@@ -7,7 +7,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import packaging.version
-from matplotlib.lines import Line2D
 
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
@@ -351,11 +350,20 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
 
     _plot_nsb_curve(axis, nsb_stats)
     _plot_proton_curve(axis, proton_stats)
-    _configure_bias_curve_axis(axis, config)
+    _plot_scaled_proton_curve(axis, proton_stats)
 
-    # Add trigger threshold annotation to legend if provided
+    # Add vertical line at trigger threshold if provided (before legend creation)
     if trigger_threshold is not None:
-        _add_trigger_threshold_to_legend(axis, trigger_threshold)
+        axis.axvline(
+            x=trigger_threshold,
+            color="grey",
+            linestyle="--",
+            linewidth=1.5,
+            alpha=0.5,
+            label=f"Trigger Threshold: {trigger_threshold:.1f}",
+        )
+
+    _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats)
 
     fig.tight_layout()
     output_path = Path(output_path)
@@ -408,6 +416,32 @@ def _plot_proton_curve(axis, proton_stats):
     _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
 
 
+def _plot_scaled_proton_curve(axis, proton_stats):
+    """Plot 1.35 * proton trigger rates for bias curve intersection."""
+    if not proton_stats:
+        return
+
+    proton_thresholds = sorted(proton_stats.keys())
+    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
+    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
+
+    # Scale by 1.35
+    scaled_proton_rates = [1.35 * r for r in proton_rates]
+    scaled_proton_errors = [1.35 * e for e in proton_errors]
+
+    axis.errorbar(
+        proton_thresholds,
+        scaled_proton_rates,
+        yerr=scaled_proton_errors,
+        fmt="^",
+        label="1.35 x Proton",
+        color="tab:red",
+        capsize=3,
+    )
+
+    _plot_log_linear_trend(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
+
+
 def _plot_log_linear_trend(axis, thresholds, rates, color):
     """Plot a log-linear trend line when at least two positive rates are available."""
     if len(thresholds) < 2:
@@ -427,13 +461,34 @@ def _plot_log_linear_trend(axis, thresholds, rates, color):
     axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
 
 
-def _configure_bias_curve_axis(axis, config):
+def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
     """Configure bias-curve axis labels, scaling, and legend."""
     axis.set_title(config["title"], fontsize=14, fontweight="bold")
     axis.set_xlabel("Threshold", fontsize=12)
     axis.set_ylabel("Trigger Rate [Hz]", fontsize=12)
     axis.set_yscale("log")
-    axis.set_ylim(config["ymin"], config["ymax"])
+
+    # Dynamically set y-axis limits based on data
+    all_rates = []
+    if nsb_stats:
+        all_rates.extend(stats["rate_hz"] for stats in nsb_stats.values() if stats["rate_hz"] > 0)
+    if proton_stats:
+        all_rates.extend(
+            1.35 * stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0
+        )
+
+    if all_rates:
+        # Add 10% padding above and below
+        y_min = min(all_rates) * 0.9
+        y_max = max(all_rates) * 1.1
+        # Ensure reasonable minimum for log scale
+        if y_min <= 0:
+            y_min = 0.1
+        axis.set_ylim(y_min, y_max)
+    else:
+        # Fallback to config values if no data
+        axis.set_ylim(config.get("ymin", 1), config.get("ymax", 1e6))
+
     axis.grid(which="both", alpha=0.3, linestyle=":")
 
     handles, _ = axis.get_legend_handles_labels()
@@ -441,28 +496,3 @@ def _configure_bias_curve_axis(axis, config):
         axis.legend(fontsize=11, loc="best")
     else:
         _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
-
-
-def _add_trigger_threshold_to_legend(axis, trigger_threshold):
-    """Add trigger threshold annotation to the plot legend.
-
-    Parameters
-    ----------
-    axis : matplotlib.axis
-        The plot axis to add the annotation to.
-    trigger_threshold : float
-        The trigger threshold value to display.
-    """
-    # Add the trigger threshold as a legend entry
-    threshold_handle = Line2D([0], [0], color="gray", linestyle="-", linewidth=1)
-    threshold_label = f"Trigger Threshold: {trigger_threshold:.1f}"
-
-    # Get existing handles and labels
-    handles, labels = axis.get_legend_handles_labels()
-
-    # Add our new handle and label
-    handles.append(threshold_handle)
-    labels.append(threshold_label)
-
-    # Update the legend
-    axis.legend(handles, labels, fontsize=11, loc="best")

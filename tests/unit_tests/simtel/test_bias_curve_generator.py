@@ -395,27 +395,73 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         "parameter_version": "1.0.0",
     }
 
+    args = {
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "7.0.0",
+        "parameter_version": "1.0.0",
+    }
+
     with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
         mock_io.return_value.get_output_directory.return_value = tmp_path
 
         with patch(
             "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
         ) as mock_write:
-            bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+                mock_model = MagicMock()
+                mock_model.get_parameter_value.return_value = "DigitalSum"
+                mock_tel.return_value = mock_model
+
+                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
 
         # Verify the model parameter was written with correct values
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["parameter_name"] == "trigger_threshold"
-        assert call_kwargs["value"] == 250  # Rounded from 250.0
+        assert call_kwargs["parameter_name"] == "dsum_threshold"
+        assert call_kwargs["value"] == 250  # Integer for DigitalSum
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
+        assert call_kwargs["unit"] == "count"
+        assert call_kwargs["check_db_for_existing_parameter"] is False
+
+
+def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
+    """Test that asum_threshold is used when default_trigger is AnalogSum."""
+    args = {
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "7.0.0",
+        "parameter_version": "1.0.0",
+    }
+
+    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
+        mock_io.return_value.get_output_directory.return_value = tmp_path
+
+        with patch(
+            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+        ) as mock_write:
+            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+                mock_model = MagicMock()
+                mock_model.get_parameter_value.return_value = "AnalogSum"
+                mock_tel.return_value = mock_model
+
+                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.5)
+
+        # Verify the model parameter was written with correct values for AnalogSum
+        mock_write.assert_called_once()
+        call_kwargs = mock_write.call_args.kwargs
+        assert call_kwargs["parameter_name"] == "asum_threshold"
+        assert call_kwargs["value"] == pytest.approx(250.5, rel=0.01)  # Float for AnalogSum
+        assert call_kwargs["instrument"] == "LSTN-01"
+        assert call_kwargs["parameter_version"] == "1.0.0"
+        assert call_kwargs["unit"] == "mV"
         assert call_kwargs["check_db_for_existing_parameter"] is False
 
 
 def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
-    """Test that missing telescope name defaults to 'unknown'."""
-    args = {"parameter_version": "1.0.0"}  # No telescope
+    """Test that missing telescope name defaults to 'unknown' and function returns early."""
+    args = {"parameter_version": "1.0.0"}  # No telescope, no site, no model_version
 
     with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
         mock_io.return_value.get_output_directory.return_value = tmp_path
@@ -426,16 +472,20 @@ def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
             with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
                 bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
 
-        mock_logger.warning.assert_called_once_with(
-            "No telescope name provided. Using 'unknown' as telescope name."
-        )
-        call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["instrument"] == "unknown"
+        # Should warn about missing telescope and then fail when trying to create TelescopeModel
+        assert mock_logger.warning.call_count >= 1
+        # Write should not be called since we can't create TelescopeModel without site/model_version
+        mock_write.assert_not_called()
 
 
 def test_export_trigger_threshold_handles_exception(tmp_path):
     """Test that exceptions during export are caught and logged."""
-    args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
+    args = {
+        "telescope": "LSTN-01",
+        "parameter_version": "1.0.0",
+        "site": "North",
+        "model_version": "7.0.0",
+    }
 
     with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
         mock_io.return_value.get_output_directory.return_value = tmp_path
@@ -445,8 +495,16 @@ def test_export_trigger_threshold_handles_exception(tmp_path):
         ) as mock_write:
             mock_write.side_effect = OSError("Disk full")
 
-            with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+                mock_model = MagicMock()
+                mock_model.get_parameter_value.return_value = "DigitalSum"
+                mock_tel.return_value = mock_model
+
+                with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
+                    bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+
+            mock_logger.warning.assert_called_once()
+            assert "Failed to export trigger threshold" in str(mock_logger.warning.call_args)
 
         # Should catch the exception and log warning
         mock_logger.warning.assert_called_once_with(

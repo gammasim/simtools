@@ -46,6 +46,18 @@ def generate_bias_curves(args):
     bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
     trigger_threshold = _calculate_trigger_threshold(nsb_stats, proton_stats)
 
+    # Log the data points for debugging
+    _logger.info("Trigger threshold calculation data:")
+    thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
+    for thresh in thresholds:
+        nsb_rate = nsb_stats[thresh]["rate_hz"] if thresh in nsb_stats else None
+        proton_rate = proton_stats[thresh]["rate_hz"] if thresh in proton_stats else None
+        scaled_proton = 1.35 * proton_rate if proton_rate is not None else None
+        _logger.info(
+            f"  Threshold {thresh}: NSB={nsb_rate:.2f} Hz,"
+            f"Proton={proton_rate:.2f} Hz, Scaled Proton={scaled_proton:.2f} Hz"
+        )
+
     _logger.info("Plotting bias curves...")
     plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
@@ -403,6 +415,8 @@ def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
     """
     Find the threshold value where NSB trigger rate intersects with 1.35 * proton trigger rate.
 
+    Uses linear interpolation between the two data points that bracket the intersection.
+
     Parameters
     ----------
     thresholds : numpy.ndarray
@@ -417,39 +431,70 @@ def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
     float or None
         Threshold value at intersection point, or None if no intersection found.
     """
-    differences = nsb_rates - scaled_proton_rates
-    sign_diff = np.diff(np.sign(differences))
-    sign_changes = np.nonzero(sign_diff)[0]
-    if len(sign_changes) == 0:
-        _logger.debug("No intersection found between NSB and scaled proton curves")
-        return None
+    # Sort by threshold to ensure ordering
+    sort_idx = np.argsort(thresholds)
+    x = thresholds[sort_idx]
+    y_nsb = nsb_rates[sort_idx]
+    y_proton = scaled_proton_rates[sort_idx]
 
-    # Take the first intersection point
-    crossing_idx = sign_changes[0]
-    # Interpolate to find the exact intersection point
-    x1, x2 = thresholds[crossing_idx], thresholds[crossing_idx + 1]
-    y1_nsb, y2_nsb = nsb_rates[crossing_idx], nsb_rates[crossing_idx + 1]
-    y1_proton, y2_proton = scaled_proton_rates[crossing_idx], scaled_proton_rates[crossing_idx + 1]
+    # Find where NSB crosses below scaled proton
+    # Look for: y_nsb[i] > y_proton[i] and y_nsb[i+1] <= y_proton[i+1]
+    for i in range(len(x) - 1):
+        if y_nsb[i] > y_proton[i] and y_nsb[i + 1] <= y_proton[i + 1]:
+            # Found the bracket
+            x1, x2 = float(x[i]), float(x[i + 1])
+            y1_nsb, y2_nsb = float(y_nsb[i]), float(y_nsb[i + 1])
+            y1_proton, y2_proton = float(y_proton[i]), float(y_proton[i + 1])
 
-    # Linear interpolation
-    denominator = x2 - x1
-    if abs(denominator) < 1e-10:
-        # Use midpoint as approximation if thresholds are too close
-        return float((x1 + x2) / 2.0)
-    slope_nsb = (y2_nsb - y1_nsb) / denominator
-    slope_proton = (y2_proton - y1_proton) / denominator
-    delta_y = y1_proton - y1_nsb
-    delta_slope = slope_nsb - slope_proton
-    if abs(delta_slope) < 1e-10:
-        # Lines are too close to parallel, use midpoint
-        return float((x1 + x2) / 2.0)
-    delta_x = delta_y / delta_slope
-    return float(x1 + delta_x)
+            # Linear interpolation
+            # At intersection: y1_nsb + t*(y2_nsb-y1_nsb) = y1_proton + t*(y2_proton-y1_proton)
+            # Solve for t: t = (y1_proton - y1_nsb) / ((y2_nsb - y1_nsb) - (y2_proton - y1_proton))
+            numerator = y1_proton - y1_nsb
+            denominator = (y2_nsb - y1_nsb) - (y2_proton - y1_proton)
+
+            if abs(denominator) < 1e-10:
+                # Parallel lines, use midpoint
+                return (x1 + x2) / 2.0
+
+            t = numerator / denominator
+            # Clamp t to [0, 1] to stay within bracket
+            t = max(0.0, min(1.0, t))
+
+            intersection = x1 + t * (x2 - x1)
+
+            _logger.debug(
+                f"Intersection between {x1} and {x2}: NSB {y1_nsb:.2f}>{y2_nsb:.2f}, "
+                f"Proton {y1_proton:.2f}<={y2_proton:.2f}, t={t:.3f}, result={intersection:.2f}"
+            )
+            return intersection
+
+    # Also check reverse direction (shouldn't happen but just in case)
+    for i in range(len(x) - 1):
+        if y_nsb[i] < y_proton[i] and y_nsb[i + 1] >= y_proton[i + 1]:
+            x1, x2 = float(x[i]), float(x[i + 1])
+            y1_nsb, y2_nsb = float(y_nsb[i]), float(y_nsb[i + 1])
+            y1_proton, y2_proton = float(y_proton[i]), float(y_proton[i + 1])
+
+            numerator = y1_proton - y1_nsb
+            denominator = (y2_nsb - y1_nsb) - (y2_proton - y1_proton)
+
+            if abs(denominator) < 1e-10:
+                return (x1 + x2) / 2.0
+
+            t = numerator / denominator
+            t = max(0.0, min(1.0, t))
+            return x1 + t * (x2 - x1)
+
+    _logger.debug("No intersection found")
+    return None
 
 
 def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
     """
     Export trigger threshold as a model parameter.
+
+    Determines whether to use asum_threshold or dsum_threshold based on the
+    telescope's default_trigger parameter.
 
     Parameters
     ----------
@@ -465,22 +510,48 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
             _logger.warning("No telescope name provided. Using 'unknown' as telescope name.")
             telescope_name = "unknown"
         parameter_version = args.get("parameter_version")
+
+        # Determine which threshold parameter to use based on default_trigger
+        telescope_model = TelescopeModel(
+            site=args["site"],
+            telescope_name=telescope_name,
+            model_version=args["model_version"],
+        )
+        default_trigger = telescope_model.get_parameter_value("default_trigger")
+
+        if default_trigger == "AnalogSum":
+            parameter_name = "asum_threshold"
+            # asum_threshold expects float64 in mV
+            value = round(trigger_threshold, 2)
+            unit = "mV"
+        elif default_trigger == "DigitalSum":
+            parameter_name = "dsum_threshold"
+            # dsum_threshold expects int64 in counts
+            value = round(trigger_threshold)
+            unit = "count"
+        else:
+            _logger.warning(
+                f"Unknown default_trigger '{default_trigger}' for telescope {telescope_name}. "
+                "Cannot export trigger threshold."
+            )
+            return
+
         output_path = io_handler.IOHandler().get_output_directory()
-        output_file = f"trigger_threshold-{parameter_version}.json"
+        output_file = f"{parameter_name}-{parameter_version}.json"
         model_data_writer.ModelDataWriter.write_model_parameter(
-            parameter_name="trigger_threshold",
-            value=round(trigger_threshold),
+            parameter_name=parameter_name,
+            value=value,
             instrument=telescope_name,
             parameter_version=parameter_version,
             output_file=output_file,
-            output_path=output_path / telescope_name / "trigger_threshold",
+            output_path=output_path / telescope_name / parameter_name,
             metadata_input_dict={"source": "bias_curve_analysis"},
+            unit=unit,
             check_db_for_existing_parameter=False,
         )
 
         _logger.info(
-            f"Exported trigger threshold as model parameter for {telescope_name}: "
-            f"{trigger_threshold}"
+            f"Exported trigger threshold as {parameter_name} for {telescope_name}: {value}"
         )
 
     except (OSError, ValueError, KeyError) as exc:
