@@ -325,9 +325,9 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Lower NSB to ensure sign change
     }
     proton_stats = {
-        220: {"rate_hz": 1100.0, "error_hz": 40.0},  # 1.35 * 1100 = 1485 < 1500
-        250: {"rate_hz": 740.0, "error_hz": 25.0},  # 1.35 * 740 = 999 ≈ 1000
-        280: {"rate_hz": 370.0, "error_hz": 15.0},  # 1.35 * 370 = 499.5 > 400
+        220: {"rate_hz": 1100.0, "error_hz": 40.0},
+        250: {"rate_hz": 740.0, "error_hz": 25.0},
+        280: {"rate_hz": 370.0, "error_hz": 15.0},
     }
 
     threshold = bias_curve_generator._calculate_trigger_threshold(nsb_stats, proton_stats)
@@ -339,7 +339,6 @@ def test_calculate_trigger_threshold_success():
 def test_calculate_trigger_threshold_no_valid_points():
     """Test that ValueError is raised when no valid threshold points exist."""
 
-    # Empty stats
     nsb_stats = {}
     proton_stats = {}
 
@@ -357,9 +356,9 @@ def test_calculate_trigger_threshold_no_intersection():
         280: {"rate_hz": 600.0, "error_hz": 20.0},
     }
     proton_stats = {
-        220: {"rate_hz": 500.0, "error_hz": 40.0},  # 1.35*500 = 675 < 1000
-        250: {"rate_hz": 400.0, "error_hz": 25.0},  # 1.35*400 = 540 < 800
-        280: {"rate_hz": 300.0, "error_hz": 15.0},  # 1.35*300 = 405 < 600
+        220: {"rate_hz": 500.0, "error_hz": 40.0},
+        250: {"rate_hz": 400.0, "error_hz": 25.0},
+        280: {"rate_hz": 300.0, "error_hz": 15.0},
     }
 
     with pytest.raises(ValueError, match="Could not find intersection point"):
@@ -376,9 +375,9 @@ def test_calculate_trigger_threshold_with_nan_values():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Valid - adjusted to create sign change
     }
     proton_stats = {
-        220: {"rate_hz": 700.0, "error_hz": 40.0},  # Valid but NSB is NaN
-        250: {"rate_hz": 740.0, "error_hz": 25.0},  # Valid - 1.35*740=999 < 1000
-        280: {"rate_hz": 370.0, "error_hz": 15.0},  # Valid - 1.35*370=499.5 > 400
+        220: {"rate_hz": 700.0, "error_hz": 40.0},
+        250: {"rate_hz": 740.0, "error_hz": 25.0},
+        280: {"rate_hz": 370.0, "error_hz": 15.0},
     }
 
     # Should work with the valid points (250, 280) and find intersection
@@ -427,12 +426,9 @@ def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
             with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
                 bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
 
-        # Should warn about missing telescope
         mock_logger.warning.assert_called_once_with(
             "No telescope name provided. Using 'unknown' as telescope name."
         )
-
-        # Should still export with 'unknown' as instrument
         call_kwargs = mock_write.call_args.kwargs
         assert call_kwargs["instrument"] == "unknown"
 
