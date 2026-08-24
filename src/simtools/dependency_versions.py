@@ -46,6 +46,38 @@ def _corsika_reference(component):
     return _corsika_tag(component) if "tag" in component else _corsika_build_id(component)
 
 
+def corsika_source_tag_for_build_id(build_id, catalog=None):
+    """Return the CORSIKA source tag matching a legacy build identifier.
+
+    Parameters
+    ----------
+    build_id : str or int
+        Legacy CORSIKA build identifier, for example ``78010``.
+    catalog : dict, optional
+        Validated dependency catalog. The installed catalog is loaded when omitted.
+
+    Returns
+    -------
+    str or None
+        Matching CORSIKA source tag, or ``None`` when the catalog has no match.
+
+    Raises
+    ------
+    ValueError
+        If more than one catalog entry matches the build identifier.
+    """
+    if catalog is None:
+        catalog = load_dependency_catalog()
+    matches = [
+        _corsika_tag(component)
+        for component in catalog.get("corsika", [])
+        if str(_corsika_build_id(component)) == str(build_id)
+    ]
+    if len(matches) > 1:
+        raise ValueError(f"Multiple CORSIKA source tags match build ID {build_id!r}: {matches}")
+    return matches[0] if matches else None
+
+
 def _simtel_tag(component):
     """Return a sim_telarray tag from either catalog schema."""
     return component.get("tag", component.get("version"))
