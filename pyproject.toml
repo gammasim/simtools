@@ -153,6 +153,7 @@ package-data.simtools = [
   "schemas/input/*.yml",
   "schemas/model_parameters/*.yml",
 ]
+data-files.simtools = [ "dependency_versions.yml" ]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
@@ -314,6 +315,7 @@ ini_options.addopts = [
   "--import-mode=importlib",
   "-p",
   "pytest_requirements",
+  "-rsxX",
 ]
 ini_options.markers = [
   "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",

@@ -51,9 +51,10 @@ def _has_sct(array_models):
 
 def _format_view_cone(view_cone_min, view_cone_max):
     """Format view-cone bounds in the catalog convention."""
-    return (f"{view_cone_min.to_value(u.deg)}_deg_{view_cone_max.to_value(u.deg)}_deg").replace(
-        " ", "_"
-    )
+    return (
+        f"{round(view_cone_min.to_value(u.deg), 2)}_deg_"
+        f"{round(view_cone_max.to_value(u.deg), 2)}_deg"
+    ).replace(" ", "_")
 
 
 def _add_optional_coordinate(metadata, key, value):

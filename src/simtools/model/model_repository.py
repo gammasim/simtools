@@ -21,7 +21,7 @@ from packaging.version import parse as parse_version
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import DEFAULT_SIMULATION_WORKFLOWS
 from simtools.io import ascii_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -215,6 +215,7 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
     changes, base_model_version = _get_changes_to_production(
         modification_dict, simulation_models_path, update_type
     )
+    model_parameter_changes = modification_dict.get("changes", {})
 
     _apply_changes_to_production_tables(
         changes,
@@ -225,7 +226,7 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
     )
 
     _apply_changes_to_model_parameters(
-        changes,
+        model_parameter_changes,
         simulation_models_path,
         setting_workflows_git_tag,
         setting_workflows_git_repository,
@@ -760,6 +761,12 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
             param_data["value"] = [param_data["value"]] * len(json_data["value"])
         param_data["meta_parameter"] = json_data.get("meta_parameter", False)
 
+    target_file = param_dir / f"{param}-{param_data['version']}.json"
+    if target_file.exists():
+        _validate_existing_model_parameter_file(target_file, telescope, param, param_data)
+        _logger.info("Model parameter file already matches requested version: '%s'.", target_file)
+        return
+
     writer.ModelDataWriter.write_model_parameter(
         parameter_name=param,
         value=param_data["value"],
@@ -771,6 +778,40 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         meta_parameter=param_data.get("meta_parameter", False),
         model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
     )
+
+
+def _validate_existing_model_parameter_file(target_file, telescope, param, param_data):
+    """Validate an existing generated model parameter file before reusing it."""
+    existing_data = ascii_handler.collect_data_from_file(target_file)
+    expected_data = {
+        "parameter": param,
+        "instrument": telescope,
+        "parameter_version": param_data["version"],
+        "value": param_data["value"],
+        "unit": _normalize_units_for_comparison(param_data.get("unit")),
+    }
+    existing_data["unit"] = _normalize_units_for_comparison(existing_data.get("unit"))
+    mismatches = {
+        key: (existing_data.get(key), value)
+        for key, value in expected_data.items()
+        if existing_data.get(key) != value
+    }
+    if mismatches:
+        raise ValueError(
+            f"Existing model parameter file '{target_file}' does not match the requested "
+            f"value for '{telescope} - {param}': {mismatches}"
+        )
+
+
+def _normalize_units_for_comparison(unit):
+    """Normalize equivalent scalar and per-value unit representations."""
+    unit = value_conversion.normalize_dimensionless_unit(unit)
+    if isinstance(unit, list):
+        unit = [_normalize_units_for_comparison(entry) for entry in unit]
+        if unit and all(entry == unit[0] for entry in unit):
+            return unit[0]
+        return unit
+    return value_conversion.normalize_model_parameter_unit(0, unit)
 
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
