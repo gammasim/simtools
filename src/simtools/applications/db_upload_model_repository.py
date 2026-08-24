@@ -39,13 +39,10 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
-    arguments=(
-        *_ARGUMENTS,
-        *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
-    ),
+    arguments=_ARGUMENTS,
     database=True,
-    initialize_output=True,
+    use_dependency_defaults=False,
+    setup_io_handler=False,
 )
 
 

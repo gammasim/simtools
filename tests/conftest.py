@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
+from simtools import dependency_versions
+
 pytest_plugins = ("resource_benchmark",)
 
 SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
@@ -37,12 +39,22 @@ def _versioned_test_resources_path(version):
     return Path(test_path).expanduser() / version / "integration_tests"
 
 
+def _catalog_test_resources_version():
+    """Return the default integration-test resource version from the catalog."""
+    catalog = dependency_versions.load_dependency_catalog(
+        SIMTOOLS_ROOT_PATH / "dependency_versions.yml"
+    )
+    return catalog["simtools-tests"]["version"]
+
+
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
     configured_path = config.getoption("test_resources_path", default=None)
     path = configured_path or os.environ.get("SIMTOOLS_TEST_RESOURCES")
-    version = config.getoption("simtools_tests_version", default=None) or os.environ.get(
-        "SIMTOOLS_TESTS_VERSION"
+    version = (
+        config.getoption("simtools_tests_version", default=None)
+        or os.environ.get("SIMTOOLS_TESTS_VERSION")
+        or _catalog_test_resources_version()
     )
     path = path or _versioned_test_resources_path(version)
     path = path or SIMTOOLS_ROOT_PATH / "tests" / "unit_tests" / "resources"
@@ -62,7 +74,7 @@ def pytest_addoption(parser):
         "--simtools_tests_version",
         dest="simtools_tests_version",
         default=os.environ.get("SIMTOOLS_TESTS_VERSION"),
-        help="Version of simtools-tests to use when no path is configured.",
+        help="Version of simtools-tests to use when no path is configured (default: catalog).",
     )
 
 

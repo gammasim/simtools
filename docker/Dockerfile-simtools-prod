@@ -45,7 +45,7 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
-COPY LICENSE README.md pyproject.toml /workdir/simtools/
+COPY LICENSE README.md dependency_versions.yml pyproject.toml /workdir/simtools/
 COPY src /workdir/simtools/src
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"

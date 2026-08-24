@@ -553,7 +553,7 @@ class PSFImage:
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)
         fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
             data,
-            containment_radius_cm=self.get_psf(fraction) / 2,
+            containment_radius=self.get_psf(fraction) / 2,
             center=center,
             psf_kwargs=kwargs_for_psf,
             use_current_axes=True,

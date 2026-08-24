@@ -6,7 +6,7 @@ import pytest
 from dotenv import load_dotenv
 
 import simtools.io.io_handler
-from simtools import settings
+from simtools import dependency_versions, settings
 
 
 def pytest_addoption(parser):
@@ -30,6 +30,9 @@ def simtools_settings(db_config):
 def db_config(simtools_root_path):
     """DB configuration from .env file."""
     load_dotenv(simtools_root_path / ".env")
+    catalog = dependency_versions.load_dependency_catalog(
+        simtools_root_path / "dependency_versions.yml"
+    )
 
     _db_para = (
         "db_api_user",
@@ -41,6 +44,12 @@ def db_config(simtools_root_path):
         "db_simulation_model_version",
     )
     db_config = {_para: os.environ.get(f"SIMTOOLS_{_para.upper()}") for _para in _db_para}
+    db_config["db_simulation_model"] = (
+        db_config["db_simulation_model"] or catalog["model-database"]["name"]
+    )
+    db_config["db_simulation_model_version"] = (
+        db_config["db_simulation_model_version"] or catalog["model-database"]["default-version"]
+    )
     if db_config["db_api_port"] is not None:
         db_config["db_api_port"] = int(db_config["db_api_port"])
     return db_config
