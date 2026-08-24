@@ -6,9 +6,22 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import efficiency_interval
 from simtools.production_configuration.derive_corsika_limits import (
-    _parse_allowed_losses,
-    _validate_differential_loss_bins_per_decade,
     generate_corsika_limits_grid,
+    parse_allowed_losses,
+    validate_differential_loss_bins_per_decade,
+)
+
+_OUTPUT_ARGUMENTS = (
+    cli.OUTPUT_FILE,
+    cli.ArgumentDefinition(
+        "output_file_format",
+        help=(
+            "Accepted for shared configuration compatibility; this application always writes ECSV."
+        ),
+        type=str,
+        default="ecsv",
+    ),
+    cli.SKIP_OUTPUT_VALIDATION,
 )
 
 _ARGUMENTS = (
@@ -62,7 +75,7 @@ _ARGUMENTS = (
             "Number of differential energy bins per decade for per-bin limit computation. "
             "Set to 0 (default) to use integrated limits; must be non-negative."
         ),
-        type=_validate_differential_loss_bins_per_decade,
+        type=validate_differential_loss_bins_per_decade,
         required=False,
         default=0,
     ),
@@ -72,7 +85,7 @@ _ARGUMENTS = (
 def _post_parse(args_dict, _config_sources, parser):
     """Validate the complete allowed-loss configuration after merging inputs."""
     try:
-        _parse_allowed_losses(args_dict.get("allowed_losses"))
+        parse_allowed_losses(args_dict.get("allowed_losses"))
     except ValueError as exc:
         parser.error(str(exc))
 
@@ -82,7 +95,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
+        *_OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
     post_parse=_post_parse,

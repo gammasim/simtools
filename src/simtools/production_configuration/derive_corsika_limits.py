@@ -1,5 +1,6 @@
 """Derive CORSIKA limits from trigger histograms."""
 
+import argparse
 import datetime
 import logging
 import math
@@ -56,17 +57,40 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
 LOSS_AXES = ("core_distance", "angular_distance")
 
 
-def _validate_differential_loss_bins_per_decade(value):
-    """Validate and return a non-negative differential-bin count."""
+class _ArgumentTypeValueError(argparse.ArgumentTypeError, ValueError):
+    """Error that preserves a detailed message for argparse and library callers."""
+
+
+def validate_differential_loss_bins_per_decade(value):
+    """Validate and return a non-negative differential-bin count.
+
+    Parameters
+    ----------
+    value : int or str
+        Differential energy-bin count per decade.
+
+    Returns
+    -------
+    int
+        Validated bin count.
+
+    Raises
+    ------
+    ValueError
+        If ``value`` is not a non-negative integer. The raised exception is
+        also an ``argparse.ArgumentTypeError`` for detailed CLI diagnostics.
+    """
     try:
         parsed_value = int(value)
     except (TypeError, ValueError) as exc:
-        raise ValueError(
+        raise _ArgumentTypeValueError(
             "differential_loss_bins_per_decade must be a non-negative integer"
         ) from exc
 
     if parsed_value < 0:
-        raise ValueError("differential_loss_bins_per_decade must be a non-negative integer")
+        raise _ArgumentTypeValueError(
+            "differential_loss_bins_per_decade must be a non-negative integer"
+        )
 
     return parsed_value
 
@@ -118,7 +142,7 @@ def _allowed_loss_axes(axis_name):
     return (axis_name,)
 
 
-def _parse_allowed_losses(allowed_losses_args):
+def parse_allowed_losses(allowed_losses_args):
     """
     Parse repeatable --allowed_losses values for core/viewcone axes.
 
@@ -164,9 +188,9 @@ def generate_corsika_limits_grid(args_dict=None):
     if not args_dict.get("trigger_histogram_file"):
         raise ValueError("Use --trigger_histogram_file to provide a precomputed histogram file.")
 
-    allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
+    allowed_losses = parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
-    differential_loss_bins_per_decade = _validate_differential_loss_bins_per_decade(
+    differential_loss_bins_per_decade = validate_differential_loss_bins_per_decade(
         args_dict.get("differential_loss_bins_per_decade", 0)
     )
 

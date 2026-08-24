@@ -41,7 +41,9 @@ The output table includes the selected particle, array layout, pointing, NSB lev
 the broad-range values used for the derivation, and standard simtools metadata in its ECSV header.
 The loss settings are also recorded in the ECSV metadata. `output_file` may be an absolute path
 or a path relative to `output_path`; if omitted, shared simtools startup generates a name from
-the activity ID and optional label. The output table is always ECSV.
+the activity ID and optional label. The shared `--output_file_format` option is accepted for
+configuration compatibility but does not change this application's output: the table is always
+written as ECSV.
 
 Use `--plot_histograms` to write diagnostic plots below `output_path`. With multiple production
 indices, plots are grouped below `output_path/production_<index>/`; with one production they are

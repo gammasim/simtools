@@ -32,7 +32,7 @@ def test_parser_accepts_compact_loss_configuration_and_array_selection():
     assert args.output_file_format == "ecsv"
 
 
-def test_parser_rejects_negative_differential_loss_bins():
+def test_parser_rejects_negative_differential_loss_bins(capsys):
     with pytest.raises(SystemExit):
         production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
             [
@@ -44,6 +44,10 @@ def test_parser_rejects_negative_differential_loss_bins():
                 "-1",
             ]
         )
+    assert (
+        "differential_loss_bins_per_decade must be a non-negative integer"
+        in capsys.readouterr().err
+    )
 
 
 def test_post_parse_rejects_invalid_allowed_loss_configuration(mocker):
