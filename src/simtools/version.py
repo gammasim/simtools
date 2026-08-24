@@ -11,7 +11,7 @@ from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
 MAJOR_MINOR = "major.minor"
-RELEASE_TAG_PATTERN = re.compile(r"^v[0-9][0-9A-Za-z._+-]*$")
+RELEASE_TAG_PATTERN = re.compile(r"^v\d[\dA-Za-z._+-]*$")
 MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
