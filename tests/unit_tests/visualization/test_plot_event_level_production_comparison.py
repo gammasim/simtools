@@ -84,6 +84,35 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     )
 
 
+def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, bins=8, figure_format=["pdf"]
+    )
+
+    assert (output_path / "trigger_multiplicity.pdf").exists()
+    assert (output_path / "distribution_energy.pdf").exists()
+    assert not (output_path / "trigger_multiplicity.png").exists()
+
+
+def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    plot_event_level_production_comparison.plot(
+        metrics, output_path=Path(tmp_test_directory), figure_format=["svg"]
+    )
+
+    assert (Path(tmp_test_directory) / "trigger_multiplicity.svg").exists()
+
+
 def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
@@ -99,17 +128,24 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
         jsonschema.validate(statistics, comparison_schema)
 
 
-def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_directory):
+def test_output_directory_for_array_layout_selection_uses_single_layout_name(tmp_test_directory):
     output_dir = Path(tmp_test_directory) / "plots"
-    array_layout_names = ["CTAO-North Alpha", "MSTN-01"]
 
     selected = plot_event_level_production_comparison._output_directory_for_array_layout_selection(
         output_dir,
-        array_layout_names,
+        "CTAO-North Alpha",
     )
 
-    assert selected == output_dir.joinpath(*array_layout_names)
+    assert selected == output_dir / "CTAO-North Alpha"
     assert selected.exists()
+
+
+def test_output_directory_for_array_layout_selection_rejects_multiple_layouts(tmp_test_directory):
+    with pytest.raises(ValueError, match="one array layout"):
+        plot_event_level_production_comparison._output_directory_for_array_layout_selection(
+            Path(tmp_test_directory),
+            ["CTAO-North Alpha", "MSTN-01"],
+        )
 
 
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
@@ -255,6 +291,26 @@ def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     assert not (output_path / "mixed_trigger_combinations.png").exists()
 
 
+def test_mixed_trigger_combination_plot_limits_categories(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metric = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    metric.trigger_combinations = Counter(
+        {
+            "LSTN-01,MSTN-01": 10,
+            "LSTN-01,MSTN-02": 5,
+            "LSTN-02,MSTN-01": 1,
+        }
+    )
+
+    statistics = plot_event_level_production_comparison._plot_mixed_trigger_combinations(
+        [metric], output_path, top_n=2
+    )
+
+    assert statistics["metadata"]["category_count"] == 3
+    assert len(statistics["metadata"]["display_categories"]) == 2
+    assert (output_path / "mixed_trigger_combinations.png").exists()
+
+
 def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
@@ -270,6 +326,8 @@ def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_direc
     assert comparison["metric"] == "jensen_shannon"
     assert comparison["jensen_shannon_distance"] > 0
     assert statistics["metadata"]["categories"] == ["LSTN-01", "MSTN-01"]
+    assert comparison["value"] > 0
+    assert statistics["metadata"]["category_count"] == 2
     assert statistics["metadata"]["display_categories"] == ["LSTN-01"]
 
 
@@ -286,13 +344,16 @@ def test_histogram_quantity_comparison_uses_binned_ks():
         "simulated_samples": None,
         "triggered_samples": None,
     }
+    baseline["bin_edges"] = np.array([0.0, 1.0, 2.0])
+    candidate["bin_edges"] = np.array([0.0, 1.0, 2.0])
 
     result = plot_event_level_production_comparison._compare_distribution_data(
-        baseline, candidate, "simulated", np.array([0.0, 1.0, 2.0])
+        baseline, candidate, "simulated"
     )
 
     assert result["metric"] == "ks"
     assert result["ks_statistic"] == pytest.approx(0.5)
+    assert result["value"] == pytest.approx(0.5)
 
 
 def test_global_quantity_bin_edges_union_histogram_supports():
@@ -316,3 +377,22 @@ def test_global_quantity_bin_edges_union_histogram_supports():
     )
 
     np.testing.assert_array_equal(edges, np.array([0.0, 1.0, 2.0, 3.0]))
+
+
+def test_quantity_count_rebinning_preserves_distribution_when_edges_split():
+    metric = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    metric.quantity_histograms = {
+        "energy": {
+            "simulated": (np.array([100.0]), np.array([0.0, 2.0])),
+        }
+    }
+
+    counts, samples = plot_event_level_production_comparison._get_quantity_counts(
+        metric,
+        "energy",
+        np.array([0.0, 1.0, 2.0]),
+        "simulated",
+    )
+
+    assert samples is None
+    np.testing.assert_allclose(counts, np.array([50.0, 50.0]))

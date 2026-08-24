@@ -18,7 +18,18 @@ _ARGUMENTS = (
         ),
         nargs="+",
         action="extend",
-        required=True,
+        exclusive_group="event_data_input",
+        exclusive_group_required=True,
+    ),
+    cli.ArgumentDefinition(
+        "event_data_directory",
+        help=(
+            "Directory containing reduced event-data files. Files with matching names after "
+            "a '.part<digits>' suffix is removed are processed into one output product."
+        ),
+        type=str,
+        exclusive_group="event_data_input",
+        exclusive_group_required=True,
     ),
     cli.ArgumentDefinition(
         "energy_bins_per_decade",
@@ -31,6 +42,15 @@ _ARGUMENTS = (
         help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
         type=positive_quantity("deg"),
         default=0.5 * u.deg,
+    ),
+    cli.ArgumentDefinition(
+        "core_distance_bin_width",
+        help=(
+            "Core-distance bin width. The range remains flexible and is rounded to a common "
+            "physical grid."
+        ),
+        type=positive_quantity("m"),
+        default=20.0 * u.m,
     ),
     cli.ArgumentDefinition(
         "skip_invalid_event_data_files",
@@ -53,6 +73,22 @@ _ARGUMENTS = (
 )
 
 
+def _post_parse(args_dict, config_sources, parser):
+    """Validate output options selected for the event-data input mode."""
+    if args_dict.get("event_data_directory"):
+        explicit_output_path_sources = set().union(
+            *(
+                config_sources.get(source, set())
+                for source in ("environment", "constructor", "yaml", "cli")
+            )
+        )
+        if "output_path" not in explicit_output_path_sources:
+            parser.error("'--output_path' is required with '--event_data_directory'.")
+
+        if args_dict.get("output_file") and not args_dict.get("output_file_from_default"):
+            parser.error("'--output_file' cannot be used with '--event_data_directory'.")
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -67,6 +103,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
     initialize_output=True,
+    post_parse=_post_parse,
 )
 
 

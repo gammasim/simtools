@@ -3,12 +3,12 @@
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
 from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.camera import trace_analysis as trace
@@ -14,6 +13,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.camera import Camera
 from simtools.simtel.simtel_event_reader import read_events
 from simtools.utils import general as gen
+from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
 from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 

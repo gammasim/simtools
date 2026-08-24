@@ -83,11 +83,11 @@ def parse_production_arguments(production_arguments):
     Raises
     ------
     ValueError
-        If configuration is malformed or does not contain any production.
+        If configuration is malformed or does not contain at least two productions.
     """
     parsed_productions = _normalize_production_arguments(production_arguments)
-    if not parsed_productions:
-        raise ValueError("At least one production is required.")
+    if len(parsed_productions) < 2:
+        raise ValueError("At least two productions are required for comparison.")
 
     labels = [label for label, _ in parsed_productions]
     if len(set(labels)) != len(labels):

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PatchCollection
 
@@ -14,6 +13,7 @@ from simtools.io import io_handler
 from simtools.model.mirrors import Mirrors
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
 

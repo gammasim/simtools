@@ -86,6 +86,8 @@ definitions:
         $ref: '#/definitions/MetricName'
       value:
         type: [number, 'null']
+      pvalue:
+        type: number
       valid:
         type: boolean
       reason:
@@ -135,9 +137,9 @@ definitions:
         $ref: '#/definitions/MetricResult'
     required:
       - candidate_label
-      - baseline_bin_edges
       - simulated
       - triggered
+
 
   Counts:
     type: array

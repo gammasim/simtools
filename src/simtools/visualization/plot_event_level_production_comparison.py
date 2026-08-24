@@ -2,8 +2,9 @@
 
 import functools
 import logging
+from collections import Counter
+from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.io import ascii_handler, io_handler
@@ -12,6 +13,8 @@ from simtools.statistics import (
     compare_samples_with_statistics,
 )
 from simtools.utils import names
+from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 _logger = logging.getLogger(__name__)
 
@@ -21,15 +24,23 @@ def _output_directory_for_array_layout_selection(output_directory, array_layout_
     if not array_layout_name:
         return output_directory
 
-    if isinstance(array_layout_name, str):
-        array_layout_name = [array_layout_name]
+    if not isinstance(array_layout_name, str):
+        if len(array_layout_name) != 1:
+            raise ValueError("Plot one array layout at a time.")
+        array_layout_name = array_layout_name[0]
 
-    output_path = output_directory.joinpath(*array_layout_name)
+    output_path = output_directory / array_layout_name
     output_path.mkdir(parents=True, exist_ok=True)
     return output_path
 
 
-def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=40):
+def plot(
+    metrics_per_production,
+    output_path=None,
+    array_layout_name=None,
+    bins=40,
+    figure_format=None,
+):
     """Create all event-level production comparison plots.
 
     Parameters
@@ -39,11 +50,19 @@ def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=
     output_path : pathlib.Path, optional
         Output directory for the generated plots. Falls back to the current
         application output directory when omitted.
-    array_layout_name : list[str] or str, optional
+    array_layout_name : str, optional
         Array-layout selection used to collect the metrics. When set, plots are
-        written into a subdirectory derived from that selection.
+        written into a subdirectory with that name.
     bins : int, optional
         Number of bins for 1D histograms.
+    figure_format : list[str] or str, optional
+        Figure formats to write. Formats supported by Matplotlib can be used.
+        Defaults to the configured formats or ``["png"]``.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the JSON file containing the comparison statistics.
     """
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
     output_path = output_path or io_handler.IOHandler().get_output_directory()
@@ -54,16 +73,22 @@ def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=
         _record_plot_statistics(
             comparison_statistics,
             plot_name,
-            plot_function(metrics_per_production, output_path),
+            plot_function(metrics_per_production, output_path, figure_format=figure_format),
         )
 
-    _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
-    _plot_per_type_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
+    _plot_quantity_comparisons(
+        metrics_per_production, output_path, bins, comparison_statistics, figure_format
+    )
+    _plot_per_type_comparisons(
+        metrics_per_production, output_path, bins, comparison_statistics, figure_format
+    )
 
     return _write_comparison_statistics_json(comparison_statistics, output_path)
 
 
-def _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics):
+def _plot_quantity_comparisons(
+    metrics_per_production, output_path, bins, comparison_statistics, figure_format
+):
     """Plot quantity-based comparisons and collect their statistics."""
     for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
         if quantity_name in _TRIGGERED_FRACTION_QUANTITIES:
@@ -74,6 +99,7 @@ def _plot_quantity_comparisons(metrics_per_production, output_path, bins, compar
                 x_label=x_label,
                 x_scale=x_scale,
                 bins=bins,
+                figure_format=figure_format,
             )
         for cumulative in _distribution_cumulative_variants(quantity_name):
             if cumulative is None:
@@ -90,11 +116,14 @@ def _plot_quantity_comparisons(metrics_per_production, output_path, bins, compar
                     x_scale=x_scale,
                     bins=bins,
                     cumulative=cumulative,
+                    figure_format=figure_format,
                 ),
             )
 
 
-def _plot_per_type_comparisons(metrics_per_production, output_path, bins, comparison_statistics):
+def _plot_per_type_comparisons(
+    metrics_per_production, output_path, bins, comparison_statistics, figure_format
+):
     """Plot per-telescope-type comparisons and collect their statistics."""
     all_types = sorted(
         {
@@ -111,22 +140,34 @@ def _plot_per_type_comparisons(metrics_per_production, output_path, bins, compar
             if tel_type in metrics.per_type
         ]
         for plot_fn in _PER_TYPE_PLOT_FNS:
-            statistics = plot_fn(type_metrics, output_path, suffix=f"_{tel_type}", bins=bins)
+            statistics = plot_fn(
+                type_metrics,
+                output_path,
+                suffix=f"_{tel_type}",
+                bins=bins,
+                figure_format=figure_format,
+            )
             if statistics is None:
                 continue
             plot_name = _plot_name_from_statistics(statistics)
             _record_plot_statistics(comparison_statistics, plot_name, statistics)
 
 
-def _save_figure(fig, output_path, filename):
+def _save_figure(fig, output_path, filename, figure_format=None):
     """Save figure and close it."""
-    output_file = output_path / filename
-    _logger.info(f"Saving comparison plot: {output_file}")
-    fig.savefig(output_file, dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    output_file = output_path / Path(filename).with_suffix("")
+    save_figure(
+        fig,
+        output_file,
+        figure_format=figure_format,
+        dpi=300,
+        close=True,
+    )
 
 
-def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
+def _plot_trigger_multiplicity(
+    metrics_per_production, output_path, suffix="", bins=None, figure_format=None
+):
     """Plot triggered telescope multiplicity distributions."""
     del bins
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -172,13 +213,16 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
     statistics = _build_aligned_count_statistics(
         metrics_per_production,
         counts_per_label,
-        metadata={"bin_edges": bin_edges.astype(float).tolist()},
+        metadata={
+            "bin_edges": bin_edges.astype(float).tolist(),
+            "bin_count": len(bin_edges) - 1,
+        },
         metric="wasserstein",
         bin_edges=bin_edges,
     )
     _annotate_comparison_statistics(ax, statistics)
 
-    _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
+    _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png", figure_format)
     statistics["plot_name"] = f"trigger_multiplicity{suffix}"
     return statistics
 
@@ -198,7 +242,7 @@ def _get_trigger_multiplicity_counts(metrics, bin_edges):
     return counts
 
 
-def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
+def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12, figure_format=None):
     """Plot trigger combination distributions for each production."""
     combinations = set()
     for metrics in metrics_per_production:
@@ -233,13 +277,16 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
         x_rotation=45,
         x_ha="right",
         statistics_categories=all_categories,
+        figure_format=figure_format,
     )
     if statistics is not None:
         statistics["plot_name"] = "trigger_combination"
     return statistics
 
 
-def _plot_single_telescope_trigger_frequencies(metrics_per_production, output_path):
+def _plot_single_telescope_trigger_frequencies(
+    metrics_per_production, output_path, figure_format=None
+):
     """Plot single-telescope trigger frequency distributions by telescope name."""
     telescope_names = sorted(
         {
@@ -269,23 +316,26 @@ def _plot_single_telescope_trigger_frequencies(metrics_per_production, output_pa
         figure_width=max(10, len(telescope_names) * 0.45),
         x_rotation=90,
         x_ha="center",
+        figure_format=figure_format,
     )
     if statistics is not None:
         statistics["plot_name"] = "single_telescope_trigger_distribution"
     return statistics
 
 
-def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
+def _plot_mixed_trigger_combinations(
+    metrics_per_production, output_path, top_n=12, figure_format=None
+):
     """Plot mixed-type trigger combinations with multiplicity signatures and telescope names."""
-    mixed_labels = sorted(
-        {
-            _format_mixed_combination_label(combination)
-            for metrics in metrics_per_production
-            for combination in metrics.trigger_combinations
-            if _is_mixed_type_combination(combination)
-        }
-    )
-    if len(mixed_labels) == 0:
+    counts_by_production = {
+        metrics.label: _aggregate_mixed_trigger_combinations(metrics.trigger_combinations)
+        for metrics in metrics_per_production
+    }
+    total_counts = Counter()
+    for counts in counts_by_production.values():
+        total_counts.update(counts)
+    mixed_labels = [label for label, _ in total_counts.most_common(top_n)]
+    if not mixed_labels:
         _logger.warning("Skipping mixed trigger combination plot, no mixed-type combinations.")
         return None
 
@@ -293,13 +343,7 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
         metrics_per_production,
         categories=mixed_labels,
         counts_getter=lambda metrics, category_labels: [
-            sum(
-                count
-                for combination, count in metrics.trigger_combinations.items()
-                if _is_mixed_type_combination(combination)
-                and _format_mixed_combination_label(combination) == label
-            )
-            for label in category_labels
+            counts_by_production[metrics.label].get(label, 0) for label in category_labels
         ],
         normalization_fn=_fraction_with_poisson_errors,
         output_path=output_path,
@@ -309,10 +353,22 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
         figure_width=max(12, len(mixed_labels) * 0.8),
         x_rotation=45,
         x_ha="right",
+        statistics_categories=sorted(total_counts),
+        figure_format=figure_format,
     )
     if statistics is not None:
         statistics["plot_name"] = "mixed_trigger_combinations"
     return statistics
+
+
+def _aggregate_mixed_trigger_combinations(trigger_combinations):
+    """Aggregate mixed trigger combinations by display label in one pass."""
+    counts = Counter()
+    for combination, count in trigger_combinations.items():
+        label = _format_mixed_combination_label(combination)
+        if label is not None:
+            counts[label] += count
+    return counts
 
 
 def _fractions_per_triggered_events(counts, metrics):
@@ -334,6 +390,7 @@ def _plot_grouped_fraction_bars(
     x_rotation,
     x_ha,
     statistics_categories=None,
+    figure_format=None,
 ):
     """Plot grouped bars with fractions and Poisson error bars for each production."""
     statistics_categories = statistics_categories or categories
@@ -369,31 +426,32 @@ def _plot_grouped_fraction_bars(
         },
         metadata={
             "categories": list(statistics_categories),
+            "category_count": len(statistics_categories),
             "display_categories": list(categories),
         },
         metric="jensen_shannon",
     )
     _annotate_comparison_statistics(ax, statistics)
 
-    _save_figure(fig, output_path, filename)
+    _save_figure(fig, output_path, filename, figure_format)
     return statistics
-
-
-def _is_mixed_type_combination(combination):
-    """Return True only for mixed signatures 1+1 and 1+2 (max multiplicity 3)."""
-    type_counts, _ = _type_counts_from_combination(combination)
-    if len(type_counts) < 2:
-        return False
-    signature = tuple(sorted(type_counts.values()))
-    return signature in {(1, 1), (1, 2)}
 
 
 def _format_mixed_combination_label(combination):
     """Format mixed trigger combination as '<signature> | <tel1> + <tel2> + ...'."""
     type_counts, telescope_names = _type_counts_from_combination(combination)
+    if not _is_mixed_type_combination_counts(type_counts):
+        return None
     signature = "+".join(str(count) for _, count in sorted(type_counts.items()))
     telescopes_label = " + ".join(telescope_names)
     return f"{signature} | {telescopes_label}"
+
+
+def _is_mixed_type_combination_counts(type_counts):
+    """Return whether type counts represent a supported mixed trigger signature."""
+    if len(type_counts) < 2:
+        return False
+    return tuple(sorted(type_counts.values())) in {(1, 1), (1, 2)}
 
 
 def _type_counts_from_combination(combination):
@@ -417,6 +475,7 @@ def _plot_triggered_vs_quantity(
     x_scale,
     bins,
     suffix="",
+    figure_format=None,
 ):
     """Plot simulated vs triggered distributions for one quantity."""
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -461,7 +520,12 @@ def _plot_triggered_vs_quantity(
     ax.grid(alpha=0.25)
     ax.legend()
 
-    _save_figure(fig, output_path, f"triggered_fraction_vs_{quantity_name}{suffix}.png")
+    _save_figure(
+        fig,
+        output_path,
+        f"triggered_fraction_vs_{quantity_name}{suffix}.png",
+        figure_format,
+    )
 
 
 def _get_bin_edges(values, x_scale, bins):
@@ -511,6 +575,7 @@ def _plot_quantity_distribution(
     bins=40,
     suffix="",
     cumulative=False,
+    figure_format=None,
 ):
     """Plot simulated and triggered distributions for one quantity.
 
@@ -565,6 +630,7 @@ def _plot_quantity_distribution(
             "triggered": trig_counts,
             "simulated_samples": simulated_samples,
             "triggered_samples": triggered_samples,
+            "bin_edges": bin_edges,
         }
         _plot_distribution_series(
             ax,
@@ -603,13 +669,17 @@ def _plot_quantity_distribution(
         metrics_per_production,
         quantity_name,
         counts_by_label,
-        baseline_bin_edges=bin_edges,
         cumulative=cumulative,
     )
     _annotate_comparison_statistics(ax, statistics)
 
     cum_str = "_cumulative" if cumulative else ""
-    _save_figure(fig, output_path, f"distribution_{quantity_name}{cum_str}{suffix}.png")
+    _save_figure(
+        fig,
+        output_path,
+        f"distribution_{quantity_name}{cum_str}{suffix}.png",
+        figure_format,
+    )
     statistics["plot_name"] = f"distribution_{quantity_name}{cum_str}{suffix}"
     return statistics
 
@@ -650,12 +720,31 @@ def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
     source_edges = np.asarray(source_edges, dtype=float)
     if np.array_equal(source_edges, bin_edges):
         return counts, None
-    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
-    rebinned, _ = np.histogram(centers, bins=bin_edges, weights=counts)
-    return rebinned, None
+    return _rebin_histogram_counts(counts, source_edges, bin_edges), None
 
 
-def _plot_telescope_participation(metrics_per_production, output_path):
+def _rebin_histogram_counts(counts, source_edges, target_edges):
+    """Rebin counts by distributing each source bin over its overlapping target bins.
+
+    Counts are assumed to be uniformly distributed within each source bin. This
+    preserves the total count and avoids assigning a complete source bin to one
+    target bin when the target edges split it.
+    """
+    rebinned = np.zeros(len(target_edges) - 1, dtype=float)
+    for count, source_low, source_high in zip(counts, source_edges[:-1], source_edges[1:]):
+        source_width = source_high - source_low
+        target_start = np.searchsorted(target_edges, source_low, side="right") - 1
+        target_stop = np.searchsorted(target_edges, source_high, side="left")
+        for target_index in range(max(0, target_start), min(len(rebinned), target_stop + 1)):
+            overlap = min(source_high, target_edges[target_index + 1]) - max(
+                source_low, target_edges[target_index]
+            )
+            if overlap > 0:
+                rebinned[target_index] += count * overlap / source_width
+    return rebinned
+
+
+def _plot_telescope_participation(metrics_per_production, output_path, figure_format=None):
     """Plot telescope participation fractions by production."""
     telescopes = sorted(
         {
@@ -682,6 +771,7 @@ def _plot_telescope_participation(metrics_per_production, output_path):
         figure_width=max(10, len(telescopes) * 0.4),
         x_rotation=90,
         x_ha="center",
+        figure_format=figure_format,
     )
     if statistics is not None:
         statistics["plot_name"] = "telescope_participation_fraction"
@@ -733,7 +823,6 @@ def _build_quantity_distribution_statistics(
     metrics_per_production,
     quantity_name,
     counts_by_label,
-    baseline_bin_edges,
     cumulative,
 ):
     """Build comparison statistics for quantity distribution plots."""
@@ -760,33 +849,30 @@ def _build_quantity_distribution_statistics(
             baseline_data,
             candidate_data,
             "simulated",
-            baseline_bin_edges,
         )
         trig_stats = _compare_distribution_data(
             baseline_data,
             candidate_data,
             "triggered",
-            baseline_bin_edges,
         )
 
         comparison_record = {
             "candidate_label": metrics.label,
             "simulated": sim_stats,
             "triggered": trig_stats,
-            "baseline_bin_edges": np.asarray(baseline_bin_edges, dtype=float).tolist(),
         }
         stats_summary["comparisons"].append(comparison_record)
     return stats_summary
 
 
-def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseline_bin_edges):
+def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     """Compare either raw sample arrays or pre-binned count arrays."""
     sample_key = f"{event_kind}_samples"
     if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
         return compare_samples_with_statistics(
             baseline_data[sample_key],
             candidate_data[sample_key],
-            baseline_bin_edges,
+            baseline_data["bin_edges"],
         )
     result = compare_histogram_counts(
         baseline_data[event_kind],
@@ -795,7 +881,7 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseli
     )
     result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=int).tolist()
     result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=int).tolist()
-    result["bin_edges"] = np.asarray(baseline_bin_edges, dtype=float).tolist()
+    result["bin_edges"] = np.asarray(baseline_data["bin_edges"], dtype=float).tolist()
     return result
 
 
@@ -809,9 +895,14 @@ def _annotate_comparison_statistics(ax, statistics):
     for comparison in statistics["comparisons"]:
         label = comparison.get("candidate_label", "candidate")
         if metric_type == "quantity_distribution":
-            simulated = _format_metric_value(comparison.get("simulated", {}))
-            triggered = _format_metric_value(comparison.get("triggered", {}))
-            lines.append(f"{label}: {simulated[0]} s/t={simulated[1]}/{triggered[1]}")
+            simulated_label, simulated_value = _format_metric_value(comparison.get("simulated", {}))
+            triggered_label, triggered_value = _format_metric_value(comparison.get("triggered", {}))
+            metric_label = (
+                simulated_label
+                if simulated_label == triggered_label
+                else f"{simulated_label}/{triggered_label}"
+            )
+            lines.append(f"{label}: {metric_label} s/t={simulated_value}/{triggered_value}")
             continue
         metric_label, metric_value = _format_metric_value(comparison)
         lines.append(f"{label}: {metric_label}={metric_value}")
@@ -852,8 +943,9 @@ def _format_metric_value(statistics):
         "ks": "ks_statistic",
         "jensen_shannon": "jensen_shannon_distance",
         "wasserstein": "wasserstein_distance",
-    }.get(metric, "ks_statistic")
-    return metric_labels.get(metric, metric), _format_statistic_value(statistics.get(value_key))
+    }.get(metric, "value")
+    value = statistics.get(value_key, statistics.get("value"))
+    return metric_labels.get(metric, metric), _format_statistic_value(value)
 
 
 def _initialize_comparison_statistics(metrics_per_production):
