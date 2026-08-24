@@ -299,9 +299,10 @@ class ReadParameters:
 
         return True
 
-    def _generate_plots(self, parameter, parameter_version, input_file, outpath):
+    def _generate_plots(self, parameter, parameter_version, input_file, outpath, telescope=None):
         """Generate plots based on the parameter type."""
         plot_names = []
+        telescope_kwargs = {"telescope": telescope} if telescope else {}
 
         if parameter == "camera_config_file":
             plot_names = self._plot_camera_config(
@@ -309,6 +310,7 @@ class ReadParameters:
                 parameter_version,
                 input_file,
                 outpath,
+                **telescope_kwargs,
             )
         elif parameter in (
             "mirror_list",
@@ -320,21 +322,26 @@ class ReadParameters:
                 parameter_version,
                 input_file,
                 outpath,
+                **telescope_kwargs,
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
                 parameter,
                 parameter_version,
                 outpath,
+                **telescope_kwargs,
             )
 
         return plot_names
 
-    def _plot_camera_config(self, parameter, parameter_version, input_file, outpath):
+    def _plot_camera_config(
+        self, parameter, parameter_version, input_file, outpath, telescope=None
+    ):
         """Generate plots for camera configuration files."""
         if not parameter_version:
             return []
 
+        telescope = telescope or self.array_element
         plot_names = []
         plot_name = input_file.stem.replace(".", "-")
         plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
@@ -342,7 +349,7 @@ class ReadParameters:
         if not plot_path.exists():
             plot_config = {
                 "file_name": input_file.name,
-                "telescope": self.array_element,
+                "telescope": telescope,
                 "parameter_version": parameter_version,
                 "site": self.site,
                 "model_version": self.model_version,
@@ -363,11 +370,14 @@ class ReadParameters:
 
         return plot_names
 
-    def _plot_mirror_config(self, parameter, parameter_version, input_file, outpath):
+    def _plot_mirror_config(
+        self, parameter, parameter_version, input_file, outpath, telescope=None
+    ):
         """Generate plots for mirror configuration files."""
         if not parameter_version:
             return []
 
+        telescope = telescope or self.array_element
         plot_names = []
         plot_name = input_file.stem.replace(".", "-")
         plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
@@ -375,7 +385,7 @@ class ReadParameters:
         if not plot_path.exists():
             plot_config = {
                 "parameter": parameter,
-                "telescope": self.array_element,
+                "telescope": telescope,
                 "parameter_version": parameter_version,
                 "site": self.site,
                 "model_version": self.model_version,
@@ -395,9 +405,9 @@ class ReadParameters:
 
         return plot_names
 
-    def _plot_parameter_tables(self, parameter, parameter_version, outpath):
+    def _plot_parameter_tables(self, parameter, parameter_version, outpath, telescope=None):
         """Generate plots for parameter tables."""
-        tel = self._get_telescope_identifier()
+        tel = self._get_telescope_identifier(telescope=telescope)
 
         config_data = plot_tables.generate_plot_configurations(
             parameter=parameter,
@@ -424,20 +434,21 @@ class ReadParameters:
 
         return plot_names
 
-    def _get_telescope_identifier(self, model_version=None):
+    def _get_telescope_identifier(self, model_version=None, telescope=None):
         """Get the appropriate telescope design type for file naming (e.g., LSTN-design)."""
         model_version = model_version or self.model_version
+        telescope = telescope or self.array_element
         telescope_design = self.db.get_design_model(
-            model_version, self.array_element, collection="telescopes"
+            model_version, telescope, collection="telescopes"
         )
 
-        if not self.array_element:
+        if not telescope:
             return None
-        if not names.is_design_type(self.array_element):
+        if not names.is_design_type(telescope):
             return telescope_design
-        return self.array_element
+        return telescope
 
-    def _convert_to_md(self, parameter, parameter_version, input_file):
+    def _convert_to_md(self, parameter, parameter_version, input_file, telescope=None):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
 
@@ -455,7 +466,10 @@ class ReadParameters:
             outpath = io_handler.IOHandler().get_output_directory("_images")
             outpath.mkdir(parents=True, exist_ok=True)
 
-            plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
+            telescope_kwargs = {"telescope": telescope} if telescope else {}
+            plot_names = self._generate_plots(
+                parameter, parameter_version, input_file, outpath, **telescope_kwargs
+            )
             # Write markdown file using the stored path
             file_contents = ascii_handler.read_file_encoded_in_utf_or_latin(input_file)
 
@@ -480,7 +494,7 @@ class ReadParameters:
         return relative_path
 
     def _format_parameter_value(
-        self, parameter, value_data, unit, file_flag, parameter_version=None
+        self, parameter, value_data, unit, file_flag, parameter_version=None, telescope=None
     ):
         """Format parameter value based on type."""
         if file_flag:
@@ -491,7 +505,10 @@ class ReadParameters:
                     f"/simulation-model/simulation-models/-/blob/main/"
                     f"simulation-models/model_parameters/Files/{value_data})"
                 ).strip()
-            output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
+            telescope_kwargs = {"telescope": telescope} if telescope else {}
+            output_file_name = self._convert_to_md(
+                parameter, parameter_version, input_file_name, **telescope_kwargs
+            )
             return f"[{Path(value_data).name}]({output_file_name})".strip()
 
         if isinstance(value_data, (str, int, float, dict)):
@@ -818,7 +835,7 @@ class ReadParameters:
             file_flag = parameter_data.get("file", False)
             parameter_version = parameter_data.get("parameter_version")
             value = self._format_parameter_value(
-                parameter, value_data, unit, file_flag, parameter_version
+                parameter, value_data, unit, file_flag, parameter_version, telescope=telescope
             )
 
             if self._is_list_of_dicts(value_data):
