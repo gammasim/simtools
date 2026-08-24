@@ -123,7 +123,7 @@ jobs:
             suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
-            type=semver,pattern=v{{version}}
+            type=semver,pattern={{version}},prefix=v
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD'}}
             type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}

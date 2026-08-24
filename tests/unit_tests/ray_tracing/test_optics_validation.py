@@ -343,3 +343,313 @@ def test_export_effective_focal_length_model_parameter_without_results(caplog):
     )
 
     assert "No ray-tracing results available to export effective_focal_length" in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# _median_effective_focal_length
+# ---------------------------------------------------------------------------
+
+
+def _make_results(off_x, off_y, eff_flen):
+    """Build a minimal QTable matching the ray-tracing results schema."""
+    return QTable(
+        {
+            "off_x": off_x * u.deg,
+            "off_y": off_y * u.deg,
+            "eff_flen": np.asarray(eff_flen, dtype=float),
+        }
+    )
+
+
+def test_median_effective_focal_length_returns_median_of_nonzero_rows():
+    results = _make_results(
+        off_x=[0.0, 1.0, -1.0, 0.0, 0.0],
+        off_y=[0.0, 0.0, 0.0, 1.0, -1.0],
+        eff_flen=[np.nan, 2900.0, 2950.0, 2920.0, 2940.0],
+    )
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value == pytest.approx(2930.0)
+
+
+def test_median_effective_focal_length_excludes_zero_offset_nan():
+    # Only the zero-offset row; eff_flen is NaN there -> no valid values
+    results = _make_results(off_x=[0.0], off_y=[0.0], eff_flen=[np.nan])
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value is None
+
+
+def test_median_effective_focal_length_all_nonzero_nan_returns_none():
+    results = _make_results(
+        off_x=[1.0, -1.0],
+        off_y=[0.0, 0.0],
+        eff_flen=[np.nan, np.nan],
+    )
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value is None
+
+
+def test_median_effective_focal_length_single_valid_value():
+    results = _make_results(off_x=[0.0, 1.0], off_y=[0.0, 0.0], eff_flen=[np.nan, 2800.0])
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value == pytest.approx(2800.0)
+
+
+# ---------------------------------------------------------------------------
+# _prepare_image_for_plotting
+# ---------------------------------------------------------------------------
+
+_IMAGE_DTYPE = [("X", "f8"), ("Y", "f8")]
+
+
+def _make_image_data(x_vals, y_vals):
+    data = np.zeros(len(x_vals), dtype=_IMAGE_DTYPE)
+    data["X"] = x_vals
+    data["Y"] = y_vals
+    return data
+
+
+def test_prepare_image_for_plotting_returns_cm_when_no_eff_flen():
+    image_data = _make_image_data([1.0, -2.0], [3.0, -4.0])
+    psf_cm = 2.0
+    max_extent_cm = 5.0
+
+    converted, psf_q, cont_r, plot_extent = optics_validation._prepare_image_for_plotting(
+        image_data, psf_cm, max_extent_cm
+    )
+
+    assert converted is image_data
+    assert psf_q.unit == u.cm
+    assert psf_q.value == pytest.approx(2.0)
+    assert cont_r.unit == u.cm
+    assert cont_r.value == pytest.approx(1.0)
+    assert plot_extent == pytest.approx(5.0)
+
+
+def test_prepare_image_for_plotting_converts_to_degrees():
+    image_data = _make_image_data([100.0, -200.0], [50.0, -50.0])
+    psf_cm = 4.0
+    max_extent_cm = 200.0
+    eff_flen_cm = 2000.0
+
+    converted, psf_q, cont_r, plot_extent = optics_validation._prepare_image_for_plotting(
+        image_data, psf_cm, max_extent_cm, eff_flen_cm
+    )
+
+    expected_x = np.rad2deg(np.array([100.0, -200.0]) / eff_flen_cm)
+    expected_y = np.rad2deg(np.array([50.0, -50.0]) / eff_flen_cm)
+    np.testing.assert_allclose(converted["X"], expected_x)
+    np.testing.assert_allclose(converted["Y"], expected_y)
+    assert psf_q.unit == u.deg
+    assert psf_q.value == pytest.approx(np.rad2deg(psf_cm / eff_flen_cm))
+    assert cont_r.unit == u.deg
+    assert cont_r.value == pytest.approx(np.rad2deg(psf_cm / 2 / eff_flen_cm))
+    assert plot_extent == pytest.approx(np.rad2deg(max_extent_cm / eff_flen_cm))
+
+
+def test_prepare_image_for_plotting_does_not_mutate_original():
+    image_data = _make_image_data([10.0], [20.0])
+    original_x = image_data["X"].copy()
+
+    optics_validation._prepare_image_for_plotting(image_data, 1.0, 5.0, eff_flen_cm=1000.0)
+
+    np.testing.assert_array_equal(image_data["X"], original_x)
+
+
+# ---------------------------------------------------------------------------
+# _plot_psf_summary
+# ---------------------------------------------------------------------------
+
+
+def test_plot_psf_summary_saves_four_figures():
+    mock_ray = MagicMock()
+    mock_ray.plot.return_value = MagicMock()
+    mock_io = MagicMock()
+
+    with patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save:
+        optics_validation._plot_psf_summary(mock_ray, "validate_optics", "LSTN-01", mock_io)
+
+    assert mock_ray.plot.call_count == 4
+    assert mock_save.call_count == 4
+    plotted_keys = [call.args[0] for call in mock_ray.plot.call_args_list]
+    assert plotted_keys == ["psf_deg", "psf_cm", "eff_area", "eff_flen"]
+
+
+def test_plot_psf_summary_adds_errorbar_kwargs_for_eff_flen():
+    mock_ray = MagicMock()
+    mock_ray.plot.return_value = MagicMock()
+    mock_io = MagicMock()
+
+    with patch("simtools.ray_tracing.optics_validation.visualize.save_figure"):
+        optics_validation._plot_psf_summary(mock_ray, "label", "TEL", mock_io)
+
+    eff_flen_call = mock_ray.plot.call_args_list[3]
+    assert eff_flen_call.kwargs.get("error_type") == "errorbar"
+
+
+# ---------------------------------------------------------------------------
+# _eff_flen_cm_for_degree_conversion
+# ---------------------------------------------------------------------------
+
+
+def test_eff_flen_cm_for_degree_conversion_returns_median():
+    mock_ray = MagicMock()
+    mock_ray._results = _make_results(
+        off_x=[0.0, 1.0, -1.0],
+        off_y=[0.0, 0.0, 0.0],
+        eff_flen=[np.nan, 2900.0, 2950.0],
+    )
+
+    value = optics_validation._eff_flen_cm_for_degree_conversion(mock_ray)
+
+    assert value == pytest.approx(2925.0)
+
+
+def test_eff_flen_cm_for_degree_conversion_returns_none_when_no_results():
+    mock_ray = MagicMock(spec=[])  # no _results attribute
+
+    value = optics_validation._eff_flen_cm_for_degree_conversion(mock_ray)
+
+    assert value is None
+
+
+def test_eff_flen_cm_for_degree_conversion_returns_none_when_column_missing():
+    mock_ray = MagicMock()
+    mock_ray._results = QTable({"off_x": [1.0] * u.deg, "off_y": [0.0] * u.deg})
+
+    value = optics_validation._eff_flen_cm_for_degree_conversion(mock_ray)
+
+    assert value is None
+
+
+def test_eff_flen_cm_for_degree_conversion_returns_none_when_all_nan():
+    mock_ray = MagicMock()
+    mock_ray._results = _make_results(off_x=[1.0], off_y=[0.0], eff_flen=[np.nan])
+
+    value = optics_validation._eff_flen_cm_for_degree_conversion(mock_ray)
+
+    assert value is None
+
+
+# ---------------------------------------------------------------------------
+# _max_image_extent
+# ---------------------------------------------------------------------------
+
+
+def _make_mock_image(x_vals, y_vals):
+    image = MagicMock()
+    image.get_image_data.return_value = _make_image_data(x_vals, y_vals)
+    return image
+
+
+def test_max_image_extent_returns_rounded_half_range():
+    images_dict = {
+        (0.0, 0.0): _make_mock_image([-3.0, 1.0], [2.0, -1.0]),
+        (1.0, 0.0): _make_mock_image([0.5, -0.5], [4.1, -0.5]),
+    }
+
+    result = optics_validation._max_image_extent(images_dict)
+
+    # max abs is 4.1; ceil(4.1*2)/2 = ceil(8.2)/2 = 9/2 = 4.5
+    assert result == pytest.approx(4.5)
+
+
+def test_max_image_extent_ignores_empty_images():
+    images_dict = {
+        (0.0, 0.0): _make_mock_image([], []),
+        (1.0, 0.0): _make_mock_image([2.0], [-1.0]),
+    }
+
+    result = optics_validation._max_image_extent(images_dict)
+
+    # max abs is 2.0; ceil(2.0*2)/2 = ceil(4.0)/2 = 2.0
+    assert result == pytest.approx(2.0)
+
+
+# ---------------------------------------------------------------------------
+# _plot_psf_images
+# ---------------------------------------------------------------------------
+
+
+def test_plot_psf_images_calls_create_figure_per_image_and_saves_pdf():
+    image_a = _make_mock_image([-1.0, 1.0], [-1.0, 1.0])
+    image_a.get_psf.return_value = 2.0
+    image_b = _make_mock_image([0.5], [-0.5])
+    image_b.get_psf.return_value = 1.5
+
+    mock_ray = MagicMock()
+    mock_ray.psf_images = {(0.0, 0.0): image_a, (1.0, 0.0): image_b}
+    mock_ray._results = None
+
+    with (
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf"
+            ".create_annotated_psf_image_figure",
+            return_value=MagicMock(),
+        ) as mock_create,
+        patch(
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"
+        ) as mock_save,
+    ):
+        optics_validation._plot_psf_images(mock_ray, "LSTN-01", Path("out.pdf"))
+
+    assert mock_create.call_count == 2
+    mock_save.assert_called_once()
+    assert mock_save.call_args.kwargs["close"] is True
+
+
+def test_plot_psf_images_passes_telescope_name_to_figure():
+    image = _make_mock_image([1.0], [-1.0])
+    image.get_psf.return_value = 2.0
+
+    mock_ray = MagicMock()
+    mock_ray.psf_images = {(0.5, 0.0): image}
+    mock_ray._results = None
+
+    with (
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf"
+            ".create_annotated_psf_image_figure",
+            return_value=MagicMock(),
+        ) as mock_create,
+        patch("simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"),
+    ):
+        optics_validation._plot_psf_images(mock_ray, "MSTS-01", Path("out.pdf"))
+
+    assert mock_create.call_args.kwargs["telescope_name"] == "MSTS-01"
+
+
+def test_plot_psf_images_in_degrees_uses_eff_flen():
+    image = _make_mock_image([100.0, -100.0], [50.0, -50.0])
+    image.get_psf.return_value = 4.0
+
+    mock_ray = MagicMock()
+    mock_ray.psf_images = {(1.0, 0.0): image}
+    mock_ray._results = _make_results(off_x=[0.0, 1.0], off_y=[0.0, 0.0], eff_flen=[np.nan, 2000.0])
+
+    captured = {}
+
+    def capture_figure(data, **kwargs):
+        captured["psf_unit"] = kwargs["psf"].unit
+        return MagicMock()
+
+    with (
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf"
+            ".create_annotated_psf_image_figure",
+            side_effect=capture_figure,
+        ),
+        patch("simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"),
+    ):
+        optics_validation._plot_psf_images(
+            mock_ray, "LSTN-01", Path("out.pdf"), plot_in_degrees=True
+        )
+
+    assert captured["psf_unit"] == u.deg

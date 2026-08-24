@@ -22,7 +22,7 @@ if __package__:
             cli.ArgumentDefinition(
                 "format",
                 help="Output format.",
-                choices=("catalog", "github-output", "python-requirements", "summary"),
+                choices=("catalog", "env", "github-output", "python-requirements", "summary"),
                 default="catalog",
             ),
             cli.ArgumentDefinition(
@@ -55,7 +55,7 @@ def _main_standalone():
     parser.add_argument("--pyproject", type=Path)
     parser.add_argument(
         "--format",
-        choices=("catalog", "github-output", "python-requirements", "summary"),
+        choices=("catalog", "env", "github-output", "python-requirements", "summary"),
         default="catalog",
     )
     parser.add_argument("--extras", nargs="*", default=[])

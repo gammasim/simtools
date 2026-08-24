@@ -13,9 +13,10 @@ New releases of the model repository will automatically trigger an update of the
 
 ## Simulation Models Database
 
-The name and version of the model parameter database need to be indicated by the
-`$SIMTOOLS_DB_SIMULATION_MODEL` and `$SIMTOOLS_DB_SIMULATION_MODEL_VERSION`
-environment variables and defined, e.g., in the `.env` file.
+The model parameter database name and default version are defined in
+`dependency_versions.yml`. The local `.env` file supplies the connection details; a
+command-line `--db_simulation_model_version` can override the catalog for an explicit
+operation.
 
 Collections:
 
@@ -48,7 +49,6 @@ SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
 SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible person
 SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.12.0' # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
 ```
 
@@ -94,11 +94,9 @@ To upload the model parameters, follow these steps:
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
 ```
 
-2. Modify the environment file `.env` to set the simulation model version. Best practice is to use a released version of the model repository, e.g.,
+2. Use the model version from `dependency_versions.yml`, or provide an explicit version to the upload application. Best practice is to use a released version of the model repository, e.g.,
 
 ```console
-# Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.12.0
 SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model
 
 # Local MongoDB connection created by setup_local_db.sh
@@ -109,7 +107,7 @@ SIMTOOLS_DB_API_PORT=27017
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=admin
 ```
 
-3. Fill the model parameter database from the model repository (parameters must match the version defined in the `.env` file):
+3. Fill the model parameter database from the model repository (parameters must match the selected model version):
 
 ```console
 simtools-db-upload-model-repository --db_simulation_model_version v0.12.0
