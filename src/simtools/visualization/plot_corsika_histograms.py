@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from matplotlib import colormaps, colors
 
+from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figures_to_single_document
 
 

@@ -36,6 +36,10 @@ class EventDataHistograms:
         List of telescope IDs to filter the events (default is None).
     energy_bins_per_decade : int, optional
         Number of energy bins per decade for logarithmic energy histograms.
+    angular_distance_bin_width : astropy.units.Quantity, optional
+        Fixed angular-distance bin width. If omitted, the configured bin count is used.
+    core_distance_bin_width : astropy.units.Quantity, optional
+        Fixed core-distance bin width. If omitted, the configured bin count is used.
     skip_invalid_event_data_files : bool, optional
         Skip invalid event-data files while reading resolved input files.
     require_triggered_data : bool, optional
@@ -51,6 +55,7 @@ class EventDataHistograms:
         angular_distance_bin_count=100,
         angular_distance_bin_width=None,
         core_distance_bin_count=100,
+        core_distance_bin_width=None,
         skip_invalid_event_data_files=False,
         require_triggered_data=False,
     ):
@@ -64,7 +69,10 @@ class EventDataHistograms:
         self.angular_distance_bin_width = self._validate_angular_distance_bin_width(
             angular_distance_bin_width
         )
-        self.core_distance_bin_count = max(int(core_distance_bin_count), 2)
+        self._core_distance_binning = (
+            max(int(core_distance_bin_count), 2),
+            self._validate_core_distance_bin_width(core_distance_bin_width),
+        )
         self.skip_invalid_event_data_files = skip_invalid_event_data_files
         self.require_triggered_data = require_triggered_data
         self.telescope_list = telescope_list
@@ -94,6 +102,7 @@ class EventDataHistograms:
         angular_distance_bin_count=100,
         angular_distance_bin_width=None,
         core_distance_bin_count=100,
+        core_distance_bin_width=None,
     ):
         """Create an empty histogram accumulator for externally supplied event data.
 
@@ -110,7 +119,10 @@ class EventDataHistograms:
         instance.angular_distance_bin_width = cls._validate_angular_distance_bin_width(
             angular_distance_bin_width
         )
-        instance.core_distance_bin_count = max(int(core_distance_bin_count), 2)
+        instance._core_distance_binning = (
+            max(int(core_distance_bin_count), 2),
+            cls._validate_core_distance_bin_width(core_distance_bin_width),
+        )
         instance.skip_invalid_event_data_files = False
         instance.require_triggered_data = True
         instance.telescope_list = telescope_list
@@ -163,6 +175,26 @@ class EventDataHistograms:
         if angular_distance_bin_width.value <= 0.0:
             raise ValueError("angular_distance_bin_width must be positive.")
         return angular_distance_bin_width
+
+    @staticmethod
+    def _validate_core_distance_bin_width(core_distance_bin_width):
+        """Return core-distance bin width in meters, or None for count-based binning."""
+        if core_distance_bin_width is None:
+            return None
+        core_distance_bin_width = get_value_as_quantity(core_distance_bin_width, "m")
+        if core_distance_bin_width.value <= 0.0:
+            raise ValueError("core_distance_bin_width must be positive.")
+        return core_distance_bin_width
+
+    @property
+    def core_distance_bin_count(self):
+        """Return the configured count for count-based core-distance bins."""
+        return self._core_distance_binning[0]
+
+    @property
+    def core_distance_bin_width(self):
+        """Return the configured fixed core-distance bin width, if any."""
+        return self._core_distance_binning[1]
 
     def _normalize_event_data_files(self, event_data_file):
         """Return event-data files as a list of resolved file names."""
@@ -228,6 +260,7 @@ class EventDataHistograms:
             "spectral_index": spectral_index,
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
             "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
+            "core_scatter_min": self._get_file_info_value(file_info_table, "core_scatter_min", "m"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
             "viewcone_min": self._get_file_info_value(file_info_table, "viewcone_min", "deg"),
             "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
@@ -829,11 +862,17 @@ class EventDataHistograms:
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
 
-        return np.linspace(
-            self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
-            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
-            self.core_distance_bin_count,
-        )
+        core_min_value = self.file_info.get("core_scatter_min")
+        core_max_value = self.file_info.get("core_scatter_max")
+        core_min = (core_min_value if core_min_value is not None else 0.0 * u.m).to("m").value
+        core_max = (core_max_value if core_max_value is not None else 1.0e5 * u.m).to("m").value
+        if self.core_distance_bin_width is not None:
+            width = self.core_distance_bin_width.to_value(u.m)
+            lower = np.floor(core_min / width) * width
+            upper = np.ceil(core_max / width) * width
+            bin_count = max(int(np.ceil((upper - lower) / width)), 1)
+            return lower + np.arange(bin_count + 1) * width
+        return np.linspace(core_min, core_max, self.core_distance_bin_count)
 
     @property
     def view_cone_bins(self):

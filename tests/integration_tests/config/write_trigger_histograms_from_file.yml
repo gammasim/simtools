@@ -14,6 +14,7 @@ applications:
     site: South
     energy_bins_per_decade: 10
     angular_distance_bin_width: 0.5
+    core_distance_bin_width: 20.0
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

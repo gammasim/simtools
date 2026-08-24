@@ -34,6 +34,7 @@ class ApplicationDefinition:
     usage: str | None = None
     validate_simulation_dependencies: bool = False
     use_dependency_defaults: bool = True
+    excluded_standard_arguments: tuple[str, ...] = ()
 
     @classmethod
     def for_module(cls, module_name, **kwargs):
@@ -48,6 +49,11 @@ class ApplicationDefinition:
     def __post_init__(self):
         """Normalize and validate the immutable definition."""
         object.__setattr__(self, "arguments", tuple(self.arguments))
+        object.__setattr__(
+            self,
+            "excluded_standard_arguments",
+            tuple(self.excluded_standard_arguments),
+        )
         self._validate_arguments(self.all_arguments)
 
     @property
@@ -59,7 +65,12 @@ class ApplicationDefinition:
     def all_arguments(self):
         """Return standard and application-selected arguments in registration order."""
         database = DATABASE_ARGUMENTS if self.database else ()
-        return (*self.arguments, *database, *STANDARD_ARGUMENTS)
+        standard = tuple(
+            argument
+            for argument in STANDARD_ARGUMENTS
+            if argument.name not in self.excluded_standard_arguments
+        )
+        return (*self.arguments, *database, *standard)
 
     @staticmethod
     def _validate_arguments(arguments):

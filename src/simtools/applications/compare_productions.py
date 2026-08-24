@@ -4,6 +4,8 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.constants import SCHEMA_PATH
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
     parse_production_arguments,
@@ -15,11 +17,11 @@ _ARGUMENTS = (
         "production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "TRIGGER_HISTOGRAM_FILES"),
+        metavar=("LABEL", "TRIGGER_HISTOGRAM_PATTERNS"),
         required=True,
         help=(
             "Production descriptor: --production <label> <comma-separated file patterns>. "
-            "Repeat for multiple trigger histogram files."
+            "Repeat for each production; the first production is the baseline."
         ),
     ),
     cli.ArgumentDefinition(
@@ -42,29 +44,52 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    initialize_output=False,
+    excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-
     comparison_level = app_context.args["comparison_level"]
-    if comparison_level == "events":
-        metrics_per_production = collect_production_metrics(
-            parse_production_arguments(app_context.args["production"]),
-            array_names=app_context.args.get("array_layout_name"),
-        )
-        plot_event_level_production_comparison.plot(
-            metrics_per_production,
-            output_path=app_context.io_handler.get_output_directory(),
-            array_layout_name=app_context.args.get("array_layout_name"),
-        )
-    else:
+    if comparison_level != "events":
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
+
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+    array_layout_names = app_context.args.get("array_layout_name") or [None]
+    for array_layout_name in array_layout_names:
+        _compare_array_layout(
+            production_descriptors,
+            app_context,
+            array_layout_name,
+        )
+
+
+def _compare_array_layout(production_descriptors, app_context, array_layout_name):
+    """Compare one selected array layout and write its statistics metadata."""
+    metrics_per_production = collect_production_metrics(
+        production_descriptors,
+        array_names=array_layout_name,
+    )
+    comparison_statistics_file = plot_event_level_production_comparison.plot(
+        metrics_per_production,
+        output_path=app_context.io_handler.get_output_directory(),
+        array_layout_name=array_layout_name,
+        figure_format=app_context.args.get("figure_format"),
+    )
+    metadata_args = dict(app_context.args)
+    metadata_args.update(
+        {
+            "array_layout_name": array_layout_name,
+            "output_file": str(comparison_statistics_file),
+            "output_file_format": "JSON",
+            "metadata_product_data_name": "production_comparison_statistics",
+            "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
+        }
+    )
+    MetadataCollector.dump(metadata_args, comparison_statistics_file)
 
 
 if __name__ == "__main__":

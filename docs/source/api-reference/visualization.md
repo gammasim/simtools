@@ -147,3 +147,10 @@ the visualization module.
 .. automodule:: visualization.plot_corsika_limits
    :members:
 ```
+
+## matplotlib_backend
+
+```{eval-rst}
+.. automodule:: visualization.matplotlib_backend
+   :members:
+```
