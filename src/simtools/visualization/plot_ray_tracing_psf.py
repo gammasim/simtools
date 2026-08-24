@@ -1,5 +1,6 @@
 """Shared PSF plotting helpers for ray-tracing workflows."""
 
+import astropy.units as u
 import matplotlib.pyplot as plt
 
 from simtools.visualization import visualize
@@ -58,7 +59,7 @@ def create_cumulative_psf_figure(
 
 def create_psf_image_figure(
     data,
-    containment_radius_cm,
+    containment_radius,
     center,
     ax=None,
     psf_kwargs=None,
@@ -73,10 +74,10 @@ def create_psf_image_figure(
     ----------
     data : numpy.ndarray
         Structured array with ``X`` and ``Y`` columns.
-    containment_radius_cm : float
-        Radius of the containment circle in cm.
+    containment_radius : float
+        Radius of the containment circle, assumed to be in the same unit as the data.
     center : tuple
-        Center of the PSF circle in cm.
+        Center of the PSF circle in the same unit as the data.
     ax : matplotlib.axes.Axes, optional
         Existing axes to draw on.
     psf_kwargs : dict, optional
@@ -103,7 +104,7 @@ def create_psf_image_figure(
     ax = fig.gca() if ax is None else ax
     ax.set_xlabel("X Position (cm)")
     ax.set_ylabel("Y Position (cm)")
-    circle = plt.Circle(center, containment_radius_cm, **(psf_kwargs or {}))
+    circle = plt.Circle(center, containment_radius, **(psf_kwargs or {}))
     ax.add_artist(circle)
 
     if show_reference_axes:
@@ -117,11 +118,13 @@ def create_annotated_psf_image_figure(
     data,
     off_x,
     off_y,
-    psf_cm,
+    psf,
+    containment_radius,
     image_range,
     bins=150,
     cmap=None,
     psf_kwargs=None,
+    telescope_name=None,
 ):
     """
     Create a PSF image figure annotated with offset and PSF information.
@@ -129,13 +132,17 @@ def create_annotated_psf_image_figure(
     Parameters
     ----------
     data : numpy.ndarray
-        Structured array with ``X`` and ``Y`` columns.
+        Structured array with ``X`` and ``Y`` columns, already in the
+        desired display unit.
     off_x : float
         Off-axis x component in degrees.
     off_y : float
         Off-axis y component in degrees.
-    psf_cm : float
-        PSF diameter in cm.
+    psf : astropy.units.Quantity
+        PSF diameter as an astropy quantity (e.g. ``1.2 * u.cm`` or
+        ``0.05 * u.deg``).  Its unit is used for axis labels and annotation.
+    containment_radius : astropy.units.Quantity
+        Containment radius in the same unit as ``psf``.
     image_range : list
         Range passed to ``Axes.hist2d``.
     bins : int
@@ -144,16 +151,22 @@ def create_annotated_psf_image_figure(
         Colormap passed to ``Axes.hist2d``.
     psf_kwargs : dict, optional
         Keyword arguments passed to ``matplotlib.patches.Circle``.
+    telescope_name : str, optional
+        Telescope name shown in the annotation box above the offset.
 
     Returns
     -------
     matplotlib.figure.Figure
         Created figure.
     """
+    unit_str = psf.unit.to_string()
+    psf_fmt = ".4f" if psf.unit == u.deg else ".2f"
+    psf_annotation = f"PSF: {psf.value:{psf_fmt}} {unit_str}"
+
     fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
     create_psf_image_figure(
         data,
-        containment_radius_cm=psf_cm / 2,
+        containment_radius=containment_radius.to(psf.unit).value,
         center=(0, 0),
         ax=ax,
         image_range=image_range,
@@ -161,7 +174,16 @@ def create_annotated_psf_image_figure(
         cmap=cmap,
         psf_kwargs=psf_kwargs,
     )
-    text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
+    ax.set_xlabel(f"X Position ({unit_str})")
+    ax.set_ylabel(f"Y Position ({unit_str})")
+
+    annotation_lines = []
+    if telescope_name:
+        annotation_lines.append(telescope_name)
+    annotation_lines.append(f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)")
+    annotation_lines.append(psf_annotation)
+    text_str = "\n".join(annotation_lines)
+
     ax.text(
         0.02,
         0.98,

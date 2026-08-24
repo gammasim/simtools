@@ -137,7 +137,11 @@ in a file named `.env`, see the [Environment Variables](#environment-variables) 
 
 ## Environment Variables
 
-The environment variables listed below are used by simtools applications and defined by the user in a `.env` file to be placed in the working directory. Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named `.env` and update it accordingly.
+The environment variables listed below are used by simtools applications and defined by the user
+in a `.env` file to be placed in the working directory. Copy the template file
+[.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named
+`.env` and update it accordingly. The model database version and the default `simtools-tests`
+resource version are maintained in `dependency_versions.yml`.
 
 ```console
 # Hostname of the database server
