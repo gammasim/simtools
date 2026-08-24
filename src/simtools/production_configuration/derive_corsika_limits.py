@@ -1,7 +1,9 @@
 """Derive CORSIKA limits from trigger histograms."""
 
+import argparse
 import datetime
 import logging
+import math
 import os
 from pathlib import Path
 
@@ -55,7 +57,92 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
 LOSS_AXES = ("core_distance", "angular_distance")
 
 
-def _parse_allowed_losses(allowed_losses_args):
+class _ArgumentTypeValueError(argparse.ArgumentTypeError, ValueError):
+    """Error that preserves a detailed message for argparse and library callers."""
+
+
+def validate_differential_loss_bins_per_decade(value):
+    """Validate and return a non-negative differential-bin count.
+
+    Parameters
+    ----------
+    value : int or str
+        Differential energy-bin count per decade.
+
+    Returns
+    -------
+    int
+        Validated bin count.
+
+    Raises
+    ------
+    ValueError
+        If ``value`` is not a non-negative integer. The raised exception is
+        also an ``argparse.ArgumentTypeError`` for detailed CLI diagnostics.
+    """
+    try:
+        parsed_value = int(value)
+    except (TypeError, ValueError) as exc:
+        raise _ArgumentTypeValueError(
+            "differential_loss_bins_per_decade must be a non-negative integer"
+        ) from exc
+
+    if parsed_value < 0:
+        raise _ArgumentTypeValueError(
+            "differential_loss_bins_per_decade must be a non-negative integer"
+        )
+
+    return parsed_value
+
+
+def _parse_allowed_loss_value(raw_value):
+    """Parse and validate one compact allowed-loss value."""
+    parts = [part.strip() for part in raw_value.split(",")]
+    if len(parts) != 3:
+        raise ValueError(
+            f"Invalid --allowed_losses value '{raw_value}'. "
+            "Expected format: axis,fraction,min_events"
+        )
+
+    axis_raw, fraction_raw, min_events_raw = parts
+    try:
+        fraction = float(fraction_raw)
+        min_events = int(min_events_raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Invalid --allowed_losses value '{raw_value}': "
+            "fraction must be float and min_events must be int"
+        ) from exc
+
+    if not math.isfinite(fraction) or not 0.0 <= fraction <= 1.0:
+        raise ValueError(
+            f"Invalid --allowed_losses value '{raw_value}': "
+            "fraction must be finite and in the interval [0, 1]"
+        )
+    if min_events < 0:
+        raise ValueError(
+            f"Invalid --allowed_losses value '{raw_value}': "
+            "min_events must be a non-negative integer"
+        )
+
+    return axis_raw.lower(), {
+        "loss_fraction": fraction,
+        "loss_min_events": min_events,
+    }
+
+
+def _allowed_loss_axes(axis_name):
+    """Return the axes selected by one allowed-loss axis name."""
+    if axis_name == "all":
+        return LOSS_AXES
+    if axis_name not in LOSS_AXES:
+        raise ValueError(
+            f"Invalid axis for --allowed_losses. Allowed axes: {', '.join(LOSS_AXES)}, all."
+        )
+    return (axis_name,)
+
+
+def parse_allowed_losses(allowed_losses_args):
     """
     Parse repeatable --allowed_losses values for core/viewcone axes.
 
@@ -76,40 +163,9 @@ def _parse_allowed_losses(allowed_losses_args):
 
     parsed = {}
     for raw_value in allowed_losses_args:
-        parts = [part.strip() for part in raw_value.split(",")]
-        if len(parts) != 3:
-            raise ValueError(
-                f"Invalid --allowed_losses value '{raw_value}'. "
-                "Expected format: axis,fraction,min_events"
-            )
-
-        axis_raw, fraction_raw, min_events_raw = parts
-        try:
-            fraction = float(fraction_raw)
-            min_events = int(min_events_raw)
-        except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"Invalid --allowed_losses value '{raw_value}': "
-                "fraction must be float and min_events must be int"
-            ) from exc
-
-        axis_name = axis_raw.strip().lower()
-        if axis_name == "all":
-            for axis_name in LOSS_AXES:
-                parsed[axis_name] = {
-                    "loss_fraction": fraction,
-                    "loss_min_events": min_events,
-                }
-            continue
-
-        if axis_name not in LOSS_AXES:
-            raise ValueError(
-                f"Invalid axis for --allowed_losses. Allowed axes: {', '.join(LOSS_AXES)}, all."
-            )
-        parsed[axis_name] = {
-            "loss_fraction": fraction,
-            "loss_min_events": min_events,
-        }
+        axis_name, loss_config = _parse_allowed_loss_value(raw_value)
+        for selected_axis in _allowed_loss_axes(axis_name):
+            parsed[selected_axis] = loss_config.copy()
 
     missing_axes = [axis_name for axis_name in LOSS_AXES if axis_name not in parsed]
     if missing_axes:
@@ -132,9 +188,11 @@ def generate_corsika_limits_grid(args_dict=None):
     if not args_dict.get("trigger_histogram_file"):
         raise ValueError("Use --trigger_histogram_file to provide a precomputed histogram file.")
 
-    allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
+    allowed_losses = parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
-    differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
+    differential_loss_bins_per_decade = validate_differential_loss_bins_per_decade(
+        args_dict.get("differential_loss_bins_per_decade", 0)
+    )
 
     results = _generate_corsika_limits_from_histogram_file(
         args_dict,

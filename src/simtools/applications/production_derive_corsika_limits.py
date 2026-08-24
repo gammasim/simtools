@@ -7,6 +7,21 @@ from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import efficiency_interval
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
+    parse_allowed_losses,
+    validate_differential_loss_bins_per_decade,
+)
+
+_OUTPUT_ARGUMENTS = (
+    cli.OUTPUT_FILE,
+    cli.ArgumentDefinition(
+        "output_file_format",
+        help=(
+            "Accepted for shared configuration compatibility; this application always writes ECSV."
+        ),
+        type=str,
+        default="ecsv",
+    ),
+    cli.SKIP_OUTPUT_VALIDATION,
 )
 
 _ARGUMENTS = (
@@ -35,9 +50,10 @@ _ARGUMENTS = (
         action="extend",
         metavar="AXIS,FRACTION,MIN_EVENTS",
         help=(
-            "Per-axis allowed losses as axis,fraction,min_events. Repeat for each axis "
-            "using core_distance, angular_distance, or all to set both. Example: "
-            "--allowed_losses core_distance,1e-6,10"
+            "Per-axis allowed losses as axis,fraction,min_events. Provide both "
+            "core_distance and angular_distance, or use all to set both. The fraction "
+            "must be in [0,1] and min_events must be non-negative. Example: "
+            "--allowed_losses core_distance,1e-6,10 angular_distance,1e-6,10"
         ),
     ),
     cli.ArgumentDefinition(
@@ -57,13 +73,21 @@ _ARGUMENTS = (
         "differential_loss_bins_per_decade",
         help=(
             "Number of differential energy bins per decade for per-bin limit computation. "
-            "Set to 0 (default) to use integrated limits."
+            "Set to 0 (default) to use integrated limits; must be non-negative."
         ),
-        type=int,
+        type=validate_differential_loss_bins_per_decade,
         required=False,
         default=0,
     ),
 )
+
+
+def _post_parse(args_dict, _config_sources, parser):
+    """Validate the complete allowed-loss configuration after merging inputs."""
+    try:
+        parse_allowed_losses(args_dict.get("allowed_losses"))
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -71,9 +95,10 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
+        *_OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
+    post_parse=_post_parse,
 )
 
 

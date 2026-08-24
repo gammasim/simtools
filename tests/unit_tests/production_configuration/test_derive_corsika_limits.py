@@ -257,16 +257,20 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
         (["core_distance,abc,10"], "fraction must be float"),
         (["invalid,0.2,10"], "Invalid axis"),
         (["core_distance,0.2,10"], "Missing --allowed_losses entries"),
+        (["core_distance,-0.1,10", "angular_distance,0.2,10"], r"interval \[0, 1\]"),
+        (["core_distance,1.1,10", "angular_distance,0.2,10"], r"interval \[0, 1\]"),
+        (["core_distance,nan,10", "angular_distance,0.2,10"], "finite"),
+        (["core_distance,0.2,-1", "angular_distance,0.2,10"], "non-negative integer"),
     ],
 )
 def test_parse_allowed_losses_error_paths(allowed_losses, error_match):
     with pytest.raises(ValueError, match=error_match):
-        derive_corsika_limits._parse_allowed_losses(allowed_losses)
+        derive_corsika_limits.parse_allowed_losses(allowed_losses)
 
 
 def test_parse_allowed_losses_raises_when_not_provided():
     with pytest.raises(ValueError, match="No allowed-loss configuration provided"):
-        derive_corsika_limits._parse_allowed_losses(None)
+        derive_corsika_limits.parse_allowed_losses(None)
 
 
 def test_compute_limits_lower():
@@ -708,7 +712,7 @@ def test_get_production_directory_name_appends_uuid_on_collision(mocker):
 
 
 def test_parse_allowed_losses_all_and_override():
-    result = derive_corsika_limits._parse_allowed_losses(
+    result = derive_corsika_limits.parse_allowed_losses(
         [
             "all,1e-6,10",
             "core_distance,5e-7,5",
@@ -719,6 +723,17 @@ def test_parse_allowed_losses_all_and_override():
     assert result["core_distance"]["loss_min_events"] == 5
     assert result["angular_distance"]["loss_fraction"] == pytest.approx(1e-6)
     assert result["angular_distance"]["loss_min_events"] == 10
+
+
+@pytest.mark.parametrize("value", [-1, "-1", "invalid"])
+def test_validate_differential_loss_bins_per_decade_rejects_invalid_values(value):
+    with pytest.raises(ValueError, match="non-negative integer"):
+        derive_corsika_limits.validate_differential_loss_bins_per_decade(value)
+
+
+def test_validate_differential_loss_bins_per_decade_accepts_zero_and_positive_values():
+    assert derive_corsika_limits.validate_differential_loss_bins_per_decade(0) == 0
+    assert derive_corsika_limits.validate_differential_loss_bins_per_decade("5") == 5
 
 
 def test_build_production_subdirectories_single_production(tmp_test_directory):
