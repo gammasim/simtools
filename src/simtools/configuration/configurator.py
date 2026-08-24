@@ -155,7 +155,9 @@ class Configurator:
             return {}
         catalog = dependency_versions.load_dependency_catalog()
         model = catalog["model-database"]
-        defaults = {"db_simulation_model": model["name"]}
+        defaults = {}
+        if "db_simulation_model" in parser_defaults:
+            defaults["db_simulation_model"] = model["name"]
         model_tag = model.get("default-tag", model.get("default-version"))
         if "db_simulation_model_tag" in parser_defaults:
             defaults["db_simulation_model_tag"] = model_tag

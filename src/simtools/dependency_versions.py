@@ -539,18 +539,18 @@ def dependency_catalog_environment(catalog):
         }
     if "simtools-tests" in catalog:
         test_tag = _tests_tag(catalog["simtools-tests"])
-        environment.update(
-            {
-                "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
-                "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
-            }
-        )
         tag_key = (
             "SIMTOOLS_TESTS_TAG"
             if catalog["schema_version"] == "0.3.0"
             else "SIMTOOLS_TESTS_VERSION"
         )
-        environment[tag_key] = test_tag
+        environment.update(
+            {
+                tag_key: test_tag,
+                "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
+                "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
+            }
+        )
     return environment
 
 

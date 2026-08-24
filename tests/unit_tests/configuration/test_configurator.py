@@ -319,6 +319,7 @@ def test_environment_database_version_overrides_catalog(
     env_file = tmp_test_directory / ".env"
     env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.99.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_TAG", raising=False)
 
     configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
@@ -338,6 +339,7 @@ def test_environment_database_version_rejects_bare_value(
     env_file = tmp_test_directory / ".env"
     env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.99.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_TAG", raising=False)
 
     configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
