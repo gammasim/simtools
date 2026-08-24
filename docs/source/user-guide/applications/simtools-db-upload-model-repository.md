@@ -49,3 +49,13 @@ simtools-db-upload-model-repository \
     --db_simulation_model_tag v0.16.0 \
     --repository_dir /path/to/simulation-models
 ```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: db_upload_model_repository_released_repository.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: db_upload_model_repository_local_repository.yml
+```
