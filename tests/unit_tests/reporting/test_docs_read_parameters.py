@@ -677,6 +677,55 @@ def test_get_simulation_configuration_data(simulation_software, tmp_path):
     assert dict_tables == []
 
 
+def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test_directory, mocker):
+    """Pass the loop telescope to plotting for all-telescope reports."""
+    output_path = Path(tmp_test_directory)
+    read_parameters = ReadParameters(
+        args={
+            "model_version": "6.0.0",
+            "simulation_software": "sim_telarray",
+            "all_model_versions": True,
+        },
+        output_path=output_path,
+    )
+    read_parameters.db.get_array_elements = Mock(return_value=["LSTN-01"])
+    read_parameters.db.get_design_model = Mock(return_value="LSTN-design")
+    read_parameters.db.get_simulation_configuration_parameters = Mock(
+        return_value={
+            "pm_photoelectron_spectrum": {
+                "value": "pe-spectrum.dat",
+                "unit": " ",
+                "file": True,
+                "parameter_version": "1.0.0",
+            }
+        }
+    )
+    read_parameters.db.export_model_files.side_effect = lambda parameters, dest: (
+        Path(dest).mkdir(parents=True, exist_ok=True),
+        (Path(dest) / "pe-spectrum.dat").write_text("table data\n", encoding="utf-8"),
+    )
+    read_parameters.get_all_parameter_descriptions = Mock(
+        return_value={
+            "pm_photoelectron_spectrum": {
+                "description": "Photoelectron spectrum",
+                "short_description": "Spectrum",
+            }
+        }
+    )
+    generate_plot_configurations = mocker.patch(
+        "simtools.reporting.docs_read_parameters.plot_tables.generate_plot_configurations",
+        return_value=None,
+    )
+
+    read_parameters.get_simulation_configuration_data()
+
+    read_parameters.db.get_design_model.assert_called_once_with(
+        "6.0.0", "LSTN-01", collection="telescopes"
+    )
+    assert generate_plot_configurations.call_args.kwargs["telescope"] == "LSTN-design"
+    assert generate_plot_configurations.call_args.kwargs["site"] == "North"
+
+
 def test__write_to_file(telescope_model_lst, tmp_path):
     args = {
         "telescope": telescope_model_lst.name,
