@@ -55,6 +55,20 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
         parser.parse_args([])
 
 
+def test_application_definition_can_exclude_standard_arguments():
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    )
+
+    argument_names = {argument.name for argument in application.all_arguments}
+
+    assert "test" not in argument_names
+    assert "ignore_existing_parameter_version" not in argument_names
+    assert "config" in argument_names
+
+
 @pytest.mark.parametrize(
     "module_name",
     [

@@ -7,7 +7,6 @@ from collections import OrderedDict
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib import gridspec
@@ -15,6 +14,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
 from simtools.settings import config
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 COLORS = {}
 COLORS["classic"] = [
