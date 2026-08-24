@@ -24,10 +24,12 @@ def _output_directory_for_array_layout_selection(output_directory, array_layout_
     if not array_layout_name:
         return output_directory
 
-    if isinstance(array_layout_name, str):
-        array_layout_name = [array_layout_name]
+    if not isinstance(array_layout_name, str):
+        if len(array_layout_name) != 1:
+            raise ValueError("Plot one array layout at a time.")
+        array_layout_name = array_layout_name[0]
 
-    output_path = output_directory.joinpath(*array_layout_name)
+    output_path = output_directory / array_layout_name
     output_path.mkdir(parents=True, exist_ok=True)
     return output_path
 
@@ -48,9 +50,9 @@ def plot(
     output_path : pathlib.Path, optional
         Output directory for the generated plots. Falls back to the current
         application output directory when omitted.
-    array_layout_name : list[str] or str, optional
+    array_layout_name : str, optional
         Array-layout selection used to collect the metrics. When set, plots are
-        written into a subdirectory derived from that selection.
+        written into a subdirectory with that name.
     bins : int, optional
         Number of bins for 1D histograms.
     figure_format : list[str] or str, optional

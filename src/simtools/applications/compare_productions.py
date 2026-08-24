@@ -57,19 +57,32 @@ def main():
     if comparison_level != "events":
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+    array_layout_names = app_context.args.get("array_layout_name") or [None]
+    for array_layout_name in array_layout_names:
+        _compare_array_layout(
+            production_descriptors,
+            app_context,
+            array_layout_name,
+        )
+
+
+def _compare_array_layout(production_descriptors, app_context, array_layout_name):
+    """Compare one selected array layout and write its statistics metadata."""
     metrics_per_production = collect_production_metrics(
-        parse_production_arguments(app_context.args["production"]),
-        array_names=app_context.args.get("array_layout_name"),
+        production_descriptors,
+        array_names=array_layout_name,
     )
     comparison_statistics_file = plot_event_level_production_comparison.plot(
         metrics_per_production,
         output_path=app_context.io_handler.get_output_directory(),
-        array_layout_name=app_context.args.get("array_layout_name"),
+        array_layout_name=array_layout_name,
         figure_format=app_context.args.get("figure_format"),
     )
     metadata_args = dict(app_context.args)
     metadata_args.update(
         {
+            "array_layout_name": array_layout_name,
             "output_file": str(comparison_statistics_file),
             "output_file_format": "JSON",
             "metadata_product_data_name": "production_comparison_statistics",

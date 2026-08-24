@@ -21,10 +21,9 @@ normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
 Use `array_layout_name` to restrict the comparison to selected layouts. Without this option, all
-array-layout references found in the input files are aggregated into one comparison. With one or
-more selected layouts, the selected references are aggregated into one comparison and the plots
-are written below `output_path/<layout-name>/` (or nested layout-name directories when multiple
-names are selected).
+array-layout references found in the input files are aggregated into one comparison. With multiple
+selected layouts, each layout is compared independently and written to its own directory below
+`output_path/<layout-name>/`.
 
 ## Input and output
 

@@ -128,17 +128,24 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
         jsonschema.validate(statistics, comparison_schema)
 
 
-def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_directory):
+def test_output_directory_for_array_layout_selection_uses_single_layout_name(tmp_test_directory):
     output_dir = Path(tmp_test_directory) / "plots"
-    array_layout_names = ["CTAO-North Alpha", "MSTN-01"]
 
     selected = plot_event_level_production_comparison._output_directory_for_array_layout_selection(
         output_dir,
-        array_layout_names,
+        "CTAO-North Alpha",
     )
 
-    assert selected == output_dir.joinpath(*array_layout_names)
+    assert selected == output_dir / "CTAO-North Alpha"
     assert selected.exists()
+
+
+def test_output_directory_for_array_layout_selection_rejects_multiple_layouts(tmp_test_directory):
+    with pytest.raises(ValueError, match="one array layout"):
+        plot_event_level_production_comparison._output_directory_for_array_layout_selection(
+            Path(tmp_test_directory),
+            ["CTAO-North Alpha", "MSTN-01"],
+        )
 
 
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
