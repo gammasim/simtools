@@ -3,16 +3,11 @@
 import logging
 from pathlib import Path
 
-import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
 
-mpl.use("Agg")
-from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
-
-from simtools.production_configuration.trigger_histograms import (  # pylint: disable=wrong-import-position
-    load_event_data_histograms,
-)
+from simtools.production_configuration.trigger_histograms import load_event_data_histograms
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 

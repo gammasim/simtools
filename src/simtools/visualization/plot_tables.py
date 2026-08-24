@@ -4,7 +4,6 @@
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import packaging.version
 
@@ -14,6 +13,7 @@ from simtools.db import db_handler
 from simtools.io import ascii_handler, legacy_data_handler
 from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 

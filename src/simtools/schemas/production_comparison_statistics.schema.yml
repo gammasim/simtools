@@ -1,0 +1,125 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+title: Event-level production comparison statistics
+description: |
+  Schema for the machine-readable report written by simtools-compare-productions.
+schema_version: 1.0.0
+schema_name: production_comparison_statistics.schema
+type: object
+additionalProperties: false
+properties:
+  format_version:
+    type: integer
+    enum: [1]
+  baseline:
+    $ref: '#/definitions/ProductionSummary'
+  comparison_sets:
+    type: array
+    items:
+      $ref: '#/definitions/ProductionSummary'
+  plot_statistics:
+    type: object
+    additionalProperties:
+      $ref: '#/definitions/PlotStatistics'
+required:
+  - format_version
+  - baseline
+  - comparison_sets
+  - plot_statistics
+
+definitions:
+  ProductionSummary:
+    type: object
+    additionalProperties: false
+    properties:
+      label:
+        type: [string, 'null']
+      simulated_event_count:
+        type: integer
+        minimum: 0
+      triggered_event_count:
+        type: integer
+        minimum: 0
+    required:
+      - label
+      - simulated_event_count
+      - triggered_event_count
+
+  PlotStatistics:
+    type: object
+    additionalProperties: true
+    properties:
+      baseline_label:
+        type: [string, 'null']
+      metric_type:
+        type: string
+        enum: [aligned_counts, quantity_distribution]
+      metric:
+        $ref: '#/definitions/MetricName'
+      metadata:
+        type: object
+        additionalProperties: true
+      quantity_name:
+        type: string
+      cumulative:
+        type: boolean
+      comparisons:
+        type: array
+        items:
+          oneOf:
+            - $ref: '#/definitions/AlignedComparison'
+            - $ref: '#/definitions/QuantityComparison'
+    required:
+      - baseline_label
+      - metric_type
+      - comparisons
+
+  MetricName:
+    type: string
+    enum: [ks, jensen_shannon, wasserstein]
+
+  MetricResult:
+    type: object
+    additionalProperties: true
+    properties:
+      metric:
+        $ref: '#/definitions/MetricName'
+      value:
+        type: [number, 'null']
+      pvalue:
+        type: number
+      valid:
+        type: boolean
+      reason:
+        type: string
+    required:
+      - metric
+      - value
+      - valid
+      - reason
+
+  AlignedComparison:
+    allOf:
+      - $ref: '#/definitions/MetricResult'
+      - type: object
+        additionalProperties: true
+        properties:
+          candidate_label:
+            type: string
+        required:
+          - candidate_label
+
+  QuantityComparison:
+    type: object
+    additionalProperties: true
+    properties:
+      candidate_label:
+        type: string
+      simulated:
+        $ref: '#/definitions/MetricResult'
+      triggered:
+        $ref: '#/definitions/MetricResult'
+    required:
+      - candidate_label
+      - simulated
+      - triggered

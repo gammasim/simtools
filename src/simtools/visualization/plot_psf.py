@@ -9,12 +9,12 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 # Constants
 RADIUS = "Radius [cm]"
