@@ -12,10 +12,22 @@ This application derives CORSIKA limits from broad-range trigger histograms. The
 cover the lower energy bound (`ERANGE`), the maximum core distance (`CSCAT`), and the viewcone
 radius (`VIEWCONE`).
 
-`allowed_losses` defines the accepted loss for the core-distance and angular-distance axes. Use
-integrated limits by leaving `differential_loss_bins_per_decade` at zero, or derive energy-dependent
-limits with differential bins. The lower energy limit is derived from the triggered-energy peak
-using `energy_threshold_fraction`.
+`allowed_losses` defines the accepted loss for the core-distance and angular-distance axes. Both
+axes must be provided, or `all` can be used as a shorthand. Its three comma-separated fields are
+the axis, fractional loss, and minimum number of lost events. The fraction is in `[0, 1]`, and
+the event count is a non-negative integer:
+
+```console
+--allowed_losses core_distance,0.001,10 angular_distance,0.001,10
+```
+
+Use integrated limits by leaving `differential_loss_bins_per_decade` at zero, or derive
+energy-dependent limits with a positive number of bins per decade. The lower energy limit is
+derived from the triggered-energy peak using `energy_threshold_fraction`, which defaults to
+`0.01` and must be in `[0, 1]`.
+
+When `array_layout_name` is omitted, all layouts in the input file are processed. The option
+accepts multiple names, for example `--array_layout_name CTAO-North-Alpha CTAO-North-Beta`.
 
 ## Input and output
 
@@ -27,7 +39,14 @@ using `energy_threshold_fraction`.
 
 The output table includes the selected particle, array layout, pointing, NSB level, derived limits,
 the broad-range values used for the derivation, and standard simtools metadata in its ECSV header.
-With multiple productions, plots are grouped into production-specific subdirectories.
+The loss settings are also recorded in the ECSV metadata. `output_file` may be an absolute path
+or a path relative to `output_path`; if omitted, shared simtools startup generates a name from
+the activity ID and optional label. The output table is always ECSV.
+
+Use `--plot_histograms` to write diagnostic plots below `output_path`. With multiple production
+indices, plots are grouped below `output_path/production_<index>/`; with one production they are
+written directly below `output_path`. The current plotting path writes PNG files; the shared
+`figure_format` option is not yet applied here.
 
 ## Command line arguments
 
@@ -38,6 +57,9 @@ With multiple productions, plots are grouped into production-specific subdirecto
 ```
 
 ## Example
+
+The example below is rendered automatically from the integration-test configuration, so the
+documented command and YAML remain aligned with the tested workflow.
 
 ```{eval-rst}
 .. simtools-integration-example::
