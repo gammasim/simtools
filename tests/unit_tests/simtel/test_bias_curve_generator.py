@@ -392,11 +392,6 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
     """Test successful export of trigger threshold as model parameter."""
     args = {
         "telescope": "LSTN-01",
-        "parameter_version": "1.0.0",
-    }
-
-    args = {
-        "telescope": "LSTN-01",
         "site": "North",
         "model_version": "7.0.0",
         "parameter_version": "1.0.0",
