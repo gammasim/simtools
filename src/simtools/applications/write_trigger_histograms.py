@@ -33,6 +33,15 @@ _ARGUMENTS = (
         default=0.5 * u.deg,
     ),
     cli.ArgumentDefinition(
+        "core_distance_bin_width",
+        help=(
+            "Core-distance bin width. The range remains flexible and is rounded to a common "
+            "physical grid."
+        ),
+        type=positive_quantity("m"),
+        default=20.0 * u.m,
+    ),
+    cli.ArgumentDefinition(
         "skip_invalid_event_data_files",
         help=(
             "Skip malformed or incomplete reduced event-data files inside each input "

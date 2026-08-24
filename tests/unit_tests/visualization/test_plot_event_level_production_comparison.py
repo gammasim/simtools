@@ -284,6 +284,26 @@ def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     assert not (output_path / "mixed_trigger_combinations.png").exists()
 
 
+def test_mixed_trigger_combination_plot_limits_categories(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metric = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    metric.trigger_combinations = Counter(
+        {
+            "LSTN-01,MSTN-01": 10,
+            "LSTN-01,MSTN-02": 5,
+            "LSTN-02,MSTN-01": 1,
+        }
+    )
+
+    statistics = plot_event_level_production_comparison._plot_mixed_trigger_combinations(
+        [metric], output_path, top_n=2
+    )
+
+    assert statistics["metadata"]["category_count"] == 3
+    assert len(statistics["metadata"]["display_categories"]) == 2
+    assert (output_path / "mixed_trigger_combinations.png").exists()
+
+
 def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
@@ -297,8 +317,8 @@ def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_direc
 
     comparison = statistics["comparisons"][0]
     assert comparison["metric"] == "jensen_shannon"
-    assert comparison["jensen_shannon_distance"] > 0
-    assert statistics["metadata"]["categories"] == ["LSTN-01", "MSTN-01"]
+    assert comparison["value"] > 0
+    assert statistics["metadata"]["category_count"] == 2
     assert statistics["metadata"]["display_categories"] == ["LSTN-01"]
 
 
@@ -317,11 +337,11 @@ def test_histogram_quantity_comparison_uses_binned_ks():
     }
 
     result = plot_event_level_production_comparison._compare_distribution_data(
-        baseline, candidate, "simulated", np.array([0.0, 1.0, 2.0])
+        baseline, candidate, "simulated"
     )
 
     assert result["metric"] == "ks"
-    assert result["ks_statistic"] == pytest.approx(0.5)
+    assert result["value"] == pytest.approx(0.5)
 
 
 def test_global_quantity_bin_edges_union_histogram_supports():

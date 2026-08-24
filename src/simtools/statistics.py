@@ -63,44 +63,36 @@ def compare_histogram_counts(counts1, counts2, metric="ks", bin_edges=None):
 
     counts1, counts2 = _validate_count_arrays(counts1, counts2)
     support = _validate_bin_edges(bin_edges, counts1.size) if metric == "wasserstein" else None
-    result = {
-        "metric": metric,
-        "value": None,
-        "valid": False,
-        "reason": "insufficient_data",
-    }
     if np.sum(counts1) <= 0 or np.sum(counts2) <= 0:
-        return result
+        return _comparison_result(metric)
 
     normalized1 = counts1 / np.sum(counts1)
     normalized2 = counts2 / np.sum(counts2)
     if metric == "ks":
-        result["ks_statistic"] = float(
-            np.max(np.abs(np.cumsum(normalized1) - np.cumsum(normalized2)))
-        )
+        value = np.max(np.abs(np.cumsum(normalized1) - np.cumsum(normalized2)))
     elif metric == "jensen_shannon":
-        result["jensen_shannon_distance"] = float(
-            distance.jensenshannon(normalized1, normalized2, base=2.0)
-        )
+        value = distance.jensenshannon(normalized1, normalized2, base=2.0)
     elif metric == "wasserstein":
         centers = 0.5 * (support[:-1] + support[1:])
-        result["wasserstein_distance"] = float(
-            stats.wasserstein_distance(
-                centers,
-                centers,
-                u_weights=counts1,
-                v_weights=counts2,
-            )
+        value = stats.wasserstein_distance(
+            centers,
+            centers,
+            u_weights=counts1,
+            v_weights=counts2,
         )
-    result["value"] = result[
-        {
-            "ks": "ks_statistic",
-            "jensen_shannon": "jensen_shannon_distance",
-            "wasserstein": "wasserstein_distance",
-        }[metric]
-    ]
-    result["valid"] = True
-    result["reason"] = "ok"
+    return _comparison_result(metric, value=value)
+
+
+def _comparison_result(metric, value=None, pvalue=None):
+    """Build a serializable comparison result with one metric value."""
+    result = {
+        "metric": metric,
+        "value": None if value is None else float(value),
+        "valid": value is not None,
+        "reason": "ok" if value is not None else "insufficient_data",
+    }
+    if pvalue is not None:
+        result["pvalue"] = float(pvalue)
     return result
 
 
@@ -129,8 +121,8 @@ def _validate_bin_edges(bin_edges, count_size):
     return bin_edges
 
 
-def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edges):
-    """Compute KS statistics for two sample arrays using provided bin edges.
+def compare_samples_with_statistics(baseline_samples, candidate_samples):
+    """Compute the KS statistic and p-value for two sample arrays.
 
     Parameters
     ----------
@@ -138,35 +130,14 @@ def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edg
         Baseline sample values.
     candidate_samples : np.ndarray
         Candidate sample values.
-    bin_edges : np.ndarray
-        Histogram bin edges
-
     Returns
     -------
     dict
-        KS statistics, p-values, and histogram metadata.
+        KS statistic and p-value in the standard comparison-result format.
     """
     baseline_samples = np.asarray(baseline_samples)
     candidate_samples = np.asarray(candidate_samples)
-    result = {
-        "metric": "ks",
-        "value": None,
-        "ks_statistic": None,
-        "ks_pvalue": None,
-        "valid": False,
-        "reason": "insufficient_data",
-    }
     if baseline_samples.size == 0 or candidate_samples.size == 0:
-        return result
+        return _comparison_result("ks")
     ks_stat, ks_pval = ks_test_samples(baseline_samples, candidate_samples)
-    result["ks_statistic"] = ks_stat
-    result["ks_pvalue"] = ks_pval
-    result["value"] = ks_stat
-    baseline_counts, _ = np.histogram(baseline_samples, bins=bin_edges)
-    candidate_counts, _ = np.histogram(candidate_samples, bins=bin_edges)
-    result["valid"] = True
-    result["reason"] = "ok"
-    result["baseline_counts"] = baseline_counts.astype(int).tolist()
-    result["candidate_counts"] = candidate_counts.astype(int).tolist()
-    result["bin_edges"] = np.asarray(bin_edges, dtype=float).tolist()
-    return result
+    return _comparison_result("ks", value=ks_stat, pvalue=ks_pval)

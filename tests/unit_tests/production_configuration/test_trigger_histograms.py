@@ -280,6 +280,7 @@ def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
             "telescope_configs": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
         }
     )
@@ -348,6 +349,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "array_element_list": ["LSTN-01"],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
             "max_workers": 24,
             "site": "North",
@@ -363,6 +365,10 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "prod_a/*.hdf5",
         "prod_b/*.hdf5",
     ]
+    assert all(
+        job_spec["core_distance_bin_width"].to_value(u.m) == pytest.approx(20.0)
+        for job_spec in job_specs
+    )
     assert list(metadata_table["reference_id"]) == ["reference_0", "reference_1"]
     assert list(metadata_table["production_index"]) == [0, 1]
     assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
@@ -372,6 +378,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "array_element_list": ["LSTN-01"],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
             "max_workers": 24,
             "site": "North",

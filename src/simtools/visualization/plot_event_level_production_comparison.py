@@ -2,6 +2,7 @@
 
 import functools
 import logging
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -205,7 +206,7 @@ def _plot_trigger_multiplicity(
     statistics = _build_aligned_count_statistics(
         metrics_per_production,
         counts_per_label,
-        metadata={"bin_edges": bin_edges.astype(float).tolist()},
+        metadata={"bin_count": len(bin_edges) - 1},
         metric="wasserstein",
         bin_edges=bin_edges,
     )
@@ -312,17 +313,19 @@ def _plot_single_telescope_trigger_frequencies(
     return statistics
 
 
-def _plot_mixed_trigger_combinations(metrics_per_production, output_path, figure_format=None):
+def _plot_mixed_trigger_combinations(
+    metrics_per_production, output_path, top_n=12, figure_format=None
+):
     """Plot mixed-type trigger combinations with multiplicity signatures and telescope names."""
-    mixed_labels = sorted(
-        {
-            _format_mixed_combination_label(combination)
-            for metrics in metrics_per_production
-            for combination in metrics.trigger_combinations
-            if _is_mixed_type_combination(combination)
-        }
-    )
-    if len(mixed_labels) == 0:
+    counts_by_production = {
+        metrics.label: _aggregate_mixed_trigger_combinations(metrics.trigger_combinations)
+        for metrics in metrics_per_production
+    }
+    total_counts = Counter()
+    for counts in counts_by_production.values():
+        total_counts.update(counts)
+    mixed_labels = [label for label, _ in total_counts.most_common(top_n)]
+    if not mixed_labels:
         _logger.warning("Skipping mixed trigger combination plot, no mixed-type combinations.")
         return None
 
@@ -330,13 +333,7 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path, figure
         metrics_per_production,
         categories=mixed_labels,
         counts_getter=lambda metrics, category_labels: [
-            sum(
-                count
-                for combination, count in metrics.trigger_combinations.items()
-                if _is_mixed_type_combination(combination)
-                and _format_mixed_combination_label(combination) == label
-            )
-            for label in category_labels
+            counts_by_production[metrics.label].get(label, 0) for label in category_labels
         ],
         normalization_fn=_fraction_with_poisson_errors,
         output_path=output_path,
@@ -346,11 +343,22 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path, figure
         figure_width=max(12, len(mixed_labels) * 0.8),
         x_rotation=45,
         x_ha="right",
+        statistics_categories=sorted(total_counts),
         figure_format=figure_format,
     )
     if statistics is not None:
         statistics["plot_name"] = "mixed_trigger_combinations"
     return statistics
+
+
+def _aggregate_mixed_trigger_combinations(trigger_combinations):
+    """Aggregate mixed trigger combinations by display label in one pass."""
+    counts = Counter()
+    for combination, count in trigger_combinations.items():
+        label = _format_mixed_combination_label(combination)
+        if label is not None:
+            counts[label] += count
+    return counts
 
 
 def _fractions_per_triggered_events(counts, metrics):
@@ -407,7 +415,7 @@ def _plot_grouped_fraction_bars(
             for metrics in metrics_per_production
         },
         metadata={
-            "categories": list(statistics_categories),
+            "category_count": len(statistics_categories),
             "display_categories": list(categories),
         },
         metric="jensen_shannon",
@@ -418,21 +426,21 @@ def _plot_grouped_fraction_bars(
     return statistics
 
 
-def _is_mixed_type_combination(combination):
-    """Return True only for mixed signatures 1+1 and 1+2 (max multiplicity 3)."""
-    type_counts, _ = _type_counts_from_combination(combination)
-    if len(type_counts) < 2:
-        return False
-    signature = tuple(sorted(type_counts.values()))
-    return signature in {(1, 1), (1, 2)}
-
-
 def _format_mixed_combination_label(combination):
     """Format mixed trigger combination as '<signature> | <tel1> + <tel2> + ...'."""
     type_counts, telescope_names = _type_counts_from_combination(combination)
+    if not _is_mixed_type_combination_counts(type_counts):
+        return None
     signature = "+".join(str(count) for _, count in sorted(type_counts.items()))
     telescopes_label = " + ".join(telescope_names)
     return f"{signature} | {telescopes_label}"
+
+
+def _is_mixed_type_combination_counts(type_counts):
+    """Return whether type counts represent a supported mixed trigger signature."""
+    if len(type_counts) < 2:
+        return False
+    return tuple(sorted(type_counts.values())) in {(1, 1), (1, 2)}
 
 
 def _type_counts_from_combination(combination):
@@ -649,7 +657,6 @@ def _plot_quantity_distribution(
         metrics_per_production,
         quantity_name,
         counts_by_label,
-        baseline_bin_edges=bin_edges,
         cumulative=cumulative,
     )
     _annotate_comparison_statistics(ax, statistics)
@@ -790,12 +797,7 @@ def _build_aligned_count_statistics(
             metric=metric,
             bin_edges=bin_edges,
         )
-        result = {
-            **result,
-            "candidate_label": metrics.label,
-            "baseline_counts": np.asarray(baseline_counts, dtype=float).tolist(),
-            "candidate_counts": np.asarray(candidate_counts, dtype=float).tolist(),
-        }
+        result["candidate_label"] = metrics.label
         stats_summary["comparisons"].append(result)
     return stats_summary
 
@@ -804,7 +806,6 @@ def _build_quantity_distribution_statistics(
     metrics_per_production,
     quantity_name,
     counts_by_label,
-    baseline_bin_edges,
     cumulative,
 ):
     """Build comparison statistics for quantity distribution plots."""
@@ -831,43 +832,34 @@ def _build_quantity_distribution_statistics(
             baseline_data,
             candidate_data,
             "simulated",
-            baseline_bin_edges,
         )
         trig_stats = _compare_distribution_data(
             baseline_data,
             candidate_data,
             "triggered",
-            baseline_bin_edges,
         )
 
         comparison_record = {
             "candidate_label": metrics.label,
             "simulated": sim_stats,
             "triggered": trig_stats,
-            "baseline_bin_edges": np.asarray(baseline_bin_edges, dtype=float).tolist(),
         }
         stats_summary["comparisons"].append(comparison_record)
     return stats_summary
 
 
-def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseline_bin_edges):
+def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     """Compare either raw sample arrays or pre-binned count arrays."""
     sample_key = f"{event_kind}_samples"
     if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
         return compare_samples_with_statistics(
-            baseline_data[sample_key],
-            candidate_data[sample_key],
-            baseline_bin_edges,
+            baseline_data[sample_key], candidate_data[sample_key]
         )
-    result = compare_histogram_counts(
+    return compare_histogram_counts(
         baseline_data[event_kind],
         candidate_data[event_kind],
         metric="ks",
     )
-    result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=float).tolist()
-    result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=float).tolist()
-    result["bin_edges"] = np.asarray(baseline_bin_edges, dtype=float).tolist()
-    return result
 
 
 def _annotate_comparison_statistics(ax, statistics):
@@ -880,9 +872,14 @@ def _annotate_comparison_statistics(ax, statistics):
     for comparison in statistics["comparisons"]:
         label = comparison.get("candidate_label", "candidate")
         if metric_type == "quantity_distribution":
-            simulated = _format_metric_value(comparison.get("simulated", {}))
-            triggered = _format_metric_value(comparison.get("triggered", {}))
-            lines.append(f"{label}: {simulated[0]} s/t={simulated[1]}/{triggered[1]}")
+            simulated_label, simulated_value = _format_metric_value(comparison.get("simulated", {}))
+            triggered_label, triggered_value = _format_metric_value(comparison.get("triggered", {}))
+            metric_label = (
+                simulated_label
+                if simulated_label == triggered_label
+                else f"{simulated_label}/{triggered_label}"
+            )
+            lines.append(f"{label}: {metric_label} s/t={simulated_value}/{triggered_value}")
             continue
         metric_label, metric_value = _format_metric_value(comparison)
         lines.append(f"{label}: {metric_label}={metric_value}")
@@ -897,11 +894,6 @@ def _annotate_comparison_statistics(ax, statistics):
         fontsize=7,
         bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.75, "edgecolor": "0.8"},
     )
-
-
-def _annotate_ks_statistics(ax, statistics):
-    """Backward-compatible alias for metric-neutral comparison annotations."""
-    _annotate_comparison_statistics(ax, statistics)
 
 
 def _format_statistic_value(value):
@@ -919,12 +911,7 @@ def _format_metric_value(statistics):
         "wasserstein": "W1",
     }
     metric = statistics.get("metric", "ks")
-    value_key = {
-        "ks": "ks_statistic",
-        "jensen_shannon": "jensen_shannon_distance",
-        "wasserstein": "wasserstein_distance",
-    }.get(metric, "ks_statistic")
-    return metric_labels.get(metric, metric), _format_statistic_value(statistics.get(value_key))
+    return metric_labels.get(metric, metric), _format_statistic_value(statistics.get("value"))
 
 
 def _initialize_comparison_statistics(metrics_per_production):

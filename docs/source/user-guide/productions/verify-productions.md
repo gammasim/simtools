@@ -39,7 +39,8 @@ Event-level comparison writes `comparison_statistics.json` alongside the plots. 
 KS statistic for continuous quantities, Jensen-Shannon distance for categorical trigger and
 telescope distributions, and Wasserstein-1 distance for ordered trigger multiplicities. Distances
 compare normalized distribution shapes, so differing production event totals do not directly set
-the result. A `comparison_statistics.meta.yml` sidecar records the application configuration and
-provenance. The report format is described by
+the result. It stores scalar diagnostics rather than duplicating the input histogram arrays. A
+`comparison_statistics.meta.yml` sidecar records the application configuration and provenance. The
+report format is described by
 `src/simtools/schemas/production_comparison_statistics.schema.yml`. The report file contains
 diagnostics; simtools does not apply acceptance thresholds.

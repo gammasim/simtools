@@ -453,6 +453,7 @@ def _process_production(
     telescope_configs,
     energy_bins_per_decade,
     angular_distance_bin_width,
+    core_distance_bin_width=None,
     skip_invalid_event_data_files=False,
 ):
     """Read one production once and build trigger histograms for all telescope configurations."""
@@ -461,6 +462,7 @@ def _process_production(
         telescope_configs,
         energy_bins_per_decade=energy_bins_per_decade,
         angular_distance_bin_width=angular_distance_bin_width,
+        core_distance_bin_width=core_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         fill_efficiency_histogram=True,
         collect_trigger_topology=True,
@@ -475,6 +477,7 @@ def _execute_production_job(job_spec):
         job_spec["telescope_configs"],
         energy_bins_per_decade=job_spec["energy_bins_per_decade"],
         angular_distance_bin_width=job_spec["angular_distance_bin_width"],
+        core_distance_bin_width=job_spec.get("core_distance_bin_width"),
         skip_invalid_event_data_files=job_spec["skip_invalid_event_data_files"],
     )
     return [
@@ -531,6 +534,7 @@ def write_trigger_histograms(args_dict):
             "telescope_configs": telescope_configs,
             "energy_bins_per_decade": args_dict["energy_bins_per_decade"],
             "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
+            "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
             "skip_invalid_event_data_files": args_dict.get("skip_invalid_event_data_files", False),
         }
         for production_index, pattern in enumerate(production_patterns)
