@@ -30,6 +30,22 @@ simtools-write-trigger-histograms \
     --output_file trigger_histograms.hdf5
 ```
 
+For a directory that contains partitioned reduced event-data products, submit one independent
+trigger-histogram job per parameter-space group with:
+
+```bash
+simtools-write-trigger-histograms \
+    --event_data_directory reduced_event_data \
+    --array_layout_name LSTN-01 \
+    --site North \
+    --model_version 7.0.0 \
+    --output_path trigger_histograms \
+    --backend htcondor \
+    --backend_config htcondor.yml
+```
+
+Files with names that differ only by `.part<digits>` are accumulated into one output HDF5 file.
+
 ## Derivation of CORSIKA Limits
 
 CORSIKA configuration limits are derived from broad-range simulations and include

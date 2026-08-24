@@ -215,7 +215,7 @@ class HTCondorBackend:
 
     @staticmethod
     def _add_python_path(entries, source_path):
-        """Prepend the source checkout to the container Python module path."""
+        """Prepend the source checkout to the worker Python module path."""
         paths = [str(source_path)]
         if entries.get("PYTHONPATH"):
             paths.extend(path for path in entries["PYTHONPATH"].split(os.pathsep) if path)
@@ -455,7 +455,7 @@ class HTCondorBackend:
         )
         self._add_resource_submit_values(submit_values, config, resource_keys)
         self._add_container_submit_values(submit_values, config, uses_container)
-        source_path = self._source_checkout_path() if uses_container else None
+        source_path = self._source_checkout_path()
         bind_paths = self._build_container_bind_paths(
             uses_container, source_path, work_dir, working_directory, jobs
         )

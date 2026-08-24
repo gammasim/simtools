@@ -2,6 +2,8 @@
 
 import copy
 import logging
+import re
+from pathlib import Path
 
 import astropy.units as u
 import h5py
@@ -11,12 +13,14 @@ from astropy.table import Table, vstack
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.io.file_type import validate_file_type
-from simtools.job_execution.execution import map_ordered
+from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
+from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_telescope_configs,
     resolve_telescope_configs,
 )
+from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
 
@@ -29,6 +33,8 @@ TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
+_REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
+_PART_SUFFIX_PATTERN = re.compile(r"\.part\d+$")
 
 
 def _get_plot_directory_name(array_name, telescope_ids):
@@ -77,7 +83,6 @@ def _create_histogram_tables(reference_specs):
         _create_metadata_table(
             reference_id=spec["reference_id"],
             production_index=spec["production_index"],
-            event_data_file=spec["event_data_file"],
             site=spec["site"],
             array_name=spec["array_name"],
             telescope_ids=spec["telescope_ids"],
@@ -190,7 +195,6 @@ def _create_trigger_subset_histogram_table(reference_specs):
 def _create_metadata_table(
     reference_id,
     production_index,
-    event_data_file,
     site,
     array_name,
     telescope_ids,
@@ -203,7 +207,6 @@ def _create_metadata_table(
             {
                 "reference_id": reference_id,
                 "production_index": production_index,
-                "event_data_file": event_data_file,
                 "site": site or "",
                 "array_name": array_name,
                 "telescope_ids": ",".join(telescope_ids) if telescope_ids else "",
@@ -480,7 +483,6 @@ def _execute_production_job(job_spec):
     return [
         {
             "production_index": job_spec["production_index"],
-            "event_data_file": job_spec["production_pattern"],
             "site": job_spec["site"],
             "array_name": config["array_name"],
             "telescope_ids": config["telescope_ids"],
@@ -493,34 +495,54 @@ def _execute_production_job(job_spec):
     ]
 
 
-def write_trigger_histograms(args_dict):
+def discover_event_data_groups(event_data_directory):
     """
-    Build trigger histograms and write them to file.
+    Discover reduced event-data files and group partitioned products by filename.
 
     Parameters
     ----------
-    args_dict : dict
-        Application arguments.
+    event_data_directory : str or pathlib.Path
+        Directory containing direct-child reduced event-data HDF5 files.
 
     Returns
     -------
-    tuple[astropy.table.Table, astropy.table.Table]
-        Metadata and per-bin histogram tables written to the HDF5 output file.
+    list[tuple[str, list[pathlib.Path]]]
+        Sorted ``(group_name, files)`` pairs. A group name is the file stem with a
+        trailing ``.part<digits>`` suffix removed.
 
     Raises
     ------
+    FileNotFoundError
+        If the input directory does not exist or is not a directory.
     ValueError
-        If the output file does not use an HDF5 suffix or no supported telescope
-        selection is provided.
+        If the directory does not contain matching reduced event-data files.
     """
-    production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
+    directory = Path(event_data_directory)
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Event-data directory not found: {directory}")
+
+    groups = {}
+    for file_path in sorted(directory.glob(f"*{_REDUCED_EVENT_DATA_SUFFIX}")):
+        if not file_path.is_file():
+            continue
+        file_stem = file_path.name.removesuffix(_REDUCED_EVENT_DATA_SUFFIX)
+        group_name = _PART_SUFFIX_PATTERN.sub("", file_stem)
+        groups.setdefault(group_name, []).append(file_path)
+
+    if not groups:
+        raise ValueError(
+            "No reduced event-data files matching "
+            f"'*{_REDUCED_EVENT_DATA_SUFFIX}' found in {directory}."
+        )
+    return [(group_name, groups[group_name]) for group_name in sorted(groups)]
+
+
+def _write_trigger_histogram_product(args_dict, production_patterns, output_file):
+    """Build and write one trigger-histogram product from production sources."""
     telescope_configs = _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )
-    output_file = validate_file_type(
-        io_handler.IOHandler().get_output_file(args_dict["output_file"]),
-        file_type="hdf5",
-    )
+    output_file = validate_file_type(output_file, file_type="hdf5")
 
     reference_specs = []
     job_specs = [
@@ -573,6 +595,84 @@ def write_trigger_histograms(args_dict):
     )
     _write_dense_histogram_payload(reference_specs, output_file)
     return metadata_table, bin_table
+
+
+def _write_directory_group_job(job_spec):
+    """Build one directory-discovered trigger-histogram product."""
+    args_dict = job_spec["args_dict"] | {
+        "event_data_files": job_spec["event_data_files"],
+        "backend": "local",
+        "backend_config": None,
+        "max_workers": 1,
+    }
+    _write_trigger_histogram_product(
+        args_dict, [job_spec["event_data_files"]], job_spec["output_file"]
+    )
+    return str(job_spec["output_file"])
+
+
+def _write_directory_products(args_dict):
+    """Submit or execute one independent trigger-histogram product per directory group."""
+    output_directory = io_handler.IOHandler().get_output_directory()
+    event_data_directory = Path(args_dict["event_data_directory"]).resolve()
+    groups = discover_event_data_groups(event_data_directory)
+    runtime_args = (
+        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
+    )
+    runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
+    jobs = []
+    for index, (group_name, event_data_files) in enumerate(groups):
+        output_file = validate_file_type(
+            output_directory / f"{group_name}.trigger_histograms.hdf5",
+            file_type="hdf5",
+        )
+        jobs.append(
+            JobSpec(
+                job_id=f"trigger-histograms-{index:06d}",
+                index=index,
+                function=_write_directory_group_job,
+                item={
+                    "args_dict": args_dict,
+                    "event_data_files": [str(file_path) for file_path in event_data_files],
+                    "output_file": output_file,
+                },
+                runtime_args=runtime_args,
+                runtime_db_config=runtime_db_config,
+                mount_paths=(event_data_directory,),
+                output_paths=(output_file,),
+            )
+        )
+    _logger.info("Submitting %d trigger-histogram directory group(s)", len(jobs))
+    return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
+
+
+def write_trigger_histograms(args_dict):
+    """
+    Build trigger histograms and write them to file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments.
+
+    Returns
+    -------
+    tuple[astropy.table.Table, astropy.table.Table] or simtools.job_execution.job.SubmissionHandle
+        Metadata and per-bin histogram tables for explicit input patterns, or the submission
+        handle for directory-mode jobs.
+
+    Raises
+    ------
+    ValueError
+        If the output file does not use an HDF5 suffix or no supported telescope
+        selection is provided.
+    """
+    if args_dict.get("event_data_directory"):
+        return _write_directory_products(args_dict)
+
+    production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
+    output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
+    return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
 
 
 def load_trigger_histograms(reference_file):
