@@ -1,0 +1,17 @@
+---
+applications:
+- application: simtools-db-upload-model-repository
+  docs:
+    title: Upload an existing local simulation-model repository
+    summary: Upload model parameters and production tables from an existing local repository checkout.
+  configuration:
+    db_simulation_model: CTAO-Simulation-Model
+    db_simulation_model_version: 0.16.0
+    repository_dir: /path/to/simulation-models
+  requires_mongodb: true
+  skip_integration_test: >-
+    Documentation example; requires writable MongoDB access and a local simulation-model repository
+    checkout.
+  test_name: local_repository
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0
