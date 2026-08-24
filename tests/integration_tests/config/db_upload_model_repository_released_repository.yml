@@ -1,0 +1,16 @@
+---
+applications:
+- application: simtools-db-upload-model-repository
+  docs:
+    title: Upload a released simulation-model repository
+    summary: Clone the selected repository release and upload its model parameters and production tables.
+  configuration:
+    db_simulation_model: CTAO-Simulation-Model
+    db_simulation_model_version: 0.16.0
+  requires_mongodb: true
+  skip_integration_test: >-
+    Documentation example; requires writable MongoDB access and cloning the simulation-model
+    repository.
+  test_name: released_repository
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0
