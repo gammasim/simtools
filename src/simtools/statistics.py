@@ -68,6 +68,7 @@ def compare_histogram_counts(counts1, counts2, metric="ks", bin_edges=None):
 
     normalized1 = counts1 / np.sum(counts1)
     normalized2 = counts2 / np.sum(counts2)
+    value = None
     if metric == "ks":
         value = np.max(np.abs(np.cumsum(normalized1) - np.cumsum(normalized2)))
     elif metric == "jensen_shannon":
@@ -130,6 +131,7 @@ def compare_samples_with_statistics(baseline_samples, candidate_samples):
         Baseline sample values.
     candidate_samples : np.ndarray
         Candidate sample values.
+
     Returns
     -------
     dict

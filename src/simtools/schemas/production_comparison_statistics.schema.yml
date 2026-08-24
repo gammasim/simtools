@@ -119,7 +119,7 @@ definitions:
         $ref: '#/definitions/MetricResult'
       triggered:
         $ref: '#/definitions/MetricResult'
-        required:
-          - candidate_label
-          - simulated
-          - triggered
+    required:
+      - candidate_label
+      - simulated
+      - triggered
