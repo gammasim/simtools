@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import h5py
 import numpy as np
@@ -19,6 +21,9 @@ from simtools.production_configuration.trigger_histograms import (
     _get_plot_directory_name,
     _use_readable_inline_array_names,
     _write_dense_histogram_payload,
+    _write_directory_group_job,
+    _write_directory_products,
+    discover_event_data_groups,
     inspect_trigger_histogram_file,
     load_event_data_histograms,
     write_trigger_histograms,
@@ -108,7 +113,6 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
             {
                 "reference_id": "ref-1",
                 "production_index": 0,
-                "event_data_file": "pattern*.hdf5",
                 "site": "North",
                 "array_name": "alpha",
                 "telescope_ids": ["LSTN-01"],
@@ -141,7 +145,6 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -191,7 +194,6 @@ def test_trigger_topology_tables_are_created_from_reference_specs():
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -226,7 +228,6 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "MSTS-01",
             "telescope_ids": ["MSTS-01"],
@@ -280,6 +281,7 @@ def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
             "telescope_configs": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
         }
     )
@@ -287,7 +289,6 @@ def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
     assert result == [
         {
             "production_index": 3,
-            "event_data_file": "prod_a/*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -295,6 +296,102 @@ def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
             "trigger_topology": topology,
         }
     ]
+
+
+def test_discover_event_data_groups_collects_parts(tmp_test_directory):
+    input_directory = Path(tmp_test_directory) / "reduced_event_data"
+    input_directory.mkdir()
+    for file_name in (
+        "gamma.part0002.reduced_event_data.hdf5",
+        "gamma.part0001.reduced_event_data.hdf5",
+        "proton.reduced_event_data.hdf5",
+        "ignored.hdf5",
+    ):
+        (input_directory / file_name).touch()
+    (input_directory / "not-a-file.reduced_event_data.hdf5").mkdir()
+
+    groups = discover_event_data_groups(input_directory)
+
+    assert [(name, [path.name for path in files]) for name, files in groups] == [
+        (
+            "gamma",
+            [
+                "gamma.part0001.reduced_event_data.hdf5",
+                "gamma.part0002.reduced_event_data.hdf5",
+            ],
+        ),
+        ("proton", ["proton.reduced_event_data.hdf5"]),
+    ]
+
+
+def test_discover_event_data_groups_rejects_empty_directory(tmp_test_directory):
+    input_directory = Path(tmp_test_directory) / "reduced_event_data"
+    input_directory.mkdir()
+
+    with pytest.raises(ValueError, match="No reduced event-data files"):
+        discover_event_data_groups(input_directory)
+
+
+def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    input_directory = tmp_test_directory / "reduced_event_data"
+    input_directory.mkdir()
+    for file_name in (
+        "gamma.part0001.reduced_event_data.hdf5",
+        "gamma.part0002.reduced_event_data.hdf5",
+        "proton.reduced_event_data.hdf5",
+    ):
+        (input_directory / file_name).touch()
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory / "output"
+    submit_jobs = mocker.patch("simtools.production_configuration.trigger_histograms.submit_jobs")
+
+    _write_directory_products(
+        {
+            "event_data_directory": input_directory,
+            "output_path": tmp_test_directory / "output",
+            "backend": "htcondor",
+            "backend_config": {},
+            "max_workers": 4,
+        }
+    )
+
+    jobs = submit_jobs.call_args.args[0]
+    assert [job.job_id for job in jobs] == [
+        "trigger-histograms-000000",
+        "trigger-histograms-000001",
+    ]
+    assert [job.output_paths[0].name for job in jobs] == [
+        "gamma.trigger_histograms.hdf5",
+        "proton.trigger_histograms.hdf5",
+    ]
+    assert jobs[0].item["event_data_files"] == [
+        str(input_directory / "gamma.part0001.reduced_event_data.hdf5"),
+        str(input_directory / "gamma.part0002.reduced_event_data.hdf5"),
+    ]
+    assert jobs[0].mount_paths == (input_directory.resolve(),)
+    assert jobs[1].mount_paths == (input_directory.resolve(),)
+    assert jobs[0].output_paths != jobs[1].output_paths
+
+
+def test_write_directory_group_job_uses_local_inner_execution(mocker):
+    write_product = mocker.patch(
+        "simtools.production_configuration.trigger_histograms._write_trigger_histogram_product"
+    )
+
+    _write_directory_group_job(
+        {
+            "args_dict": {"backend": "htcondor", "max_workers": 8, "backend_config": {}},
+            "event_data_files": ["gamma.part0001.reduced_event_data.hdf5"],
+            "output_file": "gamma.trigger_histograms.hdf5",
+        }
+    )
+
+    inner_args = write_product.call_args.args[0]
+    assert inner_args["backend"] == "local"
+    assert inner_args["backend_config"] is None
+    assert inner_args["max_workers"] == 1
 
 
 def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):
@@ -315,7 +412,6 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             [
                 {
                     "production_index": 0,
-                    "event_data_file": "prod_a/*.hdf5",
                     "site": "North",
                     "array_name": "alpha",
                     "telescope_ids": ["LSTN-01"],
@@ -326,7 +422,6 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             [
                 {
                     "production_index": 1,
-                    "event_data_file": "prod_b/*.hdf5",
                     "site": "North",
                     "array_name": "alpha",
                     "telescope_ids": ["LSTN-01"],
@@ -348,6 +443,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "array_element_list": ["LSTN-01"],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
             "max_workers": 24,
             "site": "North",
@@ -363,15 +459,20 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "prod_a/*.hdf5",
         "prod_b/*.hdf5",
     ]
+    assert all(
+        job_spec["core_distance_bin_width"].to_value(u.m) == pytest.approx(20.0)
+        for job_spec in job_specs
+    )
     assert list(metadata_table["reference_id"]) == ["reference_0", "reference_1"]
     assert list(metadata_table["production_index"]) == [0, 1]
-    assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
+    assert "event_data_file" not in metadata_table.colnames
     mock_metadata.assert_called_once_with(
         {
             "event_data_files": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
             "array_element_list": ["LSTN-01"],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,
+            "core_distance_bin_width": 20.0 * u.m,
             "skip_invalid_event_data_files": False,
             "max_workers": 24,
             "site": "North",

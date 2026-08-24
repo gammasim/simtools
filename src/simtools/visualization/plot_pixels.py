@@ -5,7 +5,6 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.db import db_handler
@@ -20,6 +19,7 @@ from simtools.visualization.camera_plot_utils import (
     create_pixel_patches_by_type,
     setup_camera_axis_properties,
 )
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
 

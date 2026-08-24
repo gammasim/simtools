@@ -5,7 +5,6 @@ applications:
     title: Compare event-level production products
     summary: Compare trigger multiplicity and telescope participation across production histograms.
   configuration:
-    comparison_level: events
     array_layout_name:
     - CTAO-North-Alpha
     production:

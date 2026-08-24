@@ -26,7 +26,6 @@ DEFAULT_ALLOWED_LOSSES = {
 
 def _pool_result(
     production_index=0,
-    event_data_file="pattern_*.hdf5",
     array_name="LST",
     telescope_ids=None,
     lower_energy_limit=0.5 * u.TeV,
@@ -36,7 +35,6 @@ def _pool_result(
     """Build a standard mocked pool result row for grid execution tests."""
     return {
         "production_index": production_index,
-        "event_data_file": event_data_file,
         "array_name": array_name,
         "telescope_ids": telescope_ids or ["LSTN-01"],
         "lower_energy_limit": lower_energy_limit,
@@ -137,7 +135,6 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
         rows=[
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "alpha",
                 "telescope_ids": "LSTN-01",
             }
@@ -164,7 +161,6 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
     mock_derive.assert_called_once()
     result = mock_write.call_args[0][0][0]
-    assert result["event_data_file"] == "prod/*.hdf5"
     assert result["array_name"] == "alpha"
     assert result["telescope_ids"] == ["LSTN-01"]
 
@@ -180,13 +176,11 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
         rows=[
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "alpha",
                 "telescope_ids": "LSTN-01",
             },
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "beta",
                 "telescope_ids": "MSTS-01",
             },
@@ -217,6 +211,17 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
     assert [result["array_name"] for result in results] == ["alpha", "beta"]
     assert results[0]["telescope_ids"] == ["LSTN-01"]
     assert results[1]["telescope_ids"] == ["MSTS-01"]
+
+
+def test_build_production_subdirectories_uses_production_indices(tmp_test_directory):
+    result = derive_corsika_limits._build_production_subdirectories(
+        [0, 3], Path(tmp_test_directory)
+    )
+
+    assert result[0] == Path(tmp_test_directory) / "production_0"
+    assert result[3] == Path(tmp_test_directory) / "production_3"
+    assert result[0].is_dir()
+    assert result[3].is_dir()
 
 
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
@@ -252,16 +257,20 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
         (["core_distance,abc,10"], "fraction must be float"),
         (["invalid,0.2,10"], "Invalid axis"),
         (["core_distance,0.2,10"], "Missing --allowed_losses entries"),
+        (["core_distance,-0.1,10", "angular_distance,0.2,10"], r"interval \[0, 1\]"),
+        (["core_distance,1.1,10", "angular_distance,0.2,10"], r"interval \[0, 1\]"),
+        (["core_distance,nan,10", "angular_distance,0.2,10"], "finite"),
+        (["core_distance,0.2,-1", "angular_distance,0.2,10"], "non-negative integer"),
     ],
 )
 def test_parse_allowed_losses_error_paths(allowed_losses, error_match):
     with pytest.raises(ValueError, match=error_match):
-        derive_corsika_limits._parse_allowed_losses(allowed_losses)
+        derive_corsika_limits.parse_allowed_losses(allowed_losses)
 
 
 def test_parse_allowed_losses_raises_when_not_provided():
     with pytest.raises(ValueError, match="No allowed-loss configuration provided"):
-        derive_corsika_limits._parse_allowed_losses(None)
+        derive_corsika_limits.parse_allowed_losses(None)
 
 
 def test_compute_limits_lower():
@@ -703,7 +712,7 @@ def test_get_production_directory_name_appends_uuid_on_collision(mocker):
 
 
 def test_parse_allowed_losses_all_and_override():
-    result = derive_corsika_limits._parse_allowed_losses(
+    result = derive_corsika_limits.parse_allowed_losses(
         [
             "all,1e-6,10",
             "core_distance,5e-7,5",
@@ -714,6 +723,17 @@ def test_parse_allowed_losses_all_and_override():
     assert result["core_distance"]["loss_min_events"] == 5
     assert result["angular_distance"]["loss_fraction"] == pytest.approx(1e-6)
     assert result["angular_distance"]["loss_min_events"] == 10
+
+
+@pytest.mark.parametrize("value", [-1, "-1", "invalid"])
+def test_validate_differential_loss_bins_per_decade_rejects_invalid_values(value):
+    with pytest.raises(ValueError, match="non-negative integer"):
+        derive_corsika_limits.validate_differential_loss_bins_per_decade(value)
+
+
+def test_validate_differential_loss_bins_per_decade_accepts_zero_and_positive_values():
+    assert derive_corsika_limits.validate_differential_loss_bins_per_decade(0) == 0
+    assert derive_corsika_limits.validate_differential_loss_bins_per_decade("5") == 5
 
 
 def test_build_production_subdirectories_single_production(tmp_test_directory):

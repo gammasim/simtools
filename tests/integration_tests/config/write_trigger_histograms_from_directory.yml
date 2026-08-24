@@ -1,0 +1,30 @@
+---
+applications:
+- application: simtools-write-trigger-histograms
+  docs:
+    title: Build trigger histograms from a directory
+    summary: Group reduced event files by parameter space and write one HDF5 product per group.
+  configuration:
+    array_element_list:
+    - MSTN-03
+    event_data_directory: ${generated:.}
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    energy_bins_per_decade: 10
+    angular_distance_bin_width: 0.5
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5
+      validations:
+      - type: hdf5_product
+        product: trigger_histograms
+    - path_descriptor: output_path
+      file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5
+      validations:
+      - type: hdf5_product
+        product: trigger_histograms
+  test_name: write_trigger_histograms_from_directory
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

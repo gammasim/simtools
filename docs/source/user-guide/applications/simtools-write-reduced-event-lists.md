@@ -15,8 +15,8 @@ Converts sim_telarray event files (``*.simtel.zst``) into a
 compact, analysis-oriented HDF5 product. It removes waveform- and pixel-level
 data while retaining the event-level quantities needed for trigger-rate,
 effective-area, and Monte Carlo statistics studies. Input files can be supplied
-directly or through a text file; several input files can be combined into one
-output file.
+directly, through one text file, or through a glob pattern matching several text
+files; several input files can be combined into one output file.
 
 Each output file contains the following root-level datasets:
 
@@ -38,11 +38,14 @@ columns carrying their Astropy units.
 
 | Role | Argument | Format | Description |
 | --- | --- | --- | --- |
-| Input | `input_files` | sim_telarray | One or more `*.simtel.zst` files or glob patterns. |
+| Input | `input_files` | sim_telarray | One or more `*.simtel.zst` files. |
+| Input | `input_file_list` | Text file | One sim_telarray output file per line. |
+| Input | `input_file_list_pattern` | Glob pattern | Text files containing one sim_telarray output file per line. |
 | Output | `output_path` | Directory | Reduced-event HDF5 files with embedded metadata. |
 
-Provide either `input_files` or `input_file_list`, but not both. Use `max_workers` to control
-parallel output-file processing.
+Provide exactly one of `input_files`, `input_file_list`, or `input_file_list_pattern`. A pattern
+processes each matching list independently and submits all resulting output batches together. Use
+`max_workers` to control parallel output-file processing.
 
 If an HDF5 write fails, the retained incomplete file includes the application activity ID and
 the per-write staging ID in its name. The activity ID matches the UUID in the generated
@@ -57,6 +60,15 @@ the per-write staging ID in its name. The activity ID matches the UUID in the ge
 ```
 
 ## Example
+
+```bash
+python src/simtools/applications/write_reduced_event_lists.py \
+    --input_file_list_pattern "/lustre/fs25/group/cta/prod6/north/reduced_event_list/*.txt" \
+    --output_path /lustre/fs25/group/cta/prod6/north/reduced_event_list \
+    --files_per_reduced_event_file 10 \
+    --backend htcondor \
+    --backend_config htcondor.yml
+```
 
 ```{eval-rst}
 .. simtools-integration-example::

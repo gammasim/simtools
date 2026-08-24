@@ -160,6 +160,7 @@ def accumulate_histograms_by_telescope_config(
     energy_bins_per_decade,
     angular_distance_bin_count=100,
     angular_distance_bin_width=None,
+    core_distance_bin_width=None,
     skip_invalid_event_data_files=False,
     fill_efficiency_histogram=False,
     collect_trigger_topology=False,
@@ -179,6 +180,8 @@ def accumulate_histograms_by_telescope_config(
         Number of angular-distance bins used by the accumulators.
     angular_distance_bin_width : astropy.units.Quantity, optional
         Angular-distance bin width used to derive bins from broad-range viewcone limits.
+    core_distance_bin_width : astropy.units.Quantity, optional
+        Core-distance bin width used to derive a common physical grid across ranges.
     skip_invalid_event_data_files : bool, optional
         Skip malformed event-data files instead of aborting the run.
     fill_efficiency_histogram : bool, optional
@@ -194,6 +197,7 @@ def accumulate_histograms_by_telescope_config(
         energy_bins_per_decade=energy_bins_per_decade,
         angular_distance_bin_count=angular_distance_bin_count,
         angular_distance_bin_width=angular_distance_bin_width,
+        core_distance_bin_width=core_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         require_triggered_data=True,
     )
@@ -204,6 +208,7 @@ def accumulate_histograms_by_telescope_config(
             energy_bins_per_decade=energy_bins_per_decade,
             angular_distance_bin_count=angular_distance_bin_count,
             angular_distance_bin_width=angular_distance_bin_width,
+            core_distance_bin_width=core_distance_bin_width,
         )
         for config in telescope_configs
     ]

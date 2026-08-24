@@ -69,6 +69,21 @@ def test_core_distance_bins(mock_reader, hdf5_file_name):
     assert len(bins) == 100
 
 
+def test_core_distance_bins_use_fixed_width_and_flexible_range():
+    histograms = EventDataHistograms.create_accumulator(core_distance_bin_width=20.0 * u.m)
+    histograms.file_info = {
+        "core_scatter_min": 15.0 * u.m,
+        "core_scatter_max": 65.0 * u.m,
+    }
+
+    np.testing.assert_allclose(histograms.core_distance_bins, [0.0, 20.0, 40.0, 60.0, 80.0])
+
+
+def test_core_distance_bin_width_must_be_positive():
+    with pytest.raises(ValueError, match="core_distance_bin_width must be positive"):
+        EventDataHistograms.create_accumulator(core_distance_bin_width=0.0 * u.m)
+
+
 def test_view_cone_bins(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     mock_reader.return_value.triggered_data.angular_distance = np.array([0.5, 1.0, 1.5])

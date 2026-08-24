@@ -24,6 +24,12 @@ _ARGUMENTS = (
         help="Text file containing one sim_telarray output file per line.",
     ),
     cli.ArgumentDefinition(
+        "input_file_list_pattern",
+        exclusive_group="input group",
+        exclusive_group_required=True,
+        help="Glob pattern matching text files containing sim_telarray output file lists.",
+    ),
+    cli.ArgumentDefinition(
         "files_per_reduced_event_file",
         type=int,
         default=1,
@@ -72,6 +78,7 @@ def main():
         wait_for_completion=app_context.args.get("wait", False),
         output_path=app_context.io_handler.get_output_directory(),
         metadata_args=app_context.args,
+        input_file_list_pattern=app_context.args["input_file_list_pattern"],
     )
 
 
