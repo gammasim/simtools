@@ -509,4 +509,14 @@ def _should_forward_path(args_dict, key):
 
     sources = args_dict.get("_metadata_configuration_sources", {})
     explicit_sources = ("cli", "yaml", "constructor")
-    return any(key in sources.get(source, ()) for source in explicit_sources)
+
+    # Forward if explicitly provided via CLI/YAML/constructor
+    if any(key in sources.get(source, ()) for source in explicit_sources):
+        return True
+
+    # For any non-local backend, also forward file paths that need to be accessed by jobs
+    # These paths come from job grid and must be made available to the workers
+    if key in _SIMULATE_PROD_FILE_PATH_FIELDS:
+        return True
+
+    return False

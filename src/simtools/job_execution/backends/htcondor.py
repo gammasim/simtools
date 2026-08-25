@@ -456,9 +456,7 @@ class HTCondorBackend:
         self._add_resource_submit_values(submit_values, config, resource_keys)
         self._add_container_submit_values(submit_values, config, uses_container)
         source_path = self._source_checkout_path()
-        bind_paths = self._build_container_bind_paths(
-            uses_container, source_path, work_dir, working_directory, jobs
-        )
+        bind_paths = self._build_container_bind_paths(uses_container, source_path, work_dir, jobs)
         environment = self._read_environment_file(
             config.get("environment_file"),
             bind_paths=bind_paths,
@@ -529,11 +527,11 @@ class HTCondorBackend:
             )
 
     @staticmethod
-    def _build_container_bind_paths(uses_container, source_path, work_dir, working_directory, jobs):
+    def _build_container_bind_paths(uses_container, source_path, work_dir, jobs):
         """Return minimized bind paths needed by container jobs."""
         if not uses_container:
             return ()
-        bind_paths = [work_dir.parent, working_directory]
+        bind_paths = [work_dir.parent]
         if source_path is not None:
             bind_paths.append(source_path)
         bind_paths.extend(
