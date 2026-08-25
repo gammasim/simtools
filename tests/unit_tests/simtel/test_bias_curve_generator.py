@@ -17,9 +17,10 @@ def _base_args(tmp_path):
         "site": "North",
         "model_version": "7.0.0",
         "telescope": "LSTN-01",
-        "title": "Bias curve",
-        "ymin": 1,
-        "ymax": 1e6,
+        "scaling_factor": 1.35,
+        "parameter_version": "test",
+        "overwrite_model_parameters": False,
+        "title": "Trigger Rate Bias Curves",
     }
 
 
@@ -330,7 +331,8 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 370.0, "error_hz": 15.0},
     }
 
-    threshold = bias_curve_generator._calculate_trigger_threshold(nsb_stats, proton_stats)
+    args = {"scaling_factor": 1.35}
+    threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
     # Should find intersection between 250 and 280
     assert threshold is not None
     assert 250 <= threshold <= 280
@@ -338,17 +340,17 @@ def test_calculate_trigger_threshold_success():
 
 def test_calculate_trigger_threshold_no_valid_points():
     """Test that ValueError is raised when no valid threshold points exist."""
-
+    args = {"scaling_factor": 1.35}
     nsb_stats = {}
     proton_stats = {}
 
     with pytest.raises(ValueError, match="No valid threshold points with both NSB and proton data"):
-        bias_curve_generator._calculate_trigger_threshold(nsb_stats, proton_stats)
+        bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
 
 def test_calculate_trigger_threshold_no_intersection():
     """Test that ValueError is raised when curves don't intersect."""
-
+    args = {"scaling_factor": 1.35}
     # NSB rates are always higher than 1.35*proton rates
     nsb_stats = {
         220: {"rate_hz": 1000.0, "error_hz": 50.0},
@@ -362,7 +364,7 @@ def test_calculate_trigger_threshold_no_intersection():
     }
 
     with pytest.raises(ValueError, match="Could not find intersection point"):
-        bias_curve_generator._calculate_trigger_threshold(nsb_stats, proton_stats)
+        bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
 
 def test_calculate_trigger_threshold_with_nan_values():
@@ -381,7 +383,8 @@ def test_calculate_trigger_threshold_with_nan_values():
     }
 
     # Should work with the valid points (250, 280) and find intersection
-    threshold = bias_curve_generator._calculate_trigger_threshold(nsb_stats, proton_stats)
+    args = {"scaling_factor": 1.35}
+    threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
     assert threshold is not None
     # Intersection should be between 250 and 280
@@ -645,8 +648,11 @@ def test_calculate_proton_rate_for_file_handles_attributeerror(tmp_path):
         assert result is None
 
 
-def test_group_hdf5_files_skips_non_proton_files(tmp_path):
+def test_group_hdf5_files_skips_non_proton_files(tmp_test_directory):
     """Test that _group_hdf5_files_by_threshold_and_run skips non-proton files."""
+    from pathlib import Path
+
+    tmp_path = Path(str(tmp_test_directory))
     _write_file_info_hdf5(
         tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
         "gamma_run000001_asum220.simtel.zst",
@@ -656,8 +662,11 @@ def test_group_hdf5_files_skips_non_proton_files(tmp_path):
     assert result == {}  # No proton files, should return empty dict
 
 
-def test_group_hdf5_files_skips_missing_metadata(tmp_path):
+def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):
     """Test that _group_hdf5_files_by_threshold_and_run skips files with missing metadata."""
+    from pathlib import Path
+
+    tmp_path = Path(str(tmp_test_directory))
     # Create a file without proper metadata
     (tmp_path / "proton_run000001.reduced_event_data.hdf5").touch()
 

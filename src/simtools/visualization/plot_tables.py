@@ -470,12 +470,13 @@ def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
 
     # Dynamically set y-axis limits based on data
     all_rates = []
+    scaling_factor = config.get("scaling_factor", 1.35)
     if nsb_stats:
         all_rates.extend(stats["rate_hz"] for stats in nsb_stats.values() if stats["rate_hz"] > 0)
     if proton_stats:
-        all_rates.extend(
-            1.35 * stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0
-        )
+        proton_rates = [stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0]
+        all_rates.extend(proton_rates)
+        all_rates.extend(scaling_factor * rate for rate in proton_rates)
 
     if all_rates:
         # Add 10% padding above and below
