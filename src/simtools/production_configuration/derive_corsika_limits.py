@@ -24,6 +24,14 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
+_PARTICLE_FILE_PREFIXES = (
+    ("gamma-diffuse", "gamma"),
+    ("gamma_diffuse", "gamma"),
+    ("gamma-0.00deg", "gamma-0.00deg"),
+    ("electron", "electron"),
+    ("proton", "proton"),
+    ("gamma", "gamma-0.00deg"),
+)
 
 
 def _load_output_table_configuration_from_schema(schema_file):
@@ -55,6 +63,15 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
     _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
 )
 LOSS_AXES = ("core_distance", "angular_distance")
+_NO_PLOT_LAYOUTS = ()
+_REDUCED_PLOT_HISTOGRAM_NAMES = frozenset(
+    {
+        "angular_distance_vs_energy",
+        "core_distance_vs_energy",
+        "reuse_max_vs_core_distance_vs_energy",
+        "x_core_shower_vs_y_core_shower",
+    }
+)
 
 
 class _ArgumentTypeValueError(argparse.ArgumentTypeError, ValueError):
@@ -178,21 +195,48 @@ def parse_allowed_losses(allowed_losses_args):
 
 def generate_corsika_limits_grid(args_dict=None):
     """
-    Generate CORSIKA limits from a precomputed trigger-histogram file.
+    Generate CORSIKA limits from precomputed trigger-histogram products.
 
-    Reads histograms, computes limits, optionally plots histograms,
-    and writes results to an ECSV file.
+    Reads histograms, computes limits, optionally plots histograms, and writes
+    results to ECSV files. A literal file or glob preserves the existing output
+    behavior. A directory processes supported particle products independently
+    and writes one result below a particle-specific subdirectory.
     """
     args_dict = args_dict or settings.config.args
 
-    if not args_dict.get("trigger_histogram_file"):
-        raise ValueError("Use --trigger_histogram_file to provide a precomputed histogram file.")
+    trigger_histogram_file = args_dict.get("trigger_histogram_file")
+    trigger_histogram_directory = args_dict.get("trigger_histogram_directory")
+    if trigger_histogram_file and trigger_histogram_directory:
+        raise ValueError(
+            "Provide only one of trigger_histogram_file and trigger_histogram_directory."
+        )
+    if not trigger_histogram_file and not trigger_histogram_directory:
+        raise ValueError(
+            "Use trigger_histogram_file or trigger_histogram_directory to provide input."
+        )
+    if (
+        trigger_histogram_directory
+        and args_dict.get("output_file")
+        and not args_dict.get("output_file_from_default")
+    ):
+        raise ValueError(
+            "output_file cannot be used with trigger_histogram_directory; "
+            "one corsika_limits.ecsv is written per particle directory."
+        )
 
     allowed_losses = parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
     differential_loss_bins_per_decade = validate_differential_loss_bins_per_decade(
         args_dict.get("differential_loss_bins_per_decade", 0)
     )
+
+    if trigger_histogram_directory:
+        return _generate_corsika_limits_from_histogram_directory(
+            args_dict,
+            allowed_losses,
+            energy_threshold_fraction,
+            differential_loss_bins_per_decade,
+        )
 
     results = _generate_corsika_limits_from_histogram_file(
         args_dict,
@@ -201,6 +245,7 @@ def generate_corsika_limits_grid(args_dict=None):
         differential_loss_bins_per_decade,
     )
     write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+    return None
 
 
 def _generate_corsika_limits_from_histogram_file(
@@ -208,17 +253,27 @@ def _generate_corsika_limits_from_histogram_file(
     allowed_losses,
     energy_threshold_fraction,
     differential_loss_bins_per_decade,
+    histogram_files=None,
+    output_dir=None,
 ):
-    """Derive CORSIKA limits from a precomputed trigger-histogram file."""
+    """Derive CORSIKA limits from one or more precomputed trigger-histogram files."""
     selected_array_names = _selected_array_names(args_dict)
-    loaded_histograms = load_event_data_histograms(
-        args_dict["trigger_histogram_file"],
-        array_names=selected_array_names,
+    plot_layouts = _normalize_plot_histogram_selection(args_dict.get("plot_histograms", False))
+    loaded_histograms = []
+    input_files = histogram_files or _resolve_trigger_histogram_files(
+        args_dict["trigger_histogram_file"]
     )
-    output_dir = io_handler.IOHandler().get_output_directory()
+    for histogram_file in input_files:
+        loaded_histograms.extend(
+            load_event_data_histograms(
+                histogram_file,
+                array_names=selected_array_names,
+            )
+        )
+    output_dir = output_dir or io_handler.IOHandler().get_output_directory()
     production_indices = sorted({int(row["production_index"]) for row, _ in loaded_histograms})
     production_subdirs = {}
-    if args_dict.get("plot_histograms") and len(production_indices) > 1:
+    if plot_layouts != _NO_PLOT_LAYOUTS and len(production_indices) > 1:
         production_subdirs = _build_production_subdirectories(production_indices, output_dir)
 
     results = []
@@ -226,17 +281,16 @@ def _generate_corsika_limits_from_histogram_file(
         _logger.info(
             f"Processing production index {row['production_index']} for array {row['array_name']}"
         )
-        output_subdir = None
-        if production_subdirs:
-            output_subdir = production_subdirs.get(int(row["production_index"]))
+        output_subdir = production_subdirs.get(int(row["production_index"]), output_dir)
         result = _derive_limits_from_histograms(
             histograms,
             row["array_name"],
             allowed_losses,
             energy_threshold_fraction,
-            args_dict.get("plot_histograms", False),
+            _plot_selected_for_array(plot_layouts, row["array_name"]),
             output_subdir,
             differential_loss_bins_per_decade,
+            args_dict.get("plot_reduced_histograms", False),
         )
         result.update(
             {
@@ -247,6 +301,155 @@ def _generate_corsika_limits_from_histogram_file(
         )
         results.append(result)
     return results
+
+
+def _normalize_plot_histogram_selection(plot_histograms):
+    """Normalize plot selection to all layouts, no layouts, or named layouts.
+
+    Parameters
+    ----------
+    plot_histograms : bool, str, or sequence[str]
+        Plot configuration. ``False`` disables plotting. ``True``, ``all``, an
+        empty sequence from a bare command-line flag, or a sequence containing
+        ``all`` enables plotting for every layout. Other strings are interpreted
+        as one layout name.
+
+    Returns
+    -------
+    None or tuple[str, ...]
+        ``None`` means all layouts, an empty tuple means no layouts, and a
+        non-empty tuple contains the selected layout names.
+
+    Raises
+    ------
+    ValueError
+        If the value is not a boolean, string, or sequence of strings.
+    """
+    if plot_histograms is True:
+        return None
+    if plot_histograms is False or plot_histograms is None:
+        return _NO_PLOT_LAYOUTS
+
+    if isinstance(plot_histograms, str):
+        selections = [plot_histograms]
+    elif isinstance(plot_histograms, list | tuple | set):
+        selections = list(plot_histograms)
+    else:
+        raise ValueError(
+            "plot_histograms must be False, True, 'all', or a list of array layout names."
+        )
+
+    if not selections:
+        return None
+
+    normalized = tuple(str(selection).strip() for selection in selections)
+    lowered = {selection.lower() for selection in normalized}
+    if "all" in lowered or "true" in lowered:
+        return None
+    if "false" in lowered:
+        if len(normalized) > 1:
+            raise ValueError("plot_histograms cannot combine 'False' with layout names.")
+        return _NO_PLOT_LAYOUTS
+    if any(not selection for selection in normalized):
+        raise ValueError("plot_histograms layout names must not be empty.")
+    return normalized
+
+
+def _plot_selected_for_array(plot_layouts, array_name):
+    """Return whether a layout should receive diagnostic histogram plots."""
+    return plot_layouts is None or str(array_name) in plot_layouts
+
+
+def _generate_corsika_limits_from_histogram_directory(
+    args_dict,
+    allowed_losses,
+    energy_threshold_fraction,
+    differential_loss_bins_per_decade,
+):
+    """Derive one CORSIKA-limits table per supported particle in a directory."""
+    particle_files = _discover_trigger_histogram_groups(args_dict["trigger_histogram_directory"])
+    output_root = io_handler.IOHandler().get_output_directory()
+
+    for particle_name, histogram_files in particle_files.items():
+        particle_output_dir = output_root / particle_name
+        particle_output_dir.mkdir(parents=True, exist_ok=True)
+        results = _generate_corsika_limits_from_histogram_file(
+            args_dict,
+            allowed_losses,
+            energy_threshold_fraction,
+            differential_loss_bins_per_decade,
+            histogram_files=histogram_files,
+            output_dir=particle_output_dir,
+        )
+        particle_args = dict(args_dict)
+        particle_args["output_file"] = str(particle_output_dir / "corsika_limits.ecsv")
+        particle_args["output_path"] = str(particle_output_dir)
+        write_results(results, particle_args, allowed_losses, energy_threshold_fraction)
+
+
+def _discover_trigger_histogram_groups(trigger_histogram_directory):
+    """Return supported trigger-histogram files grouped by output particle name.
+
+    Parameters
+    ----------
+    trigger_histogram_directory : str or pathlib.Path
+        Directory containing finalized trigger-histogram HDF5 products.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        Sorted particle names mapped to sorted input filenames.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the input directory does not exist or is not a directory.
+    ValueError
+        If no supported trigger-histogram products are found.
+    """
+    directory = Path(trigger_histogram_directory)
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Trigger-histogram directory not found: {directory}")
+
+    groups = {}
+    for file_path in sorted(directory.glob("*.hdf5")):
+        if not file_path.is_file():
+            continue
+        particle_name = _particle_name_from_histogram_file(file_path)
+        if particle_name is None:
+            _logger.debug("Ignoring unsupported trigger-histogram file %s", file_path)
+            continue
+        groups.setdefault(particle_name, []).append(str(file_path))
+
+    if not groups:
+        raise ValueError(f"No supported trigger-histogram HDF5 products found in {directory}.")
+    return {particle_name: groups[particle_name] for particle_name in sorted(groups)}
+
+
+def _particle_name_from_histogram_file(file_path):
+    """Return the lookup particle name encoded by a trigger-histogram filename."""
+    file_name = Path(file_path).name.lower()
+    for input_prefix, particle_name in _PARTICLE_FILE_PREFIXES:
+        if file_name == f"{input_prefix}.hdf5" or file_name.startswith(f"{input_prefix}_"):
+            return particle_name
+    return None
+
+
+def _resolve_trigger_histogram_files(trigger_histogram_file):
+    """Resolve a trigger-histogram filename or glob pattern into input files.
+
+    A literal path is returned unchanged so the existing file-validation error is
+    preserved. Glob patterns must match at least one file.
+    """
+    pattern_path = Path(trigger_histogram_file)
+    matched_files = sorted(
+        str(path) for path in pattern_path.parent.glob(pattern_path.name) if path.is_file()
+    )
+    if matched_files:
+        return matched_files
+    if any(character in trigger_histogram_file for character in "*?["):
+        raise ValueError(f"No trigger-histogram files matched pattern '{trigger_histogram_file}'.")
+    return [trigger_histogram_file]
 
 
 def _build_production_subdirectories(production_indices, output_dir):
@@ -276,6 +479,7 @@ def _derive_limits_from_histograms(
     plot_histograms,
     output_subdir,
     differential_loss_bins_per_decade,
+    plot_reduced_histograms=False,
 ):
     """Compute, optionally plot, and return limits from finalized histograms."""
     limits = {
@@ -304,6 +508,12 @@ def _derive_limits_from_histograms(
         histograms_to_plot = {
             name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
         }
+        if plot_reduced_histograms:
+            histograms_to_plot = {
+                name: histogram
+                for name, histogram in histograms_to_plot.items()
+                if name in _REDUCED_PLOT_HISTOGRAM_NAMES
+            }
         if limits.get("angular_distance_is_constant", False):
             histograms_to_plot = {
                 name: histogram
@@ -533,6 +743,7 @@ def _create_results_table(results, allowed_losses, energy_threshold_fraction):
 
     table_cols = _create_table_columns(cols, columns, units)
     table = Table(table_cols)
+    table.sort(["production_index", "primary_particle", "array_name", "zenith"])
 
     table.meta.update(
         {

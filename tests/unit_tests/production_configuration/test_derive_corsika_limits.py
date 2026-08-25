@@ -120,7 +120,9 @@ def test_generate_corsika_limits_grid_requires_trigger_histogram_file(mock_args_
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = None
 
-    with pytest.raises(ValueError, match="Use --trigger_histogram_file"):
+    args["trigger_histogram_directory"] = None
+
+    with pytest.raises(ValueError, match="Use trigger_histogram_file"):
         derive_corsika_limits.generate_corsika_limits_grid(args)
 
 
@@ -160,6 +162,7 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
 
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
     mock_derive.assert_called_once()
+    assert mock_derive.call_args.args[5] == tmp_test_directory
     result = mock_write.call_args[0][0][0]
     assert result["array_name"] == "alpha"
     assert result["telescope_ids"] == ["LSTN-01"]
@@ -211,6 +214,189 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
     assert [result["array_name"] for result in results] == ["alpha", "beta"]
     assert results[0]["telescope_ids"] == ["LSTN-01"]
     assert results[1]["telescope_ids"] == ["MSTS-01"]
+
+
+def test_generate_corsika_limits_grid_plots_only_selected_array_layouts(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    args = mock_args_dict.copy()
+    args["trigger_histogram_file"] = "trigger_histograms.hdf5"
+    args["plot_histograms"] = ["alpha"]
+
+    metadata = Table(
+        rows=[
+            {
+                "production_index": 0,
+                "array_name": "alpha",
+                "telescope_ids": "LSTN-01",
+            },
+            {
+                "production_index": 0,
+                "array_name": "beta",
+                "telescope_ids": "MSTS-01",
+            },
+        ]
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
+        return_value=[(metadata[0], mocker.Mock()), (metadata[1], mocker.Mock())],
+    )
+    mock_derive = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
+        side_effect=[_pool_result(array_name="alpha"), _pool_result(array_name="beta")],
+    )
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    assert [call.args[4] for call in mock_derive.call_args_list] == [True, False]
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (False, ()),
+        (True, None),
+        ("all", None),
+        (["all"], None),
+        (["alpha", "beta"], ("alpha", "beta")),
+    ],
+)
+def test_normalize_plot_histogram_selection(value, expected):
+    assert derive_corsika_limits._normalize_plot_histogram_selection(value) == expected
+
+
+def test_normalize_plot_histogram_selection_rejects_mixed_false_and_layouts():
+    with pytest.raises(ValueError, match="cannot combine 'False'"):
+        derive_corsika_limits._normalize_plot_histogram_selection(["False", "alpha"])
+
+
+def test_generate_corsika_limits_grid_expands_trigger_histogram_glob(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    args = mock_args_dict.copy()
+    first_file = Path(tmp_test_directory) / "electron_20.hdf5"
+    second_file = Path(tmp_test_directory) / "electron_40.hdf5"
+    first_file.touch()
+    second_file.touch()
+    args["trigger_histogram_file"] = str(Path(tmp_test_directory) / "electron*.hdf5")
+
+    metadata = Table(
+        rows=[
+            {
+                "production_index": 0,
+                "array_name": "alpha",
+                "telescope_ids": "LSTN-01",
+            }
+        ]
+    )
+    mock_load = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
+        return_value=[(metadata[0], mocker.Mock())],
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
+        return_value=_pool_result(array_name="alpha"),
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    assert mock_load.call_args_list == [
+        mocker.call(str(first_file), array_names=None),
+        mocker.call(str(second_file), array_names=None),
+    ]
+    assert len(mock_write.call_args.args[0]) == 2
+
+
+def test_resolve_trigger_histogram_files_rejects_unmatched_glob(tmp_test_directory):
+    with pytest.raises(ValueError, match="No trigger-histogram files matched pattern"):
+        derive_corsika_limits._resolve_trigger_histogram_files(
+            str(Path(tmp_test_directory) / "electron*.hdf5")
+        )
+
+
+def test_discover_trigger_histogram_groups(tmp_test_directory):
+    directory = Path(tmp_test_directory)
+    files = [
+        "proton_z20.trigger_histograms.hdf5",
+        "gamma_z20.trigger_histograms.hdf5",
+        "gamma-diffuse_z20.trigger_histograms.hdf5",
+        "electron_z20.trigger_histograms.hdf5",
+        "unrelated.hdf5",
+    ]
+    for file_name in files:
+        (directory / file_name).touch()
+
+    result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
+
+    assert result == {
+        "electron": [str(directory / "electron_z20.trigger_histograms.hdf5")],
+        "gamma": [str(directory / "gamma-diffuse_z20.trigger_histograms.hdf5")],
+        "gamma-0.00deg": [str(directory / "gamma_z20.trigger_histograms.hdf5")],
+        "proton": [str(directory / "proton_z20.trigger_histograms.hdf5")],
+    }
+
+
+def test_discover_trigger_histogram_groups_rejects_empty_directory(tmp_test_directory):
+    with pytest.raises(ValueError, match="No supported trigger-histogram HDF5 products"):
+        derive_corsika_limits._discover_trigger_histogram_groups(tmp_test_directory)
+
+
+def test_discover_trigger_histogram_groups_rejects_missing_directory(tmp_test_directory):
+    missing_directory = Path(tmp_test_directory) / "missing"
+
+    with pytest.raises(FileNotFoundError, match="Trigger-histogram directory not found"):
+        derive_corsika_limits._discover_trigger_histogram_groups(missing_directory)
+
+
+def test_generate_corsika_limits_grid_writes_one_file_per_particle(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    input_directory = Path(tmp_test_directory) / "trigger_histograms"
+    input_directory.mkdir()
+    for file_name in ("electron_z20.hdf5", "gamma-diffuse_z20.hdf5", "gamma_z20.hdf5"):
+        (input_directory / file_name).touch()
+
+    args = mock_args_dict.copy()
+    args["trigger_histogram_file"] = None
+    args["trigger_histogram_directory"] = str(input_directory)
+    args["output_file"] = "activity-id-simtools-production-derive-corsika-limits.ecsv"
+    args["output_file_from_default"] = True
+
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = Path(tmp_test_directory) / "output"
+    mock_generate = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._generate_corsika_limits_from_histogram_file",
+        return_value=[_pool_result()],
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    output_root = Path(tmp_test_directory) / "output"
+    assert [call.kwargs["histogram_files"] for call in mock_generate.call_args_list] == [
+        [str(input_directory / "electron_z20.hdf5")],
+        [str(input_directory / "gamma-diffuse_z20.hdf5")],
+        [str(input_directory / "gamma_z20.hdf5")],
+    ]
+    assert [call.args[1]["output_file"] for call in mock_write.call_args_list] == [
+        str(output_root / "electron" / "corsika_limits.ecsv"),
+        str(output_root / "gamma" / "corsika_limits.ecsv"),
+        str(output_root / "gamma-0.00deg" / "corsika_limits.ecsv"),
+    ]
+    assert all((output_root / name).is_dir() for name in ("electron", "gamma", "gamma-0.00deg"))
 
 
 def test_build_production_subdirectories_uses_production_indices(tmp_test_directory):
@@ -593,6 +779,38 @@ def test_constant_angular_distance_is_not_rounded_in_results_table(mock_results)
     assert table["viewcone_radius"][0] == pytest.approx(0.1)
 
 
+def test_create_results_table_sorts_production_configuration_columns():
+    results = [
+        _pool_result(production_index=1, array_name="beta"),
+        _pool_result(production_index=0, array_name="alpha"),
+        _pool_result(production_index=0, array_name="beta"),
+        _pool_result(production_index=0, array_name="alpha"),
+        _pool_result(production_index=0, array_name="alpha"),
+    ]
+    results[1].update({"primary_particle": "proton", "zenith": 20.0 * u.deg})
+    results[2].update({"primary_particle": "electron", "zenith": 20.0 * u.deg})
+    results[3].update({"primary_particle": "electron", "zenith": 40.0 * u.deg})
+    results[4].update({"primary_particle": "electron", "zenith": 20.0 * u.deg})
+
+    table = derive_corsika_limits._create_results_table(results, DEFAULT_ALLOWED_LOSSES, 0.1)
+
+    assert list(
+        zip(
+            table["production_index"],
+            table["primary_particle"],
+            table["array_name"],
+            table["zenith"].quantity.to_value(u.deg),
+            strict=True,
+        )
+    ) == [
+        (0, "electron", "alpha", 20.0),
+        (0, "electron", "alpha", 40.0),
+        (0, "electron", "beta", 20.0),
+        (0, "proton", "alpha", 20.0),
+        (1, "gamma", "beta", 20.0),
+    ]
+
+
 def test_constant_angular_distance_distributions_are_not_plotted(mocker, tmp_test_directory):
     histograms = mocker.MagicMock()
     histograms.file_info = {}
@@ -629,6 +847,44 @@ def test_constant_angular_distance_distributions_are_not_plotted(mocker, tmp_tes
     assert set(plotted_histograms) == set()
     assert plot.call_args.kwargs["add_distance_projections"] is True
     assert plot.call_args.kwargs["use_broad_range_limits"] is True
+
+
+def test_reduced_histogram_plot_selection(mocker, tmp_test_directory):
+    reduced_histogram_names = {
+        "angular_distance_vs_energy",
+        "core_distance_vs_energy",
+        "reuse_max_vs_core_distance_vs_energy",
+        "x_core_shower_vs_y_core_shower",
+    }
+    histograms = mocker.MagicMock()
+    histograms.file_info = {}
+    histograms.histograms = {
+        name: {"histogram": np.array([1.0])} for name in reduced_histogram_names
+    }
+    histograms.histograms.update(
+        {
+            "energy": {"histogram": np.array([1.0])},
+            "core_distance": {"histogram": np.array([1.0])},
+        }
+    )
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
+    mocker.patch(COMPUTE_LIMITS_PATH, return_value={})
+    plot = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+
+    derive_corsika_limits._derive_limits_from_histograms(
+        histograms,
+        "MockArray",
+        DEFAULT_ALLOWED_LOSSES,
+        0.01,
+        True,
+        tmp_test_directory,
+        0,
+        True,
+    )
+
+    assert set(plot.call_args.args[0]) == reduced_histogram_names
 
 
 def test_differential_upper_limits(mocker):

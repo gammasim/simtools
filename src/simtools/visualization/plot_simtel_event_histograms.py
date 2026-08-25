@@ -701,11 +701,29 @@ def _create_2d_plot_with_projections(
         yscale=scales.get("y", "linear"),
     )
     _apply_axis_limits(ax, axis_limits)
-    _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind)
+    _plot_distance_projections(
+        ax_x,
+        ax_y,
+        data,
+        bins,
+        labels,
+        axis_limits,
+        lines,
+        projection_kind,
+    )
     return fig, ax
 
 
-def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind):
+def _plot_distance_projections(
+    ax_x,
+    ax_y,
+    data,
+    bins,
+    labels,
+    axis_limits,
+    lines,
+    projection_kind,
+):
     """Plot overall projections and fixed-coordinate slices of a 2D histogram."""
     x_centers = 0.5 * (bins[0][:-1] + bins[0][1:])
     y_centers = 0.5 * (bins[1][:-1] + bins[1][1:])
@@ -739,6 +757,8 @@ def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, proj
     )
     _apply_axis_limits(ax_x, {"x": axis_limits.get("x")})
     _apply_axis_limits(ax_y, {"x": axis_limits.get("y")})
+    _add_lines(ax_x, {"x": lines.get("x")})
+    _add_lines(ax_y, {"x": lines.get("y")})
     _add_projection_legend(ax_x)
     _add_projection_legend(ax_y)
 

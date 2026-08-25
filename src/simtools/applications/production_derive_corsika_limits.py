@@ -27,9 +27,20 @@ _OUTPUT_ARGUMENTS = (
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "trigger_histogram_file",
-        help="Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms. ",
+        help="Trigger-histogram HDF5 file or glob from simtools-write-trigger-histograms.",
         type=str,
-        required=True,
+        exclusive_group="trigger_histogram_input",
+        exclusive_group_required=True,
+    ),
+    cli.ArgumentDefinition(
+        "trigger_histogram_directory",
+        help=(
+            "Directory containing precomputed trigger-histogram HDF5 products. "
+            "Each supported particle is processed into its own output subdirectory."
+        ),
+        type=str,
+        exclusive_group="trigger_histogram_input",
+        exclusive_group_required=True,
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
@@ -65,7 +76,19 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "plot_histograms",
-        help="Plot histograms of the event data.",
+        help=(
+            "Plot histograms for selected array layouts. Use without values, 'True', or 'all' "
+            "for all layouts; provide layout names to restrict plotting."
+        ),
+        nargs="*",
+        default=False,
+    ),
+    cli.ArgumentDefinition(
+        "plot_reduced_histograms",
+        help=(
+            "When plotting, restrict each layout to the reduced diagnostic histogram set: "
+            "triggered distance-versus-energy, reuse maximum, and core-position plots."
+        ),
         action="store_true",
         default=False,
     ),
@@ -84,6 +107,12 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, _config_sources, parser):
     """Validate the complete allowed-loss configuration after merging inputs."""
+    if (
+        args_dict.get("trigger_histogram_directory")
+        and args_dict.get("output_file")
+        and not args_dict.get("output_file_from_default")
+    ):
+        parser.error("--output_file cannot be used with --trigger_histogram_directory.")
     try:
         parse_allowed_losses(args_dict.get("allowed_losses"))
     except ValueError as exc:

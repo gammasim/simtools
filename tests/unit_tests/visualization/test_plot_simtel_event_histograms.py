@@ -851,7 +851,7 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         scales={"y": "log"},
         colorbar_label="Event count",
         output_file=output_file,
-        lines={},
+        lines={"x": 1200.0, "y": 0.1},
         axis_limits={"x": (0.0, 1800.0), "y": (0.02, 200.0)},
         projection_kind="core_distance",
     )
@@ -866,6 +866,7 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         "log10(E/TeV)=-0.5",
         "log10(E/TeV)=0.5",
         "log10(E/TeV)=1.5",
+        "_child5",
     ]
     assert [line.get_label() for line in fig.axes[2].lines] == [
         "overall",
@@ -873,9 +874,44 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         "500 m",
         "1000 m",
         "1500 m",
+        "_child5",
     ]
+    assert fig.axes[1].lines[-1].get_xdata() == pytest.approx([1200.0, 1200.0])
+    assert fig.axes[1].lines[-1].get_color() == "r"
+    assert fig.axes[1].lines[-1].get_linestyle() == "--"
+    assert fig.axes[2].lines[-1].get_xdata() == pytest.approx([0.1, 0.1])
+    assert fig.axes[2].lines[-1].get_color() == "r"
+    assert fig.axes[2].lines[-1].get_linestyle() == "--"
     assert fig.axes[1].get_legend()._loc == 1
     assert fig.axes[2].get_legend()._loc == 1
+
+
+def test_create_2d_plot_with_angular_distance_projection_limits(tmp_test_directory):
+    output_file = tmp_test_directory / "angular_projected.png"
+    data = np.arange(1.0, 21.0).reshape(4, 5)
+    bins = [np.linspace(0.0, 4.0, 5), np.logspace(-2, 3, 6)]
+
+    fig = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"x": "Angular distance (deg)", "y": "Energy (TeV)", "title": "Triggered"},
+        scales={"y": "log"},
+        colorbar_label="Event count",
+        output_file=output_file,
+        lines={"x": 2.5, "y": 0.1},
+        axis_limits={"x": (0.0, 4.0), "y": (0.02, 200.0)},
+        projection_kind="angular_distance",
+    )
+
+    assert output_file.exists()
+    assert fig.axes[1].lines[-1].get_xdata() == pytest.approx([2.5, 2.5])
+    assert fig.axes[1].lines[-1].get_color() == "r"
+    assert fig.axes[1].lines[-1].get_linestyle() == "--"
+    assert fig.axes[2].lines[-1].get_xdata() == pytest.approx([0.1, 0.1])
+    assert fig.axes[2].lines[-1].get_color() == "r"
+    assert fig.axes[2].lines[-1].get_linestyle() == "--"
 
 
 def test_execute_plotting_loop_removes_array_suffix_word():
