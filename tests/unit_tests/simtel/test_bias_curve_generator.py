@@ -414,7 +414,7 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
         assert call_kwargs["parameter_name"] == "dsum_threshold"
-        assert call_kwargs["value"] == 250  # Integer for DigitalSum
+        assert call_kwargs["value"] == 250  # int for DigitalSum
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "count"
@@ -498,13 +498,10 @@ def test_export_trigger_threshold_handles_exception(tmp_path):
                 with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
                     bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
 
-            mock_logger.warning.assert_called_once()
-            assert "Failed to export trigger threshold" in str(mock_logger.warning.call_args)
-
-        # Should catch the exception and log warning
-        mock_logger.warning.assert_called_once_with(
-            "Failed to export trigger threshold as model parameter: Disk full"
-        )
+            # Should catch the exception and log warning
+            mock_logger.warning.assert_called_once_with(
+                "Failed to export trigger threshold as model parameter: Disk full"
+            )
 
 
 def test_generate_bias_curves_runs_full_pipeline(tmp_path):

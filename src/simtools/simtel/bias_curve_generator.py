@@ -54,8 +54,8 @@ def generate_bias_curves(args):
         proton_rate = proton_stats[thresh]["rate_hz"] if thresh in proton_stats else None
         scaled_proton = 1.35 * proton_rate if proton_rate is not None else None
         _logger.info(
-            f"  Threshold {thresh}: NSB={nsb_rate:.2f} Hz,"
-            f"Proton={proton_rate:.2f} Hz, Scaled Proton={scaled_proton:.2f} Hz"
+            f"  Threshold {thresh}: NSB={nsb_rate:.2f} Hz, "
+            f"Proton={proton_rate:.2f} Hz, Scaled={scaled_proton:.2f} Hz"
         )
 
     _logger.info("Plotting bias curves...")
@@ -451,37 +451,8 @@ def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
             # Solve for t: t = (y1_proton - y1_nsb) / ((y2_nsb - y1_nsb) - (y2_proton - y1_proton))
             numerator = y1_proton - y1_nsb
             denominator = (y2_nsb - y1_nsb) - (y2_proton - y1_proton)
-
-            if abs(denominator) < 1e-10:
-                # Parallel lines, use midpoint
-                return (x1 + x2) / 2.0
-
             t = numerator / denominator
             # Clamp t to [0, 1] to stay within bracket
-            t = max(0.0, min(1.0, t))
-
-            intersection = x1 + t * (x2 - x1)
-
-            _logger.debug(
-                f"Intersection between {x1} and {x2}: NSB {y1_nsb:.2f}>{y2_nsb:.2f}, "
-                f"Proton {y1_proton:.2f}<={y2_proton:.2f}, t={t:.3f}, result={intersection:.2f}"
-            )
-            return intersection
-
-    # Also check reverse direction (shouldn't happen but just in case)
-    for i in range(len(x) - 1):
-        if y_nsb[i] < y_proton[i] and y_nsb[i + 1] >= y_proton[i + 1]:
-            x1, x2 = float(x[i]), float(x[i + 1])
-            y1_nsb, y2_nsb = float(y_nsb[i]), float(y_nsb[i + 1])
-            y1_proton, y2_proton = float(y_proton[i]), float(y_proton[i + 1])
-
-            numerator = y1_proton - y1_nsb
-            denominator = (y2_nsb - y1_nsb) - (y2_proton - y1_proton)
-
-            if abs(denominator) < 1e-10:
-                return (x1 + x2) / 2.0
-
-            t = numerator / denominator
             t = max(0.0, min(1.0, t))
             return x1 + t * (x2 - x1)
 
