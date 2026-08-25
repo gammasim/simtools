@@ -216,6 +216,55 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
     assert results[1]["telescope_ids"] == ["MSTS-01"]
 
 
+def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    args = mock_args_dict.copy()
+    args["trigger_histogram_file"] = "trigger_histograms.hdf5"
+
+    metadata = Table(
+        rows=[
+            {
+                "production_index": 0,
+                "array_name": "empty",
+                "telescope_ids": "LSTN-01",
+            },
+            {
+                "production_index": 0,
+                "array_name": "valid",
+                "telescope_ids": "MSTS-01",
+            },
+        ]
+    )
+    empty_histograms = mocker.Mock()
+    empty_histograms.histograms = {"energy": {"histogram": np.zeros(2)}}
+    valid_histograms = mocker.Mock()
+    valid_histograms.histograms = {"energy": {"histogram": np.array([0.0, 1.0])}}
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
+        return_value=[
+            (metadata[0], empty_histograms),
+            (metadata[1], valid_histograms),
+        ],
+    )
+    mock_derive = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
+        return_value=_pool_result(array_name="valid"),
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    mock_derive.assert_called_once()
+    assert mock_derive.call_args.args[1] == "valid"
+    mock_write.assert_called_once()
+
+
 def test_generate_corsika_limits_grid_plots_only_selected_array_layouts(
     mocker, mock_args_dict, tmp_test_directory
 ):

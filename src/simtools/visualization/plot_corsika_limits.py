@@ -232,6 +232,10 @@ def plot_limits(limits_table, output_dir):
                     linewidth=1.5,
                 )
 
+        for axis in axes:
+            axis.relim()
+            axis.autoscale_view()
+
         axes[0].set_title("Lower Energy Limit vs Zenith")
         axes[0].set_xlabel(ZENITH_LABEL)
         axes[0].set_ylabel("Lower Energy Limit [TeV]")

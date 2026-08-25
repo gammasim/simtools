@@ -69,6 +69,10 @@ the activity ID and optional label. The shared `--output_file_format` option is 
 configuration compatibility but does not change this application's output: the table is always
 written as ECSV.
 
+Rows with no positive entries in the energy histogram are skipped with a warning. This allows
+layouts that are not available at every pointing or zenith angle to coexist in one trigger-histogram
+product; valid layouts continue to produce limits.
+
 Use `trigger_histogram_directory` when all existing trigger-histogram products for one site are
 stored together. The application discovers the supported particle prefixes and writes
 `<output_path>/<particle>/corsika_limits.ecsv` for each particle. Site selection remains explicit:

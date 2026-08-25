@@ -132,6 +132,8 @@ def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
     assert mock_savefig.called
     fig = plt.gcf()
     axes = fig.axes[:3]
+    assert axes[0].get_ylim()[0] <= 0.008
+    assert axes[0].get_ylim()[1] >= 0.015
     assert any(
         line.get_linestyle() == "--" and line.get_color() == "gray"
         for axis in axes

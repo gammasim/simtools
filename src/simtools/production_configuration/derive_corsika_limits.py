@@ -244,7 +244,10 @@ def generate_corsika_limits_grid(args_dict=None):
         energy_threshold_fraction,
         differential_loss_bins_per_decade,
     )
-    write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+    if results:
+        write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+    else:
+        _logger.warning("No non-empty trigger histograms were available; no limits were written.")
     return None
 
 
@@ -271,13 +274,24 @@ def _generate_corsika_limits_from_histogram_file(
             )
         )
     output_dir = output_dir or io_handler.IOHandler().get_output_directory()
-    production_indices = sorted({int(row["production_index"]) for row, _ in loaded_histograms})
+    usable_histograms = []
+    for row, histograms in loaded_histograms:
+        if _has_positive_energy_histogram(histograms):
+            usable_histograms.append((row, histograms))
+            continue
+        _logger.warning(
+            "Skipping production index %s for array %s: energy histogram has no positive entries.",
+            row["production_index"],
+            row["array_name"],
+        )
+
+    production_indices = sorted({int(row["production_index"]) for row, _ in usable_histograms})
     production_subdirs = {}
     if plot_layouts != _NO_PLOT_LAYOUTS and len(production_indices) > 1:
         production_subdirs = _build_production_subdirectories(production_indices, output_dir)
 
     results = []
-    for row, histograms in loaded_histograms:
+    for row, histograms in usable_histograms:
         _logger.info(
             f"Processing production index {row['production_index']} for array {row['array_name']}"
         )
@@ -360,6 +374,26 @@ def _plot_selected_for_array(plot_layouts, array_name):
     return plot_layouts is None or str(array_name) in plot_layouts
 
 
+def _has_positive_energy_histogram(histograms):
+    """Return whether finalized histograms contain a usable energy distribution."""
+    histogram_definitions = getattr(histograms, "histograms", None)
+    if not isinstance(histogram_definitions, dict):
+        return True
+
+    energy_definition = histogram_definitions.get("energy")
+    if not isinstance(energy_definition, dict):
+        return False
+
+    counts = energy_definition.get("histogram")
+    if counts is None:
+        return False
+
+    try:
+        return bool(np.any(np.asarray(counts, dtype=float) > 0))
+    except TypeError, ValueError:
+        return False
+
+
 def _generate_corsika_limits_from_histogram_directory(
     args_dict,
     allowed_losses,
@@ -384,7 +418,13 @@ def _generate_corsika_limits_from_histogram_directory(
         particle_args = dict(args_dict)
         particle_args["output_file"] = str(particle_output_dir / "corsika_limits.ecsv")
         particle_args["output_path"] = str(particle_output_dir)
-        write_results(results, particle_args, allowed_losses, energy_threshold_fraction)
+        if results:
+            write_results(results, particle_args, allowed_losses, energy_threshold_fraction)
+        else:
+            _logger.warning(
+                "No non-empty trigger histograms found for particle %s; no limits were written.",
+                particle_name,
+            )
 
 
 def _discover_trigger_histogram_groups(trigger_histogram_directory):
