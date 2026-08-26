@@ -23,6 +23,7 @@ _LIMIT_COLUMNS = (
     "upper_radius_limit",
     "viewcone_radius",
 )
+_AZIMUTH_LINESTYLES = ("-", "--")
 
 
 def _get_primary_particle_label(table):
@@ -151,14 +152,15 @@ def plot_grid_coverage(limits_table, grid_definition, output_dir):
     return output_files
 
 
-def _plot_limit_series(axes, zeniths, values, color, filled_marker):
+def _plot_limit_series(axes, zeniths, values, color, filled_marker, linestyle):
     """Plot the three derived limit series with a common azimuth marker style."""
     for axis, value in zip(axes, values, strict=True):
         axis.plot(
             zeniths,
             value,
-            "o-",
+            "o",
             color=color,
+            linestyle=linestyle,
             markerfacecolor=color if filled_marker else "none",
         )
 
@@ -202,12 +204,14 @@ def _plot_limit_group(axes, group, broad_range_columns):
             agg_data.sort("zenith")
             zeniths = agg_data["zenith"].value
             azimuth_value = _value_in_degrees(azimuth_group["azimuth"][0])
+            azimuth_index = azimuth_values.index(azimuth_value)
             _plot_limit_series(
                 axes,
                 zeniths,
                 [agg_data[column] for column in _LIMIT_COLUMNS],
                 color,
-                filled_marker=azimuth_values.index(azimuth_value) == 0,
+                filled_marker=azimuth_index == 0,
+                linestyle=_AZIMUTH_LINESTYLES[azimuth_index % len(_AZIMUTH_LINESTYLES)],
             )
 
             if broad_range_columns:
@@ -291,7 +295,7 @@ def plot_limits(limits_table, output_dir):
                 [0],
                 marker="o",
                 color="black",
-                linestyle="none",
+                linestyle=_AZIMUTH_LINESTYLES[index % len(_AZIMUTH_LINESTYLES)],
                 markerfacecolor="black" if index == 0 else "none",
             )
             for index, _ in enumerate(azimuth_values)

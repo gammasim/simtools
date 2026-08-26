@@ -9,7 +9,7 @@
 ```{eval-rst}
 This application reads a CORSIKA limits table and plots the limits as a
 function of zenith angle. Azimuth directions share each plot: NSB levels use
-different colors, while azimuths use filled and open markers.
+different colors, while azimuths use solid or dashed lines with filled or open markers.
 
 
 **Command line arguments**

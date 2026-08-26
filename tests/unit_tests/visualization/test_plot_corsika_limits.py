@@ -119,6 +119,7 @@ def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     marker_face_colors = [line.get_markerfacecolor() for line in plt.gcf().axes[0].lines]
     assert any(color == "none" for color in marker_face_colors)
     assert any(color != "none" for color in marker_face_colors)
+    assert {line.get_linestyle() for line in plt.gcf().axes[0].lines} == {"-", "--"}
     assert [label.get_text() for label in plt.gcf().legends[0].get_texts()] == [
         "NSB=dark GHz",
         "Az=0 deg",
