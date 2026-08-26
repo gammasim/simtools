@@ -9,6 +9,7 @@ from matplotlib.colors import LogNorm
 
 from simtools.visualization import plot_simtel_event_histograms
 from simtools.visualization.plot_simtel_event_histograms import (
+    _add_lines,
     _build_plot_filename,
     _create_2d_histogram_plot,
     _create_plot,
@@ -970,6 +971,17 @@ def test_create_2d_plot_renders_single_point_limit_curve(tmp_test_directory):
     assert curve.get_marker() == "o"
     assert curve.get_xdata() == pytest.approx([120.0])
     assert curve.get_ydata() == pytest.approx([1.0])
+
+
+def test_add_lines_handles_multi_point_and_malformed_limit_curves():
+    fig, ax = plt.subplots()
+
+    _add_lines(ax, {"curve": {"x": [100.0, 200.0], "y": [1.0, 2.0]}})
+    _add_lines(ax, {"curve": {"x": [100.0], "y": [1.0, 2.0]}})
+
+    assert len(ax.lines) == 1
+    assert ax.lines[0].get_marker() == "None"
+    plt.close(fig)
 
 
 def test_execute_plotting_loop_removes_array_suffix_word():
