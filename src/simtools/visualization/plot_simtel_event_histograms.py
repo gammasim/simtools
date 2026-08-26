@@ -368,15 +368,16 @@ def _get_broad_range_axis_limits(name, limits):
     if not limits:
         return {}
     broad_range_values = _extract_broad_range_values(limits)
+    energy_axis_limits = _get_energy_axis_limits(limits)
     axis_limits_by_group = {
-        "energy": {"x": broad_range_values["energy_limits"]},
+        "energy": {"x": energy_axis_limits},
         "core_distance_vs_energy": {
             "x": (0.0, broad_range_values["core_max"]),
-            "y": broad_range_values["energy_limits"],
+            "y": energy_axis_limits,
         },
         "angular_distance_vs_energy": {
             "x": (0.0, broad_range_values["viewcone_max"]),
-            "y": broad_range_values["energy_limits"],
+            "y": energy_axis_limits,
         },
         "core_distance": {"x": (0.0, broad_range_values["core_max"])},
         "angular_distance": {"x": (0.0, broad_range_values["viewcone_max"])},
@@ -413,7 +414,10 @@ def _get_broad_range_plot_lines(name, limits):
 def _extract_broad_range_values(limits):
     """Extract scalar broad-range values from the limits dictionary."""
     return {
-        "energy_limits": _get_energy_axis_limits(limits),
+        "energy_limits": (
+            _get_limit_value(limits, "br_energy_min"),
+            _get_limit_value(limits, "br_energy_max"),
+        ),
         "core_max": _get_limit_value(limits, "br_core_scatter_max"),
         "viewcone_max": _get_limit_value(limits, "br_viewcone_max"),
     }

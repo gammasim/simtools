@@ -837,6 +837,9 @@ def test_broad_range_axis_limits_expand_for_coincident_energy_limit(tmp_test_dir
 
     assert axis_limits["x"] == pytest.approx((0.0, 1800.0))
     assert axis_limits["y"] == pytest.approx((0.018, 200.0))
+    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
+        "core_distance_vs_energy", limits
+    )["y"] == pytest.approx([0.02, 200.0])
 
     fig = _create_plot(
         data=np.ones((2, 2)),
