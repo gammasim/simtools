@@ -508,12 +508,12 @@ def test_discover_trigger_histogram_groups_groups_metadata_particles_and_ignores
     tmp_test_directory, caplog
 ):
     directory = Path(tmp_test_directory)
-    first_file = directory / "first.hdf5"
-    second_file = directory / "second.hdf5"
+    first_file = directory / "first.trigger_histograms.hdf5"
+    second_file = directory / "second.trigger_histograms.hdf5"
     _write_particle_metadata(first_file, "iron")
     _write_particle_metadata(second_file, "iron")
-    (directory / "not_hdf5.hdf5").write_bytes(b"not an HDF5 file")
-    (directory / "missing_metadata.hdf5").touch()
+    (directory / "not_hdf5.trigger_histograms.hdf5").write_bytes(b"not an HDF5 file")
+    (directory / "missing_metadata.trigger_histograms.hdf5").touch()
 
     result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
 
@@ -523,12 +523,13 @@ def test_discover_trigger_histogram_groups_groups_metadata_particles_and_ignores
 
 def test_discover_trigger_histogram_groups_ignores_directories(tmp_test_directory):
     directory = Path(tmp_test_directory)
-    _write_particle_metadata(directory / "proton.hdf5", "proton")
-    (directory / "not_a_file.hdf5").mkdir()
+    proton_file = directory / "proton.trigger_histograms.hdf5"
+    _write_particle_metadata(proton_file, "proton")
+    (directory / "not_a_file.trigger_histograms.hdf5").mkdir()
 
     result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
 
-    assert result == {"proton": [str(directory / "proton.hdf5")]}
+    assert result == {"proton": [str(proton_file)]}
 
 
 @pytest.mark.parametrize(

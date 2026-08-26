@@ -454,7 +454,7 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
         raise FileNotFoundError(f"Trigger-histogram directory not found: {directory}")
 
     groups = {}
-    for file_path in sorted(directory.glob("*.hdf5")):
+    for file_path in sorted(directory.glob("*.trigger_histograms.hdf5")):
         if not file_path.is_file():
             continue
         try:
