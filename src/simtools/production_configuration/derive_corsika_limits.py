@@ -8,8 +8,8 @@ import os
 from pathlib import Path
 
 import astropy.units as u
-import h5py
 import numpy as np
+from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
 from simtools import settings
@@ -20,7 +20,6 @@ from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
 )
 from simtools.production_configuration.trigger_histograms import (
-    TRIGGER_HISTOGRAM_DENSE_GROUP,
     TRIGGER_HISTOGRAM_METADATA_TABLE,
     load_event_data_histograms,
 )
@@ -32,7 +31,6 @@ _logger = logging.getLogger(__name__)
 CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
 _ONAXIS_GAMMA_PARTICLE = "gamma-0.00deg"
 _PARTICLE_METADATA_COLUMNS = (
-    "reference_id",
     "primary_particle",
     "viewcone_min",
     "viewcone_max",
@@ -442,8 +440,7 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
     -------
     dict[str, list[str]]
         Sorted particle names mapped to sorted input filenames. Particle names are
-        read from ``TRIGGER_REFERENCE_METADATA``; filenames are used only for
-        optional compatibility diagnostics.
+        read from ``TRIGGER_REFERENCE_METADATA``.
 
     Raises
     ------
@@ -462,19 +459,10 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
             continue
         try:
             particle_name = _particle_name_from_histogram_file(file_path)
-        except (OSError, KeyError, TypeError, ValueError, IndexError) as exc:
+        except (OSError, KeyError, TypeError, ValueError, IndexError, IORegistryError) as exc:
             _logger.warning("Ignoring invalid trigger-histogram candidate %s: %s", file_path, exc)
             continue
 
-        filename_particle = _filename_particle_name_hint(file_path)
-        if filename_particle and filename_particle != particle_name:
-            _logger.warning(
-                "Particle metadata in %s identifies %s, while its filename suggests %s; "
-                "using metadata.",
-                file_path,
-                particle_name,
-                filename_particle,
-            )
         groups.setdefault(particle_name, []).append(str(file_path))
 
     if not groups:
@@ -484,16 +472,6 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
 
 def _particle_name_from_histogram_file(file_path):
     """Return the canonical output particle name from trigger-histogram metadata."""
-    with h5py.File(file_path, "r") as hdf5_file:
-        if TRIGGER_HISTOGRAM_METADATA_TABLE not in hdf5_file:
-            raise ValueError(f"missing {TRIGGER_HISTOGRAM_METADATA_TABLE} table")
-        if not isinstance(hdf5_file[TRIGGER_HISTOGRAM_METADATA_TABLE], h5py.Dataset):
-            raise ValueError(f"{TRIGGER_HISTOGRAM_METADATA_TABLE} is not a table dataset")
-        if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
-            raise ValueError(f"missing {TRIGGER_HISTOGRAM_DENSE_GROUP} histogram group")
-        if not isinstance(hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP], h5py.Group):
-            raise ValueError(f"{TRIGGER_HISTOGRAM_DENSE_GROUP} is not a histogram group")
-
     metadata = table_handler.read_tables(
         file_path,
         [TRIGGER_HISTOGRAM_METADATA_TABLE],
@@ -506,14 +484,6 @@ def _particle_name_from_histogram_file(file_path):
         raise ValueError(f"missing required metadata column(s): {', '.join(missing_columns)}")
     if not metadata:
         raise ValueError("metadata table is empty")
-
-    metadata_reference_ids = {str(reference_id) for reference_id in metadata["reference_id"]}
-    with h5py.File(file_path, "r") as hdf5_file:
-        dense_reference_ids = set(hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP].keys())
-    missing_dense_ids = metadata_reference_ids - dense_reference_ids
-    if missing_dense_ids:
-        missing_ids = ", ".join(sorted(missing_dense_ids))
-        raise ValueError(f"missing dense histogram payload for reference id(s): {missing_ids}")
 
     particle_names = set()
     for row in metadata:
@@ -564,24 +534,6 @@ def _metadata_angle_in_degrees(value, column_name):
     if not np.isfinite(value):
         raise ValueError(f"{column_name} metadata is not finite")
     return value
-
-
-def _filename_particle_name_hint(file_path):
-    """Return a legacy filename particle hint for conflict diagnostics only."""
-    file_name = Path(file_path).name.lower()
-    suffix = ".trigger_histograms.hdf5"
-    if not file_name.endswith(suffix):
-        return None
-
-    stem = file_name[: -len(suffix)]
-    if stem == "gamma-diffuse" or stem.startswith("gamma-diffuse_"):
-        return "gamma"
-    if stem == "gamma_diffuse" or stem.startswith("gamma_diffuse_"):
-        return "gamma"
-    prefix = stem.split("_", maxsplit=1)[0]
-    if prefix in {"gamma", _ONAXIS_GAMMA_PARTICLE}:
-        return _ONAXIS_GAMMA_PARTICLE
-    return prefix or None
 
 
 def _resolve_trigger_histogram_files(trigger_histogram_file):

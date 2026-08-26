@@ -72,12 +72,13 @@ layouts that are not available at every pointing or zenith angle to coexist in o
 product; valid layouts continue to produce limits.
 
 Use `trigger_histogram_directory` when all existing trigger-histogram products for one site are
-stored together. The application discovers the supported particle prefixes and writes
-`<output_path>/<particle>/corsika_limits.ecsv` for each particle. Site selection remains explicit:
-run a North and South configuration separately. The directory must contain the finalized HDF5
-products; this mode does not read reduced event data or refill histograms. The standard input
-prefixes are `electron`, `proton`, `gamma-diffuse` (output label `gamma`), and `gamma` (output
-label `gamma-0.00deg`).
+stored together. The application scans direct-child `*.hdf5` files and groups them using their
+`TRIGGER_REFERENCE_METADATA` tables, then writes
+`<output_path>/<particle>/corsika_limits.ecsv` for each particle. New primary particles are
+discovered automatically. Gamma products with a zero-to-zero viewcone are labelled
+`gamma-0.00deg`; other gamma products are labelled `gamma`. Files without valid metadata are
+ignored with a warning. Site selection remains explicit: run a North and South configuration
+separately. This mode does not read reduced event data or refill histograms.
 
 For example:
 
