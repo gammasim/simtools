@@ -19,6 +19,7 @@ from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
 )
 from simtools.production_configuration.trigger_histograms import load_event_data_histograms
+from simtools.utils.general import resolve_file_patterns
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
@@ -452,7 +453,7 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
 
     groups = {}
     for file_path in sorted(directory.glob("*.hdf5")):
-        if not file_path.is_file():
+        if not file_path.is_file() or not file_path.name.endswith(".trigger_histograms.hdf5"):
             continue
         particle_name = _particle_name_from_histogram_file(file_path)
         if particle_name is None:
@@ -480,14 +481,13 @@ def _resolve_trigger_histogram_files(trigger_histogram_file):
     A literal path is returned unchanged so the existing file-validation error is
     preserved. Glob patterns must match at least one file.
     """
-    pattern_path = Path(trigger_histogram_file)
-    matched_files = sorted(
-        str(path) for path in pattern_path.parent.glob(pattern_path.name) if path.is_file()
-    )
-    if matched_files:
-        return matched_files
     if any(character in trigger_histogram_file for character in "*?["):
-        raise ValueError(f"No trigger-histogram files matched pattern '{trigger_histogram_file}'.")
+        try:
+            return [str(path) for path in resolve_file_patterns(trigger_histogram_file)]
+        except FileNotFoundError as exc:
+            raise ValueError(
+                f"No trigger-histogram files matched pattern '{trigger_histogram_file}'."
+            ) from exc
     return [trigger_histogram_file]
 
 

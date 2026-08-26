@@ -373,6 +373,21 @@ def test_resolve_trigger_histogram_files_rejects_unmatched_glob(tmp_test_directo
         )
 
 
+def test_resolve_trigger_histogram_files_supports_wildcards_in_parent_directory(
+    tmp_test_directory,
+):
+    for run_name in ("run_0001", "run_0002"):
+        run_directory = Path(tmp_test_directory) / run_name
+        run_directory.mkdir()
+        (run_directory / "gamma.trigger_histograms.hdf5").touch()
+
+    pattern = str(Path(tmp_test_directory) / "run_*" / "gamma.trigger_histograms.hdf5")
+    assert derive_corsika_limits._resolve_trigger_histogram_files(pattern) == [
+        str(Path(tmp_test_directory) / "run_0001" / "gamma.trigger_histograms.hdf5"),
+        str(Path(tmp_test_directory) / "run_0002" / "gamma.trigger_histograms.hdf5"),
+    ]
+
+
 def test_discover_trigger_histogram_groups(tmp_test_directory):
     directory = Path(tmp_test_directory)
     files = [
@@ -412,7 +427,11 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
 ):
     input_directory = Path(tmp_test_directory) / "trigger_histograms"
     input_directory.mkdir()
-    for file_name in ("electron_z20.hdf5", "gamma-diffuse_z20.hdf5", "gamma_z20.hdf5"):
+    for file_name in (
+        "electron_z20.trigger_histograms.hdf5",
+        "gamma-diffuse_z20.trigger_histograms.hdf5",
+        "gamma_z20.trigger_histograms.hdf5",
+    ):
         (input_directory / file_name).touch()
 
     args = mock_args_dict.copy()
@@ -436,9 +455,9 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
 
     output_root = Path(tmp_test_directory) / "output"
     assert [call.kwargs["histogram_files"] for call in mock_generate.call_args_list] == [
-        [str(input_directory / "electron_z20.hdf5")],
-        [str(input_directory / "gamma-diffuse_z20.hdf5")],
-        [str(input_directory / "gamma_z20.hdf5")],
+        [str(input_directory / "electron_z20.trigger_histograms.hdf5")],
+        [str(input_directory / "gamma-diffuse_z20.trigger_histograms.hdf5")],
+        [str(input_directory / "gamma_z20.trigger_histograms.hdf5")],
     ]
     assert [call.args[1]["output_file"] for call in mock_write.call_args_list] == [
         str(output_root / "electron" / "corsika_limits.ecsv"),

@@ -16,6 +16,10 @@ Use one or more input files or glob patterns. Files from each selected productio
 into the output HDF5 file. `model_version`, `site`, and the array-layout selection describe the
 simulation model associated with the input data.
 
+By default, only events triggering at least two telescopes contribute to the trigger histograms.
+Set `minimum_triggered_telescopes: 1` (or use `--minimum_triggered_telescopes 1`) when single-
+telescope triggers must be included, for example for a single-telescope layout.
+
 For a directory of reduced event-data products, use `event_data_directory`. The application scans
 direct-child `*.reduced_event_data.hdf5` files and groups files whose names differ only by a
 `.part<digits>` suffix. It writes one `<group>.trigger_histograms.hdf5` product per group below
