@@ -413,13 +413,26 @@ def _get_broad_range_plot_lines(name, limits):
 def _extract_broad_range_values(limits):
     """Extract scalar broad-range values from the limits dictionary."""
     return {
-        "energy_limits": (
-            _get_limit_value(limits, "br_energy_min"),
-            _get_limit_value(limits, "br_energy_max"),
-        ),
+        "energy_limits": _get_energy_axis_limits(limits),
         "core_max": _get_limit_value(limits, "br_core_scatter_max"),
         "viewcone_max": _get_limit_value(limits, "br_viewcone_max"),
     }
+
+
+def _get_energy_axis_limits(limits):
+    """Return broad-range energy limits with room for a coincident derived limit."""
+    lower = _get_limit_value(limits, "br_energy_min")
+    upper = _get_limit_value(limits, "br_energy_max")
+    derived_lower = _get_limit_value(limits, "lower_energy_limit")
+    if (
+        lower is not None
+        and upper is not None
+        and derived_lower is not None
+        and lower > 0.0
+        and np.isclose(derived_lower, lower)
+    ):
+        lower *= 0.9
+    return lower, upper
 
 
 def _get_limit_value(limits, key):
@@ -832,8 +845,14 @@ def _add_lines(ax, lines):
             ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
 
     curve = lines.get("curve")
-    if curve and curve.get("x") and curve.get("y"):
-        ax.plot(curve["x"], curve["y"], color="r", linestyle="--", linewidth=1.0)
+    if curve:
+        curve_x = np.asarray(curve.get("x", []), dtype=float).ravel()
+        curve_y = np.asarray(curve.get("y", []), dtype=float).ravel()
+        if curve_x.size and curve_x.size == curve_y.size:
+            curve_params = {"color": "r", "linestyle": "--", "linewidth": 1.0}
+            if curve_x.size == 1:
+                curve_params.update(marker="o", markersize=3.0)
+            ax.plot(curve_x, curve_y, **curve_params)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params, ax=None):

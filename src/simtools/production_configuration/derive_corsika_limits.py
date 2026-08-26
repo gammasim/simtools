@@ -24,13 +24,14 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
+_ONAXIS_GAMMA_PARTICLE = "gamma-0.00deg"
 _PARTICLE_FILE_PREFIXES = (
     ("gamma-diffuse", "gamma"),
     ("gamma_diffuse", "gamma"),
-    ("gamma-0.00deg", "gamma-0.00deg"),
+    (_ONAXIS_GAMMA_PARTICLE, _ONAXIS_GAMMA_PARTICLE),
     ("electron", "electron"),
     ("proton", "proton"),
-    ("gamma", "gamma-0.00deg"),
+    ("gamma", _ONAXIS_GAMMA_PARTICLE),
 )
 
 
