@@ -39,7 +39,7 @@ nsb_table_file (str, optional)
 proton_table_file (str, optional)
     Output ECSV table file for proton rates. If not specified, no table is written.
 parameter_version (str, required)
-    Model parameter version for the exported trigger threshold (e.g., ``prod5``).
+    Model parameter version for the exported trigger threshold (e.g., ``1.0.0``).
 title (str, optional)
     Title for the bias curve plot. Default: "Trigger Rate Bias Curves".
 site (str, required)
@@ -64,7 +64,7 @@ telescope (str, required)
         --site North \\
         --model_version 7.0.0 \\
         --telescope LSTN-01 \\
-        --parameter_version prod5 \\
+        --parameter_version 1.0.0 \\
         --scaling_factor 1.35 \\
         --figure_file bias_curves.png
 ```
