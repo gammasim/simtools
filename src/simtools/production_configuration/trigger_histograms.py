@@ -458,6 +458,7 @@ def _process_production(
     angular_distance_bin_width,
     core_distance_bin_width=None,
     skip_invalid_event_data_files=False,
+    minimum_triggered_telescopes=2,
 ):
     """Read one production once and build trigger histograms for all telescope configurations."""
     finalized_histograms = accumulate_histograms_by_telescope_config(
@@ -469,6 +470,7 @@ def _process_production(
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         fill_efficiency_histogram=True,
         collect_trigger_topology=True,
+        minimum_triggered_telescopes=minimum_triggered_telescopes,
     )
     return [(histograms, topology) for _, histograms, topology in finalized_histograms]
 
@@ -482,6 +484,7 @@ def _execute_production_job(job_spec):
         angular_distance_bin_width=job_spec["angular_distance_bin_width"],
         core_distance_bin_width=job_spec.get("core_distance_bin_width"),
         skip_invalid_event_data_files=job_spec["skip_invalid_event_data_files"],
+        minimum_triggered_telescopes=job_spec.get("minimum_triggered_telescopes", 2),
     )
     return [
         {
@@ -558,6 +561,7 @@ def _write_trigger_histogram_product(args_dict, production_patterns, output_file
             "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
             "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
             "skip_invalid_event_data_files": args_dict.get("skip_invalid_event_data_files", False),
+            "minimum_triggered_telescopes": args_dict.get("minimum_triggered_telescopes", 2),
         }
         for production_index, pattern in enumerate(production_patterns)
     ]
