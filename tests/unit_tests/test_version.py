@@ -219,14 +219,24 @@ def test_base_version_for_patch_delta(version_string, expected):
 
 @pytest.mark.parametrize(
     "version_string",
-    ["v0.17.0", "v1.2.3-rc1", "v1.2.3+build.4", "v7.8010", "v2025-11-30-rc"],
+    [
+        "v0.17.0",
+        "v1.2.3-rc1",
+        "v1.2.3-1a",
+        "v1.2.3+build.4",
+        "v7.8010",
+        "v2025-11-30-rc",
+    ],
 )
 def test_validate_release_tag(version_string):
     assert version.is_valid_release_tag(version_string)
     assert version.validate_release_tag(version_string) == version_string
 
 
-@pytest.mark.parametrize("version_string", ["0.17.0", "vv0.17.0", "v", "latest"])
+@pytest.mark.parametrize(
+    "version_string",
+    ["0.17.0", "vv0.17.0", "v", "latest", "v1oops", "v1.2.", "v1..2"],
+)
 def test_validate_release_tag_rejects_non_tags(version_string):
     assert not version.is_valid_release_tag(version_string)
     with pytest.raises(ValueError, match="v-prefixed semantic version"):

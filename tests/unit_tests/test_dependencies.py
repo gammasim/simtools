@@ -20,6 +20,8 @@ from simtools.dependencies import (
     canonical_manifest_bytes,
     export_build_info,
     get_corsika_version,
+    get_database_tag_or_name,
+    get_database_version_or_name,
     get_dependency_manifest,
     get_dependency_manifest_digest,
     get_sim_telarray_version,
@@ -268,11 +270,25 @@ def test_get_version_string(mocker):
     }
     result = get_version_string(run_time=["docker"])
     assert "Database name: test_db" in result
-    assert "Database version: 1.2.3" in result
+    assert "Database release tag: 1.2.3" in result
     assert "sim_telarray version: 2024.271.0" in result
     assert "CORSIKA version: 7.7550" in result
     assert "Build options: {'simtel_tag': 'master', 'corsika_build_id': '78010'}" in result
     assert "Runtime environment: ['docker']" in result
+
+
+def test_database_tag_accessors_keep_the_legacy_interface(mocker):
+    """Expose canonical tag terminology while retaining the old accessor."""
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.db_config = {
+        "db_simulation_model": "test_db",
+        "db_simulation_model_tag": "v1.2.3",
+    }
+
+    assert get_database_tag_or_name() == "v1.2.3"
+    assert get_database_tag_or_name(tag=False) == "test_db"
+    assert get_database_version_or_name() == "v1.2.3"
+    assert get_database_version_or_name(version=False) == "test_db"
 
 
 def test_get_version_string_without_software_versions(mocker):
@@ -466,7 +482,7 @@ def test_export_build_info(mocker, tmp_test_directory):
         "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
     )
     mocker.patch(
-        "simtools.dependencies.get_database_version_or_name", side_effect=["test_db", "1.2.3"]
+        "simtools.dependencies.get_database_tag_or_name", side_effect=["test_db", "v1.2.3"]
     )
     mocker.patch(
         "simtools.dependencies.get_dependency_manifest",
@@ -481,7 +497,7 @@ def test_export_build_info(mocker, tmp_test_directory):
     assert call_args[1]["data"]["corsika_build_id"] == "78010"
     assert call_args[1]["data"]["simtools"] == __version__
     assert call_args[1]["data"]["database_name"] == "test_db"
-    assert call_args[1]["data"]["database_version"] == "1.2.3"
+    assert call_args[1]["data"]["database_tag"] == "v1.2.3"
 
 
 def test_get_package_path_from_environment(mocker):

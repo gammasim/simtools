@@ -69,7 +69,7 @@ def main():
         tmp_dir=app_context.args.get("tmp_dir"),
         db=db,
         db_simulation_model=app_context.args.get("db_simulation_model"),
-        db_simulation_model_version=app_context.args.get("db_simulation_model_tag"),
+        db_simulation_model_tag=app_context.args.get("db_simulation_model_tag"),
         repository_url=(
             None if app_context.args.get("repository_dir") else DEFAULT_SIMULATION_MODELS
         ),

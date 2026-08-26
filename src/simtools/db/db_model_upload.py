@@ -17,7 +17,7 @@ def add_complete_model(
     tmp_dir,
     db,
     db_simulation_model,
-    db_simulation_model_version,
+    db_simulation_model_tag,
     repository_url=None,
     repository_branch=None,
     max_attempts=3,
@@ -36,8 +36,8 @@ def add_complete_model(
         Database handler object.
     db_simulation_model : str
         Name of the simulation model in the database.
-    db_simulation_model_version : str
-        Version of the simulation model in the database.
+    db_simulation_model_tag : str
+        Release tag of the simulation model repository and database.
     repository_url : str, optional
         URL of the simulation model repository to clone.
     repository_branch : str, optional
@@ -69,7 +69,7 @@ def add_complete_model(
             clone_target_dir = clone_simulation_model_repository(
                 tmp_dir,
                 repository_url,
-                db_simulation_model_version=db_simulation_model_version,
+                db_simulation_model_tag=db_simulation_model_tag,
                 repository_branch=repository_branch,
                 max_attempts=max_attempts,
             )
@@ -87,7 +87,7 @@ def add_complete_model(
         db.generate_compound_indexes_for_databases(
             db_name=None,
             db_simulation_model=db_simulation_model,
-            db_simulation_model_tag=db_simulation_model_version,
+            db_simulation_model_tag=db_simulation_model_tag,
         )
     except Exception as exc:
         raise RuntimeError(f"Upload of simulation model failed: {exc}") from exc
@@ -394,7 +394,7 @@ def _validate_repository_directory_structure(repository_dir):
 
 
 def clone_simulation_model_repository(
-    target_dir, repository_url, db_simulation_model_version, repository_branch, max_attempts=3
+    target_dir, repository_url, db_simulation_model_tag, repository_branch, max_attempts=3
 ):
     """
     Clone a git repository containing simulation model parameters and production tables.
@@ -405,10 +405,10 @@ def clone_simulation_model_repository(
         Target directory to clone the repository into.
     repository_url : str
         URL of the git repository to clone.
-    db_simulation_model_version : str
-        Version tag of the simulation model to checkout.
+    db_simulation_model_tag : str
+        Release tag of the simulation model to checkout.
     repository_branch : str, optional
-        Branch of the repository to use. If None, the version tag is used.
+        Branch of the repository to use. If None, the release tag is used.
     max_attempts : int, optional
         Maximum number of attempts to clone the repository in case of network failures.
 
@@ -420,7 +420,7 @@ def clone_simulation_model_repository(
     if repository_branch:
         logger.info(f"Using branch: {repository_branch}")
     else:
-        logger.info(f"Using version tag: {db_simulation_model_version}")
+        logger.info(f"Using release tag: {db_simulation_model_tag}")
 
     target_dir = Path(target_dir)
     target_dir = target_dir if target_dir.is_absolute() else Path.cwd() / target_dir
@@ -433,9 +433,9 @@ def clone_simulation_model_repository(
     if repository_branch:
         command = f'git clone --depth=1 -b "{repository_branch}" "{repository_url}" "{target_dir}"'
     else:
-        # Use version tag with detached head (generates warning but that's fine)
+        # Use the release tag with detached head (generates warning but that's fine)
         command = (
-            f'git clone --branch "{db_simulation_model_version}" '
+            f'git clone --branch "{db_simulation_model_tag}" '
             f'--depth 1 "{repository_url}" "{target_dir}"'
         )
 

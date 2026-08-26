@@ -412,7 +412,7 @@ def test_version_info_export_build_info_with_io_handler():
     mock_io_handler.get_output_file.return_value = "/output/build_info.json"
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_version_or_name"):
+        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
             with patch(
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:
@@ -430,7 +430,7 @@ def test_version_info_export_build_info_without_io_handler():
     logger = logging.getLogger("test")
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_version_or_name"):
+        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
             with patch(
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:

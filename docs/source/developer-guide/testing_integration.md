@@ -98,7 +98,7 @@ canonical environment override; `SIMTOOLS_TESTS_VERSION` remains supported as
 an alias.
 
 ```text
-<simtools-tests>/simtools-tests/<selected-version>/integration_tests/
+<simtools-tests>/simtools-tests/<selected-tag>/integration_tests/
   static/
   generated/
   downloaded/
@@ -114,7 +114,7 @@ pytest --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-To select a version instead of a path:
+To select a tag instead of a path:
 
 ```bash
 pytest --simtools_tests_tag v0.36.0 \

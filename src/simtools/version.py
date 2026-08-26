@@ -11,7 +11,6 @@ from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
 MAJOR_MINOR = "major.minor"
-RELEASE_TAG_PATTERN = re.compile(r"^v\d[\dA-Za-z._+-]*$")
 MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
@@ -216,7 +215,45 @@ def base_version_for_patch_delta(version_string):
 
 def is_valid_release_tag(version_string):
     """Return whether a value is a ``v``-prefixed semantic release tag."""
-    return isinstance(version_string, str) and bool(RELEASE_TAG_PATTERN.fullmatch(version_string))
+    if not isinstance(version_string, str) or not version_string.startswith("v"):
+        return False
+
+    release, separator, build = version_string[1:].partition("+")
+    if separator and (not _is_valid_release_tag_suffix(build) or "+" in build):
+        return False
+    return _is_valid_release_tag_base(release)
+
+
+def _is_valid_release_tag_base(release):
+    """Return whether a release tag has numeric segments and an optional pre-release suffix."""
+    position = 0
+    while position < len(release) and release[position].isdigit():
+        position += 1
+    if position == 0:
+        return False
+
+    while position < len(release):
+        separator = release[position]
+        if separator not in "._-":
+            return False
+        position += 1
+        segment_start = position
+        while position < len(release) and release[position].isdigit():
+            position += 1
+        if position == len(release):
+            return segment_start != position
+        if position > segment_start and release[position] in "._-":
+            continue
+        return separator == "-" and _is_valid_release_tag_suffix(release[segment_start:])
+
+    return True
+
+
+def _is_valid_release_tag_suffix(suffix):
+    """Return whether a pre-release or build suffix contains only supported characters."""
+    return bool(suffix) and all(
+        character.isascii() and (character.isalnum() or character in "._-") for character in suffix
+    )
 
 
 def validate_release_tag(version_string):
