@@ -112,3 +112,11 @@ documented command and YAML remain aligned with the tested workflow.
 .. simtools-integration-example::
     :file: production_derive_corsika_limits.yml
 ```
+
+The directory-mode workflow is also covered by the following integration-test
+configuration:
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: production_derive_corsika_limits_from_directory.yml
+```
