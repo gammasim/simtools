@@ -8,6 +8,7 @@ from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
 import simtools.production_configuration.production_event_data_helpers as event_data_helpers
+from simtools.io import table_handler
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -22,6 +23,24 @@ DEFAULT_ALLOWED_LOSSES = {
     "core_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
     "angular_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
 }
+
+
+def _write_particle_metadata(file_path, particle, viewcone_min=0.0, viewcone_max=10.0):
+    """Write the metadata needed by directory particle discovery."""
+    metadata = Table(
+        {
+            "primary_particle": [particle],
+            "viewcone_min": [viewcone_min] * u.deg,
+            "viewcone_max": [viewcone_max] * u.deg,
+        }
+    )
+    metadata.meta["EXTNAME"] = derive_corsika_limits.TRIGGER_HISTOGRAM_METADATA_TABLE
+    table_handler.write_tables(
+        [metadata],
+        file_path,
+        overwrite_existing=True,
+        file_type="HDF5",
+    )
 
 
 def _pool_result(
@@ -390,15 +409,13 @@ def test_resolve_trigger_histogram_files_supports_wildcards_in_parent_directory(
 
 def test_discover_trigger_histogram_groups(tmp_test_directory):
     directory = Path(tmp_test_directory)
-    files = [
-        "proton_z20.trigger_histograms.hdf5",
-        "gamma_z20.trigger_histograms.hdf5",
-        "gamma-diffuse_z20.trigger_histograms.hdf5",
-        "electron_z20.trigger_histograms.hdf5",
-        "unrelated.hdf5",
-    ]
-    for file_name in files:
-        (directory / file_name).touch()
+    _write_particle_metadata(directory / "proton_z20.trigger_histograms.hdf5", "proton")
+    _write_particle_metadata(directory / "gamma_z20.trigger_histograms.hdf5", "gamma", 0.0, 0.0)
+    _write_particle_metadata(
+        directory / "gamma-diffuse_z20.trigger_histograms.hdf5", "gamma", 0.0, 10.0
+    )
+    _write_particle_metadata(directory / "electron_z20.trigger_histograms.hdf5", "electron")
+    (directory / "unrelated.hdf5").touch()
 
     result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
 
@@ -411,7 +428,7 @@ def test_discover_trigger_histogram_groups(tmp_test_directory):
 
 
 def test_discover_trigger_histogram_groups_rejects_empty_directory(tmp_test_directory):
-    with pytest.raises(ValueError, match="No supported trigger-histogram HDF5 products"):
+    with pytest.raises(ValueError, match="No valid trigger-histogram HDF5 products"):
         derive_corsika_limits._discover_trigger_histogram_groups(tmp_test_directory)
 
 
@@ -427,12 +444,13 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
 ):
     input_directory = Path(tmp_test_directory) / "trigger_histograms"
     input_directory.mkdir()
-    for file_name in (
-        "electron_z20.trigger_histograms.hdf5",
-        "gamma-diffuse_z20.trigger_histograms.hdf5",
-        "gamma_z20.trigger_histograms.hdf5",
-    ):
-        (input_directory / file_name).touch()
+    _write_particle_metadata(input_directory / "electron_z20.trigger_histograms.hdf5", "electron")
+    _write_particle_metadata(
+        input_directory / "gamma-diffuse_z20.trigger_histograms.hdf5", "gamma", 0.0, 10.0
+    )
+    _write_particle_metadata(
+        input_directory / "gamma_z20.trigger_histograms.hdf5", "gamma", 0.0, 0.0
+    )
 
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = None
@@ -465,6 +483,127 @@ def test_generate_corsika_limits_grid_writes_one_file_per_particle(
         str(output_root / "gamma-0.00deg" / "corsika_limits.ecsv"),
     ]
     assert all((output_root / name).is_dir() for name in ("electron", "gamma", "gamma-0.00deg"))
+
+
+@pytest.mark.parametrize(
+    ("particle", "viewcone_min", "viewcone_max", "expected"),
+    [
+        ("gamma", 0.0, 0.0, "gamma-0.00deg"),
+        ("gamma", 0.0, 10.0, "gamma"),
+        ("electron", 0.0, 10.0, "electron"),
+        ("proton", 0.0, 10.0, "proton"),
+        ("iron", 0.0, 10.0, "iron"),
+    ],
+)
+def test_particle_name_from_histogram_metadata(
+    tmp_test_directory, particle, viewcone_min, viewcone_max, expected
+):
+    file_path = Path(tmp_test_directory) / "arbitrary_name.hdf5"
+    _write_particle_metadata(file_path, particle, viewcone_min, viewcone_max)
+
+    assert derive_corsika_limits._particle_name_from_histogram_file(file_path) == expected
+
+
+def test_discover_trigger_histogram_groups_groups_metadata_particles_and_ignores_malformed(
+    tmp_test_directory, caplog
+):
+    directory = Path(tmp_test_directory)
+    first_file = directory / "first.trigger_histograms.hdf5"
+    second_file = directory / "second.trigger_histograms.hdf5"
+    _write_particle_metadata(first_file, "iron")
+    _write_particle_metadata(second_file, "iron")
+    (directory / "not_hdf5.trigger_histograms.hdf5").write_bytes(b"not an HDF5 file")
+    (directory / "missing_metadata.trigger_histograms.hdf5").touch()
+
+    result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
+
+    assert result == {"iron": [str(first_file), str(second_file)]}
+    assert "Ignoring invalid trigger-histogram candidate" in caplog.text
+
+
+def test_discover_trigger_histogram_groups_ignores_directories(tmp_test_directory):
+    directory = Path(tmp_test_directory)
+    proton_file = directory / "proton.trigger_histograms.hdf5"
+    _write_particle_metadata(proton_file, "proton")
+    (directory / "not_a_file.trigger_histograms.hdf5").mkdir()
+
+    result = derive_corsika_limits._discover_trigger_histogram_groups(directory)
+
+    assert result == {"proton": [str(proton_file)]}
+
+
+@pytest.mark.parametrize(
+    ("metadata", "message"),
+    [
+        (Table({"primary_particle": ["proton"]}), "missing required metadata column"),
+        (
+            Table(
+                names=("primary_particle", "viewcone_min", "viewcone_max"),
+                dtype=("U10", float, float),
+            ),
+            "metadata table is empty",
+        ),
+        (
+            Table(
+                {
+                    "primary_particle": ["proton", "electron"],
+                    "viewcone_min": [0.0, 0.0],
+                    "viewcone_max": [10.0, 10.0],
+                }
+            ),
+            "conflicting canonical particle names",
+        ),
+    ],
+)
+def test_particle_name_from_histogram_metadata_rejects_invalid_metadata(mocker, metadata, message):
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.table_handler.read_tables",
+        return_value={derive_corsika_limits.TRIGGER_HISTOGRAM_METADATA_TABLE: metadata},
+    )
+
+    with pytest.raises(ValueError, match=message):
+        derive_corsika_limits._particle_name_from_histogram_file("input.hdf5")
+
+
+@pytest.mark.parametrize(
+    ("metadata_row", "message"),
+    [
+        (
+            {"primary_particle": "", "viewcone_min": 0.0, "viewcone_max": 0.0},
+            "primary_particle metadata is empty",
+        ),
+        (
+            {"primary_particle": "../proton", "viewcone_min": 0.0, "viewcone_max": 0.0},
+            "not a safe directory name",
+        ),
+        (
+            {"primary_particle": "gamma", "viewcone_min": 10.0, "viewcone_max": 0.0},
+            "viewcone_min .* is greater than viewcone_max",
+        ),
+    ],
+)
+def test_canonical_particle_name_rejects_invalid_metadata(metadata_row, message):
+    with pytest.raises(ValueError, match=message):
+        derive_corsika_limits._canonical_particle_name(metadata_row)
+
+
+def test_canonical_particle_name_accepts_byte_particle_name():
+    metadata_row = {
+        "primary_particle": b"gamma",
+        "viewcone_min": 0.0,
+        "viewcone_max": 0.0,
+    }
+
+    assert derive_corsika_limits._canonical_particle_name(metadata_row) == "gamma-0.00deg"
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    [(None, "not a scalar angle"), (np.nan, "not finite")],
+)
+def test_metadata_angle_in_degrees_rejects_invalid_values(value, message):
+    with pytest.raises(ValueError, match=message):
+        derive_corsika_limits._metadata_angle_in_degrees(value, "viewcone_min")
 
 
 def test_build_production_subdirectories_uses_production_indices(tmp_test_directory):

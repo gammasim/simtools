@@ -9,16 +9,20 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
 from simtools import settings
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler, io_handler, table_handler
 from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
 )
-from simtools.production_configuration.trigger_histograms import load_event_data_histograms
+from simtools.production_configuration.trigger_histograms import (
+    TRIGGER_HISTOGRAM_METADATA_TABLE,
+    load_event_data_histograms,
+)
 from simtools.utils.general import resolve_file_patterns
 from simtools.visualization import plot_simtel_event_histograms
 
@@ -26,13 +30,10 @@ _logger = logging.getLogger(__name__)
 
 CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
 _ONAXIS_GAMMA_PARTICLE = "gamma-0.00deg"
-_PARTICLE_FILE_PREFIXES = (
-    ("gamma-diffuse", "gamma"),
-    ("gamma_diffuse", "gamma"),
-    (_ONAXIS_GAMMA_PARTICLE, _ONAXIS_GAMMA_PARTICLE),
-    ("electron", "electron"),
-    ("proton", "proton"),
-    ("gamma", _ONAXIS_GAMMA_PARTICLE),
+_PARTICLE_METADATA_COLUMNS = (
+    "primary_particle",
+    "viewcone_min",
+    "viewcone_max",
 )
 
 
@@ -400,7 +401,7 @@ def _generate_corsika_limits_from_histogram_directory(
     energy_threshold_fraction,
     differential_loss_bins_per_decade,
 ):
-    """Derive one CORSIKA-limits table per supported particle in a directory."""
+    """Derive one CORSIKA-limits table per metadata-defined particle in a directory."""
     particle_files = _discover_trigger_histogram_groups(args_dict["trigger_histogram_directory"])
     output_root = io_handler.IOHandler().get_output_directory()
 
@@ -428,7 +429,7 @@ def _generate_corsika_limits_from_histogram_directory(
 
 
 def _discover_trigger_histogram_groups(trigger_histogram_directory):
-    """Return supported trigger-histogram files grouped by output particle name.
+    """Return valid trigger-histogram files grouped by metadata-defined particle name.
 
     Parameters
     ----------
@@ -438,41 +439,101 @@ def _discover_trigger_histogram_groups(trigger_histogram_directory):
     Returns
     -------
     dict[str, list[str]]
-        Sorted particle names mapped to sorted input filenames.
+        Sorted particle names mapped to sorted input filenames. Particle names are
+        read from ``TRIGGER_REFERENCE_METADATA``.
 
     Raises
     ------
     FileNotFoundError
         If the input directory does not exist or is not a directory.
     ValueError
-        If no supported trigger-histogram products are found.
+        If no valid trigger-histogram products are found.
     """
     directory = Path(trigger_histogram_directory)
     if not directory.is_dir():
         raise FileNotFoundError(f"Trigger-histogram directory not found: {directory}")
 
     groups = {}
-    for file_path in sorted(directory.glob("*.hdf5")):
-        if not file_path.is_file() or not file_path.name.endswith(".trigger_histograms.hdf5"):
+    for file_path in sorted(directory.glob("*.trigger_histograms.hdf5")):
+        if not file_path.is_file():
             continue
-        particle_name = _particle_name_from_histogram_file(file_path)
-        if particle_name is None:
-            _logger.debug("Ignoring unsupported trigger-histogram file %s", file_path)
+        try:
+            particle_name = _particle_name_from_histogram_file(file_path)
+        except (OSError, KeyError, TypeError, ValueError, IndexError, IORegistryError) as exc:
+            _logger.warning("Ignoring invalid trigger-histogram candidate %s: %s", file_path, exc)
             continue
+
         groups.setdefault(particle_name, []).append(str(file_path))
 
     if not groups:
-        raise ValueError(f"No supported trigger-histogram HDF5 products found in {directory}.")
+        raise ValueError(f"No valid trigger-histogram HDF5 products found in {directory}.")
     return {particle_name: groups[particle_name] for particle_name in sorted(groups)}
 
 
 def _particle_name_from_histogram_file(file_path):
-    """Return the lookup particle name encoded by a trigger-histogram filename."""
-    file_name = Path(file_path).name.lower()
-    for input_prefix, particle_name in _PARTICLE_FILE_PREFIXES:
-        if file_name == f"{input_prefix}.hdf5" or file_name.startswith(f"{input_prefix}_"):
-            return particle_name
-    return None
+    """Return the canonical output particle name from trigger-histogram metadata."""
+    metadata = table_handler.read_tables(
+        file_path,
+        [TRIGGER_HISTOGRAM_METADATA_TABLE],
+        file_type="HDF5",
+    )[TRIGGER_HISTOGRAM_METADATA_TABLE]
+    missing_columns = [
+        column for column in _PARTICLE_METADATA_COLUMNS if column not in metadata.colnames
+    ]
+    if missing_columns:
+        raise ValueError(f"missing required metadata column(s): {', '.join(missing_columns)}")
+    if not metadata:
+        raise ValueError("metadata table is empty")
+
+    particle_names = set()
+    for row in metadata:
+        particle_names.add(_canonical_particle_name(row))
+
+    if len(particle_names) != 1:
+        names = ", ".join(sorted(particle_names))
+        raise ValueError(f"metadata contains conflicting canonical particle names: {names}")
+    return particle_names.pop()
+
+
+def _canonical_particle_name(metadata_row):
+    """Return one canonical output particle name from a metadata row."""
+    primary_particle = metadata_row["primary_particle"]
+    if isinstance(primary_particle, bytes | np.bytes_):
+        primary_particle = primary_particle.decode("utf-8")
+    primary_particle = str(primary_particle).strip()
+    if not primary_particle:
+        raise ValueError("primary_particle metadata is empty")
+    if Path(primary_particle).name != primary_particle or primary_particle in {".", ".."}:
+        raise ValueError(
+            f"primary_particle metadata is not a safe directory name: {primary_particle}"
+        )
+
+    if primary_particle.casefold() != "gamma":
+        return primary_particle
+
+    viewcone_min = _metadata_angle_in_degrees(metadata_row["viewcone_min"], "viewcone_min")
+    viewcone_max = _metadata_angle_in_degrees(metadata_row["viewcone_max"], "viewcone_max")
+    if viewcone_min > viewcone_max:
+        raise ValueError(
+            f"viewcone_min ({viewcone_min}) is greater than viewcone_max ({viewcone_max})"
+        )
+    if np.isclose(viewcone_min, 0.0, rtol=0.0, atol=1e-12) and np.isclose(
+        viewcone_max, 0.0, rtol=0.0, atol=1e-12
+    ):
+        return _ONAXIS_GAMMA_PARTICLE
+    return "gamma"
+
+
+def _metadata_angle_in_degrees(value, column_name):
+    """Return one finite viewcone metadata value in degrees."""
+    try:
+        value = value.to_value(u.deg) if hasattr(value, "to_value") else float(value)
+        value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{column_name} metadata is not a scalar angle") from exc
+    if not np.isfinite(value):
+        raise ValueError(f"{column_name} metadata is not finite")
+    return value
 
 
 def _resolve_trigger_histogram_files(trigger_histogram_file):
