@@ -3,16 +3,11 @@
 import logging
 from pathlib import Path
 
-import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
 
-mpl.use("Agg")
-from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
-
-from simtools.production_configuration.trigger_histograms import (  # pylint: disable=wrong-import-position
-    load_event_data_histograms,
-)
+from simtools.production_configuration.trigger_histograms import load_event_data_histograms
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 
@@ -373,15 +368,16 @@ def _get_broad_range_axis_limits(name, limits):
     if not limits:
         return {}
     broad_range_values = _extract_broad_range_values(limits)
+    energy_axis_limits = _get_energy_axis_limits(limits)
     axis_limits_by_group = {
-        "energy": {"x": broad_range_values["energy_limits"]},
+        "energy": {"x": energy_axis_limits},
         "core_distance_vs_energy": {
             "x": (0.0, broad_range_values["core_max"]),
-            "y": broad_range_values["energy_limits"],
+            "y": energy_axis_limits,
         },
         "angular_distance_vs_energy": {
             "x": (0.0, broad_range_values["viewcone_max"]),
-            "y": broad_range_values["energy_limits"],
+            "y": energy_axis_limits,
         },
         "core_distance": {"x": (0.0, broad_range_values["core_max"])},
         "angular_distance": {"x": (0.0, broad_range_values["viewcone_max"])},
@@ -425,6 +421,22 @@ def _extract_broad_range_values(limits):
         "core_max": _get_limit_value(limits, "br_core_scatter_max"),
         "viewcone_max": _get_limit_value(limits, "br_viewcone_max"),
     }
+
+
+def _get_energy_axis_limits(limits):
+    """Return broad-range energy limits with room for a coincident derived limit."""
+    lower = _get_limit_value(limits, "br_energy_min")
+    upper = _get_limit_value(limits, "br_energy_max")
+    derived_lower = _get_limit_value(limits, "lower_energy_limit")
+    if (
+        lower is not None
+        and upper is not None
+        and derived_lower is not None
+        and lower > 0.0
+        and np.isclose(derived_lower, lower)
+    ):
+        lower *= 0.9
+    return lower, upper
 
 
 def _get_limit_value(limits, key):
@@ -706,11 +718,29 @@ def _create_2d_plot_with_projections(
         yscale=scales.get("y", "linear"),
     )
     _apply_axis_limits(ax, axis_limits)
-    _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind)
+    _plot_distance_projections(
+        ax_x,
+        ax_y,
+        data,
+        bins,
+        labels,
+        axis_limits,
+        lines,
+        projection_kind,
+    )
     return fig, ax
 
 
-def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind):
+def _plot_distance_projections(
+    ax_x,
+    ax_y,
+    data,
+    bins,
+    labels,
+    axis_limits,
+    lines,
+    projection_kind,
+):
     """Plot overall projections and fixed-coordinate slices of a 2D histogram."""
     x_centers = 0.5 * (bins[0][:-1] + bins[0][1:])
     y_centers = 0.5 * (bins[1][:-1] + bins[1][1:])
@@ -744,6 +774,8 @@ def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, proj
     )
     _apply_axis_limits(ax_x, {"x": axis_limits.get("x")})
     _apply_axis_limits(ax_y, {"x": axis_limits.get("y")})
+    _add_lines(ax_x, {"x": lines.get("x")})
+    _add_lines(ax_y, {"x": lines.get("y")})
     _add_projection_legend(ax_x)
     _add_projection_legend(ax_y)
 
@@ -817,8 +849,14 @@ def _add_lines(ax, lines):
             ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
 
     curve = lines.get("curve")
-    if curve and curve.get("x") and curve.get("y"):
-        ax.plot(curve["x"], curve["y"], color="r", linestyle="--", linewidth=1.0)
+    if curve:
+        curve_x = np.asarray(curve.get("x", []), dtype=float).ravel()
+        curve_y = np.asarray(curve.get("y", []), dtype=float).ravel()
+        if curve_x.size and curve_x.size == curve_y.size:
+            curve_params = {"color": "r", "linestyle": "--", "linewidth": 1.0}
+            if curve_x.size == 1:
+                curve_params.update(marker="o", markersize=3.0)
+            ax.plot(curve_x, curve_y, **curve_params)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params, ax=None):

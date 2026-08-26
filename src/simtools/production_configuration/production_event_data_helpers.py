@@ -160,9 +160,11 @@ def accumulate_histograms_by_telescope_config(
     energy_bins_per_decade,
     angular_distance_bin_count=100,
     angular_distance_bin_width=None,
+    core_distance_bin_width=None,
     skip_invalid_event_data_files=False,
     fill_efficiency_histogram=False,
     collect_trigger_topology=False,
+    minimum_triggered_telescopes=2,
 ):
     """
     Read one production once and accumulate histograms for all telescope configurations.
@@ -179,10 +181,14 @@ def accumulate_histograms_by_telescope_config(
         Number of angular-distance bins used by the accumulators.
     angular_distance_bin_width : astropy.units.Quantity, optional
         Angular-distance bin width used to derive bins from broad-range viewcone limits.
+    core_distance_bin_width : astropy.units.Quantity, optional
+        Core-distance bin width used to derive a common physical grid across ranges.
     skip_invalid_event_data_files : bool, optional
         Skip malformed event-data files instead of aborting the run.
     fill_efficiency_histogram : bool, optional
         Whether to finalize with efficiency histograms enabled.
+    minimum_triggered_telescopes : int, optional
+        Minimum number of triggered telescopes within each telescope configuration.
 
     Returns
     -------
@@ -194,6 +200,7 @@ def accumulate_histograms_by_telescope_config(
         energy_bins_per_decade=energy_bins_per_decade,
         angular_distance_bin_count=angular_distance_bin_count,
         angular_distance_bin_width=angular_distance_bin_width,
+        core_distance_bin_width=core_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         require_triggered_data=True,
     )
@@ -204,6 +211,7 @@ def accumulate_histograms_by_telescope_config(
             energy_bins_per_decade=energy_bins_per_decade,
             angular_distance_bin_count=angular_distance_bin_count,
             angular_distance_bin_width=angular_distance_bin_width,
+            core_distance_bin_width=core_distance_bin_width,
         )
         for config in telescope_configs
     ]
@@ -221,6 +229,7 @@ def accumulate_histograms_by_telescope_config(
                     triggered_data,
                     triggered_shower,
                     telescope_list=config["telescope_ids"],
+                    minimum_triggered_telescopes=minimum_triggered_telescopes,
                 )
             else:
                 filtered_triggered_data = triggered_data

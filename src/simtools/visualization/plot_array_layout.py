@@ -6,9 +6,7 @@ from collections import Counter
 from typing import NamedTuple
 
 import astropy.units as u
-import matplotlib as mpl
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 from adjustText import adjust_text
 from astropy.table import Column
@@ -19,6 +17,7 @@ from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logging.getLogger("adjustText").setLevel(logging.CRITICAL)
 
@@ -85,7 +84,6 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
         Dictionary of layout name to matplotlib figure object.
 
     """
-    mpl.use("Agg")
     for layout in layouts:
         fig_out = plot_array_layout(
             telescopes=layout["array_elements"],

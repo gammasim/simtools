@@ -8,8 +8,9 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
+
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 Y_AXIS_BIN_COUNT_LABEL = "Density"
 

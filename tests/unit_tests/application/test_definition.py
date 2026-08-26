@@ -55,6 +55,20 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
         parser.parse_args([])
 
 
+def test_application_definition_can_exclude_standard_arguments():
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    )
+
+    argument_names = {argument.name for argument in application.all_arguments}
+
+    assert "test" not in argument_names
+    assert "ignore_existing_parameter_version" not in argument_names
+    assert "config" in argument_names
+
+
 @pytest.mark.parametrize(
     "module_name",
     [
@@ -67,6 +81,24 @@ def test_database_maintenance_applications_require_explicit_targets(module_name)
     application = importlib.import_module(module_name).APPLICATION
 
     assert application.use_dependency_defaults is False
+
+
+def test_db_upload_model_repository_has_no_output_options():
+    """Test the database upload application does not configure unused output options."""
+    application = importlib.import_module(
+        "simtools.applications.db_upload_model_repository"
+    ).APPLICATION
+
+    argument_names = {argument.name for argument in application.all_arguments}
+
+    assert {
+        "output_path",
+        "output_file",
+        "output_file_format",
+        "skip_output_validation",
+    }.isdisjoint(argument_names)
+    assert application.initialize_output is False
+    assert application.setup_io_handler is False
 
 
 def test_start_delegates_to_common_startup(mocker):

@@ -353,7 +353,11 @@ def test_missing_model_data_reports_source(simulation_models_path):
 
     with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
         handler.read_production_table("telescopes", "2.0.0")
-    with pytest.raises(ValueError, match="No production table for collection"):
+    with pytest.raises(
+        ValueError,
+        match=r"The following query returned zero results: "
+        r"\{'model_version': '1\.0\.0', 'collection': 'calibration_devices'\}",
+    ):
         handler.read_production_table("calibration_devices", "1.0.0")
     with pytest.raises(ValueError, match="returned zero results"):
         handler.query_model_parameters(
