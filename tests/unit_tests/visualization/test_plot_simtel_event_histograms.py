@@ -9,6 +9,7 @@ from matplotlib.colors import LogNorm
 
 from simtools.visualization import plot_simtel_event_histograms
 from simtools.visualization.plot_simtel_event_histograms import (
+    _add_lines,
     _build_plot_filename,
     _create_2d_histogram_plot,
     _create_plot,
@@ -821,6 +822,42 @@ def test_broad_range_axis_limits_do_not_replace_derived_limits():
     }
 
 
+def test_broad_range_axis_limits_expand_for_coincident_energy_limit(tmp_test_directory):
+    limits = {
+        "lower_energy_limit": 0.02 * u.TeV,
+        "br_energy_min": 0.02 * u.TeV,
+        "br_energy_max": 200.0 * u.TeV,
+        "br_core_scatter_max": 1800.0 * u.m,
+        "br_viewcone_max": 4.0 * u.deg,
+    }
+
+    axis_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
+        "core_distance_vs_energy", limits
+    )
+
+    assert axis_limits["x"] == pytest.approx((0.0, 1800.0))
+    assert axis_limits["y"] == pytest.approx((0.018, 200.0))
+    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
+        "core_distance_vs_energy", limits
+    )["y"] == pytest.approx([0.02, 200.0])
+
+    fig = _create_plot(
+        data=np.ones((2, 2)),
+        bins=[np.array([0.0, 100.0, 200.0]), np.array([0.01, 1.0, 10.0])],
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"title": "Triggered"},
+        scales={"y": "log"},
+        output_file=tmp_test_directory / "expanded_energy_axis.png",
+        lines={"y": 0.02},
+        axis_limits=axis_limits,
+        projection_kind="core_distance",
+    )
+
+    assert fig.axes[0].get_ylim()[0] == pytest.approx(0.018)
+    assert fig.axes[2].get_xlim()[0] == pytest.approx(0.018)
+
+
 def test_projection_slice_coordinates():
     energy_slices = plot_simtel_event_histograms._energy_slice_values(
         np.logspace(-2, 3, 6), (0.02, 200.0)
@@ -851,7 +888,7 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         scales={"y": "log"},
         colorbar_label="Event count",
         output_file=output_file,
-        lines={},
+        lines={"x": 1200.0, "y": 0.1},
         axis_limits={"x": (0.0, 1800.0), "y": (0.02, 200.0)},
         projection_kind="core_distance",
     )
@@ -866,6 +903,7 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         "log10(E/TeV)=-0.5",
         "log10(E/TeV)=0.5",
         "log10(E/TeV)=1.5",
+        "_child5",
     ]
     assert [line.get_label() for line in fig.axes[2].lines] == [
         "overall",
@@ -873,9 +911,80 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         "500 m",
         "1000 m",
         "1500 m",
+        "_child5",
     ]
+    assert fig.axes[1].lines[-1].get_xdata() == pytest.approx([1200.0, 1200.0])
+    assert fig.axes[1].lines[-1].get_color() == "r"
+    assert fig.axes[1].lines[-1].get_linestyle() == "--"
+    assert fig.axes[2].lines[-1].get_xdata() == pytest.approx([0.1, 0.1])
+    assert fig.axes[2].lines[-1].get_color() == "r"
+    assert fig.axes[2].lines[-1].get_linestyle() == "--"
     assert fig.axes[1].get_legend()._loc == 1
     assert fig.axes[2].get_legend()._loc == 1
+
+
+def test_create_2d_plot_with_angular_distance_projection_limits(tmp_test_directory):
+    output_file = tmp_test_directory / "angular_projected.png"
+    data = np.arange(1.0, 21.0).reshape(4, 5)
+    bins = [np.linspace(0.0, 4.0, 5), np.logspace(-2, 3, 6)]
+
+    fig = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"x": "Angular distance (deg)", "y": "Energy (TeV)", "title": "Triggered"},
+        scales={"y": "log"},
+        colorbar_label="Event count",
+        output_file=output_file,
+        lines={"x": 2.5, "y": 0.1},
+        axis_limits={"x": (0.0, 4.0), "y": (0.02, 200.0)},
+        projection_kind="angular_distance",
+    )
+
+    assert output_file.exists()
+    assert fig.axes[1].lines[-1].get_xdata() == pytest.approx([2.5, 2.5])
+    assert fig.axes[1].lines[-1].get_color() == "r"
+    assert fig.axes[1].lines[-1].get_linestyle() == "--"
+    assert fig.axes[2].lines[-1].get_xdata() == pytest.approx([0.1, 0.1])
+    assert fig.axes[2].lines[-1].get_color() == "r"
+    assert fig.axes[2].lines[-1].get_linestyle() == "--"
+
+
+def test_create_2d_plot_renders_single_point_limit_curve(tmp_test_directory):
+    output_file = tmp_test_directory / "single_point_curve.png"
+    data = np.ones((2, 2))
+    bins = [np.array([0.0, 100.0, 200.0]), np.array([0.1, 1.0, 10.0])]
+
+    fig = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"title": "Triggered"},
+        scales={"y": "log"},
+        output_file=output_file,
+        lines={"curve": {"x": [120.0], "y": [1.0]}},
+    )
+
+    assert output_file.exists()
+    curve = fig.axes[0].lines[-1]
+    assert curve.get_color() == "r"
+    assert curve.get_linestyle() == "--"
+    assert curve.get_marker() == "o"
+    assert curve.get_xdata() == pytest.approx([120.0])
+    assert curve.get_ydata() == pytest.approx([1.0])
+
+
+def test_add_lines_handles_multi_point_and_malformed_limit_curves():
+    fig, ax = plt.subplots()
+
+    _add_lines(ax, {"curve": {"x": [100.0, 200.0], "y": [1.0, 2.0]}})
+    _add_lines(ax, {"curve": {"x": [100.0], "y": [1.0, 2.0]}})
+
+    assert len(ax.lines) == 1
+    assert ax.lines[0].get_marker() == "None"
+    plt.close(fig)
 
 
 def test_execute_plotting_loop_removes_array_suffix_word():
