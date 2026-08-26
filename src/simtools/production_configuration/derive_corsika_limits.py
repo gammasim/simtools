@@ -69,8 +69,6 @@ _REDUCED_PLOT_HISTOGRAM_NAMES = frozenset(
     {
         "angular_distance_vs_energy",
         "core_distance_vs_energy",
-        "reuse_max_vs_core_distance_vs_energy",
-        "x_core_shower_vs_y_core_shower",
     }
 )
 

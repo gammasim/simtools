@@ -87,7 +87,7 @@ _ARGUMENTS = (
         "plot_reduced_histograms",
         help=(
             "When plotting, restrict each layout to the reduced diagnostic histogram set: "
-            "triggered distance-versus-energy, reuse maximum, and core-position plots."
+            "triggered core-distance-versus-energy and angular-distance-versus-energy plots."
         ),
         action="store_true",
         default=False,

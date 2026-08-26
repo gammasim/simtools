@@ -902,8 +902,6 @@ def test_reduced_histogram_plot_selection(mocker, tmp_test_directory):
     reduced_histogram_names = {
         "angular_distance_vs_energy",
         "core_distance_vs_energy",
-        "reuse_max_vs_core_distance_vs_energy",
-        "x_core_shower_vs_y_core_shower",
     }
     histograms = mocker.MagicMock()
     histograms.file_info = {}
@@ -914,6 +912,8 @@ def test_reduced_histogram_plot_selection(mocker, tmp_test_directory):
         {
             "energy": {"histogram": np.array([1.0])},
             "core_distance": {"histogram": np.array([1.0])},
+            "reuse_max_vs_core_distance_vs_energy": {"histogram": np.array([1.0])},
+            "x_core_shower_vs_y_core_shower": {"histogram": np.array([1.0])},
         }
     )
     mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)

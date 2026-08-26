@@ -44,10 +44,8 @@ plot_histograms:
 ```
 
 Set `plot_reduced_histograms: true` (or use `--plot_reduced_histograms`) to limit each selected
-layout to the four diagnostic histogram families used by the reduced plot set:
-`angular_distance_vs_energy_triggered`, `core_distance_vs_energy_triggered`,
-`reuse_max_vs_core_distance_vs_energy`, and `x_core_shower_vs_y_core_shower`. This flag affects
-plotting only; all input histograms are still used for deriving limits.
+layout to `angular_distance_vs_energy_triggered` and `core_distance_vs_energy_triggered`. This
+flag affects plotting only; all input histograms are still used for deriving limits.
 
 For the distance-versus-energy plots, the top-right distance projection and bottom-right energy
 projection include the derived maximum distance and minimum energy limits as red dashed lines.

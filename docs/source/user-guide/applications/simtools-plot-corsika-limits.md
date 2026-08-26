@@ -7,8 +7,9 @@
 ```
 
 ```{eval-rst}
-This application reads a CORSIKA limits table and plots the limits
-as function of zenith angle.
+This application reads a CORSIKA limits table and plots the limits as a
+function of zenith angle. Azimuth directions share each plot: NSB levels use
+different colors, while azimuths use filled and open markers.
 
 
 **Command line arguments**
@@ -20,7 +21,7 @@ corsika_limits_file (str, required)
 
 .. code-block:: console
 
-   simtools-production-plot-corsika-limits \
+   simtools-plot-corsika-limits \
        --corsika_limits_file simtools-output/merged_corsika_limits.ecsv \
        --output_path simtools-output
 ```

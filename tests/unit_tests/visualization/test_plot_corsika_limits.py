@@ -99,6 +99,35 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
 
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
+    mock_savefig, tmp_test_directory
+):
+    table = vstack(
+        [
+            create_test_table(20, 0, "dark", "layout1"),
+            create_test_table(40, 0, "dark", "layout1"),
+            create_test_table(20, 180, "dark", "layout1"),
+            create_test_table(40, 180, "dark", "layout1"),
+        ]
+    )
+
+    with patch("simtools.visualization.plot_corsika_limits.plt.close"):
+        output_files = plot_corsika_limits.plot_limits(table, tmp_test_directory)
+
+    assert len(output_files) == 1
+    assert output_files[0].name == "limits_layout1_gamma.png"
+    marker_face_colors = [line.get_markerfacecolor() for line in plt.gcf().axes[0].lines]
+    assert any(color == "none" for color in marker_face_colors)
+    assert any(color != "none" for color in marker_face_colors)
+    assert [label.get_text() for label in plt.gcf().legends[0].get_texts()] == [
+        "NSB=dark GHz",
+        "Az=0 deg",
+        "Az=180 deg",
+    ]
+    plt.close(plt.gcf())
+
+
+@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
     table = vstack(
         [
