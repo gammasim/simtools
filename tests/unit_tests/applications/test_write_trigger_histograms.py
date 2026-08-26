@@ -39,6 +39,7 @@ def test_add_arguments_uses_default_angular_distance_bin_width():
 
     assert args.angular_distance_bin_width.value == pytest.approx(0.5)
     assert args.core_distance_bin_width.value == pytest.approx(20.0)
+    assert args.minimum_triggered_telescopes == 2
 
 
 def test_add_arguments_accepts_max_workers():

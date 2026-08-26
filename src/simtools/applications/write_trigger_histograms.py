@@ -38,6 +38,15 @@ _ARGUMENTS = (
         default=10,
     ),
     cli.ArgumentDefinition(
+        "minimum_triggered_telescopes",
+        help=(
+            "Minimum number of triggered telescopes within each selected array layout "
+            "required to fill trigger histograms."
+        ),
+        type=int,
+        default=2,
+    ),
+    cli.ArgumentDefinition(
         "angular_distance_bin_width",
         help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
         type=positive_quantity("deg"),
@@ -75,6 +84,9 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, config_sources, parser):
     """Validate output options selected for the event-data input mode."""
+    if args_dict.get("minimum_triggered_telescopes", 2) < 1:
+        parser.error("'--minimum_triggered_telescopes' must be at least 1.")
+
     if args_dict.get("event_data_directory"):
         explicit_output_path_sources = set().union(
             *(

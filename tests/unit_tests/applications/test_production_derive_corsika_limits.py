@@ -32,6 +32,103 @@ def test_parser_accepts_compact_loss_configuration_and_array_selection():
     assert args.output_file_format == "ecsv"
 
 
+def test_parser_accepts_trigger_histogram_directory():
+    args = production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
+        [
+            "--trigger_histogram_directory",
+            "/data/trigger_histograms",
+            "--allowed_losses",
+            "all,0.001,10",
+        ]
+    )
+
+    assert args.trigger_histogram_directory == "/data/trigger_histograms"
+    assert args.trigger_histogram_file is None
+
+
+def test_parser_accepts_selected_plot_layouts():
+    args = production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
+        [
+            "--trigger_histogram_file",
+            "trigger_histograms.hdf5",
+            "--allowed_losses",
+            "all,0.001,10",
+            "--plot_histograms",
+            "CTAO-North-Alpha",
+            "CTAO-North-Beta",
+        ]
+    )
+
+    assert args.plot_histograms == ["CTAO-North-Alpha", "CTAO-North-Beta"]
+
+
+def test_parser_accepts_bare_plot_histograms_flag_as_all_layouts():
+    args = production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
+        [
+            "--trigger_histogram_file",
+            "trigger_histograms.hdf5",
+            "--allowed_losses",
+            "all,0.001,10",
+            "--plot_histograms",
+        ]
+    )
+
+    assert args.plot_histograms == []
+
+
+def test_parser_accepts_reduced_histogram_plot_flag():
+    args = production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
+        [
+            "--trigger_histogram_file",
+            "trigger_histograms.hdf5",
+            "--allowed_losses",
+            "all,0.001,10",
+            "--plot_histograms",
+            "CTAO-North-Alpha",
+            "--plot_reduced_histograms",
+        ]
+    )
+
+    assert args.plot_histograms == ["CTAO-North-Alpha"]
+    assert args.plot_reduced_histograms is True
+
+
+def test_parser_rejects_output_file_with_trigger_histogram_directory(mocker):
+    parser = mocker.Mock()
+
+    production_derive_corsika_limits._post_parse(
+        {
+            "trigger_histogram_directory": "/data/trigger_histograms",
+            "output_file": "limits.ecsv",
+            "output_file_from_default": False,
+            "allowed_losses": ["all,0.001,10"],
+        },
+        {},
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "--output_file cannot be used with --trigger_histogram_directory."
+    )
+
+
+def test_parser_accepts_default_output_file_with_trigger_histogram_directory(mocker):
+    parser = mocker.Mock()
+
+    production_derive_corsika_limits._post_parse(
+        {
+            "trigger_histogram_directory": "/data/trigger_histograms",
+            "output_file": "activity-id-simtools-production-derive-corsika-limits.ecsv",
+            "output_file_from_default": True,
+            "allowed_losses": ["all,0.001,10"],
+        },
+        {},
+        parser,
+    )
+
+    parser.error.assert_not_called()
+
+
 def test_parser_rejects_negative_differential_loss_bins(capsys):
     with pytest.raises(SystemExit):
         production_derive_corsika_limits.APPLICATION.build_parser().parse_args(
