@@ -26,7 +26,7 @@ model-database:
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
-  tag: v0.36.0
+  tag: v0.37.0
 production-combinations:
   - corsika: v7.8010
     sim-telarray: v2025-11-30-rc
