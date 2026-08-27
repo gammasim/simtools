@@ -78,7 +78,7 @@ jobs:
           name: upload-auxiliary-files
           path: |
             autoconf.tar.gz
-          retention-days: 1
+          retention-days: 7
 
   download-corsika-source:
     runs-on: ubuntu-latest
@@ -152,7 +152,7 @@ jobs:
           path: |
             corsika7-source.tar.gz
             corsika7-source.tar.gz.sha256
-          retention-days: 1
+          retention-days: 7
 
   build-corsika7:
     needs: [dependency-config, download-auxiliary-files, download-corsika-source]

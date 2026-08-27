@@ -60,7 +60,7 @@ jobs:
           name: upload-auxiliary-files
           path: |
             gsl.tar.gz
-          retention-days: 1
+          retention-days: 7
 
   download-simtel-source:
     runs-on: ubuntu-latest
@@ -136,7 +136,7 @@ jobs:
           path: |
             simtel-source.tar.gz
             simtel-source.tar.gz.sha256
-          retention-days: 1
+          retention-days: 7
 
   build-sim_telarray:
     needs: [dependency-config, download-auxiliary-files, download-simtel-source]
