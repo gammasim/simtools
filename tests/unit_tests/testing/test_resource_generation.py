@@ -273,9 +273,15 @@ def test_initialize_test_resources_copies_inputs_only(tmp_test_directory):
     (template_dir / "config_files").mkdir(parents=True)
     (template_dir / "static").mkdir()
     (template_dir / "generated").mkdir()
-    (template_dir / "config_files" / "workflow.config.yml").write_text("steps: []\n")
-    (template_dir / "static" / "static_manifest.yml").write_text("files: []\n")
-    (template_dir / "run_time.yml").write_text("runtime_environment: {}\n")
+    (template_dir / "config_files" / "workflow.config.yml").write_text(
+        "steps: []\n", encoding="utf-8"
+    )
+    (template_dir / "static" / "static_manifest.yml").write_text(
+        "files: []\n", encoding="utf-8"
+    )
+    (template_dir / "run_time.yml").write_text(
+        "runtime_environment: {}\n", encoding="utf-8"
+    )
 
     target_dir = resource_generation.initialize_test_resources(
         tmp_test_directory, "v0.37.0", "v0.36.0"
