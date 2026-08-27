@@ -8,6 +8,7 @@ applications:
   configuration:
     log_level: info
     model_version: 7.0.0
+    nsb_spectrum: ${generated:model_parameters/Benn_LaPalma_sky_converted.lis}
     output_path: simtools-output
     site: North
     telescope: LSTN-02
