@@ -151,6 +151,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
     assert summary["model_database_tag"] == _model_tag(catalog)
     assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
+    assert summary["simtools_tests_tag"] == catalog["simtools-tests"]["tag"]
     assert summary["simtools_tests_url"] == catalog["simtools-tests"]["source-url"]
 
 
