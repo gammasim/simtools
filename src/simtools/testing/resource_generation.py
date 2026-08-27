@@ -374,12 +374,11 @@ def generate_test_resources(args_dict, run_time=None):
     """
     test_directory = Path(args_dict["test_directory"])
     simtools_version = args_dict["simtools_version"]
+    integration_test_dir = get_integration_test_directory(test_directory, simtools_version)
+
     template_version = args_dict.get("template_version")
-    if template_version:
+    if template_version and not integration_test_dir.exists():
         initialize_test_resources(test_directory, simtools_version, template_version)
-    integration_test_dir = get_integration_test_directory(
-        args_dict["test_directory"], args_dict["simtools_version"]
-    )
     if args_dict.get("test_static_files"):
         validate_static_files(integration_test_dir / "static" / STATIC_MANIFEST)
         return
