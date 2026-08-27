@@ -13,7 +13,6 @@ on:
       - dependency_versions.yml
       - src/simtools/applications/dependency_versions.py
       - src/simtools/dependency_versions.py
-      - src/simtools/schemas/dependency_versions.schema.yml
       - .github/workflows/build-sim_telarray.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
