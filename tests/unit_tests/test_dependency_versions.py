@@ -64,7 +64,7 @@ def _legacy_catalog(schema_version="0.2.0"):
 def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     """Use source tags for selection and derive the legacy build ID."""
     catalog = _load_catalog(simtools_root_path)
-    assert catalog["schema_version"] == "0.3.0"
+    assert catalog["schema_version"] == "0.4.0"
     assert catalog["corsika"][0]["tag"] == "v7.8010"
     assert "build-id" not in catalog["corsika"][0]
     matrices = dependency_versions.build_workflow_matrices(catalog)
@@ -100,6 +100,15 @@ def test_catalog_reads_legacy_corsika_fields():
     assert dependency_versions.validate_dependency_catalog(catalog) == catalog
 
 
+def test_schema_0_4_requires_source_revisions(simtools_root_path):
+    """Require immutable source revisions in the current catalog schema."""
+    catalog = _load_catalog(simtools_root_path)
+    del catalog["corsika"][0]["source-revision"]
+
+    with pytest.raises(ValueError, match="Invalid Git revision"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
 def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypatch):
     """Test catalog loading and matrix construction."""
     monkeypatch.chdir(simtools_root_path)
@@ -123,8 +132,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
     assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
     assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v0.1.0"
     assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
-    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
-    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == (
+        "6b720388124871f8e07741e40e3446a7375efe78"
+    )
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == (
+        "6b720388124871f8e07741e40e3446a7375efe78"
+    )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -475,7 +488,14 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema = schemas_by_version[catalog["schema_version"]]
 
     jsonschema.validate(catalog, schema)
-    assert sorted(item["schema_version"] for item in schemas) == ["0.1.0", "0.2.0", "0.3.0"]
+    assert sorted(item["schema_version"] for item in schemas) == [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+    ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
     assert "default-tag" in schema["properties"]["model-database"]["required"]
+    assert "source-revision" in schema["definitions"]["corsika"]["required"]
+    assert "revision" in schema["definitions"]["simtel"]["required"]
