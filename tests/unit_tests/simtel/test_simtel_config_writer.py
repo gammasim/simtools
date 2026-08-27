@@ -247,6 +247,19 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     )
     assert not file_has_text(_file, "array_triggers = array_triggers.dat")
 
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=_file,
+        parameters={
+            "reference_point_longitude": {
+                "parameter": "reference_point_longitude",
+                "value": -70.316345,
+                "unit": "deg",
+            }
+        },
+    )
+    assert not file_has_text(_file, "longitude = -70.316345")
+    assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
+
 
 def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel(None) == "none"

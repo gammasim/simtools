@@ -121,9 +121,7 @@ class SimtelConfigWriter:
         simtel_par = {}
         for par, value in parameters.items():
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
-                names.get_simulation_software_name_from_parameter_name(
-                    par, software_name="sim_telarray"
-                ),
+                self._get_sim_telarray_config_parameter_name(par),
                 value["value"],
                 config_file_path,
                 None,
@@ -134,6 +132,22 @@ class SimtelConfigWriter:
             simtel_par["stars"] = None
 
         return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
+
+    @staticmethod
+    def _get_sim_telarray_config_parameter_name(parameter_name):
+        """Return the sim_telarray name when it is an ordinary config parameter."""
+        simtel_name = names.get_simulation_software_name_from_parameter_name(
+            parameter_name, software_name="sim_telarray"
+        )
+        if (
+            simtel_name
+            and names.get_simulation_software_meta_parameter_mode(
+                parameter_name, software_name="sim_telarray"
+            )
+            == "set"
+        ):
+            return None
+        return simtel_name
 
     def _get_flasher_parameters_for_sim_telarray(self, parameters, simtel_par):
         """
@@ -505,9 +519,7 @@ class SimtelConfigWriter:
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
-                names.get_simulation_software_name_from_parameter_name(
-                    par, software_name="sim_telarray"
-                ),
+                self._get_sim_telarray_config_parameter_name(par),
                 value["value"],
                 model_path,
                 telescope_model,
