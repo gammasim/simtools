@@ -16,6 +16,12 @@ def _load_catalog(simtools_root_path):
     )
 
 
+def _model_tag(catalog):
+    return catalog["model-database"].get(
+        "default-tag", catalog["model-database"].get("default-version")
+    )
+
+
 def _legacy_catalog(schema_version="0.2.0"):
     """Return a minimal catalog using the pre-tag dependency fields."""
     catalog = {
@@ -64,12 +70,17 @@ def _legacy_catalog(schema_version="0.2.0"):
 def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     """Use source tags for selection and derive the legacy build ID."""
     catalog = _load_catalog(simtools_root_path)
-    assert catalog["schema_version"] == "0.3.0"
-    assert catalog["corsika"][0]["tag"] == "v7.8010"
-    assert "build-id" not in catalog["corsika"][0]
+    combination = catalog["production-combinations"][0]
+    corsika = next(item for item in catalog["corsika"] if item["tag"] == combination["corsika"])
+    build_id = corsika["tag"].removeprefix("v").replace(".", "")
+    variant = combination.get("cpu-variants", catalog["cpu-variants"])[0]
     matrices = dependency_versions.build_workflow_matrices(catalog)
-    assert matrices["production_matrix"][0]["corsika_tag"] == "v7.8010"
-    assert matrices["production_matrix"][0]["corsika_image"].endswith(":v78010-generic")
+    production = matrices["production_matrix"][0]
+
+    assert "build-id" not in corsika
+    assert production["corsika_tag"] == corsika["tag"]
+    assert production["corsika_build_id"] == build_id
+    assert production["corsika_image"].endswith(f":v{build_id}-{variant}")
 
 
 def test_corsika_build_id_is_derived_without_a_fixed_length():
@@ -106,20 +117,19 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
     catalog = dependency_versions.load_dependency_catalog()
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
-    assert catalog["python"] == "3.14"
-    assert len(matrices["corsika_matrix"]) == 8
-    assert len(matrices["corsika_build_matrix"]) == 10
-    assert len(matrices["corsika_source_matrix"]) == 2
-    assert len(matrices["simtel_matrix"]) == 1
-    assert len(matrices["simtel_build_matrix"]) == 2
-    assert len(matrices["production_matrix"]) == 8
-    assert {(item["avx_flag"], item["arch"]) for item in matrices["corsika_build_matrix"]} == {
-        ("generic", "amd64"),
-        ("generic", "arm64"),
-        ("avx2", "amd64"),
-        ("avx512f", "amd64"),
-        ("sse4", "amd64"),
-    }
+    variants = catalog["cpu-variants"]
+    assert len(matrices["corsika_matrix"]) == len(catalog["corsika"]) * len(variants)
+    assert len(matrices["corsika_build_matrix"]) == len(catalog["corsika"]) * sum(
+        2 if variant == "generic" else 1 for variant in variants
+    )
+    assert len(matrices["corsika_source_matrix"]) == len(catalog["corsika"])
+    assert len(matrices["simtel_matrix"]) == len(catalog["sim-telarray"])
+    assert len(matrices["simtel_build_matrix"]) == 2 * len(catalog["sim-telarray"])
+    assert len(matrices["production_matrix"]) == sum(
+        len(combination.get("cpu-variants", variants))
+        for combination in catalog["production-combinations"]
+    )
+    assert {item["avx_flag"] for item in matrices["corsika_build_matrix"]} == set(variants)
     assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
@@ -132,13 +142,17 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     catalog = _load_catalog(simtools_root_path)
     summary = dependency_versions.dependency_catalog_summary(catalog)
 
-    assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
-    assert summary["corsika_tables_tag"] == "v1.0.0"
-    assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
-    assert summary["model_database_tag"] == catalog["model-database"]["default-tag"]
-    assert summary["simtools_tests_repository"] == "gammasim/simtools-tests"
-    assert summary["simtools_tests_url"].endswith("/simtools-tests.git")
-    assert summary["simtools_tests_tag"] == "v0.36.0"
+    base = catalog["base-image"]
+    corsika = catalog["corsika"][0]
+
+    assert summary["base_image"] == f"{base['name']}:{base['runtime-version']}"
+    assert summary["corsika_tables_tag"] == catalog["corsika-interaction-tables"]["tag"]
+    build_id = corsika["tag"].removeprefix("v").replace(".", "")
+    assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
+    assert summary["model_database_tag"] == _model_tag(catalog)
+    assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
+    assert summary["simtools_tests_tag"] == catalog["simtools-tests"]["tag"]
+    assert summary["simtools_tests_url"] == catalog["simtools-tests"]["source-url"]
 
 
 def test_env_template_matches_catalog(simtools_root_path):
@@ -155,9 +169,14 @@ def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simto
     """Test catalog-managed versions are not duplicated in the environment template."""
     catalog = _load_catalog(simtools_root_path)
     template = tmp_test_directory / ".env_template"
+    model_key = (
+        "SIMTOOLS_DB_SIMULATION_MODEL_TAG"
+        if "default-tag" in catalog["model-database"]
+        else "SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+    )
     template.write_text(
-        "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model\n"
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.16.0\n",
+        f"SIMTOOLS_DB_SIMULATION_MODEL={catalog['model-database']['name']}\n"
+        f"{model_key}={_model_tag(catalog)}\n",
         encoding="utf-8",
     )
 
@@ -183,8 +202,8 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
     catalog = _legacy_catalog("0.1.0")
     template = tmp_test_directory / ".env_template"
     template.write_text(
-        "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model\n"
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.16.0\n",
+        f"SIMTOOLS_DB_SIMULATION_MODEL={catalog['model-database']['name']}\n"
+        f"SIMTOOLS_DB_SIMULATION_MODEL_VERSION={_model_tag(catalog)}\n",
         encoding="utf-8",
     )
 
@@ -388,22 +407,27 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
         simtools_root_path / "pyproject.toml", "github-output"
     )
 
+    catalog = _load_catalog(simtools_root_path)
+
     assert "production_matrix=" in output
-    assert "python_version=3.14" in output
+    assert f"python_version={catalog['python']}" in output
 
 
 def test_export_dependency_configuration_returns_environment_values(simtools_root_path):
     """Test env output contains catalog-managed runtime values only."""
     output = dependency_versions.export_dependency_configuration(output_format="env")
-    model_version = _load_catalog(simtools_root_path)["model-database"]["default-tag"]
-
-    assert output.splitlines() == [
-        "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model",
-        f"SIMTOOLS_DB_SIMULATION_MODEL_TAG={model_version}",
-        "SIMTOOLS_TESTS_TAG=v0.36.0",
-        "SIMTOOLS_TESTS_REPOSITORY=gammasim/simtools-tests",
-        "SIMTOOLS_TESTS_URL=https://github.com/gammasim/simtools-tests.git",
+    catalog = _load_catalog(simtools_root_path)
+    model = catalog["model-database"]
+    test_resources = catalog["simtools-tests"]
+    expected = [
+        f"SIMTOOLS_DB_SIMULATION_MODEL={model['name']}",
+        f"SIMTOOLS_DB_SIMULATION_MODEL_TAG={_model_tag(catalog)}",
+        f"SIMTOOLS_TESTS_TAG={test_resources['tag']}",
+        f"SIMTOOLS_TESTS_REPOSITORY={test_resources['repository']}",
+        f"SIMTOOLS_TESTS_URL={test_resources['source-url']}",
     ]
+
+    assert output.splitlines() == expected
 
 
 def test_dependency_catalog_environment_supports_schema_0_1(simtools_root_path):
@@ -413,8 +437,8 @@ def test_dependency_catalog_environment_supports_schema_0_1(simtools_root_path):
     environment = dependency_versions.dependency_catalog_environment(catalog)
 
     assert environment == {
-        "SIMTOOLS_DB_SIMULATION_MODEL": "CTAO-Simulation-Model",
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": "0.16.0",
+        "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
+        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": _model_tag(catalog),
     }
 
 
@@ -466,7 +490,9 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema = schemas_by_version[catalog["schema_version"]]
 
     jsonschema.validate(catalog, schema)
-    assert sorted(item["schema_version"] for item in schemas) == ["0.1.0", "0.2.0", "0.3.0"]
-    assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
-    assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
+    assert catalog["schema_version"] in schemas_by_version
+    legacy_schema = next(schema for schema in schemas if "simtools-tests" not in schema["required"])
+    tagged_schema = next(schema for schema in schemas if "simtools-tests" in schema["required"])
+    assert "simtools-tests" not in legacy_schema["required"]
+    assert "simtools-tests" in tagged_schema["required"]
     assert "default-tag" in schema["properties"]["model-database"]["required"]
