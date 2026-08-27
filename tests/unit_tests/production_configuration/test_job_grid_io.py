@@ -86,6 +86,39 @@ def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_direct
     assert read_rows[1]["scan_label"] == "asum220"
 
 
+def test_serialize_job_grid_sorts_rows_by_production_configuration(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = [
+        {
+            **_job_rows()[0],
+            "run_number": 12,
+            "primary": "proton",
+            "azimuth_angle": 10 * u.deg,
+        },
+        {
+            **_job_rows()[0],
+            "run_number": 11,
+            "primary": "gamma",
+            "azimuth_angle": 20 * u.deg,
+        },
+        {
+            **_job_rows()[0],
+            "run_number": 10,
+            "primary": "gamma",
+            "azimuth_angle": 10 * u.deg,
+        },
+    ]
+
+    job_grid_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert list(zip(output_table["primary"], output_table["azimuth_angle"], strict=True)) == [
+        ("gamma", 10.0),
+        ("gamma", 20.0),
+        ("proton", 10.0),
+    ]
+
+
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.txt"
 
