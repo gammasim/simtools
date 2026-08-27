@@ -14,14 +14,15 @@ simtools-dependency-versions --format github-output
 
 ## Scientific component images
 
-`docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. It requires the CORSIKA
-source token and the `autoconf.tar.gz` archive. The Dockerfile records the source,
-configuration and optimization-patch revisions that it actually checked out, as well as the
-archive checksum it calculated. Optional catalogued revisions and checksums are verified when set.
+`docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. The workflow prepares
+the CORSIKA source, configuration, and optimization-patch trees before the Docker build and
+provides them with the `autoconf.tar.gz` archive. The Dockerfile verifies the prepared source
+revisions and records them in the build provenance. It does not require GitLab credentials.
 
-`docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio and stdtools releases.
-It requires the corresponding GitLab tokens and `gsl.tar.gz`; its calculated archive checksum is
-recorded before extraction, and verified when the catalog supplies one.
+`docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio, and stdtools releases.
+The workflow prepares those source trees before the Docker build and provides them with the
+`gsl.tar.gz` archive. The Dockerfile verifies the prepared source revisions and records them in the
+build provenance. It does not require GitLab credentials.
 
 Use the workflow-generated matrix values as build arguments. This ensures that a local build uses
 the same base-image tags, source releases and flags as CI. Add optional digests and revisions to

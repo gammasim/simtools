@@ -121,6 +121,10 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
         ("sse4", "amd64"),
     }
     assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
+    assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v0.1.0"
+    assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -228,6 +232,10 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
             "Invalid Git revision",
         ),
         (
+            lambda data: data["corsika"][0].update({"source-revision": "short"}),
+            "Invalid Git revision",
+        ),
+        (
             lambda data: data["model-database"].update({"default-tag": "0.16.0"}),
             "release tags",
         ),
@@ -331,6 +339,7 @@ def test_validate_dependency_catalog_accepts_valid_revisions(simtools_root_path)
     """Test valid component revisions pass catalog validation."""
     catalog = _load_catalog(simtools_root_path)
     revision = "a" * 40
+    catalog["corsika"][0]["source-revision"] = revision
     catalog["corsika"][0]["config-revision"] = revision
     catalog["corsika"][0]["opt-patch-revision"] = revision
     catalog["sim-telarray"][0].update(

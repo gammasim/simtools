@@ -235,6 +235,7 @@ def _validate_corsika_components(components):
             _corsika_build_id(component)
         except ValueError as exc:
             raise ValueError(f"Invalid CORSIKA build ID mapping for {source_tag!r}: {exc}") from exc
+        _validate_optional_revision(component.get("source-revision"), "CORSIKA source")
         _validate_optional_revision(component.get("config-revision"), "CORSIKA configuration")
         _validate_optional_revision(
             component.get("opt-patch-revision"), "CORSIKA optimization patch"
@@ -413,6 +414,7 @@ def build_workflow_matrices(catalog):
             "corsika_tag": _corsika_tag(corsika),
             "corsika_build_id": _corsika_build_id(corsika),
             "corsika_source_url": corsika["source-url"],
+            "corsika_source_revision": corsika.get("source-revision", ""),
             "corsika_config_tag": _dependency_tag(corsika, "config-tag", "config-version"),
             "corsika_config_source_url": corsika["config-source-url"],
             "corsika_config_revision": corsika.get("config-revision", ""),
@@ -443,6 +445,22 @@ def build_workflow_matrices(catalog):
         }
         for component in catalog["sim-telarray"]
     ]
+    corsika_source_matrix = [
+        {
+            "corsika_tag": _corsika_tag(component),
+            "corsika_source_url": component["source-url"],
+            "corsika_source_revision": component.get("source-revision", ""),
+            "corsika_config_tag": _dependency_tag(component, "config-tag", "config-version"),
+            "corsika_config_source_url": component["config-source-url"],
+            "corsika_config_revision": component.get("config-revision", ""),
+            "corsika_opt_patch_tag": _dependency_tag(
+                component, "opt-patch-tag", "opt-patch-version"
+            ),
+            "corsika_opt_patch_source_url": component["opt-patch-source-url"],
+            "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
+        }
+        for component in catalog["corsika"]
+    ]
     return {
         "corsika_matrix": corsika_matrix,
         "corsika_build_matrix": [
@@ -452,12 +470,8 @@ def build_workflow_matrices(catalog):
             if item["avx_flag"] == "generic" or platform["arch"] == "amd64"
         ],
         "corsika_source_matrix": [
-            {
-                "corsika_tag": _corsika_tag(component),
-                "corsika_build_id": _corsika_build_id(component),
-                "corsika_source_url": component["source-url"],
-            }
-            for component in catalog["corsika"]
+            {"corsika_build_id": _corsika_build_id(component), **source}
+            for component, source in zip(catalog["corsika"], corsika_source_matrix)
         ],
         "simtel_matrix": simtel_matrix,
         "simtel_build_matrix": [
