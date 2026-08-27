@@ -6,7 +6,7 @@ applications:
     summary: Upload model parameters and production tables from an existing local repository checkout.
   configuration:
     db_simulation_model: CTAO-Simulation-Model
-    db_simulation_model_version: 0.16.0
+    db_simulation_model_tag: v0.16.0
     repository_dir: /path/to/simulation-models
   requires_mongodb: true
   skip_integration_test: >-

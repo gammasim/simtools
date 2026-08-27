@@ -13,10 +13,11 @@ New releases of the model repository will automatically trigger an update of the
 
 ## Simulation Models Database
 
-The model parameter database name and default version are defined in
+The model parameter database name and default release tag are defined in
 `dependency_versions.yml`. The local `.env` file supplies the connection details; a
-command-line `--db_simulation_model_version` can override the catalog for an explicit
-operation.
+command-line `--db_simulation_model_tag` can override the catalog for an explicit
+operation. The legacy `--db_simulation_model_version` spelling remains accepted as
+an alias.
 
 Collections:
 
@@ -110,7 +111,7 @@ SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=admin
 3. Fill the model parameter database from the model repository (parameters must match the selected model version):
 
 ```console
-simtools-db-upload-model-repository --db_simulation_model_version v0.12.0
+simtools-db-upload-model-repository --db_simulation_model_tag v0.12.0
 ```
 
 For development purposes, a specific branch of the model repository can be used by providing the `--branch` argument to the upload application

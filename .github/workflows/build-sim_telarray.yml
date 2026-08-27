@@ -75,7 +75,7 @@ jobs:
         include: ${{ fromJSON(needs.dependency-config.outputs.simtel_build_matrix) }}
     env:
       BASE_LABEL: "sim_telarray"
-      BASE_TAG: "${{ matrix.simtel_version }}"
+      BASE_TAG: "${{ matrix.simtel_tag }}"
       ARCH: "${{ matrix.arch }}"
       RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
@@ -121,13 +121,13 @@ jobs:
           build-args: |
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             BUILD_BASE_IMAGE=${{ needs.dependency-config.outputs.build_base_image }}
-            SIMTEL_VERSION=${{ matrix.simtel_version }}
+            SIMTEL_TAG=${{ matrix.simtel_tag }}
             SIMTEL_SOURCE_URL=${{ matrix.simtel_source_url }}
             SIMTEL_REVISION=${{ matrix.simtel_revision }}
-            HESSIO_VERSION=${{ matrix.hessio_version }}
+            HESSIO_TAG=${{ matrix.hessio_tag }}
             HESSIO_SOURCE_URL=${{ matrix.hessio_source_url }}
             HESSIO_REVISION=${{ matrix.hessio_revision }}
-            STDTOOLS_VERSION=${{ matrix.stdtools_version }}
+            STDTOOLS_TAG=${{ matrix.stdtools_tag }}
             STDTOOLS_SOURCE_URL=${{ matrix.stdtools_source_url }}
             STDTOOLS_REVISION=${{ matrix.stdtools_revision }}
             GSL_VERSION=${{ needs.dependency-config.outputs.gsl_version }}
@@ -153,7 +153,7 @@ jobs:
         include: ${{ fromJSON(needs.dependency-config.outputs.simtel_matrix) }}
     env:
       BASE_LABEL: "sim_telarray"
-      BASE_TAG: "${{ matrix.simtel_version }}"
+      BASE_TAG: "${{ matrix.simtel_tag }}"
       IMAGE: "ghcr.io/gammasim/sim_telarray"
       RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 

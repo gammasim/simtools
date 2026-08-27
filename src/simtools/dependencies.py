@@ -34,14 +34,23 @@ DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.1.0"
 SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "avx_flag",
     "build_date",
-    "corsika_config_version",
-    "corsika_opt_patch_version",
-    "corsika_version",
+    "corsika_config_tag",
+    "corsika_opt_patch_tag",
+    "corsika_build_id",
+    "corsika_source_tag",
     "extra_defines",
-    "hessio_version",
+    "hessio_tag",
     "iact_atmo_version",
-    "simtel_version",
-    "stdtools_version",
+    "simtel_tag",
+    "stdtools_tag",
+}
+LEGACY_BUILD_OPTION_KEYS = {
+    "corsika_config_version": "corsika_config_tag",
+    "corsika_opt_patch_version": "corsika_opt_patch_tag",
+    "corsika_version": "corsika_build_id",
+    "hessio_version": "hessio_tag",
+    "simtel_version": "simtel_tag",
+    "stdtools_version": "stdtools_tag",
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
@@ -254,8 +263,8 @@ def get_version_string(run_time=None, include_software_versions=True):
 
     return (
         f"simtools version: {__version__}\n"
-        f"Database name: {get_database_version_or_name(version=False)}\n"
-        f"Database version: {get_database_version_or_name(version=True)}\n"
+        f"Database name: {get_database_tag_or_name(tag=False)}\n"
+        f"Database release tag: {get_database_tag_or_name()}\n"
         f"sim_telarray version: {simtel_version}\n"
         f"sim_telarray exe: {simtel_exe if simtel_exe else 'None'}\n"
         f"CORSIKA version: {corsika_version}\n"
@@ -506,7 +515,7 @@ def _build_options_from_files(build_option_files):
             options.update(
                 _sanitize_build_options(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
             )
-    return options
+    return _normalize_build_options(options)
 
 
 def _write_manifest(manifest, output_file):
@@ -531,8 +540,8 @@ def get_dependency_summary(run_time=None):
         f"simtools: {simtools_info.get('version', __version__)}\n"
         f"revision: {simtools_info.get('revision')}\n"
         f"Python: {runtime.get('python_version')}\n"
-        f"CORSIKA: {build_options.get('corsika_version')}\n"
-        f"sim_telarray: {build_options.get('simtel_version')}\n"
+        f"CORSIKA: {build_options.get('corsika_build_id')}\n"
+        f"sim_telarray: {build_options.get('simtel_tag')}\n"
         f"dependency manifest SHA-256: "
         f"{hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()}"
     )
@@ -575,26 +584,31 @@ def get_software_version(software):
         raise ValueError(f"Unknown software: {software}") from exc
 
 
-def get_database_version_or_name(version=True):
+def get_database_tag_or_name(tag=True):
     """
-    Get the version or name of the simulation model data base used.
+    Get the release tag or name of the simulation model database used.
 
     Parameters
     ----------
-    version : bool
-        If True, return the version of the database. If False, return the name.
+    tag : bool
+        If True, return the release tag of the database. If False, return the name.
 
     Returns
     -------
     str
-        Version or name of the simulation model data base used.
+        Release tag or name of the simulation model database used.
 
     """
-    if version:
+    if tag:
         return settings.config.db_config and settings.config.db_config.get(
-            "db_simulation_model_version"
+            "db_simulation_model_tag"
         )
     return settings.config.db_config and settings.config.db_config.get("db_simulation_model")
+
+
+def get_database_version_or_name(version=True):
+    """Return the database release tag or name using the deprecated interface."""
+    return get_database_tag_or_name(tag=version)
 
 
 def get_sim_telarray_version(run_time=None):
@@ -687,7 +701,7 @@ def get_corsika_version(run_time=None):
         _logger.warning("Could not get CORSIKA version.")
         return None
     _logger.debug("Getting the CORSIKA version from the build options.")
-    return build_opts.get("corsika_version")
+    return build_opts.get("corsika_build_id")
 
 
 def get_build_options(run_time=None):
@@ -729,7 +743,18 @@ def get_build_options(run_time=None):
     if not build_opts:
         raise FileNotFoundError("No build option file found.")
 
-    return build_opts
+    return _normalize_build_options(build_opts)
+
+
+def _normalize_build_options(build_options):
+    """Return canonical build-option names while accepting old image metadata."""
+    normalized = {
+        key: value for key, value in build_options.items() if key not in LEGACY_BUILD_OPTION_KEYS
+    }
+    for legacy_key, canonical_key in LEGACY_BUILD_OPTION_KEYS.items():
+        if canonical_key not in normalized and legacy_key in build_options:
+            normalized[canonical_key] = build_options[legacy_key]
+    return normalized
 
 
 def _get_package_path(package):
@@ -777,8 +802,8 @@ def export_build_info(output_file, run_time=None):
     except FileNotFoundError:
         build_options = {}
     manifest = get_dependency_manifest(run_time)
-    database_name = get_database_version_or_name(version=False)
-    database_version = get_database_version_or_name(version=True)
+    database_name = get_database_tag_or_name(tag=False)
+    database_tag = get_database_tag_or_name()
     build_info = {
         "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
         "dependency_manifest": manifest,
@@ -787,13 +812,13 @@ def export_build_info(output_file, run_time=None):
         ).hexdigest(),
         "runtime": {
             "database_name": database_name,
-            "database_version": database_version,
+            "database_tag": database_tag,
         },
         "build_options": build_options,
         # Compatibility fields retained for existing consumers.
         **build_options,
         "simtools": __version__,
         "database_name": database_name,
-        "database_version": database_version,
+        "database_tag": database_tag,
     }
     ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))
