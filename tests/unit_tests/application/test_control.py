@@ -412,12 +412,12 @@ def test_version_info_export_build_info_with_io_handler():
     mock_io_handler.get_output_file.return_value = "/output/build_info.json"
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_version_or_name"):
+        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
             with patch(
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:
                 with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_version": "7.7500"}
+                    mock_build.return_value = {"corsika_build_id": "7.7500"}
 
                     _version_info(args_dict, mock_io_handler, logger)
 
@@ -430,12 +430,12 @@ def test_version_info_export_build_info_without_io_handler():
     logger = logging.getLogger("test")
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_version_or_name"):
+        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
             with patch(
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:
                 with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_version": "7.7500"}
+                    mock_build.return_value = {"corsika_build_id": "7.7500"}
 
                     _version_info(args_dict, None, logger)
 

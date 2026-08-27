@@ -103,7 +103,7 @@ jobs:
         id: interaction_table_version
         run: |
           CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
-            --format github-output | sed -n 's/^corsika_tables_version=//p')
+            --format github-output | sed -n 's/^corsika_tables_tag=//p')
           test -n "$CORSIKA_TABLES"
           echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
           echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"
@@ -213,8 +213,12 @@ jobs:
             CURRENT_REF="$HEAD_REF"
           fi
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-            BRANCH="v${SIMTOOLS_DB_SIMULATION_MODEL_VERSION#v}"
+            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_TAG"
+            if [[ ! "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG must be a v-prefixed release tag."
+              exit 1
+            fi
+            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
           fi
           echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -288,7 +292,7 @@ jobs:
     name: download test resources
     runs-on: ubuntu-latest
     outputs:
-      test_resources_version: ${{ steps.test_resources.outputs.version }}
+      test_resources_tag: ${{ steps.test_resources.outputs.tag }}
 
     defaults:
       run:
@@ -305,9 +309,9 @@ jobs:
       - name: Set test resource version
         id: test_resources
         run: |
-          test -n "$SIMTOOLS_TESTS_VERSION"
+          test -n "$SIMTOOLS_TESTS_TAG"
           test -n "$SIMTOOLS_TESTS_REPOSITORY"
-          echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$SIMTOOLS_TESTS_TAG" >> "$GITHUB_OUTPUT"
           echo "repository=$SIMTOOLS_TESTS_REPOSITORY" >> "$GITHUB_OUTPUT"
 
       - name: Checkout test resources
@@ -315,7 +319,7 @@ jobs:
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
           path: simtools-tests
-          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.version }}
+          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
 
       - name: Upload test resources
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
@@ -373,7 +377,7 @@ jobs:
         run: |
           {
             echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
-            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/${{ needs.prepare_test_resources.outputs.test_resources_version }}/integration_tests"
+            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/${{ needs.prepare_test_resources.outputs.test_resources_tag }}/integration_tests"
           } >> "$GITHUB_ENV"
 
       - name: Download test resources
@@ -396,7 +400,7 @@ jobs:
               echo "SIMTOOLS_DB_API_PW=$DB_API_PW"
               echo "SIMTOOLS_DB_API_PORT=$DB_API_PORT"
               echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG=$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
             fi
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
@@ -449,7 +453,7 @@ jobs:
         run: |
           simtools-db-upload-model-repository \
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
-            --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
+            --db_simulation_model_tag ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_TAG }} \
             --repository_dir ../simulation-models
 
       - name: Integration tests

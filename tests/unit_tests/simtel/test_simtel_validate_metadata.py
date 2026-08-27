@@ -60,6 +60,10 @@ def test_validate_metadata_values_checks_known_keys_and_skips_unknown_keys():
         simtel_validate_metadata.validate_metadata_values({"azimuth_angle": "not-a-number"})
 
 
+def test_validate_metadata_values_accepts_legacy_generated_names():
+    simtel_validate_metadata.validate_metadata_values({"simtools_simtel_version": "v2025-11-30-rc"})
+
+
 def test_validate_metadata_values_skips_add_and_model_derived_keys():
     assert (
         simtel_validate_metadata.validate_metadata_values(

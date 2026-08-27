@@ -429,7 +429,7 @@ def test_write_simtools_parameters_validates_metadata_lines(simtel_config_writer
     with (
         mock.patch(
             "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
-            return_value={"corsika_version": "invalid-int"},
+            return_value={"corsika_build_id": "invalid-int"},
         ),
         pytest.raises(ValueError, match=r"invalid literal for int"),
     ):

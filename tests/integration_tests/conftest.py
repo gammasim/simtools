@@ -41,15 +41,18 @@ def db_config(simtools_root_path):
         "db_api_authentication_database",
         "db_server",
         "db_simulation_model",
-        "db_simulation_model_version",
+        "db_simulation_model_tag",
     )
     db_config = {_para: os.environ.get(f"SIMTOOLS_{_para.upper()}") for _para in _db_para}
+    db_config["db_simulation_model_tag"] = db_config["db_simulation_model_tag"] or os.environ.get(
+        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+    )
     db_config["db_simulation_model"] = (
         db_config["db_simulation_model"] or catalog["model-database"]["name"]
     )
-    db_config["db_simulation_model_version"] = (
-        db_config["db_simulation_model_version"] or catalog["model-database"]["default-version"]
-    )
+    db_config["db_simulation_model_tag"] = db_config["db_simulation_model_tag"] or catalog[
+        "model-database"
+    ].get("default-tag", catalog["model-database"].get("default-version"))
     if db_config["db_api_port"] is not None:
         db_config["db_api_port"] = int(db_config["db_api_port"])
     return db_config
