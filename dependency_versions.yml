@@ -1,5 +1,5 @@
 ---
-schema_version: 0.2.0
+schema_version: 0.3.0
 python: "3.14"
 apptainer: "1.5.0"
 cpu-variants:
@@ -19,38 +19,36 @@ base-image:
   runtime-version: 9.8-minimal
   build-version: "9.8"
 corsika-interaction-tables:
-  version: v1.0.0
+  tag: v1.0.0
 model-database:
   name: CTAO-Simulation-Model
-  default-version: v0.17.0
+  default-tag: v0.17.0
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
-  version: v0.36.0
+  tag: v0.36.0
 production-combinations:
-  - corsika: "78010"
+  - corsika: v7.8010
     sim-telarray: v2025-11-30-rc
-  - corsika: "78050"
+  - corsika: v7.8050
     sim-telarray: v2025-11-30-rc
 corsika:
-  - version: "78010"
-    source-ref: v7.8010
+  - tag: v7.8010
     source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-version: v0.1.0
+    config-tag: v0.1.0
     config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-version: v1.1.0
+    opt-patch-tag: v1.1.0
     opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
-  - version: "78050"
-    source-ref: v7.8050
+  - tag: v7.8050
     source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-version: v1.0.0
+    config-tag: v1.0.0
     config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-version: v1.2.0
+    opt-patch-tag: v1.2.0
     opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
 sim-telarray:
-  - version: v2025-11-30-rc
+  - tag: v2025-11-30-rc
     source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
-    hessio-version: v2025-12-01-rc
+    hessio-tag: v2025-12-01-rc
     hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
-    stdtools-version: v2025-06-16-rc
+    stdtools-tag: v2025-06-16-rc
     stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git

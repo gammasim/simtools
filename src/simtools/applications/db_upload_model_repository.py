@@ -50,16 +50,16 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    if app_context.args.get("db_simulation_model_version"):
+    if app_context.args.get("db_simulation_model_tag"):
         app_context.db_config["db_simulation_model"] = app_context.args.get(
             "db_simulation_model", "CTAO-Simulation-Model"
         )
-        app_context.db_config["db_simulation_model_version"] = app_context.args[
-            "db_simulation_model_version"
+        app_context.db_config["db_simulation_model_tag"] = app_context.args[
+            "db_simulation_model_tag"
         ]
         config.load(app_context.args, app_context.db_config)
     else:
-        raise ValueError("Setting of db_simulation_model_version is required.")
+        raise ValueError("Setting of db_simulation_model_tag is required.")
 
     db = db_handler.DatabaseHandler()
     db.require_mongodb("Uploading a simulation model to a database")
@@ -69,7 +69,7 @@ def main():
         tmp_dir=app_context.args.get("tmp_dir"),
         db=db,
         db_simulation_model=app_context.args.get("db_simulation_model"),
-        db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
+        db_simulation_model_tag=app_context.args.get("db_simulation_model_tag"),
         repository_url=(
             None if app_context.args.get("repository_dir") else DEFAULT_SIMULATION_MODELS
         ),

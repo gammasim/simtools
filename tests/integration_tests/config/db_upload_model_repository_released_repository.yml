@@ -6,7 +6,7 @@ applications:
     summary: Clone the selected repository release and upload its model parameters and production tables.
   configuration:
     db_simulation_model: CTAO-Simulation-Model
-    db_simulation_model_version: 0.16.0
+    db_simulation_model_tag: v0.16.0
   requires_mongodb: true
   skip_integration_test: >-
     Documentation example; requires writable MongoDB access and cloning the simulation-model

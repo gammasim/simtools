@@ -453,7 +453,7 @@ def test_clone_simulation_model_repository_invalid_max_attempts(
             db_model_upload.clone_simulation_model_repository(
                 target_dir,
                 repository_url,
-                db_simulation_model_version="1.0.0",
+                db_simulation_model_tag="1.0.0",
                 repository_branch=None,
                 max_attempts=0,
             )
@@ -496,7 +496,7 @@ def test_add_complete_model_success(
     mock_clone_repo.assert_called_once_with(
         tmp_dir,
         repository_url,
-        db_simulation_model_version=db_simulation_model_version,
+        db_simulation_model_tag=db_simulation_model_version,
         repository_branch=None,
         max_attempts=3,
     )
@@ -509,7 +509,7 @@ def test_add_complete_model_success(
     mock_db.generate_compound_indexes_for_databases.assert_called_once_with(
         db_name=None,
         db_simulation_model=db_simulation_model,
-        db_simulation_model_version=db_simulation_model_version,
+        db_simulation_model_tag=db_simulation_model_version,
     )
     mock_rmtree.assert_called_once_with(repository_dir)
     assert "Upload of simulation model completed successfully" in caplog.text
@@ -646,7 +646,7 @@ def test_add_complete_model_uses_repository_dir_without_clone(
         tmp_dir=Path(tmp_test_directory) / "tmp",
         db=mock_db,
         db_simulation_model="test_model",
-        db_simulation_model_version="1.0.0",
+        db_simulation_model_tag="1.0.0",
         repository_url=None,
         repository_dir=str(repo_dir),
     )
@@ -675,7 +675,7 @@ def test_add_complete_model_requires_repository_url_or_repository_dir(
             tmp_dir=Path(tmp_test_directory) / "tmp",
             db=Mock(),
             db_simulation_model="test_model",
-            db_simulation_model_version="1.0.0",
+            db_simulation_model_tag="1.0.0",
             repository_url=None,
             repository_dir=None,
         )

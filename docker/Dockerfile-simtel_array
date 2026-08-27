@@ -14,13 +14,13 @@ ARG BUILD_BASE_IMAGE
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
 FROM ${BASE_IMAGE} AS source_preparation
-ARG SIMTEL_VERSION
+ARG SIMTEL_TAG
 ARG SIMTEL_REVISION
 ARG SIMTEL_SOURCE_URL
-ARG HESSIO_VERSION
+ARG HESSIO_TAG
 ARG HESSIO_REVISION
 ARG HESSIO_SOURCE_URL
-ARG STDTOOLS_VERSION
+ARG STDTOOLS_TAG
 ARG STDTOOLS_REVISION
 ARG STDTOOLS_SOURCE_URL
 ARG GSL_SHA256
@@ -33,7 +33,7 @@ WORKDIR /src
 # Clone sim_telarray from CTAO gitlab
 RUN --mount=type=secret,id=sim_telarray_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${SIMTEL_VERSION}" \
+    git clone --depth 1 --branch "${SIMTEL_TAG}" \
       "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_SOURCE_URL#https://}" && \
     if [ -n "${SIMTEL_REVISION}" ]; then \
         test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"; \
@@ -42,7 +42,7 @@ RUN --mount=type=secret,id=sim_telarray_token \
 # Clone hessio from CTAO gitlab
 RUN --mount=type=secret,id=hessio_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${HESSIO_VERSION}" \
+    git clone --depth 1 --branch "${HESSIO_TAG}" \
       "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
     git -C hessio rev-parse HEAD > /src/hessio_revision && \
     if [ -n "${HESSIO_REVISION}" ]; then \
@@ -52,7 +52,7 @@ RUN --mount=type=secret,id=hessio_token \
 # Clone stdtools from CTAO gitlab
 RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${STDTOOLS_VERSION}" \
+    git clone --depth 1 --branch "${STDTOOLS_TAG}" \
       "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_SOURCE_URL#https://}" && \
     if [ -n "${STDTOOLS_REVISION}" ]; then \
         test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"; \
@@ -72,11 +72,11 @@ RUN sha256sum /tmp/gsl.tar.gz | cut -d ' ' -f1 > /src/gsl_sha256 && \
 # -----------------------------------------------------------------------------
 FROM ${BUILD_BASE_IMAGE} AS build_image
 ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
-ARG SIMTEL_VERSION
+ARG SIMTEL_TAG
 ARG SIMTEL_SOURCE_URL
-ARG HESSIO_VERSION
+ARG HESSIO_TAG
 ARG HESSIO_SOURCE_URL
-ARG STDTOOLS_VERSION
+ARG STDTOOLS_TAG
 ARG STDTOOLS_SOURCE_URL
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 ARG GSL_VERSION
@@ -141,13 +141,13 @@ RUN make clean && \
 
 # Generate build_opts.yml with build information before removing Git metadata.
 RUN { \
-    echo "simtel_version: \"${SIMTEL_VERSION}\""; \
+    echo "simtel_tag: \"${SIMTEL_TAG}\""; \
     echo "simtel_revision: \"$(git rev-parse HEAD)\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
-    echo "hessio_version: \"${HESSIO_VERSION}\""; \
+    echo "hessio_tag: \"${HESSIO_TAG}\""; \
     echo "hessio_revision: \"$(cat /workdir/simulation_software/hessio_revision)\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
-    echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
+    echo "stdtools_tag: \"${STDTOOLS_TAG}\""; \
     echo "stdtools_revision: \"$(git -C /workdir/simulation_software/stdtools rev-parse HEAD)\""; \
     echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
     echo "gsl_version: \"${GSL_VERSION}\""; \
@@ -156,18 +156,18 @@ RUN { \
     echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
     echo "components:"; \
     echo "  - name: \"hessioxxx\""; \
-    echo "    version: \"${HESSIO_VERSION}\""; \
+    echo "    tag: \"${HESSIO_TAG}\""; \
     echo "    build_flags: \"DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "  - name: \"stdtools\""; \
-    echo "    version: \"${STDTOOLS_VERSION}\""; \
+    echo "    tag: \"${STDTOOLS_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "  - name: \"sim_telarray\""; \
-    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    tag: \"${SIMTEL_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "    executables:"; \
     echo "      - \"sim_telarray\""; \
     echo "  - name: \"sim_telarray_debug_trace\""; \
-    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    tag: \"${SIMTEL_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\""; \
     echo "    executables:"; \
     echo "      - \"sim_telarray_debug_trace\""; \

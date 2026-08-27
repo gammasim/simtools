@@ -96,6 +96,10 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: *string_scalar
+  simtools_corsika_config_tag:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_corsika_exec:
     scope: global
     mode: set
@@ -104,10 +108,22 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: *string_scalar
+  simtools_corsika_opt_patch_tag:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_corsika_version:
     scope: global
     mode: set
     value_schema: {kind: scalar, data_type: integer}
+  simtools_corsika_build_id:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: integer}
+  simtools_corsika_source_tag:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_dependency_manifest_sha256:
     scope: global
     mode: set
@@ -117,6 +133,10 @@ generated_meta_parameters:
     mode: set
     value_schema: *string_scalar
   simtools_hessio_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_hessio_tag:
     scope: global
     mode: set
     value_schema: *string_scalar
@@ -140,7 +160,15 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: *string_scalar
+  simtools_simtel_tag:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_stdtools_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_stdtools_tag:
     scope: global
     mode: set
     value_schema: *string_scalar

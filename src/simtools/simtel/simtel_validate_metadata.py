@@ -7,6 +7,7 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
+from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils import names
 
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter")
@@ -91,7 +92,7 @@ def validate_metadata_values(metadata):
         Decoded sim_telarray metadata values, keyed by emitted name.
     """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
-    for name, value in metadata.items():
+    for name, value in normalize_sim_telarray_metadata(metadata).items():
         definition = registry.get(name)
         if (
             definition is None

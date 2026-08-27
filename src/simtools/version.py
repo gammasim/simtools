@@ -11,6 +11,8 @@ from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
 MAJOR_MINOR = "major.minor"
+MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
+REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 try:
     try:
@@ -209,6 +211,95 @@ def base_version_for_patch_delta(version_string):
         return f"{major}.{minor}.0"
 
     return None
+
+
+def is_valid_release_tag(version_string):
+    """Return whether a value is a ``v``-prefixed semantic release tag."""
+    if not isinstance(version_string, str) or not version_string.startswith("v"):
+        return False
+
+    release, separator, build = version_string[1:].partition("+")
+    if separator and (not _is_valid_release_tag_suffix(build) or "+" in build):
+        return False
+    return _is_valid_release_tag_base(release)
+
+
+def _is_valid_release_tag_base(release):
+    """Return whether a release tag has numeric segments and an optional pre-release suffix."""
+    position = 0
+    while position < len(release) and release[position].isdigit():
+        position += 1
+    if position == 0:
+        return False
+
+    while position < len(release):
+        separator = release[position]
+        if separator not in "._-":
+            return False
+        position += 1
+        segment_start = position
+        while position < len(release) and release[position].isdigit():
+            position += 1
+        if position == len(release):
+            return segment_start != position
+        if position > segment_start and release[position] in "._-":
+            continue
+        return separator == "-" and _is_valid_release_tag_suffix(release[segment_start:])
+
+    return True
+
+
+def _is_valid_release_tag_suffix(suffix):
+    """Return whether a pre-release or build suffix contains only supported characters."""
+    return bool(suffix) and all(
+        character.isascii() and (character.isalnum() or character in "._-") for character in suffix
+    )
+
+
+def validate_release_tag(version_string):
+    """Validate and return a ``v``-prefixed semantic release tag.
+
+    Parameters
+    ----------
+    version_string : str
+        Release tag to validate.
+
+    Returns
+    -------
+    str
+        The unchanged release tag.
+
+    Raises
+    ------
+    ValueError
+        If ``version_string`` is not a ``v``-prefixed semantic release tag.
+    """
+    if not is_valid_release_tag(version_string):
+        raise ValueError(
+            f"Release tag must be a v-prefixed semantic version, got {version_string!r}."
+        )
+    return version_string
+
+
+def is_valid_model_version(version_string):
+    """Return whether a value is a bare simulation-model version."""
+    return isinstance(version_string, str) and bool(MODEL_VERSION_PATTERN.fullmatch(version_string))
+
+
+def is_valid_package_version(version_string):
+    """Return whether a value is a bare PEP 440 package version."""
+    if not isinstance(version_string, str) or version_string.startswith("v"):
+        return False
+    try:
+        Version(version_string)
+    except InvalidVersion:
+        return False
+    return True
+
+
+def is_valid_revision(version_string):
+    """Return whether a value is an exact lower-case Git revision."""
+    return isinstance(version_string, str) and bool(REVISION_PATTERN.fullmatch(version_string))
 
 
 def is_valid_semantic_version(version_string, strict=True):
