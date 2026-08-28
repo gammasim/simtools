@@ -16,8 +16,9 @@ simtools-dependency-versions --format github-output
 
 `docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. The workflow prepares
 the CORSIKA source, configuration, and optimization-patch trees before the Docker build and
-provides them with the `autoconf.tar.gz` archive. The Dockerfile verifies the prepared source
-revisions and records them in the build provenance. It does not require GitLab credentials.
+provides them with the `autoconf.tar.gz` archive. The Dockerfile checks the recorded revisions
+against the catalog values and includes them in the build provenance. It does not require GitLab
+credentials.
 
 `docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio, and stdtools releases.
 The workflow prepares those source trees before the Docker build and provides them with the
