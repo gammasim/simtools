@@ -14,7 +14,6 @@ on:
       - dependency_versions.yml
       - src/simtools/applications/dependency_versions.py
       - src/simtools/dependency_versions.py
-      - src/simtools/schemas/dependency_versions.schema.yml
       - docker/validate_corsika7_build.sh
       - .github/workflows/build-corsika7.yml
   schedule:
@@ -47,6 +46,7 @@ jobs:
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   download-auxiliary-files:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     needs: dependency-config
 
@@ -85,43 +85,58 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     needs: dependency-config
+    permissions:
+      contents: read
     strategy:
       matrix:
         include: ${{ fromJSON(needs.dependency-config.outputs.corsika_source_matrix) }}
 
     steps:
-      - name: Restore CORSIKA source cache
-        id: restore-corsika-source
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: corsika7-source.tar.gz
-          key: corsika7-source-tarball-${{ matrix.corsika_build_id }}-${{ matrix.corsika_tag }}
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
-      - name: Clone CORSIKA source from KIT
-        if: steps.restore-corsika-source.outputs.cache-hit != 'true'
+      - name: Prepare CORSIKA sources
         env:
           CORSIKA_SOURCE_TAG: ${{ matrix.corsika_tag }}
           CORSIKA_SOURCE_URL: ${{ matrix.corsika_source_url }}
+          CORSIKA_SOURCE_REVISION: ${{ matrix.corsika_source_revision }}
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
+          CORSIKA_CONFIG_TAG: ${{ matrix.corsika_config_tag }}
+          CORSIKA_CONFIG_SOURCE_URL: ${{ matrix.corsika_config_source_url }}
+          CORSIKA_CONFIG_REVISION: ${{ matrix.corsika_config_revision }}
+          CORSIKA_OPT_PATCH_TAG: ${{ matrix.corsika_opt_patch_tag }}
+          CORSIKA_OPT_PATCH_SOURCE_URL: ${{ matrix.corsika_opt_patch_source_url }}
+          CORSIKA_OPT_PATCH_REVISION: ${{ matrix.corsika_opt_patch_revision }}
         run: |
-          git clone --depth 1 --branch "$CORSIKA_SOURCE_TAG" \
-            "https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}" corsika7
-          git -C corsika7 rev-parse HEAD > corsika_revision
-          rm -rf corsika7/.git
-          tar -czf corsika7-source.tar.gz corsika7 corsika_revision
+          source_url="https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}"
+          source_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$source_url" "$CORSIKA_SOURCE_TAG" corsika7 "$CORSIKA_SOURCE_REVISION")
+          printf '%s\n' "$source_revision" > corsika_revision
 
-      - name: Save CORSIKA source cache
-        if: steps.restore-corsika-source.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: corsika7-source.tar.gz
-          key: corsika7-source-tarball-${{ matrix.corsika_build_id }}-${{ matrix.corsika_tag }}
+          config_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$CORSIKA_CONFIG_SOURCE_URL" "$CORSIKA_CONFIG_TAG" corsika7-config \
+            "$CORSIKA_CONFIG_REVISION")
+          printf '%s\n' "$config_revision" > corsika_config_revision
+
+          opt_patch_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$CORSIKA_OPT_PATCH_SOURCE_URL" "$CORSIKA_OPT_PATCH_TAG" corsika-opt-patches \
+            "$CORSIKA_OPT_PATCH_REVISION")
+          printf '%s\n' "$opt_patch_revision" > corsika_opt_patch_revision
+
+          rm -rf corsika7/.git corsika7-config/.git corsika-opt-patches/.git
+          tar -czf corsika7-source.tar.gz \
+            corsika7 corsika_revision \
+            corsika7-config corsika_config_revision \
+            corsika-opt-patches corsika_opt_patch_revision
+          sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
 
       - name: Upload CORSIKA source
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: corsika7-source-${{ matrix.corsika_build_id }}
-          path: corsika7-source.tar.gz
+          path: |
+            corsika7-source.tar.gz
+            corsika7-source.tar.gz.sha256
           retention-days: 1
 
   build-corsika7:
@@ -158,7 +173,10 @@ jobs:
           path: corsika-source
 
       - name: Extract CORSIKA source
-        run: tar -xzf corsika-source/corsika7-source.tar.gz -C corsika-source
+        run: |
+          cd corsika-source
+          sha256sum --check corsika7-source.tar.gz.sha256
+          tar -xzf corsika7-source.tar.gz -C .
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
@@ -194,6 +212,7 @@ jobs:
             AVX_FLAG=${{ matrix.avx_flag }}
             CORSIKA_BUILD_ID=${{ matrix.corsika_build_id }}
             CORSIKA_SOURCE_TAG=${{ matrix.corsika_tag }}
+            CORSIKA_SOURCE_REVISION=${{ matrix.corsika_source_revision }}
             CORSIKA_SOURCE_URL=${{ matrix.corsika_source_url }}
             CORSIKA_CONFIG_TAG=${{ matrix.corsika_config_tag }}
             CORSIKA_CONFIG_SOURCE_URL=${{ matrix.corsika_config_source_url }}

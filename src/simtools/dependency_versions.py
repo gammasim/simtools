@@ -194,9 +194,9 @@ def validate_dependency_catalog(catalog):
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     schema_version = catalog["schema_version"]
-    if schema_version not in {"0.1.0", "0.2.0", "0.3.0"}:
+    if schema_version not in {"0.1.0", "0.2.0", "0.3.0", "0.4.0"}:
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
-    if schema_version in {"0.2.0", "0.3.0"} and "simtools-tests" not in catalog:
+    if schema_version in {"0.2.0", "0.3.0", "0.4.0"} and "simtools-tests" not in catalog:
         raise ValueError("Missing dependency catalog keys: simtools-tests")
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
@@ -212,13 +212,14 @@ def _validate_components(catalog, schema_version):
         _dependency_tag(catalog["corsika-interaction-tables"], "tag", "version"),
         "CORSIKA interaction tables",
     )
-    _validate_corsika_components(catalog["corsika"])
-    _validate_simtel_components(catalog["sim-telarray"])
+    require_revisions = schema_version == "0.4.0"
+    _validate_corsika_components(catalog["corsika"], require_revisions)
+    _validate_simtel_components(catalog["sim-telarray"], require_revisions)
     _validate_model_and_test_components(catalog, schema_version)
     _validate_archive_versions(catalog["archives"])
 
 
-def _validate_corsika_components(components):
+def _validate_corsika_components(components, require_revisions=False):
     """Validate CORSIKA tags, legacy IDs, revisions, and image digests."""
     for component in components:
         source_tag = _corsika_tag(component)
@@ -235,15 +236,17 @@ def _validate_corsika_components(components):
             _corsika_build_id(component)
         except ValueError as exc:
             raise ValueError(f"Invalid CORSIKA build ID mapping for {source_tag!r}: {exc}") from exc
-        _validate_optional_revision(component.get("config-revision"), "CORSIKA configuration")
-        _validate_optional_revision(
-            component.get("opt-patch-revision"), "CORSIKA optimization patch"
+        revision_validator = (
+            _validate_revision if require_revisions else _validate_optional_revision
         )
+        revision_validator(component.get("source-revision"), "CORSIKA source")
+        revision_validator(component.get("config-revision"), "CORSIKA configuration")
+        revision_validator(component.get("opt-patch-revision"), "CORSIKA optimization patch")
         for variant, digest in component.get("image-digests", {}).items():
             _validate_optional_digest(digest, f"CORSIKA {source_tag} {variant}")
 
 
-def _validate_simtel_components(components):
+def _validate_simtel_components(components, require_revisions=False):
     """Validate sim_telarray component revisions and image digests."""
     for component in components:
         _validate_release_tag(_simtel_tag(component), "sim_telarray")
@@ -251,8 +254,11 @@ def _validate_simtel_components(components):
         _validate_release_tag(
             _dependency_tag(component, "stdtools-tag", "stdtools-version"), "stdtools"
         )
+        revision_validator = (
+            _validate_revision if require_revisions else _validate_optional_revision
+        )
         for key in ("revision", "hessio-revision", "stdtools-revision"):
-            _validate_optional_revision(component.get(key), key)
+            revision_validator(component.get(key), key)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
 
 
@@ -261,17 +267,17 @@ def _validate_model_and_test_components(catalog, schema_version):
     model_version = _model_tag(catalog)
     valid_model_version = (
         versioning.is_valid_release_tag(model_version)
-        if schema_version in {"0.2.0", "0.3.0"}
+        if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
         else isinstance(model_version, str) and versioning.is_valid_model_version(model_version)
     )
     if not valid_model_version:
         message = (
             "Model database values must be release tags starting with 'v'."
-            if schema_version in {"0.2.0", "0.3.0"}
+            if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
             else "Invalid model database version."
         )
         raise ValueError(message)
-    if schema_version in {"0.2.0", "0.3.0"}:
+    if schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
         _validate_simtools_tests(catalog["simtools-tests"])
 
 
@@ -378,7 +384,7 @@ def validate_env_template(catalog, template_path):
         key, value = stripped.split("=", maxsplit=1)
         values[key] = value
     version_keys = {"SIMTOOLS_TESTS_VERSION", "SIMTOOLS_TESTS_TAG"}
-    if catalog["schema_version"] in {"0.2.0", "0.3.0"}:
+    if catalog["schema_version"] in {"0.2.0", "0.3.0", "0.4.0"}:
         version_keys.update(
             {"SIMTOOLS_DB_SIMULATION_MODEL_VERSION", "SIMTOOLS_DB_SIMULATION_MODEL_TAG"}
         )
@@ -413,6 +419,7 @@ def build_workflow_matrices(catalog):
             "corsika_tag": _corsika_tag(corsika),
             "corsika_build_id": _corsika_build_id(corsika),
             "corsika_source_url": corsika["source-url"],
+            "corsika_source_revision": corsika.get("source-revision", ""),
             "corsika_config_tag": _dependency_tag(corsika, "config-tag", "config-version"),
             "corsika_config_source_url": corsika["config-source-url"],
             "corsika_config_revision": corsika.get("config-revision", ""),
@@ -443,6 +450,22 @@ def build_workflow_matrices(catalog):
         }
         for component in catalog["sim-telarray"]
     ]
+    corsika_source_matrix = [
+        {
+            "corsika_tag": _corsika_tag(component),
+            "corsika_source_url": component["source-url"],
+            "corsika_source_revision": component.get("source-revision", ""),
+            "corsika_config_tag": _dependency_tag(component, "config-tag", "config-version"),
+            "corsika_config_source_url": component["config-source-url"],
+            "corsika_config_revision": component.get("config-revision", ""),
+            "corsika_opt_patch_tag": _dependency_tag(
+                component, "opt-patch-tag", "opt-patch-version"
+            ),
+            "corsika_opt_patch_source_url": component["opt-patch-source-url"],
+            "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
+        }
+        for component in catalog["corsika"]
+    ]
     return {
         "corsika_matrix": corsika_matrix,
         "corsika_build_matrix": [
@@ -452,12 +475,8 @@ def build_workflow_matrices(catalog):
             if item["avx_flag"] == "generic" or platform["arch"] == "amd64"
         ],
         "corsika_source_matrix": [
-            {
-                "corsika_tag": _corsika_tag(component),
-                "corsika_build_id": _corsika_build_id(component),
-                "corsika_source_url": component["source-url"],
-            }
-            for component in catalog["corsika"]
+            {"corsika_build_id": _corsika_build_id(component), **source}
+            for component, source in zip(catalog["corsika"], corsika_source_matrix)
         ],
         "simtel_matrix": simtel_matrix,
         "simtel_build_matrix": [
@@ -553,7 +572,7 @@ def dependency_catalog_environment(catalog):
         configuration. Local paths and credentials are intentionally omitted.
     """
     model_tag = _model_tag(catalog)
-    if catalog["schema_version"] == "0.3.0":
+    if catalog["schema_version"] in {"0.3.0", "0.4.0"}:
         environment = {
             "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
             "SIMTOOLS_DB_SIMULATION_MODEL_TAG": model_tag,
@@ -567,7 +586,7 @@ def dependency_catalog_environment(catalog):
         test_tag = _tests_tag(catalog["simtools-tests"])
         tag_key = (
             "SIMTOOLS_TESTS_TAG"
-            if catalog["schema_version"] == "0.3.0"
+            if catalog["schema_version"] in {"0.3.0", "0.4.0"}
             else "SIMTOOLS_TESTS_VERSION"
         )
         environment.update(
