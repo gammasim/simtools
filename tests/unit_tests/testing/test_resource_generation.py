@@ -268,6 +268,38 @@ def test_get_resource_generation_directory_missing(tmp_test_directory):
         resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
 
 
+def test_initialize_test_resources_copies_inputs_only(tmp_test_directory):
+    template_dir = Path(tmp_test_directory) / "simtools-tests" / "v0.36.0" / "integration_tests"
+    (template_dir / "config_files").mkdir(parents=True)
+    (template_dir / "static").mkdir()
+    (template_dir / "generated").mkdir()
+    (template_dir / "config_files" / "workflow.config.yml").write_text(
+        "steps: []\n", encoding="utf-8"
+    )
+    (template_dir / "static" / "static_manifest.yml").write_text("files: []\n", encoding="utf-8")
+    (template_dir / "run_time.yml").write_text("runtime_environment: {}\n", encoding="utf-8")
+
+    target_dir = resource_generation.initialize_test_resources(
+        tmp_test_directory, "v0.37.0", "v0.36.0"
+    )
+
+    assert target_dir == (
+        Path(tmp_test_directory) / "simtools-tests" / "v0.37.0" / "integration_tests"
+    )
+    assert (target_dir / "config_files" / "workflow.config.yml").is_file()
+    assert (target_dir / "static" / "static_manifest.yml").is_file()
+    assert (target_dir / "run_time.yml").is_file()
+    assert not (target_dir / "generated").exists()
+
+
+def test_initialize_test_resources_refuses_existing_target(tmp_test_directory):
+    target_dir = Path(tmp_test_directory) / "simtools-tests" / "v0.37.0" / "integration_tests"
+    target_dir.mkdir(parents=True)
+
+    with pytest.raises(FileExistsError, match="already exists"):
+        resource_generation.initialize_test_resources(tmp_test_directory, "v0.37.0", "v0.36.0")
+
+
 def test_download_files_requires_valid_base_url_key(tmp_test_directory):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
