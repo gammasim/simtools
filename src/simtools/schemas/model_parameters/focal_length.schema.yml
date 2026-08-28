@@ -36,3 +36,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: sim_telarray
+    meta_parameter_mode: add

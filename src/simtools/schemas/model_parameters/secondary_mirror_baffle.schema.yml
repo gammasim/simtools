@@ -74,3 +74,4 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: secondary_baffle
+    meta_parameter_mode: add

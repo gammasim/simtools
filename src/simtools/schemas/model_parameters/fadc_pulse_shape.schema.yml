@@ -90,6 +90,7 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+    meta_parameter_mode: add
 plot_configuration:
   - type: fadc_pulse_shape
     title: 'FADC pulse shape'
