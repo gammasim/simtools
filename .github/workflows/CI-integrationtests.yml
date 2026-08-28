@@ -208,6 +208,9 @@ jobs:
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
           fi
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$HEAD_REF" = "metadata-in-simulation-models" ]; then
+            BRANCH="metadata"
+          fi
           CURRENT_REF="$REF_NAME"
           if [ "$EVENT_NAME" = "pull_request" ]; then
             CURRENT_REF="$HEAD_REF"
