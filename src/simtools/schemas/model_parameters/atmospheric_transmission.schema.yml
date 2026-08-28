@@ -28,6 +28,7 @@ source:
 simulation_software:
   - name: corsika
   - name: sim_telarray
+    meta_parameter_mode: add
 plot_configuration:
   - type: atmospheric_transmission
     title: 'Atmospheric transmission profile'

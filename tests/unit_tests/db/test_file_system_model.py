@@ -22,7 +22,6 @@ def _parameter(instrument, site, name, version, value, file=False, parameter_typ
     return {
         "file": file,
         "instrument": instrument,
-        "meta_parameter": False,
         "model_parameter_schema_version": "0.1.0",
         "parameter": name,
         "parameter_version": version,

@@ -93,7 +93,6 @@ class ModelDataWriter:
         output_path=None,
         metadata_input_dict=None,
         unit=None,
-        meta_parameter=False,
         model_parameter_schema_version=None,
         check_db_for_existing_parameter=True,
     ):
@@ -118,8 +117,6 @@ class ModelDataWriter:
             Input to metadata collector.
         unit: str
             Unit of the parameter value (if applicable and value is not of type astropy Quantity).
-        meta_parameter: bool
-            Setting for meta parameter flag.
         model_parameter_schema_version: str, None
             Version of the model parameter schema (if None, use schema version from schema dict).
         check_db_for_existing_parameter: bool
@@ -167,7 +164,6 @@ class ModelDataWriter:
             unique_id,
             model_parameter_schema_version=model_parameter_schema_version,
             unit=unit,
-            meta_parameter=meta_parameter,
         )
         output_file = writer.write_model_parameter_dict_json(output_file, _json_dict)
         if metadata is not None:
@@ -218,7 +214,6 @@ class ModelDataWriter:
         unique_id=None,
         schema_version=None,
         unit=None,
-        meta_parameter=False,
         model_parameter_schema_version=None,
     ):
         """
@@ -240,8 +235,6 @@ class ModelDataWriter:
             Unique ID of the parameter set (from metadata).
         unit: str
             Unit of the parameter value (if applicable and value is not an astropy Quantity).
-        meta_parameter: bool
-            Setting for meta parameter flag.
         model_parameter_schema_version: str, None
             Version of the model parameter schema (if None, use schema version from schema dict).
 
@@ -269,7 +262,6 @@ class ModelDataWriter:
             "unit": unit,
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
-            "meta_parameter": meta_parameter,
             "model_parameter_schema_version": model_parameter_schema_version
             or self.schema_dict.get("schema_version", "0.1.0"),
         }

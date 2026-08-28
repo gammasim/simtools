@@ -117,7 +117,7 @@ def testget_parameter_attribute_from_schema_with_invalid_data_type(mocker):
 
 def test_get_model_parameter_schema_version():
     most_recent = schema.get_model_parameter_schema_version()
-    assert most_recent == "0.3.0"
+    assert most_recent == "0.4.0"
 
     assert schema.get_model_parameter_schema_version("0.2.0") == "0.2.0"
     assert schema.get_model_parameter_schema_version("0.1.0") == "0.1.0"

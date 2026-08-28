@@ -813,7 +813,6 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
         output_file=f"{param}-{param_data['version']}.json",
         output_path=model_parameters_dir / telescope / param,
         unit=None,
-        meta_parameter=False,
         model_parameter_schema_version=None,
     )
 
@@ -857,7 +856,6 @@ def test_create_new_model_parameter_entry_with_existing_file(
     mock_get_latest.return_value = "/path/to/existing/file.json"
     mock_collect_data.return_value = {
         "value": [30.0, 31.0, 32.0],  # List value to trigger the conversion
-        "meta_parameter": True,
     }
     mock_check_version.return_value = "2.0.0"
 
@@ -871,7 +869,6 @@ def test_create_new_model_parameter_entry_with_existing_file(
 
     # Verify that param_data was updated with existing file info
     assert param_data["version"] == "2.0.0"
-    assert param_data["meta_parameter"] is True
     assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
 
 
