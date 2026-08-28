@@ -9,7 +9,7 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools import constants
+from simtools import constants, dependency_versions
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     DB_SIMULATION_MODEL_TAG,
@@ -272,15 +272,22 @@ def test_set_model_versions(configurator):
     assert configurator.config["model_version"] == model_version_1
 
 
-def test_dependency_database_defaults_are_read_from_catalog():
+def test_dependency_database_defaults_are_read_from_catalog(monkeypatch):
     """Test database name and version defaults come from the dependency catalog."""
+    model = {"name": "catalog-model", "default-tag": "catalog-tag"}
+    monkeypatch.setattr(
+        dependency_versions,
+        "load_dependency_catalog",
+        lambda: {"model-database": model},
+    )
+
     defaults = Configurator._dependency_defaults(  # pylint: disable=protected-access
         {"db_simulation_model": None, "db_simulation_model_tag": None}
     )
 
     assert defaults == {
-        "db_simulation_model": "CTAO-Simulation-Model",
-        "db_simulation_model_tag": "v0.17.0",
+        "db_simulation_model": model["name"],
+        "db_simulation_model_tag": model["default-tag"],
     }
     assert (
         Configurator._dependency_defaults(  # pylint: disable=protected-access
@@ -290,10 +297,10 @@ def test_dependency_database_defaults_are_read_from_catalog():
     )
     assert Configurator._dependency_defaults(  # pylint: disable=protected-access
         {"db_simulation_model": None}
-    ) == {"db_simulation_model": "CTAO-Simulation-Model"}
+    ) == {"db_simulation_model": model["name"]}
     assert Configurator._dependency_defaults(  # pylint: disable=protected-access
         {"db_simulation_model_tag": None}
-    ) == {"db_simulation_model_tag": "v0.17.0"}
+    ) == {"db_simulation_model_tag": model["default-tag"]}
 
 
 def test_configure_can_disable_dependency_defaults(configurator):
@@ -359,8 +366,8 @@ def test_database_tag_aliases_reject_conflicting_values(configurator):
     with pytest.raises(ValueError, match="must match"):
         configurator._normalize_argument_aliases(  # pylint: disable=protected-access
             {
-                "db_simulation_model_tag": "v0.17.0",
-                "db_simulation_model_version": "v0.18.0",
+                "db_simulation_model_tag": "tag-a",
+                "db_simulation_model_version": "tag-b",
             }
         )
 
@@ -373,8 +380,8 @@ def test_database_tag_cli_aliases_reject_conflicting_values(configurator):
         configurator._validate_cli_aliases(  # pylint: disable=protected-access
             [
                 "--db_simulation_model_tag",
-                "v0.17.0",
-                "--db_simulation_model_version=v0.18.0",
+                "tag-a",
+                "--db_simulation_model_version=tag-b",
             ]
         )
 
