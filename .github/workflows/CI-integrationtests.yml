@@ -318,6 +318,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
+          ref: metaparameter-for-model-parameter
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
 
