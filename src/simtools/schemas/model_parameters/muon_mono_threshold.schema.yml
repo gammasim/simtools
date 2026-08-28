@@ -36,3 +36,4 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: muon_mono_thresh
+    meta_parameter_mode: add

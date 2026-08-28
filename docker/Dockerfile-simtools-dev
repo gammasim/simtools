@@ -32,7 +32,7 @@ COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation
 COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-  bc bzip2 findutils gcc-c++ git git-lfs libgfortran procps wget zstd \
+  bc bzip2 diffutils findutils gcc-c++ git git-lfs libgfortran procps tree vim wget zstd \
   python"${PYTHON_VERSION}" python"${PYTHON_VERSION}"-pip python"${PYTHON_VERSION}"-devel && \
   microdnf clean all && \
   rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
@@ -53,7 +53,7 @@ WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
 COPY dependency_versions.yml /workdir/dependency_versions.yml
 COPY src /workdir/src
-RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir packaging pyyaml && \
+RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packaging pyyaml && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
       --extras dev doc tests > /workdir/requirements-dev.txt && \

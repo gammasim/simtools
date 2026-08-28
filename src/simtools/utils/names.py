@@ -84,9 +84,8 @@ def simulation_software():
     list
         List of simulation software names.
     """
-    with open(Path(MODEL_PARAMETER_DESCRIPTION_METASCHEMA), encoding="utf-8") as file:
-        schema = yaml.safe_load(file)
-        return schema["definitions"]["SimulationSoftwareName"]["enum"]
+    schema = schema_loader.load_schema(MODEL_PARAMETER_DESCRIPTION_METASCHEMA, "latest")
+    return schema["definitions"]["SimulationSoftwareName"]["enum"]
 
 
 @cache
@@ -705,7 +704,6 @@ def get_collection_name_from_parameter_name(parameter_name):
 def get_simulation_software_name_from_parameter_name(
     parameter_name,
     software_name="sim_telarray",
-    set_meta_parameter=False,
 ):
     """
     Get the name used in the given simulation software from the model parameter name.
@@ -719,8 +717,6 @@ def get_simulation_software_name_from_parameter_name(
         Model parameter name.
     software_name: str
         Simulation software name.
-    set_meta_parameter: bool
-        If True, return values with 'set_meta_parameter' field set to True.
 
     Returns
     -------
@@ -732,11 +728,21 @@ def get_simulation_software_name_from_parameter_name(
         raise KeyError(f"Parameter {parameter_name} without schema definition")
 
     for software in _parameter.get("simulation_software", []):
-        if (
-            software.get("name") == software_name
-            and software.get("set_meta_parameter", False) is set_meta_parameter
-        ):
+        if software.get("name") == software_name:
             return software.get("internal_parameter_name", parameter_name)
+
+    return None
+
+
+def get_simulation_software_meta_parameter_mode(parameter_name, software_name="sim_telarray"):
+    """Return the metadata serialization mode for a simulation software mapping."""
+    _parameter = model_parameters().get(parameter_name)
+    if not _parameter:
+        raise KeyError(f"Parameter {parameter_name} without schema definition")
+
+    for software in _parameter.get("simulation_software", []):
+        if software.get("name") == software_name:
+            return software.get("meta_parameter_mode")
 
     return None
 

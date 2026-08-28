@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import shlex
 import sys
 
@@ -288,7 +289,28 @@ class Configurator:
             for action in self.parser._actions  # pylint: disable=protected-access
             for option in action.option_strings[1:]
         )
-        return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
+        explicit_environment = set(os.environ)
+        config = gen.load_environment_variables(env_file=env_file, env_list=_env_list)
+        return self._prefer_explicit_environment_aliases(config, explicit_environment)
+
+    def _prefer_explicit_environment_aliases(self, config, explicit_environment):
+        """Prefer explicit environment values over values loaded from an env file."""
+        config = dict(config)
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            keys = {
+                action.dest,
+                *(option.removeprefix("--") for option in action.option_strings[1:]),
+            }
+            explicit_keys = {
+                key for key in keys if f"SIMTOOLS_{key.upper()}" in explicit_environment
+            }
+            if explicit_keys:
+                config = {
+                    key: value
+                    for key, value in config.items()
+                    if key not in keys or key in explicit_keys
+                }
+        return config
 
     def _initialize_model_versions(self):
         """Initialize model versions."""
