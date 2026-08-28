@@ -33,9 +33,29 @@ MODEL_PARAMETER_SCHEMA_URL = SCHEMA_URL + "/model_parameters"
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
 # Paths to test resources
-TEST_RESOURCES_ROOT = Path(
-    os.environ.get("SIMTOOLS_TEST_RESOURCES", "tests/unit_tests/resources")
-).expanduser()
+_DEFAULT_TEST_RESOURCES_ROOT = Path("tests/unit_tests/resources")
+
+
+def _configured_test_resources_root():
+    """Return the test-resource root configured through environment variables."""
+    configured_path = os.environ.get("SIMTOOLS_TEST_RESOURCES")
+    if configured_path:
+        return Path(configured_path).expanduser()
+
+    tests_path = os.environ.get("SIMTOOLS_TESTS_PATH")
+    tests_tag = os.environ.get("SIMTOOLS_TESTS_TAG") or os.environ.get("SIMTOOLS_TESTS_VERSION")
+    if tests_path and tests_tag:
+        return Path(tests_path).expanduser() / tests_tag / "integration_tests"
+
+    return None
+
+
+def get_test_resources_root():
+    """Return the active test-resource root."""
+    return _configured_test_resources_root() or TEST_RESOURCES_ROOT
+
+
+TEST_RESOURCES_ROOT = _configured_test_resources_root() or _DEFAULT_TEST_RESOURCES_ROOT
 TEST_RESOURCES_STATIC = str(TEST_RESOURCES_ROOT / "static")
 TEST_RESOURCES_GENERATED = str(TEST_RESOURCES_ROOT / "generated")
 TEST_RESOURCES_DOWNLOADED = str(TEST_RESOURCES_ROOT / "downloaded")

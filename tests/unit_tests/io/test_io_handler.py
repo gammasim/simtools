@@ -86,6 +86,20 @@ def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory)
     assert resolved["plain"] == "no_macro"
 
 
+def test_resolve_test_resource_paths_uses_versioned_environment_resources(
+    tmp_test_directory, monkeypatch
+):
+    tests_path = tmp_test_directory / "simtools-tests"
+    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tests_path))
+    monkeypatch.setenv("SIMTOOLS_TESTS_TAG", "v0.37.0")
+
+    resolved = io_handler_module.resolve_test_resource_paths("${downloaded:corsika_limits.ecsv}")
+
+    expected_root = tests_path / "v0.37.0" / "integration_tests"
+    assert resolved == str(expected_root / "downloaded/corsika_limits.ecsv")
+
+
 def test_get_model_configuration_directory(args_dict, io_handler):
     model_version = "1.0.0"
     label = "test-io-handler"
