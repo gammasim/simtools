@@ -70,6 +70,8 @@ def _legacy_catalog(schema_version="0.2.0"):
 def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     """Use source tags for selection and derive the legacy build ID."""
     catalog = _load_catalog(simtools_root_path)
+    assert catalog["schema_version"] == "0.4.0"
+    assert catalog["corsika"][0]["tag"] == "v7.8010"
     combination = catalog["production-combinations"][0]
     corsika = next(item for item in catalog["corsika"] if item["tag"] == combination["corsika"])
     build_id = corsika["tag"].removeprefix("v").replace(".", "")
@@ -111,6 +113,15 @@ def test_catalog_reads_legacy_corsika_fields():
     assert dependency_versions.validate_dependency_catalog(catalog) == catalog
 
 
+def test_schema_0_4_requires_source_revisions(simtools_root_path):
+    """Require immutable source revisions in the current catalog schema."""
+    catalog = _load_catalog(simtools_root_path)
+    del catalog["corsika"][0]["source-revision"]
+
+    with pytest.raises(ValueError, match="Invalid Git revision"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
 def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypatch):
     """Test catalog loading and matrix construction."""
     monkeypatch.chdir(simtools_root_path)
@@ -131,6 +142,14 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
     )
     assert {item["avx_flag"] for item in matrices["corsika_build_matrix"]} == set(variants)
     assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
+    assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v0.1.0"
+    assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == (
+        "6b720388124871f8e07741e40e3446a7375efe78"
+    )
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == (
+        "6b720388124871f8e07741e40e3446a7375efe78"
+    )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -247,6 +266,10 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
             "Invalid Git revision",
         ),
         (
+            lambda data: data["corsika"][0].update({"source-revision": "short"}),
+            "Invalid Git revision",
+        ),
+        (
             lambda data: data["model-database"].update({"default-tag": "0.16.0"}),
             "release tags",
         ),
@@ -350,6 +373,7 @@ def test_validate_dependency_catalog_accepts_valid_revisions(simtools_root_path)
     """Test valid component revisions pass catalog validation."""
     catalog = _load_catalog(simtools_root_path)
     revision = "a" * 40
+    catalog["corsika"][0]["source-revision"] = revision
     catalog["corsika"][0]["config-revision"] = revision
     catalog["corsika"][0]["opt-patch-revision"] = revision
     catalog["sim-telarray"][0].update(
@@ -490,9 +514,19 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema = schemas_by_version[catalog["schema_version"]]
 
     jsonschema.validate(catalog, schema)
+    assert sorted(item["schema_version"] for item in schemas) == [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+    ]
+    assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
+    assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
     assert catalog["schema_version"] in schemas_by_version
     legacy_schema = next(schema for schema in schemas if "simtools-tests" not in schema["required"])
     tagged_schema = next(schema for schema in schemas if "simtools-tests" in schema["required"])
     assert "simtools-tests" not in legacy_schema["required"]
     assert "simtools-tests" in tagged_schema["required"]
     assert "default-tag" in schema["properties"]["model-database"]["required"]
+    assert "source-revision" in schema["definitions"]["corsika"]["required"]
+    assert "revision" in schema["definitions"]["simtel"]["required"]
