@@ -208,9 +208,6 @@ jobs:
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
           fi
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$HEAD_REF" = "metadata-in-simulation-models" ]; then
-            BRANCH="metadata"
-          fi
           CURRENT_REF="$REF_NAME"
           if [ "$EVENT_NAME" = "pull_request" ]; then
             CURRENT_REF="$HEAD_REF"
@@ -321,7 +318,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
-          ref: metaparameter-for-model-parameter
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
 
