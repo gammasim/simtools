@@ -336,6 +336,29 @@ def test_htcondor_environment_parsing_preserves_quoted_comment_and_bind_paths():
     )
 
 
+def test_htcondor_avoids_only_nested_same_destination_bind_paths():
+    """Bind de-duplication compares container destinations, not host sources."""
+    entries = {"APPTAINER_BINDPATH": "/shared"}
+
+    HTCondorBackend._add_apptainer_bind_path(entries, "/shared/tables")
+
+    assert entries == {"APPTAINER_BINDPATH": "/shared"}
+
+    entries = {"APPTAINER_BINDPATH": "/shared:/container/shared"}
+    HTCondorBackend._add_apptainer_bind_path(entries, "/shared/tables")
+
+    assert entries == {"APPTAINER_BINDPATH": "/shared:/container/shared,/shared/tables"}
+
+
+def test_htcondor_replaces_nested_container_destination_bind_paths():
+    """A broader same-destination bind replaces narrower configured entries."""
+    entries = {"APPTAINER_BINDPATH": "/shared/tables"}
+
+    HTCondorBackend._add_apptainer_bind_path(entries, "/shared")
+
+    assert entries == {"APPTAINER_BINDPATH": "/shared"}
+
+
 def test_htcondor_environment_parsing_rejects_empty_key_and_ignores_empty_bind():
     """Environment keys are required and empty bind paths are harmless."""
     with pytest.raises(BackendConfigurationError, match="empty environment key"):
@@ -545,8 +568,8 @@ def test_htcondor_wait_handles_cluster_remove_and_event_log_errors(monkeypatch, 
         backend._wait_for_processes(submission)
 
 
-def test_htcondor_wait_timeout_and_expected_output_failures(tmp_test_directory):
-    """Timeouts and missing declared outputs remain actionable failures."""
+def test_htcondor_wait_timeout_and_expected_output_failures(monkeypatch, tmp_test_directory):
+    """Timeouts cancel active jobs and missing declared outputs remain actionable failures."""
     submission = SubmissionHandle(
         "htcondor",
         Path(tmp_test_directory),
@@ -562,7 +585,42 @@ def test_htcondor_wait_timeout_and_expected_output_failures(tmp_test_directory):
     backend = HTCondorBackend()
     backend._htcondor = types.SimpleNamespace(JobEventLog=lambda _path: object())
     submission.metadata.update({"poll_interval": 1, "timeout": 0})
+    cancelled = []
+    monkeypatch.setattr(backend, "cancel", lambda handle: cancelled.append(handle))
+
     assert backend._wait_for_processes(submission) == ["process 0: timeout"]
+    assert cancelled == [submission]
+
+
+def test_htcondor_wait_cancels_cluster_when_a_job_is_held(monkeypatch, tmp_test_directory):
+    """Held jobs stop the remaining cluster instead of leaving scheduler work behind."""
+
+    class _Event(dict):
+        cluster = 17
+        proc = 0
+        type = "JOB_HELD"
+
+    class _EventLog:
+        def events(self, stop_after):
+            yield _Event()
+
+    backend = HTCondorBackend()
+    backend._htcondor = types.SimpleNamespace(JobEventLog=lambda _path: _EventLog())
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory),
+        ("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={"poll_interval": 1},
+    )
+    cancelled = []
+    monkeypatch.setattr(backend, "cancel", lambda handle: cancelled.append(handle))
+
+    failures = backend._wait_for_processes(submission)
+
+    assert "JOB_HELD" in failures[0]
+    assert cancelled == [submission]
 
 
 def test_htcondor_wait_reports_scheduler_failures_and_preserves_artifacts(
