@@ -260,13 +260,37 @@ class HTCondorBackend:
 
     @staticmethod
     def _add_apptainer_bind_path(entries, bind_path):
-        """Add a same-path Apptainer bind without duplicating existing paths."""
+        """Add an Apptainer bind without duplicating nested container destinations."""
         if not bind_path:
             return
         bind_paths = [path for path in entries.get("APPTAINER_BINDPATH", "").split(",") if path]
-        if bind_path not in bind_paths:
-            bind_paths.append(str(bind_path))
+        _, candidate_destination = HTCondorBackend._apptainer_bind_paths(bind_path)
+        existing_destinations = [
+            HTCondorBackend._apptainer_bind_paths(existing)[1] for existing in bind_paths
+        ]
+        if any(
+            candidate_destination == destination
+            or candidate_destination.is_relative_to(destination)
+            for destination in existing_destinations
+        ):
+            return
+        bind_paths = [
+            existing
+            for existing, destination in zip(bind_paths, existing_destinations, strict=True)
+            if not destination.is_relative_to(candidate_destination)
+        ]
+        bind_paths.append(str(bind_path))
         entries["APPTAINER_BINDPATH"] = ",".join(bind_paths)
+
+    @staticmethod
+    def _apptainer_bind_paths(bind_path):
+        """Return normalized source and destination paths for an Apptainer bind entry."""
+        source, separator, destination_and_options = str(bind_path).partition(":")
+        destination = destination_and_options.split(":", 1)[0] if separator else source
+        return (
+            Path(source).expanduser().resolve(),
+            Path(destination or source).expanduser().resolve(),
+        )
 
     @staticmethod
     def _strip_environment_comment(value):
@@ -659,6 +683,7 @@ class HTCondorBackend:
         while remaining:
             if timeout is not None and time.monotonic() - start_time >= timeout:
                 failures.extend(f"process {proc}: timeout" for proc in sorted(remaining))
+                self._cancel_after_wait_failure(submission, failures)
                 break
             event = self._next_event(event_log, submission.metadata["poll_interval"])
             if event is None:
@@ -667,7 +692,27 @@ class HTCondorBackend:
                 event, submission.scheduler_id, remaining, terminal_types
             )
             failures.extend(event_failures)
+            if self._is_held_event(event, submission.scheduler_id, submission.process_ids.values()):
+                self._cancel_after_wait_failure(submission, failures)
         return failures
+
+    def _cancel_after_wait_failure(self, submission, failures):
+        """Cancel a cluster that cannot complete normally while preserving diagnostics."""
+        try:
+            self.cancel(submission)
+        except BackendExecutionError as exc:
+            failures.append(f"Cancellation failed: {exc}")
+
+    @staticmethod
+    def _is_held_event(event, scheduler_id, process_ids):
+        """Return whether an event reports a held process in this submission."""
+        if int(getattr(event, "cluster", -1)) != scheduler_id:
+            return False
+        event_type = getattr(event, "type", "")
+        return (
+            int(getattr(event, "proc", -1)) in process_ids
+            and getattr(event_type, "name", str(event_type)).upper() == "JOB_HELD"
+        )
 
     @staticmethod
     def _next_event(event_log, poll_interval):

@@ -3,14 +3,16 @@
 import logging
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import get_context
+from multiprocessing import get_all_start_methods, get_context
 from pathlib import Path
 
-from simtools.job_execution.backends.base import BackendExecutionError
+from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.job import JobResult, SubmissionHandle
 from simtools.job_execution.worker import execute_job_spec
 
 logger = logging.getLogger(__name__)
+
+_CONFIG_KEYS = {"mp_start_method"}
 
 
 def determine_max_workers(max_workers=None, default_fraction=0.6):
@@ -28,6 +30,7 @@ class LocalBackend:
 
     def submit(self, job_specs, options):
         """Submit jobs to a local process pool."""
+        self._validate_config(options.backend_config)
         item_list = list(job_specs)
         workers = determine_max_workers(options.max_workers)
         if workers == 1 or len(item_list) < 2:
@@ -77,6 +80,23 @@ class LocalBackend:
             job_ids=tuple(job.job_id for job in item_list),
             metadata={"executor": executor, "futures": futures},
         )
+
+    @staticmethod
+    def _validate_config(config):
+        """Validate local-backend-specific configuration."""
+        unknown = set(config) - _CONFIG_KEYS
+        if unknown:
+            names = ", ".join(sorted(unknown))
+            raise BackendConfigurationError(f"Unknown local backend configuration key(s): {names}.")
+        start_method = config.get("mp_start_method")
+        if start_method is None:
+            return
+        available_methods = get_all_start_methods()
+        if not isinstance(start_method, str) or start_method not in available_methods:
+            available = ", ".join(available_methods)
+            raise BackendConfigurationError(
+                f"Invalid mp_start_method {start_method!r}. Available methods: {available}."
+            )
 
     def wait(self, submission):
         """Collect local results in input order."""
