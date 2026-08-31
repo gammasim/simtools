@@ -670,7 +670,8 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     log_title: str
         Title of the figure to be added to the log message.
     dpi : str or int, optional
-        DPI passed to ``fig.savefig``. Defaults to ``"figure"``.
+        DPI passed to ``fig.savefig`` unless saving a PNG and ``figure_dpi`` is
+        configured. Defaults to ``"figure"``.
     close : bool, optional
         Close the figure after saving. Defaults to False.
     """
