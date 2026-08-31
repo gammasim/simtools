@@ -3,6 +3,7 @@
 from astropy import units as u
 
 from simtools.utils import names
+from simtools.utils.geometry import geographic_to_corsika_azimuth
 
 CATALOG_SITE_NAMES = {"North": "LaPalma", "South": "Paranal"}
 
@@ -28,7 +29,7 @@ def build_simulation_job_metadata(args_dict, simulator):
         "array_layout": args_dict["array_layout_name"],
         "site": CATALOG_SITE_NAMES[args_dict["site"]],
         "particle": args_dict["primary"].lower(),
-        "phiP": round((azimuth_angle + 180.0) % 360.0, 2),
+        "phiP": round(geographic_to_corsika_azimuth(azimuth_angle), 2),
         "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
         "sct": str(_has_sct(simulator.array_models)),
         "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),

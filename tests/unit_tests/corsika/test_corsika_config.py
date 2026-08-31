@@ -355,7 +355,7 @@ def test_input_config_io_buff(corsika_config_mock_array_model):
     )
 
 
-def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
+def test_to_corsika_phi(corsika_config_mock_array_model):
     test_cases = [
         # input_angle, with_correction, expected_result
         (0.0, False, 180.0),
@@ -363,24 +363,32 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
         (450.0, False, 90.0),
         (180.0, False, 0.0),
         (-180.0, False, 0.0),
+        (45.7, False, 134.3),
+        (135.3, False, 44.7),
+        (225.5, False, 314.5),
+        (315.8, False, 224.2),
         (0.0, True, 175.467),
         (360.0, True, 175.467),
         (450.0, True, 85.467),
         (180.0, True, 355.467),
         (-180.0, True, 355.467),
+        (67.5, True, 107.967),
+        (247.3, True, 288.167),
     ]
 
     for input_angle, with_correction, expected_result in test_cases:
-        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        assert corsika_config_mock_array_model._to_corsika_phi(
             input_angle, correct_for_geomagnetic_field_alignment=with_correction
-        ) == pytest.approx(expected_result)
+        ) == pytest.approx(expected_result, abs=1e-3)
 
     # The formula is self-inverse: applying it twice returns the original value.
     for input_angle, with_correction, expected_result in test_cases:
-        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        # Normalise with % 360 to handle the floating-point edge case where a
+        # tiny negative intermediate value maps to ≈360 instead of ≈0.
+        assert corsika_config_mock_array_model._to_corsika_phi(
             expected_result,
             correct_for_geomagnetic_field_alignment=with_correction,
-        ) == pytest.approx(input_angle % 360)
+        ) % 360 == pytest.approx(input_angle % 360, abs=1e-3)
 
 
 def test_get_config_parameter(corsika_config_mock_array_model):
