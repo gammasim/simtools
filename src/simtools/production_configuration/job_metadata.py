@@ -31,7 +31,8 @@ def build_simulation_job_metadata(args_dict, simulator):
         "phiP": round((azimuth_angle + 180.0) % 360.0, 2),
         "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
         "sct": str(_has_sct(simulator.array_models)),
-        "view_cone": _format_view_cone(view_cone_min, view_cone_max),
+        "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),
+        "view_cone_max": round(float(view_cone_max.to_value(u.deg)), 2),
         "runNumber": int(simulator.run_number),
         "model_version": str(args_dict["model_version"]),
     }
@@ -47,14 +48,6 @@ def _has_sct(array_models):
         for array_model in array_models
         for element_name in array_model.array_elements
     )
-
-
-def _format_view_cone(view_cone_min, view_cone_max):
-    """Format view-cone bounds in the catalog convention."""
-    return (
-        f"{round(view_cone_min.to_value(u.deg), 2)}_deg_"
-        f"{round(view_cone_max.to_value(u.deg), 2)}_deg"
-    ).replace(" ", "_")
 
 
 def _add_optional_coordinate(metadata, key, value):
