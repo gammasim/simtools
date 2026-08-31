@@ -590,30 +590,36 @@ class CorsikaConfig:
 
     def _to_corsika_phi(self, az, correct_for_geomagnetic_field_alignment=True):
         """
-        Convert geographic azimuth to CORSIKA phi (azimuth in the CORSIKA coordinate system).
+        Convert geographic arrival azimuth to CORSIKA phi.
 
-        CORSIKA uses a left-handed coordinate system (x=North, y=West), so its azimuth
-        convention is the mirror image of the standard geographic right-handed convention
-        (x=North, y=East). The core conversion is ``(-az + 180) % 360``, which is
-        self-inverse. An optional geomagnetic-field declination correction is applied on
-        top, keeping everything in one modular-reduction step to avoid floating-point drift.
+        Geographic azimuth is measured clockwise from geographic North toward
+        East and specifies the direction from which the primary arrives.
+
+        CORSIKA phi specifies the direction toward which the primary propagates
+        and is measured in the CORSIKA shower frame. The basic conversion is
+
+            phi = 180 degrees - azimuth
+
+        modulo 360 degrees. If requested, the site's CORSIKA geomagnetic rotation
+        parameter is then added to account for the alignment of the CORSIKA shower
+        frame with geomagnetic North.
 
         Parameters
         ----------
-        az: float
-            Geographic azimuth angle in degrees.
-        correct_for_geomagnetic_field_alignment: bool
-            Whether to apply the geomagnetic-field declination correction.
+        az : float
+            Geographic arrival azimuth in degrees.
+        correct_for_geomagnetic_field_alignment : bool
+            If True, add the site's CORSIKA geomagnetic rotation.
 
         Returns
         -------
         float
-            CORSIKA phi angle in degrees.
+            CORSIKA phi in degrees.
         """
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
-        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360
+        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360.0
 
     def get_config_parameter(self, par_name):
         """
