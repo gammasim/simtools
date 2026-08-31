@@ -17,7 +17,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: 'corsika-sim-telarray-parameters'
   workflow_call:
     inputs:
       container_image:
