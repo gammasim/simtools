@@ -14,6 +14,7 @@ from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.utils import general as gen
+from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
 
 
@@ -191,9 +192,8 @@ class CorsikaConfig:
         )
 
         if args.get("corsika_file", None) is not None:
-            azimuth = self._rotate_azimuth_by_180deg(
+            azimuth = self._to_corsika_phi(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
-                invert_operation=True,
             )
             zenith = 0.5 * (
                 self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
@@ -389,7 +389,7 @@ class CorsikaConfig:
     def _get_corsika_theta_phi(self, args_dict):
         """Get CORSIKA theta and phi angles from args_dict."""
         theta = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
-        phi = self._rotate_azimuth_by_180deg(
+        phi = self._to_corsika_phi(
             args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value,
             correct_for_geomagnetic_field_alignment=args_dict.get(
                 "correct_for_b_field_alignment", True
@@ -588,35 +588,38 @@ class CorsikaConfig:
             return f"{int(value)}MB"
         return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
-    def _rotate_azimuth_by_180deg(
-        self, az, correct_for_geomagnetic_field_alignment=True, invert_operation=False
-    ):
+    def _to_corsika_phi(self, az, correct_for_geomagnetic_field_alignment=True):
         """
-        Convert azimuth angle to the CORSIKA coordinate system.
+        Convert geographic arrival azimuth to CORSIKA phi.
 
-        Corresponds to a rotation by 180 degrees, and optionally a correction for the
-        for the differences between the geographic and geomagnetic north pole.
+        Geographic azimuth is measured clockwise from geographic North toward
+        East and specifies the direction from which the primary arrives.
+
+        CORSIKA phi specifies the direction toward which the primary propagates
+        and is measured in the CORSIKA shower frame. The basic conversion is
+
+            phi = 180 degrees - azimuth
+
+        modulo 360 degrees. If requested, the site's CORSIKA geomagnetic rotation
+        parameter is then added to account for the alignment of the CORSIKA shower
+        frame with geomagnetic North.
 
         Parameters
         ----------
-        az: float
-            Azimuth angle in degrees.
-        correct_for_geomagnetic_field_alignment: bool
-            Whether to correct for the geomagnetic field alignment.
-        invert_operation: bool
-            Whether to invert the operation (i.e., convert from CORSIKA to geographic system).
+        az : float
+            Geographic arrival azimuth in degrees.
+        correct_for_geomagnetic_field_alignment : bool
+            If True, add the site's CORSIKA geomagnetic rotation.
 
         Returns
         -------
         float
-            Azimuth angle in degrees in the CORSIKA coordinate system.
+            CORSIKA phi in degrees.
         """
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
-        if invert_operation:
-            return (az - 180 - b_field_declination) % 360
-        return (az + 180 + b_field_declination) % 360
+        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360.0 % 360.0
 
     def get_config_parameter(self, par_name):
         """
