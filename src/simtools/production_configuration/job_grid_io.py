@@ -23,7 +23,7 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
-_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label")
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "model_parameter_set")
 _MISSING = object()
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     {
@@ -339,6 +339,31 @@ def read_job_grid_row(input_file, row_index):
     return rows[row_index - 1], metadata
 
 
+def _deep_merge_dicts(dict1, dict2):
+    """
+    Deep merge two dictionaries, with dict2 taking precedence.
+
+    Parameters
+    ----------
+    dict1 : dict
+        Base dictionary
+    dict2 : dict
+        Dictionary to merge into dict1 (takes precedence)
+
+    Returns
+    -------
+    dict
+        Merged dictionary
+    """
+    result = dict1.copy()
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     """
     Convert an in-memory job grid row to simulate_prod argument format.
@@ -361,7 +386,17 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     dict
         Argument dictionary compatible with ``simulate_prod`` ``args_dict`` keys.
     """
-    args = {
+    args = _build_base_args(job_row)
+    _add_optional_args(args, job_row)
+    _add_metadata_args(args, metadata)
+    _add_scan_label(args, job_row)
+    _add_parameter_scan_overwrites(args, job_row, metadata)
+    return args
+
+
+def _build_base_args(job_row):
+    """Build the base arguments dictionary from job_row."""
+    return {
         "primary": job_row["primary"],
         "azimuth_angle": job_row["azimuth_angle"],
         "zenith_angle": job_row["zenith_angle"],
@@ -374,22 +409,58 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         "corsika_le_interaction": job_row["corsika_le_interaction"],
         "corsika_he_interaction": job_row["corsika_he_interaction"],
         "run_number": int(job_row["run_number"]),
-        # Force the run number offset to zero,
-        # since the job grid row already specifies the run number.
         "run_number_offset": 0,
     }
+
+
+def _add_optional_args(args, job_row):
+    """Add optional arguments to the args dictionary."""
     if job_row.get("corsika_hadronic_transition_energy") is not None:
         args["corsika_hadronic_transition_energy"] = job_row["corsika_hadronic_transition_energy"]
     for coordinate in ("ha", "dec"):
         if job_row.get(coordinate) is not None:
             args[coordinate] = job_row[coordinate]
-    if metadata:
-        for key in ("site", "simulation_software"):
-            if metadata.get(key):
-                args[key] = metadata[key]
-    if job_row.get("overwrite_model_parameters"):
-        args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
-    return args
+
+
+def _add_metadata_args(args, metadata):
+    """Add metadata-based arguments to the args dictionary."""
+    if not metadata:
+        return
+    for key in ("site", "simulation_software"):
+        if metadata.get(key):
+            args[key] = metadata[key]
+
+
+def _add_scan_label(args, job_row):
+    """Add scan_label to args if present."""
+    if job_row.get("scan_label"):
+        args["scan_label"] = job_row["scan_label"]
+
+
+def _add_parameter_scan_overwrites(args, job_row, metadata):
+    """Handle parameter scan overwrites from metadata."""
+    if not (
+        job_row.get("model_parameter_set") and metadata and metadata.get("model_parameter_sets")
+    ):
+        if job_row.get("overwrite_model_parameters"):
+            args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
+        return
+
+    param_set_name = job_row["model_parameter_set"]
+    model_parameter_sets = metadata["model_parameter_sets"]
+    if param_set_name not in model_parameter_sets:
+        return
+
+    param_overwrites = model_parameter_sets[param_set_name]
+    existing_overwrites = job_row.get("overwrite_model_parameters")
+    if existing_overwrites:
+        if isinstance(existing_overwrites, dict):
+            merged_overwrites = _deep_merge_dicts(existing_overwrites, param_overwrites)
+        else:
+            merged_overwrites = param_overwrites
+    else:
+        merged_overwrites = param_overwrites
+    args["overwrite_model_parameters"] = merged_overwrites
 
 
 def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
@@ -490,7 +561,10 @@ def _normalize_simulate_prod_paths(job_args, args_dict):
         if not _should_forward_path(args_dict, key):
             job_args.pop(key, None)
         elif job_args.get(key):
-            job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+            # Skip normalization for non-string values
+            # (e.g., overwrite_model_parameters can be a dict)
+            if isinstance(job_args[key], str):
+                job_args[key] = str(Path(job_args[key]).expanduser().resolve())
 
 
 def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
@@ -498,8 +572,10 @@ def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
     for key in _SIMULATE_PROD_PATH_FIELDS:
         if key == "grid_output_path" or not job_args.get(key):
             continue
-        path = Path(job_args[key])
-        mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
+        # Skip non-string values (e.g., overwrite_model_parameters can be a dict)
+        if isinstance(job_args[key], str):
+            path = Path(job_args[key])
+            mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
 
 
 def _should_forward_path(args_dict, key):

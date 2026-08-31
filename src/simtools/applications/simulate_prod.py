@@ -3,6 +3,7 @@
 """Generate simulation configuration and run simulations."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -14,13 +15,14 @@ from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
-    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     build_simulate_prod_job_specs,
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
 )
 from simtools.production_configuration.job_metadata import build_simulation_job_metadata
 from simtools.simulator import Simulator
+
+logger = logging.getLogger(__name__)
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
@@ -153,24 +155,48 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
     job_grid_row_is_explicit = "job_grid_row" in explicit_keys
 
-    if not args_dict.get("job_grid_file"):
-        if job_grid_row_is_explicit:
-            parser.error("'--job_grid_row' requires '--job_grid_file'.")
-        _validate_layout_selection(args_dict, parser)
-        _validate_simulation_arguments(args_dict, parser)
+    if not _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
         return
 
-    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
-    if conflicting_keys:
-        parser.error(
-            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
-            + ", ".join(conflicting_keys)
+    rows, metadata = _load_and_validate_job_grid(args_dict, parser)
+    is_parameter_scan = _check_parameter_scan(rows)
+
+    selected_row = None
+    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
+        selected_row, rows = _select_rows(
+            args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser
         )
 
+    if args_dict.get("backend", "local") != "local":
+        args_dict["_job_grid_rows"] = rows
+        args_dict["_job_grid_metadata"] = metadata
+        return
+
+    _finalize_args_dict(args_dict, rows, metadata, selected_row, parser)
+
+
+def _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
+    """Handle case where no job grid file is provided."""
+    if args_dict.get("job_grid_file"):
+        return True
+    if job_grid_row_is_explicit:
+        parser.error("'--job_grid_row' requires '--job_grid_file'.")
+    _validate_layout_selection(args_dict, parser)
+    _validate_simulation_arguments(args_dict, parser)
+    return False
+
+
+def _load_and_validate_job_grid(args_dict, parser):
+    """Load job grid and validate its contents."""
     rows, metadata = read_job_grid(args_dict["job_grid_file"])
     if not rows:
         parser.error("Job grid contains no rows to process.")
+    _validate_array_layout_names(rows, parser)
+    return rows, metadata
 
+
+def _validate_array_layout_names(rows, parser):
+    """Validate that all rows have array_layout_name."""
     missing_layout_rows = [
         index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
     ]
@@ -179,23 +205,49 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
         )
 
-    selected_row = None
-    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
-        row_index = args_dict.get("job_grid_row") or 1
-        if row_index < 1 or row_index > len(rows):
-            parser.error(
-                f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
-            )
-        selected_row = rows[row_index - 1]
-        rows = [selected_row]
 
-    if args_dict.get("backend", "local") != "local":
+def _check_parameter_scan(rows):
+    """Check if the job grid is a parameter scan grid."""
+    has_model_parameter_set = any(row.get("model_parameter_set") for row in rows)
+    logger.info(f"has_model_parameter_set: {has_model_parameter_set}")
+    return has_model_parameter_set
+
+
+def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser):
+    """Select rows based on job_grid_row and grid type."""
+    row_index = args_dict.get("job_grid_row")
+    if job_grid_row_is_explicit and row_index is not None:
+        return _select_explicit_row(rows, row_index, parser), rows
+    if is_parameter_scan:
+        return None, rows
+    if row_index is not None:
+        return _select_implicit_row(rows, row_index, parser), rows
+    return rows[0], [rows[0]]
+
+
+def _select_explicit_row(rows, row_index, parser):
+    """Select a row by explicit index."""
+    if row_index < 1 or row_index > len(rows):
+        parser.error(f"Row index {row_index} is out of range for a grid with {len(rows)} row(s).")
+    return rows[row_index - 1]
+
+
+def _select_implicit_row(rows, row_index, parser):
+    """Select a row by implicit index."""
+    if row_index < 1 or row_index > len(rows):
+        parser.error(f"Row index {row_index} is out of range for a grid with {len(rows)} row(s).")
+    return rows[row_index - 1]
+
+
+def _finalize_args_dict(args_dict, rows, metadata, selected_row, parser):
+    """Finalize the args_dict based on selected rows."""
+    if selected_row is None:
+        logger.info(f"Setting _job_grid_rows to {len(rows)} rows for parameter scan")
         args_dict["_job_grid_rows"] = rows
         args_dict["_job_grid_metadata"] = metadata
-        return
-
-    args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
-    _validate_simulation_arguments(args_dict, parser)
+    else:
+        args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
+        _validate_simulation_arguments(args_dict, parser)
 
 
 def _validate_layout_selection(args_dict, parser):
@@ -259,11 +311,22 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    if app_context.args.get("_job_grid_rows") is not None:
+    # Check if we have a job grid file with parameter scan
+    if app_context.args.get("job_grid_file") and app_context.args.get("_job_grid_rows") is not None:
         _execute_job_grid(app_context.args)
         return
+    if app_context.args.get("job_grid_file"):
+        # Job grid file but not parameter scan - this shouldn't happen with our logic
+        # Fall back to single row processing
+        logger.warning("Job grid file detected but _job_grid_rows not set")
 
-    simulator = Simulator(label=app_context.args.get("label"))
+    # Construct label with scan_label if present
+    label = app_context.args.get("label")
+    scan_label = app_context.args.get("scan_label")
+    if scan_label:
+        label = f"{label}_{scan_label}" if label else f"simulate-prod_{scan_label}"
+
+    simulator = Simulator(label=label)
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:
