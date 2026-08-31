@@ -44,10 +44,25 @@ def _configured_test_resources_root():
 
     tests_path = os.environ.get("SIMTOOLS_TESTS_PATH")
     tests_tag = os.environ.get("SIMTOOLS_TESTS_TAG") or os.environ.get("SIMTOOLS_TESTS_VERSION")
-    if tests_path and tests_tag:
-        return Path(tests_path).expanduser() / tests_tag / "integration_tests"
+    if tests_path:
+        tests_tag = tests_tag or _default_test_resources_tag()
+        if tests_tag:
+            return Path(tests_path).expanduser() / tests_tag / "integration_tests"
 
     return None
+
+
+def _default_test_resources_tag():
+    """Return the catalog default tag for the versioned test resources."""
+    # Import lazily to keep constants independent of the dependency catalog during module
+    # initialization. This also lets installed applications use the same default as pytest.
+    from simtools import dependency_versions  # pylint: disable=import-outside-toplevel
+
+    try:
+        test_resources = dependency_versions.load_dependency_catalog()["simtools-tests"]
+    except FileNotFoundError, KeyError:
+        return None
+    return test_resources.get("tag", test_resources.get("version"))
 
 
 def get_test_resources_root():
