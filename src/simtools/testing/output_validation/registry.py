@@ -22,7 +22,10 @@ def validate_reference(artifact, rule, _context):
         rule.get("filters"),
         rule.get("key_columns"),
     ):
-        raise AssertionError(f"Output '{artifact.path}' differs from reference '{reference_file}'.")
+        raise AssertionError(
+            f"Output '{artifact.path}' differs from reference '{reference_file}'.\n"
+            f"{reference.difference_report(reference_file, artifact.path)}"
+        )
 
 
 def validate_data_schema(artifact, rule, _context):
