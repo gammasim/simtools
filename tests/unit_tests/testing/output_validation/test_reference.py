@@ -91,6 +91,21 @@ def test_json_reference_comparison_ignores_schema_version(tmp_test_directory):
     assert reference.compare_json_or_yaml_files(first, second)
 
 
+def test_json_difference_report_identifies_generated_values(tmp_test_directory):
+    """Report generated and reference lines in a unified diff."""
+    reference_file = Path(tmp_test_directory) / "reference.json"
+    output_file = Path(tmp_test_directory) / "output.json"
+    reference_file.write_text(json.dumps({"value": 1.0}, indent=2) + "\n", encoding="utf-8")
+    output_file.write_text(json.dumps({"value": 2.0}, indent=2) + "\n", encoding="utf-8")
+
+    report = reference.difference_report(reference_file, output_file)
+
+    assert "--- reference:" in report
+    assert "+++ generated:" in report
+    assert '-  "value": 1.0' in report
+    assert '+  "value": 2.0' in report
+
+
 def test_reference_resolve_path_handles_absolute_and_repository_relative_paths():
     """Resolve absolute paths unchanged and relative paths from the repository root."""
     absolute = Path.cwd() / "reference.json"

@@ -91,10 +91,12 @@ def test_registry_reference_validator(mocker):
 def test_registry_reference_validator_reports_difference(mocker):
     """Report a reference comparison failure."""
     artifact = OutputArtifact(Path("output.json"), {})
-    mocker.patch.object(registry.reference, "resolve_path", return_value=Path("reference.json"))
+    reference_file = Path("reference.json")
+    mocker.patch.object(registry.reference, "resolve_path", return_value=reference_file)
     mocker.patch.object(registry.reference, "compare_files", return_value=False)
+    mocker.patch.object(registry.reference, "difference_report", return_value="- changed value")
 
-    with pytest.raises(AssertionError, match="differs from reference"):
+    with pytest.raises(AssertionError, match="changed value"):
         registry.validate_reference(artifact, {"file": "reference.json"}, {})
 
 
