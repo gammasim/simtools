@@ -182,8 +182,18 @@ def compare_files(
 
 def difference_report(reference_file, output_file):
     """Return a unified diff between a reference file and generated output."""
-    reference_lines = Path(reference_file).read_text(encoding="utf-8").splitlines(keepends=True)
-    output_lines = Path(output_file).read_text(encoding="utf-8").splitlines(keepends=True)
+    try:
+        reference_lines = (
+            Path(reference_file)
+            .read_text(encoding="utf-8", errors="replace")
+            .splitlines(keepends=True)
+        )
+        output_lines = (
+            Path(output_file).read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+        )
+    except OSError as exc:
+        return f"(Unable to read files for diff: {exc})"
+
     return "".join(
         difflib.unified_diff(
             reference_lines,
