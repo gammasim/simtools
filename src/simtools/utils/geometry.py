@@ -186,6 +186,29 @@ def project_ground_to_corsika_shower_coordinates(
     return x_s, y_s, z_s
 
 
+def geographic_to_corsika_azimuth(az_deg):
+    """Convert geographic azimuth (degrees) to CORSIKA azimuth (degrees).
+
+    CORSIKA uses a left-handed coordinate system (x=North, y=West), so its
+    azimuth convention is the mirror image of the standard geographic
+    right-handed convention (x=North, y=East). Converting geographic azimuth
+    to CORSIKA requires negating it before applying the +180 deg
+    travel-direction reversal. The resulting formula ``(-az + 180) % 360`` is
+    self-inverse, i.e. applying it twice returns the original value.
+
+    Parameters
+    ----------
+    az_deg : float
+        Geographic azimuth in degrees.
+
+    Returns
+    -------
+    float
+        CORSIKA azimuth in degrees (without geomagnetic-field correction).
+    """
+    return (-az_deg + 180) % 360
+
+
 def fiducial_radius_from_shape(width, shape):
     """
     Calculate minimum radius including different geometrical shapes.

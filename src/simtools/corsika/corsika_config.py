@@ -14,6 +14,7 @@ from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.utils import general as gen
+from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
 
 
@@ -191,7 +192,7 @@ class CorsikaConfig:
         )
 
         if args.get("corsika_file", None) is not None:
-            azimuth = self._rotate_azimuth_by_180deg(
+            azimuth = self._to_corsika_phi(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
             )
             zenith = 0.5 * (
@@ -388,7 +389,7 @@ class CorsikaConfig:
     def _get_corsika_theta_phi(self, args_dict):
         """Get CORSIKA theta and phi angles from args_dict."""
         theta = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
-        phi = self._rotate_azimuth_by_180deg(
+        phi = self._to_corsika_phi(
             args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value,
             correct_for_geomagnetic_field_alignment=args_dict.get(
                 "correct_for_b_field_alignment", True
@@ -587,32 +588,32 @@ class CorsikaConfig:
             return f"{int(value)}MB"
         return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
-    def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
+    def _to_corsika_phi(self, az, correct_for_geomagnetic_field_alignment=True):
         """
-        Convert azimuth angle to the CORSIKA coordinate system.
+        Convert geographic azimuth to CORSIKA phi (azimuth in the CORSIKA coordinate system).
 
         CORSIKA uses a left-handed coordinate system (x=North, y=West), so its azimuth
         convention is the mirror image of the standard geographic right-handed convention
-        (x=North, y=East). Converting geographic azimuth to CORSIKA requires negating it
-        before applying the +180 deg travel-direction reversal and geomagnetic declination
-        correction. The resulting formula is self-inverse.
+        (x=North, y=East). The core conversion is ``(-az + 180) % 360``, which is
+        self-inverse. An optional geomagnetic-field declination correction is applied on
+        top, keeping everything in one modular-reduction step to avoid floating-point drift.
 
         Parameters
         ----------
         az: float
-            Azimuth angle in degrees.
+            Geographic azimuth angle in degrees.
         correct_for_geomagnetic_field_alignment: bool
-            Whether to correct for the geomagnetic field alignment.
+            Whether to apply the geomagnetic-field declination correction.
 
         Returns
         -------
         float
-            Azimuth angle in degrees in the CORSIKA coordinate system.
+            CORSIKA phi angle in degrees.
         """
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
-        return (-az + 180 + b_field_declination) % 360 % 360
+        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360
 
     def get_config_parameter(self, par_name):
         """
