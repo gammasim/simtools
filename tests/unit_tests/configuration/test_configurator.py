@@ -124,7 +124,11 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):
+def test_config_from_file_resolves_test_resource_paths(tmp_test_directory, monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_TAG", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_VERSION", raising=False)
     config_dict = {
         "applications": [
             {

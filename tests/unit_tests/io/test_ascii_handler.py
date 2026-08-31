@@ -50,6 +50,25 @@ def test_collect_dict_data(io_handler, simple_test_file):
         ascii_handler.collect_data_from_file(unsupported_file)
 
 
+def test_collect_data_from_file_resolves_configured_test_resource_paths(
+    tmp_test_directory, monkeypatch
+):
+    resources_path = tmp_test_directory / "resources"
+    config_file = tmp_test_directory / "config.yml"
+    config_file.write_text(
+        "input: ${generated:input.ecsv}\nlegacy: tests/resources/static/layout.ecsv\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(resources_path))
+
+    loaded = ascii_handler.collect_data_from_file(config_file)
+
+    assert loaded == {
+        "input": str(resources_path / "generated/input.ecsv"),
+        "legacy": str(resources_path / "static/layout.ecsv"),
+    }
+
+
 def test_collect_data_from_file_exceptions(io_handler) -> None:
     # Create an invalid YAML file
     test_file = io_handler.get_output_file(file_name="invalid.yml")
