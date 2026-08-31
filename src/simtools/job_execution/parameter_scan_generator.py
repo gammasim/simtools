@@ -2,10 +2,26 @@ r"""
 Parameter scan grid generator.
 
 Expands an existing production job grid with parameter scan combinations.
-For each cartesian combination of scan parameters, one overwrite YAML file is
-created dynamically from the inline ``overwrite`` block in the scan configuration,
-and each base grid row is duplicated with the overwrite file path, scan
-label, and optional fixed job-grid updates attached.
+Parameter sets are stored as compact references in the ECSV metadata and referenced
+by a model_parameter_set column, with the actual override dictionaries embedded once
+in the ECSV metadata.
+
+For each cartesian combination of scan parameters, a parameter set is built
+from the inline ``overwrite`` block in the scan configuration, and each base grid
+row is duplicated with the parameter set reference, scan label, and optional
+fixed job-grid updates attached.
+
+Example metadata structure:
+# meta:
+#   model_parameter_sets:
+#     lst_asum220:
+#       LSTN-01:
+#         asum_threshold: {value: 220}
+#     mst_asum150:
+#       MSTN-01:
+#         asum_threshold: {value: 150}
+#       OBS-North:
+#         nsb_scaling_factor: {value: 2.0}
 """
 
 import itertools
@@ -13,9 +29,15 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 
+from astropy.table import Table
+
 from simtools.data_model import schema
 from simtools.io import ascii_handler
-from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
+from simtools.production_configuration.job_grid_io import (
+    _ECSV_FORMAT,
+    read_job_grid,
+    serialize_job_grid,
+)
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
@@ -91,16 +113,23 @@ def _build_overwrite_data(overwrite_base, param_combo):
     return overwrite_data
 
 
-def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, label):
-    """Generate overwrite YAML file for one parameter combination."""
-    overwrite_data = _build_overwrite_data(overwrite_base, param_combo)
+def _build_parameter_set_name(param_combo, param_specs):
+    """Build a unique name for a parameter set based on the combination."""
+    name_parts = []
+    for param_spec in param_specs:
+        param_name = param_spec["name"]
+        if param_name in param_combo:
+            param_value = param_combo[param_name]["value"]
+            scan_label = _format_value_for_name(param_spec.get("label", param_name))
+            scan_value = _format_value_for_name(param_value)
+            separator = param_spec.get("label_separator", "_")
+            name_parts.append(f"{scan_label}{separator}{scan_value}")
+    return "_".join(name_parts)
 
-    safe_label = _format_value_for_name(label)
-    overwrite_file = work_dir / f"overwrite_{safe_label}_{combo_name}.yaml"
-    ascii_handler.write_data_to_file(overwrite_data, overwrite_file, sort_keys=False)
 
-    _logger.debug(f"Generated overwrite file: {overwrite_file}")
-    return overwrite_file
+def _extract_changes_from_overwrite(overwrite_data):
+    """Extract the changes section from overwrite data, removing non-change fields."""
+    return overwrite_data.get("changes", {})
 
 
 def _parse_parameter_scan_config(param_scan):
@@ -176,13 +205,51 @@ def _generate_parameter_combinations(param_specs):
     return combinations
 
 
+def _build_parameter_sets(param_combinations, overwrite_base, param_specs):
+    """Build parameter sets dictionary for embedding in ECSV metadata.
+
+    Creates a mapping from parameter set names to their actual override dictionaries,
+    suitable for storage in ECSV metadata.
+
+    Parameters
+    ----------
+    param_combinations : list
+        List of parameter combinations from _generate_parameter_combinations
+    overwrite_base : dict
+        Base overwrite configuration
+    param_specs : list
+        Parameter specifications
+
+    Returns
+    -------
+    dict
+        Dictionary mapping parameter set names to their changes dictionaries
+    """
+    parameter_sets = {}
+
+    for combo_spec in param_combinations:
+        # Build the parameter set name
+        param_set_name = _build_parameter_set_name(combo_spec["combo"], param_specs)
+
+        # Build the overwrite data for this combination
+        overwrite_data = _build_overwrite_data(overwrite_base, combo_spec["combo"])
+
+        # Extract just the changes section for storage in metadata
+        changes = _extract_changes_from_overwrite(overwrite_data)
+
+        # Store the changes dictionary indexed by the parameter set name
+        parameter_sets[param_set_name] = changes
+
+    return parameter_sets
+
+
 def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     """Expand a production job grid with parameter scan combinations.
 
-    Reads a base job grid, dynamically generates one overwrite YAML file per
-    scan parameter combination, and writes a new grid where each base row is
-    duplicated for every combination with ``overwrite_model_parameters`` and
-    ``scan_label`` columns added.
+    Reads a base job grid, builds parameter sets from the scan configuration,
+    stores them in the ECSV metadata, and writes a new grid where each base row
+    is duplicated for every combination with ``model_parameter_set`` and ``scan_label``
+    columns added.
 
     Parameters
     ----------
@@ -207,12 +274,14 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         ascii_handler.collect_data_from_file(scan_config_path),
         schema_file="parameter_scan_config.schema.yml",
     )
-    schema.validate_dict_using_schema(
-        scan_config["parameter_scan"]["overwrite"],
-        schema_file="simulation_models_info.schema.yml",
-    )
 
-    label = scan_config["label"]
+    # Validate the overwrite section against simulation_models_info schema
+    if "parameter_scan" in scan_config and "overwrite" in scan_config["parameter_scan"]:
+        schema.validate_dict_using_schema(
+            scan_config["parameter_scan"]["overwrite"],
+            schema_file="simulation_models_info.schema.yml",
+        )
+
     param_specs, overwrite_base, job_grid_updates = _parse_parameter_scan_config(
         scan_config["parameter_scan"]
     )
@@ -223,17 +292,59 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         f"Expanding {len(base_rows)} base rows with {len(param_combinations)} scan combinations."
     )
 
+    # Build parameter sets for metadata
+    parameter_sets = _build_parameter_sets(param_combinations, overwrite_base, param_specs)
+
+    # Add parameter sets to metadata
+    if metadata is None:
+        metadata = {}
+    metadata["model_parameter_sets"] = parameter_sets
+
     expanded_rows = []
+    _logger.info(
+        f"About to expand {len(base_rows)} base rows with {len(param_combinations)} combinations"
+    )
     for combo_spec in param_combinations:
-        overwrite_file = _generate_overwrite_file(
-            overwrite_base, combo_spec["combo"], combo_spec["name"], output_dir, label
-        )
+        # Build the parameter set name for this combination
+        param_set_name = _build_parameter_set_name(combo_spec["combo"], param_specs)
+        _logger.info(f"Processing combination: {param_set_name}")
+
+        combo_rows = []
         for row in base_rows:
             new_row = dict(row)
-            new_row["overwrite_model_parameters"] = str(overwrite_file)
+            new_row["model_parameter_set"] = param_set_name
             new_row["scan_label"] = combo_spec["name"]
             new_row.update(job_grid_updates)
-            expanded_rows.append(new_row)
+            combo_rows.append(new_row)
+
+        _logger.info(f"Combination {param_set_name} generated {len(combo_rows)} rows")
+        expanded_rows.extend(combo_rows)
+
+    _logger.info(f"Total expanded rows: {len(expanded_rows)}")
 
     serialize_job_grid(expanded_rows, output_file, metadata=metadata)
+    try:
+        _clean_scan_grid_metadata(output_file)
+    except OSError as e:
+        _logger.warning(f"Failed to clean scan grid metadata: {e}")
     _logger.info(f"Scan grid with {len(expanded_rows)} rows written to '{output_file}'.")
+
+
+def _clean_scan_grid_metadata(output_file):
+    """Remove unwanted metadata from scan grid file, keeping only essential fields."""
+    output_path = Path(output_file)
+
+    # Read the file
+    table = Table.read(output_path, format=_ECSV_FORMAT)
+
+    # Create clean metadata with only essential fields
+    clean_meta = {}
+    for key in ["model_parameter_sets", "site", "simulation_software"]:
+        if key in table.meta:
+            clean_meta[key] = table.meta[key]
+
+    # Update table metadata
+    table.meta = clean_meta
+
+    # Write back to file
+    table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
