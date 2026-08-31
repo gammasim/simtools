@@ -619,7 +619,7 @@ class CorsikaConfig:
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
-        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360.0
+        return (geographic_to_corsika_azimuth(az) + b_field_declination) % 360.0 % 360.0
 
     def get_config_parameter(self, par_name):
         """
