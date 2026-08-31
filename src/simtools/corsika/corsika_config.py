@@ -594,8 +594,11 @@ class CorsikaConfig:
         """
         Convert azimuth angle to the CORSIKA coordinate system.
 
-        Corresponds to a rotation by 180 degrees, and optionally a correction for the
-        for the differences between the geographic and geomagnetic north pole.
+        CORSIKA uses a left-handed coordinate system (x=North, y=West), so its azimuth
+        convention is the mirror image of the standard geographic right-handed convention
+        (x=North, y=East). Converting geographic azimuth to CORSIKA requires negating it
+        before applying the +180° travel-direction reversal and geomagnetic declination
+        correction. The resulting formula is self-inverse.
 
         Parameters
         ----------
@@ -604,7 +607,7 @@ class CorsikaConfig:
         correct_for_geomagnetic_field_alignment: bool
             Whether to correct for the geomagnetic field alignment.
         invert_operation: bool
-            Whether to invert the operation (i.e., convert from CORSIKA to geographic system).
+            Deprecated. No longer has any effect; kept for backward compatibility only.
 
         Returns
         -------
@@ -614,9 +617,7 @@ class CorsikaConfig:
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
-        if invert_operation:
-            return (az - 180 - b_field_declination) % 360
-        return (az + 180 + b_field_declination) % 360
+        return (-az + 180 + b_field_declination) % 360
 
     def get_config_parameter(self, par_name):
         """

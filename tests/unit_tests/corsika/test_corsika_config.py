@@ -360,12 +360,12 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
         # input_angle, with_correction, expected_result
         (0.0, False, 180.0),
         (360.0, False, 180.0),
-        (450.0, False, 270.0),
+        (450.0, False, 90.0),
         (180.0, False, 0.0),
         (-180.0, False, 0.0),
         (0.0, True, 175.467),
         (360.0, True, 175.467),
-        (450.0, True, 265.467),
+        (450.0, True, 85.467),
         (180.0, True, 355.467),
         (-180.0, True, 355.467),
     ]
@@ -375,11 +375,11 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
             input_angle, correct_for_geomagnetic_field_alignment=with_correction
         ) == pytest.approx(expected_result)
 
+    # The formula is self-inverse: applying it twice returns the original value.
     for input_angle, with_correction, expected_result in test_cases:
         assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
             expected_result,
             correct_for_geomagnetic_field_alignment=with_correction,
-            invert_operation=True,
         ) == pytest.approx(input_angle % 360)
 
 
