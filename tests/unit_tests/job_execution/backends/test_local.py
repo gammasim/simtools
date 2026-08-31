@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from simtools.job_execution.backends.base import BackendExecutionError
+from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.local import LocalBackend, determine_max_workers
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 
@@ -34,6 +34,17 @@ def test_determine_max_workers_handles_missing_cpu_count(monkeypatch):
 
     assert determine_max_workers() == 1
     assert determine_max_workers(-1) == 1
+
+
+@pytest.mark.parametrize(
+    "config", [{"unknown": True}, {"mp_start_method": "invalid"}, {"mp_start_method": 1}]
+)
+def test_local_backend_rejects_invalid_configuration_for_direct_jobs(config):
+    """Local backend configuration is validated even when no pool is created."""
+    job = JobSpec("job-000000", 0, function=_square, item=1)
+
+    with pytest.raises(BackendConfigurationError):
+        LocalBackend().submit([job], ExecutionOptions(max_workers=1, backend_config=config))
 
 
 def test_local_backend_executes_direct_jobs_in_order(tmp_test_directory):
