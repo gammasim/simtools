@@ -130,7 +130,8 @@ def _copy_resolved_resource_config_files(config, output_path, test_resources_pat
             return value
 
         resolved_data = resolve_test_resource_paths(
-            ascii_handler.collect_data_from_file(path), test_resources_path=test_resources_path
+            ascii_handler.collect_data_from_file(path, test_resources_path=test_resources_path),
+            test_resources_path=test_resources_path,
         )
         resolved_config_file = config_dir / path.name
         ascii_handler.write_data_to_file(
