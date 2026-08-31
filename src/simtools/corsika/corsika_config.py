@@ -1,7 +1,6 @@
 """CORSIKA configuration."""
 
 import logging
-import warnings
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -194,7 +193,6 @@ class CorsikaConfig:
         if args.get("corsika_file", None) is not None:
             azimuth = self._rotate_azimuth_by_180deg(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
-                invert_operation=True,
             )
             zenith = 0.5 * (
                 self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
@@ -589,9 +587,7 @@ class CorsikaConfig:
             return f"{int(value)}MB"
         return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
-    def _rotate_azimuth_by_180deg(
-        self, az, correct_for_geomagnetic_field_alignment=True, invert_operation=False
-    ):
+    def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
         """
         Convert azimuth angle to the CORSIKA coordinate system.
 
@@ -607,8 +603,6 @@ class CorsikaConfig:
             Azimuth angle in degrees.
         correct_for_geomagnetic_field_alignment: bool
             Whether to correct for the geomagnetic field alignment.
-        invert_operation: bool
-            Deprecated. No longer has any effect; kept for backward compatibility only.
 
         Returns
         -------
@@ -616,13 +610,6 @@ class CorsikaConfig:
             Azimuth angle in degrees in the CORSIKA coordinate system.
         """
         b_field_declination = 0
-        if invert_operation:
-            warnings.warn(
-                "The 'invert_operation' parameter of '_rotate_azimuth_by_180deg' is deprecated "
-                "and has no effect. The corrected formula is self-inverse; remove this argument.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
         return (-az + 180 + b_field_declination) % 360
