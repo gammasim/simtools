@@ -202,8 +202,8 @@ class CorsikaConfig:
             azimuth = args.get("azimuth_angle", 0.0 * u.deg).to("deg").value
             zenith = args.get("zenith_angle", 20.0 * u.deg).to("deg").value
 
-        self.azimuth_angle = round(azimuth)
-        self.zenith_angle = round(zenith)
+        self.azimuth_angle = round(azimuth, 2)
+        self.zenith_angle = round(zenith, 2)
 
         self.curved_atmosphere_min_zenith_angle = (
             args.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
@@ -705,7 +705,7 @@ class CorsikaConfig:
 
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary_particle.name}\n")
-            file.write(f"IACT setenv ZA {int(self.get_config_parameter('THETAP')[0])}\n")
+            file.write(f"IACT setenv ZA {self.zenith_angle}\n")
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
