@@ -670,17 +670,20 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     log_title: str
         Title of the figure to be added to the log message.
     dpi : str or int, optional
-        DPI passed to ``fig.savefig``. Defaults to ``"figure"``.
+        DPI passed to ``fig.savefig`` unless saving a PNG and ``figure_dpi`` is
+        configured. Defaults to ``"figure"``.
     close : bool, optional
         Close the figure after saving. Defaults to False.
     """
     configured_formats = config.args.get("figure_format")
+    configured_dpi = config.args.get("figure_dpi")
 
     figure_format = figure_format or configured_formats or ["png"]
 
     for fmt in gen.ensure_list(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
-        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
+        save_dpi = configured_dpi if fmt == "png" and configured_dpi is not None else dpi
+        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=save_dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
