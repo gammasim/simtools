@@ -88,11 +88,12 @@ class LocalBackend:
         if unknown:
             names = ", ".join(sorted(unknown))
             raise BackendConfigurationError(f"Unknown local backend configuration key(s): {names}.")
-        start_method = config.get("mp_start_method", "fork")
+        start_method = config.get("mp_start_method")
         if start_method is None:
             return
-        if not isinstance(start_method, str) or start_method not in get_all_start_methods():
-            available = ", ".join(get_all_start_methods())
+        available_methods = get_all_start_methods()
+        if not isinstance(start_method, str) or start_method not in available_methods:
+            available = ", ".join(available_methods)
             raise BackendConfigurationError(
                 f"Invalid mp_start_method {start_method!r}. Available methods: {available}."
             )
