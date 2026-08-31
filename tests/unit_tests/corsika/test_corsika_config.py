@@ -673,7 +673,7 @@ def test_corsika_configuration_for_dummy_simulations(corsika_config_no_array_mod
     assert config["ESLOPE"] == pytest.approx([-2.0])
     assert config["ERANGE"] == pytest.approx([0.1, 0.1])
     assert config["THETAP"] == pytest.approx([30.0, 30.0])
-    assert config["PHIP"] == pytest.approx([225.0, 225.0])
+    assert config["PHIP"] == pytest.approx([135.0, 135.0])
     assert config["VIEWCONE"] == pytest.approx([0.0, 0.0])
     assert config["CSCAT"] == pytest.approx([1, 0.0, 10.0])
 
@@ -729,7 +729,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 "corsika_file": tmp_path / "test.corsika",
                 "curved_atmosphere_min_zenith_angle": 85.0 * u.deg,
             },
-            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 85.0},
+            "expected": {"zenith": 30, "azimuth": 90, "curved_atm": 85.0},
         },
         {
             "args": {
@@ -737,7 +737,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 "correct_for_b_field_alignment": False,
                 "curved_atmosphere_min_zenith_angle": 80 * u.deg,
             },
-            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 80.0},
+            "expected": {"zenith": 30, "azimuth": 90, "curved_atm": 80.0},
         },
     ]
 
