@@ -197,7 +197,18 @@ def compare_versions(version_string_1, version_string_2, level=MAJOR_MINOR_PATCH
 
 
 def base_version_for_patch_delta(version_string):
-    """Return major.minor.0 version for patch releases (x.y.z -> x.y.0) or None."""
+    """Return major.minor.0 version for patch releases (x.y.z -> x.y.0) or ``None``.
+
+    Parameters
+    ----------
+    version_string : str
+        Version string to inspect.
+
+    Returns
+    -------
+    str or None
+        The base patch version for patch releases, or ``None`` for all other inputs.
+    """
     if not version_string:
         return None
 
@@ -214,7 +225,18 @@ def base_version_for_patch_delta(version_string):
 
 
 def is_valid_release_tag(version_string):
-    """Return whether a value is a ``v``-prefixed semantic release tag."""
+    """Return whether a value is a ``v``-prefixed semantic release tag.
+
+    Parameters
+    ----------
+    version_string : str
+        Version string to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the value is a valid ``v``-prefixed semantic release tag.
+    """
     if not isinstance(version_string, str) or not version_string.startswith("v"):
         return False
 
@@ -282,12 +304,34 @@ def validate_release_tag(version_string):
 
 
 def is_valid_model_version(version_string):
-    """Return whether a value is a bare simulation-model version."""
+    """Return whether a value is a bare simulation-model version.
+
+    Parameters
+    ----------
+    version_string : str
+        Version string to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the value matches the simulation-model version format.
+    """
     return isinstance(version_string, str) and bool(MODEL_VERSION_PATTERN.fullmatch(version_string))
 
 
 def is_valid_package_version(version_string):
-    """Return whether a value is a bare PEP 440 package version."""
+    """Return whether a value is a bare PEP 440 package version.
+
+    Parameters
+    ----------
+    version_string : str
+        Version string to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the value is a valid non-``v``-prefixed PEP 440 version.
+    """
     if not isinstance(version_string, str) or version_string.startswith("v"):
         return False
     try:
@@ -298,7 +342,18 @@ def is_valid_package_version(version_string):
 
 
 def is_valid_revision(version_string):
-    """Return whether a value is an exact lower-case Git revision."""
+    """Return whether a value is an exact lower-case Git revision.
+
+    Parameters
+    ----------
+    version_string : str
+        Revision string to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the value is a valid lower-case Git revision hash.
+    """
     return isinstance(version_string, str) and bool(REVISION_PATTERN.fullmatch(version_string))
 
 

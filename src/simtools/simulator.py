@@ -104,7 +104,7 @@ class Simulator:
 
         Parameters
         ----------
-        simulation_software: choices: [sim_telarray, corsika, corsika_sim_telarray]
+        simulation_software : str
             implemented are sim_telarray and CORSIKA or corsika_sim_telarray
             (running CORSIKA and piping it directly to sim_telarray)
 
@@ -668,7 +668,7 @@ class Simulator:
 
         Parameters
         ----------
-        directory_for_grid_upload: str
+        directory_for_grid_upload : str
             Directory for the output files.
 
         """
