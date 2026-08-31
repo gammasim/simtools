@@ -374,7 +374,7 @@ def test_to_corsika_phi(corsika_config_mock_array_model):
     # The formula is self-inverse: applying it twice returns the original value.
     for input_angle, with_correction, expected_result in test_cases:
         # Normalise with % 360 to handle the floating-point edge case where a
-        # tiny negative intermediate value maps to ≈360 instead of ≈0.
+        # tiny negative intermediate value maps to approx 360 instead of approx 0.
         assert corsika_config_mock_array_model._to_corsika_phi(
             expected_result,
             correct_for_geomagnetic_field_alignment=with_correction,
