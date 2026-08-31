@@ -594,7 +594,7 @@ class CorsikaConfig:
         CORSIKA uses a left-handed coordinate system (x=North, y=West), so its azimuth
         convention is the mirror image of the standard geographic right-handed convention
         (x=North, y=East). Converting geographic azimuth to CORSIKA requires negating it
-        before applying the +180° travel-direction reversal and geomagnetic declination
+        before applying the +180 deg travel-direction reversal and geomagnetic declination
         correction. The resulting formula is self-inverse.
 
         Parameters
