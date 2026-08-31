@@ -135,13 +135,24 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
         if isinstance(par_dict, dict):
             for param_name, param_version in par_dict.items():
                 total_checked += 1
+                instrument = _get_production_parameter_scope(production_table, array_element)
                 parameter_file = get_model_parameter_file_path(
-                    simulation_models_path, array_element, param_name, param_version
+                    simulation_models_path, instrument, param_name, param_version
                 )
                 if parameter_file and not parameter_file.exists():
                     missing_files.append(str(parameter_file))
 
     return missing_files, total_checked
+
+
+def _get_production_parameter_scope(production_table, array_element):
+    """Translate a production-table key to its filesystem parameter scope."""
+    if (
+        production_table.get("production_table_name") == "configuration_corsika"
+        and array_element == "xSTx-design"
+    ):
+        return None
+    return array_element
 
 
 def get_model_parameter_file_path(
@@ -150,14 +161,16 @@ def get_model_parameter_file_path(
     """
     Get the file path for a model parameter.
 
-    Take into account path structure based on collections and array elements.
+    Use the instrument scope of the parameter. Null-instrument parameters are
+    stored below the explicit ``global`` scope.
 
     Parameters
     ----------
     simulation_models_path : str
         Path to the simulation models repository.
     array_element : str
-        Name of the array element (e.g., 'telescope').
+        Name of the array element (e.g., 'telescope'), or ``None`` for a
+        global parameter.
     parameter_name : str
         Name of the parameter.
     parameter_version : str
@@ -168,18 +181,18 @@ def get_model_parameter_file_path(
     Path
         The file path to the model parameter JSON file.
     """
-    collection = names.get_collection_name_from_parameter_name(parameter_name)
+    instrument = array_element or "global"
     return (
         get_model_parameter_directory(simulation_models_path)
-        / (
-            collection
-            if collection in ("configuration_sim_telarray", "configuration_corsika")
-            else ""
-        )
-        / (array_element if collection != "configuration_corsika" else "")
+        / instrument
         / parameter_name
         / f"{parameter_name}-{parameter_version}.json"
     )
+
+
+def _get_model_parameter_scope(telescope):
+    """Return the filesystem scope for a production-table key."""
+    return None if telescope == "configuration_corsika" else telescope
 
 
 def generate_new_production(model_version, simulation_models_path, setting_workflows_git_tag=None):
@@ -700,15 +713,12 @@ def _download_model_parameter_from_workflow(
             f"'{param_data['version']}', downloaded '{downloaded_version}'."
         )
 
-    try:
-        target_dir = get_model_parameter_file_path(
-            simulation_models_path,
-            telescope,
-            param,
-            param_data["version"],
-        ).parent
-    except KeyError:
-        target_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
+    target_dir = get_model_parameter_file_path(
+        simulation_models_path,
+        _get_model_parameter_scope(telescope),
+        param,
+        param_data["version"],
+    ).parent
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / f"{param}-{param_data['version']}.json"
     writer.ModelDataWriter.write_model_parameter_json(downloaded_data, target_file)
@@ -732,15 +742,12 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    try:
-        param_dir = get_model_parameter_file_path(
-            simulation_models_path,
-            telescope,
-            param,
-            param_data["version"],
-        ).parent
-    except KeyError:
-        param_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
+    param_dir = get_model_parameter_file_path(
+        simulation_models_path,
+        _get_model_parameter_scope(telescope),
+        param,
+        param_data["version"],
+    ).parent
     if not param_dir.exists():
         _logger.info(
             f"Create directory for model parameter '{telescope} - {param}': '{param_dir}'."

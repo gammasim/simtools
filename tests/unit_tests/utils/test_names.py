@@ -406,6 +406,32 @@ def test_get_simulation_software_name_from_parameter_name():
     )
 
 
+@pytest.mark.parametrize(
+    "parameter_name",
+    [
+        "iobuf_maximum",
+        "iobuf_output_maximum",
+        "min_photoelectrons",
+        "min_photons",
+        "random_generator",
+        "sampled_output",
+        "save_pe_with_amplitude",
+        "store_photoelectrons",
+        "tailcut_scale",
+    ],
+)
+def test_sim_telarray_configuration_parameters_have_explicit_mappings(parameter_name):
+    assert names.get_simulation_software_name_from_parameter_name(parameter_name) == parameter_name
+
+
+def test_simtools_owned_sim_telarray_collection_parameter_has_no_sim_telarray_mapping():
+    parameter = "correct_nsb_spectrum_to_telescope_altitude"
+    assert names.get_simulation_software_name_from_parameter_name(parameter) is None
+    assert (
+        names.get_simulation_software_name_from_parameter_name(parameter, "simtools") == parameter
+    )
+
+
 def test_file_name_with_version():
     assert names.file_name_with_version(None, None) is None
     assert names.file_name_with_version("file", None) is None

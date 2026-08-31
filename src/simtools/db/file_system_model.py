@@ -109,14 +109,12 @@ class FileSystemModelHandler:
             )
         return parameters
 
-    def _get_parameter_file_path(self, collection_name, instrument, parameter, parameter_version):
+    def _get_parameter_file_path(self, _collection_name, instrument, parameter, parameter_version):
         """Return the path for one model parameter version."""
-        path = self.model_parameters_path
-        if collection_name in ("configuration_sim_telarray", "configuration_corsika"):
-            path /= collection_name
-        if collection_name != "configuration_corsika":
-            path /= instrument
-        return path / parameter / f"{parameter}-{parameter_version}.json"
+        scope = instrument or "global"
+        return (
+            self.model_parameters_path / scope / parameter / f"{parameter}-{parameter_version}.json"
+        )
 
     @staticmethod
     def _resolve_instrument(query, collection_name):
@@ -127,7 +125,7 @@ class FileSystemModelHandler:
         if collection_name == "sites" and query.get("site"):
             return f"OBS-{query['site']}"
         if collection_name == "configuration_corsika":
-            return "xSTx-design"
+            return None
         raise ValueError(
             f"Filesystem lookup for collection {collection_name} requires an array element name"
         )

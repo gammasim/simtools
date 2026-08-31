@@ -120,10 +120,30 @@ def test_verify_model_parameters_for_production_non_dict_parameters(
         assert total_checked == 1
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_regular_collection(mock_get_collection, tmp_test_directory):
-    mock_get_collection.return_value = "camera"
+@patch("simtools.io.ascii_handler.collect_data_from_file")
+def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, tmp_test_directory):
+    mock_collect_data.return_value = {
+        "production_table_name": "configuration_corsika",
+        "parameters": {"xSTx-design": {"corsika_iact_io_buffer": "1.0.0"}},
+    }
+    production_file = Path(TEST_PRODUCTION_FILE)
 
+    with patch(PATH_PATCH) as mock_get_path:
+        mock_file = Mock()
+        mock_file.exists.return_value = True
+        mock_get_path.return_value = mock_file
+
+        _, total_checked = model_repository._verify_model_parameters_for_production(
+            str(tmp_test_directory), production_file
+        )
+
+    assert total_checked == 1
+    mock_get_path.assert_called_once_with(
+        str(tmp_test_directory), None, "corsika_iact_io_buffer", "1.0.0"
+    )
+
+
+def test_get_model_parameter_file_path_regular_collection(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "camera_config", "1.0.0"
     )
@@ -139,12 +159,7 @@ def test_get_model_parameter_file_path_regular_collection(mock_get_collection, t
     assert result == expected
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_sim_telarray(
-    mock_get_collection, tmp_test_directory
-):
-    mock_get_collection.return_value = "configuration_sim_telarray"
-
+def test_get_model_parameter_file_path_configuration_sim_telarray(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "sim_telarray_config", "1.0.0"
     )
@@ -153,7 +168,6 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(
         tmp_test_directory
         / "simulation-models"
         / "model_parameters"
-        / "configuration_sim_telarray"
         / "telescope"
         / "sim_telarray_config"
         / "sim_telarray_config-1.0.0.json"
@@ -161,12 +175,7 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(
     assert result == expected
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_corsika(
-    mock_get_collection, tmp_test_directory
-):
-    mock_get_collection.return_value = "configuration_corsika"
-
+def test_get_model_parameter_file_path_configuration_corsika(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "corsika_config", "1.0.0"
     )
@@ -175,11 +184,50 @@ def test_get_model_parameter_file_path_configuration_corsika(
         tmp_test_directory
         / "simulation-models"
         / "model_parameters"
-        / "configuration_corsika"
+        / "telescope"
         / "corsika_config"
         / "corsika_config-1.0.0.json"
     )
     assert result == expected
+
+
+def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
+    result = model_repository.get_model_parameter_file_path(
+        str(tmp_test_directory), None, "corsika_config", "1.0.0"
+    )
+
+    expected = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / "global"
+        / "corsika_config"
+        / "corsika_config-1.0.0.json"
+    )
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("telescope", "expected_scope"),
+    [("configuration_corsika", None), ("LSTN-design", "LSTN-design")],
+)
+def test_get_model_parameter_scope(telescope, expected_scope):
+    assert model_repository._get_model_parameter_scope(telescope) == expected_scope
+
+
+@pytest.mark.parametrize(
+    ("production_table_name", "array_element", "expected_scope"),
+    [
+        ("configuration_corsika", "xSTx-design", None),
+        ("LSTN-design", "LSTN-design", "LSTN-design"),
+    ],
+)
+def test_get_production_parameter_scope(production_table_name, array_element, expected_scope):
+    production_table = {"production_table_name": production_table_name}
+    assert (
+        model_repository._get_production_parameter_scope(production_table, array_element)
+        == expected_scope
+    )
 
 
 def test_check_for_major_version_jump_no_major_jump():
