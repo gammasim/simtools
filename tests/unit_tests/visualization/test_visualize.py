@@ -149,6 +149,19 @@ def test_save_figure_closes_when_requested(io_handler, mocker):
     mock_close.assert_called_once_with(fig)
 
 
+def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker):
+    fig = mocker.Mock()
+    mocker.patch.object(visualize, "config").args = {"figure_dpi": 123}
+    output_file = Path(tmp_test_directory) / "figure"
+
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], dpi=150)
+
+    assert fig.savefig.call_args_list == [
+        mocker.call(output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi=150),
+        mocker.call(output_file.with_suffix(".png"), format="png", bbox_inches="tight", dpi=123),
+    ]
+
+
 def test_plot_histogram_uses_existing_axes():
     data = np.array([0.0, 1.0, 1.0])
     fig, ax = plt.subplots()
