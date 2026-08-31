@@ -124,27 +124,59 @@ def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_di
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
     array_element_dir = input_path / "LSTS-01"
-    array_element_dir.mkdir(parents=True, exist_ok=True)
-    (array_element_dir / "num_gains-0.1.0.json").touch()
-    (array_element_dir / "mirror_list-0.2.1.json").touch()
+    (array_element_dir / "num_gains").mkdir(parents=True, exist_ok=True)
+    (array_element_dir / "mirror_list").mkdir(parents=True, exist_ok=True)
+    (array_element_dir / "num_gains" / "num_gains-0.1.0.json").touch()
+    (array_element_dir / "mirror_list" / "mirror_list-0.2.1.json").touch()
 
     with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[array_element_dir]):
         with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_any_call(
-        file=array_element_dir / "num_gains-0.1.0.json",
+        file=array_element_dir / "num_gains" / "num_gains-0.1.0.json",
         collection="telescopes",
         db=mock_db,
         file_prefix=input_path / "Files",
     )
     mock_add_values_from_json_to_db.assert_any_call(
-        file=array_element_dir / "mirror_list-0.2.1.json",
+        file=array_element_dir / "mirror_list" / "mirror_list-0.2.1.json",
         collection="telescopes",
         db=mock_db,
         file_prefix=input_path / "Files",
     )
     assert mock_add_values_from_json_to_db.call_count == 2
+
+
+@patch("simtools.db.db_model_upload.add_values_from_json_to_db")
+def test_add_model_parameters_to_db_uses_parameter_schema_collection(
+    mock_add_values_from_json_to_db, tmp_test_directory
+):
+    mock_db = Mock()
+    input_path = Path(tmp_test_directory)
+    simtel_parameter = input_path / "LSTN-design" / "min_photons" / "min_photons-1.0.0.json"
+    corsika_parameter = (
+        input_path / "global" / "corsika_iact_io_buffer" / "corsika_iact_io_buffer-1.0.0.json"
+    )
+    simtel_parameter.parent.mkdir(parents=True, exist_ok=True)
+    corsika_parameter.parent.mkdir(parents=True, exist_ok=True)
+    simtel_parameter.touch()
+    corsika_parameter.touch()
+
+    db_model_upload.add_model_parameters_to_db(input_path, mock_db)
+
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=simtel_parameter,
+        collection="configuration_sim_telarray",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=corsika_parameter,
+        collection="configuration_corsika",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")

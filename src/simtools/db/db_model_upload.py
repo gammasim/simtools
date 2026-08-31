@@ -141,13 +141,13 @@ def add_model_parameters_to_db(input_path, db):
     input_path = Path(input_path)
     logger.info(f"Reading model parameters from repository path {input_path}")
     for element in filter(Path.is_dir, input_path.iterdir()):
-        collection = names.get_collection_name_from_array_element_name(element.name, False)
-        if collection == "Files":
+        if element.name == "Files":
             logger.info("Files (tables) are uploaded with the corresponding model parameters")
             continue
-        logger.info(f"Reading model parameters for {element.name} into collection {collection}")
+        logger.info(f"Reading model parameters for {element.name}")
         files_to_insert = list(Path(element).rglob("*json"))
         for file in files_to_insert:
+            collection = names.get_collection_name_from_parameter_name(file.parent.name)
             add_values_from_json_to_db(
                 file=file,
                 collection=collection,

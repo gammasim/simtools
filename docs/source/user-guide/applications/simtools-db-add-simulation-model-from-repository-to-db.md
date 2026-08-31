@@ -30,11 +30,11 @@ Loops over all subdirectories in 'input_path' and uploads all json files to the
 database (or updates an existing database with the same name):
 
 * subdirectories starting with 'OBS' are uploaded to the 'sites' collection
-* json files from the subdirectory 'configuration_sim_telarray/configuration_corsika'
-  are uploaded to the 'configuration_sim_telarray/configuration_corsika' collection
+* json files are uploaded to the collection defined by their model-parameter schema;
+  this keeps telescope-scoped sim_telarray parameters in the
+  'configuration_sim_telarray' collection and files below 'global' in the
+  'configuration_corsika' collection
 * 'Files' are added to the 'files' collection
-* all other json files are uploaded to collection defined in the array element description
-  in 'simtools/schemas/array_elements.yml'
 
 .. code-block:: console
 
