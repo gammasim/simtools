@@ -795,6 +795,14 @@ def test_zenith_azimuth_float_precision(mocker):
             "zenith_angle": 20.567 * u.deg,
             "azimuth_angle": 45.123 * u.deg,
             "correct_for_b_field_alignment": False,
+            "event_number_first_shower": 1,
+            "showers_per_run": 100,
+            "energy_range": (10 * u.GeV, 10 * u.TeV),
+            "view_cone": (0 * u.deg, 0 * u.deg),
+            "core_scatter": (10, 1400 * u.m),
+            "primary": "proton",
+            "primary_id_type": "common_name",
+            "eslope": -2,
         },
     ):
         config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
