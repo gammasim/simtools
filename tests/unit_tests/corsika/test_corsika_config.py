@@ -18,6 +18,20 @@ MUON_PLUS_PARTICLE = "muon+"
 PROTON_PARTICLE = "proton"
 G_CM2 = "g/cm2"
 
+_BASE_CORSIKA_ARGS = {
+    "correct_for_b_field_alignment": False,
+    "azimuth_angle": 0 * u.deg,
+    "zenith_angle": 20 * u.deg,
+    "event_number_first_shower": 1,
+    "showers_per_run": 100,
+    "energy_range": (10 * u.GeV, 10 * u.TeV),
+    "view_cone": (0 * u.deg, 0 * u.deg),
+    "core_scatter": (10, 1400 * u.m),
+    "primary": "proton",
+    "primary_id_type": "common_name",
+    "eslope": -2,
+}
+
 
 def create_mock_array_model(mocker, geomag_rotation=0):
     """Helper function to create a mock array model with site model."""
@@ -56,19 +70,7 @@ def corsika_config_no_array_model(mocker):
 
     mock_array_model = create_mock_array_model(mocker)
 
-    modified_data = {
-        "correct_for_b_field_alignment": False,
-        "azimuth_angle": 0 * u.deg,
-        "zenith_angle": 20 * u.deg,
-        "event_number_first_shower": 1,
-        "showers_per_run": 100,
-        "energy_range": (10 * u.GeV, 10 * u.TeV),
-        "view_cone": (0 * u.deg, 0 * u.deg),
-        "core_scatter": (10, 1400 * u.m),
-        "primary": "proton",
-        "primary_id_type": "common_name",
-        "eslope": -2,
-    }
+    modified_data = dict(_BASE_CORSIKA_ARGS)
 
     mocker.patch.object(
         _Config,
@@ -139,19 +141,7 @@ def get_standard_corsika_parameters_teltype_grammage(get_standard_corsika_parame
 def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
     mock_array_model = create_mock_array_model(mocker)
 
-    args_dict = {
-        "azimuth_angle": 0 * u.deg,
-        "zenith_angle": 20 * u.deg,
-        "event_number_first_shower": 1,
-        "showers_per_run": 100,
-        "energy_range": (10 * u.GeV, 10 * u.TeV),
-        "view_cone": (0 * u.deg, 0 * u.deg),
-        "core_scatter": (10, 1400 * u.m),
-        "primary": "proton",
-        "primary_id_type": "common_name",
-        "eslope": -2,
-        "correct_for_b_field_alignment": False,
-    }
+    args_dict = dict(_BASE_CORSIKA_ARGS)
 
     mocker.patch.object(
         _Config,
@@ -792,17 +782,9 @@ def test_zenith_azimuth_float_precision(mocker):
         "args",
         new_callable=PropertyMock,
         return_value={
+            **_BASE_CORSIKA_ARGS,
             "zenith_angle": 20.567 * u.deg,
             "azimuth_angle": 45.123 * u.deg,
-            "correct_for_b_field_alignment": False,
-            "event_number_first_shower": 1,
-            "showers_per_run": 100,
-            "energy_range": (10 * u.GeV, 10 * u.TeV),
-            "view_cone": (0 * u.deg, 0 * u.deg),
-            "core_scatter": (10, 1400 * u.m),
-            "primary": "proton",
-            "primary_id_type": "common_name",
-            "eslope": -2,
         },
     ):
         config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
