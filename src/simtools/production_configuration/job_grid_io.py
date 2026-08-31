@@ -281,20 +281,6 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     ]
     output_table = _build_output_table(output_rows, output_columns, metadata)
     output_table = _validate_job_grid_table(output_table)
-    output_table.sort(
-        [
-            "primary",
-            "model_version",
-            "array_layout_name",
-            "corsika_le_interaction",
-            "corsika_he_interaction",
-            "azimuth_angle",
-            "zenith_angle",
-            "energy_min",
-            "energy_max",
-            "run_number",
-        ]
-    )
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
