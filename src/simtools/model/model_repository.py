@@ -135,24 +135,13 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
         if isinstance(par_dict, dict):
             for param_name, param_version in par_dict.items():
                 total_checked += 1
-                instrument = _get_production_parameter_scope(production_table, array_element)
                 parameter_file = get_model_parameter_file_path(
-                    simulation_models_path, instrument, param_name, param_version
+                    simulation_models_path, array_element, param_name, param_version
                 )
                 if parameter_file and not parameter_file.exists():
                     missing_files.append(str(parameter_file))
 
     return missing_files, total_checked
-
-
-def _get_production_parameter_scope(production_table, array_element):
-    """Translate a production-table key to its filesystem parameter scope."""
-    if (
-        production_table.get("production_table_name") == "configuration_corsika"
-        and array_element == "xSTx-design"
-    ):
-        return None
-    return array_element
 
 
 def get_model_parameter_file_path(
@@ -192,7 +181,7 @@ def get_model_parameter_file_path(
 
 def _get_model_parameter_scope(telescope):
     """Return the filesystem scope for a production-table key."""
-    return None if telescope == "configuration_corsika" else telescope
+    return "global" if telescope == "configuration_corsika" else telescope
 
 
 def generate_new_production(model_version, simulation_models_path, setting_workflows_git_tag=None):
@@ -250,8 +239,8 @@ def _get_production_table_key(table_name):
     """
     Get the production table key for a given table name.
 
-    CORSIKA configuration uses 'xSTx-design' as a placeholder to indicate
-    that parameters are site-wide and independent of specific telescope designs.
+    CORSIKA configuration uses 'global' to indicate parameters that are
+    site-wide and independent of specific telescope designs.
 
     Parameters
     ----------
@@ -263,7 +252,7 @@ def _get_production_table_key(table_name):
     str
         Production table key to use in parameter dictionaries.
     """
-    return "xSTx-design" if table_name == "configuration_corsika" else table_name
+    return "global" if table_name == "configuration_corsika" else table_name
 
 
 def _apply_changes_to_production_tables(

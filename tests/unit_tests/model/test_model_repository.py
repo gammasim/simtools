@@ -124,7 +124,7 @@ def test_verify_model_parameters_for_production_non_dict_parameters(
 def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, tmp_test_directory):
     mock_collect_data.return_value = {
         "production_table_name": "configuration_corsika",
-        "parameters": {"xSTx-design": {"corsika_iact_io_buffer": "1.0.0"}},
+        "parameters": {"global": {"corsika_iact_io_buffer": "1.0.0"}},
     }
     production_file = Path(TEST_PRODUCTION_FILE)
 
@@ -139,7 +139,7 @@ def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, t
 
     assert total_checked == 1
     mock_get_path.assert_called_once_with(
-        str(tmp_test_directory), None, "corsika_iact_io_buffer", "1.0.0"
+        str(tmp_test_directory), "global", "corsika_iact_io_buffer", "1.0.0"
     )
 
 
@@ -209,25 +209,10 @@ def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
 
 @pytest.mark.parametrize(
     ("telescope", "expected_scope"),
-    [("configuration_corsika", None), ("LSTN-design", "LSTN-design")],
+    [("configuration_corsika", "global"), ("LSTN-design", "LSTN-design")],
 )
 def test_get_model_parameter_scope(telescope, expected_scope):
     assert model_repository._get_model_parameter_scope(telescope) == expected_scope
-
-
-@pytest.mark.parametrize(
-    ("production_table_name", "array_element", "expected_scope"),
-    [
-        ("configuration_corsika", "xSTx-design", None),
-        ("LSTN-design", "LSTN-design", "LSTN-design"),
-    ],
-)
-def test_get_production_parameter_scope(production_table_name, array_element, expected_scope):
-    production_table = {"production_table_name": production_table_name}
-    assert (
-        model_repository._get_production_parameter_scope(production_table, array_element)
-        == expected_scope
-    )
 
 
 def test_check_for_major_version_jump_no_major_jump():
@@ -324,7 +309,7 @@ def test_update_parameters_dict_new_function():
 
 
 def test_get_production_table_key_configuration_corsika():
-    assert model_repository._get_production_table_key("configuration_corsika") == "xSTx-design"
+    assert model_repository._get_production_table_key("configuration_corsika") == "global"
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -357,7 +342,7 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {
+            "global": {
                 "corsika_starting_grammage": "1.0.0",
                 "corsika_first_interaction_height": "1.0.0",
             },
@@ -377,15 +362,15 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
-    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["global"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["global"]
 
 
 def test_apply_changes_to_production_table_configuration_corsika_patch_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {
+            "global": {
                 "corsika_starting_grammage": "1.0.0",
                 "corsika_first_interaction_height": "1.2.0",
             },
@@ -405,8 +390,8 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
-    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["global"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["global"]
     assert data["deprecated_parameters"] == ["corsika_first_interaction_height"]
 
 

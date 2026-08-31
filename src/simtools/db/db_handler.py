@@ -459,8 +459,8 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        # 'xSTX-design' is a placeholder to ignore 'instrument' field in query.
-        if array_element_name and array_element_name != "xSTx-design":
+        # 'global' is a placeholder to ignore 'instrument' field in query.
+        if array_element_name and array_element_name != "global":
             query_dict["instrument"] = array_element_name
         if site:
             query_dict["site"] = site
@@ -918,7 +918,7 @@ class DatabaseHandler:
             List of array elements
         """
         if collection == "configuration_corsika":
-            return ["xSTx-design"]  # placeholder to ignore 'instrument' field in query.
+            return ["global"]  # placeholder to ignore 'instrument' field in query.
         if collection == "sites":
             return [f"OBS-{site}"]
         if names.is_design_type(array_element_name):

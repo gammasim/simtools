@@ -72,7 +72,7 @@ def simulation_models_path(tmp_test_directory):
             "model_version": "1.0.0",
             "production_table_name": "configuration_corsika",
             "parameters": {
-                "xSTx-design": {
+                "global": {
                     "corsika_cherenkov_photon_bunch_size": "1.0.0",
                     "corsika_particle_kinetic_energy_cutoff": "1.0.0",
                     "corsika_starting_grammage": "1.0.2",

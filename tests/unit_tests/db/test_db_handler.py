@@ -520,7 +520,7 @@ def test_get_query_from_parameter_version_table(db):
         ("LSTN-01", None, {"$or": or_list, "instrument": "LSTN-01"}),
         (None, "North", {"$or": or_list, "site": "North"}),
         (None, None, {"$or": or_list}),
-        ("xSTx-design", "North", {"$or": or_list, "site": "North"}),
+        ("global", "North", {"$or": or_list, "site": "North"}),
     ]
 
     for array_element_name, site, expected in test_cases:
@@ -858,7 +858,7 @@ def test_get_array_element_list_configuration_corsika(db):
 
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
 
-    assert result == ["xSTx-design"]
+    assert result == ["global"]
 
 
 def test_get_array_element_list_sites(db):
