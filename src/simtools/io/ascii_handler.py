@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -10,12 +11,13 @@ import astropy.units as u
 import numpy as np
 import yaml
 
+from simtools.io import io_handler
 from simtools.utils.general import ensure_list, is_url
 
 _logger = logging.getLogger(__name__)
 
 
-def collect_data_from_file(file_name, yaml_document=None):
+def collect_data_from_file(file_name, yaml_document=None, test_resources_path=None):
     """
     Collect data from file based on its extension.
 
@@ -25,6 +27,8 @@ def collect_data_from_file(file_name, yaml_document=None):
         Name of the yaml/json/ascii file.
     yaml_document: None, int
         Return list of yaml documents or a single document (for yaml files with several documents).
+    test_resources_path : str or pathlib.Path, optional
+        Explicit base directory for resolving test-resource paths in structured files.
 
     Returns
     -------
@@ -37,10 +41,20 @@ def collect_data_from_file(file_name, yaml_document=None):
     suffix = Path(file_name).suffix.lower()
     try:
         with open(file_name, encoding="utf-8") as file:
-            return _collect_data_from_different_file_types(file, file_name, suffix, yaml_document)
+            data = _collect_data_from_different_file_types(file, file_name, suffix, yaml_document)
+            return _resolve_configured_test_resource_paths(data, test_resources_path)
     # broad exception to catch all possible errors in reading the file
     except Exception as exc:  # pylint: disable=broad-except
         raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
+
+
+def _resolve_configured_test_resource_paths(data, test_resources_path=None):
+    """Resolve test-resource paths when a test-resource environment is active."""
+    if test_resources_path is not None:
+        return io_handler.resolve_test_resource_paths(data, test_resources_path=test_resources_path)
+    if os.environ.get("SIMTOOLS_TEST_RESOURCES") or os.environ.get("SIMTOOLS_TESTS_PATH"):
+        return io_handler.resolve_test_resource_paths(data)
+    return data
 
 
 def _collect_data_from_different_file_types(file, file_name, suffix, yaml_document):
