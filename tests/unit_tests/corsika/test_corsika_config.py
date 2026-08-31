@@ -783,6 +783,27 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 )
 
 
+def test_zenith_azimuth_float_precision(mocker):
+    """Test that zenith and azimuth angles are stored with two decimal places (not as integers)."""
+    mock_array_model = create_mock_array_model(mocker)
+
+    with patch.object(
+        _Config,
+        "args",
+        new_callable=PropertyMock,
+        return_value={
+            "zenith_angle": 20.567 * u.deg,
+            "azimuth_angle": 45.123 * u.deg,
+            "correct_for_b_field_alignment": False,
+        },
+    ):
+        config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
+        assert config.zenith_angle == pytest.approx(20.57, abs=1e-9)
+        assert config.azimuth_angle == pytest.approx(45.12, abs=1e-9)
+        assert isinstance(config.zenith_angle, float)
+        assert isinstance(config.azimuth_angle, float)
+
+
 def test_check_altitude_and_site(corsika_config_mock_array_model):
     corsika_config_mock_array_model._check_altitude_and_site(220000.0)
 
