@@ -100,6 +100,36 @@ def test_resolve_test_resource_paths_uses_versioned_environment_resources(
     assert resolved == str(expected_root / "downloaded/corsika_limits.ecsv")
 
 
+def test_resolve_test_resource_paths_rejects_conflicting_environment_versions(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "simtools-tests"))
+    monkeypatch.setenv("SIMTOOLS_TESTS_TAG", "v0.37.0")
+    monkeypatch.setenv("SIMTOOLS_TESTS_VERSION", "v0.36.0")
+
+    with pytest.raises(
+        ValueError,
+        match="SIMTOOLS_TESTS_TAG and SIMTOOLS_TESTS_VERSION must match",
+    ):
+        io_handler_module.resolve_test_resource_paths("${generated:input.ecsv}")
+
+
+def test_resolve_test_resource_paths_accepts_matching_environment_versions(
+    tmp_test_directory, monkeypatch
+):
+    tests_path = tmp_test_directory / "simtools-tests"
+    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tests_path))
+    monkeypatch.setenv("SIMTOOLS_TESTS_TAG", "v0.37.0")
+    monkeypatch.setenv("SIMTOOLS_TESTS_VERSION", "v0.37.0")
+
+    resolved = io_handler_module.resolve_test_resource_paths("${generated:input.ecsv}")
+
+    expected_root = tests_path / "v0.37.0" / "integration_tests"
+    assert resolved == str(expected_root / "generated/input.ecsv")
+
+
 def test_resolve_test_resource_paths_uses_catalog_default_version(tmp_test_directory, monkeypatch):
     tests_path = tmp_test_directory / "simtools-tests"
     monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
