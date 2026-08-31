@@ -102,8 +102,8 @@ def test_json_difference_report_identifies_generated_values(tmp_test_directory):
 
     assert "--- reference:" in report
     assert "+++ generated:" in report
-    assert "-  \"value\": 1.0" in report
-    assert "+  \"value\": 2.0" in report
+    assert '-  "value": 1.0' in report
+    assert '+  "value": 2.0' in report
 
 
 def test_reference_resolve_path_handles_absolute_and_repository_relative_paths():
