@@ -77,11 +77,17 @@ urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls.documentation = "https://gammasim.github.io/simtools/"
 urls.repository = "https://github.com/gammasim/simtools"
 scripts.simtools-compare-productions = "simtools.applications.compare_productions:main"
-scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
-scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
+scripts.simtools-convert-all-model-parameters-from-simtel = """\
+  simtools.applications.convert_all_model_parameters_from_simtel:main\
+  """
+scripts.simtools-convert-geo-coordinates-of-array-elements = """\
+  simtools.applications.convert_geo_coordinates_of_array_elements:main\
+  """
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
-scripts.simtools-db-add-simulation-model-from-repository-to-db = "simtools.applications.db_add_simulation_model_from_repository_to_db:main"
+scripts.simtools-db-add-simulation-model-from-repository-to-db = """\
+  simtools.applications.db_add_simulation_model_from_repository_to_db:main\
+  """
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
 scripts.simtools-db-generate-compound-indexes = "simtools.applications.db_generate_compound_indexes:main"
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
@@ -100,9 +106,13 @@ scripts.simtools-derive-pulse-shape-parameters = "simtools.applications.derive_p
 scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
 scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
 scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
-scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.docs_produce_model_parameter_reports:main"
+scripts.simtools-docs-produce-model-parameter-reports = """\
+  simtools.applications.docs_produce_model_parameter_reports:main\
+  """
 scripts.simtools-docs-produce-production-summary = "simtools.applications.docs_produce_production_summary:main"
-scripts.simtools-docs-produce-simulation-configuration-report = "simtools.applications.docs_produce_simulation_configuration_report:main"
+scripts.simtools-docs-produce-simulation-configuration-report = """\
+  simtools.applications.docs_produce_simulation_configuration_report:main\
+  """
 scripts.simtools-export-sim-telarray-metadata-schema = "simtools.applications.export_sim_telarray_metadata_schema:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
 scripts.simtools-generate-bias-curve-submissions = "simtools.applications.generate_bias_curve_submissions:main"
@@ -111,19 +121,31 @@ scripts.simtools-generate-default-metadata = "simtools.applications.generate_def
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
 scripts.simtools-inspect-file = "simtools.applications.inspect_file:main"
-scripts.simtools-maintain-simulation-model-add-production = "simtools.applications.maintain_simulation_model_add_production:main"
-scripts.simtools-maintain-simulation-model-compare-productions = "simtools.applications.maintain_simulation_model_compare_productions:main"
-scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.applications.maintain_simulation_model_verify_production_tables:main"
-scripts.simtools-maintain-simulation-model-write-array-element-positions = "simtools.applications.maintain_simulation_model_write_array_element_positions:main"
+scripts.simtools-maintain-simulation-model-add-production = """\
+  simtools.applications.maintain_simulation_model_add_production:main\
+  """
+scripts.simtools-maintain-simulation-model-compare-productions = """\
+  simtools.applications.maintain_simulation_model_compare_productions:main\
+  """
+scripts.simtools-maintain-simulation-model-verify-production-tables = """\
+  simtools.applications.maintain_simulation_model_verify_production_tables:main\
+  """
+scripts.simtools-maintain-simulation-model-write-array-element-positions = """\
+  simtools.applications.maintain_simulation_model_write_array_element_positions:main\
+  """
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
 scripts.simtools-plot-corsika-limits = "simtools.applications.plot_corsika_limits:main"
 scripts.simtools-plot-production-grid = "simtools.applications.plot_production_grid:main"
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
 scripts.simtools-plot-simulated-event-distributions = "simtools.applications.plot_simulated_event_distributions:main"
 scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
-scripts.simtools-plot-tabular-data-for-model-parameter = "simtools.applications.plot_tabular_data_for_model_parameter:main"
+scripts.simtools-plot-tabular-data-for-model-parameter = """\
+  simtools.applications.plot_tabular_data_for_model_parameter:main\
+  """
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
-scripts.simtools-production-derive-monte-carlo-statistics = "simtools.applications.production_derive_monte_carlo_statistics:main"
+scripts.simtools-production-derive-monte-carlo-statistics = """\
+  simtools.applications.production_derive_monte_carlo_statistics:main\
+  """
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
@@ -133,7 +155,9 @@ scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-submit-array-layouts = "simtools.applications.submit_array_layouts:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
-scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
+scripts.simtools-submit-model-parameter-from-external = """\
+  simtools.applications.submit_model_parameter_from_external:main\
+  """
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
 scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
