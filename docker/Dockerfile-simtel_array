@@ -14,48 +14,38 @@ ARG BUILD_BASE_IMAGE
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
 FROM ${BASE_IMAGE} AS source_preparation
-ARG SIMTEL_VERSION
+ARG SIMTEL_TAG
 ARG SIMTEL_REVISION
 ARG SIMTEL_SOURCE_URL
-ARG HESSIO_VERSION
+ARG HESSIO_TAG
 ARG HESSIO_REVISION
 ARG HESSIO_SOURCE_URL
-ARG STDTOOLS_VERSION
+ARG STDTOOLS_TAG
 ARG STDTOOLS_REVISION
 ARG STDTOOLS_SOURCE_URL
 ARG GSL_SHA256
 
-RUN microdnf update -y && microdnf install -y git gzip tar && \
+RUN microdnf update -y && microdnf install -y gzip tar && \
     microdnf clean all
 
 WORKDIR /src
 
-# Clone sim_telarray from CTAO gitlab
-RUN --mount=type=secret,id=sim_telarray_token \
-    git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${SIMTEL_VERSION}" \
-      "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_SOURCE_URL#https://}" && \
-    if [ -n "${SIMTEL_REVISION}" ]; then \
-        test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"; \
-    fi
+# Source repositories are prepared and verified by the workflow.
+COPY simtel-source/sim_telarray /src/sim_telarray
+COPY simtel-source/simtel_revision /src/simtel_revision
+COPY simtel-source/hessio /src/hessio
+COPY simtel-source/hessio_revision /src/hessio_revision
+COPY simtel-source/stdtools /src/stdtools
+COPY simtel-source/stdtools_revision /src/stdtools_revision
 
-# Clone hessio from CTAO gitlab
-RUN --mount=type=secret,id=hessio_token \
-    git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${HESSIO_VERSION}" \
-      "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
-    git -C hessio rev-parse HEAD > /src/hessio_revision && \
+RUN if [ -n "${SIMTEL_REVISION}" ]; then \
+        test "$(cat /src/simtel_revision)" = "${SIMTEL_REVISION}"; \
+    fi && \
     if [ -n "${HESSIO_REVISION}" ]; then \
         test "$(cat /src/hessio_revision)" = "${HESSIO_REVISION}"; \
-    fi
-
-# Clone stdtools from CTAO gitlab
-RUN --mount=type=secret,id=stdtools_token \
-    git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${STDTOOLS_VERSION}" \
-      "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_SOURCE_URL#https://}" && \
+    fi && \
     if [ -n "${STDTOOLS_REVISION}" ]; then \
-        test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"; \
+        test "$(cat /src/stdtools_revision)" = "${STDTOOLS_REVISION}"; \
     fi
 
 # GSL archive (tar file needs to be present in the build context)
@@ -72,11 +62,11 @@ RUN sha256sum /tmp/gsl.tar.gz | cut -d ' ' -f1 > /src/gsl_sha256 && \
 # -----------------------------------------------------------------------------
 FROM ${BUILD_BASE_IMAGE} AS build_image
 ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
-ARG SIMTEL_VERSION
+ARG SIMTEL_TAG
 ARG SIMTEL_SOURCE_URL
-ARG HESSIO_VERSION
+ARG HESSIO_TAG
 ARG HESSIO_SOURCE_URL
-ARG STDTOOLS_VERSION
+ARG STDTOOLS_TAG
 ARG STDTOOLS_SOURCE_URL
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 ARG GSL_VERSION
@@ -88,7 +78,7 @@ ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
 RUN yum update -y && yum install -y \
     gcc gcc-c++ \
     automake csh diffutils patch perl \
-    git make m4 which && \
+    make m4 which && \
     yum clean all
 
 WORKDIR /tmp
@@ -139,16 +129,16 @@ RUN make clean && \
     rm -vf LightEmission/LightSourcesPresentation.pdf && \
     find . -name "*.o" -exec rm -f {} \;
 
-# Generate build_opts.yml with build information before removing Git metadata.
+# Generate build_opts.yml with build information.
 RUN { \
-    echo "simtel_version: \"${SIMTEL_VERSION}\""; \
-    echo "simtel_revision: \"$(git rev-parse HEAD)\""; \
+    echo "simtel_tag: \"${SIMTEL_TAG}\""; \
+    echo "simtel_revision: \"$(cat /workdir/simulation_software/simtel_revision)\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
-    echo "hessio_version: \"${HESSIO_VERSION}\""; \
+    echo "hessio_tag: \"${HESSIO_TAG}\""; \
     echo "hessio_revision: \"$(cat /workdir/simulation_software/hessio_revision)\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
-    echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
-    echo "stdtools_revision: \"$(git -C /workdir/simulation_software/stdtools rev-parse HEAD)\""; \
+    echo "stdtools_tag: \"${STDTOOLS_TAG}\""; \
+    echo "stdtools_revision: \"$(cat /workdir/simulation_software/stdtools_revision)\""; \
     echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
     echo "gsl_version: \"${GSL_VERSION}\""; \
     echo "gsl_sha256: \"$(cat /workdir/simulation_software/gsl_sha256)\""; \
@@ -156,25 +146,25 @@ RUN { \
     echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
     echo "components:"; \
     echo "  - name: \"hessioxxx\""; \
-    echo "    version: \"${HESSIO_VERSION}\""; \
+    echo "    tag: \"${HESSIO_TAG}\""; \
     echo "    build_flags: \"DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "  - name: \"stdtools\""; \
-    echo "    version: \"${STDTOOLS_VERSION}\""; \
+    echo "    tag: \"${STDTOOLS_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "  - name: \"sim_telarray\""; \
-    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    tag: \"${SIMTEL_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
     echo "    executables:"; \
     echo "      - \"sim_telarray\""; \
     echo "  - name: \"sim_telarray_debug_trace\""; \
-    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    tag: \"${SIMTEL_TAG}\""; \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\""; \
     echo "    executables:"; \
     echo "      - \"sim_telarray_debug_trace\""; \
     } > build_opts.yml && \
-    rm -rf /workdir/simulation_software/hessioxxx/.git \
-           /workdir/simulation_software/stdtools/.git \
-           /workdir/simulation_software/sim_telarray/.git
+    rm -f /workdir/simulation_software/simtel_revision \
+          /workdir/simulation_software/hessio_revision \
+          /workdir/simulation_software/stdtools_revision
 
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image

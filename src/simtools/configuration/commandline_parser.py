@@ -27,7 +27,11 @@ class CommandLineParser(argparse.ArgumentParser):
             if argument.preserve_by_version:
                 self.preserve_by_version.add(argument.name)
             container = self._exclusive_container(argument, container, exclusive_groups)
-            container.add_argument(f"--{argument.name}", **argument.kwargs)
+            container.add_argument(
+                f"--{argument.name}",
+                *(f"--{alias}" for alias in argument.aliases),
+                **argument.kwargs,
+            )
 
     def _display_container(self, argument, display_groups):
         """Return the parser or shared display group for an argument."""

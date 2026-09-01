@@ -230,7 +230,6 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
                 "parameter": "num_gains",
                 "value": 1,
                 "unit": None,
-                "meta_parameter": False,
             }
         },
     )
@@ -243,11 +242,23 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
                 "parameter": "array_triggers",
                 "value": "array_triggers.dat",
                 "unit": None,
-                "meta_parameter": False,
             }
         },
     )
     assert not file_has_text(_file, "array_triggers = array_triggers.dat")
+
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=_file,
+        parameters={
+            "reference_point_longitude": {
+                "parameter": "reference_point_longitude",
+                "value": -70.316345,
+                "unit": "deg",
+            }
+        },
+    )
+    assert not file_has_text(_file, "longitude = -70.316345")
+    assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
@@ -361,31 +372,29 @@ def test_write_table_parameter_file_passes_through_non_dict_value(
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
-    model_parameters = {"test_param": {"value": 42, "meta_parameter": True}}
+    model_parameters = {"test_param": {"value": 42}}
 
-    def mock_get_name(key, software_name, set_meta_parameter):
-        if software_name == "sim_telarray":
-            if set_meta_parameter:
-                return "test_set_param_meta"
-            return "test_add_param"
-        return None
+    def mock_get_name(key, software_name):
+        return "test_param" if software_name == "sim_telarray" else None
 
     with (
         mock.patch(
             "simtools.utils.names.get_simulation_software_name_from_parameter_name",
             side_effect=mock_get_name,
         ),
+        mock.patch(
+            "simtools.utils.names.get_simulation_software_meta_parameter_mode",
+            return_value="add",
+        ),
         mock.patch("simtools.simtel.simtel_validate_metadata.validate_metadata"),
     ):
         tel_meta = simtel_config_writer._get_sim_telarray_metadata(
             "telescope", model_parameters, "test_telescope"
         )
-        assert "metaparam telescope add test_add_param" in tel_meta
-        assert "metaparam telescope set test_set_param_meta=42" in tel_meta
+        assert "metaparam telescope add test_param" in tel_meta
 
         site_meta = simtel_config_writer._get_sim_telarray_metadata("site", model_parameters, None)
-        assert "metaparam global add test_add_param" in site_meta
-        assert "metaparam global set test_set_param_meta=42" in site_meta
+        assert "metaparam global add test_param" in site_meta
 
 
 def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer):
@@ -433,7 +442,7 @@ def test_write_simtools_parameters_validates_metadata_lines(simtel_config_writer
     with (
         mock.patch(
             "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
-            return_value={"corsika_version": "invalid-int"},
+            return_value={"corsika_build_id": "invalid-int"},
         ),
         pytest.raises(ValueError, match=r"invalid literal for int"),
     ):

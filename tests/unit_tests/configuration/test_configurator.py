@@ -9,10 +9,10 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools import constants
+from simtools import constants, dependency_versions
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
-    DB_SIMULATION_MODEL_VERSION,
+    DB_SIMULATION_MODEL_TAG,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
     STANDARD_ARGUMENTS,
@@ -124,7 +124,11 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):
+def test_config_from_file_resolves_test_resource_paths(tmp_test_directory, monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_TAG", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_VERSION", raising=False)
     config_dict = {
         "applications": [
             {
@@ -272,15 +276,22 @@ def test_set_model_versions(configurator):
     assert configurator.config["model_version"] == model_version_1
 
 
-def test_dependency_database_defaults_are_read_from_catalog():
+def test_dependency_database_defaults_are_read_from_catalog(monkeypatch):
     """Test database name and version defaults come from the dependency catalog."""
+    model = {"name": "catalog-model", "default-tag": "catalog-tag"}
+    monkeypatch.setattr(
+        dependency_versions,
+        "load_dependency_catalog",
+        lambda: {"model-database": model},
+    )
+
     defaults = Configurator._dependency_defaults(  # pylint: disable=protected-access
-        {"db_simulation_model": None, "db_simulation_model_version": None}
+        {"db_simulation_model": None, "db_simulation_model_tag": None}
     )
 
     assert defaults == {
-        "db_simulation_model": "CTAO-Simulation-Model",
-        "db_simulation_model_version": "v0.17.0",
+        "db_simulation_model": model["name"],
+        "db_simulation_model_tag": model["default-tag"],
     }
     assert (
         Configurator._dependency_defaults(  # pylint: disable=protected-access
@@ -290,16 +301,16 @@ def test_dependency_database_defaults_are_read_from_catalog():
     )
     assert Configurator._dependency_defaults(  # pylint: disable=protected-access
         {"db_simulation_model": None}
-    ) == {"db_simulation_model": "CTAO-Simulation-Model"}
+    ) == {"db_simulation_model": model["name"]}
     assert Configurator._dependency_defaults(  # pylint: disable=protected-access
-        {"db_simulation_model_version": None}
-    ) == {"db_simulation_model_version": "v0.17.0"}
+        {"db_simulation_model_tag": None}
+    ) == {"db_simulation_model_tag": model["default-tag"]}
 
 
 def test_configure_can_disable_dependency_defaults(configurator):
     """Test applications can preserve explicit database-target validation."""
     configurator.use_dependency_defaults = False
-    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=[])
     configurator._config_from_env = MagicMock(return_value={})
     configurator._config_from_file = MagicMock(return_value={})
@@ -309,7 +320,7 @@ def test_configure_can_disable_dependency_defaults(configurator):
 
     config, _ = configurator.configure()
 
-    assert config["db_simulation_model_version"] is None
+    assert config["db_simulation_model_tag"] is None
 
 
 def test_environment_database_version_overrides_catalog(
@@ -319,8 +330,9 @@ def test_environment_database_version_overrides_catalog(
     env_file = tmp_test_directory / ".env"
     env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.99.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_TAG", raising=False)
 
-    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
@@ -328,7 +340,59 @@ def test_environment_database_version_overrides_catalog(
 
     config, _ = configurator.configure()
 
-    assert config["db_simulation_model_version"] == "v0.99.0"
+    assert config["db_simulation_model_tag"] == "v0.99.0"
+
+
+def test_explicit_environment_database_tag_overrides_env_file_alias(
+    configurator, tmp_test_directory, monkeypatch
+):
+    """An explicit canonical environment value takes precedence over a file alias."""
+    env_file = tmp_test_directory / ".env"
+    env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.99.0\n", encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_DB_SIMULATION_MODEL_TAG", "v0.18.0")
+    monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
+
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
+    configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
+    configurator._initialize_model_versions = MagicMock()
+    configurator._initialize_io_handler = MagicMock()
+    configurator._get_db_parameters = MagicMock(return_value={})
+
+    config, _ = configurator.configure()
+
+    assert config["db_simulation_model_tag"] == "v0.18.0"
+    assert "db_simulation_model_version" not in config
+
+
+def test_database_tag_aliases_reject_conflicting_values(configurator):
+    """Canonical and deprecated database selectors cannot disagree."""
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
+    with pytest.raises(ValueError, match="must match"):
+        configurator._normalize_argument_aliases(  # pylint: disable=protected-access
+            {
+                "db_simulation_model_tag": "tag-a",
+                "db_simulation_model_version": "tag-b",
+            }
+        )
+
+
+def test_database_tag_cli_aliases_reject_conflicting_values(configurator):
+    """Canonical and deprecated CLI selectors cannot disagree."""
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
+
+    with pytest.raises(ValueError, match="Conflicting values"):
+        configurator._validate_cli_aliases(  # pylint: disable=protected-access
+            [
+                "--db_simulation_model_tag",
+                "tag-a",
+                "--db_simulation_model_version=tag-b",
+            ]
+        )
+
+
+def test_canonical_database_tag_argument_is_available():
+    """The canonical database tag argument is part of the shared definitions."""
+    assert DB_SIMULATION_MODEL_TAG.name == "db_simulation_model_tag"
 
 
 def test_initialize(configurator):

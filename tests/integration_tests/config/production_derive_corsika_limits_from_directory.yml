@@ -1,0 +1,34 @@
+---
+applications:
+- application: simtools-production-derive-corsika-limits
+  docs:
+    title: Derive CORSIKA limits from a trigger-histogram directory
+    summary: Derive particle-specific CORSIKA limits from finalized trigger-histogram products.
+  configuration:
+    trigger_histogram_directory: ${generated:.}
+    allowed_losses:
+    - core_distance,0.001,10
+    - angular_distance,0.001,10
+    energy_threshold_fraction: 0.01
+    output_path: simtools-output
+    differential_loss_bins_per_decade: 5
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: gamma
+      file: corsika_limits.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/corsika_limits_table.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          primary_particle:
+            allowed_values:
+            - gamma
+          array_name:
+            allowed_values:
+            - CTAO-North-Alpha
+  test_name: directory
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

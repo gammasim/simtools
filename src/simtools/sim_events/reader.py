@@ -446,7 +446,13 @@ class EventDataReader:
                     f"{', '.join(missing_columns)}."
                 )
 
-    def filter_by_telescopes(self, triggered_data, triggered_shower, telescope_list=None):
+    def filter_by_telescopes(
+        self,
+        triggered_data,
+        triggered_shower,
+        telescope_list=None,
+        minimum_triggered_telescopes=1,
+    ):
         """
         Filter trigger and shower data by an explicit or reader telescope list.
 
@@ -458,6 +464,8 @@ class EventDataReader:
             Shower data corresponding to the triggered events.
         telescope_list : list, optional
             List of telescopes to filter by. If None, uses the reader's telescope list.
+        minimum_triggered_telescopes : int, optional
+            Minimum number of telescopes from the selected list required in an event.
 
         Returns
         -------
@@ -465,9 +473,15 @@ class EventDataReader:
             A tuple containing the filtered triggered event data and the corresponding
             triggered shower data.
         """
+        if minimum_triggered_telescopes < 1:
+            raise ValueError("minimum_triggered_telescopes must be at least 1.")
+
         telescope_set = set(self.telescope_list if telescope_list is None else telescope_list)
         mask = np.fromiter(
-            (not telescope_set.isdisjoint(event) for event in triggered_data.telescope_list),
+            (
+                len(telescope_set.intersection(event)) >= minimum_triggered_telescopes
+                for event in triggered_data.telescope_list
+            ),
             dtype=np.bool_,
             count=len(triggered_data.telescope_list),
         )

@@ -1153,18 +1153,22 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
 def test_get_db_name(db):
     assert (
-        db.get_db_name(db_simulation_model_version="v1.0.0", model_name="SimulationModel")
+        db.get_db_name(db_simulation_model_tag="v1.0.0", model_name="SimulationModel")
         == "SimulationModel-v1-0-0"
     )
-    assert db.get_db_name(db_simulation_model_version="v1.0.0") is None
+    assert db.get_db_name(db_simulation_model_tag="v1.0.0") is None
     assert db.get_db_name(model_name="SimulationModel") is None
     assert db.get_db_name() is not None
     assert db.get_db_name(db_name="test_db") == "test_db"
     assert (
         db.get_db_name(
-            db_name="test_db", db_simulation_model_version="v1.0.0", model_name="SimulationModel"
+            db_name="test_db", db_simulation_model_tag="v1.0.0", model_name="SimulationModel"
         )
         == "test_db"
+    )
+    assert (
+        db.get_db_name(db_simulation_model_version="v1.0.0", model_name="SimulationModel")
+        == "SimulationModel-v1-0-0"
     )
 
 
@@ -1184,6 +1188,16 @@ def test_is_remote_database_with_handler(db, mocker):
 
 
 def test_generate_compound_indexes_for_databases_delegation(db, mocker):
+    mock_generate = mocker.patch.object(
+        db.mongo_db_handler, "generate_compound_indexes_for_databases"
+    )
+    db.generate_compound_indexes_for_databases(
+        db_name="test_db", db_simulation_model="model", db_simulation_model_tag="1.0.0"
+    )
+    mock_generate.assert_called_once_with("test_db", "model", "1.0.0")
+
+
+def test_generate_compound_indexes_accepts_legacy_keyword(db, mocker):
     mock_generate = mocker.patch.object(
         db.mongo_db_handler, "generate_compound_indexes_for_databases"
     )

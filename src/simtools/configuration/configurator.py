@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import shlex
 import sys
 
@@ -84,6 +85,7 @@ class Configurator:
             Application configuration and database configuration dictionaries.
         """
         cli_arglist = self._get_cli_arglist()
+        self._validate_cli_aliases(cli_arglist)
         config_file = self._option_value(cli_arglist, "--config") or (
             self.config_class_init or {}
         ).get("config")
@@ -91,9 +93,11 @@ class Configurator:
             self.config_class_init or {}
         ).get("env_file", ".env")
 
-        env_config = self._config_from_env(env_file)
-        file_config = self._config_from_file(config_file)
-        constructor_config = gen.change_dict_keys_case(self.config_class_init or {})
+        env_config = self._normalize_argument_aliases(self._config_from_env(env_file))
+        file_config = self._normalize_argument_aliases(self._config_from_file(config_file))
+        constructor_config = self._normalize_argument_aliases(
+            gen.change_dict_keys_case(self.config_class_init or {})
+        )
         default_config = self._parser_defaults()
         if self.use_dependency_defaults:
             default_config.update(self._dependency_defaults(default_config))
@@ -119,7 +123,6 @@ class Configurator:
                 )
             )
         )
-
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
         if self.config["label"] is None:
@@ -143,19 +146,21 @@ class Configurator:
     @staticmethod
     def _dependency_defaults(parser_defaults):
         """Return catalog-managed database defaults supported by this parser."""
-        database_keys = {"db_simulation_model", "db_simulation_model_version"}
+        database_keys = {
+            "db_simulation_model",
+            "db_simulation_model_tag",
+        }
         if not database_keys & parser_defaults.keys():
             return {}
         catalog = dependency_versions.load_dependency_catalog()
         model = catalog["model-database"]
-        return {
-            key: value
-            for key, value in {
-                "db_simulation_model": model["name"],
-                "db_simulation_model_version": model["default-version"],
-            }.items()
-            if key in parser_defaults
-        }
+        defaults = {}
+        if "db_simulation_model" in parser_defaults:
+            defaults["db_simulation_model"] = model["name"]
+        model_tag = model.get("default-tag", model.get("default-version"))
+        if "db_simulation_model_tag" in parser_defaults:
+            defaults["db_simulation_model_tag"] = model_tag
+        return defaults
 
     @staticmethod
     def _option_value(arg_list, option_name):
@@ -187,6 +192,28 @@ class Configurator:
             if group_destinations & cli_keys:
                 superseded.update(group_destinations)
         return {key: value for key, value in config.items() if key not in superseded}
+
+    def _validate_cli_aliases(self, arg_list):
+        """Reject conflicting canonical and deprecated CLI values."""
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            values = {
+                value
+                for option in action.option_strings
+                if (value := self._option_value(arg_list, option)) is not None
+            }
+            if len(values) > 1:
+                raise ValueError(f"Conflicting values for {action.dest} command-line aliases.")
+
+    def _normalize_argument_aliases(self, config):
+        """Replace deprecated configuration keys with their canonical parser destinations."""
+        config = dict(config)
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            aliases = {option.removeprefix("--") for option in action.option_strings[1:]}
+            for alias in aliases & config.keys():
+                if action.dest in config and config[action.dest] != config[alias]:
+                    raise ValueError(f"{action.dest} and {alias} must match when both are set.")
+                config[action.dest] = config.pop(alias)
+        return config
 
     def _config_from_file(self, config_file):
         """
@@ -256,11 +283,34 @@ class Configurator:
         dict
             Configuration parameters from environment variables.
         """
-        _env_list = [
-            action.dest
+        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
+        _env_list.extend(
+            option.removeprefix("--")
             for action in self.parser._actions  # pylint: disable=protected-access
-        ]
-        return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
+            for option in action.option_strings[1:]
+        )
+        explicit_environment = set(os.environ)
+        config = gen.load_environment_variables(env_file=env_file, env_list=_env_list)
+        return self._prefer_explicit_environment_aliases(config, explicit_environment)
+
+    def _prefer_explicit_environment_aliases(self, config, explicit_environment):
+        """Prefer explicit environment values over values loaded from an env file."""
+        config = dict(config)
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            keys = {
+                action.dest,
+                *(option.removeprefix("--") for option in action.option_strings[1:]),
+            }
+            explicit_keys = {
+                key for key in keys if f"SIMTOOLS_{key.upper()}" in explicit_environment
+            }
+            if explicit_keys:
+                config = {
+                    key: value
+                    for key, value in config.items()
+                    if key not in keys or key in explicit_keys
+                }
+        return config
 
     def _initialize_model_versions(self):
         """Initialize model versions."""

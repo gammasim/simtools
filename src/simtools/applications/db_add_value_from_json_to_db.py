@@ -48,9 +48,9 @@ def main():
     app_context = APPLICATION.start()
 
     if app_context.args.get("test_db", False):
-        app_context.db_config["db_simulation_model_version"] = gen.get_uuid()
+        app_context.db_config["db_simulation_model_tag"] = gen.get_uuid()
         app_context.logger.info(
-            f"Using test database version {app_context.db_config['db_simulation_model_version']}"
+            f"Using test database tag {app_context.db_config['db_simulation_model_tag']}"
         )
     db = db_handler.DatabaseHandler()
     db.require_mongodb("Adding parameters to a database")

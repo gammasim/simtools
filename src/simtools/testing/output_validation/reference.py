@@ -1,5 +1,6 @@
 """Reference-file comparison validators."""
 
+import difflib
 import logging
 from pathlib import Path
 
@@ -177,3 +178,29 @@ def compare_files(
         return compare_json_or_yaml_files(first_file, second_file, tolerance)
     _logger.warning(f"Unknown file type for files: {first_file} and {second_file}")
     return False
+
+
+def difference_report(reference_file, output_file):
+    """Return a unified diff between a reference file and generated output."""
+    try:
+        reference_lines = (
+            Path(reference_file)
+            .read_text(encoding="utf-8", errors="replace")
+            .splitlines(keepends=True)
+        )
+        output_lines = (
+            Path(output_file)
+            .read_text(encoding="utf-8", errors="replace")
+            .splitlines(keepends=True)
+        )
+    except OSError as exc:
+        return f"(Unable to read files for diff: {exc})"
+
+    return "".join(
+        difflib.unified_diff(
+            reference_lines,
+            output_lines,
+            fromfile=f"reference: {reference_file}",
+            tofile=f"generated: {output_file}",
+        )
+    )
