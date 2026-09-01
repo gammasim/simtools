@@ -304,6 +304,14 @@ FIGURE_FORMAT = _argument(
     default=["png"],
 )
 
+FIGURE_DPI = _argument(
+    "figure_dpi",
+    "execution",
+    help="PNG figure resolution in DPI",
+    type=int,
+    default=300,
+)
+
 EXPORT_BUILD_INFO = _argument(
     "export_build_info",
     "execution",
@@ -343,6 +351,7 @@ EXECUTION_ARGUMENTS = (
     LOG_FILE_PATH,
     DISABLE_LOG_FILE,
     FIGURE_FORMAT,
+    FIGURE_DPI,
     EXPORT_BUILD_INFO,
     IGNORE_EXISTING_PARAMETER_VERSION,
     VERSION,
