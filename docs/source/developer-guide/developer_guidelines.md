@@ -54,9 +54,7 @@ All applications should follow the same structure:
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 
-_ARGUMENTS = (
-    cli.ArgumentDefinition("input_file", type=str, required=True),
-)
+_ARGUMENTS = (cli.ArgumentDefinition("input_file", type=str, required=True),)
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
@@ -68,6 +66,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
 )
+
 
 def main():
     context = APPLICATION.start()
