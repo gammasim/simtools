@@ -41,7 +41,7 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
 
     assert metadata == {
         "array_layout": "CTAO-South-Alpha",
-        "site": "South",
+        "site": "Paranal",
         "particle": "gamma",
         "phiP": 350.0,
         "thetaP": 20.0,
@@ -72,7 +72,7 @@ def test_build_simulation_job_metadata_omits_missing_coordinates_and_sets_sct_fa
         _simulator("LSTN-01", run_number=5),
     )
 
-    assert metadata["site"] == "North"
+    assert metadata["site"] == "LaPalma"
     assert metadata["phiP"] == pytest.approx(0.0)
     assert metadata["sct"] == "False"
     assert metadata["runNumber"] == 5

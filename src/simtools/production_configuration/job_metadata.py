@@ -8,7 +8,7 @@ from astropy import units as u
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 
-CATALOG_SITE_NAMES = {"North": "North", "South": "South"}
+CATALOG_SITE_NAMES = {"North": "LaPalma", "South": "Paranal"}
 PRODUCTION_JOB_MANIFEST_VERSION = "1.0.0"
 
 _FILE_TYPE_ALIASES = {
