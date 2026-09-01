@@ -235,13 +235,15 @@ def test_expand_job_grid_with_scan_uses_sanitized_default_label_and_description(
     )
 
     expanded_rows = mock_serialize_grid.call_args.args[0]
-    overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
+    metadata = mock_serialize_grid.call_args.kwargs["metadata"]
 
-    assert overwrite_file.name == "overwrite_scan-path_thresholdvalue_20MeV-25MeV.yaml"
+    assert expanded_rows[0]["model_parameter_set"] == "thresholdvalue_20MeV-25MeV"
     assert expanded_rows[0]["scan_label"] == "thresholdvalue_20MeV-25MeV"
+    assert "overwrite_model_parameters" not in expanded_rows[0]
 
-    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
-    assert overwrite["description"] == "Parameter scan - threshold value=20 MeV/25 MeV"
+    assert metadata["model_parameter_sets"]["thresholdvalue_20MeV-25MeV"] == {
+        "LSTN-01": {"asum_threshold": {"value": "20 MeV/25 MeV"}}
+    }
 
 
 @mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
@@ -282,14 +284,14 @@ def test_expand_job_grid_with_scan_uses_explicit_compact_label(
     )
 
     expanded_rows = mock_serialize_grid.call_args.args[0]
-    overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
+    metadata = mock_serialize_grid.call_args.kwargs["metadata"]
 
-    assert overwrite_file.name == "overwrite_nsb_asum220.yaml"
+    assert expanded_rows[0]["model_parameter_set"] == "asum220"
     assert expanded_rows[0]["scan_label"] == "asum220"
     assert expanded_rows[0]["array_layout_name"] == "LSTN-01"
+    assert "overwrite_model_parameters" not in expanded_rows[0]
 
-    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
-    assert overwrite["changes"]["LSTN-01"]["asum_threshold"] == {
+    assert metadata["model_parameter_sets"]["asum220"]["LSTN-01"]["asum_threshold"] == {
         "version": "2.0.0",
         "value": 220,
     }
