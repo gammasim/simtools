@@ -57,5 +57,5 @@ be selected.
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: compare_productions_run.yml
+    :file: compare_productions_events.yml
 ```

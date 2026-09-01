@@ -92,6 +92,14 @@ definitions:
         type: boolean
       reason:
         type: string
+      ks_statistic:
+        type: [number, 'null']
+      ks_pvalue:
+        type: [number, 'null']
+      jensen_shannon_distance:
+        type: [number, 'null']
+      wasserstein_distance:
+        type: [number, 'null']
     required:
       - metric
       - value
@@ -106,8 +114,14 @@ definitions:
         properties:
           candidate_label:
             type: string
+          baseline_counts:
+            $ref: '#/definitions/Counts'
+          candidate_counts:
+            $ref: '#/definitions/Counts'
         required:
           - candidate_label
+          - baseline_counts
+          - candidate_counts
 
   QuantityComparison:
     type: object
@@ -115,6 +129,8 @@ definitions:
     properties:
       candidate_label:
         type: string
+      baseline_bin_edges:
+        $ref: '#/definitions/BinEdges'
       simulated:
         $ref: '#/definitions/MetricResult'
       triggered:
@@ -123,3 +139,16 @@ definitions:
       - candidate_label
       - simulated
       - triggered
+
+
+  Counts:
+    type: array
+    items:
+      type: number
+      minimum: 0
+
+  BinEdges:
+    type: array
+    minItems: 2
+    items:
+      type: number

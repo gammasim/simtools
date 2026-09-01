@@ -39,8 +39,16 @@ Event-level comparison writes `comparison_statistics.json` alongside the plots. 
 KS statistic for continuous quantities, Jensen-Shannon distance for categorical trigger and
 telescope distributions, and Wasserstein-1 distance for ordered trigger multiplicities. Distances
 compare normalized distribution shapes, so differing production event totals do not directly set
-the result. It stores scalar diagnostics rather than duplicating the input histogram arrays. A
-`comparison_statistics.meta.yml` sidecar records the application configuration and provenance. The
-report format is described by
+the result. It stores metric values together with aligned histogram counts and bin edges. A
+`comparison_statistics.meta.yml` sidecar records the application configuration and
+provenance. The report format is described by
 `src/simtools/schemas/production_comparison_statistics.schema.yml`. The report file contains
 diagnostics; simtools does not apply acceptance thresholds.
+
+For telescope-level diagnostics, use `--comparison_level signal` with sim_telarray files as the
+production inputs. The application discovers the shared telescope set in those files and writes
+pedestal, integrated-signal, peak-sample, and
+triggered-pixel distributions under one output directory per telescope. If an input does not
+contain a triggered-pixel list, the selected-pixel list is used instead.
+Signal and timing distributions use the KS statistic; triggered-pixel multiplicities use the
+Wasserstein-1 distance, matching the event-level comparison convention.

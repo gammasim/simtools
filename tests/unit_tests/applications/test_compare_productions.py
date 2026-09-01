@@ -30,8 +30,8 @@ def test_parse_production_arguments_resolves_flattened_pairs(mocker):
 
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
 
-    assert descriptors[0].trigger_histogram_files == ["base_*.h5"]
-    assert descriptors[1].trigger_histogram_files == ["cand_*.h5"]
+    assert descriptors[0].input_files == ["base_*.h5"]
+    assert descriptors[1].input_files == ["cand_*.h5"]
 
 
 def test_parse_production_arguments_rejects_duplicate_labels(mocker):
@@ -51,7 +51,7 @@ def test_parse_production_arguments_rejects_duplicate_labels(mocker):
         (["baseline", "base.h5", "dangling"], "label/file pairs"),
         (
             [["baseline", "  ,   "], ["candidate", "candidate.h5"]],
-            "has no trigger_histogram_file pattern",
+            "has no input_file pattern",
         ),
         ([["baseline", "a.h5"], ["candidate", 1]], "label/file pairs"),
     ],
@@ -185,6 +185,44 @@ def test_main_compares_each_selected_array_layout_separately(mocker, tmp_test_di
         "first",
         "second",
     ]
+
+
+def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "comparison"
+    statistics_file = output_directory / "LSTN-01" / "comparison_statistics.json"
+    app_context = mocker.MagicMock()
+    app_context.args = {
+        "comparison_level": "signal",
+        "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
+    }
+    app_context.io_handler.get_output_directory.return_value = output_directory
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
+    mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
+    mocker.patch(
+        "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
+        return_value=[statistics_file],
+    )
+    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
+
+    compare_productions.main()
+
+    mock_dump.assert_called_once()
+    assert mock_dump.call_args.args[1] == statistics_file
+
+
+def test_signal_comparison_rejects_array_layout_name(mocker):
+    app_context = mocker.MagicMock()
+    app_context.args = {
+        "comparison_level": "signal",
+        "array_layout_name": ["CTAO-North-Alpha"],
+    }
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+
+    with pytest.raises(ValueError, match="only supported for event-level"):
+        compare_productions.main()
 
 
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():

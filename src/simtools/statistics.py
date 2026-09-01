@@ -92,6 +92,13 @@ def _comparison_result(metric, value=None, pvalue=None):
         "valid": value is not None,
         "reason": "ok" if value is not None else "insufficient_data",
     }
+    value_keys = {
+        "ks": "ks_statistic",
+        "jensen_shannon": "jensen_shannon_distance",
+        "wasserstein": "wasserstein_distance",
+    }
+    if value is not None:
+        result[value_keys[metric]] = float(value)
     if pvalue is not None:
         result["pvalue"] = float(pvalue)
     return result
@@ -122,8 +129,10 @@ def _validate_bin_edges(bin_edges, count_size):
     return bin_edges
 
 
-def compare_samples_with_statistics(baseline_samples, candidate_samples):
-    """Compute the KS statistic and p-value for two sample arrays.
+def compare_samples_with_statistics(
+    baseline_samples, candidate_samples, bin_edges=None, metric="ks"
+):
+    """Compare two sample arrays using the selected metric and optional bin edges.
 
     Parameters
     ----------
@@ -131,15 +140,42 @@ def compare_samples_with_statistics(baseline_samples, candidate_samples):
         Baseline sample values.
     candidate_samples : np.ndarray
         Candidate sample values.
+    bin_edges : np.ndarray
+        Histogram bin edges used to include aligned count metadata. Required for
+        non-KS metrics.
+    metric : {"ks", "jensen_shannon", "wasserstein"}, optional
+        Metric used for the comparison.
 
     Returns
     -------
     dict
-        KS statistic and p-value in the standard comparison-result format.
+        Comparison statistics and, when bin edges are provided, histogram metadata.
     """
     baseline_samples = np.asarray(baseline_samples)
     candidate_samples = np.asarray(candidate_samples)
-    if baseline_samples.size == 0 or candidate_samples.size == 0:
-        return _comparison_result("ks")
-    ks_stat, ks_pval = ks_test_samples(baseline_samples, candidate_samples)
-    return _comparison_result("ks", value=ks_stat, pvalue=ks_pval)
+    if metric != "ks":
+        if bin_edges is None:
+            raise ValueError("Bin edges are required for non-KS sample comparisons.")
+        baseline_counts, _ = np.histogram(baseline_samples, bins=bin_edges)
+        candidate_counts, _ = np.histogram(candidate_samples, bins=bin_edges)
+        result = compare_histogram_counts(
+            baseline_counts,
+            candidate_counts,
+            metric=metric,
+            bin_edges=bin_edges,
+        )
+    elif baseline_samples.size == 0 or candidate_samples.size == 0:
+        result = _comparison_result("ks")
+        result["ks_statistic"] = None
+        result["ks_pvalue"] = None
+    else:
+        ks_stat, ks_pval = ks_test_samples(baseline_samples, candidate_samples)
+        result = _comparison_result("ks", value=ks_stat, pvalue=ks_pval)
+
+    if bin_edges is not None:
+        baseline_counts, _ = np.histogram(baseline_samples, bins=bin_edges)
+        candidate_counts, _ = np.histogram(candidate_samples, bins=bin_edges)
+        result["baseline_counts"] = baseline_counts.astype(int).tolist()
+        result["candidate_counts"] = candidate_counts.astype(int).tolist()
+        result["bin_edges"] = np.asarray(bin_edges, dtype=float).tolist()
+    return result

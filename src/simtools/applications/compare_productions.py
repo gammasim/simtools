@@ -8,9 +8,13 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
+    collect_signal_metrics,
     parse_production_arguments,
 )
-from simtools.visualization import plot_event_level_production_comparison
+from simtools.visualization import (
+    plot_event_level_production_comparison,
+    plot_signal_level_production_comparison,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -26,14 +30,14 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "comparison_level",
-        choices=["events", "signals", "compute"],
+        choices=["events", "signal", "compute"],
         default="events",
         help="Comparison level to execute.",
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
         nargs="+",
-        help="Restrict trigger histogram references to the selected array layout name(s).",
+        help="Restrict event-level comparison to the selected array layout name(s).",
         required=False,
     ),
 )
@@ -54,42 +58,75 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
     comparison_level = app_context.args["comparison_level"]
-    if comparison_level != "events":
+    if comparison_level == "events":
+        output_files = _run_event_comparison(app_context)
+    elif comparison_level == "signal":
+        output_files = _run_signal_comparison(app_context)
+    else:
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
+    for output_file, array_layout_name in output_files:
+        _dump_comparison_metadata(app_context.args, output_file, array_layout_name)
+
+
+def _run_event_comparison(app_context):
+    """Run event-level comparison and return generated statistics files."""
     production_descriptors = parse_production_arguments(app_context.args["production"])
     array_layout_names = app_context.args.get("array_layout_name") or [None]
+    output_files = []
     for array_layout_name in array_layout_names:
-        _compare_array_layout(
-            production_descriptors,
-            app_context,
-            array_layout_name,
+        output_files.append(
+            (
+                _compare_array_layout(production_descriptors, app_context, array_layout_name),
+                array_layout_name,
+            )
         )
+    return output_files
 
 
 def _compare_array_layout(production_descriptors, app_context, array_layout_name):
-    """Compare one selected array layout and write its statistics metadata."""
+    """Compare one selected array layout and return its statistics file."""
     metrics_per_production = collect_production_metrics(
         production_descriptors,
         array_names=array_layout_name,
     )
-    comparison_statistics_file = plot_event_level_production_comparison.plot(
+    return plot_event_level_production_comparison.plot(
         metrics_per_production,
         output_path=app_context.io_handler.get_output_directory(),
         array_layout_name=array_layout_name,
         figure_format=app_context.args.get("figure_format"),
     )
-    metadata_args = dict(app_context.args)
+
+
+def _run_signal_comparison(app_context):
+    """Run signal-level comparison and return generated statistics files."""
+    if app_context.args.get("array_layout_name"):
+        raise ValueError("array_layout_name is only supported for event-level comparison.")
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+    metrics_by_telescope = collect_signal_metrics(production_descriptors)
+    return [
+        (statistics_file, None)
+        for statistics_file in plot_signal_level_production_comparison.plot(
+            metrics_by_telescope,
+            output_path=app_context.io_handler.get_output_directory(),
+        )
+    ]
+
+
+def _dump_comparison_metadata(args, output_file, array_layout_name=None):
+    """Write comparison metadata for one generated statistics file."""
+    metadata_args = dict(args)
+    if array_layout_name is not None:
+        metadata_args["array_layout_name"] = array_layout_name
     metadata_args.update(
         {
-            "array_layout_name": array_layout_name,
-            "output_file": str(comparison_statistics_file),
+            "output_file": str(output_file),
             "output_file_format": "JSON",
             "metadata_product_data_name": "production_comparison_statistics",
             "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
         }
     )
-    MetadataCollector.dump(metadata_args, comparison_statistics_file)
+    MetadataCollector.dump(metadata_args, output_file)
 
 
 if __name__ == "__main__":
