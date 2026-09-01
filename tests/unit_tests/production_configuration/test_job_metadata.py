@@ -9,7 +9,6 @@ import pytest
 from simtools.production_configuration.job_metadata import (
     REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS,
     _add_optional_configuration_value,
-    _ensure_list,
     _resolved_model_parameter_overrides,
     build_production_job_manifest,
     build_simulation_job_metadata,
@@ -139,6 +138,64 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
     }
 
 
+def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    for name in (
+        "gamma_run000012.simtel.zst",
+        "gamma_run000012.corsika.zst",
+        "gamma_run000012.simtel.log.gz",
+    ):
+        (output_directory / name).touch()
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        _simulator("MSTS-01", run_number=12),
+        output_directory,
+    )
+
+    assert manifest["files"] == {
+        "corsika": ["gamma_run000012.corsika.zst"],
+        "sim_telarray": ["gamma_run000012.simtel.zst"],
+        "sim_telarray_log": ["gamma_run000012.simtel.log.gz"],
+    }
+
+
+def test_build_production_job_manifest_reads_primary_from_corsika_input(
+    tmp_test_directory,
+):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    (output_directory / "gamma_run000012.simtel.zst").touch()
+    simulator = _simulator("MSTS-01", run_number=12)
+    simulator.corsika_configurations = SimpleNamespace(
+        primary_particle=SimpleNamespace(name="gamma"),
+        use_curved_atmosphere=False,
+        shower_events=10,
+    )
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=None,
+            primary=None,
+            simulation_software="sim_telarray",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    assert manifest["catalog_metadata"]["particle"] == "gamma"
+    assert manifest["configuration"]["primary"] == "gamma"
+    assert manifest["configuration"]["showers_per_run"] == 10
+
+
 def test_build_production_job_manifest_preserves_truthful_backfill_metadata(tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "job-000012"
     output_directory.mkdir()
@@ -238,9 +295,6 @@ def test_optional_configuration_values_and_file_lists():
     _add_optional_configuration_value(configuration, "missing", None)
 
     assert configuration == {"present": 1}
-    assert _ensure_list(None) == []
-    assert _ensure_list((1, 2)) == [1, 2]
-    assert _ensure_list("one") == ["one"]
 
 
 def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_directory):
@@ -258,6 +312,7 @@ def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_direct
         _args(
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
             simulation_software="sim_telarray",
         ),
         simulator,

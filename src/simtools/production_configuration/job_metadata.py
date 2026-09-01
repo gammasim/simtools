@@ -7,7 +7,7 @@ from astropy import units as u
 
 from simtools.production_configuration.production_file_selection import (
     get_manifest_schema_metadata,
-    get_simulation_file_type_aliases,
+    inventory_production_files,
 )
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
@@ -50,7 +50,7 @@ def build_simulation_job_metadata(args_dict, simulator, include_sct=True):
     metadata = {
         "array_layout": args_dict["array_layout_name"],
         "site": CATALOG_SITE_NAMES[args_dict["site"]],
-        "particle": args_dict["primary"].lower(),
+        "particle": _primary_name(args_dict, simulator),
         "phiP": round(geographic_to_corsika_azimuth(azimuth_angle), 2),
         "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
         "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),
@@ -110,7 +110,11 @@ def build_production_job_manifest(
             simulator,
             atmosphere_configuration=atmosphere_configuration,
         ),
-        "files": file_inventory or _build_output_file_inventory(simulator, output_directory),
+        "files": (
+            file_inventory
+            if file_inventory is not None
+            else inventory_production_files(output_directory)
+        ),
     }
 
 
@@ -121,7 +125,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
     cores_per_shower, core_scatter_max = args_dict["core_scatter"]
     configuration = {
         "run_number": int(simulator.run_number),
-        "primary": str(args_dict["primary"]).lower(),
+        "primary": _primary_name(args_dict, simulator),
         "site": args_dict["site"],
         "array_layout_name": args_dict["array_layout_name"],
         "model_version": str(args_dict["model_version"]),
@@ -134,7 +138,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "view_cone_max": view_cone_max,
         "cores_per_shower": int(cores_per_shower),
         "core_scatter_max": core_scatter_max,
-        "showers_per_run": args_dict.get("showers_per_run"),
+        "showers_per_run": _showers_per_run(args_dict, simulator),
         "eslope": args_dict.get("eslope"),
         "corsika_he_interaction": args_dict.get("corsika_he_interaction"),
         "corsika_le_interaction": args_dict.get("corsika_le_interaction"),
@@ -203,32 +207,40 @@ def _add_optional_configuration_value(configuration, key, value):
         configuration[key] = value
 
 
-def _build_output_file_inventory(simulator, output_directory):
-    """Return output files grouped by manifest file type."""
-    output_directory = Path(output_directory).resolve()
-    inventory = {}
-    for simulator_file_type, manifest_file_type in get_simulation_file_type_aliases().items():
-        files = []
-        for file_path in _ensure_list(simulator.get_files(file_type=simulator_file_type)):
-            file_path = Path(file_path).resolve()
-            try:
-                relative_path = file_path.relative_to(output_directory)
-            except ValueError:
-                relative_path = Path(file_path.name)
-            if (output_directory / relative_path).exists():
-                files.append(relative_path.as_posix())
-        if files:
-            inventory[manifest_file_type] = sorted(files)
-    return inventory
+def _primary_name(args_dict, simulator):
+    """Return the resolved primary name, including sim_telarray-only inputs."""
+    if args_dict.get("primary") is not None:
+        return str(args_dict["primary"]).lower()
+
+    corsika_configurations = getattr(simulator, "corsika_configurations", [])
+    if not isinstance(corsika_configurations, list):
+        corsika_configurations = [corsika_configurations]
+    for configuration in corsika_configurations:
+        primary_particle = getattr(configuration, "primary_particle", None)
+        primary_name = getattr(primary_particle, "name", None)
+        if primary_name:
+            return str(primary_name).lower()
+
+    raise ValueError("Unable to determine the primary particle for production metadata.")
 
 
-def _ensure_list(value):
-    """Return value as list, preserving empty values."""
-    if value is None:
-        return []
-    if isinstance(value, list | tuple | set):
-        return list(value)
-    return [value]
+def _showers_per_run(args_dict, simulator):
+    """Return the configured shower count, including for sim_telarray-only inputs."""
+    if args_dict.get("showers_per_run") is not None:
+        return args_dict["showers_per_run"]
+
+    corsika_configurations = getattr(simulator, "corsika_configurations", [])
+    if not isinstance(corsika_configurations, list):
+        corsika_configurations = [corsika_configurations]
+    shower_counts = {
+        configuration.shower_events
+        for configuration in corsika_configurations
+        if configuration is not None and getattr(configuration, "shower_events", None) is not None
+    }
+    if len(shower_counts) == 1:
+        return shower_counts.pop()
+
+    raise ValueError("Unable to determine the number of showers for production metadata.")
 
 
 def _has_sct(array_models):

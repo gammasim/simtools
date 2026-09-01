@@ -67,19 +67,6 @@ def _get_registered_manifest_schema_versions():
     }
 
 
-def get_simulation_file_type_aliases():
-    """Return simulator file types mapped to their manifest file types."""
-    special_cases = {
-        "sim_telarray": "sim_telarray_output",
-        "reduced_event_data": "sim_telarray_event_data",
-    }
-    return {
-        special_cases.get(manifest_file_type, manifest_file_type): manifest_file_type
-        for manifest_file_type in _FILE_TYPE_SUFFIXES
-        if manifest_file_type != "trigger_histograms"
-    }
-
-
 _GROUPING_EXCLUDE_KEYS = {
     "run_number",
     "random_seed",
