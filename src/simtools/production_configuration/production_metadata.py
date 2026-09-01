@@ -59,10 +59,8 @@ def _check_existing_manifests(production_path):
 def _write_manifests(production_path, job_grid_file, args_dict):
     """Write manifests for job directories described by a job grid."""
     rows, metadata = read_job_grid(job_grid_file)
-    for index, row in enumerate(rows):
-        job_directory = production_path / f"job-{index + 1:06d}"
-        if not job_directory.is_dir():
-            raise FileNotFoundError(f"Production job directory not found: {job_directory}")
+    job_directories = _job_directories_for_rows(production_path, len(rows))
+    for row, job_directory in zip(rows, job_directories):
         manifest_path = job_directory / SIMULATE_PROD_JOB_METADATA
         if manifest_path.exists() and not args_dict.get("overwrite"):
             raise FileExistsError(
@@ -135,3 +133,30 @@ def _job_directories(production_path):
     if not production_path.is_dir():
         raise FileNotFoundError(f"Production path not found: {production_path}")
     return sorted(path for path in production_path.glob("job-*") if path.is_dir())
+
+
+def _job_directories_for_rows(production_path, row_count):
+    """Resolve a complete zero- or one-based job-directory mapping."""
+    job_directories = _job_directories(production_path)
+    if not job_directories:
+        raise FileNotFoundError(
+            f"Production job directory not found: {production_path / 'job-000001'}"
+        )
+    numbers = {
+        int(directory.name.removeprefix("job-"))
+        for directory in job_directories
+        if directory.name.removeprefix("job-").isdigit()
+    }
+    if 0 in numbers:
+        offset = 0
+    else:
+        offset = 1
+    expected_numbers = set(range(offset, offset + row_count))
+    if numbers != expected_numbers:
+        expected = ", ".join(f"job-{number:06d}" for number in sorted(expected_numbers))
+        found = ", ".join(directory.name for directory in job_directories)
+        raise FileNotFoundError(
+            f"Production job directories do not match the {row_count}-row job grid. "
+            f"Expected: {expected}; found: {found or 'none'}."
+        )
+    return [production_path / f"job-{number:06d}" for number in sorted(expected_numbers)]

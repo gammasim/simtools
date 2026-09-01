@@ -56,7 +56,7 @@ def build_simulation_job_metadata(args_dict, simulator, include_sct=True):
         "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),
         "view_cone_max": round(float(view_cone_max.to_value(u.deg)), 2),
         "runNumber": int(simulator.run_number),
-        "model_version": str(args_dict["model_version"]),
+        "model_version": _scalar_or_list(args_dict["model_version"]),
     }
     if include_sct:
         metadata["sct"] = str(_has_sct(simulator.array_models))
@@ -128,7 +128,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "primary": _primary_name(args_dict, simulator),
         "site": args_dict["site"],
         "array_layout_name": args_dict["array_layout_name"],
-        "model_version": str(args_dict["model_version"]),
+        "model_version": _scalar_or_list(args_dict["model_version"]),
         "simulation_software": args_dict["simulation_software"],
         "azimuth_angle": args_dict["azimuth_angle"],
         "zenith_angle": args_dict["zenith_angle"],
@@ -150,6 +150,16 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
     }
     _add_optional_configuration_value(configuration, "dec", args_dict.get("dec"))
     _add_optional_configuration_value(configuration, "ha", args_dict.get("ha"))
+    for key in (
+        "corsika_seeds",
+        "event_number_first_shower",
+        "correct_for_b_field_alignment",
+        "sim_telarray_instrument_seed",
+        "sim_telarray_random_instrument_instances",
+        "sim_telarray_seed",
+        "sim_telarray_seed_file",
+    ):
+        _add_optional_configuration_value(configuration, key, args_dict.get(key))
     return {key: value for key, value in configuration.items() if value is not None}
 
 
@@ -222,6 +232,13 @@ def _primary_name(args_dict, simulator):
             return str(primary_name).lower()
 
     raise ValueError("Unable to determine the primary particle for production metadata.")
+
+
+def _scalar_or_list(value):
+    """Return model-version values without converting lists to pseudo-scalars."""
+    if isinstance(value, list | tuple):
+        return [str(item) for item in value]
+    return str(value)
 
 
 def _showers_per_run(args_dict, simulator):

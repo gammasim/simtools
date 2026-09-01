@@ -75,6 +75,8 @@ _GROUPING_EXCLUDE_KEYS = {
     "sim_telarray_seed_file",
     "sim_telarray_instrument_seed",
     "sim_telarray_random_instrument_instances",
+    "event_number_first_shower",
+    "correct_for_b_field_alignment",
     "output_path",
     "grid_output_path",
 }

@@ -196,6 +196,26 @@ def test_build_production_job_manifest_reads_primary_from_corsika_input(
     assert manifest["configuration"]["showers_per_run"] == 10
 
 
+def test_build_production_job_manifest_preserves_multiple_model_versions(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    (output_directory / "gamma_run000012.simtel.zst").touch()
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            model_version=["6.0.2", "7.0.0"],
+            simulation_software="sim_telarray",
+        ),
+        _simulator("MSTS-01", run_number=12),
+        output_directory,
+    )
+
+    assert manifest["configuration"]["model_version"] == ["6.0.2", "7.0.0"]
+    assert manifest["catalog_metadata"]["model_version"] == ["6.0.2", "7.0.0"]
+
+
 def test_build_production_job_manifest_preserves_truthful_backfill_metadata(tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "job-000012"
     output_directory.mkdir()

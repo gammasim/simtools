@@ -15,3 +15,19 @@ def test_main_delegates_to_production_metadata_workflow(mocker):
     write_production_metadata.main()
 
     mock_write.assert_called_once_with(app_context.args)
+
+
+def test_post_parse_allows_check_without_job_grid(mocker):
+    parser = mocker.Mock()
+
+    write_production_metadata._post_parse({"check": True}, {}, parser)
+
+    parser.error.assert_not_called()
+
+
+def test_post_parse_requires_job_grid_when_writing(mocker):
+    parser = mocker.Mock()
+
+    write_production_metadata._post_parse({"check": False}, {}, parser)
+
+    parser.error.assert_called_once()

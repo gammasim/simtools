@@ -109,6 +109,24 @@ def test_write_manifests_rejects_missing_job_directory(mocker, tmp_test_director
         production_metadata._write_manifests(Path(tmp_test_directory), "job-grid.ecsv", {})
 
 
+def test_write_manifests_supports_zero_based_job_directories(mocker, tmp_test_directory):
+    production_path = Path(tmp_test_directory)
+    job_directory = production_path / "job-000000"
+    job_directory.mkdir()
+    (job_directory / "gamma_run000001.simtel.zst").touch()
+    mocker.patch(
+        "simtools.production_configuration.production_metadata.read_job_grid",
+        return_value=([_job_grid_row()], {"site": "North", "simulation_software": "sim_telarray"}),
+    )
+    write_file = mocker.patch(
+        "simtools.production_configuration.production_metadata.write_data_to_file"
+    )
+
+    production_metadata._write_manifests(production_path, "job-grid.ecsv", {"overwrite": False})
+
+    assert write_file.call_args.args[1] == job_directory / "simulate_prod_job_metadata.yml"
+
+
 def test_write_manifests_requires_overwrite_for_existing_manifest(mocker, tmp_test_directory):
     production_path = Path(tmp_test_directory)
     job_directory = production_path / "job-000001"
