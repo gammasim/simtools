@@ -7,6 +7,56 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.37.0](https://github.com/gammasim/simtools/releases/tag/v0.37.0) - 2026-09-01
+
+### API Changes
+
+- Introduce consistent naming scheme for software and model version and tags. ([#2466](https://github.com/gammasim/simtools/pull/2466))
+- Separate the view cone metadata entry into two separate entries for the minimum and maximum view cone angles. This entry is used by the DIRAC file catalog. This change improves clarity and allows for more precise specification of the view cone range when searching for output files. ([#2486](https://github.com/gammasim/simtools/pull/2486))
+
+### Bugfixes
+
+- Fix local-filesystem compatibility for calibration and simtel-array reports by normalizing missing-table errors and propagating telescope context to plotting lookups. ([#2467](https://github.com/gammasim/simtools/pull/2467))
+- Fix float precision for zenith/azimuth angles in CORSIKA config: angles are now stored with two decimal places instead of as integers, while output file names continue to use rounded integer values. ([#2487](https://github.com/gammasim/simtools/pull/2487))
+- Fix sign error in `_rotate_azimuth_by_180deg` that caused zero camera hits for azimuths other than 0 deg and 180 deg. CORSIKA uses a left-handed coordinate system, so the geographic azimuth must be negated before applying the +180° travel-direction reversal. The corrected formula `(-az + 180 + D) % 360` is self-inverse, so the `invert_operation` parameter has been removed. ([#2488](https://github.com/gammasim/simtools/pull/2488))
+
+### Documentation
+
+- Update and improve release documentation. ([#2460](https://github.com/gammasim/simtools/pull/2460))
+- Improve documentation for `production_derive_corsika_limits`. ([#2468](https://github.com/gammasim/simtools/pull/2468))
+- Improve CL and documentation for `db_upload_model_repository`. ([#2465](https://github.com/gammasim/simtools/pull/2465))
+
+
+### New Features
+
+- Add machine-readable comparison statistics and configurable plot formats to `simtools-compare-productions`.
+  Compare selected array layouts independently and write each result to its own output directory. ([#2449](https://github.com/gammasim/simtools/pull/2449))
+- Add functionality to plot PSF images in degrees instead of cm, using the effective focal length.
+  This is controlled by the new `plot_images_in_degrees` argument in the optics validation application.
+  The plots include as well the name of the telescope in the annotation box. ([#2461](https://github.com/gammasim/simtools/pull/2461))
+- Support directory-based trigger-histogram production, glob-based input list selection for
+  `write_reduced_event_lists`, and consistent source-checkout imports for HTCondor workers. ([#2464](https://github.com/gammasim/simtools/pull/2464))
+- Improve application `simtools-resources-test-generate` to prepare test resources from template. ([#2477](https://github.com/gammasim/simtools/pull/2477))
+- Require simtools-tests version v0.37.0. ([#2478](https://github.com/gammasim/simtools/pull/2478))
+- Improve error messaging for integration tests when comparisons with reference files fail. ([#2485](https://github.com/gammasim/simtools/pull/2485))
+- Add a `--figure_dpi <dpi>` command line parameter to change resolution of generated PNG figures (default is 300). ([#2490](https://github.com/gammasim/simtools/pull/2490))
+
+### Maintenance
+
+- Ensure consistent version tagging for simtools-prod and simtools-dev images. ([#2459](https://github.com/gammasim/simtools/pull/2459))
+- View cone values printed in the job metadata are now rounded to two decimal places. This change ensures that the view cone values are consistently formatted and avoids potential issues with floating-point precision in the metadata. ([#2462](https://github.com/gammasim/simtools/pull/2462))
+- Move simtools `meta_parameter` handling into simulation-software schemas. ([#2472](https://github.com/gammasim/simtools/pull/2472))
+- Add vim and diff to developer container. ([#2474](https://github.com/gammasim/simtools/pull/2474))
+- Resolve simtools-tests directory when using integration tests config files in applications. ([#2475](https://github.com/gammasim/simtools/pull/2475))
+- Fix hardwired version numbers in unit tests. Improve test output for failing tests. ([#2478](https://github.com/gammasim/simtools/pull/2478))
+- Improve robustness of `CORSIKA` and `sim_telarray` builds by minimizing repository cloning. ([#2480](https://github.com/gammasim/simtools/pull/2480))
+- Apptainer bind de-duplication now compares container destinations, preserving remapped binds safely. ([#2484](https://github.com/gammasim/simtools/pull/2484))
+
+### Simulation model
+
+- Update default simulation models tag to `v0.17.1`. ([#2483](https://github.com/gammasim/simtools/pull/2483))
+
+
 ## [v0.36.0](https://github.com/gammasim/simtools/releases/tag/v0.36.0) - 2026-08-20
 
 ### Simulation model
