@@ -510,6 +510,29 @@ def test_manifest_path_and_file_suffix_validation(tmp_test_directory):
         _validate_file_type(Path(tmp_test_directory) / "file.txt", "sim_telarray", "manifest.yml")
 
 
+@pytest.mark.parametrize(
+    ("file_type", "suffix"),
+    [
+        ("reduced_event_data", ".reduced_event_data.hdf5"),
+        ("sim_telarray", ".simtel"),
+        ("sim_telarray_log", ".simtel.log"),
+        ("sim_telarray_histogram", ".hdata"),
+        ("corsika", ".corsika"),
+        ("corsika_log", ".corsika.log"),
+        ("trigger_histograms", ".trigger_histograms.hdf5"),
+    ],
+)
+@pytest.mark.parametrize("compression", ["", ".gz", ".zst"])
+def test_all_production_file_types_accept_compression_suffixes(
+    file_type, suffix, compression, tmp_test_directory
+):
+    _validate_file_type(
+        Path(tmp_test_directory) / f"run000001{suffix}{compression}",
+        file_type,
+        "manifest.yml",
+    )
+
+
 def test_filename_run_number_validation_allows_unencoded_names_and_rejects_mismatch():
     no_run_manifest = ProductionManifest(Path("manifest.yml"), {"configuration": {}})
     _validate_filename_run_number(Path("output.simtel"), no_run_manifest)

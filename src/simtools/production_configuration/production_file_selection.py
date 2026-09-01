@@ -17,15 +17,30 @@ from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 SUPPORTED_SCHEMA_VERSIONS = {"1.0.0"}
 
-_RUN_NUMBER_PATTERN = re.compile(r"(?:^|_)run0*([0-9]+)(?:_|\.|$)")
+_RUN_NUMBER_PATTERN = re.compile(r"(?:^|_)run0*(\d+)(?:_|\.|$)")
+
+
+def _with_compression_suffixes(*suffixes):
+    """Return suffixes with supported compression extensions."""
+    return tuple(
+        compressed_suffix
+        for suffix in suffixes
+        for compressed_suffix in (f"{suffix}.zst", f"{suffix}.gz", suffix)
+    )
+
+
 _FILE_TYPE_SUFFIXES = {
-    "reduced_event_data": (".reduced_event_data.hdf5",),
-    "sim_telarray": (".simtel.zst", ".simtel.gz", ".simtel"),
-    "sim_telarray_log": (".simtel.log.gz", ".simtel.log"),
-    "sim_telarray_histogram": (".histogram.hdf5", ".histogram.gz", ".histogram"),
-    "corsika": (".corsika.zst", ".corsika.gz", ".corsika"),
-    "corsika_log": (".corsika.log.gz", ".corsika.log"),
-    "trigger_histograms": (".trigger_histograms.hdf5",),
+    "reduced_event_data": _with_compression_suffixes(".reduced_event_data.hdf5"),
+    "sim_telarray": _with_compression_suffixes(".simtel"),
+    "sim_telarray_log": _with_compression_suffixes(".simtel.log"),
+    "sim_telarray_histogram": _with_compression_suffixes(
+        ".hdata",
+        ".histogram",
+        ".histogram.hdf5",
+    ),
+    "corsika": _with_compression_suffixes(".corsika"),
+    "corsika_log": _with_compression_suffixes(".corsika.log"),
+    "trigger_histograms": _with_compression_suffixes(".trigger_histograms.hdf5"),
 }
 _MANIFEST_SCHEMAS = {
     "simulate_prod_job": "simulate_prod_job_metadata.schema.yml",

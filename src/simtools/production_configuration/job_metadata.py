@@ -19,6 +19,19 @@ _FILE_TYPE_ALIASES = {
     "corsika_output": "corsika",
     "corsika_log": "corsika_log",
 }
+REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
+    "primary",
+    "azimuth_angle",
+    "zenith_angle",
+    "energy_range",
+    "core_scatter",
+    "view_cone",
+    "showers_per_run",
+    "model_version",
+    "array_layout_name",
+    "site",
+    "simulation_software",
+)
 
 
 def build_simulation_job_metadata(args_dict, simulator, include_sct=True):

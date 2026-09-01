@@ -7,6 +7,7 @@ import astropy.units as u
 import pytest
 
 from simtools.production_configuration.job_metadata import (
+    REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS,
     _add_optional_configuration_value,
     _ensure_list,
     _resolved_model_parameter_overrides,
@@ -33,6 +34,22 @@ def _simulator(*array_elements, run_number=12):
     return SimpleNamespace(
         array_models=[SimpleNamespace(array_elements=dict.fromkeys(array_elements))],
         run_number=run_number,
+    )
+
+
+def test_required_simulation_job_metadata_arguments_cover_manifest_inputs():
+    assert REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS == (
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "energy_range",
+        "core_scatter",
+        "view_cone",
+        "showers_per_run",
+        "model_version",
+        "array_layout_name",
+        "site",
+        "simulation_software",
     )
 
 

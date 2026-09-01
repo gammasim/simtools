@@ -6,8 +6,6 @@ import pytest
 import simtools.sim_events.production_comparison as production_comparison
 from simtools.applications import compare_productions
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.constants import SCHEMA_PATH
-from simtools.production_configuration.production_file_selection import ProductionManifest
 
 
 def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
@@ -90,9 +88,8 @@ def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
 
 
-def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
+def test_main_delegates_to_production_comparison_workflow(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
-    statistics_file = output_directory / "comparison_statistics.json"
     app_context = mocker.MagicMock()
     app_context.args = {
         "comparison_level": "events",
@@ -108,85 +105,13 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
-    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
-    mocker.patch("simtools.applications.compare_productions.collect_production_metrics")
-    mock_plot = mocker.patch(
-        "simtools.applications.compare_productions.plot_event_level_production_comparison.plot",
-        return_value=statistics_file,
+    mock_write = mocker.patch(
+        "simtools.applications.compare_productions.write_production_comparison"
     )
-    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
 
     compare_productions.main()
 
-    mock_plot.assert_called_once_with(
-        mocker.ANY,
-        output_path=output_directory,
-        array_layout_name="CTAO-North-Alpha",
-        figure_format=["pdf"],
-    )
-    metadata_args, metadata_file = mock_dump.call_args.args
-    assert metadata_file == statistics_file
-    assert metadata_args["output_file"] == str(statistics_file)
-    assert metadata_args["output_file_format"] == "JSON"
-    assert metadata_args["metadata_product_data_name"] == "production_comparison_statistics"
-    assert metadata_args["schema_file"] == str(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
-    )
-
-
-def test_main_compares_each_selected_array_layout_separately(mocker, tmp_test_directory):
-    output_directory = Path(tmp_test_directory) / "comparison"
-    first_statistics_file = output_directory / "first" / "comparison_statistics.json"
-    second_statistics_file = output_directory / "second" / "comparison_statistics.json"
-    app_context = mocker.MagicMock()
-    app_context.args = {
-        "comparison_level": "events",
-        "production": ["baseline", "baseline.hdf5", "candidate", "candidate.hdf5"],
-        "array_layout_name": ["first", "second"],
-        "figure_format": ["png"],
-    }
-    app_context.io_handler.get_output_directory.return_value = output_directory
-    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
-    mock_application.start.return_value = app_context
-    descriptors = mocker.sentinel.production_descriptors
-    mocker.patch(
-        "simtools.applications.compare_productions.parse_production_arguments",
-        return_value=descriptors,
-    )
-    mock_collect = mocker.patch(
-        "simtools.applications.compare_productions.collect_production_metrics",
-        side_effect=[mocker.sentinel.first_metrics, mocker.sentinel.second_metrics],
-    )
-    mock_plot = mocker.patch(
-        "simtools.applications.compare_productions.plot_event_level_production_comparison.plot",
-        side_effect=[first_statistics_file, second_statistics_file],
-    )
-    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
-
-    compare_productions.main()
-
-    assert mock_collect.call_args_list == [
-        mocker.call(descriptors, array_names="first"),
-        mocker.call(descriptors, array_names="second"),
-    ]
-    assert mock_plot.call_args_list == [
-        mocker.call(
-            mocker.sentinel.first_metrics,
-            output_path=output_directory,
-            array_layout_name="first",
-            figure_format=["png"],
-        ),
-        mocker.call(
-            mocker.sentinel.second_metrics,
-            output_path=output_directory,
-            array_layout_name="second",
-            figure_format=["png"],
-        ),
-    ]
-    assert [call.args[0]["array_layout_name"] for call in mock_dump.call_args_list] == [
-        "first",
-        "second",
-    ]
+    mock_write.assert_called_once_with(app_context.args, output_directory)
 
 
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():
@@ -252,52 +177,3 @@ def test_main_rejects_unimplemented_comparison_level(mocker):
 
     with pytest.raises(NotImplementedError, match="Comparison level 'signals' is not implemented"):
         compare_productions.main()
-
-
-def test_metadata_comparison_builds_one_descriptor_pair_per_configuration(
-    mocker,
-    tmp_test_directory,
-):
-    base_directory = Path(tmp_test_directory)
-
-    def manifest(directory, interaction, zenith):
-        return ProductionManifest(
-            path=base_directory / directory / f"{zenith}.yml",
-            data={
-                "configuration": {
-                    "primary": "gamma",
-                    "zenith_angle": {"value": zenith, "unit": "deg"},
-                    "corsika_he_interaction": interaction,
-                },
-                "histogram_settings": {"minimum_triggered_telescopes": 2},
-                "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
-                "files": {
-                    "trigger_histograms": [f"{interaction}_{zenith}.trigger_histograms.hdf5"]
-                },
-            },
-        )
-
-    mocker.patch(
-        "simtools.applications.compare_productions._selected_trigger_histogram_manifests",
-        side_effect=[
-            [manifest("baseline", "qgs3", 20), manifest("baseline", "qgs3", 40)],
-            [manifest("candidate", "epos", 20), manifest("candidate", "epos", 40)],
-        ],
-    )
-
-    pairs = compare_productions._production_descriptor_pairs_from_metadata(
-        {
-            "baseline_path": base_directory / "baseline",
-            "candidate_path": base_directory / "candidate",
-            "select": [],
-            "compare_by": ["corsika_he_interaction"],
-        }
-    )
-
-    assert len(pairs) == 2
-    assert all(len(descriptors) == 2 for _, descriptors in pairs)
-    assert all(
-        len(descriptor.trigger_histogram_files) == 1
-        for _, descriptors in pairs
-        for descriptor in descriptors
-    )
