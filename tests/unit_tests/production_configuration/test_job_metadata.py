@@ -7,6 +7,9 @@ import astropy.units as u
 import pytest
 
 from simtools.production_configuration.job_metadata import (
+    _add_optional_configuration_value,
+    _ensure_list,
+    _resolved_model_parameter_overrides,
     build_production_job_manifest,
     build_simulation_job_metadata,
 )
@@ -167,6 +170,35 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
     assert configuration["atmosphere"]["site_parameters"]["atmospheric_profile"] == (
         "prod-atmosphere"
     )
+
+
+def test_resolved_model_parameter_overrides_keeps_values_by_model_version():
+    models = [
+        SimpleNamespace(
+            model_version="7.0.0",
+            overwrite_model_parameter_dict={"first": 1},
+        ),
+        SimpleNamespace(
+            model_version="7.1.0",
+            overwrite_model_parameter_dict={"second": 2},
+        ),
+    ]
+
+    assert _resolved_model_parameter_overrides(SimpleNamespace(array_models=models)) == {
+        "7.0.0": {"first": 1},
+        "7.1.0": {"second": 2},
+    }
+
+
+def test_optional_configuration_values_and_file_lists():
+    configuration = {}
+    _add_optional_configuration_value(configuration, "present", 1)
+    _add_optional_configuration_value(configuration, "missing", None)
+
+    assert configuration == {"present": 1}
+    assert _ensure_list(None) == []
+    assert _ensure_list((1, 2)) == [1, 2]
+    assert _ensure_list("one") == ["one"]
 
 
 def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_directory):

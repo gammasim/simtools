@@ -253,7 +253,7 @@ def stable_configuration_hash(value, length=8):
     """Return a short stable hash for normalized configuration data."""
     normalized = normalize_for_comparison(value)
     payload = json.dumps(normalized, sort_keys=True, default=str).encode()
-    return hashlib.sha1(payload).hexdigest()[:length]
+    return hashlib.sha256(payload).hexdigest()[:length]
 
 
 def write_selection_file(selection_result, output_file):
