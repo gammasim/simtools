@@ -25,6 +25,7 @@ from simtools.production_configuration.production_event_data_helpers import (
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
     check_manifest,
+    get_manifest_schema_metadata,
     select_file_groups,
     selection_summary,
     stable_configuration_hash,
@@ -624,9 +625,9 @@ def _write_trigger_histogram_metadata(args_dict, output_file, product_metadata):
     """Write a neighboring YAML manifest for a trigger-histogram product."""
     output_file = Path(output_file)
     metadata_file = output_file.with_suffix(".yml")
+    manifest_schema = get_manifest_schema_metadata("trigger_histograms")
     manifest = {
-        "schema_name": "trigger_histograms_metadata",
-        "schema_version": "1.0.0",
+        **manifest_schema,
         "product_type": "trigger_histograms",
         "status": "complete",
         "configuration": product_metadata["configuration"],

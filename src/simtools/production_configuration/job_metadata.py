@@ -5,20 +5,14 @@ from pathlib import Path
 
 from astropy import units as u
 
+from simtools.production_configuration.production_file_selection import (
+    get_manifest_schema_metadata,
+    get_simulation_file_type_aliases,
+)
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 
 CATALOG_SITE_NAMES = {"North": "LaPalma", "South": "Paranal"}
-PRODUCTION_JOB_MANIFEST_VERSION = "1.0.0"
-
-_FILE_TYPE_ALIASES = {
-    "sim_telarray_output": "sim_telarray",
-    "sim_telarray_event_data": "reduced_event_data",
-    "sim_telarray_log": "sim_telarray_log",
-    "sim_telarray_histogram": "sim_telarray_histogram",
-    "corsika_output": "corsika",
-    "corsika_log": "corsika_log",
-}
 REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
     "primary",
     "azimuth_angle",
@@ -103,9 +97,9 @@ def build_production_job_manifest(
     """
     if catalog_metadata is None:
         catalog_metadata = build_simulation_job_metadata(args_dict, simulator)
+    manifest_schema = get_manifest_schema_metadata("simulate_prod_job")
     return {
-        "schema_name": "simulate_prod_job_metadata",
-        "schema_version": PRODUCTION_JOB_MANIFEST_VERSION,
+        **manifest_schema,
         "product_type": "simulate_prod_job",
         "production_id": args_dict.get("production_id") or args_dict.get("label"),
         "job_id": Path(output_directory).name,
@@ -213,7 +207,7 @@ def _build_output_file_inventory(simulator, output_directory):
     """Return output files grouped by manifest file type."""
     output_directory = Path(output_directory).resolve()
     inventory = {}
-    for simulator_file_type, manifest_file_type in _FILE_TYPE_ALIASES.items():
+    for simulator_file_type, manifest_file_type in get_simulation_file_type_aliases().items():
         files = []
         for file_path in _ensure_list(simulator.get_files(file_type=simulator_file_type)):
             file_path = Path(file_path).resolve()

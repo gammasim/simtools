@@ -15,7 +15,6 @@ from simtools.io import ascii_handler
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
-SUPPORTED_SCHEMA_VERSIONS = {"1.0.0"}
 
 _RUN_NUMBER_PATTERN = re.compile(r"(?:^|_)run0*(\d+)(?:_|\.|$)")
 
@@ -46,6 +45,41 @@ _MANIFEST_SCHEMAS = {
     "simulate_prod_job": "simulate_prod_job_metadata.schema.yml",
     "trigger_histograms": "trigger_histograms_metadata.schema.yml",
 }
+
+
+def get_manifest_schema_metadata(product_type):
+    """Return the current schema name and version for a manifest product type."""
+    schema_file = _MANIFEST_SCHEMAS.get(product_type)
+    if schema_file is None:
+        raise ValueError(f"Unknown production manifest product type: {product_type}")
+    definition = schema.load_schema(SCHEMA_PATH / schema_file, "latest")
+    return {
+        "schema_name": str(definition["schema_name"]).removesuffix(".schema"),
+        "schema_version": str(definition["schema_version"]),
+    }
+
+
+def _get_registered_manifest_schema_versions():
+    """Return schema versions registered for known manifest product types."""
+    return {
+        get_manifest_schema_metadata(product_type)["schema_version"]
+        for product_type in _MANIFEST_SCHEMAS
+    }
+
+
+def get_simulation_file_type_aliases():
+    """Return simulator file types mapped to their manifest file types."""
+    special_cases = {
+        "sim_telarray": "sim_telarray_output",
+        "reduced_event_data": "sim_telarray_event_data",
+    }
+    return {
+        special_cases.get(manifest_file_type, manifest_file_type): manifest_file_type
+        for manifest_file_type in _FILE_TYPE_SUFFIXES
+        if manifest_file_type != "trigger_histograms"
+    }
+
+
 _GROUPING_EXCLUDE_KEYS = {
     "run_number",
     "random_seed",
@@ -274,7 +308,6 @@ def stable_configuration_hash(value, length=8):
 def write_selection_file(selection_result, output_file):
     """Write selected file groups to a YAML file."""
     output = {
-        "schema_version": "1.0.0",
         "product_type": "production_file_selection",
         "metadata_files_read": selection_result["metadata_files_read"],
         "matching_jobs": selection_result["matching_jobs"],
@@ -333,7 +366,18 @@ def _validate_manifest_structure(data, manifest_path):
     for key in ("schema_version", "product_type", "status", "configuration", "files"):
         if key not in data:
             raise ValueError(f"Malformed metadata in {manifest_path}: missing '{key}'.")
-    if str(data["schema_version"]) not in SUPPORTED_SCHEMA_VERSIONS:
+    product_type = data["product_type"]
+    expected_version = (
+        get_manifest_schema_metadata(product_type)["schema_version"]
+        if product_type in _MANIFEST_SCHEMAS
+        else None
+    )
+    if str(data["schema_version"]) not in _get_registered_manifest_schema_versions():
+        raise ValueError(
+            f"Unsupported production metadata schema version in {manifest_path}: "
+            f"{data['schema_version']}"
+        )
+    if expected_version is not None and str(data["schema_version"]) != expected_version:
         raise ValueError(
             f"Unsupported production metadata schema version in {manifest_path}: "
             f"{data['schema_version']}"
