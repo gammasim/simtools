@@ -558,11 +558,14 @@ def _add_scan_label(job_args, row):
 def _normalize_simulate_prod_paths(job_args, args_dict):
     """Normalize paths while allowing remote environments to provide them."""
     for key in _SIMULATE_PROD_PATH_FIELDS:
+        # Scan-derived overwrite_model_parameters is a dict of actual override values
+        # so it must always be forwarded to the job, regardless
+        # of whether it was explicitly given on the CLI/YAML/constructor.
+        if isinstance(job_args.get(key), dict):
+            continue
         if not _should_forward_path(args_dict, key):
             job_args.pop(key, None)
         elif job_args.get(key):
-            # Skip normalization for non-string values
-            # (e.g., overwrite_model_parameters can be a dict)
             if isinstance(job_args[key], str):
                 job_args[key] = str(Path(job_args[key]).expanduser().resolve())
 
