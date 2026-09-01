@@ -1,13 +1,14 @@
 """Tests for source-neutral simulation-model reading."""
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from simtools.application.model_reader import create_model_reader
-from simtools.db.model_source import MongoDBModelSource
 from simtools.model_repository import files as repository_files
 from simtools.model_repository import reader as reader_module
 from simtools.model_repository.reader import FileSystemModelSource, SimulationModelReader
@@ -96,19 +97,6 @@ def test_reader_factory_adapts_database_handler():
     assert reader.source_name == "simulation-model-db"
 
 
-def test_mongodb_source_adapts_parameter_mapping():
-    """The DB adapter presents parameter documents in the source protocol shape."""
-    database_handler = Mock(model_source_name="simulation-model-db")
-    database_handler._read_db.return_value = {  # pylint: disable=protected-access
-        "camera_body_diameter": {"parameter": "camera_body_diameter", "value": 350.0}
-    }
-    source = MongoDBModelSource(database_handler)
-
-    assert source.query_model_parameters({}, "telescopes") == [
-        {"parameter": "camera_body_diameter", "value": 350.0}
-    ]
-
-
 def test_production_file_index_includes_patch_history(model_repository):
     """Patch productions include files from each version in their history."""
     patch_path = model_repository / "simulation-models/productions/1.1.0"
@@ -143,6 +131,26 @@ def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
     """A missing repository fails with a useful path error."""
     with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):
         FileSystemModelSource(Path(tmp_test_directory) / "missing")
+
+
+def test_model_repository_import_does_not_load_database_modules():
+    """Filesystem reading has no database or MongoDB import dependency."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; import simtools.model_repository.reader; "
+                "raise SystemExit(any(name == 'simtools.db' or name.startswith('simtools.db.') "
+                "or name.startswith('pymongo') or name.startswith('gridfs') for name in sys.modules))"
+            ),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_reader_facade_routes_source_operations_and_branches():

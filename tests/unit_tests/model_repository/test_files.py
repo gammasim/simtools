@@ -21,13 +21,23 @@ def test_read_production_tables_aggregates_parameters_and_removes_deprecated(tmp
         ),
         encoding="utf-8",
     )
+    (model_path / "LSTN-02.json").write_text(
+        json.dumps({"parameters": {"LSTN-02": {"camera_body_diameter": "1.0.0"}}}),
+        encoding="utf-8",
+    )
 
-    assert get_production_table_files(model_path) == [("1.0.0", production_file)]
+    assert get_production_table_files(model_path) == [
+        ("1.0.0", production_file),
+        ("1.0.0", model_path / "LSTN-02.json"),
+    ]
     table = read_production_tables(model_path, collection_name="telescopes")["telescopes"]
 
     assert table["collection"] == "telescopes"
     assert table["model_version"] == "1.0.0"
-    assert table["parameters"] == {"LSTN-01": {"camera_body_diameter": "1.0.0"}}
+    assert table["parameters"] == {
+        "LSTN-01": {"camera_body_diameter": "1.0.0"},
+        "LSTN-02": {"camera_body_diameter": "1.0.0"},
+    }
     assert table["design_model"] == {"LSTN-01": "LSTN-design"}
 
 

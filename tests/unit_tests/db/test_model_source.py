@@ -46,4 +46,4 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
     )
     handler._read_db.reset_mock()  # pylint: disable=protected-access
     handler._read_db.return_value = {}  # pylint: disable=protected-access
-    assert source.read_parameters({}, "configuration_corsika", instrument="xSTx-design") == []
+    assert source.read_parameters({}, "configuration_corsika", instrument="global") == []

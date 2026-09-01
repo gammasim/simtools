@@ -85,7 +85,7 @@ class FileSystemModelSource:
         if not instrument and collection_name == "sites" and query.get("site"):
             instrument = f"OBS-{query['site']}"
         if not instrument and collection_name == "configuration_corsika":
-            instrument = "xSTx-design"
+            instrument = "global"
         if not instrument:
             raise ValueError(
                 f"Filesystem lookup for collection {collection_name} requires an array element name"
@@ -114,7 +114,7 @@ class FileSystemModelSource:
         if not instrument and collection_name == "sites" and site:
             instrument = f"OBS-{site}"
         if not instrument and collection_name == "configuration_corsika":
-            instrument = "xSTx-design"
+            instrument = "global"
         if not instrument:
             raise ValueError(
                 f"Filesystem lookup for collection {collection_name} requires an array element name"
@@ -134,14 +134,14 @@ class FileSystemModelSource:
             raise ValueError(f"No parameters found for {collection_name}: {parameter_versions}")
         return parameters
 
-    def _parameter_path(self, collection_name, instrument, parameter, parameter_version):
+    def _parameter_path(self, _collection_name, instrument, parameter, parameter_version):
         """Return the path for one parameter version."""
-        path = self.model_parameters_path
-        if collection_name in ("configuration_sim_telarray", "configuration_corsika"):
-            path /= collection_name
-        if collection_name != "configuration_corsika":
-            path /= instrument
-        return path / parameter / f"{parameter}-{parameter_version}.json"
+        return (
+            self.model_parameters_path
+            / (instrument or "global")
+            / parameter
+            / f"{parameter}-{parameter_version}.json"
+        )
 
     def _read_parameter_file(self, parameter_path):
         """Read and cache one parameter JSON file."""
@@ -168,6 +168,8 @@ class FileSystemModelSource:
     @staticmethod
     def _matches_filters(parameter_data, instrument, site):
         """Return whether parameter metadata matches source filters."""
+        if instrument == "global":
+            instrument = None
         if instrument and parameter_data.get("instrument") != instrument:
             return False
         parameter_sites = parameter_data.get("site")
@@ -284,7 +286,8 @@ class SimulationModelReader:
             array_element_name, site, production, collection
         ):
             versions = production["parameters"].get(element, {})
-            parameters.update(self._read_parameters(versions, collection, element, site))
+            if versions:
+                parameters.update(self._read_parameters(versions, collection, element, site))
         return {key: parameters[key] for key in sorted(parameters)}
 
     def get_array_elements(self, model_version, collection="telescopes"):
@@ -340,7 +343,7 @@ class SimulationModelReader:
     def _get_array_element_list(self, array_element_name, site, production, collection):
         """Return the design and concrete elements represented by a request."""
         if collection == "configuration_corsika":
-            return ["xSTx-design"]
+            return ["global"]
         if collection == "sites":
             return [f"OBS-{site}"]
         if names.is_design_type(array_element_name):

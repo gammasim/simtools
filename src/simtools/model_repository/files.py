@@ -26,20 +26,17 @@ def get_production_table_files(model_path):
     ]
 
 
-def read_production_tables(
-    model_path, collection_name=None, production_files=None, table_reader=None
-):
+def read_production_tables(model_path, collection_name=None, production_files=None):
     """Read and merge production tables for one model version."""
     model_dict = {}
     if production_files is None:
         production_files = get_production_table_files(model_path)
-    table_reader = table_reader or _read_production_table
     for model, file in production_files:
         if collection_name and (
             names.get_collection_name_from_array_element_name(file.stem, False) != collection_name
         ):
             continue
-        table_reader(model_dict, file, model)
+        _read_production_table(model_dict, file, model)
 
     for table in model_dict.values():
         table["model_version"] = model_path.name
@@ -74,9 +71,8 @@ def _read_production_table(model_dict, file, model_name):
         ]
     except KeyError:
         pass
-    model_dict[collection]["deprecated_parameters"] = parameter_dict.get(
-        "deprecated_parameters", []
-    )
+    if "deprecated_parameters" in parameter_dict:
+        model_dict[collection]["deprecated_parameters"] = parameter_dict["deprecated_parameters"]
 
 
 def _remove_deprecated_model_parameters(model_dict):

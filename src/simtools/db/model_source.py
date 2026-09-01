@@ -21,13 +21,6 @@ class MongoDBModelSource:
         """Read a production table."""
         return self.database_handler.read_production_table_from_db(collection_name, model_version)
 
-    def query_model_parameters(self, query, collection_name):
-        """Read parameter documents matching an internal query."""
-        parameters = self.database_handler._read_db(  # pylint: disable=protected-access
-            query, collection_name
-        )
-        return list(parameters.values())
-
     def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
         """Read parameter documents by name and version."""
         query = {
@@ -36,11 +29,14 @@ class MongoDBModelSource:
                 for parameter, version in parameter_versions.items()
             ]
         }
-        if instrument and instrument != "xSTx-design":
+        if instrument and instrument != "global":
             query["instrument"] = instrument
         if site:
             query["site"] = site
-        return self.query_model_parameters(query, collection_name)
+        parameters = self.database_handler._read_db(  # pylint: disable=protected-access
+            query, collection_name
+        )
+        return list(parameters.values())
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Export model files."""
