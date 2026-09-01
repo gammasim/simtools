@@ -97,6 +97,10 @@ def _base_overwrite(curve_name, telescope, args):
         telescope_changes = {
             "min_photons": {"value": 0},
             "min_photoelectrons": {"value": 0},
+            "disc_bins": {"value": 100},
+            "fadc_bins": {"value": 100},
+            "disc_start": {"value": 0},
+            "fadc_sum_bins": {"value": 100},
         }
 
     curve_label = "NSB" if curve_name == "nsb" else "proton"

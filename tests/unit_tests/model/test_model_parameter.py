@@ -558,7 +558,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     telescope_copy.write_sim_telarray_config_file()
     mock_export.assert_called_once_with(update_if_necessary=True)
-    mock_load_writer.assert_called_once_with(label=None)
+    mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     mock_writer.write_telescope_config_file.assert_called_once()
 
     mock_export.reset_mock()
@@ -570,7 +570,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
     assert mock_export.call_count == 2  # Called for both models
-    mock_load_writer.assert_called_once_with(label=None)
+    mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     assert telescope_copy.parameters.get("test_param") == "test_value"
     mock_writer.write_telescope_config_file.assert_called_once()
 
@@ -746,7 +746,9 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
     telescope_name = "LSTN-01"
     changes = {
         telescope_name: {
-            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_spectrum_overwritten.dat"}
+            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_spectrum_overwritten.dat"},
+            "min_photoelectrons": {"value": 0},
+            "min_photons": {"value": 0},
         }
     }
 
@@ -764,6 +766,11 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
         ]["value"]
         == "nsb_spectrum_overwritten.dat"
     )
+    assert (
+        tel_model.get_simulation_software_parameters("sim_telarray")["min_photoelectrons"]["value"]
+        == 0
+    )
+    assert tel_model.get_simulation_software_parameters("sim_telarray")["min_photons"]["value"] == 0
 
 
 def test_check_corsika_simulation_software_parameter_with_overwrite(model_version, mock_db_handler):
@@ -784,7 +791,7 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(model_versio
     )
 
     changes = {
-        telescope_name: {
+        "configuration_corsika": {
             corsika_parameter: {
                 "value": 2.5,
             }

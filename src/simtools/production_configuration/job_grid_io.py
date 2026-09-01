@@ -389,7 +389,7 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     args = _build_base_args(job_row)
     _add_optional_args(args, job_row)
     _add_metadata_args(args, metadata)
-    _add_scan_label(args, job_row)
+    _add_row_scan_label(args, job_row)
     _add_parameter_scan_overwrites(args, job_row, metadata)
     return args
 
@@ -431,7 +431,7 @@ def _add_metadata_args(args, metadata):
             args[key] = metadata[key]
 
 
-def _add_scan_label(args, job_row):
+def _add_row_scan_label(args, job_row):
     """Add scan_label to args if present."""
     if job_row.get("scan_label"):
         args["scan_label"] = job_row["scan_label"]
@@ -553,6 +553,8 @@ def _add_scan_label(job_args, row):
     if row.get("scan_label"):
         label = job_args.get("label") or "simulate-prod"
         job_args["label"] = f"{label}_{row['scan_label']}"
+        # Already folded into "label"; drop it so the nested job doesn't append it again.
+        job_args.pop("scan_label", None)
 
 
 def _normalize_simulate_prod_paths(job_args, args_dict):
@@ -566,8 +568,7 @@ def _normalize_simulate_prod_paths(job_args, args_dict):
         if not _should_forward_path(args_dict, key):
             job_args.pop(key, None)
         elif job_args.get(key):
-            if isinstance(job_args[key], str):
-                job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+            job_args[key] = str(Path(job_args[key]).expanduser().resolve())
 
 
 def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
@@ -575,10 +576,11 @@ def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
     for key in _SIMULATE_PROD_PATH_FIELDS:
         if key == "grid_output_path" or not job_args.get(key):
             continue
-        # Skip non-string values (e.g., overwrite_model_parameters can be a dict)
-        if isinstance(job_args[key], str):
-            path = Path(job_args[key])
-            mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
+        # Skip non-path values (e.g., overwrite_model_parameters can be a dict)
+        if isinstance(job_args[key], dict):
+            continue
+        path = Path(job_args[key])
+        mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
 
 
 def _should_forward_path(args_dict, key):

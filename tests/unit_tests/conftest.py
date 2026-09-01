@@ -782,6 +782,24 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
 
+    corsika_params_from_db = {
+        "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+        "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+        "corsika_cherenkov_photon_wavelength_range": {
+            "value": [240.0, 1000.0],
+            "unit": "nm",
+        },
+        "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+        "corsika_particle_kinetic_energy_cutoff": {
+            "value": [0.3, 0.1, 0.020, 0.020],
+            "unit": "GeV",
+        },
+        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+        "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+        "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
+        "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+    }
+
     with (
         mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp,
         mock.patch.object(
@@ -790,25 +808,17 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
             new_callable=mock.PropertyMock,
             return_value=corsika_config_data,
         ),
+        mock.patch(
+            "simtools.corsika.corsika_config.db_handler.DatabaseHandler"
+        ) as mock_db_handler_cls,
     ):
         mp_instance = mp.return_value
-        mp_instance.get_simulation_software_parameters.return_value = {
-            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
-            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-            "corsika_cherenkov_photon_wavelength_range": {
-                "value": [240.0, 1000.0],
-                "unit": "nm",
-            },
-            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-            "corsika_particle_kinetic_energy_cutoff": {
-                "value": [0.3, 0.1, 0.020, 0.020],
-                "unit": "GeV",
-            },
-            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
-            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-            "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
-            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
-        }
+        mp_instance.get_simulation_software_parameters.return_value = corsika_params_from_db
+
+        mock_db_instance = mock_db_handler_cls.return_value
+        mock_db_instance.get_simulation_configuration_parameters.return_value = (
+            corsika_params_from_db
+        )
 
         corsika_config = CorsikaConfig(
             array_model=array_model, run_number=1, label="test-corsika-config"

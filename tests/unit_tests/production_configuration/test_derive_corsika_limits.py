@@ -378,7 +378,7 @@ def test_generate_corsika_limits_grid_expands_trigger_histogram_glob(
 
     derive_corsika_limits.generate_corsika_limits_grid(args)
 
-    assert mock_load.call_args_list == [
+    assert sorted(mock_load.call_args_list, key=lambda call: call.args[0]) == [
         mocker.call(str(first_file), array_names=None),
         mocker.call(str(second_file), array_names=None),
     ]

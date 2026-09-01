@@ -15,6 +15,7 @@ from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
+    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     build_simulate_prod_job_specs,
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
@@ -158,6 +159,7 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     if not _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
         return
 
+    _validate_no_conflicting_production_parameters(explicit_keys, parser)
     rows, metadata = _load_and_validate_job_grid(args_dict, parser)
     is_parameter_scan = _check_parameter_scan(rows)
 
@@ -184,6 +186,16 @@ def _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
     _validate_layout_selection(args_dict, parser)
     _validate_simulation_arguments(args_dict, parser)
     return False
+
+
+def _validate_no_conflicting_production_parameters(explicit_keys, parser):
+    """Reject explicit production parameters combined with '--job_grid_file'."""
+    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
+    if conflicting_keys:
+        parser.error(
+            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
+            + ", ".join(conflicting_keys)
+        )
 
 
 def _load_and_validate_job_grid(args_dict, parser):
@@ -217,7 +229,8 @@ def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, p
     """Select rows based on job_grid_row and grid type."""
     row_index = args_dict.get("job_grid_row")
     if job_grid_row_is_explicit and row_index is not None:
-        return _select_explicit_row(rows, row_index, parser), rows
+        selected_row = _select_explicit_row(rows, row_index, parser)
+        return selected_row, [selected_row]
     if is_parameter_scan:
         return None, rows
     if row_index is not None:
