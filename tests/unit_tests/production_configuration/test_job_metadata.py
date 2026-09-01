@@ -39,7 +39,7 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
         "array_layout": "CTAO-South-Alpha",
         "site": "Paranal",
         "particle": "gamma",
-        "phiP": 10.0,
+        "phiP": 350.0,
         "thetaP": 20.0,
         "sct": "True",
         "view_cone_min": 0.0,
@@ -84,3 +84,27 @@ def test_build_simulation_job_metadata_rounds_view_cone_to_two_decimal_places():
 
     assert metadata["view_cone_min"] == pytest.approx(0.12)
     assert metadata["view_cone_max"] == pytest.approx(5.68)
+
+
+@pytest.mark.parametrize(
+    ("geographic_az", "expected_phip"),
+    [
+        (0.0, 180.0),
+        (90.0, 90.0),
+        (180.0, 0.0),
+        (270.0, 270.0),
+        (190.0, 350.0),
+        (360.0, 180.0),
+        (45.7, 134.3),
+        (135.3, 44.7),
+        (225.5, 314.5),
+        (315.8, 224.2),
+    ],
+)
+def test_phip_is_corsika_azimuth_conversion(geographic_az, expected_phip):
+    """phiP is the CORSIKA-space azimuth derived from the geographic azimuth."""
+    metadata = build_simulation_job_metadata(
+        _args(azimuth_angle=geographic_az * u.deg),
+        _simulator("MSTS-01"),
+    )
+    assert metadata["phiP"] == pytest.approx(expected_phip, abs=1e-3)
