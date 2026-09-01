@@ -8,6 +8,9 @@ from packaging.version import Version
 
 from simtools.io import ascii_handler
 from simtools.job_execution.job_manager import retry_command
+from simtools.model_repository.files import (
+    read_production_tables as read_repository_production_tables,
+)
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -175,7 +178,7 @@ def add_production_tables_to_db(input_path, db):
 
     for model in sorted(filter(Path.is_dir, input_path.iterdir())):
         logger.info(f"Reading production tables for model version {model.name}")
-        model_dict = read_production_tables(model)
+        model_dict = read_repository_production_tables(model, table_reader=_read_production_table)
 
         for collection, data in model_dict.items():
             if data["parameters"]:

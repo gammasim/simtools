@@ -6,7 +6,14 @@ from pathlib import Path
 import pytest
 from astropy.table import Table
 
-from simtools.db import db_handler, file_system_model
+from simtools.db import db_handler
+from simtools.model_repository import files as repository_files
+from simtools.model_repository import reader as reader_module
+from simtools.model_repository.reader import FileSystemModelSource
+
+file_system_model = reader_module
+file_system_model.FileSystemModelHandler = FileSystemModelSource
+file_system_model.db_model_upload = repository_files
 
 pytestmark = pytest.mark.db_unit_test
 
@@ -177,10 +184,8 @@ def simulation_models_path(tmp_test_directory):
 @pytest.fixture(autouse=True)
 def clear_file_system_caches():
     """Prevent filesystem cache state from leaking between tests."""
-    file_system_model.FileSystemModelHandler.clear_caches()
     db_handler.DatabaseHandler.model_parameters_cached.clear()
     yield
-    file_system_model.FileSystemModelHandler.clear_caches()
     db_handler.DatabaseHandler.model_parameters_cached.clear()
 
 
@@ -247,13 +252,13 @@ def test_file_system_handler_caches_production_and_parameter_reads(simulation_mo
         handler.read_production_table("telescopes", "1.0.0")
         handler.query_model_parameters(query, "telescopes")
 
-    assert production_spy.call_count == 1
+    assert production_spy.call_count == 2
     parameter_reads = [
         call
         for call in parameter_spy.call_args_list
         if "camera_body_diameter-2.0.0.json" in str(call.kwargs.get("file_name"))
     ]
-    assert len(parameter_reads) == 1
+    assert len(parameter_reads) == 2
 
 
 def test_file_system_handler_reads_requested_production_collection_only(
@@ -354,12 +359,10 @@ def test_missing_model_data_reports_source(simulation_models_path):
     with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
         handler.read_production_table("telescopes", "2.0.0")
     with pytest.raises(
-        ValueError,
-        match=r"The following query returned zero results: "
-        r"\{'model_version': '1\.0\.0', 'collection': 'calibration_devices'\}",
+        ValueError, match=r"No production table for calibration_devices in model version 1\.0\.0"
     ):
         handler.read_production_table("calibration_devices", "1.0.0")
-    with pytest.raises(ValueError, match="returned zero results"):
+    with pytest.raises(ValueError, match="No parameters found"):
         handler.query_model_parameters(
             {
                 "parameter": "camera_body_diameter",

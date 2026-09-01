@@ -8,9 +8,9 @@ from pathlib import Path
 from simtools import settings
 from simtools.data_model import validate_data
 from simtools.db import parameter_exporter
-from simtools.db.file_system_model import FileSystemModelHandler
 from simtools.db.mongo_db import MongoDBHandler, _resolve_model_tag
 from simtools.io import io_handler
+from simtools.model_repository.reader import FileSystemModelSource
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
@@ -43,7 +43,7 @@ class DatabaseHandler:
         if not isinstance(simulation_models_path, str | Path):
             simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
         self.file_system_handler = (
-            FileSystemModelHandler(simulation_models_path) if simulation_models_path else None
+            FileSystemModelSource(simulation_models_path) if simulation_models_path else None
         )
 
         if self.file_system_handler:
