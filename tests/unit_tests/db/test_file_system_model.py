@@ -379,6 +379,42 @@ def test_missing_model_data_reports_source(simulation_models_path):
         )
 
 
+def test_filesystem_source_routes_parameter_collections_and_filters(simulation_models_path):
+    """Filesystem parameter lookups handle collection defaults and metadata filters."""
+    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+
+    assert (
+        handler.read_parameters({"array_layouts": "1.0.0"}, "sites", site="North")[0]["parameter"]
+        == "array_layouts"
+    )
+    with pytest.raises(ValueError, match="requires an array element name"):
+        handler.read_parameters({"array_layouts": "1.0.0"}, "sites")
+    with pytest.raises(ValueError, match="No parameters found"):
+        handler.read_parameters({"missing": "9.0.0"}, "telescopes", instrument="LSTN-01")
+    with pytest.raises(ValueError, match="No parameters found"):
+        handler.read_parameters(
+            {"corsika_cherenkov_photon_bunch_size": "1.0.0"}, "configuration_corsika"
+        )
+
+    assert not handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": "North"}, "MSTN-01", "North"
+    )
+    assert handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": ["North", "South"]}, "LSTN-01", "South"
+    )
+    assert not handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": ["North"]}, "LSTN-01", "South"
+    )
+    assert handler.query_model_parameters(
+        {
+            "$or": [{}, {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"}],
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        "telescopes",
+    )
+
+
 def test_model_file_export_errors(simulation_models_path, tmp_test_directory):
     handler = file_system_model.FileSystemModelHandler(simulation_models_path)
 

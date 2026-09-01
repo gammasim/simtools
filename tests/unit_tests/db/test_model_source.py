@@ -17,6 +17,10 @@ def test_mongodb_source_delegates_model_operations():
     assert source.read_production_table("telescopes", "1.0.0") == {"collection": "telescopes"}
     handler.get_model_versions.assert_called_once_with("telescopes")
     handler.read_production_table_from_db.assert_called_once_with("telescopes", "1.0.0")
+    handler.export_model_files.return_value = {"model.dat": "copied"}
+    handler.get_ecsv_file_as_astropy_table.return_value = "table"
+    assert source.export_model_files(file_names="model.dat") == {"model.dat": "copied"}
+    assert source.get_ecsv_file_as_astropy_table("model.ecsv") == "table"
 
 
 def test_mongodb_source_builds_parameter_query_and_returns_documents():
@@ -40,3 +44,6 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
         },
         "telescopes",
     )
+    handler._read_db.reset_mock()  # pylint: disable=protected-access
+    handler._read_db.return_value = {}  # pylint: disable=protected-access
+    assert source.read_parameters({}, "configuration_corsika", instrument="xSTx-design") == []

@@ -143,3 +143,42 @@ def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
     """A missing repository fails with a useful path error."""
     with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):
         FileSystemModelSource(Path(tmp_test_directory) / "missing")
+
+
+def test_reader_facade_routes_source_operations_and_branches():
+    """The facade resolves parameters and delegates source-specific operations."""
+    source = Mock(source_name="mock")
+    source.get_model_versions.return_value = ["1.0.0"]
+    source.read_production_table.return_value = {
+        "model_version": "1.0.0",
+        "parameters": {"LSTN-design": {"camera_body_diameter": "1.0.0"}, "LSTN-01": {}},
+        "design_model": {"LSTN-01": "LSTN-design"},
+    }
+    source.read_parameters.side_effect = lambda versions, *_: [
+        {"parameter": parameter, "value": 1} for parameter in versions
+    ]
+    source.export_model_files.return_value = {"model.dat": "copied"}
+    source.get_ecsv_file_as_astropy_table.return_value = "table"
+    reader = SimulationModelReader(source)
+
+    assert reader.get_model_parameter(
+        "camera_body_diameter", "North", "LSTN-01", model_version="1.0.0"
+    ) == {"camera_body_diameter": {"parameter": "camera_body_diameter", "value": 1}}
+    assert reader.get_array_elements_of_type("LST", "1.0.0", "telescopes") == ["LSTN-01"]
+    assert reader._get_array_element_list(None, "North", {}, "sites") == ["OBS-North"]
+    assert reader._get_array_element_list("LSTN-design", None, {}, "telescopes") == ["LSTN-design"]
+    assert reader.get_simulation_configuration_parameters("corsika", None, None, "1.0.0") == {}
+    assert reader.get_simulation_configuration_parameters(
+        "sim_telarray", "North", "LSTN-01", "1.0.0"
+    ) == {"camera_body_diameter": {"parameter": "camera_body_diameter", "value": 1}}
+    assert reader.get_simulation_configuration_parameters("sim_telarray", None, None, "1.0.0") == {}
+    with pytest.raises(ValueError, match="Unknown simulation software"):
+        reader.get_simulation_configuration_parameters("other", None, None, "1.0.0")
+    with pytest.raises(ValueError, match="not a list"):
+        reader.get_model_parameter(
+            "camera_body_diameter", "North", "LSTN-01", model_version=["1.0.0"]
+        )
+    assert reader.export_model_files(file_names="model.dat", dest="output") == {
+        "model.dat": "copied"
+    }
+    assert reader.get_ecsv_file_as_astropy_table("model.ecsv") == "table"
