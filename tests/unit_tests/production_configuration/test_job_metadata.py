@@ -1,5 +1,6 @@
 """Tests for simulation job metadata generation."""
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import astropy.units as u
@@ -7,6 +8,7 @@ import pytest
 
 from simtools.production_configuration.job_metadata import (
     _format_view_cone,
+    build_production_job_manifest,
     build_simulation_job_metadata,
 )
 
@@ -81,3 +83,92 @@ def test_build_simulation_job_metadata_omits_missing_coordinates_and_sets_sct_fa
 def test_format_view_cone_rounds_to_two_decimal_places():
     result = _format_view_cone(0.12345 * u.deg, 5.6789 * u.deg)
     assert result == "0.12_deg_5.68_deg"
+
+
+def test_build_production_job_manifest_contains_selection_fields(tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    output_directory = tmp_test_directory / "job-000001"
+    output_directory.mkdir()
+    simtel_file = output_directory / "gamma_run000012.simtel.zst"
+    event_data_file = output_directory / "gamma_run000012.reduced_event_data.hdf5"
+    simtel_file.touch()
+    event_data_file.touch()
+    simulator = _simulator("MSTS-01", run_number=12)
+    simulator.get_files = lambda file_type: {
+        "sim_telarray_output": [tmp_test_directory / simtel_file.name],
+        "sim_telarray_event_data": [tmp_test_directory / event_data_file.name],
+    }.get(file_type, [])
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+            corsika_he_interaction="qgs3",
+            corsika_le_interaction="urqmd",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["product_type"] == "simulate_prod_job"
+    assert manifest["catalog_metadata"]["runNumber"] == 12
+    assert manifest["configuration"]["run_number"] == 12
+    assert manifest["configuration"]["zenith_angle"] == 20 * u.deg
+    assert manifest["configuration"]["cores_per_shower"] == 10
+    assert manifest["files"] == {
+        "reduced_event_data": ["gamma_run000012.reduced_event_data.hdf5"],
+        "sim_telarray": ["gamma_run000012.simtel.zst"],
+    }
+
+
+def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere(
+    tmp_test_directory,
+):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    simtel_file = output_directory / "gamma_run000012.simtel.zst"
+    simtel_file.touch()
+    site_model = SimpleNamespace(
+        parameters={
+            "atmospheric_profile": {"value": "prod-atmosphere"},
+            "reference_point_altitude": {"value": 2150 * u.m},
+        }
+    )
+    array_model = SimpleNamespace(
+        array_elements={},
+        model_version="7.0.0",
+        overwrite_model_parameter_dict={"LSTN-design": {"mirror_area": {"value": 400}}},
+        site_model=site_model,
+    )
+    simulator = SimpleNamespace(
+        array_models=[array_model],
+        corsika_configurations=SimpleNamespace(use_curved_atmosphere=True),
+        run_number=12,
+        get_files=lambda file_type: [simtel_file] if file_type == "sim_telarray_output" else [],
+    )
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+            curved_atmosphere_min_zenith_angle=70 * u.deg,
+            overwrite_model_parameters="/submission/path/overrides.yml",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    configuration = manifest["configuration"]
+    assert configuration["model_parameter_overrides"] == {
+        "LSTN-design": {"mirror_area": {"value": 400}}
+    }
+    assert "overwrite_model_parameters" not in configuration
+    assert configuration["atmosphere"]["use_curved_atmosphere"] is True
+    assert configuration["atmosphere"]["site_parameters"]["atmospheric_profile"] == (
+        "prod-atmosphere"
+    )

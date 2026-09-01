@@ -6,6 +6,7 @@ import simtools.sim_events.production_comparison as production_comparison
 from simtools.applications import compare_productions
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.constants import SCHEMA_PATH
+from simtools.production_configuration.production_file_selection import ProductionManifest
 
 
 def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
@@ -228,3 +229,52 @@ def test_main_rejects_unimplemented_comparison_level(mocker):
 
     with pytest.raises(NotImplementedError, match="Comparison level 'signals' is not implemented"):
         compare_productions.main()
+
+
+def test_metadata_comparison_builds_one_descriptor_pair_per_configuration(
+    mocker,
+    tmp_test_directory,
+):
+    base_directory = Path(tmp_test_directory)
+
+    def manifest(directory, interaction, zenith):
+        return ProductionManifest(
+            path=base_directory / directory / f"{zenith}.yml",
+            data={
+                "configuration": {
+                    "primary": "gamma",
+                    "zenith_angle": {"value": zenith, "unit": "deg"},
+                    "corsika_he_interaction": interaction,
+                },
+                "histogram_settings": {"minimum_triggered_telescopes": 2},
+                "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
+                "files": {
+                    "trigger_histograms": [f"{interaction}_{zenith}.trigger_histograms.hdf5"]
+                },
+            },
+        )
+
+    mocker.patch(
+        "simtools.applications.compare_productions._selected_trigger_histogram_manifests",
+        side_effect=[
+            [manifest("baseline", "qgs3", 20), manifest("baseline", "qgs3", 40)],
+            [manifest("candidate", "epos", 20), manifest("candidate", "epos", 40)],
+        ],
+    )
+
+    pairs = compare_productions._production_descriptor_pairs_from_metadata(
+        {
+            "baseline_path": base_directory / "baseline",
+            "candidate_path": base_directory / "candidate",
+            "select": [],
+            "compare_by": ["corsika_he_interaction"],
+        }
+    )
+
+    assert len(pairs) == 2
+    assert all(len(descriptors) == 2 for _, descriptors in pairs)
+    assert all(
+        len(descriptor.trigger_histogram_files) == 1
+        for _, descriptors in pairs
+        for descriptor in descriptors
+    )

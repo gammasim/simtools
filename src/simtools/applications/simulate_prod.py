@@ -19,7 +19,12 @@ from simtools.production_configuration.job_grid_io import (
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
 )
-from simtools.production_configuration.job_metadata import build_simulation_job_metadata
+from simtools.production_configuration.job_metadata import build_production_job_manifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+    check_manifest,
+    validate_required_production_outputs,
+)
 from simtools.simulator import Simulator
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
@@ -278,9 +283,21 @@ def main():
     if app_context.args.get("grid_output_path"):
         grid_output_path = Path(app_context.args["grid_output_path"])
         simulator.pack_for_register(grid_output_path)
+        manifest_path = grid_output_path / _JOB_METADATA_FILE
+        manifest = build_production_job_manifest(
+            app_context.args,
+            simulator,
+            grid_output_path,
+        )
+        validate_required_production_outputs(
+            manifest["files"],
+            manifest["configuration"]["simulation_software"],
+            grid_output_path,
+        )
+        check_manifest(ProductionManifest(path=manifest_path, data=manifest))
         write_data_to_file(
-            build_simulation_job_metadata(app_context.args, simulator),
-            grid_output_path / _JOB_METADATA_FILE,
+            manifest,
+            manifest_path,
         )
 
 

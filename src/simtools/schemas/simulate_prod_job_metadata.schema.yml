@@ -1,0 +1,151 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+title: simulate_prod job metadata
+description: Versioned manifest for one completed simulate_prod job.
+schema_version: 1.0.0
+schema_name: simulate_prod_job_metadata.schema
+type: object
+additionalProperties: false
+properties:
+  schema_name:
+    type: string
+    enum: [simulate_prod_job_metadata]
+  schema_version:
+    type: string
+    enum: [1.0.0]
+  product_type:
+    type: string
+    enum: [simulate_prod_job]
+  production_id:
+    type: [string, 'null']
+  job_id:
+    type: string
+  status:
+    type: string
+    enum: [complete]
+  catalog_metadata:
+    type: object
+    additionalProperties: true
+  configuration:
+    type: object
+    additionalProperties: true
+    properties:
+      run_number:
+        type: integer
+        minimum: 0
+      primary:
+        type: string
+        minLength: 1
+      site:
+        type: string
+        enum: [North, South]
+      array_layout_name:
+        oneOf:
+          - type: string
+            minLength: 1
+          - type: array
+            minItems: 1
+            items:
+              type: string
+              minLength: 1
+      model_version:
+        type: string
+        minLength: 1
+      simulation_software:
+        type: string
+        enum: [corsika, sim_telarray, corsika_sim_telarray]
+      azimuth_angle:
+        $ref: '#/definitions/Quantity'
+      zenith_angle:
+        $ref: '#/definitions/Quantity'
+      energy_min:
+        $ref: '#/definitions/Quantity'
+      energy_max:
+        $ref: '#/definitions/Quantity'
+      view_cone_min:
+        $ref: '#/definitions/Quantity'
+      view_cone_max:
+        $ref: '#/definitions/Quantity'
+      cores_per_shower:
+        type: integer
+        minimum: 1
+      core_scatter_max:
+        $ref: '#/definitions/Quantity'
+      showers_per_run:
+        type: integer
+        minimum: 1
+      corsika_hadronic_transition_energy:
+        $ref: '#/definitions/Quantity'
+      model_parameter_overrides:
+        type: object
+      atmosphere:
+        type: object
+    required:
+      - run_number
+      - primary
+      - site
+      - array_layout_name
+      - model_version
+      - simulation_software
+      - azimuth_angle
+      - zenith_angle
+      - energy_min
+      - energy_max
+      - view_cone_min
+      - view_cone_max
+      - cores_per_shower
+      - core_scatter_max
+      - showers_per_run
+      - model_parameter_overrides
+      - atmosphere
+  files:
+    type: object
+    additionalProperties: false
+    minProperties: 1
+    properties:
+      sim_telarray:
+        $ref: '#/definitions/FileList'
+      reduced_event_data:
+        $ref: '#/definitions/FileList'
+      sim_telarray_log:
+        $ref: '#/definitions/FileList'
+      sim_telarray_histogram:
+        $ref: '#/definitions/FileList'
+      corsika:
+        $ref: '#/definitions/FileList'
+      corsika_log:
+        $ref: '#/definitions/FileList'
+    anyOf:
+      - required: [sim_telarray]
+      - required: [corsika]
+required:
+  - schema_name
+  - schema_version
+  - product_type
+  - job_id
+  - status
+  - catalog_metadata
+  - configuration
+  - files
+
+definitions:
+  Quantity:
+    type: object
+    additionalProperties: false
+    properties:
+      value:
+        type: number
+      unit:
+        type: string
+        minLength: 1
+    required:
+      - value
+      - unit
+
+  FileList:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+      minLength: 1

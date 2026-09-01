@@ -61,6 +61,29 @@ def test_add_arguments_accepts_event_data_directory():
     assert args.event_data_files is None
 
 
+def test_add_arguments_accepts_production_path_and_selection():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
+
+    args = parser.parse_args(
+        [
+            "--production_path",
+            "grid-output",
+            "--select",
+            "configuration.corsika_he_interaction=qgs3",
+            "--select",
+            "configuration.zenith_angle=20 deg",
+        ]
+    )
+
+    assert args.production_path == "grid-output"
+    assert args.select == [
+        "configuration.corsika_he_interaction=qgs3",
+        "configuration.zenith_angle=20 deg",
+    ]
+    assert args.file_type == "reduced_event_data"
+
+
 def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
     parser = mocker.Mock()
 
@@ -75,7 +98,7 @@ def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
     )
 
     parser.error.assert_called_once_with(
-        "'--output_path' is required with '--event_data_directory'."
+        "'--output_path' is required with directory or production metadata input."
     )
 
 
@@ -110,5 +133,5 @@ def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
     )
 
     parser.error.assert_called_once_with(
-        "'--output_file' cannot be used with '--event_data_directory'."
+        "'--output_file' cannot be used with directory or production metadata input."
     )

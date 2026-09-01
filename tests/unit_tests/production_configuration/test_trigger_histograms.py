@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import astropy.units as u
 import h5py
@@ -7,6 +8,7 @@ import pytest
 from astropy.table import Table
 
 from simtools.io import table_handler
+from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_BINS_TABLE,
     TRIGGER_HISTOGRAM_DENSE_GROUP,
@@ -19,10 +21,13 @@ from simtools.production_configuration.trigger_histograms import (
     _execute_production_job,
     _format_trigger_histogram_inspection,
     _get_plot_directory_name,
+    _group_output_stem,
+    _relative_to_directory,
     _use_readable_inline_array_names,
     _write_dense_histogram_payload,
     _write_directory_group_job,
     _write_directory_products,
+    _write_trigger_histogram_metadata,
     discover_event_data_groups,
     inspect_trigger_histogram_file,
     load_event_data_histograms,
@@ -392,6 +397,72 @@ def test_write_directory_group_job_uses_local_inner_execution(mocker):
     assert inner_args["backend"] == "local"
     assert inner_args["backend_config"] is None
     assert inner_args["max_workers"] == 1
+
+
+def test_trigger_histogram_metadata_uses_portable_paths_and_resolved_array_selection(
+    tmp_test_directory,
+):
+    base_directory = Path(tmp_test_directory)
+    input_file = base_directory / "grid-output" / "job-000001" / "gamma.hdf5"
+    output_file = base_directory / "trigger_histograms" / "gamma.trigger_histograms.hdf5"
+    input_file.parent.mkdir(parents=True)
+    output_file.parent.mkdir()
+    input_file.touch()
+    output_file.touch()
+
+    _write_trigger_histogram_metadata(
+        {
+            "energy_bins_per_decade": 10,
+            "angular_distance_bin_width": 0.5 * u.deg,
+            "core_distance_bin_width": 20 * u.m,
+            "minimum_triggered_telescopes": 2,
+        },
+        output_file,
+        {
+            "configuration": {"primary": "gamma"},
+            "run_numbers": [1],
+            "input_files": [input_file],
+            "array_selection": [{"array_name": "CTAO-North-Alpha", "telescope_ids": ["LSTN-01"]}],
+        },
+    )
+
+    metadata = collect_data_from_file(output_file.with_suffix(".yml"))
+    assert metadata["input_files"]["reduced_event_data"] == ["../grid-output/job-000001/gamma.hdf5"]
+    assert metadata["array_selection"][0]["array_name"] == "CTAO-North-Alpha"
+
+
+def test_group_output_stem_changes_with_histogram_settings_and_array_selection():
+    group = SimpleNamespace(
+        configuration={
+            "primary": "gamma",
+            "zenith_angle": {"value": 20.0, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        }
+    )
+    first = _group_output_stem(
+        group,
+        {
+            "histogram_settings": {"minimum_triggered_telescopes": 2},
+            "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
+        },
+    )
+    second = _group_output_stem(
+        group,
+        {
+            "histogram_settings": {"minimum_triggered_telescopes": 3},
+            "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
+        },
+    )
+
+    assert first != second
+
+
+def test_relative_to_directory_handles_sibling_directories(tmp_test_directory):
+    base_directory = Path(tmp_test_directory)
+    path = base_directory / "grid-output" / "job-000001" / "file.hdf5"
+    directory = base_directory / "trigger_histograms"
+
+    assert _relative_to_directory(path, directory) == "../grid-output/job-000001/file.hdf5"
 
 
 def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):
