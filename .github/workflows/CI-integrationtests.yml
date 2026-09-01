@@ -17,7 +17,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'corsika-sim-telarray-parameters'
+        default: 'main'
   workflow_call:
     inputs:
       container_image:
@@ -50,6 +50,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'tests/unit_tests/**'
+  push:
   schedule:
     - cron: "0 0 * * *"
   release:
@@ -204,7 +205,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
         run: |
-          BRANCH="main"
+          BRANCH="corsika-sim-telarray-parameters"
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
           fi
