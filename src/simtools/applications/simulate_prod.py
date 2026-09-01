@@ -234,6 +234,20 @@ def _validate_simulation_arguments(args_dict, parser):
         parser.error("the following argument is required for CORSIKA: --primary")
 
 
+def _write_job_metadata(args_dict, simulator, output_directory):
+    """Write and validate metadata for a completed simulation job."""
+    output_directory = Path(output_directory)
+    manifest_path = output_directory / _JOB_METADATA_FILE
+    manifest = build_production_job_manifest(args_dict, simulator, output_directory)
+    validate_required_production_outputs(
+        manifest["files"],
+        manifest["configuration"]["simulation_software"],
+        output_directory,
+    )
+    check_manifest(ProductionManifest(path=manifest_path, data=manifest))
+    write_data_to_file(manifest, manifest_path)
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -280,25 +294,12 @@ def main():
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
 
+    metadata_output_path = Path(app_context.args["output_path"])
     if app_context.args.get("grid_output_path"):
-        grid_output_path = Path(app_context.args["grid_output_path"])
-        simulator.pack_for_register(grid_output_path)
-        manifest_path = grid_output_path / _JOB_METADATA_FILE
-        manifest = build_production_job_manifest(
-            app_context.args,
-            simulator,
-            grid_output_path,
-        )
-        validate_required_production_outputs(
-            manifest["files"],
-            manifest["configuration"]["simulation_software"],
-            grid_output_path,
-        )
-        check_manifest(ProductionManifest(path=manifest_path, data=manifest))
-        write_data_to_file(
-            manifest,
-            manifest_path,
-        )
+        metadata_output_path = Path(app_context.args["grid_output_path"])
+        simulator.pack_for_register(metadata_output_path)
+
+    _write_job_metadata(app_context.args, simulator, metadata_output_path)
 
 
 if __name__ == "__main__":

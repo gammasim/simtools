@@ -177,14 +177,18 @@ def _add_optional_configuration_value(configuration, key, value):
 
 def _build_output_file_inventory(simulator, output_directory):
     """Return output files grouped by manifest file type."""
-    output_directory = Path(output_directory)
+    output_directory = Path(output_directory).resolve()
     inventory = {}
     for simulator_file_type, manifest_file_type in _FILE_TYPE_ALIASES.items():
         files = []
         for file_path in _ensure_list(simulator.get_files(file_type=simulator_file_type)):
-            packaged_file = output_directory / Path(file_path).name
-            if packaged_file.exists():
-                files.append(packaged_file.relative_to(output_directory).as_posix())
+            file_path = Path(file_path).resolve()
+            try:
+                relative_path = file_path.relative_to(output_directory)
+            except ValueError:
+                relative_path = Path(file_path.name)
+            if (output_directory / relative_path).exists():
+                files.append(relative_path.as_posix())
         if files:
             inventory[manifest_file_type] = sorted(files)
     return inventory

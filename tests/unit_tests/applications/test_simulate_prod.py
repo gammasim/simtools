@@ -88,6 +88,7 @@ def _mock_application_context(mock_application_start, label="test"):
             "label": label,
             "reduced_event_lists": True,
             "save_file_lists": False,
+            "output_path": Path("output"),
             "grid_output_path": None,
         }
     )
@@ -373,12 +374,14 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
     _mock_application_context(mock_application_start)
     mock_simulator_class.return_value = MagicMock()
 
-    app.main()
+    with patch("simtools.applications.simulate_prod._write_job_metadata") as mock_write_metadata:
+        app.main()
 
     mock_application_start.assert_called_once_with()
     assert app.APPLICATION.setup_io_handler is False
     assert app.APPLICATION.validate_simulation_dependencies is True
     assert app.APPLICATION.post_parse == app._post_parse
+    mock_write_metadata.assert_called_once()
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
@@ -388,12 +391,57 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     mock_simulator = MagicMock()
     mock_simulator_class.return_value = mock_simulator
 
-    app.main()
+    with patch("simtools.applications.simulate_prod._write_job_metadata") as mock_write_metadata:
+        app.main()
 
     mock_simulator_class.assert_called_once_with(label="myprod")
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()
+    mock_write_metadata.assert_called_once()
+
+
+@patch("simtools.applications.simulate_prod.write_data_to_file")
+@patch("simtools.applications.simulate_prod.check_manifest")
+@patch("simtools.applications.simulate_prod.validate_required_production_outputs")
+@patch("simtools.applications.simulate_prod.build_production_job_manifest")
+@patch("simtools.applications.simulate_prod.Simulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_writes_job_metadata_to_output_path(
+    mock_application_start,
+    mock_simulator_class,
+    mock_build_metadata,
+    mock_validate_outputs,
+    mock_check_manifest,
+    mock_write_data,
+):
+    _mock_application_context(mock_application_start)
+    mock_simulator = MagicMock()
+    mock_simulator_class.return_value = mock_simulator
+    manifest = {
+        "configuration": {
+            "run_number": 7,
+            "simulation_software": "corsika_sim_telarray",
+        },
+        "files": {"sim_telarray": ["gamma.simtel.zst"]},
+    }
+    mock_build_metadata.return_value = manifest
+
+    app.main()
+
+    mock_build_metadata.assert_called_once_with(
+        mock_application_start.return_value.args,
+        mock_simulator,
+        Path("output"),
+    )
+    mock_simulator.pack_for_register.assert_not_called()
+    mock_validate_outputs.assert_called_once_with(
+        manifest["files"],
+        "corsika_sim_telarray",
+        Path("output"),
+    )
+    assert mock_check_manifest.call_args.args[0].data == manifest
+    mock_write_data.assert_called_once_with(manifest, Path("output") / app._JOB_METADATA_FILE)
 
 
 @patch("simtools.applications.simulate_prod.write_data_to_file")

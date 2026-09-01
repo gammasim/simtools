@@ -169,6 +169,32 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
     )
 
 
+def test_build_production_job_manifest_keeps_nested_output_paths(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    simtel_directory = output_directory / "sim_telarray" / "run000012"
+    simtel_directory.mkdir(parents=True)
+    simtel_file = simtel_directory / "gamma_run000012.simtel.zst"
+    simtel_file.touch()
+    simulator = _simulator("MSTS-01", run_number=12)
+    simulator.get_files = lambda file_type: (
+        [simtel_file] if file_type == "sim_telarray_output" else []
+    )
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            simulation_software="sim_telarray",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    assert manifest["files"] == {
+        "sim_telarray": ["sim_telarray/run000012/gamma_run000012.simtel.zst"]
+    }
+
+
 def test_build_simulation_job_metadata_rounds_view_cone_to_two_decimal_places():
     metadata = build_simulation_job_metadata(
         _args(view_cone=(0.12345 * u.deg, 5.6789 * u.deg)),
