@@ -175,6 +175,7 @@ def test_arglist_from_config():
     ] == Configurator._arglist_from_config(_tmp_dict)
 
     assert [] == Configurator._arglist_from_config({})
+    assert [] == Configurator._arglist_from_config({"select": []})
 
     assert [] == Configurator._arglist_from_config(None)
     assert [] == Configurator._arglist_from_config(5.0)

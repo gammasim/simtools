@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -219,6 +220,28 @@ def test_comparison_level_argument_accepts_events():
     )
 
     assert args.comparison_level == "events"
+
+
+def test_application_parses_productions_without_select(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compare_productions.py",
+            "--production",
+            "baseline",
+            "baseline.hdf5",
+            "--production",
+            "candidate",
+            "candidate.hdf5",
+            "--output_path",
+            "output",
+        ],
+    )
+
+    args, _ = compare_productions.APPLICATION._parse()
+
+    assert args["select"] == []
 
 
 def test_main_rejects_unimplemented_comparison_level(mocker):

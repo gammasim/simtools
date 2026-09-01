@@ -403,7 +403,7 @@ class Configurator:
             return boolean_tokens
 
         if isinstance(value, list):
-            return [option, *map(str, value)]
+            return [option, *map(str, value)] if value else []
 
         if Configurator._is_scalar_config_value(value):
             return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
