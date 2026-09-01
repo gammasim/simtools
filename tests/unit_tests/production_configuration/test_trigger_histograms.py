@@ -23,6 +23,7 @@ from simtools.production_configuration.trigger_histograms import (
     _get_plot_directory_name,
     _group_output_stem,
     _relative_to_directory,
+    _resolve_group_telescope_configs,
     _use_readable_inline_array_names,
     _write_dense_histogram_payload,
     _write_directory_group_job,
@@ -463,6 +464,44 @@ def test_relative_to_directory_handles_sibling_directories(tmp_test_directory):
     directory = base_directory / "trigger_histograms"
 
     assert _relative_to_directory(path, directory) == "../grid-output/job-000001/file.hdf5"
+
+
+def test_production_group_telescope_configs_come_from_metadata(mocker):
+    resolve = mocker.patch(
+        "simtools.production_configuration.trigger_histograms._resolve_telescope_configs",
+        return_value=[{"array_name": "CTAO-North-Alpha", "telescope_ids": ["LSTN-01"]}],
+    )
+
+    _resolve_group_telescope_configs(
+        {},
+        {
+            "site": "North",
+            "model_version": "7.0.0",
+            "array_layout_name": "CTAO-North-Alpha",
+        },
+    )
+
+    resolved_args = resolve.call_args.args[0]
+    assert resolved_args["site"] == "North"
+    assert resolved_args["model_version"] == ["7.0.0"]
+    assert resolved_args["array_layout_name"] == ["CTAO-North-Alpha"]
+
+
+def test_production_group_telescope_configs_reject_mismatched_layout():
+    with pytest.raises(ValueError, match="does not match selected production metadata"):
+        _resolve_group_telescope_configs(
+            {"array_layout_name": ["CTAO-North-Beta"]},
+            {
+                "site": "North",
+                "model_version": "7.0.0",
+                "array_layout_name": "CTAO-North-Alpha",
+            },
+        )
+
+
+def test_production_metadata_histograms_reject_non_event_data_file_types():
+    with pytest.raises(ValueError, match="requires file_type='reduced_event_data'"):
+        write_trigger_histograms({"production_path": "production", "file_type": "sim_telarray"})
 
 
 def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):

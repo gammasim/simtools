@@ -5,18 +5,18 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-import astropy.units as u
-
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration import defaults
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.production_configuration.job_grid_io import (
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
 )
-from simtools.production_configuration.job_metadata import build_production_job_manifest
+from simtools.production_configuration.job_metadata import (
+    build_production_job_manifest,
+    build_simulation_job_metadata,
+)
 from simtools.production_configuration.production_file_selection import (
     SIMULATE_PROD_JOB_METADATA,
     ProductionManifest,
@@ -112,10 +112,6 @@ def _write_manifests(production_path, job_grid_file, args_dict):
             )
         resolved_args = job_grid_row_to_simulate_prod_args(row, metadata)
         resolved_args.setdefault("simulation_software", "corsika_sim_telarray")
-        resolved_args.setdefault(
-            "curved_atmosphere_min_zenith_angle",
-            defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
-        )
         resolved_args.setdefault("eslope", -2.0)
         _validate_resolved_configuration(resolved_args, job_grid_file)
         overwrite_parameter_file = resolved_args.get("overwrite_model_parameters")
@@ -123,9 +119,6 @@ def _write_manifests(production_path, job_grid_file, args_dict):
             read_overwrite_model_parameter_dict(overwrite_parameter_file)
             if overwrite_parameter_file
             else {}
-        )
-        use_curved_atmosphere = (
-            resolved_args["zenith_angle"] >= resolved_args["curved_atmosphere_min_zenith_angle"]
         )
         array_model = SimpleNamespace(
             model_version=resolved_args["model_version"],
@@ -136,7 +129,7 @@ def _write_manifests(production_path, job_grid_file, args_dict):
         simulator = SimpleNamespace(
             run_number=resolved_args["run_number"],
             array_models=[array_model],
-            corsika_configurations=SimpleNamespace(use_curved_atmosphere=use_curved_atmosphere),
+            corsika_configurations=[],
         )
         file_inventory = inventory_production_files(job_directory)
         validate_required_production_outputs(
@@ -149,9 +142,19 @@ def _write_manifests(production_path, job_grid_file, args_dict):
             simulator,
             job_directory,
             file_inventory=file_inventory,
+            catalog_metadata=build_simulation_job_metadata(
+                resolved_args, simulator, include_sct=False
+            ),
+            atmosphere_configuration=_backfilled_atmosphere_configuration(resolved_args),
         )
         check_manifest(ProductionManifest(path=manifest_path, data=manifest))
         write_data_to_file(manifest, manifest_path)
+
+
+def _backfilled_atmosphere_configuration(args_dict):
+    """Return only atmosphere values known from the authoritative job grid."""
+    threshold = args_dict.get("curved_atmosphere_min_zenith_angle")
+    return {"curved_atmosphere_min_zenith_angle": threshold} if threshold is not None else {}
 
 
 def _validate_resolved_configuration(args_dict, job_grid_file):

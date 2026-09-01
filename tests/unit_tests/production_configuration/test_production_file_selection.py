@@ -131,6 +131,23 @@ def test_select_file_groups_reports_missing_runs(tmp_test_directory):
     assert result["groups"][0].missing_run_numbers == [2]
 
 
+def test_select_file_groups_keeps_multiple_files_from_one_run(tmp_test_directory):
+    manifest_path = _write_manifest(tmp_test_directory, "job-000001", 1)
+    second_file = manifest_path.parent / "gamma_run000001.part0002.reduced_event_data.hdf5"
+    second_file.touch()
+    manifest = collect_data_from_file(manifest_path)
+    manifest["files"]["reduced_event_data"].append(second_file.name)
+    write_data_to_file(manifest, manifest_path)
+
+    result = select_file_groups(tmp_test_directory)
+
+    assert result["groups"][0].run_numbers == [1]
+    assert [path.name for path in result["groups"][0].file_paths] == [
+        "gamma_run000001.reduced_event_data.hdf5",
+        "gamma_run000001.part0002.reduced_event_data.hdf5",
+    ]
+
+
 def test_select_file_groups_can_require_complete_runs(tmp_test_directory):
     _write_manifest(tmp_test_directory, "job-000001", 1)
     _write_manifest(tmp_test_directory, "job-000003", 3)

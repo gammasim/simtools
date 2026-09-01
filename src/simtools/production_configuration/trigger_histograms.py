@@ -702,11 +702,13 @@ def _write_directory_products(args_dict):
 
 def _write_production_selection_products(args_dict):
     """Submit one trigger-histogram product per selected production configuration group."""
+    if args_dict.get("file_type", "reduced_event_data") != "reduced_event_data":
+        raise ValueError("Production metadata input requires file_type='reduced_event_data'.")
     output_directory = io_handler.IOHandler().get_output_directory()
     selection_result = select_file_groups(
         args_dict["production_path"],
         selections=args_dict.get("select"),
-        file_type=args_dict.get("file_type", "reduced_event_data"),
+        file_type="reduced_event_data",
         require_complete_runs=args_dict.get("require_complete_runs", False),
     )
     _logger.info("\n%s", selection_summary(selection_result))
@@ -718,13 +720,13 @@ def _write_production_selection_products(args_dict):
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
     runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
-    telescope_configs = _resolve_telescope_configs(args_dict)
-    product_identity = {
-        "histogram_settings": _histogram_settings(args_dict),
-        "array_selection": telescope_configs,
-    }
     jobs = []
     for index, group in enumerate(selection_result["groups"]):
+        telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
+        product_identity = {
+            "histogram_settings": _histogram_settings(args_dict),
+            "array_selection": telescope_configs,
+        }
         output_file = validate_file_type(
             output_directory
             / f"{_group_output_stem(group, product_identity)}.trigger_histograms.hdf5",
@@ -838,6 +840,38 @@ def _resolve_telescope_configs(args_dict):
     return _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )
+
+
+def _resolve_group_telescope_configs(args_dict, configuration):
+    """Resolve telescope configurations from one selected production configuration."""
+    group_args = dict(args_dict)
+    _set_group_argument(group_args, configuration, "site")
+    _set_group_argument(group_args, configuration, "model_version", list_value=True)
+    if group_args.get("array_element_list"):
+        return _resolve_telescope_configs(group_args)
+    _set_group_argument(group_args, configuration, "array_layout_name", list_value=True)
+    return _resolve_telescope_configs(group_args)
+
+
+def _set_group_argument(args_dict, configuration, key, list_value=False):
+    """Set one telescope-resolution argument from metadata or reject an incompatible override."""
+    if key not in configuration:
+        raise ValueError(f"Selected production metadata is missing configuration.{key}.")
+    metadata_value = configuration[key]
+    expected = _as_argument_value(metadata_value, list_value)
+    provided = args_dict.get(key)
+    if provided is not None and provided != expected:
+        raise ValueError(
+            f"Explicit --{key}={provided} does not match selected production metadata {expected}."
+        )
+    args_dict[key] = expected
+
+
+def _as_argument_value(value, list_value):
+    """Return manifest values in the form accepted by the command-line resolver."""
+    if not list_value:
+        return value
+    return value if isinstance(value, list) else [value]
 
 
 def _histogram_settings(args_dict):

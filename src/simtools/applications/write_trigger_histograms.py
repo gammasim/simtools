@@ -45,12 +45,6 @@ _ARGUMENTS = (
         default=[],
     ),
     cli.ArgumentDefinition(
-        "file_type",
-        help="Manifest file type selected from production metadata.",
-        type=str,
-        default="reduced_event_data",
-    ),
-    cli.ArgumentDefinition(
         "require_complete_runs",
         help="Fail when selected run numbers are not contiguous within each configuration group.",
         action="store_true",
@@ -127,6 +121,11 @@ def _post_parse(args_dict, config_sources, parser):
                 "'--output_file' cannot be used with directory or production metadata input."
             )
 
+    if not args_dict.get("production_path") and not (
+        args_dict.get("array_layout_name") or args_dict.get("array_element_list")
+    ):
+        parser.error("Use one of --array_layout_name or --array_element_list.")
+
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
@@ -136,7 +135,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        *cli.layout_selection_arguments(),
+        *cli.layout_selection_arguments(required=False),
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

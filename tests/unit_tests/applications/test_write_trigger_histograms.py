@@ -81,7 +81,6 @@ def test_add_arguments_accepts_production_path_and_selection():
         "configuration.corsika_he_interaction=qgs3",
         "configuration.zenith_angle=20 deg",
     ]
-    assert args.file_type == "reduced_event_data"
 
 
 def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
@@ -90,6 +89,7 @@ def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
     write_trigger_histograms._post_parse(
         {
             "event_data_directory": "reduced_event_data",
+            "array_layout_name": ["CTAO-North-Alpha"],
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
@@ -109,6 +109,7 @@ def test_post_parse_accepts_explicit_output_path_for_directory_mode(mocker, sour
     write_trigger_histograms._post_parse(
         {
             "event_data_directory": "reduced_event_data",
+            "array_layout_name": ["CTAO-North-Alpha"],
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
@@ -125,6 +126,7 @@ def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
     write_trigger_histograms._post_parse(
         {
             "event_data_directory": "reduced_event_data",
+            "array_layout_name": ["CTAO-North-Alpha"],
             "output_file": "trigger_histograms.hdf5",
             "output_file_from_default": False,
         },
@@ -135,3 +137,19 @@ def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
     parser.error.assert_called_once_with(
         "'--output_file' cannot be used with directory or production metadata input."
     )
+
+
+def test_post_parse_allows_production_metadata_without_layout_selection(mocker):
+    parser = mocker.Mock()
+
+    write_trigger_histograms._post_parse(
+        {
+            "production_path": "production",
+            "output_file": "write_trigger_histograms.hdf5",
+            "output_file_from_default": True,
+        },
+        {"cli": {"output_path"}},
+        parser,
+    )
+
+    parser.error.assert_not_called()

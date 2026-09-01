@@ -81,6 +81,7 @@ class ProductionFileGroup:
     file_paths: list[Path] = field(default_factory=list)
     missing_run_numbers: list[int] = field(default_factory=list)
     duplicate_run_numbers: list[int] = field(default_factory=list)
+    files_by_run_number: dict[int, list[Path]] = field(default_factory=dict, repr=False)
 
 
 def find_manifests(production_path, manifest_name=SIMULATE_PROD_JOB_METADATA):
@@ -172,9 +173,8 @@ def group_selected_files(manifests, file_type="reduced_event_data"):
                 )
             ),
         )
-        for file_path in files:
-            group.run_numbers.append(manifest.run_number)
-            group.file_paths.append(file_path)
+        group.run_numbers.append(manifest.run_number)
+        group.files_by_run_number.setdefault(manifest.run_number, []).extend(files)
 
     grouped = list(groups.values())
     for group in grouped:
@@ -511,9 +511,12 @@ def _embedded_metadata_matches(manifest_value, metadata_value):
 
 def _sort_group_by_run_number(group):
     """Sort grouped run numbers and files by run number."""
-    ordered = sorted(zip(group.run_numbers, group.file_paths), key=lambda item: item[0])
-    group.run_numbers = [run_number for run_number, _ in ordered]
-    group.file_paths = [file_path for _, file_path in ordered]
+    group.run_numbers.sort()
+    group.file_paths = [
+        file_path
+        for run_number in group.run_numbers
+        for file_path in group.files_by_run_number[run_number]
+    ]
 
 
 def _duplicate_run_numbers(run_numbers):

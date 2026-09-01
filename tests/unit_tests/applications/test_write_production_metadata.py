@@ -60,3 +60,28 @@ def test_write_manifests_does_not_mark_incomplete_job_complete(
         )
 
     write_file.assert_not_called()
+
+
+def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(mocker, tmp_test_directory):
+    production_path = Path(tmp_test_directory)
+    job_directory = production_path / "job-000001"
+    job_directory.mkdir()
+    (job_directory / "gamma_run000001.simtel.zst").touch()
+    mocker.patch(
+        "simtools.applications.write_production_metadata.read_job_grid",
+        return_value=(
+            [_job_grid_row()],
+            {"site": "North", "simulation_software": "corsika_sim_telarray"},
+        ),
+    )
+    write_file = mocker.patch("simtools.applications.write_production_metadata.write_data_to_file")
+
+    write_production_metadata._write_manifests(
+        production_path,
+        "job-grid.ecsv",
+        {"overwrite": False},
+    )
+
+    manifest = write_file.call_args.args[0]
+    assert "sct" not in manifest["catalog_metadata"]
+    assert manifest["configuration"]["atmosphere"] == {}

@@ -122,6 +122,31 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
     }
 
 
+def test_build_production_job_manifest_preserves_truthful_backfill_metadata(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    simulator = _simulator("MSTS-01", run_number=12)
+    catalog_metadata = {"runNumber": 12, "particle": "gamma"}
+    atmosphere = {"curved_atmosphere_min_zenith_angle": 70 * u.deg}
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        simulator,
+        output_directory,
+        file_inventory={"sim_telarray": ["gamma_run000012.simtel.zst"]},
+        catalog_metadata=catalog_metadata,
+        atmosphere_configuration=atmosphere,
+    )
+
+    assert manifest["catalog_metadata"] == catalog_metadata
+    assert manifest["configuration"]["atmosphere"] == atmosphere
+
+
 def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere(
     tmp_test_directory,
 ):

@@ -21,7 +21,7 @@ _FILE_TYPE_ALIASES = {
 }
 
 
-def build_simulation_job_metadata(args_dict, simulator):
+def build_simulation_job_metadata(args_dict, simulator, include_sct=True):
     """Build DIRAC catalog metadata from resolved simulation configuration.
 
     Parameters
@@ -30,6 +30,8 @@ def build_simulation_job_metadata(args_dict, simulator):
         Resolved ``simulate_prod`` application arguments.
     simulator : simtools.simulator.Simulator
         Simulator for the completed run.
+    include_sct : bool, optional
+        Include the SCT-presence catalog field when the resolved array elements are available.
 
     Returns
     -------
@@ -44,18 +46,26 @@ def build_simulation_job_metadata(args_dict, simulator):
         "particle": args_dict["primary"].lower(),
         "phiP": round(geographic_to_corsika_azimuth(azimuth_angle), 2),
         "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
-        "sct": str(_has_sct(simulator.array_models)),
         "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),
         "view_cone_max": round(float(view_cone_max.to_value(u.deg)), 2),
         "runNumber": int(simulator.run_number),
         "model_version": str(args_dict["model_version"]),
     }
+    if include_sct:
+        metadata["sct"] = str(_has_sct(simulator.array_models))
     _add_optional_coordinate(metadata, "dec", args_dict.get("dec"))
     _add_optional_coordinate(metadata, "ha", args_dict.get("ha"))
     return metadata
 
 
-def build_production_job_manifest(args_dict, simulator, output_directory, file_inventory=None):
+def build_production_job_manifest(
+    args_dict,
+    simulator,
+    output_directory,
+    file_inventory=None,
+    catalog_metadata=None,
+    atmosphere_configuration=None,
+):
     """Build a versioned production-job manifest from resolved simulation output.
 
     Parameters
@@ -68,13 +78,18 @@ def build_production_job_manifest(args_dict, simulator, output_directory, file_i
         Directory containing the packaged output files.
     file_inventory : dict, optional
         Precomputed manifest file inventory. Used when backfilling existing jobs.
+    catalog_metadata : dict, optional
+        Catalog metadata to store instead of deriving it from the simulator.
+    atmosphere_configuration : dict, optional
+        Resolved atmosphere configuration to store instead of deriving it from the simulator.
 
     Returns
     -------
     dict
         Versioned production-job manifest used for downstream file selection.
     """
-    catalog_metadata = build_simulation_job_metadata(args_dict, simulator)
+    if catalog_metadata is None:
+        catalog_metadata = build_simulation_job_metadata(args_dict, simulator)
     return {
         "schema_name": "simulate_prod_job_metadata",
         "schema_version": PRODUCTION_JOB_MANIFEST_VERSION,
@@ -83,12 +98,16 @@ def build_production_job_manifest(args_dict, simulator, output_directory, file_i
         "job_id": Path(output_directory).name,
         "status": "complete",
         "catalog_metadata": catalog_metadata,
-        "configuration": _build_selection_configuration(args_dict, simulator),
+        "configuration": _build_selection_configuration(
+            args_dict,
+            simulator,
+            atmosphere_configuration=atmosphere_configuration,
+        ),
         "files": file_inventory or _build_output_file_inventory(simulator, output_directory),
     }
 
 
-def _build_selection_configuration(args_dict, simulator):
+def _build_selection_configuration(args_dict, simulator, atmosphere_configuration=None):
     """Return stable simulation configuration fields used for selection and grouping."""
     energy_min, energy_max = args_dict["energy_range"]
     view_cone_min, view_cone_max = args_dict["view_cone"]
@@ -114,7 +133,9 @@ def _build_selection_configuration(args_dict, simulator):
         "corsika_le_interaction": args_dict.get("corsika_le_interaction"),
         "corsika_hadronic_transition_energy": args_dict.get("corsika_hadronic_transition_energy"),
         "model_parameter_overrides": _resolved_model_parameter_overrides(simulator),
-        "atmosphere": _resolved_atmosphere_configuration(args_dict, simulator),
+        "atmosphere": atmosphere_configuration
+        if atmosphere_configuration is not None
+        else _resolved_atmosphere_configuration(args_dict, simulator),
     }
     _add_optional_configuration_value(configuration, "dec", args_dict.get("dec"))
     _add_optional_configuration_value(configuration, "ha", args_dict.get("ha"))
