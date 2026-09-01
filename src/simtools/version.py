@@ -201,8 +201,8 @@ def base_version_for_patch_delta(version_string):
 
     Parameters
     ----------
-    version_string : str
-        Version string to inspect.
+    version_string : str or None
+        Version string to inspect, or ``None``.
 
     Returns
     -------

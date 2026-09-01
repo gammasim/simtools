@@ -105,8 +105,9 @@ class Simulator:
         Parameters
         ----------
         simulation_software : str
-            implemented are sim_telarray and CORSIKA or corsika_sim_telarray
-            (running CORSIKA and piping it directly to sim_telarray)
+            Simulation software to use. Must be one of ``"sim_telarray"``,
+            ``"corsika"``, or ``"corsika_sim_telarray"``. The latter runs CORSIKA
+            and pipes it directly to sim_telarray.
 
         Raises
         ------
@@ -668,8 +669,9 @@ class Simulator:
 
         Parameters
         ----------
-        directory_for_grid_upload : str
-            Directory for the output files.
+        directory_for_grid_upload : str or pathlib.Path or None, optional
+            Directory for the output files. If ``None``, use the
+            ``directory_for_grid_upload`` subdirectory of the configured output directory.
 
         """
         self.logger.info(
