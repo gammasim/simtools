@@ -147,13 +147,22 @@ def add_model_parameters_to_db(input_path, db):
         logger.info(f"Reading model parameters for {element.name}")
         files_to_insert = list(Path(element).rglob("*json"))
         for file in files_to_insert:
-            collection = names.get_collection_name_from_parameter_name(file.parent.name)
+            collection = _get_model_parameter_collection(file)
             add_values_from_json_to_db(
                 file=file,
                 collection=collection,
                 db=db,
                 file_prefix=input_path / "Files",
             )
+
+
+def _get_model_parameter_collection(file):
+    """Return the database collection for a model parameter file."""
+    parameter_collection = names.get_collection_name_from_parameter_name(file.parent.name)
+    if parameter_collection.startswith("configuration_"):
+        return parameter_collection
+
+    return names.get_collection_name_from_array_element_name(file.parent.parent.name, False)
 
 
 def add_production_tables_to_db(input_path, db):

@@ -158,10 +158,18 @@ def test_add_model_parameters_to_db_uses_parameter_schema_collection(
     corsika_parameter = (
         input_path / "global" / "corsika_iact_io_buffer" / "corsika_iact_io_buffer-1.0.0.json"
     )
+    calibration_parameter = (
+        input_path
+        / "ILLN-01"
+        / "array_element_position_ground"
+        / "array_element_position_ground-2.0.0.json"
+    )
     simtel_parameter.parent.mkdir(parents=True, exist_ok=True)
     corsika_parameter.parent.mkdir(parents=True, exist_ok=True)
+    calibration_parameter.parent.mkdir(parents=True, exist_ok=True)
     simtel_parameter.touch()
     corsika_parameter.touch()
+    calibration_parameter.touch()
 
     db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
@@ -174,6 +182,12 @@ def test_add_model_parameters_to_db_uses_parameter_schema_collection(
     mock_add_values_from_json_to_db.assert_any_call(
         file=corsika_parameter,
         collection="configuration_corsika",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=calibration_parameter,
+        collection="calibration_devices",
         db=mock_db,
         file_prefix=input_path / "Files",
     )
