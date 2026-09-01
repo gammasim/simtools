@@ -1,0 +1,876 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtools.sim_events.output_validator &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=29b1acb9"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtools/sim_events/output_validator';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.37.0" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools.sim_events.output_validator</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtools.sim_events.output_validator</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Validation of reduced event list files."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">METADATA_JSON_SCHEMA</span><span class="p">,</span> <span class="n">SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span><span class="p">,</span> <span class="n">validate_data</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">table_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.trigger_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span><span class="p">,</span>
+    <span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_SUBSET_HISTOGRAMS_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_TOPOLOGY_COUNTS_TABLE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.sim_events.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_simulation_metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_REDUCED_EVENT_TABLE_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"SHOWERS"</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"reduced_event_showers.schema.yml"</span><span class="p">,</span>
+    <span class="s2">"TRIGGERS"</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"reduced_event_triggers.schema.yml"</span><span class="p">,</span>
+    <span class="s2">"FILE_INFO"</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"reduced_event_file_info.schema.yml"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_REDUCED_EVENT_METADATA_DOCUMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"METADATA"</span><span class="p">,</span> <span class="s2">"SIMULATION_METADATA"</span><span class="p">)</span>
+<span class="n">_TRIGGER_HISTOGRAM_TABLES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_TOPOLOGY_COUNTS_TABLE</span><span class="p">,</span>
+    <span class="n">TRIGGER_SUBSET_HISTOGRAMS_TABLE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_TRIGGER_HISTOGRAM_TABLE_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span>
+    <span class="o">/</span> <span class="s2">"trigger_histogram_reference_metadata.schema.yml"</span><span class="p">,</span>
+    <span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"trigger_histogram_reference_bins.schema.yml"</span><span class="p">,</span>
+    <span class="n">TRIGGER_TOPOLOGY_COUNTS_TABLE</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"trigger_histogram_topology_counts.schema.yml"</span><span class="p">,</span>
+    <span class="n">TRIGGER_SUBSET_HISTOGRAMS_TABLE</span><span class="p">:</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"trigger_histogram_subset_histograms.schema.yml"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="validate_sim_events">
+<a class="viewcode-back" href="../../../api-reference/sim_events.html#simtools.sim_events.output_validator.validate_sim_events">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_sim_events</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate reduced event lists files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_files: str, Path, list</span>
+<span class="sd">        Path(s) to the reduced event list files to validate.</span>
+<span class="sd">    expected_mc_events: int</span>
+<span class="sd">        Expected number of simulated MC events.</span>
+<span class="sd">    """</span>
+    <span class="n">data_files</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_list</span><span class="p">(</span><span class="n">data_files</span><span class="p">)</span>
+    <span class="n">validate_event_numbers</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_event_numbers">
+<a class="viewcode-back" href="../../../api-reference/sim_events.html#simtools.sim_events.output_validator.validate_event_numbers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_event_numbers</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate that the number of simulated events in reduced event lists matches the expected number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_files: str, Path, list</span>
+<span class="sd">        Path(s) to the reduced event list files to validate.</span>
+<span class="sd">    expected_mc_events: int</span>
+<span class="sd">        Expected number of simulated MC events.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the number of simulated events does not match the expected number.</span>
+<span class="sd">    """</span>
+    <span class="n">data_files</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_list</span><span class="p">(</span><span class="n">data_files</span><span class="p">)</span>
+
+    <span class="n">event_errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">data_file</span> <span class="ow">in</span> <span class="n">data_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_file_type</span><span class="p">([</span><span class="n">data_file</span><span class="p">])</span> <span class="o">!=</span> <span class="s2">"HDF5"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Unsupported reduced event data format for '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">'. "</span>
+                <span class="s2">"Only HDF5 files with suffix '.hdf5' or '.h5' are supported."</span>
+            <span class="p">)</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="p">[</span><span class="s2">"SHOWERS"</span><span class="p">],</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">"HDF5"</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mc_events</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="s2">"SHOWERS"</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SHOWERS table not found in reduced event list </span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="n">mc_events</span> <span class="o">!=</span> <span class="n">expected_mc_events</span><span class="p">:</span>
+            <span class="n">event_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Number of simulated MC events (</span><span class="si">{</span><span class="n">mc_events</span><span class="si">}</span><span class="s2">) does not match "</span>
+                <span class="sa">f</span><span class="s2">"the expected number (</span><span class="si">{</span><span class="n">expected_mc_events</span><span class="si">}</span><span class="s2">) in reduced event list </span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Consistent number of events in reduced event list: </span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">: MC events:"</span>
+                <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">mc_events</span><span class="si">}</span><span class="s2"> (expected: </span><span class="si">{</span><span class="n">expected_mc_events</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">event_errors</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Inconsistent event counts found in reduced event lists:"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">event_errors</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">" - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="s2">"Inconsistent event counts found in reduced event lists:</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">" - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">event_errors</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_reduced_event_data_file">
+<a class="viewcode-back" href="../../../api-reference/sim_events.html#simtools.sim_events.output_validator.validate_reduced_event_data_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_reduced_event_data_file</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate the structure, tables, metadata, and references of one reduced-event file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_file : str or pathlib.Path</span>
+<span class="sd">        HDF5 reduced-event file to validate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` when the file passes all structural and semantic checks.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the file format, required entries, metadata, or references are invalid.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If a required table column is missing.</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If ``data_file`` is not a readable HDF5 file.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_file_type</span><span class="p">([</span><span class="n">data_file</span><span class="p">])</span> <span class="o">!=</span> <span class="s2">"HDF5"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reduced event data file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' must be an HDF5 file."</span><span class="p">)</span>
+
+    <span class="n">required_entries</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">_REDUCED_EVENT_TABLE_SCHEMAS</span><span class="p">,</span> <span class="o">*</span><span class="n">_REDUCED_EVENT_METADATA_DOCUMENTS</span><span class="p">]</span>
+    <span class="n">available_entries</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_list</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">required_entries</span><span class="p">)</span>
+    <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">entries</span> <span class="ow">in</span> <span class="n">available_entries</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">entries</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_entries</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Reduced event data file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' is missing required entries: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
+        <span class="n">data_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">_REDUCED_EVENT_TABLE_SCHEMAS</span><span class="p">),</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">"HDF5"</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">_REDUCED_EVENT_TABLE_SCHEMAS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span>
+            <span class="n">data_table</span><span class="o">=</span><span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">],</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">()</span>
+
+    <span class="n">standard_metadata</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_metadata_document</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">"METADATA"</span><span class="p">)</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">standard_metadata</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">METADATA_JSON_SCHEMA</span><span class="p">)</span>
+    <span class="n">validate_simulation_metadata</span><span class="p">(</span>
+        <span class="n">table_handler</span><span class="o">.</span><span class="n">read_metadata_document</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">"SIMULATION_METADATA"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">_validate_reduced_event_table_references</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="validate_trigger_histogram_file">
+<a class="viewcode-back" href="../../../api-reference/sim_events.html#simtools.sim_events.output_validator.validate_trigger_histogram_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_trigger_histogram_file</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate the structure, tables, metadata, and references of one trigger-histogram file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_file : str or pathlib.Path</span>
+<span class="sd">        HDF5 trigger-histogram file to validate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` when the file passes all structural and semantic checks.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the file format, required entries, metadata, table contents, or references are invalid.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If a required table column is missing.</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If ``data_file`` is not a readable HDF5 file.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_file_type</span><span class="p">([</span><span class="n">data_file</span><span class="p">])</span> <span class="o">!=</span> <span class="s2">"HDF5"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' must be an HDF5 file."</span><span class="p">)</span>
+
+    <span class="n">available_entries</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_table_list</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">_TRIGGER_HISTOGRAM_TABLES</span><span class="p">))</span>
+    <span class="n">missing_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">entries</span> <span class="ow">in</span> <span class="n">available_entries</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">entries</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_entries</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' is missing required entries: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_entries</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="n">standard_metadata</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_metadata_document</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">"METADATA"</span><span class="p">)</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">standard_metadata</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">METADATA_JSON_SCHEMA</span><span class="p">)</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">_TRIGGER_HISTOGRAM_TABLES</span><span class="p">),</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">"HDF5"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">_TRIGGER_HISTOGRAM_TABLE_SCHEMAS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span>
+            <span class="n">data_table</span><span class="o">=</span><span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">],</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">()</span>
+    <span class="n">reference_ids</span> <span class="o">=</span> <span class="n">_validate_trigger_histogram_table_references</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+    <span class="n">_validate_trigger_histogram_dense_payload</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">reference_ids</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="validate_trigger_histograms_file">
+<a class="viewcode-back" href="../../../api-reference/sim_events.html#simtools.sim_events.output_validator.validate_trigger_histograms_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_trigger_histograms_file</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate a trigger-histogram product using its registered product name."""</span>
+    <span class="k">return</span> <span class="n">validate_trigger_histogram_file</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_trigger_histogram_table_references</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate reference IDs used by trigger-histogram tables."""</span>
+    <span class="n">reference_ids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"reference_id"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">]}</span>
+    <span class="n">metadata_row_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reference_ids</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' has no reference metadata rows."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="n">metadata_row_count</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' has duplicate reference IDs."</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">_TRIGGER_HISTOGRAM_TABLES</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">table_reference_ids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"reference_id"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]}</span>
+        <span class="n">unknown_ids</span> <span class="o">=</span> <span class="n">table_reference_ids</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">reference_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unknown_ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' table '</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">' references unknown "</span>
+                <span class="sa">f</span><span class="s2">"reference IDs: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+    <span class="n">bin_reference_ids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"reference_id"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">]}</span>
+    <span class="n">missing_bin_ids</span> <span class="o">=</span> <span class="n">reference_ids</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">bin_reference_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">missing_bin_ids</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' has references without histogram bins: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing_bin_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">reference_ids</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_trigger_histogram_dense_payload</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">reference_ids</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate dense histogram groups and their links to reference metadata."""</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="n">dense_group</span> <span class="o">=</span> <span class="n">_get_dense_histogram_group</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+        <span class="n">_validate_dense_reference_ids</span><span class="p">(</span><span class="n">dense_group</span><span class="p">,</span> <span class="n">reference_ids</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">reference_id</span><span class="p">,</span> <span class="n">reference_group</span> <span class="ow">in</span> <span class="n">dense_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">_validate_dense_reference_payload</span><span class="p">(</span><span class="n">reference_id</span><span class="p">,</span> <span class="n">reference_group</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_dense_histogram_group</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the dense payload group from a trigger-histogram file."""</span>
+    <span class="k">if</span> <span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' has no dense payload group."</span><span class="p">)</span>
+    <span class="n">dense_group</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dense_group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' dense payload is not a group."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dense_group</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_dense_reference_ids</span><span class="p">(</span><span class="n">dense_group</span><span class="p">,</span> <span class="n">reference_ids</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate that dense payload groups correspond to reference metadata."""</span>
+    <span class="n">dense_reference_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dense_group</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">dense_reference_ids</span> <span class="o">!=</span> <span class="n">reference_ids</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' dense reference IDs do not match metadata: "</span>
+            <span class="sa">f</span><span class="s2">"metadata=</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">reference_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">, dense=</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">dense_reference_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_dense_reference_payload</span><span class="p">(</span><span class="n">reference_id</span><span class="p">,</span> <span class="n">reference_group</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate all dense histograms for one reference ID."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reference_group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">reference_group</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' reference '</span><span class="si">{</span><span class="n">reference_id</span><span class="si">}</span><span class="s2">' has no payload."</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram_group</span> <span class="ow">in</span> <span class="n">reference_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">_validate_dense_histogram_payload</span><span class="p">(</span><span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram_group</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_dense_histogram_payload</span><span class="p">(</span><span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram_group</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate one dense histogram's values and bin-edge datasets."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">histogram_group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' is not a group."</span>
+        <span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">histogram_group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"values"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+            <span class="s2">"has no values dataset."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+            <span class="s2">"has invalid values data."</span>
+        <span class="p">)</span>
+
+    <span class="n">edge_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">histogram_group</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"values"</span><span class="p">]</span>
+    <span class="n">expected_edge_names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"edges_</span><span class="si">{</span><span class="n">axis_index</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">axis_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">edge_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected_edge_names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+            <span class="sa">f</span><span class="s2">"has invalid bin-edge datasets: expected </span><span class="si">{</span><span class="n">expected_edge_names</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"found </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">edge_names</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">axis_index</span><span class="p">,</span> <span class="n">edge_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expected_edge_names</span><span class="p">):</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">histogram_group</span><span class="p">[</span><span class="n">edge_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="ow">or</span> <span class="n">edges</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+                <span class="sa">f</span><span class="s2">"edge dataset '</span><span class="si">{</span><span class="n">edge_name</span><span class="si">}</span><span class="s2">' is not a one-dimensional dataset."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">edges</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+                <span class="sa">f</span><span class="s2">"edge dataset '</span><span class="si">{</span><span class="n">edge_name</span><span class="si">}</span><span class="s2">' is not numeric."</span>
+            <span class="p">)</span>
+        <span class="n">expected_length</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis_index</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">!=</span> <span class="n">expected_length</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Trigger histogram file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' payload '</span><span class="si">{</span><span class="n">histogram_name</span><span class="si">}</span><span class="s2">' "</span>
+                <span class="sa">f</span><span class="s2">"edge dataset '</span><span class="si">{</span><span class="n">edge_name</span><span class="si">}</span><span class="s2">' has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"> values, expected </span><span class="si">{</span><span class="n">expected_length</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_reduced_event_table_references</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate file and event references between reduced-event tables."""</span>
+    <span class="n">file_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="s2">"FILE_INFO"</span><span class="p">][</span><span class="s2">"file_id"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"SHOWERS"</span><span class="p">,</span> <span class="s2">"TRIGGERS"</span><span class="p">):</span>
+        <span class="n">unknown_file_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s2">"file_id"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span>
+            <span class="n">file_ids</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">unknown_file_ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Reduced event data file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' table '</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">' references unknown "</span>
+                <span class="sa">f</span><span class="s2">"file_id values: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="w"> </span><span class="n">unknown_file_ids</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+    <span class="n">shower_ids</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"file_id"</span><span class="p">,</span> <span class="s2">"event_id"</span><span class="p">,</span> <span class="s2">"shower_id"</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">[</span><span class="s2">"SHOWERS"</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shower_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="s2">"SHOWERS"</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Reduced event data file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' contains duplicate shower composite keys."</span>
+        <span class="p">)</span>
+    <span class="n">trigger_ids</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"file_id"</span><span class="p">,</span> <span class="s2">"event_id"</span><span class="p">,</span> <span class="s2">"shower_id"</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">[</span><span class="s2">"TRIGGERS"</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="n">unknown_showers</span> <span class="o">=</span> <span class="n">trigger_ids</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">shower_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unknown_showers</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Reduced event data file '</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">' contains triggers without matching showers: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown_showers</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

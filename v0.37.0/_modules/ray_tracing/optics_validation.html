@@ -1,0 +1,947 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ray_tracing.optics_validation &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../_static/documentation_options.js?v=29b1acb9"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing/optics_validation';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.37.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ray_tracing.optics_validation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for ray_tracing.optics_validation</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Validating telescope optical model parameters via ray tracing."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_data_writer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_ray_tracing_psf</span><span class="p">,</span> <span class="n">visualize</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_psf_data_column</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">fallback_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Find a PSF data column by name, falling back to legacy column position."""</span>
+    <span class="n">matched_column</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span> <span class="k">if</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">matched_column</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">matched_column</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">[</span><span class="n">fallback_index</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Could not find required PSF data column '</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">' in </span><span class="si">{</span><span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="si">}</span><span class="s2">."</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_radius_values_in_cm</span><span class="p">(</span><span class="n">radius_column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return radius values in centimeters, using table units when available."""</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">radius_column</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">radius_column</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">radius_column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+
+
+<div class="viewcode-block" id="load_data">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.optics_validation.load_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="n">datafile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Load the data file with the measured PSF vs radius [cm].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datafile : str or Path</span>
+<span class="sd">        Path to the file containing the measured cumulative PSF.</span>
+<span class="sd">        Expected columns: radial distance in mm, differential intensity, integral intensity.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Structured array with fields 'Radius [cm]' and 'Relative intensity'.</span>
+<span class="sd">    """</span>
+    <span class="n">radius_cm</span> <span class="o">=</span> <span class="s2">"Radius [cm]"</span>
+    <span class="n">relative_intensity</span> <span class="o">=</span> <span class="s2">"Relative intensity"</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"ascii"</span><span class="p">)</span>
+    <span class="n">radius_column</span> <span class="o">=</span> <span class="n">_find_psf_data_column</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">"radius"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">integral_psf_column</span> <span class="o">=</span> <span class="n">_find_psf_data_column</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">"integral"</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">d_type</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"names"</span><span class="p">:</span> <span class="p">(</span><span class="n">radius_cm</span><span class="p">,</span> <span class="n">relative_intensity</span><span class="p">),</span> <span class="s2">"formats"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"f8"</span><span class="p">,</span> <span class="s2">"f8"</span><span class="p">)}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d_type</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">radius_cm</span><span class="p">]</span> <span class="o">=</span> <span class="n">_radius_values_in_cm</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">radius_column</span><span class="p">])</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">relative_intensity</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">integral_psf_column</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">relative_intensity</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">relative_intensity</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="validate_cumulative_psf">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.optics_validation.validate_cumulative_psf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_cumulative_psf</span><span class="p">(</span><span class="n">app_context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Simulate PSF measurements and compare cumulative PSF with measured data if provided.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app_context : object</span>
+<span class="sd">        Application context with ``args`` and ``io_handler`` attributes.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no radius data is available to compute the cumulative PSF.</span>
+<span class="sd">    """</span>
+    <span class="n">args_dict</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span>
+    <span class="n">io_handler</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">io_handler</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"validate_cumulative_psf"</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+
+    <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"site"</span><span class="p">],</span>
+        <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"telescope"</span><span class="p">],</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"model_version"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+        <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"zenith_angle"</span><span class="p">],</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"source_distance"</span><span class="p">],</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"test"</span><span class="p">],</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">images</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"d80 in cm = </span><span class="si">{</span><span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">data_to_plot</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"data"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">data_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"data"</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">"data_search_path"</span><span class="p">])</span>
+        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">"measured"</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">"measured"</span><span class="p">][</span><span class="s2">"Radius [cm]"</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_to_plot</span><span class="p">[</span><span class="sa">r</span><span class="s2">"sim$\_$telarray"</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_cumulative_data</span><span class="p">(</span><span class="n">radius</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Radius data is not available. Cannot compute cumulative PSF."</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1d</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">)</span>
+
+    <span class="n">plot_file_name</span> <span class="o">=</span> <span class="n">label</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">"_cumulative_PSF"</span>
+    <span class="n">plot_file</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+    <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">data_to_plot</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_image_data</span><span class="p">()</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plot_ray_tracing_psf</span><span class="o">.</span><span class="n">create_psf_image_figure</span><span class="p">(</span>
+        <span class="n">data_to_plot</span><span class="p">,</span>
+        <span class="n">containment_radius</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">bins</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="s2">"gist_heat_r"</span><span class="p">,</span>
+        <span class="n">psf_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"color"</span><span class="p">:</span> <span class="s2">"k"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"lw"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"ls"</span><span class="p">:</span> <span class="s2">"--"</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">plot_file_name</span> <span class="o">=</span> <span class="n">label</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">"_image"</span>
+    <span class="n">plot_file</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+    <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_optics">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.optics_validation.validate_optics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_optics</span><span class="p">(</span><span class="n">app_context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build telescope model, run ray tracing, plot PSF/area/focal-length results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app_context : object</span>
+<span class="sd">        Application context with ``args`` and ``io_handler`` attributes.</span>
+<span class="sd">    """</span>
+    <span class="n">args_dict</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span>
+    <span class="n">io_handler</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">io_handler</span>
+
+    <span class="n">label</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"validate_optics"</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+
+    <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"site"</span><span class="p">],</span>
+        <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"telescope"</span><span class="p">],</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"model_version"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Validating telescope optics with ray tracing simulations for </span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+    <span class="n">offset_directions</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"offset_directions"</span><span class="p">):</span>
+        <span class="n">offset_directions</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">"offset_directions"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)]</span>
+
+    <span class="n">max_offset</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">"max_offset"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="n">offset_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_offset</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">"offset_step"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+        <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"validate_optics"</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"zenith_angle"</span><span class="p">],</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"source_distance"</span><span class="p">],</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_offset</span><span class="p">,</span> <span class="n">offset_steps</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">offset_file</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"offset_file"</span><span class="p">),</span>
+        <span class="n">offset_directions</span><span class="o">=</span><span class="n">offset_directions</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"test"</span><span class="p">],</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_photons</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save_photons"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+    <span class="n">_plot_psf_summary</span><span class="p">(</span><span class="n">ray</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">io_handler</span><span class="p">)</span>
+
+    <span class="n">_export_effective_focal_length_model_parameter</span><span class="p">(</span>
+        <span class="n">ray</span><span class="o">=</span><span class="n">ray</span><span class="p">,</span>
+        <span class="n">telescope_name</span><span class="o">=</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">"model_version"</span><span class="p">],</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameter_version"</span><span class="p">),</span>
+        <span class="n">output_directory</span><span class="o">=</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+        <span class="n">metadata_input_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">"plot_images"</span><span class="p">]:</span>
+        <span class="n">plot_file</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"images.pdf"</span><span class="p">)))</span>
+        <span class="n">_plot_psf_images</span><span class="p">(</span>
+            <span class="n">ray</span><span class="p">,</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">plot_file</span><span class="p">,</span>
+            <span class="n">plot_in_degrees</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"plot_images_in_degrees"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_psf_summary</span><span class="p">(</span><span class="n">ray</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">io_handler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot PSF, effective area, and effective focal length vs off-axis angle."""</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"psf_deg"</span><span class="p">,</span> <span class="s2">"psf_cm"</span><span class="p">,</span> <span class="s2">"eff_area"</span><span class="p">,</span> <span class="s2">"eff_flen"</span><span class="p">]:</span>
+        <span class="n">plot_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"o"</span><span class="p">,</span> <span class="s2">"linestyle"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">,</span> <span class="s2">"color"</span><span class="p">:</span> <span class="s2">"k"</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"eff_flen"</span><span class="p">:</span>
+            <span class="n">plot_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"error_type"</span><span class="p">:</span> <span class="s2">"errorbar"</span><span class="p">,</span>
+                    <span class="s2">"error_label"</span><span class="p">:</span> <span class="s2">"Uncertainty"</span><span class="p">,</span>
+                    <span class="s2">"markersize"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span>
+        <span class="n">plot_file</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_eff_flen_cm_for_degree_conversion</span><span class="p">(</span><span class="n">ray</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the median effective focal length in cm for image unit conversion.</span>
+
+<span class="sd">    Reads ``ray._results`` and delegates to ``_median_effective_focal_length``.</span>
+<span class="sd">    Returns None when results are unavailable or contain no valid values.</span>
+<span class="sd">    """</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ray</span><span class="p">,</span> <span class="s2">"_results"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">"eff_flen"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">eff_flen_cm</span> <span class="o">=</span> <span class="n">_median_effective_focal_length</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eff_flen_cm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Using median effective focal length for degree conversion: </span><span class="si">{</span><span class="n">eff_flen_cm</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> cm"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">eff_flen_cm</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_max_image_extent</span><span class="p">(</span><span class="n">images_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the rounded half-range of all image X/Y positions in cm."""</span>
+    <span class="n">max_x_extent</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">max_y_extent</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_image_data</span><span class="p">(</span><span class="n">centralized</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">max_x_extent</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_x_extent</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"X"</span><span class="p">])))</span>
+            <span class="n">max_y_extent</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_y_extent</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"Y"</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">max_x_extent</span><span class="p">,</span> <span class="n">max_y_extent</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_psf_images</span><span class="p">(</span><span class="n">ray</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">plot_in_degrees</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Render one PSF image per off-axis angle and save them to a single PDF."""</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Plotting images into </span><span class="si">{</span><span class="n">plot_file</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">images_dict</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">psf_images</span>
+    <span class="c1"># Compute a single representative effective focal length from all non-zero-offset</span>
+    <span class="c1"># rows (eff_flen is undefined / NaN at zero offset).  The value is stable across</span>
+    <span class="c1"># off-axis angles, so using the median is sufficient.</span>
+    <span class="n">eff_flen_cm</span> <span class="o">=</span> <span class="n">_eff_flen_cm_for_degree_conversion</span><span class="p">(</span><span class="n">ray</span><span class="p">)</span> <span class="k">if</span> <span class="n">plot_in_degrees</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">max_extent_rounded</span> <span class="o">=</span> <span class="n">_max_image_extent</span><span class="p">(</span><span class="n">images_dict</span><span class="p">)</span>
+
+    <span class="n">figures</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">off_x</span><span class="p">,</span> <span class="n">off_y</span><span class="p">),</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">psf_cm_val</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_psf</span><span class="p">(</span><span class="n">fraction</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"cm"</span><span class="p">)</span>
+        <span class="n">converted_data</span><span class="p">,</span> <span class="n">psf_quantity</span><span class="p">,</span> <span class="n">containment_radius</span><span class="p">,</span> <span class="n">plot_extent</span> <span class="o">=</span> <span class="n">_prepare_image_for_plotting</span><span class="p">(</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">get_image_data</span><span class="p">(</span><span class="n">centralized</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">psf_cm_val</span><span class="p">,</span>
+            <span class="n">max_extent_rounded</span><span class="p">,</span>
+            <span class="n">eff_flen_cm</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">figures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">plot_ray_tracing_psf</span><span class="o">.</span><span class="n">create_annotated_psf_image_figure</span><span class="p">(</span>
+                <span class="n">converted_data</span><span class="p">,</span>
+                <span class="n">off_x</span><span class="o">=</span><span class="n">off_x</span><span class="p">,</span>
+                <span class="n">off_y</span><span class="o">=</span><span class="n">off_y</span><span class="p">,</span>
+                <span class="n">psf</span><span class="o">=</span><span class="n">psf_quantity</span><span class="p">,</span>
+                <span class="n">containment_radius</span><span class="o">=</span><span class="n">containment_radius</span><span class="p">,</span>
+                <span class="n">image_range</span><span class="o">=</span><span class="p">[</span>
+                    <span class="p">[</span><span class="o">-</span><span class="n">plot_extent</span><span class="p">,</span> <span class="n">plot_extent</span><span class="p">],</span>
+                    <span class="p">[</span><span class="o">-</span><span class="n">plot_extent</span><span class="p">,</span> <span class="n">plot_extent</span><span class="p">],</span>
+                <span class="p">],</span>
+                <span class="n">bins</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="s2">"gist_heat_r"</span><span class="p">,</span>
+                <span class="n">psf_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"color"</span><span class="p">:</span> <span class="s2">"k"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"lw"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"ls"</span><span class="p">:</span> <span class="s2">"--"</span><span class="p">},</span>
+                <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">visualize</span><span class="o">.</span><span class="n">save_figures_to_single_document</span><span class="p">(</span><span class="n">figures</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_median_effective_focal_length</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return median effective focal length in cm from ray-tracing results.</span>
+
+<span class="sd">    The effective focal length is undefined (NaN) at zero off-axis angle and is</span>
+<span class="sd">    stable across non-zero off-axis angles, so the median over those rows is a</span>
+<span class="sd">    sufficient single representative value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : astropy.table.QTable</span>
+<span class="sd">        Ray-tracing results table with columns ``off_x``, ``off_y``, and</span>
+<span class="sd">        ``eff_flen``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or None</span>
+<span class="sd">        Median effective focal length in cm, or None if no valid values exist.</span>
+<span class="sd">    """</span>
+    <span class="n">off_x_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"off_x"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">off_y_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"off_y"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">eff_flen_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"eff_flen"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">non_zero</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_x_vals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_y_vals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">eff_flen_vals</span><span class="p">[</span><span class="n">non_zero</span><span class="p">]</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">valid</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">valid</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">valid</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">valid</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_image_for_plotting</span><span class="p">(</span><span class="n">image_data</span><span class="p">,</span> <span class="n">psf_cm</span><span class="p">,</span> <span class="n">max_extent_cm</span><span class="p">,</span> <span class="n">eff_flen_cm</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Prepare image data and quantities for ``create_annotated_psf_image_figure``.</span>
+
+<span class="sd">    If ``eff_flen_cm`` is given, converts X/Y positions, PSF, containment</span>
+<span class="sd">    radius, and image extent from cm to degrees using the small-angle</span>
+<span class="sd">    approximation ``deg = rad2deg(cm / eff_flen_cm)``.  Otherwise returns</span>
+<span class="sd">    unchanged data and cm quantities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_data : numpy.ndarray</span>
+<span class="sd">        Structured array with ``X`` and ``Y`` columns in cm.</span>
+<span class="sd">    psf_cm : float</span>
+<span class="sd">        PSF diameter in cm.</span>
+<span class="sd">    max_extent_cm : float</span>
+<span class="sd">        Half-range of the image axes in cm.</span>
+<span class="sd">    eff_flen_cm : float, optional</span>
+<span class="sd">        Median effective focal length in cm.  When provided the returned</span>
+<span class="sd">        quantities use degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        ``(converted_data, psf_quantity, containment_radius, plot_extent)``</span>
+<span class="sd">        where ``psf_quantity`` and ``containment_radius`` are astropy</span>
+<span class="sd">        ``Quantity`` objects.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">eff_flen_cm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">converted_data</span> <span class="o">=</span> <span class="n">image_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">converted_data</span><span class="p">[</span><span class="s2">"X"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">image_data</span><span class="p">[</span><span class="s2">"X"</span><span class="p">]</span> <span class="o">/</span> <span class="n">eff_flen_cm</span><span class="p">)</span>
+        <span class="n">converted_data</span><span class="p">[</span><span class="s2">"Y"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">image_data</span><span class="p">[</span><span class="s2">"Y"</span><span class="p">]</span> <span class="o">/</span> <span class="n">eff_flen_cm</span><span class="p">)</span>
+        <span class="n">psf_quantity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">psf_cm</span> <span class="o">/</span> <span class="n">eff_flen_cm</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="n">containment_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">psf_cm</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">eff_flen_cm</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="n">plot_extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">max_extent_cm</span> <span class="o">/</span> <span class="n">eff_flen_cm</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">converted_data</span> <span class="o">=</span> <span class="n">image_data</span>
+        <span class="n">psf_quantity</span> <span class="o">=</span> <span class="n">psf_cm</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span>
+        <span class="n">containment_radius</span> <span class="o">=</span> <span class="p">(</span><span class="n">psf_cm</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span>
+        <span class="n">plot_extent</span> <span class="o">=</span> <span class="n">max_extent_cm</span>
+    <span class="k">return</span> <span class="n">converted_data</span><span class="p">,</span> <span class="n">psf_quantity</span><span class="p">,</span> <span class="n">containment_radius</span><span class="p">,</span> <span class="n">plot_extent</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_effective_focal_length_value_from_results</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build effective_focal_length from average over all non-zero-offset stars."""</span>
+    <span class="n">off_x_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"off_x"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">off_y_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"off_y"</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">eff_flen_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"eff_flen"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">non_zero_mask</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_x_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_y_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">xz_plane_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_y_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_x_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">yz_plane_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_x_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">off_y_values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_masked_nanmean</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+        <span class="n">masked_values</span> <span class="o">=</span> <span class="n">eff_flen_values</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">masked_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">masked_values</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">masked_values</span><span class="p">))</span>
+
+    <span class="n">mean_effective_focal_length</span> <span class="o">=</span> <span class="n">_masked_nanmean</span><span class="p">(</span><span class="n">non_zero_mask</span><span class="p">)</span>
+    <span class="n">mean_effective_focal_length_xz</span> <span class="o">=</span> <span class="n">_masked_nanmean</span><span class="p">(</span><span class="n">xz_plane_mask</span><span class="p">)</span>
+    <span class="n">mean_effective_focal_length_yz</span> <span class="o">=</span> <span class="n">_masked_nanmean</span><span class="p">(</span><span class="n">yz_plane_mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">mean_effective_focal_length</span><span class="p">,</span>
+        <span class="n">mean_effective_focal_length_xz</span><span class="p">,</span>
+        <span class="n">mean_effective_focal_length_yz</span><span class="p">,</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_export_effective_focal_length_model_parameter</span><span class="p">(</span>
+    <span class="n">ray</span><span class="p">,</span>
+    <span class="n">telescope_name</span><span class="p">,</span>
+    <span class="n">model_version</span><span class="p">,</span>
+    <span class="n">parameter_version</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="p">,</span>
+    <span class="n">metadata_input_dict</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Export effective_focal_length as a model parameter JSON and metadata YAML."""</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ray</span><span class="p">,</span> <span class="s2">"_results"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">"eff_flen"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No ray-tracing results available to export effective_focal_length"</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">effective_focal_length_value</span> <span class="o">=</span> <span class="n">_effective_focal_length_value_from_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="n">export_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parameter_version</span> <span class="ow">or</span> <span class="n">model_version</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"effective_focal_length-</span><span class="si">{</span><span class="n">export_version</span><span class="si">}</span><span class="s2">.json"</span>
+
+    <span class="n">model_data_writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">write_model_parameter</span><span class="p">(</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="s2">"effective_focal_length"</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">effective_focal_length_value</span><span class="p">,</span>
+        <span class="n">instrument</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">export_version</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
+        <span class="n">metadata_input_dict</span><span class="o">=</span><span class="n">metadata_input_dict</span><span class="p">,</span>
+        <span class="n">unit</span><span class="o">=</span><span class="p">[</span><span class="s2">"cm"</span><span class="p">,</span> <span class="s2">"cm"</span><span class="p">,</span> <span class="s2">"cm"</span><span class="p">,</span> <span class="s2">"cm"</span><span class="p">,</span> <span class="s2">"cm"</span><span class="p">],</span>
+        <span class="n">check_db_for_existing_parameter</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"Exported effective_focal_length model parameter (</span><span class="si">%s</span><span class="s2">) to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">export_version</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
