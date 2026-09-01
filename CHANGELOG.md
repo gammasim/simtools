@@ -24,6 +24,8 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 - Update and improve release documentation. ([#2460](https://github.com/gammasim/simtools/pull/2460))
 - Improve documentation for `production_derive_corsika_limits`. ([#2468](https://github.com/gammasim/simtools/pull/2468))
+- Improve CL and documentation for `db_upload_model_repository`. ([#2465](https://github.com/gammasim/simtools/pull/2465))
+
 
 ### New Features
 
