@@ -442,6 +442,8 @@ def test_worker_recreates_database_reader_from_source_config(mocker):
     create_reader = mocker.patch(
         "simtools.simtel.multi_illuminator_simulator.create_model_reader", return_value=reader
     )
+    database_handler = mocker.Mock()
+    mocker.patch("simtools.db.db_handler.DatabaseHandler", return_value=database_handler)
     mocker.patch(
         "simtools.simtel.multi_illuminator_simulator.require_model_reader",
         side_effect=RuntimeError,
@@ -455,7 +457,8 @@ def test_worker_recreates_database_reader_from_source_config(mocker):
         is reader
     )
 
-    create_reader.assert_called_once_with()
+    assert database_handler.db_name == "simulation-model-db"
+    create_reader.assert_called_once_with(database_handler=database_handler)
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")

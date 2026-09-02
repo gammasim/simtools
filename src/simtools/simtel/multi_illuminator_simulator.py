@@ -95,7 +95,12 @@ def _get_worker_model_reader(job_spec):
     if source_config and source_config.get("type") == "filesystem":
         return create_model_reader(source_config["path"])
     if source_config and source_config.get("type") == "mongodb":
-        return create_model_reader()
+        from simtools.db.db_handler import DatabaseHandler  # pylint: disable=import-outside-toplevel
+
+        database_handler = DatabaseHandler()
+        if source_config.get("name"):
+            database_handler.db_name = source_config["name"]
+        return create_model_reader(database_handler=database_handler)
     return require_model_reader()
 
 
