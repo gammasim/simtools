@@ -201,8 +201,8 @@ def test_write_array_config_file(
     assert file_has_text(_file, "TELESCOPE == 1")
     with open(_file, encoding="utf-8") as file:
         array_config = file.read()
-    assert array_config.count("iobuf_maximum = 1000000000") == 1
-    assert array_config.count("random_generator = mt19937") == 1
+    assert array_config.count("iobuf_maximum = 1000000000") == 0
+    assert array_config.count("random_generator = mt19937") == 0
 
     # sim_telarray configuration files need to end with two new lines
     with open(_file) as f:

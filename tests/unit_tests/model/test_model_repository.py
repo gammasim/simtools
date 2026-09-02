@@ -1213,6 +1213,7 @@ def test_apply_changes_to_sim_telarray_production_table_global_parameters():
         "parameters": {
             "global": {"iobuf_maximum": "1.0.0"},
             "LSTN-design": {
+                "iobuf_maximum": "0.9.0",
                 "min_photons": "1.0.0",
             },
         },

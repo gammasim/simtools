@@ -385,5 +385,5 @@ class SimulationModelReader:
             )
         except KeyError as exc:
             raise KeyError(
-                f"Failed generated array element list for model query for {array_element_name}"
+                f"Failed to generate array element list for model query for {array_element_name}"
             ) from exc

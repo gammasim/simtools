@@ -838,15 +838,7 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        self.parameters.update(
-            {
-                name: parameter
-                for name, parameter in self._simulation_config_parameters.get(
-                    "sim_telarray", {}
-                ).items()
-                if not names.is_global_sim_telarray_parameter(name)
-            }
-        )
+        self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
         self._add_additional_models(additional_models)

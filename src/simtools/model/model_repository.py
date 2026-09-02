@@ -482,6 +482,36 @@ def _apply_global_sim_telarray_changes(global_params, params):
     return deprecated, has_changes
 
 
+def _remove_global_sim_telarray_parameters(parameters):
+    """Remove migrated global parameters from non-global production scopes."""
+    for scope, scope_parameters in parameters.items():
+        if scope != "global" and isinstance(scope_parameters, dict):
+            for parameter_name in names.SIM_TELARRAY_GLOBAL_PARAMETERS:
+                scope_parameters.pop(parameter_name, None)
+
+
+def _apply_sim_telarray_changes_for_scope(parameters, global_params, telescope, params):
+    """Apply global and telescope-scoped sim_telarray changes for one scope."""
+    global_deprecated, global_has_changes = _apply_global_sim_telarray_changes(
+        global_params, params
+    )
+    telescope_params = {
+        param_name: param_data
+        for param_name, param_data in params.items()
+        if not names.is_global_sim_telarray_parameter(param_name)
+    }
+    telescope_params, deprecated, telescope_has_changes = _apply_sim_telarray_changes_for_telescope(
+        parameters.get(telescope), telescope_params
+    )
+    if telescope_params is not None:
+        parameters[telescope] = telescope_params
+    return (
+        global_has_changes or telescope_has_changes,
+        global_deprecated,
+        deprecated,
+    )
+
+
 def _apply_changes_to_sim_telarray_production_table(data, changes, model_version, patch_update):
     """
     Apply configuration_sim_telarray parameter changes to the production table.
@@ -511,32 +541,20 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
     has_changes = False
     parameters = data.get("parameters", {})
 
+    _remove_global_sim_telarray_parameters(parameters)
     global_params = parameters.setdefault("global", {})
 
     global_deprecated = []
     for telescope, params in changes.items():
         if not isinstance(params, dict):
             continue
-        deprecated, global_has_changes = _apply_global_sim_telarray_changes(global_params, params)
-        has_changes = has_changes or global_has_changes
-        global_deprecated.extend(deprecated)
-
-        telescope_params = parameters.get(telescope)
-        telescope_params, deprecated, telescope_has_changes = (
-            _apply_sim_telarray_changes_for_telescope(
-                telescope_params,
-                {
-                    param_name: param_data
-                    for param_name, param_data in params.items()
-                    if not names.is_global_sim_telarray_parameter(param_name)
-                },
-            )
+        changes_found, global_changes, telescope_changes = _apply_sim_telarray_changes_for_scope(
+            parameters, global_params, telescope, params
         )
-        has_changes = has_changes or telescope_has_changes
-        if telescope_params is not None:
-            parameters[telescope] = telescope_params
-        if deprecated and patch_update:
-            data.setdefault("deprecated_parameters", []).extend(deprecated)
+        has_changes = has_changes or changes_found
+        global_deprecated.extend(global_changes)
+        if telescope_changes and patch_update:
+            data.setdefault("deprecated_parameters", []).extend(telescope_changes)
     if global_deprecated and patch_update:
         data.setdefault("deprecated_parameters", []).extend(global_deprecated)
     if not global_params:
@@ -797,7 +815,12 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
 
     target_file = param_dir / f"{param}-{param_data['version']}.json"
     if target_file.exists():
-        _validate_existing_model_parameter_file(target_file, target_scope, param, param_data)
+        _validate_existing_model_parameter_file(
+            target_file,
+            None if target_scope == "global" else target_scope,
+            param,
+            param_data,
+        )
         _logger.info("Model parameter file already matches requested version: '%s'.", target_file)
         return
 

@@ -347,8 +347,12 @@ class SimtelConfigWriter:
             self._write_simtools_parameters(file)
 
             global_parameters = {
-                **site_model.get_simulation_software_parameters("sim_telarray"),
-                **site_model.parameters,
+                name: parameter
+                for name, parameter in {
+                    **site_model.get_simulation_software_parameters("sim_telarray"),
+                    **site_model.parameters,
+                }.items()
+                if not names.is_global_sim_telarray_parameter(name)
             }
             self._write_site_parameters(
                 file,

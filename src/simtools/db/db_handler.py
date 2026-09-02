@@ -917,7 +917,7 @@ class DatabaseHandler:
             )
         except KeyError as exc:
             raise KeyError(
-                f"Failed generated array element list for db query for {array_element_name}"
+                f"Failed to generate array element list for DB query for {array_element_name}"
             ) from exc
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):

@@ -50,7 +50,6 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'tests/unit_tests/**'
-  push:
   schedule:
     - cron: "0 0 * * *"
   release:

@@ -31,9 +31,9 @@ database (or updates an existing database with the same name):
 
 * subdirectories starting with 'OBS' are uploaded to the 'sites' collection
 * json files are uploaded to the collection defined by their model-parameter schema;
-  this keeps telescope-scoped sim_telarray parameters in the
-  'configuration_sim_telarray' collection and files below 'global' in the
-  'configuration_corsika' collection
+  telescope-scoped and global sim_telarray parameters are uploaded to the
+  'configuration_sim_telarray' collection, while CORSIKA parameters are uploaded
+  to the 'configuration_corsika' collection
 * 'Files' are added to the 'files' collection
 
 .. code-block:: console

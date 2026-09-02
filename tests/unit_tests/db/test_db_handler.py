@@ -1178,7 +1178,7 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
     mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
     with pytest.raises(
-        KeyError, match=r"Failed generated array element list for db query for LSTN-01"
+        KeyError, match=r"Failed to generate array element list for DB query for LSTN-01"
     ):
         db._get_array_element_list(array_element_name, site, production_table, collection)
 
