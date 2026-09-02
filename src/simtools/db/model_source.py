@@ -46,9 +46,9 @@ class MongoDBModelSource:
                 for parameter, version in parameter_versions.items()
             ]
         }
-        if instrument and instrument != "xSTx-design":
+        if instrument and instrument != "global":
             query["instrument"] = instrument
-        if site:
+        if site and instrument != "global":
             query["site"] = site
         parameters = self.database_handler._read_db(  # pylint: disable=protected-access
             query, collection_name
