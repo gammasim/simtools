@@ -18,6 +18,11 @@ class MongoDBModelSource:
         """Return the configured database name."""
         return self.database_handler.model_source_name
 
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return {"type": "mongodb", "name": self.source_name}
+
     def is_configured(self):
         """Return whether the wrapped database handler is configured."""
         return self.database_handler.is_configured()

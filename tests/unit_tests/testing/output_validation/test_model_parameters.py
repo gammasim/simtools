@@ -54,6 +54,24 @@ def test_validate_model_parameter_applies_scaling(tmp_test_directory, mocker):
     )
 
 
+def test_validate_model_parameter_reuses_explicit_reader(tmp_test_directory, mocker):
+    """Use the reader selected by the validation runner instead of creating another one."""
+    output = Path(tmp_test_directory) / "parameter.json"
+    output.write_text(json.dumps({"value": 1.0}), encoding="utf-8")
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {"parameter": {"value": 1.0}}
+    create_reader = mocker.patch.object(model_parameters, "create_model_reader")
+
+    model_parameters.validate(
+        output,
+        {"reference_parameter_name": "parameter", "tolerance": 1.0e-5},
+        {},
+        model_reader=model_reader,
+    )
+
+    create_reader.assert_not_called()
+
+
 def test_validate_model_parameter_rejects_unscalable_value(tmp_test_directory, mocker):
     """Report when a generated value cannot be scaled numerically."""
     output = Path(tmp_test_directory) / "parameter.json"

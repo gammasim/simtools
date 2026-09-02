@@ -40,6 +40,16 @@ def test_create_model_reader_constructs_database_handler_when_needed(mocker):
     database_handler.assert_called_once_with()
 
 
+def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directory):
+    """The environment selects a filesystem source when no path is passed explicitly."""
+    root = _model_repository_root(tmp_test_directory)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(root))
+
+    reader = create_model_reader()
+
+    assert reader.source_name == str(root.resolve())
+
+
 def test_require_model_reader_prefers_explicit_reader():
     """An explicit reader is returned independently of application configuration."""
     reader = Mock()

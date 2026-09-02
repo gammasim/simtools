@@ -8,11 +8,18 @@ from simtools.testing.output_validation.reference import _compare_values
 from simtools.utils import general
 
 
-def validate(path, rule, configuration):
-    """Compare a generated parameter value with its model reference."""
+def validate(path, rule, configuration, model_reader=None):
+    """Compare a generated parameter value with its model reference.
+
+    Parameters
+    ----------
+    model_reader : object, optional
+        Reader selected for the current validation run. A reader is created from
+        configuration only when this is omitted.
+    """
     parameter_name = rule["reference_parameter_name"]
-    simulation_models_path = configuration.get("simulation_models_path")
-    model_reader = create_model_reader(simulation_models_path)
+    if model_reader is None:
+        model_reader = create_model_reader(configuration.get("simulation_models_path"))
     reference = model_reader.get_model_parameter(
         parameter=parameter_name,
         site=configuration.get("site"),

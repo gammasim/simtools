@@ -7,6 +7,7 @@ import pytest
 
 from simtools.simtel.multi_illuminator_simulator import (
     MultiIlluminatorSimulator,
+    _get_worker_model_reader,
     _simulate_illuminator_telescope_pair,
 )
 
@@ -419,6 +420,42 @@ def test_simulate_illuminator_telescope_pair_failure(mock_sim_class):
     assert result["telescope"] == "MSTS-01"
     assert result["success"] is False
     assert "Simulation failed" in result["error"]
+
+
+def test_worker_uses_serialized_model_source(mocker):
+    """Workers reconstruct a filesystem reader from the serialized source selection."""
+    reader = mocker.Mock()
+    create_reader = mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.create_model_reader", return_value=reader
+    )
+
+    assert (
+        _get_worker_model_reader({"model_source": {"type": "filesystem", "path": "/models"}})
+        is reader
+    )
+    create_reader.assert_called_once_with("/models")
+
+
+def test_worker_recreates_database_reader_from_source_config(mocker):
+    """A worker can recreate a database reader without process-global state."""
+    reader = mocker.Mock()
+    create_reader = mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.create_model_reader", return_value=reader
+    )
+    mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.require_model_reader",
+        side_effect=RuntimeError,
+    )
+    mocker.patch("simtools.simtel.multi_illuminator_simulator.runtime_config")
+
+    assert (
+        _get_worker_model_reader(
+            {"model_source": {"type": "mongodb", "name": "simulation-model-db"}}
+        )
+        is reader
+    )
+
+    create_reader.assert_called_once_with()
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")

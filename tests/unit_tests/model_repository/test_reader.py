@@ -70,6 +70,10 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
     """The facade resolves production versions and design inheritance."""
     reader = SimulationModelReader.from_files(model_repository)
 
+    assert reader.source_config == {
+        "type": "filesystem",
+        "path": str(model_repository.resolve()),
+    }
     assert reader.get_model_versions() == ["1.0.0"]
     assert reader.get_array_elements("1.0.0") == ["LSTN-01"]
     assert reader.get_design_model("1.0.0", "LSTN-01") == "LSTN-design"

@@ -14,6 +14,7 @@ def test_mongodb_source_delegates_model_operations():
     source = MongoDBModelSource(handler)
 
     assert source.source_name == "simulation-model-db"
+    assert source.source_config == {"type": "mongodb", "name": "simulation-model-db"}
     assert source.is_configured() is True
     assert source.get_model_versions("telescopes") == ["1.0.0"]
     assert source.read_production_table("telescopes", "1.0.0") == {"collection": "telescopes"}

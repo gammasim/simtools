@@ -2,9 +2,10 @@
 
 import logging
 
-from simtools.application.model_reader import require_model_reader
+from simtools.application.model_reader import create_model_reader, require_model_reader
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
+from simtools.settings import config as runtime_config
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general
 
@@ -28,6 +29,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         - site: str - site name (North/South)
         - label: str - base label for the simulation
         - config: dict - light emission configuration
+        - model_source: dict - serializable model-source selection
 
     Returns
     -------
@@ -41,15 +43,14 @@ def _simulate_illuminator_telescope_pair(job_spec):
     illuminator = job_spec["illuminator"]
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
-    model_reader = require_model_reader()
-
-    # Update configuration for this specific pair
-    config["telescope"] = telescope
-    config["light_source"] = illuminator
-
-    label = job_spec["label"]
-
     try:
+        model_reader = _get_worker_model_reader(job_spec)
+
+        # Update configuration for this specific pair
+        config["telescope"] = telescope
+        config["light_source"] = illuminator
+
+        label = job_spec["label"]
         _logger.info(f"Starting simulation for {illuminator} -> {telescope}")
 
         simulator = SimulatorLightEmission(
@@ -81,6 +82,21 @@ def _simulate_illuminator_telescope_pair(job_spec):
             "success": False,
             "error": str(exc),
         }
+
+
+def _get_worker_model_reader(job_spec):
+    """Select the model reader in a worker without relying on global state."""
+    source_config = job_spec.get("model_source")
+    configured_reader = runtime_config.model_reader
+    if configured_reader is not None:
+        configured_source = getattr(configured_reader, "source_config", None)
+        if source_config is None or configured_source == source_config:
+            return configured_reader
+    if source_config and source_config.get("type") == "filesystem":
+        return create_model_reader(source_config["path"])
+    if source_config and source_config.get("type") == "mongodb":
+        return create_model_reader()
+    return require_model_reader()
 
 
 class MultiIlluminatorSimulator:
@@ -231,6 +247,9 @@ class MultiIlluminatorSimulator:
 
         # Build job specs for all wavelength-pair combinations
         job_specs = []
+        model_source = self.model_reader.source_config
+        if not isinstance(model_source, dict):
+            model_source = None
         for wavelength in wavelengths:
             for illuminator, telescope in all_pairs:
                 # Create config with wavelength
@@ -244,6 +263,7 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
+                    "model_source": model_source,
                 }
                 job_specs.append(job_spec)
 

@@ -40,6 +40,11 @@ class FileSystemModelSource:
         """Return a user-facing description of the model source."""
         return str(self.simulation_models_path)
 
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return {"type": "filesystem", "path": str(self.simulation_models_path)}
+
     def _validate_model_path(self):
         """Validate the required simulation-model directories."""
         if not self.simulation_models_path.exists():
@@ -243,6 +248,11 @@ class SimulationModelReader:
     def source_name(self):
         """Return a user-facing description of the selected source."""
         return self._source.source_name
+
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return getattr(self._source, "source_config", None)
 
     def is_configured(self):
         """Return whether the selected source is configured for reads."""

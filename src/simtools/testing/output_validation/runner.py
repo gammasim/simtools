@@ -1,5 +1,6 @@
 """Orchestration of integration-test output validation."""
 
+from simtools.application.model_reader import create_model_reader
 from simtools.testing.output_validation.artifacts import OutputArtifact
 from simtools.testing.output_validation.registry import run_validator
 
@@ -15,17 +16,41 @@ def versions_match(from_command_line, from_config_file):
     return bool(set(command_versions) & set(config_versions))
 
 
-def validate_application_output(config, from_command_line=None, from_config_file=None):
-    """Validate all explicitly declared output artifacts."""
+def validate_application_output(
+    config, from_command_line=None, from_config_file=None, model_reader=None
+):
+    """Validate all explicitly declared output artifacts.
+
+    Parameters
+    ----------
+    model_reader : object, optional
+        Reader to reuse for model-parameter validations.
+    """
     if not versions_match(from_command_line, from_config_file):
         return
     active_versions = from_command_line or from_config_file
+    context = {
+        "configuration": config["configuration"],
+        "model_reader": model_reader,
+    }
     for integration_test in config.get("integration_tests", []):
         for descriptor in integration_test.get("test_outputs", []):
-            descriptor_versions = descriptor.get("model_versions")
-            if descriptor_versions and not versions_match(active_versions, descriptor_versions):
-                continue
-            artifact = OutputArtifact.from_descriptor(config["configuration"], descriptor)
-            artifact.assert_exists()
-            for rule in descriptor.get("validations", []):
-                run_validator(artifact, rule, config)
+            _validate_descriptor(descriptor, config["configuration"], active_versions, context)
+
+
+def _validate_descriptor(descriptor, configuration, active_versions, context):
+    """Validate one output descriptor when its model version applies."""
+    descriptor_versions = descriptor.get("model_versions")
+    if descriptor_versions and not versions_match(active_versions, descriptor_versions):
+        return
+    artifact = OutputArtifact.from_descriptor(configuration, descriptor)
+    artifact.assert_exists()
+    for rule in descriptor.get("validations", []):
+        _validate_rule(artifact, rule, configuration, context)
+
+
+def _validate_rule(artifact, rule, configuration, context):
+    """Run one validation rule, creating a shared model reader if needed."""
+    if rule["type"] == "model_parameter" and context["model_reader"] is None:
+        context["model_reader"] = create_model_reader(configuration.get("simulation_models_path"))
+    run_validator(artifact, rule, context)
