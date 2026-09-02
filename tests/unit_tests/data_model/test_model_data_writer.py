@@ -319,6 +319,16 @@ def test_get_validated_parameter_dict():
         "model_parameter_schema_version": "0.1.0",
     }
 
+    global_parameter = w1.get_validated_parameter_dict(
+        parameter_name="iobuf_maximum",
+        value=1000000000,
+        instrument=None,
+        parameter_version="1.0.0",
+        unit="byte",
+    )
+    assert global_parameter["instrument"] is None
+    assert global_parameter["site"] is None
+
 
 def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
     w1 = writer.ModelDataWriter()

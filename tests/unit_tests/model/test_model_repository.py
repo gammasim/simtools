@@ -120,10 +120,30 @@ def test_verify_model_parameters_for_production_non_dict_parameters(
         assert total_checked == 1
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_regular_collection(mock_get_collection, tmp_test_directory):
-    mock_get_collection.return_value = "camera"
+@patch("simtools.io.ascii_handler.collect_data_from_file")
+def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, tmp_test_directory):
+    mock_collect_data.return_value = {
+        "production_table_name": "configuration_corsika",
+        "parameters": {"global": {"corsika_iact_io_buffer": "1.0.0"}},
+    }
+    production_file = Path(TEST_PRODUCTION_FILE)
 
+    with patch(PATH_PATCH) as mock_get_path:
+        mock_file = Mock()
+        mock_file.exists.return_value = True
+        mock_get_path.return_value = mock_file
+
+        _, total_checked = model_repository._verify_model_parameters_for_production(
+            str(tmp_test_directory), production_file
+        )
+
+    assert total_checked == 1
+    mock_get_path.assert_called_once_with(
+        str(tmp_test_directory), "global", "corsika_iact_io_buffer", "1.0.0"
+    )
+
+
+def test_get_model_parameter_file_path_regular_collection(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "camera_config", "1.0.0"
     )
@@ -139,12 +159,7 @@ def test_get_model_parameter_file_path_regular_collection(mock_get_collection, t
     assert result == expected
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_sim_telarray(
-    mock_get_collection, tmp_test_directory
-):
-    mock_get_collection.return_value = "configuration_sim_telarray"
-
+def test_get_model_parameter_file_path_configuration_sim_telarray(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "sim_telarray_config", "1.0.0"
     )
@@ -153,7 +168,6 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(
         tmp_test_directory
         / "simulation-models"
         / "model_parameters"
-        / "configuration_sim_telarray"
         / "telescope"
         / "sim_telarray_config"
         / "sim_telarray_config-1.0.0.json"
@@ -161,12 +175,7 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(
     assert result == expected
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_corsika(
-    mock_get_collection, tmp_test_directory
-):
-    mock_get_collection.return_value = "configuration_corsika"
-
+def test_get_model_parameter_file_path_configuration_corsika(tmp_test_directory):
     result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "corsika_config", "1.0.0"
     )
@@ -175,11 +184,39 @@ def test_get_model_parameter_file_path_configuration_corsika(
         tmp_test_directory
         / "simulation-models"
         / "model_parameters"
-        / "configuration_corsika"
+        / "telescope"
         / "corsika_config"
         / "corsika_config-1.0.0.json"
     )
     assert result == expected
+
+
+def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
+    result = model_repository.get_model_parameter_file_path(
+        str(tmp_test_directory), None, "corsika_config", "1.0.0"
+    )
+
+    expected = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / "global"
+        / "corsika_config"
+        / "corsika_config-1.0.0.json"
+    )
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("telescope", "parameter_name", "expected_scope"),
+    [
+        ("configuration_corsika", None, "global"),
+        ("LSTN-design", None, "LSTN-design"),
+        ("LSTN-design", "iobuf_maximum", "global"),
+    ],
+)
+def test_get_model_parameter_scope(telescope, parameter_name, expected_scope):
+    assert model_repository._get_model_parameter_scope(telescope, parameter_name) == expected_scope
 
 
 def test_check_for_major_version_jump_no_major_jump():
@@ -276,7 +313,7 @@ def test_update_parameters_dict_new_function():
 
 
 def test_get_production_table_key_configuration_corsika():
-    assert model_repository._get_production_table_key("configuration_corsika") == "xSTx-design"
+    assert model_repository._get_production_table_key("configuration_corsika") == "global"
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -309,7 +346,7 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {
+            "global": {
                 "corsika_starting_grammage": "1.0.0",
                 "corsika_first_interaction_height": "1.0.0",
             },
@@ -329,15 +366,15 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
-    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["global"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["global"]
 
 
 def test_apply_changes_to_production_table_configuration_corsika_patch_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {
+            "global": {
                 "corsika_starting_grammage": "1.0.0",
                 "corsika_first_interaction_height": "1.2.0",
             },
@@ -357,8 +394,8 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
-    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["global"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["global"]
     assert data["deprecated_parameters"] == ["corsika_first_interaction_height"]
 
 
@@ -1168,6 +1205,30 @@ def test_apply_changes_to_sim_telarray_production_table_existing_telescope(mock_
     assert has_cst_changes is True
     assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
     assert data["parameters"]["LSTN-design"]["other_cst_param"] == "1.5.0"
+
+
+def test_apply_changes_to_sim_telarray_production_table_global_parameters():
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {
+            "global": {"iobuf_maximum": "1.0.0"},
+            "LSTN-design": {
+                "iobuf_maximum": "0.9.0",
+                "min_photons": "1.0.0",
+            },
+        },
+    }
+    changes = {
+        "LSTN-design": {
+            "iobuf_maximum": {"version": "2.0.0", "value": 0},
+        },
+    }
+
+    assert model_repository._apply_changes_to_sim_telarray_production_table(
+        data, changes, "7.0.0", False
+    )
+    assert data["parameters"]["global"]["iobuf_maximum"] == "2.0.0"
+    assert "iobuf_maximum" not in data["parameters"]["LSTN-design"]
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
