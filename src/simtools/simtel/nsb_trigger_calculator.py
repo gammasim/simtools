@@ -18,8 +18,8 @@ _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 def extract_run_number(file_path):
     """Extract run number from the FILE_INFO table in the HDF5 file."""
     try:
-        file_info = Table.read(file_path, path="FILE_INFO")
-    except OSError, ValueError, KeyError:
+        file_info = Table.read(file_path, path="FILE_INFO", format="hdf5")
+    except OSError, ValueError, KeyError, ImportError:
         _logger.exception(f"Failed to read FILE_INFO from {file_path}")
         return None
 
@@ -40,8 +40,8 @@ def extract_run_number(file_path):
 def extract_threshold(file_path):
     """Extract threshold from the FILE_INFO table in the HDF5 file."""
     try:
-        file_info = Table.read(file_path, path="FILE_INFO")
-    except OSError, ValueError, KeyError:
+        file_info = Table.read(file_path, path="FILE_INFO", format="hdf5")
+    except OSError, ValueError, KeyError, ImportError:
         _logger.exception(f"Failed to read FILE_INFO from {file_path}")
         return None
 
