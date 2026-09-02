@@ -33,6 +33,7 @@ class ApplicationDefinition:
     defer_required_validation: bool = False
     usage: str | None = None
     validate_simulation_dependencies: bool = False
+    initialize_model_reader: bool = True
     use_dependency_defaults: bool = True
     excluded_standard_arguments: tuple[str, ...] = ()
 
@@ -171,4 +172,5 @@ class ApplicationDefinition:
             setup_io_handler=self.setup_io_handler,
             resolve_sim_software_executables=self.resolve_sim_software_executables,
             validate_simulation_dependencies=self.validate_simulation_dependencies,
+            initialize_model_reader=self.initialize_model_reader,
         )

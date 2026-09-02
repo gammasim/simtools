@@ -164,7 +164,7 @@ class ApplicationContext:
     db_config: dict
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
-    model_reader: object
+    model_reader: object | None
     run_time: list | None = None
 
 
@@ -174,6 +174,7 @@ def _initialize_runtime(
     setup_io_handler=True,
     resolve_sim_software_executables=True,
     validate_simulation_dependencies=False,
+    initialize_model_reader=True,
 ):
     """Initialize common runtime services for parsed application configuration.
 
@@ -191,12 +192,15 @@ def _initialize_runtime(
     validate_simulation_dependencies : bool, optional
         Validate simulation executables and CORSIKA interaction tables after settings load.
         Set to True for applications that run simulations.
+    initialize_model_reader : bool, optional
+        Initialize the configured simulation-model reader. Set to False for applications
+        that only write a new model repository and do not read model data. Default is True.
 
     Returns
     -------
     ApplicationContext
-        Container holding parsed arguments, database configuration, logger, and the optional
-        IO handler instance.
+        Container holding parsed arguments, database configuration, logger, and optional IO
+        handler and model-reader instances.
 
     """
     _configure_iers_from_env()
@@ -220,9 +224,11 @@ def _initialize_runtime(
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
-    model_reader = create_model_reader(args_dict.get("simulation_models_path"))
-    config.set_model_reader(model_reader)
-    _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
+    model_reader = None
+    if initialize_model_reader:
+        model_reader = create_model_reader(args_dict.get("simulation_models_path"))
+        config.set_model_reader(model_reader)
+        _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
     _version_info(args_dict, io_handler_instance, logger)
 
     run_time = _prepare_runtime_environment_from_cli(args_dict)

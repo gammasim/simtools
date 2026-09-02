@@ -164,6 +164,17 @@ def test_initialize_runtime_without_io_handler():
     assert app_context.logger.level == logging.DEBUG
 
 
+def test_initialize_runtime_without_model_reader(mocker):
+    """Write-only applications do not require a checked-out model repository."""
+    model_reader = mocker.patch("simtools.application.control.create_model_reader")
+    app_context = _initialize_runtime(
+        {"log_level": "info"}, {}, setup_io_handler=False, initialize_model_reader=False
+    )
+
+    model_reader.assert_not_called()
+    assert app_context.model_reader is None
+
+
 def test_initialize_runtime_without_resolving_sim_software_executables():
     """Test runtime startup forwards executable-resolution flag to settings load."""
     mock_args_dict = {"log_level": "info"}
