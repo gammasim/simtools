@@ -235,6 +235,21 @@ def test_corsika_configuration_custom_hadronic_transition_energy(
     assert parameters["HILOW"] == [120.0]
 
 
+def test_corsika_configuration_without_first_interaction_height(
+    corsika_config_mock_array_model, get_standard_corsika_parameters
+):
+    """Test interaction flags with a model that deprecated FIXHEI."""
+    parameters_from_db = get_standard_corsika_parameters.copy()
+    del parameters_from_db["corsika_first_interaction_height"]
+
+    interaction_flags = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
+        parameters_from_db
+    )
+
+    assert "FIXHEI" not in interaction_flags
+    assert interaction_flags["FIXCHI"] == ["0.0"]
+
+
 def test_primary_particle(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model.primary_particle.name == "proton"
 

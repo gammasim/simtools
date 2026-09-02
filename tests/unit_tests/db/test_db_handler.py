@@ -520,7 +520,7 @@ def test_get_query_from_parameter_version_table(db):
         ("LSTN-01", None, {"$or": or_list, "instrument": "LSTN-01"}),
         (None, "North", {"$or": or_list, "site": "North"}),
         (None, None, {"$or": or_list}),
-        ("xSTx-design", "North", {"$or": or_list, "site": "North"}),
+        ("global", "North", {"$or": or_list}),
     ]
 
     for array_element_name, site, expected in test_cases:
@@ -528,6 +528,22 @@ def test_get_query_from_parameter_version_table(db):
             parameter_version_table, array_element_name, site
         )
         assert result == expected
+
+
+def test_get_global_simtelarray_parameter_by_version_omits_telescope_scope(db, mocker):
+    read_db = mocker.patch.object(db, "_read_db", return_value={})
+
+    db.get_model_parameter(
+        "iobuf_maximum",
+        "North",
+        "LSTN-01",
+        parameter_version="1.0.0",
+    )
+
+    read_db.assert_called_once_with(
+        query={"parameter": "iobuf_maximum", "parameter_version": "1.0.0"},
+        collection_name="configuration_sim_telarray",
+    )
 
 
 def test_read_db(db, mocker):
@@ -721,12 +737,14 @@ def test_get_simulation_configuration_parameters(db, mocker):
         == return_value
     )
     assert mock_get_model_parameters.call_count == 2
-    assert db.get_simulation_configuration_parameters(software, "North", None, "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert (
+        db.get_simulation_configuration_parameters(software, "North", None, "6.0.0") == return_value
+    )
+    assert mock_get_model_parameters.call_count == 3
     assert db.get_simulation_configuration_parameters(software, None, "LSTN-design", "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert mock_get_model_parameters.call_count == 3
     assert db.get_simulation_configuration_parameters(software, None, None, "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert mock_get_model_parameters.call_count == 3
 
     with pytest.raises(ValueError, match=r"Unknown simulation software: wrong"):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
@@ -872,7 +890,7 @@ def test_get_array_element_list_configuration_corsika(db):
 
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
 
-    assert result == ["xSTx-design"]
+    assert result == ["global"]
 
 
 def test_get_array_element_list_sites(db):
@@ -1156,11 +1174,11 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
     mock_read_production_table.assert_called_once_with("telescopes", model_version)
-    assert result == ["LSTN-design", "LSTN-01"]
+    assert result == ["global", "LSTN-design", "LSTN-01"]
 
     mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
     with pytest.raises(
-        KeyError, match=r"Failed generated array element list for db query for LSTN-01"
+        KeyError, match=r"Failed to generate array element list for DB query for LSTN-01"
     ):
         db._get_array_element_list(array_element_name, site, production_table, collection)
 
