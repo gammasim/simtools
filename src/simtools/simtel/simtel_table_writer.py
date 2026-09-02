@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from astropy.table import Table
 
 from simtools.data_model import row_table_utils
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
@@ -11,7 +12,7 @@ from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 logger = logging.getLogger(__name__)
 
 
-def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
+def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None):
     """Write a table parameter to a space-separated ASCII file for sim_telarray.
 
     Parameters
@@ -35,6 +36,11 @@ def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
     ValueError
         If ``value`` does not contain ``columns`` and ``rows`` keys.
     """
+    if isinstance(table_or_parameter, Table):
+        return _write_ecsv_table(table_or_parameter, value_or_dest)
+
+    parameter_name = table_or_parameter
+    value = value_or_dest
     if not isinstance(value, dict) or "columns" not in value or "rows" not in value:
         raise ValueError(
             f"Table value for '{parameter_name}' must be a dict with 'columns' and 'rows' keys, "
@@ -53,6 +59,106 @@ def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
             fh.write(" ".join(str(v) for v in row) + "\n")
 
     return file_name
+
+
+def _write_ecsv_table(table, dest_dir):
+    """Write a validated ECSV table in its original sim_telarray representation."""
+    output_name = table.meta.get("simtelarray_original_file_name")
+    if not output_name:
+        raise ValueError("ECSV table metadata must define simtelarray_original_file_name")
+    output_path = Path(dest_dir) / Path(output_name).name
+    if Path(output_name).name != output_name:
+        raise ValueError(f"Unsafe sim_telarray output filename: {output_name}")
+
+    format_name = table.meta.get("simtelarray_table_format", "plain")
+    writers = {
+        "plain": _write_plain_table,
+        "pulse": _write_plain_table,
+        "mirror_list": _write_plain_table,
+        "rpol_matrix": _write_rpol_table,
+        "atmospheric_transmission": _write_atmospheric_transmission,
+    }
+    try:
+        writers[format_name](table, output_path)
+    except KeyError as exc:
+        raise ValueError(f"Unknown sim_telarray table format: {format_name}") from exc
+    return output_path.name
+
+
+def _table_comments(table):
+    """Return source comments as lines suitable for an ASCII table."""
+    comments = table.meta.get("original_comments", [])
+    if isinstance(comments, str):
+        comments = comments.splitlines()
+    return [f"# {comment}" if comment else "#" for comment in comments]
+
+
+def _row_values(table, row):
+    """Return serializable scalar values from an Astropy row."""
+    values = []
+    for name in table.colnames:
+        value = row[name]
+        values.append(getattr(value, "value", value))
+    return values
+
+
+def _raw_values(values):
+    """Return plain scalar values from an Astropy column or iterable."""
+    return [getattr(value, "value", value) for value in values]
+
+
+def _write_plain_table(table, output_path):
+    """Write comments and one whitespace-separated row per table row."""
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write("\n".join(_table_comments(table)))
+        if table.meta.get("original_comments"):
+            file.write("\n")
+        for row in table:
+            file.write(" ".join(str(value) for value in _row_values(table, row)) + "\n")
+
+
+def _write_rpol_table(table, output_path):
+    """Write a tidy wavelength/angle table in sim_telarray RPOL format."""
+    angle_name = "angle" if "angle" in table.colnames else "incidence_angle"
+    independent_name = "wavelength"
+    dependent = next(name for name in table.colnames if name not in (independent_name, angle_name))
+    angles = list(dict.fromkeys(_raw_values(table[angle_name])))
+    comments = [
+        line
+        for line in _table_comments(table)
+        if not any(token in line for token in ("@RPOL@", "ANGLE=", "H1=", "H2="))
+    ]
+    with output_path.open("w", encoding="utf-8") as file:
+        for line in comments:
+            file.write(f"{line}\n")
+        file.write("#@RPOL@[ANGLE=] 2\n")
+        file.write("ANGLE= " + " ".join(str(angle) for angle in angles) + "\n")
+        wavelengths = list(dict.fromkeys(_raw_values(table[independent_name])))
+        for wavelength in wavelengths:
+            selection = [
+                getattr(row[dependent], "value", row[dependent])
+                for row in table
+                if getattr(row[independent_name], "value", row[independent_name]) == wavelength
+            ]
+            file.write(" ".join([str(wavelength), *(str(value) for value in selection)]) + "\n")
+
+
+def _write_atmospheric_transmission(table, output_path):
+    """Write a tidy atmospheric transmission table in sim_telarray matrix format."""
+    altitude_name = "altitude"
+    dependent = "extinction"
+    altitudes = list(dict.fromkeys(_raw_values(table[altitude_name])))
+    with output_path.open("w", encoding="utf-8") as file:
+        for line in _table_comments(table):
+            file.write(f"{line}\n")
+        file.write("# H1= " + " ".join(str(value) for value in altitudes) + "\n")
+        for wavelength in dict.fromkeys(_raw_values(table["wavelength"])):
+            values = [
+                getattr(row[dependent], "value", row[dependent])
+                for row in table
+                if getattr(row["wavelength"], "value", row["wavelength"]) == wavelength
+            ]
+            file.write(" ".join([str(wavelength), *(str(value) for value in values)]) + "\n")
 
 
 def write_light_pulse_table_gauss_exp_conv(

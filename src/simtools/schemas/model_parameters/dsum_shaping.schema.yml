@@ -38,3 +38,97 @@ simulation_software:
   - name: sim_telarray
     internal_parameter_name: dsum_shaping_file
     meta_parameter_mode: add
+
+---
+title: Schema for dsum_shaping model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: dsum_shaping
+description: 'Shaping (convolution) parameters for a digitized detector signal
+
+  (time step of ADC time slices) to the resulting signal from which a
+
+  digital-sum trigger decision may be derived. The values are a digital
+
+  signal processing kernel.  For example, a file containing
+
+  $\left( \begin{smallmatrix} 0 & 1\\ 1&-1 \end{smallmatrix} \right)$
+
+  would be a simple differencing filter,
+
+  $b[n] = a[n] - a[n-1]$.
+
+  The first column is in ADC bins behind current interval, the second
+
+  value is the factor applied to the corresponding ADC value.'
+short_description: 'Shaping (convolution) parameters for a digitized detector signal
+
+  to the resulting signal from which a digital-sum trigger decision may be
+
+  derived.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: sample
+        description: Sample index
+        type: int64
+        unit: dimensionless
+        required: true
+      - name: coefficient
+        description: Shaping coefficient
+        type: float64
+        unit: dimensionless
+        required: true
+    table_metadata:
+      - name: parameter_name
+        description: Owning model parameter
+        type: string
+        required: true
+      - name: parameter_version
+        description: Owning parameter version
+        type: string
+        required: true
+      - name: instrument
+        description: Owning instrument
+        type: string
+        required: true
+      - name: site
+        description: Owning site
+        type: string
+        required: true
+      - name: source_file_name
+        description: Original source basename
+        type: string
+        required: true
+      - name: original_comments
+        description: Original source comments
+        type: array
+        required: true
+      - name: conversion_tool
+        description: Conversion utility identifier
+        type: string
+        required: true
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+      - name: simtelarray_table_format
+        description: Simulator serialization format
+        type: string
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: dsum_shaping_file
+    meta_parameter_mode: add

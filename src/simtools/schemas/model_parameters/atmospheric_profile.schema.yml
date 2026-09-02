@@ -66,3 +66,142 @@ plot_configuration:
       - parameter: atmospheric_profile
         column_x: 'altitude'
         column_y: 'thickness'
+
+---
+title: Schema for atmospheric_profile model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: atmospheric_profile
+description: Density, thickness, and index of refraction as function of altitude.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: altitude
+        description: Altitude
+        type: float64
+        unit: km
+        required: true
+      - name: density
+        description: Density
+        type: float64
+        unit: g/cm3
+        required: true
+      - name: thickness
+        description: Thickness
+        type: float64
+        unit: g/cm2
+        required: true
+      - name: refractive_index
+        description: Refractive index
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: temperature
+        description: Temperature
+        type: float64
+        unit: K
+        required: true
+      - name: pressure
+        description: Pressure
+        type: float64
+        unit: mbar
+        required: true
+      - name: water_vapor_partial_pressure
+        description: Water vapor partial pressure
+        type: float64
+        unit: dimensionless
+        required: true
+    table_metadata:
+      - name: parameter_name
+        description: Owning model parameter
+        type: string
+        required: true
+      - name: parameter_version
+        description: Owning parameter version
+        type: string
+        required: true
+      - name: instrument
+        description: Owning instrument
+        type: string
+        required: true
+      - name: site
+        description: Owning site
+        type: string
+        required: true
+      - name: source_file_name
+        description: Original source basename
+        type: string
+        required: true
+      - name: original_comments
+        description: Original source comments
+        type: array
+        required: true
+      - name: conversion_tool
+        description: Conversion utility identifier
+        type: string
+        required: true
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+      - name: simtelarray_table_format
+        description: Simulator serialization format
+        type: string
+        required: false
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: corsika
+plot_configuration:
+  - type: density_vs_altitude
+    title: Atmospheric density profile
+    xtitle: Height [km]
+    ytitle: Density [g/cm^3]
+    yscale: log
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: altitude
+        column_y: density
+  - type: refractive_index_vs_altitude
+    title: Atmospheric refractive index profile
+    xtitle: Height [km]
+    ytitle: refractive index (n-1)
+    yscale: log
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: altitude
+        column_y: refractive_index
+  - type: pressure_vs_altitude
+    title: Atmospheric pressure profile
+    xtitle: Height [km]
+    ytitle: Pressure [mbar]
+    yscale: log
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: altitude
+        column_y: pressure
+  - type: thickness_vs_altitude
+    title: Atmospheric thickness profile
+    xtitle: Height [km]
+    ytitle: Thickness [g/cm^2]
+    yscale: log
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: altitude
+        column_y: thickness

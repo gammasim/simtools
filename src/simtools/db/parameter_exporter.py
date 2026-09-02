@@ -40,7 +40,11 @@ def _normalize_file_names(file_names=None, parameters=None):
         return [file_names] if not isinstance(file_names, list) else file_names
     if parameters:
         return [
-            info["value"]
+            (
+                Path(info["value"]).name
+                if isinstance(info["value"], str) and info["value"].startswith("./")
+                else info["value"]
+            )
             for info in parameters.values()
             if isinstance(info, dict) and info.get("file") and info.get("value") is not None
         ]

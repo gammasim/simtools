@@ -7,6 +7,7 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from astropy.table import QTable
 
 import simtools.utils.general as gen
 import simtools.version
@@ -570,6 +571,10 @@ class SimtelConfigWriter:
                 "fadc_pulse_shape", v, mp, tm
             ),
         }
+        if isinstance(value, str) and value.lower().endswith(".ecsv"):
+            return simtel_name, self._write_table_parameter_file(
+                simtel_name, value, model_path, telescope_model
+            )
         try:
             value = conversion_dict[simtel_name](value, model_path, telescope_model)
         except KeyError:
@@ -598,6 +603,13 @@ class SimtelConfigWriter:
         str
             Basename of the written file, or the original string value unchanged.
         """
+        if isinstance(value, str) and value.lower().endswith(".ecsv"):
+            dest_dir = Path(model_path).parent
+            source = dest_dir / Path(value).name
+            if not source.is_file():
+                raise FileNotFoundError(f"Co-located ECSV table was not exported: {source}")
+            table = QTable.read(source, format="ascii.ecsv")
+            return simtel_table_writer.write_simtel_table(table, dest_dir)
         if not isinstance(value, dict):
             return value
         dest_dir = Path(model_path).parent

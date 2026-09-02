@@ -1,8 +1,30 @@
 #!/usr/bin/python3
 
 import pytest
+from astropy.table import QTable
 
 import simtools.simtel.simtel_table_writer as simtel_table_writer
+
+
+def test_write_ecsv_table_uses_original_filename(tmp_test_directory):
+    table = QTable({"time": [0.0, 1.0], "amplitude": [0.0, 1.0]})
+    table.meta["simtelarray_original_file_name"] = "pulse.dat"
+    table.meta["simtelarray_table_format"] = "pulse"
+
+    result = simtel_table_writer.write_simtel_table(table, tmp_test_directory)
+
+    assert result == "pulse.dat"
+    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+        "0.0 0.0",
+        "1.0 1.0",
+    ]
+
+
+def test_write_ecsv_table_rejects_unsafe_filename(tmp_test_directory):
+    table = QTable({"x": [1.0]})
+    table.meta["simtelarray_original_file_name"] = "../pulse.dat"
+    with pytest.raises(ValueError, match="Unsafe"):
+        simtel_table_writer.write_simtel_table(table, tmp_test_directory)
 
 
 def test_write_simtel_table_two_columns(tmp_test_directory):

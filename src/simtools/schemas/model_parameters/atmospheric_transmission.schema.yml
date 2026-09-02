@@ -72,3 +72,128 @@ plot_configuration:
         select_values:
           column_name: 'altitude'
           value: 2.358
+
+---
+title: Schema for atmospheric_transmission model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: atmospheric_transmission
+description: 'Optical thickness as a function of photon emission altitude
+
+  and wavelength.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: altitude
+        description: Emission altitude
+        type: float64
+        unit: km
+        required: true
+      - name: extinction
+        description: Atmospheric extinction
+        type: float64
+        unit: dimensionless
+        required: true
+    table_metadata:
+      - name: parameter_name
+        description: Owning model parameter
+        type: string
+        required: true
+      - name: parameter_version
+        description: Owning parameter version
+        type: string
+        required: true
+      - name: instrument
+        description: Owning instrument
+        type: string
+        required: true
+      - name: site
+        description: Owning site
+        type: string
+        required: true
+      - name: source_file_name
+        description: Original source basename
+        type: string
+        required: true
+      - name: original_comments
+        description: Original source comments
+        type: array
+        required: true
+      - name: conversion_tool
+        description: Conversion utility identifier
+        type: string
+        required: true
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+      - name: simtelarray_table_format
+        description: Simulator serialization format
+        type: string
+        required: false
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: corsika
+  - name: sim_telarray
+    meta_parameter_mode: add
+plot_configuration:
+  - type: atmospheric_transmission
+    title: Atmospheric transmission profile
+    xtitle: Wavelength [nm]
+    ytitle: Extinction
+    yscale: log
+    no_markers: true
+    tables:
+      - parameter: atmospheric_transmission
+        label: 30 km
+        column_x: wavelength
+        column_y: extinction
+        select_values:
+          column_name: altitude
+          value: 30.0
+      - parameter: atmospheric_transmission
+        label: 15 km
+        column_x: wavelength
+        column_y: extinction
+        select_values:
+          column_name: altitude
+          value: 15.0
+      - parameter: atmospheric_transmission
+        label: 10 km
+        column_x: wavelength
+        column_y: extinction
+        select_values:
+          column_name: altitude
+          value: 10.0
+      - parameter: atmospheric_transmission
+        label: 5 km
+        column_x: wavelength
+        column_y: extinction
+        select_values:
+          column_name: altitude
+          value: 5.0
+      - parameter: atmospheric_transmission
+        label: 2.4 km
+        column_x: wavelength
+        column_y: extinction
+        select_values:
+          column_name: altitude
+          value: 2.358
