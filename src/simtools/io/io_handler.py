@@ -20,15 +20,18 @@ def resolve_test_resource_paths(value, test_resources_path=None):
         Configuration value, mapping, or sequence to resolve.
     test_resources_path : str or pathlib.Path, optional
         Base directory containing the ``static``, ``generated``, and ``downloaded``
-        resource directories. Defaults to ``SIMTOOLS_TEST_RESOURCES`` or the unit-test
-        resource directory.
+        resource directories. Defaults to ``SIMTOOLS_TEST_RESOURCES`` or the versioned
+        ``simtools-tests`` integration-test resources selected by ``SIMTOOLS_TESTS_PATH`` and
+        ``SIMTOOLS_TESTS_TAG``.
 
     Returns
     -------
     object
         Configuration with absolute test-resource paths.
     """
-    base_path = Path(test_resources_path or constants.TEST_RESOURCES_ROOT).expanduser().resolve()
+    base_path = (
+        Path(test_resources_path or constants.get_test_resources_root()).expanduser().resolve()
+    )
     if isinstance(value, dict):
         return {
             key: resolve_test_resource_paths(item, test_resources_path=base_path)
@@ -64,7 +67,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.logger = logging.getLogger(__name__)
         self.output_path = {}
         self.model_path = None
-        self.test_resources_path = constants.TEST_RESOURCES_ROOT.resolve()
+        self.test_resources_path = constants.get_test_resources_root().resolve()
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """

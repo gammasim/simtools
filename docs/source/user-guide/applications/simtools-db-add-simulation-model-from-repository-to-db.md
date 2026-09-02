@@ -18,8 +18,8 @@ input_path (str, required)
     Path of local copy of model parameter repository.
 db_simulation_model (str, required)
     Name of new DB to be created.
-db_simulation_model_version (str, required)
-    Version of the new DB to be created.
+db_simulation_model_tag (str, required)
+    Release tag of the new DB to be created.
 type (str, optional)
     Type of data to be uploaded to the DB. Options are: model_parameters, production_tables.
 
@@ -41,7 +41,7 @@ database (or updates an existing database with the same name):
     simtools-db-simulation-model-from-repository-to-db \
         --input_path /path/to/repository \
         --db_simulation_model database name \
-        --db_simulation_model_version new database version \
+        --db_simulation_model_tag new database tag \
         --type model_parameters
 
 Upload production tables to the DB:
@@ -51,7 +51,7 @@ Upload production tables to the DB:
     simtools-db-simulation-model-from-repository-to-db \
         --input_path /path/to/repository \
         --db_simulation_model database name \
-        --db_simulation_model_version new database version \
+        --db_simulation_model_tag new database tag \
         --type production_tables
 ```
 

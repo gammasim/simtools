@@ -18,6 +18,20 @@ MUON_PLUS_PARTICLE = "muon+"
 PROTON_PARTICLE = "proton"
 G_CM2 = "g/cm2"
 
+_BASE_CORSIKA_ARGS = {
+    "correct_for_b_field_alignment": False,
+    "azimuth_angle": 0 * u.deg,
+    "zenith_angle": 20 * u.deg,
+    "event_number_first_shower": 1,
+    "showers_per_run": 100,
+    "energy_range": (10 * u.GeV, 10 * u.TeV),
+    "view_cone": (0 * u.deg, 0 * u.deg),
+    "core_scatter": (10, 1400 * u.m),
+    "primary": "proton",
+    "primary_id_type": "common_name",
+    "eslope": -2,
+}
+
 
 def create_mock_array_model(mocker, geomag_rotation=0):
     """Helper function to create a mock array model with site model."""
@@ -56,19 +70,7 @@ def corsika_config_no_array_model(mocker):
 
     mock_array_model = create_mock_array_model(mocker)
 
-    modified_data = {
-        "correct_for_b_field_alignment": False,
-        "azimuth_angle": 0 * u.deg,
-        "zenith_angle": 20 * u.deg,
-        "event_number_first_shower": 1,
-        "showers_per_run": 100,
-        "energy_range": (10 * u.GeV, 10 * u.TeV),
-        "view_cone": (0 * u.deg, 0 * u.deg),
-        "core_scatter": (10, 1400 * u.m),
-        "primary": "proton",
-        "primary_id_type": "common_name",
-        "eslope": -2,
-    }
+    modified_data = dict(_BASE_CORSIKA_ARGS)
 
     mocker.patch.object(
         _Config,
@@ -139,19 +141,7 @@ def get_standard_corsika_parameters_teltype_grammage(get_standard_corsika_parame
 def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
     mock_array_model = create_mock_array_model(mocker)
 
-    args_dict = {
-        "azimuth_angle": 0 * u.deg,
-        "zenith_angle": 20 * u.deg,
-        "event_number_first_shower": 1,
-        "showers_per_run": 100,
-        "energy_range": (10 * u.GeV, 10 * u.TeV),
-        "view_cone": (0 * u.deg, 0 * u.deg),
-        "core_scatter": (10, 1400 * u.m),
-        "primary": "proton",
-        "primary_id_type": "common_name",
-        "eslope": -2,
-        "correct_for_b_field_alignment": False,
-    }
+    args_dict = dict(_BASE_CORSIKA_ARGS)
 
     mocker.patch.object(
         _Config,
@@ -355,32 +345,40 @@ def test_input_config_io_buff(corsika_config_mock_array_model):
     )
 
 
-def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
+def test_to_corsika_phi(corsika_config_mock_array_model):
     test_cases = [
         # input_angle, with_correction, expected_result
         (0.0, False, 180.0),
         (360.0, False, 180.0),
-        (450.0, False, 270.0),
+        (450.0, False, 90.0),
         (180.0, False, 0.0),
         (-180.0, False, 0.0),
+        (45.7, False, 134.3),
+        (135.3, False, 44.7),
+        (225.5, False, 314.5),
+        (315.8, False, 224.2),
         (0.0, True, 175.467),
         (360.0, True, 175.467),
-        (450.0, True, 265.467),
+        (450.0, True, 85.467),
         (180.0, True, 355.467),
         (-180.0, True, 355.467),
+        (67.5, True, 107.967),
+        (247.3, True, 288.167),
     ]
 
     for input_angle, with_correction, expected_result in test_cases:
-        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        assert corsika_config_mock_array_model._to_corsika_phi(
             input_angle, correct_for_geomagnetic_field_alignment=with_correction
-        ) == pytest.approx(expected_result)
+        ) == pytest.approx(expected_result, abs=1e-3)
 
+    # The formula is self-inverse: applying it twice returns the original value.
     for input_angle, with_correction, expected_result in test_cases:
-        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+        # Normalise with % 360 to handle the floating-point edge case where a
+        # tiny negative intermediate value maps to approx 360 instead of approx 0.
+        assert corsika_config_mock_array_model._to_corsika_phi(
             expected_result,
             correct_for_geomagnetic_field_alignment=with_correction,
-            invert_operation=True,
-        ) == pytest.approx(input_angle % 360)
+        ) % 360 == pytest.approx(input_angle % 360, abs=1e-3)
 
 
 def test_get_config_parameter(corsika_config_mock_array_model):
@@ -673,7 +671,7 @@ def test_corsika_configuration_for_dummy_simulations(corsika_config_no_array_mod
     assert config["ESLOPE"] == pytest.approx([-2.0])
     assert config["ERANGE"] == pytest.approx([0.1, 0.1])
     assert config["THETAP"] == pytest.approx([30.0, 30.0])
-    assert config["PHIP"] == pytest.approx([225.0, 225.0])
+    assert config["PHIP"] == pytest.approx([135.0, 135.0])
     assert config["VIEWCONE"] == pytest.approx([0.0, 0.0])
     assert config["CSCAT"] == pytest.approx([1, 0.0, 10.0])
 
@@ -729,7 +727,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 "corsika_file": tmp_path / "test.corsika",
                 "curved_atmosphere_min_zenith_angle": 85.0 * u.deg,
             },
-            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 85.0},
+            "expected": {"zenith": 30, "azimuth": 90, "curved_atm": 85.0},
         },
         {
             "args": {
@@ -737,7 +735,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 "correct_for_b_field_alignment": False,
                 "curved_atmosphere_min_zenith_angle": 80 * u.deg,
             },
-            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 80.0},
+            "expected": {"zenith": 30, "azimuth": 90, "curved_atm": 80.0},
         },
     ]
 
@@ -781,6 +779,27 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 assert config.curved_atmosphere_min_zenith_angle == pytest.approx(
                     case["expected"]["curved_atm"]
                 )
+
+
+def test_zenith_azimuth_float_precision(mocker):
+    """Test that zenith and azimuth angles are stored with two decimal places (not as integers)."""
+    mock_array_model = create_mock_array_model(mocker)
+
+    with patch.object(
+        _Config,
+        "args",
+        new_callable=PropertyMock,
+        return_value={
+            **_BASE_CORSIKA_ARGS,
+            "zenith_angle": 20.567 * u.deg,
+            "azimuth_angle": 45.123 * u.deg,
+        },
+    ):
+        config = CorsikaConfig(array_model=mock_array_model, label="test", run_number=1)
+        assert config.zenith_angle == pytest.approx(20.57, abs=1e-9)
+        assert config.azimuth_angle == pytest.approx(45.12, abs=1e-9)
+        assert isinstance(config.zenith_angle, float)
+        assert isinstance(config.azimuth_angle, float)
 
 
 def test_check_altitude_and_site(corsika_config_mock_array_model):

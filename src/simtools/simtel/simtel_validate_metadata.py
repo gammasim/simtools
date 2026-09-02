@@ -7,6 +7,7 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
+from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils import names
 
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter")
@@ -91,7 +92,7 @@ def validate_metadata_values(metadata):
         Decoded sim_telarray metadata values, keyed by emitted name.
     """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
-    for name, value in metadata.items():
+    for name, value in normalize_sim_telarray_metadata(metadata).items():
         definition = registry.get(name)
         if (
             definition is None
@@ -195,9 +196,10 @@ def _build_model_parameter_definition(source_name, emitted_name=None):
 def _get_emitted_name_and_mode(model_schema):
     """Return emitted sim_telarray metadata name and metadata mode."""
     software = _get_software_definition(model_schema)
-    if software.get("set_meta_parameter", False):
-        return software.get("internal_parameter_name", model_schema["name"]), "set"
-    return software.get("internal_parameter_name", model_schema["name"]), "add"
+    mode = software.get("meta_parameter_mode")
+    if mode is None:
+        raise KeyError(f"Model parameter without meta parameter mode: {model_schema['name']}")
+    return software.get("internal_parameter_name", model_schema["name"]), mode
 
 
 def _get_software_definition(model_schema):

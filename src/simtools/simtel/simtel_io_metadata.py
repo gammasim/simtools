@@ -9,9 +9,69 @@ from eventio import EventIOFile
 from eventio.iact import InputCard
 from eventio.simtel import HistoryMeta
 
+from simtools import dependency_versions
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
+
+LEGACY_METADATA_ALIASES = {
+    "simtools_corsika_config_version": "simtools_corsika_config_tag",
+    "simtools_corsika_opt_patch_version": "simtools_corsika_opt_patch_tag",
+    "simtools_corsika_version": "simtools_corsika_build_id",
+    "simtools_hessio_version": "simtools_hessio_tag",
+    "simtools_simtel_version": "simtools_simtel_tag",
+    "simtools_stdtools_version": "simtools_stdtools_tag",
+}
+
+
+def normalize_sim_telarray_metadata(metadata, dependency_catalog=None):
+    """Convert legacy sim_telarray metadata names to canonical names.
+
+    Unknown metadata keys are preserved. When a dependency catalog is supplied,
+    a legacy CORSIKA build identifier is also used to recover its source tag.
+
+    Parameters
+    ----------
+    metadata : dict
+        Decoded sim_telarray metadata keyed by parameter name.
+    dependency_catalog : dict, optional
+        Dependency catalog used to resolve ``simtools_corsika_source_tag`` from
+        ``simtools_corsika_build_id``.
+
+    Returns
+    -------
+    dict
+        A new dictionary using canonical metadata names.
+
+    Raises
+    ------
+    ValueError
+        If both a legacy key and its canonical key are present with different
+        values.
+    """
+    normalized = dict(metadata)
+    for legacy_name, canonical_name in LEGACY_METADATA_ALIASES.items():
+        if legacy_name not in normalized:
+            continue
+        if canonical_name in normalized and str(normalized[canonical_name]) != str(
+            normalized[legacy_name]
+        ):
+            raise ValueError(
+                f"Conflicting sim_telarray metadata values for {canonical_name} and {legacy_name}."
+            )
+        normalized.setdefault(canonical_name, normalized[legacy_name])
+        del normalized[legacy_name]
+
+    if dependency_catalog and "simtools_corsika_source_tag" not in normalized:
+        build_id = normalized.get("simtools_corsika_build_id")
+        if build_id is not None:
+            source_tag = dependency_versions.corsika_source_tag_for_build_id(
+                build_id, dependency_catalog
+            )
+            if source_tag is not None:
+                normalized["simtools_corsika_source_tag"] = source_tag
+
+    return normalized
 
 
 @cache
@@ -61,8 +121,9 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
 
     # keys to lower case and strip leading '*', trailing spaces
     try:
-        return clean_meta(global_meta), {
-            tel_id: clean_meta(meta) for tel_id, meta in telescope_meta.items()
+        return normalize_sim_telarray_metadata(clean_meta(global_meta)), {
+            tel_id: normalize_sim_telarray_metadata(clean_meta(meta))
+            for tel_id, meta in telescope_meta.items()
         }
     except AttributeError as e:
         raise AttributeError(f"Error reading metadata from file {file}: {e}") from e

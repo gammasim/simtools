@@ -41,9 +41,9 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
-        "db_simulation_model_version": {
+        "db_simulation_model_tag": {
             "type": "string",
-            "description": "Version of simulation model database",
+            "description": "Release tag of simulation model database",
         },
     },
     "required": [
@@ -52,9 +52,26 @@ jsonschema_db_dict = {
         "db_api_user",
         "db_api_pw",
         "db_simulation_model",
-        "db_simulation_model_version",
+        "db_simulation_model_tag",
     ],
 }
+
+
+def _resolve_model_tag(db_simulation_model_tag, db_simulation_model_version):
+    """Resolve canonical and legacy database-model selectors."""
+    if (
+        db_simulation_model_tag is not None
+        and db_simulation_model_version is not None
+        and db_simulation_model_tag != db_simulation_model_version
+    ):
+        raise ValueError(
+            "db_simulation_model_tag and db_simulation_model_version must match when both are set."
+        )
+    return (
+        db_simulation_model_tag
+        if db_simulation_model_tag is not None
+        else db_simulation_model_version
+    )
 
 
 class IdleConnectionMonitor(monitoring.ConnectionPoolListener):
@@ -229,7 +246,15 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         ValueError
             If the MongoDB configuration is invalid.
         """
-        if db_config is None or all(value is None for value in db_config.values()):
+        if db_config is None:
+            return None
+        db_config = dict(db_config)
+        db_simulation_model_version = db_config.pop("db_simulation_model_version", None)
+        db_simulation_model_tag = db_config.get("db_simulation_model_tag")
+        model_tag = _resolve_model_tag(db_simulation_model_tag, db_simulation_model_version)
+        if model_tag is not None:
+            db_config["db_simulation_model_tag"] = model_tag
+        if all(value is None for value in db_config.values()):
             return None
         try:
             jsonschema.validate(instance=db_config, schema=jsonschema_db_dict)
@@ -238,7 +263,12 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             raise ValueError("Invalid MongoDB configuration") from err
 
     @staticmethod
-    def get_db_name(db_name=None, db_simulation_model_version=None, model_name=None):
+    def get_db_name(
+        db_name=None,
+        db_simulation_model_tag=None,
+        model_name=None,
+        db_simulation_model_version=None,
+    ):
         """
         Build DB name from configuration.
 
@@ -246,8 +276,8 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         ----------
         db_name: str
             Direct database name (if provided, returns this).
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
         model_name: str
             Name of the simulation model.
 
@@ -256,10 +286,13 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         str or None
             Database name.
         """
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         if db_name:
             return db_name
-        if db_simulation_model_version and model_name:
-            return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
+        if db_simulation_model_tag and model_name:
+            return f"{model_name}-{db_simulation_model_tag.replace('.', '-')}"
         return None
 
     def print_connection_info(self, db_name):
@@ -362,7 +395,11 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         return databases if requested == "all" else [requested]
 
     def generate_compound_indexes_for_databases(
-        self, db_name, db_simulation_model, db_simulation_model_version
+        self,
+        db_name,
+        db_simulation_model,
+        db_simulation_model_tag=None,
+        db_simulation_model_version=None,
     ):
         """
         Generate compound indexes for several databases.
@@ -373,18 +410,21 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             Name of the database.
         db_simulation_model: str
             Name of the simulation model.
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
 
         Raises
         ------
         ValueError
             If the requested database is not found.
         """
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         databases = self.get_accessible_database_names()
         requested = self.get_db_name(
             db_name=db_name,
-            db_simulation_model_version=db_simulation_model_version,
+            db_simulation_model_tag=db_simulation_model_tag,
             model_name=db_simulation_model,
         )
         databases = self.resolve_requested_databases(requested, databases)

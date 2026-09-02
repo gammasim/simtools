@@ -1,0 +1,116 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+title: Trigger histogram product metadata
+description: Metadata manifest for one trigger-histogram product.
+schema_version: 1.0.0
+schema_name: trigger_histograms_metadata.schema
+type: object
+additionalProperties: false
+properties:
+  schema_name:
+    type: string
+    enum: [trigger_histograms_metadata]
+  schema_version:
+    type: string
+    enum: [1.0.0]
+  product_type:
+    type: string
+    enum: [trigger_histograms]
+  status:
+    type: string
+    enum: [complete]
+  configuration:
+    type: object
+    minProperties: 1
+  histogram_settings:
+    type: object
+    additionalProperties: false
+    properties:
+      energy_bins_per_decade:
+        type: integer
+        minimum: 1
+      angular_distance_bin_width:
+        $ref: '#/definitions/Quantity'
+      core_distance_bin_width:
+        $ref: '#/definitions/Quantity'
+      minimum_triggered_telescopes:
+        type: integer
+        minimum: 1
+    required:
+      - energy_bins_per_decade
+      - angular_distance_bin_width
+      - core_distance_bin_width
+      - minimum_triggered_telescopes
+  array_selection:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        array_name:
+          type: string
+          minLength: 1
+        telescope_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+        - array_name
+        - telescope_ids
+  input_run_numbers:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: integer
+  input_files:
+    type: object
+    additionalProperties: false
+    properties:
+      reduced_event_data:
+        $ref: '#/definitions/FileList'
+    required:
+      - reduced_event_data
+  files:
+    type: object
+    additionalProperties: false
+    properties:
+      trigger_histograms:
+        $ref: '#/definitions/FileList'
+    required:
+      - trigger_histograms
+required:
+  - schema_name
+  - schema_version
+  - product_type
+  - status
+  - configuration
+  - histogram_settings
+  - array_selection
+  - input_run_numbers
+  - input_files
+  - files
+
+definitions:
+  Quantity:
+    type: object
+    additionalProperties: false
+    properties:
+      value:
+        type: number
+      unit:
+        type: string
+        minLength: 1
+    required:
+      - value
+      - unit
+
+  FileList:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+      minLength: 1

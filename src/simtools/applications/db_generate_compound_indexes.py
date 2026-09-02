@@ -26,7 +26,7 @@ def main():
     db.generate_compound_indexes_for_databases(
         db_name=app_context.args["database_name"],
         db_simulation_model=app_context.args.get("db_simulation_model"),
-        db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
+        db_simulation_model_tag=app_context.args.get("db_simulation_model_tag"),
     )
 
 

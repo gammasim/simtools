@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import os
 import re
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
+from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
@@ -19,6 +21,14 @@ from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_telescope_configs,
     resolve_telescope_configs,
+)
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+    check_manifest,
+    get_manifest_schema_metadata,
+    select_file_groups,
+    selection_summary,
+    stable_configuration_hash,
 )
 from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
@@ -458,6 +468,7 @@ def _process_production(
     angular_distance_bin_width,
     core_distance_bin_width=None,
     skip_invalid_event_data_files=False,
+    minimum_triggered_telescopes=2,
 ):
     """Read one production once and build trigger histograms for all telescope configurations."""
     finalized_histograms = accumulate_histograms_by_telescope_config(
@@ -469,6 +480,7 @@ def _process_production(
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         fill_efficiency_histogram=True,
         collect_trigger_topology=True,
+        minimum_triggered_telescopes=minimum_triggered_telescopes,
     )
     return [(histograms, topology) for _, histograms, topology in finalized_histograms]
 
@@ -482,6 +494,7 @@ def _execute_production_job(job_spec):
         angular_distance_bin_width=job_spec["angular_distance_bin_width"],
         core_distance_bin_width=job_spec.get("core_distance_bin_width"),
         skip_invalid_event_data_files=job_spec["skip_invalid_event_data_files"],
+        minimum_triggered_telescopes=job_spec.get("minimum_triggered_telescopes", 2),
     )
     return [
         {
@@ -540,11 +553,15 @@ def discover_event_data_groups(event_data_directory):
     return [(group_name, groups[group_name]) for group_name in sorted(groups)]
 
 
-def _write_trigger_histogram_product(args_dict, production_patterns, output_file):
+def _write_trigger_histogram_product(
+    args_dict,
+    production_patterns,
+    output_file,
+    product_metadata=None,
+    telescope_configs=None,
+):
     """Build and write one trigger-histogram product from production sources."""
-    telescope_configs = _use_readable_inline_array_names(
-        normalize_telescope_configs(resolve_telescope_configs(args_dict))
-    )
+    telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict)
     output_file = validate_file_type(output_file, file_type="hdf5")
 
     reference_specs = []
@@ -558,6 +575,7 @@ def _write_trigger_histogram_product(args_dict, production_patterns, output_file
             "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
             "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
             "skip_invalid_event_data_files": args_dict.get("skip_invalid_event_data_files", False),
+            "minimum_triggered_telescopes": args_dict.get("minimum_triggered_telescopes", 2),
         }
         for production_index, pattern in enumerate(production_patterns)
     ]
@@ -598,7 +616,36 @@ def _write_trigger_histogram_product(args_dict, production_patterns, output_file
         },
     )
     _write_dense_histogram_payload(reference_specs, output_file)
+    if product_metadata is not None:
+        _write_trigger_histogram_metadata(args_dict, output_file, product_metadata)
     return metadata_table, bin_table
+
+
+def _write_trigger_histogram_metadata(args_dict, output_file, product_metadata):
+    """Write a neighboring YAML manifest for a trigger-histogram product."""
+    output_file = Path(output_file)
+    metadata_file = output_file.with_suffix(".yml")
+    manifest_schema = get_manifest_schema_metadata("trigger_histograms")
+    manifest = {
+        **manifest_schema,
+        "product_type": "trigger_histograms",
+        "status": "complete",
+        "configuration": product_metadata["configuration"],
+        "histogram_settings": _histogram_settings(args_dict),
+        "array_selection": product_metadata["array_selection"],
+        "input_run_numbers": product_metadata["run_numbers"],
+        "input_files": {
+            "reduced_event_data": [
+                _relative_to_directory(path, metadata_file.parent)
+                for path in product_metadata["input_files"]
+            ],
+        },
+        "files": {
+            "trigger_histograms": [_relative_to_directory(output_file, metadata_file.parent)],
+        },
+    }
+    check_manifest(ProductionManifest(path=metadata_file, data=manifest))
+    write_data_to_file(manifest, metadata_file)
 
 
 def _write_directory_group_job(job_spec):
@@ -610,7 +657,11 @@ def _write_directory_group_job(job_spec):
         "max_workers": 1,
     }
     _write_trigger_histogram_product(
-        args_dict, [job_spec["event_data_files"]], job_spec["output_file"]
+        args_dict,
+        [job_spec["event_data_files"]],
+        job_spec["output_file"],
+        product_metadata=job_spec.get("product_metadata"),
+        telescope_configs=job_spec.get("telescope_configs"),
     )
     return str(job_spec["output_file"])
 
@@ -650,6 +701,68 @@ def _write_directory_products(args_dict):
     return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
 
 
+def _write_production_selection_products(args_dict):
+    """Submit one trigger-histogram product per selected production configuration group."""
+    if args_dict.get("file_type", "reduced_event_data") != "reduced_event_data":
+        raise ValueError("Production metadata input requires file_type='reduced_event_data'.")
+    output_directory = io_handler.IOHandler().get_output_directory()
+    selection_result = select_file_groups(
+        args_dict["production_path"],
+        selections=args_dict.get("select"),
+        file_type="reduced_event_data",
+        require_complete_runs=args_dict.get("require_complete_runs", False),
+    )
+    _logger.info("\n%s", selection_summary(selection_result))
+    if not selection_result["groups"]:
+        raise ValueError("Production metadata selection did not match any files.")
+
+    production_path = Path(args_dict["production_path"]).resolve()
+    runtime_args = (
+        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
+    )
+    runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
+    jobs = []
+    for index, group in enumerate(selection_result["groups"]):
+        telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
+        product_identity = {
+            "histogram_settings": _histogram_settings(args_dict),
+            "array_selection": telescope_configs,
+        }
+        output_file = validate_file_type(
+            output_directory
+            / f"{_group_output_stem(group, product_identity)}.trigger_histograms.hdf5",
+            file_type="hdf5",
+        )
+        metadata_file = output_file.with_suffix(".yml")
+        if output_file.exists() or metadata_file.exists():
+            raise FileExistsError(f"Trigger-histogram output already exists: {output_file}")
+        jobs.append(
+            JobSpec(
+                job_id=f"trigger-histograms-{index:06d}",
+                index=index,
+                function=_write_directory_group_job,
+                item={
+                    "args_dict": args_dict,
+                    "event_data_files": [str(file_path) for file_path in group.file_paths],
+                    "output_file": output_file,
+                    "product_metadata": {
+                        "configuration": group.configuration,
+                        "run_numbers": group.run_numbers,
+                        "input_files": group.file_paths,
+                        "array_selection": telescope_configs,
+                    },
+                    "telescope_configs": telescope_configs,
+                },
+                runtime_args=runtime_args,
+                runtime_db_config=runtime_db_config,
+                mount_paths=(production_path,),
+                output_paths=(output_file, metadata_file),
+            )
+        )
+    _logger.info("Submitting %d trigger-histogram production metadata group(s)", len(jobs))
+    return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
+
+
 def write_trigger_histograms(args_dict):
     """
     Build trigger histograms and write them to file.
@@ -673,10 +786,103 @@ def write_trigger_histograms(args_dict):
     """
     if args_dict.get("event_data_directory"):
         return _write_directory_products(args_dict)
+    if args_dict.get("production_path"):
+        return _write_production_selection_products(args_dict)
 
     production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
     output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
     return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
+
+
+def _group_output_stem(group, product_identity=None):
+    """Return a readable, stable output stem for a selected production group."""
+    configuration = group.configuration
+    parts = [
+        _safe_stem_part(configuration.get("primary", "production")),
+        _angle_stem_part("za", configuration.get("zenith_angle")),
+        _safe_stem_part(configuration.get("corsika_he_interaction")),
+    ]
+    parts = [part for part in parts if part]
+    parts.append(
+        stable_configuration_hash(
+            {
+                "configuration": configuration,
+                **(product_identity or {}),
+            }
+        )
+    )
+    return "_".join(parts)
+
+
+def _angle_stem_part(prefix, value):
+    """Return an angle value formatted for an output file stem."""
+    if isinstance(value, dict) and set(value) == {"value", "unit"}:
+        quantity = float(value["value"]) * u.Unit(value["unit"])
+        return f"{prefix}{quantity.to_value(u.deg):g}"
+    return None
+
+
+def _safe_stem_part(value):
+    """Return a filesystem-safe output stem component."""
+    if value is None:
+        return None
+    return re.sub(r"[^A-Za-z0-9]+", "-", str(value)).strip("-").lower()
+
+
+def _relative_to_directory(path, directory):
+    """Return a portable path relative to a metadata directory."""
+    path = Path(path).resolve()
+    directory = Path(directory).resolve()
+    return Path(os.path.relpath(path, directory)).as_posix()
+
+
+def _resolve_telescope_configs(args_dict):
+    """Return normalized resolved telescope configurations."""
+    return _use_readable_inline_array_names(
+        normalize_telescope_configs(resolve_telescope_configs(args_dict))
+    )
+
+
+def _resolve_group_telescope_configs(args_dict, configuration):
+    """Resolve telescope configurations from one selected production configuration."""
+    group_args = dict(args_dict)
+    _set_group_argument(group_args, configuration, "site")
+    _set_group_argument(group_args, configuration, "model_version", list_value=True)
+    if group_args.get("array_element_list"):
+        return _resolve_telescope_configs(group_args)
+    _set_group_argument(group_args, configuration, "array_layout_name", list_value=True)
+    return _resolve_telescope_configs(group_args)
+
+
+def _set_group_argument(args_dict, configuration, key, list_value=False):
+    """Set one telescope-resolution argument from metadata or reject an incompatible override."""
+    if key not in configuration:
+        raise ValueError(f"Selected production metadata is missing configuration.{key}.")
+    metadata_value = configuration[key]
+    expected = _as_argument_value(metadata_value, list_value)
+    provided = args_dict.get(key)
+    if provided is not None and provided != expected:
+        raise ValueError(
+            f"Explicit --{key}={provided} does not match selected production metadata {expected}."
+        )
+    args_dict[key] = expected
+
+
+def _as_argument_value(value, list_value):
+    """Return manifest values in the form accepted by the command-line resolver."""
+    if not list_value:
+        return value
+    return value if isinstance(value, list) else [value]
+
+
+def _histogram_settings(args_dict):
+    """Return settings that define a trigger-histogram product."""
+    return {
+        "energy_bins_per_decade": args_dict["energy_bins_per_decade"],
+        "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
+        "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
+        "minimum_triggered_telescopes": args_dict.get("minimum_triggered_telescopes", 2),
+    }
 
 
 def load_trigger_histograms(reference_file):

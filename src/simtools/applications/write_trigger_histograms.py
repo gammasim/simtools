@@ -32,10 +32,38 @@ _ARGUMENTS = (
         exclusive_group_required=True,
     ),
     cli.ArgumentDefinition(
+        "production_path",
+        help="Directory containing production job metadata manifests to select input files from.",
+        type=str,
+        exclusive_group="event_data_input",
+        exclusive_group_required=True,
+    ),
+    cli.ArgumentDefinition(
+        "select",
+        help="Selection expression as dotted.path=value. Can be repeated.",
+        action="append",
+        default=[],
+    ),
+    cli.ArgumentDefinition(
+        "require_complete_runs",
+        help="Fail when selected run numbers are not contiguous within each configuration group.",
+        action="store_true",
+        default=False,
+    ),
+    cli.ArgumentDefinition(
         "energy_bins_per_decade",
         help="Number of logarithmic energy bins per decade.",
         type=int,
         default=10,
+    ),
+    cli.ArgumentDefinition(
+        "minimum_triggered_telescopes",
+        help=(
+            "Minimum number of triggered telescopes within each selected array layout "
+            "required to fill trigger histograms."
+        ),
+        type=int,
+        default=2,
     ),
     cli.ArgumentDefinition(
         "angular_distance_bin_width",
@@ -75,7 +103,10 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, config_sources, parser):
     """Validate output options selected for the event-data input mode."""
-    if args_dict.get("event_data_directory"):
+    if args_dict.get("minimum_triggered_telescopes", 2) < 1:
+        parser.error("'--minimum_triggered_telescopes' must be at least 1.")
+
+    if args_dict.get("event_data_directory") or args_dict.get("production_path"):
         explicit_output_path_sources = set().union(
             *(
                 config_sources.get(source, set())
@@ -83,10 +114,17 @@ def _post_parse(args_dict, config_sources, parser):
             )
         )
         if "output_path" not in explicit_output_path_sources:
-            parser.error("'--output_path' is required with '--event_data_directory'.")
+            parser.error("'--output_path' is required with directory or production metadata input.")
 
         if args_dict.get("output_file") and not args_dict.get("output_file_from_default"):
-            parser.error("'--output_file' cannot be used with '--event_data_directory'.")
+            parser.error(
+                "'--output_file' cannot be used with directory or production metadata input."
+            )
+
+    if not args_dict.get("production_path") and not (
+        args_dict.get("array_layout_name") or args_dict.get("array_element_list")
+    ):
+        parser.error("Use one of --array_layout_name or --array_element_list.")
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -97,7 +135,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        *cli.layout_selection_arguments(),
+        *cli.layout_selection_arguments(required=False),
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

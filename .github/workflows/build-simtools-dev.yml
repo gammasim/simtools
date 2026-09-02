@@ -26,7 +26,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 permissions: {}
 
@@ -65,7 +64,7 @@ jobs:
           echo "SIMTOOLS_GIT_REVISION=$GITHUB_SHA" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
@@ -98,7 +97,7 @@ jobs:
             SIMTEL_IMAGE=${{ needs.dependency-config.outputs.dev_simtel_image }}
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_GIT_REVISION=${{ env.SIMTOOLS_GIT_REVISION }}
-          push: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
+          push: ${{ github.repository == 'gammasim/simtools' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) }}
           file: ./docker/Dockerfile-simtools-dev
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

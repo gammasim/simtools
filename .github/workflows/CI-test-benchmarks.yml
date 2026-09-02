@@ -40,7 +40,7 @@ jobs:
       - name: Run unit resource benchmark
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+          SIMTOOLS_DB_SIMULATION_MODEL_TAG: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_TAG }}
         run: |
           pytest --no-cov --color=yes -n 0 \
             --resource-benchmark-output=resource-benchmark-unit \

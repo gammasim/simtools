@@ -112,7 +112,7 @@ jobs:
 
       - name: Deploy versioned doc on release
         if: github.event_name == 'release'
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445  # v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
@@ -122,7 +122,7 @@ jobs:
 
       - name: Deploy dev docs on workflow_dispatch
         if: github.event_name == 'workflow_dispatch'
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f  # v4
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445  # v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages

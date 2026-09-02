@@ -13,6 +13,7 @@ applications:
     output_path: simtools-output
     site: South
     energy_bins_per_decade: 10
+    minimum_triggered_telescopes: 1
     angular_distance_bin_width: 0.5
     core_distance_bin_width: 20.0
   integration_tests:
