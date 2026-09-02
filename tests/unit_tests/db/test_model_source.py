@@ -8,11 +8,13 @@ from simtools.db.model_source import MongoDBModelSource
 def test_mongodb_source_delegates_model_operations():
     """The adapter delegates source operations to the database handler."""
     handler = Mock(model_source_name="simulation-model-db")
+    handler.is_configured.return_value = True
     handler.get_model_versions.return_value = ["1.0.0"]
     handler.read_production_table_from_db.return_value = {"collection": "telescopes"}
     source = MongoDBModelSource(handler)
 
     assert source.source_name == "simulation-model-db"
+    assert source.is_configured() is True
     assert source.get_model_versions("telescopes") == ["1.0.0"]
     assert source.read_production_table("telescopes", "1.0.0") == {"collection": "telescopes"}
     handler.get_model_versions.assert_called_once_with("telescopes")
