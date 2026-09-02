@@ -869,6 +869,15 @@ class ModelParameter:
             return
 
         self.parameters.update(additional_models.parameters)
+        self.parameters.update(
+            {
+                name: parameter
+                for name, parameter in (
+                    additional_models.get_simulation_software_parameters("sim_telarray") or {}
+                ).items()
+                if names.is_global_sim_telarray_parameter(name)
+            }
+        )
         additional_models.export_model_files(self.config_file_directory, update_if_necessary=True)
 
     @property

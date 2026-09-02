@@ -99,6 +99,7 @@ def test_validate_array_element_id_name(caplog):
 
 
 def test_get_site_from_array_element_name(invalid_name):
+    assert names.get_site_from_array_element_name(None) is None
     assert "North" == names.get_site_from_array_element_name("MSTN")
     assert "North" == names.get_site_from_array_element_name("MSTN-05")
     assert "South" == names.get_site_from_array_element_name("MSTS-05")
@@ -108,6 +109,26 @@ def test_get_site_from_array_element_name(invalid_name):
     assert "North" == names.get_site_from_array_element_name("OBS-North")
     assert "South" == names.get_site_from_array_element_name("OBS-South")
     assert "South" == names.get_site_from_array_element_name("South")
+
+
+def test_model_parameter_scope_and_simtelarray_scopes():
+    assert (
+        names.get_model_parameter_scope(
+            "configuration_sim_telarray", "LSTN-design", "iobuf_maximum"
+        )
+        == "global"
+    )
+    assert (
+        names.get_model_parameter_scope("telescopes", "LSTN-design", "camera_body_diameter")
+        == "LSTN-design"
+    )
+    assert names.get_sim_telarray_parameter_scopes("LSTN-01", "LSTN-design") == [
+        "global",
+        "LSTN-design",
+        "LSTN-01",
+    ]
+    with pytest.raises(KeyError, match="Missing design model"):
+        names.get_sim_telarray_parameter_scopes("LSTN-01")
 
 
 def test_get_collection_name_from_array_element_name():
