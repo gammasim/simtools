@@ -119,12 +119,12 @@ def test_format_show_options_result_includes_environment_and_grouped_values():
     assert "Use a matching model version." in output
 
 
-def test_show_model_versions_uses_database(monkeypatch):
-    class FakeDatabaseHandler:
+def test_show_model_versions_uses_selected_reader(monkeypatch):
+    class FakeModelReader:
         def get_model_versions(self):
             return ["7.0.0", "7.1.0"]
 
-    monkeypatch.setattr(show_options, "DatabaseHandler", FakeDatabaseHandler)
+    monkeypatch.setattr(show_options, "create_model_reader", lambda *_: FakeModelReader())
 
     result = show_options.resolve_show_options({"show_options": "model_version"})
 
@@ -133,7 +133,7 @@ def test_show_model_versions_uses_database(monkeypatch):
 
 def test_show_array_layout_names_groups_all_sites(monkeypatch):
     class FakeSiteModel:
-        def __init__(self, site, model_version):
+        def __init__(self, site, model_version, model_reader):
             self.site = site
             self.model_version = model_version
 
@@ -156,7 +156,7 @@ def test_show_array_layout_names_groups_all_sites(monkeypatch):
 
 def test_show_array_layout_names_limits_to_selected_site(monkeypatch):
     class FakeSiteModel:
-        def __init__(self, site, model_version):
+        def __init__(self, site, model_version, model_reader):
             self.site = site
             self.model_version = model_version
 

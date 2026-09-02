@@ -3,7 +3,10 @@
 from pathlib import Path
 from unittest.mock import Mock
 
-from simtools.application.model_reader import create_model_reader
+import pytest
+
+from simtools.application.model_reader import create_model_reader, require_model_reader
+from simtools.settings import config
 
 
 def _model_repository_root(tmp_test_directory):
@@ -35,3 +38,42 @@ def test_create_model_reader_constructs_database_handler_when_needed(mocker):
 
     assert reader.source_name == "simulation-model-db"
     database_handler.assert_called_once_with()
+
+
+def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directory):
+    """The environment selects a filesystem source when no path is passed explicitly."""
+    root = _model_repository_root(tmp_test_directory)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(root))
+
+    reader = create_model_reader()
+
+    assert reader.source_name == str(root.resolve())
+
+
+def test_require_model_reader_prefers_explicit_reader():
+    """An explicit reader is returned independently of application configuration."""
+    reader = Mock()
+
+    assert require_model_reader(reader) is reader
+
+
+def test_require_model_reader_uses_configured_reader():
+    """Library callers use the reader selected during application setup."""
+    reader = Mock()
+    previous_reader = config.model_reader
+    config.set_model_reader(reader)
+    try:
+        assert require_model_reader() is reader
+    finally:
+        config.set_model_reader(previous_reader)
+
+
+def test_require_model_reader_requires_selection():
+    """Calls outside an application must explicitly select a reader."""
+    previous_reader = config.model_reader
+    config.set_model_reader(None)
+    try:
+        with pytest.raises(RuntimeError, match="No simulation model reader is configured"):
+            require_model_reader()
+    finally:
+        config.set_model_reader(previous_reader)

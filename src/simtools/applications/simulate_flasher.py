@@ -106,7 +106,9 @@ def main():
 
     if app_context.args["run_mode"] == "full_simulation":
         telescopes = (
-            get_array_elements_for_layout(app_context.args["array_layout_name"])
+            get_array_elements_for_layout(
+                app_context.args["array_layout_name"], model_reader=app_context.model_reader
+            )
             if app_context.args.get("array_layout_name") is not None
             else general.ensure_list(app_context.args["telescopes"])
         )
@@ -115,6 +117,7 @@ def main():
                 light_emission_config=app_context.args,
                 telescope=tel,
                 label=app_context.args.get("label"),
+                model_reader=app_context.model_reader,
             )
             light_source.simulate()
             light_source.validate_simulations()

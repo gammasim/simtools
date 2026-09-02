@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import astropy.units as u
 import pytest
@@ -518,42 +518,41 @@ def test_parameter_is_a_file(num_gains_schema):
     assert not w1._parameter_is_a_file()
 
 
-def test_check_db_for_existing_parameter():
+def test_check_model_reader_for_existing_parameter():
     parameter_name = "test_parameter"
     instrument = "LSTN-01"
     parameter_version = "1.0.0"
 
-    w1 = writer.ModelDataWriter()
+    model_reader = Mock()
+    model_reader.is_configured.return_value = True
+    model_reader.get_model_parameter.side_effect = ValueError("Parameter not found")
+    w1 = writer.ModelDataWriter(model_reader=model_reader)
 
-    with patch("simtools.data_model.model_data_writer.db_handler.DatabaseHandler") as mockdbhandler:
-        mock_db_instance = mockdbhandler.return_value
-        mock_db_instance.get_model_parameter.side_effect = ValueError("Parameter not found")
+    # Test case where parameter does not exist
+    w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+    model_reader.get_model_parameter.assert_called_once_with(
+        parameter=parameter_name,
+        parameter_version=parameter_version,
+        site=names.get_site_from_array_element_name(instrument),
+        array_element_name=instrument,
+    )
 
-        # Test case where parameter does not exist
+    # Reset mock for next test
+    model_reader.get_model_parameter.reset_mock()
+
+    # Test case where parameter exists
+    model_reader.get_model_parameter.side_effect = None
+    with pytest.raises(
+        ValueError,
+        match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
+    ):
         w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
-        mock_db_instance.get_model_parameter.assert_called_once_with(
-            parameter=parameter_name,
-            parameter_version=parameter_version,
-            site=names.get_site_from_array_element_name(instrument),
-            array_element_name=instrument,
-        )
-
-        # Reset mock for next test
-        mock_db_instance.get_model_parameter.reset_mock()
-
-        # Test case where parameter exists
-        mock_db_instance.get_model_parameter.side_effect = None
-        with pytest.raises(
-            ValueError,
-            match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
-        ):
-            w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
-        mock_db_instance.get_model_parameter.assert_called_once_with(
-            parameter=parameter_name,
-            parameter_version=parameter_version,
-            site=names.get_site_from_array_element_name(instrument),
-            array_element_name=instrument,
-        )
+    model_reader.get_model_parameter.assert_called_once_with(
+        parameter=parameter_name,
+        parameter_version=parameter_version,
+        site=names.get_site_from_array_element_name(instrument),
+        array_element_name=instrument,
+    )
 
 
 def test_find_highest_schema_version():

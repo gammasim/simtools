@@ -8,6 +8,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.model.calibration_model import CalibrationModel
@@ -39,7 +40,7 @@ class SimulatorLightEmission(SimtelRunner):
     """
 
     @staticmethod
-    def get_available_wavelengths_from_config(config):
+    def get_available_wavelengths_from_config(config, model_reader=None):
         """
         Get available wavelengths from model configuration without full initialization.
 
@@ -71,20 +72,23 @@ class SimulatorLightEmission(SimtelRunner):
                 f"site={site}, model_version={model_version}, light_source={light_source}"
             )
 
-        calibration_model = CalibrationModel(
-            site=site,
-            calibration_device_model_name=light_source,
-            model_version=model_version,
-            label=f"temp_wavelength_query_{light_source}",
-            overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
-        )
+        calibration_kwargs = {
+            "site": site,
+            "calibration_device_model_name": light_source,
+            "model_version": model_version,
+            "label": f"temp_wavelength_query_{light_source}",
+            "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(),
+        }
+        calibration_kwargs["model_reader"] = require_model_reader(model_reader)
+        calibration_model = CalibrationModel(**calibration_kwargs)
 
         wavelengths = calibration_model.get_parameter_value_with_unit("flasher_wavelength")
         return general.ensure_list(wavelengths)
 
-    def __init__(self, light_emission_config, telescope=None, label=None):
+    def __init__(self, light_emission_config, telescope=None, label=None, model_reader=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
+        self.model_reader = require_model_reader(model_reader)
         self.io_handler = io_handler.IOHandler()
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
@@ -103,15 +107,17 @@ class SimulatorLightEmission(SimtelRunner):
             light_emission_config, run_type="sub", label=label
         )
 
+        model_kwargs = {
+            "label": label,
+            "site": light_emission_config.get("site"),
+            "telescope_name": telescope,
+            "calibration_device_name": light_emission_config.get("light_source"),
+            "calibration_device_type": light_emission_config.get("light_source_type"),
+            "model_version": light_emission_config.get("model_version"),
+        }
+        model_kwargs["model_reader"] = self.model_reader
         self.telescope_model, self.site_model, self.calibration_model = (
-            initialize_simulation_models(
-                label=label,
-                site=light_emission_config.get("site"),
-                telescope_name=telescope,
-                calibration_device_name=light_emission_config.get("light_source"),
-                calibration_device_type=light_emission_config.get("light_source_type"),
-                model_version=light_emission_config.get("model_version"),
-            )
+            initialize_simulation_models(**model_kwargs)
         )
         self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
 

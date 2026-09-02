@@ -30,6 +30,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
     ),
+    initialize_model_reader=False,
 )
 
 

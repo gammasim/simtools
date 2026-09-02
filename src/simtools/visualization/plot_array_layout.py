@@ -12,7 +12,7 @@ from adjustText import adjust_text
 from astropy.table import Column
 from matplotlib.collections import PatchCollection
 
-from simtools.db import db_handler
+from simtools.application.model_reader import require_model_reader
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
@@ -37,7 +37,7 @@ class PlotBounds(NamedTuple):
     y_lim: tuple[float, float]
 
 
-def generate_plot_combinations(args_dict):
+def generate_plot_combinations(args_dict, model_reader=None):
     """Yield model version and site combinations for plotting.
 
     Parameters
@@ -52,7 +52,7 @@ def generate_plot_combinations(args_dict):
     """
     model_versions = [args_dict.get("model_version")]
     if args_dict.get("all_model_versions"):
-        model_versions = db_handler.DatabaseHandler().get_model_versions()
+        model_versions = require_model_reader(model_reader).get_model_versions()
 
     sites = [args_dict.get("site")]
     if args_dict.get("all_sites"):
