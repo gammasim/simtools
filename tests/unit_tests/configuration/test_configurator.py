@@ -16,6 +16,7 @@ from simtools.configuration.arguments import (
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
     STANDARD_ARGUMENTS,
+    ArgumentDefinition,
 )
 from simtools.configuration.configurator import Configurator
 
@@ -175,6 +176,7 @@ def test_arglist_from_config():
     ] == Configurator._arglist_from_config(_tmp_dict)
 
     assert [] == Configurator._arglist_from_config({})
+    assert [] == Configurator._arglist_from_config({"select": []})
 
     assert [] == Configurator._arglist_from_config(None)
     assert [] == Configurator._arglist_from_config(5.0)
@@ -393,6 +395,17 @@ def test_database_tag_cli_aliases_reject_conflicting_values(configurator):
 def test_canonical_database_tag_argument_is_available():
     """The canonical database tag argument is part of the shared definitions."""
     assert DB_SIMULATION_MODEL_TAG.name == "db_simulation_model_tag"
+
+
+def test_arglist_from_dict_preserves_bare_star_argument():
+    parser = Configurator().parser
+    parser.add_argument_definitions(
+        (ArgumentDefinition("plot_histograms", nargs="*", action="store"),)
+    )
+
+    assert Configurator.arglist_from_dict({"plot_histograms": []}, parser=parser) == [
+        "--plot_histograms"
+    ]
 
 
 def test_initialize(configurator):

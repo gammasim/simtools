@@ -4,13 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.constants import SCHEMA_PATH
-from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.sim_events.production_comparison import (
-    collect_production_metrics,
-    parse_production_arguments,
-)
-from simtools.visualization import plot_event_level_production_comparison
+from simtools.production_configuration.production_comparison import write_production_comparison
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -18,11 +12,35 @@ _ARGUMENTS = (
         action="append",
         nargs="+",
         metavar=("LABEL", "TRIGGER_HISTOGRAM_PATTERNS"),
-        required=True,
+        required=False,
         help=(
             "Production descriptor: --production <label> <comma-separated file patterns>. "
             "Repeat for each production; the first production is the baseline."
         ),
+    ),
+    cli.ArgumentDefinition(
+        "baseline_path",
+        help="Directory containing baseline trigger-histogram metadata YAML files.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "candidate_path",
+        help="Directory containing candidate trigger-histogram metadata YAML files.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "select",
+        help="Selection expression as dotted.path=value. Can be repeated.",
+        action="append",
+        default=[],
+    ),
+    cli.ArgumentDefinition(
+        "compare_by",
+        help="Configuration field allowed to differ between baseline and candidate.",
+        action="append",
+        default=[],
     ),
     cli.ArgumentDefinition(
         "comparison_level",
@@ -39,6 +57,18 @@ _ARGUMENTS = (
 )
 
 
+def _post_parse(args_dict, _config_sources, parser):
+    """Validate legacy and metadata-based production input modes."""
+    has_legacy_input = bool(args_dict.get("production"))
+    has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
+    if has_legacy_input == has_metadata_input:
+        parser.error("Use either '--production' or '--baseline_path' with '--candidate_path'.")
+    if has_metadata_input and not (
+        args_dict.get("baseline_path") and args_dict.get("candidate_path")
+    ):
+        parser.error("'--baseline_path' and '--candidate_path' must be used together.")
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -47,6 +77,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     initialize_output=False,
     excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    post_parse=_post_parse,
 )
 
 
@@ -57,39 +88,10 @@ def main():
     if comparison_level != "events":
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
-    production_descriptors = parse_production_arguments(app_context.args["production"])
-    array_layout_names = app_context.args.get("array_layout_name") or [None]
-    for array_layout_name in array_layout_names:
-        _compare_array_layout(
-            production_descriptors,
-            app_context,
-            array_layout_name,
-        )
-
-
-def _compare_array_layout(production_descriptors, app_context, array_layout_name):
-    """Compare one selected array layout and write its statistics metadata."""
-    metrics_per_production = collect_production_metrics(
-        production_descriptors,
-        array_names=array_layout_name,
+    write_production_comparison(
+        app_context.args,
+        app_context.io_handler.get_output_directory(),
     )
-    comparison_statistics_file = plot_event_level_production_comparison.plot(
-        metrics_per_production,
-        output_path=app_context.io_handler.get_output_directory(),
-        array_layout_name=array_layout_name,
-        figure_format=app_context.args.get("figure_format"),
-    )
-    metadata_args = dict(app_context.args)
-    metadata_args.update(
-        {
-            "array_layout_name": array_layout_name,
-            "output_file": str(comparison_statistics_file),
-            "output_file_format": "JSON",
-            "metadata_product_data_name": "production_comparison_statistics",
-            "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
-        }
-    )
-    MetadataCollector.dump(metadata_args, comparison_statistics_file)
 
 
 if __name__ == "__main__":

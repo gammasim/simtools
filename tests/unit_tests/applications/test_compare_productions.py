@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -5,7 +6,6 @@ import pytest
 import simtools.sim_events.production_comparison as production_comparison
 from simtools.applications import compare_productions
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.constants import SCHEMA_PATH
 
 
 def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
@@ -88,9 +88,8 @@ def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
 
 
-def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
+def test_main_delegates_to_production_comparison_workflow(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
-    statistics_file = output_directory / "comparison_statistics.json"
     app_context = mocker.MagicMock()
     app_context.args = {
         "comparison_level": "events",
@@ -106,85 +105,13 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
-    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
-    mocker.patch("simtools.applications.compare_productions.collect_production_metrics")
-    mock_plot = mocker.patch(
-        "simtools.applications.compare_productions.plot_event_level_production_comparison.plot",
-        return_value=statistics_file,
+    mock_write = mocker.patch(
+        "simtools.applications.compare_productions.write_production_comparison"
     )
-    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
 
     compare_productions.main()
 
-    mock_plot.assert_called_once_with(
-        mocker.ANY,
-        output_path=output_directory,
-        array_layout_name="CTAO-North-Alpha",
-        figure_format=["pdf"],
-    )
-    metadata_args, metadata_file = mock_dump.call_args.args
-    assert metadata_file == statistics_file
-    assert metadata_args["output_file"] == str(statistics_file)
-    assert metadata_args["output_file_format"] == "JSON"
-    assert metadata_args["metadata_product_data_name"] == "production_comparison_statistics"
-    assert metadata_args["schema_file"] == str(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
-    )
-
-
-def test_main_compares_each_selected_array_layout_separately(mocker, tmp_test_directory):
-    output_directory = Path(tmp_test_directory) / "comparison"
-    first_statistics_file = output_directory / "first" / "comparison_statistics.json"
-    second_statistics_file = output_directory / "second" / "comparison_statistics.json"
-    app_context = mocker.MagicMock()
-    app_context.args = {
-        "comparison_level": "events",
-        "production": ["baseline", "baseline.hdf5", "candidate", "candidate.hdf5"],
-        "array_layout_name": ["first", "second"],
-        "figure_format": ["png"],
-    }
-    app_context.io_handler.get_output_directory.return_value = output_directory
-    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
-    mock_application.start.return_value = app_context
-    descriptors = mocker.sentinel.production_descriptors
-    mocker.patch(
-        "simtools.applications.compare_productions.parse_production_arguments",
-        return_value=descriptors,
-    )
-    mock_collect = mocker.patch(
-        "simtools.applications.compare_productions.collect_production_metrics",
-        side_effect=[mocker.sentinel.first_metrics, mocker.sentinel.second_metrics],
-    )
-    mock_plot = mocker.patch(
-        "simtools.applications.compare_productions.plot_event_level_production_comparison.plot",
-        side_effect=[first_statistics_file, second_statistics_file],
-    )
-    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
-
-    compare_productions.main()
-
-    assert mock_collect.call_args_list == [
-        mocker.call(descriptors, array_names="first"),
-        mocker.call(descriptors, array_names="second"),
-    ]
-    assert mock_plot.call_args_list == [
-        mocker.call(
-            mocker.sentinel.first_metrics,
-            output_path=output_directory,
-            array_layout_name="first",
-            figure_format=["png"],
-        ),
-        mocker.call(
-            mocker.sentinel.second_metrics,
-            output_path=output_directory,
-            array_layout_name="second",
-            figure_format=["png"],
-        ),
-    ]
-    assert [call.args[0]["array_layout_name"] for call in mock_dump.call_args_list] == [
-        "first",
-        "second",
-    ]
+    mock_write.assert_called_once_with(app_context.args, output_directory)
 
 
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():
@@ -218,6 +145,28 @@ def test_comparison_level_argument_accepts_events():
     )
 
     assert args.comparison_level == "events"
+
+
+def test_application_parses_productions_without_select(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "compare_productions.py",
+            "--production",
+            "baseline",
+            "baseline.hdf5",
+            "--production",
+            "candidate",
+            "candidate.hdf5",
+            "--output_path",
+            "output",
+        ],
+    )
+
+    args, _ = compare_productions.APPLICATION._parse()
+
+    assert args["select"] == []
 
 
 def test_main_rejects_unimplemented_comparison_level(mocker):
