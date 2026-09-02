@@ -341,19 +341,7 @@ jobs:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
-      SIMULATION_MODELS_PATH: ${{ matrix.model_version == '7.0.0' && '../simulation-models' || '' }}
-
-    services:
-      mongodb:
-        image: mongo:latest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: api
-          MONGO_INITDB_ROOT_PASSWORD: password
-        options: >-
-          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      SIMULATION_MODELS_PATH: ../simulation-models
 
     strategy:
       fail-fast: false
@@ -389,19 +377,7 @@ jobs:
       - name: Create runtime environment (.env)
         run: |
           {
-            if [ -z "$SIMULATION_MODELS_PATH" ]; then
-              DB_SERVER="mongodb"
-              DB_API_USER="api"
-              DB_API_PW="password"
-              DB_API_PORT="27017"
-              SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-              echo "SIMTOOLS_DB_SERVER=$DB_SERVER"
-              echo "SIMTOOLS_DB_API_USER=$DB_API_USER"
-              echo "SIMTOOLS_DB_API_PW=$DB_API_PW"
-              echo "SIMTOOLS_DB_API_PORT=$DB_API_PORT"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG=$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-            fi
+            echo "SIMTOOLS_SIMULATION_MODELS_PATH=$SIMULATION_MODELS_PATH"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
@@ -448,25 +424,14 @@ jobs:
         run: |
           pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
 
-      - name: Upload data to MongoDB
-        if: env.SIMULATION_MODELS_PATH == ''
-        run: |
-          simtools-db-upload-model-repository \
-            --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
-            --db_simulation_model_tag ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_TAG }} \
-            --repository_dir ../simulation-models
-
       - name: Integration tests
         shell: bash -l {0}
         run: |
           cat .env
-          MODEL_SOURCE_ARGS=()
-          if [ -n "$SIMULATION_MODELS_PATH" ]; then
-            for variable in ${!SIMTOOLS_DB_@}; do
-              unset "$variable"
-            done
-            MODEL_SOURCE_ARGS+=(--simulation_models_path="$SIMULATION_MODELS_PATH")
-          fi
+          for variable in ${!SIMTOOLS_DB_@}; do
+            unset "$variable"
+          done
+          MODEL_SOURCE_ARGS=(--simulation_models_path="$SIMULATION_MODELS_PATH")
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
               "${MODEL_SOURCE_ARGS[@]}" \
