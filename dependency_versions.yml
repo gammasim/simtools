@@ -22,7 +22,7 @@ corsika-interaction-tables:
   tag: v1.0.0
 model-database:
   name: CTAO-Simulation-Model
-  default-tag: v0.17.1
+  default-tag: v0.17.2
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
