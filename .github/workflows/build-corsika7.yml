@@ -11,9 +11,6 @@ on:
   pull_request:
     paths:
       - docker/Dockerfile-corsika7
-      - dependency_versions.yml
-      - src/simtools/applications/dependency_versions.py
-      - src/simtools/dependency_versions.py
       - docker/validate_corsika7_build.sh
       - .github/workflows/build-corsika7.yml
   schedule:
