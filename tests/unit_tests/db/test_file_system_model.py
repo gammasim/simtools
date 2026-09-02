@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 from astropy.table import Table
 
-from simtools.db import db_handler, file_system_model
+from simtools.db import db_handler
+from simtools.model_repository import reader as reader_module
+from simtools.model_repository.reader import FileSystemModelSource, SimulationModelReader
 
 pytestmark = pytest.mark.db_unit_test
 
@@ -149,7 +151,7 @@ def simulation_models_path(tmp_test_directory):
     )
     _write_json(
         parameters
-        / ("configuration_corsika/corsika_starting_grammage/corsika_starting_grammage-1.0.2.json"),
+        / "configuration_corsika/corsika_starting_grammage/corsika_starting_grammage-1.0.2.json",
         _parameter(
             None,
             None,
@@ -177,15 +179,13 @@ def simulation_models_path(tmp_test_directory):
 @pytest.fixture(autouse=True)
 def clear_file_system_caches():
     """Prevent filesystem cache state from leaking between tests."""
-    file_system_model.FileSystemModelHandler.clear_caches()
     db_handler.DatabaseHandler.model_parameters_cached.clear()
     yield
-    file_system_model.FileSystemModelHandler.clear_caches()
     db_handler.DatabaseHandler.model_parameters_cached.clear()
 
 
 def test_file_system_handler_reads_production_and_parameters(simulation_models_path):
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    handler = FileSystemModelSource(simulation_models_path)
 
     production = handler.read_production_table("telescopes", "1.0.0")
     parameters = handler.query_model_parameters(
@@ -215,7 +215,7 @@ def test_file_system_handler_reads_production_and_parameters(simulation_models_p
 
 
 def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models_path):
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    handler = FileSystemModelSource(simulation_models_path)
 
     parameters = handler.query_model_parameters(
         {
@@ -233,8 +233,8 @@ def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models
 
 
 def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
-    production_spy = mocker.spy(file_system_model.db_model_upload, "read_production_tables")
-    parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
+    production_spy = mocker.spy(reader_module.files, "read_production_tables")
+    parameter_spy = mocker.spy(reader_module.ascii_handler, "collect_data_from_file")
     query = {
         "parameter": "camera_body_diameter",
         "parameter_version": "2.0.0",
@@ -243,25 +243,25 @@ def test_file_system_handler_caches_production_and_parameter_reads(simulation_mo
     }
 
     for _ in range(2):
-        handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+        handler = FileSystemModelSource(simulation_models_path)
         handler.read_production_table("telescopes", "1.0.0")
         handler.query_model_parameters(query, "telescopes")
 
-    assert production_spy.call_count == 1
+    assert production_spy.call_count == 2
     parameter_reads = [
         call
         for call in parameter_spy.call_args_list
         if "camera_body_diameter-2.0.0.json" in str(call.kwargs.get("file_name"))
     ]
-    assert len(parameter_reads) == 1
+    assert len(parameter_reads) == 2
 
 
 def test_file_system_handler_reads_requested_production_collection_only(
     simulation_models_path, mocker
 ):
-    parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
-    file_index_spy = mocker.spy(file_system_model.db_model_upload, "get_production_table_files")
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    parameter_spy = mocker.spy(reader_module.ascii_handler, "collect_data_from_file")
+    file_index_spy = mocker.spy(reader_module.files, "get_production_table_files")
+    handler = FileSystemModelSource(simulation_models_path)
 
     handler.read_production_table("sites", "1.0.0")
     handler.read_production_table("telescopes", "1.0.0")
@@ -315,7 +315,7 @@ def test_database_handler_uses_environment_path(simulation_models_path, mocker, 
 
 
 def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_directory):
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    handler = FileSystemModelSource(simulation_models_path)
     destination = Path(tmp_test_directory) / "export"
 
     result = handler.export_model_files(file_names="model.dat", dest=destination)
@@ -342,24 +342,22 @@ def test_database_handler_rejects_mongodb_operation(simulation_models_path, mock
 
 def test_invalid_model_path_fails_without_fallback(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="Expected simulation models directory"):
-        file_system_model.FileSystemModelHandler(Path(tmp_test_directory) / "model")
+        FileSystemModelSource(Path(tmp_test_directory) / "model")
 
     with pytest.raises(FileNotFoundError, match="path does not exist"):
-        file_system_model.FileSystemModelHandler(Path(tmp_test_directory) / "missing")
+        FileSystemModelSource(Path(tmp_test_directory) / "missing")
 
 
 def test_missing_model_data_reports_source(simulation_models_path):
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    handler = FileSystemModelSource(simulation_models_path)
 
     with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
         handler.read_production_table("telescopes", "2.0.0")
     with pytest.raises(
-        ValueError,
-        match=r"The following query returned zero results: "
-        r"\{'model_version': '1\.0\.0', 'collection': 'calibration_devices'\}",
+        ValueError, match=r"No production table for calibration_devices in model version 1\.0\.0"
     ):
         handler.read_production_table("calibration_devices", "1.0.0")
-    with pytest.raises(ValueError, match="returned zero results"):
+    with pytest.raises(ValueError, match="No parameters found"):
         handler.query_model_parameters(
             {
                 "parameter": "camera_body_diameter",
@@ -376,8 +374,55 @@ def test_missing_model_data_reports_source(simulation_models_path):
         )
 
 
+def test_filesystem_source_routes_parameter_collections_and_filters(simulation_models_path):
+    """Filesystem parameter lookups handle collection defaults and metadata filters."""
+    handler = FileSystemModelSource(simulation_models_path)
+
+    assert (
+        handler.read_parameters({"array_layouts": "1.0.0"}, "sites", site="North")[0]["parameter"]
+        == "array_layouts"
+    )
+    with pytest.raises(ValueError, match="requires an array element name"):
+        handler.read_parameters({"array_layouts": "1.0.0"}, "sites")
+    with pytest.raises(ValueError, match="No parameters found"):
+        handler.read_parameters({"missing": "9.0.0"}, "telescopes", instrument="LSTN-01")
+    assert handler.read_parameters(
+        {"corsika_cherenkov_photon_bunch_size": "1.0.0"}, "configuration_corsika"
+    )[0]["value"] == pytest.approx(5.0)
+
+    assert not handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": "North"}, "MSTN-01", "North"
+    )
+    assert handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": ["North", "South"]}, "LSTN-01", "South"
+    )
+    assert not handler._matches_filters(  # pylint: disable=protected-access
+        {"instrument": "LSTN-01", "site": ["North"]}, "LSTN-01", "South"
+    )
+    assert handler.query_model_parameters(
+        {
+            "$or": [{}, {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"}],
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        "telescopes",
+    )
+
+
+def test_reader_reads_file_based_simulation_configuration(simulation_models_path):
+    """The source-neutral reader resolves CORSIKA and telescope configuration parameters."""
+    reader = SimulationModelReader.from_files(simulation_models_path)
+
+    assert reader.get_simulation_configuration_parameters("corsika", None, None, "1.0.0")[
+        "corsika_cherenkov_photon_bunch_size"
+    ]["value"] == pytest.approx(5.0)
+    assert reader.get_simulation_configuration_parameters(
+        "sim_telarray", "North", "LSTN-01", "1.0.0"
+    )["min_photons"]["value"] == pytest.approx(2.0)
+
+
 def test_model_file_export_errors(simulation_models_path, tmp_test_directory):
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+    handler = FileSystemModelSource(simulation_models_path)
 
     with pytest.raises(ValueError, match="Destination path is required"):
         handler.export_model_files(file_names="model.dat")
