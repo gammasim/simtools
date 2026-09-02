@@ -9,7 +9,7 @@ from packaging.version import Version
 
 from simtools.db import db_model_upload
 from simtools.io import ascii_handler
-from simtools.utils import value_conversion
+from simtools.utils import names, value_conversion
 
 
 class FileSystemModelHandler:
@@ -111,7 +111,16 @@ class FileSystemModelHandler:
 
     def _get_parameter_file_path(self, _collection_name, instrument, parameter, parameter_version):
         """Return the path for one model parameter version."""
-        scope = instrument or "global"
+        scope = (
+            "global"
+            if instrument is None
+            or instrument == "global"
+            or (
+                _collection_name == "configuration_sim_telarray"
+                and names.is_global_sim_telarray_parameter(parameter)
+            )
+            else instrument
+        )
         return (
             self.model_parameters_path / scope / parameter / f"{parameter}-{parameter_version}.json"
         )
@@ -125,6 +134,8 @@ class FileSystemModelHandler:
         if collection_name == "sites" and query.get("site"):
             return f"OBS-{query['site']}"
         if collection_name == "configuration_corsika":
+            return None
+        if collection_name == "configuration_sim_telarray":
             return None
         raise ValueError(
             f"Filesystem lookup for collection {collection_name} requires an array element name"
@@ -157,6 +168,8 @@ class FileSystemModelHandler:
         parameter_sites = parameter_data.get("site")
         if site and isinstance(parameter_sites, list):
             return site in parameter_sites
+        if site and parameter_sites is None and parameter_data.get("instrument") is None:
+            return True
         return not site or parameter_sites == site
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):

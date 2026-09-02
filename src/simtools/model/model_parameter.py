@@ -333,8 +333,10 @@ class ModelParameter:
         for key, parameter_changes in self.overwrite_model_parameter_dict.items():
             if not isinstance(parameter_changes, dict):
                 continue
-            if software_collection == "configuration_sim_telarray" and not (
-                names.matches_array_element_name_or_design_type(key, self.name)
+            if (
+                software_collection == "configuration_sim_telarray"
+                and key != "global"
+                and not (names.matches_array_element_name_or_design_type(key, self.name))
             ):
                 continue
 
@@ -836,7 +838,15 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
+        self.parameters.update(
+            {
+                name: parameter
+                for name, parameter in self._simulation_config_parameters.get(
+                    "sim_telarray", {}
+                ).items()
+                if not names.is_global_sim_telarray_parameter(name)
+            }
+        )
         self.export_model_files(update_if_necessary=True)
 
         self._add_additional_models(additional_models)

@@ -187,12 +187,22 @@ def test_write_array_config_file(
         "LSTN-03": telescope_model_lst,
         "LSTN-04": telescope_model_lst,
     }
+    site_model_north._simulation_config_parameters["sim_telarray"].update(
+        {
+            "iobuf_maximum": {"value": 1000000000},
+            "random_generator": {"value": "mt19937"},
+        }
+    )
     simtel_config_writer.write_array_config_file(
         config_file_path=_file,
         telescope_model=telescope_model,
         site_model=site_model_north,
     )
     assert file_has_text(_file, "TELESCOPE == 1")
+    with open(_file, encoding="utf-8") as file:
+        array_config = file.read()
+    assert array_config.count("iobuf_maximum = 1000000000") == 1
+    assert array_config.count("random_generator = mt19937") == 1
 
     # sim_telarray configuration files need to end with two new lines
     with open(_file) as f:

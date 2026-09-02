@@ -346,9 +346,13 @@ class SimtelConfigWriter:
 
             self._write_simtools_parameters(file)
 
+            global_parameters = {
+                **site_model.get_simulation_software_parameters("sim_telarray"),
+                **site_model.parameters,
+            }
             self._write_site_parameters(
                 file,
-                site_model.parameters,
+                global_parameters,
                 config_file_directory,
                 telescope_model,
                 additional_metadata,

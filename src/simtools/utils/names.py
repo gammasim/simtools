@@ -39,6 +39,20 @@ db_collections_to_class_keys = {
     "configuration_corsika": ["configuration_corsika"],
 }
 
+SIM_TELARRAY_GLOBAL_PARAMETERS = frozenset(
+    {
+        "iobuf_maximum",
+        "iobuf_output_maximum",
+        "random_generator",
+        "save_pe_with_amplitude",
+    }
+)
+
+
+def is_global_sim_telarray_parameter(parameter_name):
+    """Return whether a sim_telarray parameter has global scope."""
+    return parameter_name in SIM_TELARRAY_GLOBAL_PARAMETERS
+
 
 @cache
 def array_elements():

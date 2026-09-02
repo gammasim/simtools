@@ -170,7 +170,7 @@ def get_model_parameter_file_path(
     Path
         The file path to the model parameter JSON file.
     """
-    instrument = array_element or "global"
+    instrument = _get_model_parameter_scope(array_element, parameter_name)
     return (
         get_model_parameter_directory(simulation_models_path)
         / instrument
@@ -179,9 +179,13 @@ def get_model_parameter_file_path(
     )
 
 
-def _get_model_parameter_scope(telescope):
-    """Return the filesystem scope for a production-table key."""
-    return "global" if telescope == "configuration_corsika" else telescope
+def _get_model_parameter_scope(telescope, parameter_name=None):
+    """Return the filesystem scope for a production-table key and parameter."""
+    if telescope in (None, "global", "configuration_corsika"):
+        return "global"
+    if names.is_global_sim_telarray_parameter(parameter_name):
+        return "global"
+    return telescope
 
 
 def generate_new_production(model_version, simulation_models_path, setting_workflows_git_tag=None):
@@ -460,12 +464,30 @@ def _apply_sim_telarray_changes_for_telescope(telescope_params, params):
     return telescope_params, deprecated, has_changes
 
 
+def _apply_global_sim_telarray_changes(global_params, params):
+    """Apply global-scope sim_telarray changes found under one telescope key."""
+    deprecated = []
+    has_changes = False
+    for param_name, param_data in params.items():
+        if names.get_collection_name_from_parameter_name(
+            param_name
+        ) != "configuration_sim_telarray" or not names.is_global_sim_telarray_parameter(param_name):
+            continue
+        has_changes = True
+        if param_data.get("deprecated", False):
+            global_params.pop(param_name, None)
+            deprecated.append(param_name)
+        else:
+            global_params[param_name] = param_data["version"]
+    return deprecated, has_changes
+
+
 def _apply_changes_to_sim_telarray_production_table(data, changes, model_version, patch_update):
     """
     Apply configuration_sim_telarray parameter changes to the production table.
 
-    The configuration_sim_telarray production table groups parameters by telescope
-    design, so changes are applied per-telescope within the shared table.
+    The configuration_sim_telarray production table stores process-wide
+    parameters under ``global`` and telescope-dependent parameters by design.
 
     Parameters
     ----------
@@ -488,12 +510,26 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
 
     has_changes = False
     parameters = data.get("parameters", {})
+
+    global_params = parameters.setdefault("global", {})
+
+    global_deprecated = []
     for telescope, params in changes.items():
+        if not isinstance(params, dict):
+            continue
+        deprecated, global_has_changes = _apply_global_sim_telarray_changes(global_params, params)
+        has_changes = has_changes or global_has_changes
+        global_deprecated.extend(deprecated)
+
         telescope_params = parameters.get(telescope)
         telescope_params, deprecated, telescope_has_changes = (
             _apply_sim_telarray_changes_for_telescope(
                 telescope_params,
-                params,
+                {
+                    param_name: param_data
+                    for param_name, param_data in params.items()
+                    if not names.is_global_sim_telarray_parameter(param_name)
+                },
             )
         )
         has_changes = has_changes or telescope_has_changes
@@ -501,6 +537,10 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
             parameters[telescope] = telescope_params
         if deprecated and patch_update:
             data.setdefault("deprecated_parameters", []).extend(deprecated)
+    if global_deprecated and patch_update:
+        data.setdefault("deprecated_parameters", []).extend(global_deprecated)
+    if not global_params:
+        parameters.pop("global", None)
     data["parameters"] = parameters
     return has_changes
 
@@ -702,14 +742,15 @@ def _download_model_parameter_from_workflow(
             f"'{param_data['version']}', downloaded '{downloaded_version}'."
         )
 
+    target_scope = _get_model_parameter_scope(telescope, param)
     target_dir = get_model_parameter_file_path(
-        simulation_models_path,
-        _get_model_parameter_scope(telescope),
-        param,
-        param_data["version"],
+        simulation_models_path, target_scope, param, param_data["version"]
     ).parent
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / f"{param}-{param_data['version']}.json"
+    if target_scope == "global":
+        downloaded_data["instrument"] = None
+        downloaded_data["site"] = None
     writer.ModelDataWriter.write_model_parameter_json(downloaded_data, target_file)
 
 
@@ -731,11 +772,9 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
+    target_scope = _get_model_parameter_scope(telescope, param)
     param_dir = get_model_parameter_file_path(
-        simulation_models_path,
-        _get_model_parameter_scope(telescope),
-        param,
-        param_data["version"],
+        simulation_models_path, target_scope, param, param_data["version"]
     ).parent
     if not param_dir.exists():
         _logger.info(
@@ -758,14 +797,14 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
 
     target_file = param_dir / f"{param}-{param_data['version']}.json"
     if target_file.exists():
-        _validate_existing_model_parameter_file(target_file, telescope, param, param_data)
+        _validate_existing_model_parameter_file(target_file, target_scope, param, param_data)
         _logger.info("Model parameter file already matches requested version: '%s'.", target_file)
         return
 
     writer.ModelDataWriter.write_model_parameter(
         parameter_name=param,
         value=param_data["value"],
-        instrument=telescope,
+        instrument=None if target_scope == "global" else target_scope,
         parameter_version=param_data["version"],
         output_file=f"{param}-{param_data['version']}.json",
         output_path=param_dir,
@@ -774,12 +813,12 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     )
 
 
-def _validate_existing_model_parameter_file(target_file, telescope, param, param_data):
+def _validate_existing_model_parameter_file(target_file, instrument, param, param_data):
     """Validate an existing generated model parameter file before reusing it."""
     existing_data = ascii_handler.collect_data_from_file(target_file)
     expected_data = {
         "parameter": param,
-        "instrument": telescope,
+        "instrument": instrument,
         "parameter_version": param_data["version"],
         "value": param_data["value"],
         "unit": _normalize_units_for_comparison(param_data.get("unit")),
@@ -793,7 +832,7 @@ def _validate_existing_model_parameter_file(target_file, telescope, param, param
     if mismatches:
         raise ValueError(
             f"Existing model parameter file '{target_file}' does not match the requested "
-            f"value for '{telescope} - {param}': {mismatches}"
+            f"value for '{instrument} - {param}': {mismatches}"
         )
 
 

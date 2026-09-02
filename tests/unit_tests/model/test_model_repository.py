@@ -208,11 +208,15 @@ def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
 
 
 @pytest.mark.parametrize(
-    ("telescope", "expected_scope"),
-    [("configuration_corsika", "global"), ("LSTN-design", "LSTN-design")],
+    ("telescope", "parameter_name", "expected_scope"),
+    [
+        ("configuration_corsika", None, "global"),
+        ("LSTN-design", None, "LSTN-design"),
+        ("LSTN-design", "iobuf_maximum", "global"),
+    ],
 )
-def test_get_model_parameter_scope(telescope, expected_scope):
-    assert model_repository._get_model_parameter_scope(telescope) == expected_scope
+def test_get_model_parameter_scope(telescope, parameter_name, expected_scope):
+    assert model_repository._get_model_parameter_scope(telescope, parameter_name) == expected_scope
 
 
 def test_check_for_major_version_jump_no_major_jump():
@@ -1201,6 +1205,29 @@ def test_apply_changes_to_sim_telarray_production_table_existing_telescope(mock_
     assert has_cst_changes is True
     assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
     assert data["parameters"]["LSTN-design"]["other_cst_param"] == "1.5.0"
+
+
+def test_apply_changes_to_sim_telarray_production_table_global_parameters():
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {
+            "global": {"iobuf_maximum": "1.0.0"},
+            "LSTN-design": {
+                "min_photons": "1.0.0",
+            },
+        },
+    }
+    changes = {
+        "LSTN-design": {
+            "iobuf_maximum": {"version": "2.0.0", "value": 0},
+        },
+    }
+
+    assert model_repository._apply_changes_to_sim_telarray_production_table(
+        data, changes, "7.0.0", False
+    )
+    assert data["parameters"]["global"]["iobuf_maximum"] == "2.0.0"
+    assert "iobuf_maximum" not in data["parameters"]["LSTN-design"]
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
