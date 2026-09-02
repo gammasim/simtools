@@ -21,6 +21,7 @@ Typical outputs are:
 - CORSIKA, sim_telarray, and simtools log files
 - sim_telarray eventio files and histogram files
 - reduced event-data HDF5 files (enabled by default; disable with `--reduced_event_lists`)
+- `simulate_prod_job_metadata.yml`, containing the resolved job configuration and output inventory
 - output and log file lists when `--save_file_lists` is used
 - copied grid output files, including logs, histogram files, model archives, moved event files,
   and `simtools.log.gz`, when `--grid_output_path` is configured

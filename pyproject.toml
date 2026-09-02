@@ -147,6 +147,7 @@ scripts.simtools-production-derive-monte-carlo-statistics = """\
   simtools.applications.production_derive_monte_carlo_statistics:main\
   """
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
+scripts.simtools-production-select-files = "simtools.applications.production_select_files:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
@@ -163,6 +164,7 @@ scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fo
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
+scripts.simtools-write-production-metadata = "simtools.applications.write_production_metadata:main"
 scripts.simtools-write-reduced-event-lists = "simtools.applications.write_reduced_event_lists:main"
 scripts.simtools-write-trigger-histograms = "simtools.applications.write_trigger_histograms:main"
 
