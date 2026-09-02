@@ -8,6 +8,7 @@ import subprocess
 import traceback
 from pathlib import Path
 
+from simtools.application.model_reader import create_model_reader
 from simtools.io import io_handler
 from simtools.job_execution.job import JobSpec
 from simtools.settings import config
@@ -60,6 +61,9 @@ def _initialize_runtime(job_spec):
     if job_spec.runtime_args is None:
         return
     config.load(job_spec.runtime_args, job_spec.runtime_db_config)
+    config.set_model_reader(
+        create_model_reader(job_spec.runtime_args.get("simulation_models_path"))
+    )
     io_handler.IOHandler().set_paths(
         output_path=job_spec.runtime_args.get("output_path"),
         model_path=job_spec.runtime_args.get("model_path"),

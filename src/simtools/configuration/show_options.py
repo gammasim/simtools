@@ -6,10 +6,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from simtools.application.model_reader import create_model_reader
 from simtools.configuration import defaults
 from simtools.corsika.build_options import get_installed_corsika_build_variants
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.db.db_handler import DatabaseHandler
 from simtools.dependencies import get_corsika_version
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
@@ -140,20 +140,28 @@ def _show_sites(_args_dict):
     return ShowOptionsResult(option_name="site", values=tuple(names.site_names()))
 
 
-def _show_model_versions(_args_dict):
+def _show_model_versions(args_dict):
+    simulation_models_path = args_dict.get("simulation_models_path")
+    model_reader = create_model_reader(simulation_models_path)
     return ShowOptionsResult(
         option_name="model_version",
-        values=tuple(DatabaseHandler().get_model_versions()),
+        values=tuple(model_reader.get_model_versions()),
     )
 
 
 def _show_array_layout_names(args_dict):
     model_version = _get_single_model_version(args_dict, "array_layout_name")
+    simulation_models_path = args_dict.get("simulation_models_path")
+    model_reader = create_model_reader(simulation_models_path)
     site = args_dict.get("site")
     sites = [site] if site else sorted(names.site_names())
     grouped_values = {
         current_site: tuple(
-            SiteModel(site=current_site, model_version=model_version).get_list_of_array_layouts()
+            SiteModel(
+                site=current_site,
+                model_version=model_version,
+                model_reader=model_reader,
+            ).get_list_of_array_layouts()
         )
         for current_site in sites
     }
