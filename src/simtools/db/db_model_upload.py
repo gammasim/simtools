@@ -4,10 +4,9 @@ import logging
 import shutil
 from pathlib import Path
 
-from packaging.version import Version
-
 from simtools.io import ascii_handler
 from simtools.job_execution.job_manager import retry_command
+from simtools.model_repository.files import read_production_tables
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -186,140 +185,6 @@ def add_production_tables_to_db(input_path, db):
                 db.add_production_table(production_table=data)
             else:
                 logger.info(f"No production table for {collection} in model version {model.name}")
-
-
-def get_production_table_files(model_path):
-    """Return production JSON files with their model versions.
-
-    Parameters
-    ----------
-    model_path : Path
-        Production directory for a model version.
-
-    Returns
-    -------
-    list
-        Pairs containing a model version and production file path.
-    """
-    models = [model_path.name]
-    if (model_path / "info.yml").exists():
-        info = ascii_handler.collect_data_from_file(file_name=model_path / "info.yml")
-        if info.get("model_update") == "patch_update":
-            models.extend(info.get("model_version_history", []))
-    models = sorted(set(models), key=Version, reverse=False)
-    return [
-        (model, file)
-        for model in models
-        for file in sorted((model_path.parent / model).rglob("*json"))
-    ]
-
-
-def read_production_tables(model_path, collection_name=None, production_files=None):
-    """
-    Read production tables from a directory.
-
-    Take into account that some productions include patch updates only. Read in this cases
-    all models from the model version history, starting with the earliest one.
-
-    Parameters
-    ----------
-    model_path : Path
-        Path to the directory containing the production tables for a specific model version.
-    collection_name : str, optional
-        Read production files for this collection only.
-    production_files : list, optional
-        Pairs of model versions and production file paths.
-
-    Returns
-    -------
-    dict
-        Aggregated production tables keyed by model collection.
-    """
-    model_dict = {}
-    collection_description = f" and collection {collection_name}" if collection_name else ""
-    logger.debug(
-        f"Reading production tables for model version {model_path.name}{collection_description}"
-    )
-    if production_files is None:
-        production_files = get_production_table_files(model_path)
-    for model, file in production_files:
-        if collection_name and (
-            names.get_collection_name_from_array_element_name(file.stem, False) != collection_name
-        ):
-            continue
-        _read_production_table(model_dict, file, model)
-
-    # ensure that the for patch updates the model version is set correctly
-    for table in model_dict.values():
-        table["model_version"] = model_path.name
-
-    _remove_deprecated_model_parameters(model_dict)
-
-    return model_dict
-
-
-# Backward-compatible alias for callers and tests using the former private helper.
-_read_production_tables = read_production_tables
-
-
-def _read_production_table(model_dict, file, model_name):
-    """Read a single production table from file."""
-    array_element = file.stem
-    collection = names.get_collection_name_from_array_element_name(array_element, False)
-    model_dict.setdefault(
-        collection,
-        {
-            "collection": collection,
-            "model_version": model_name,
-            "parameters": {},
-            "design_model": {},
-            "deprecated_parameters": [],
-        },
-    )
-    parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
-    try:
-        if array_element in ("configuration_corsika", "configuration_sim_telarray"):
-            model_dict[collection]["parameters"] = parameter_dict["parameters"]
-        else:
-            model_dict[collection]["parameters"].setdefault(array_element, {}).update(
-                parameter_dict["parameters"][array_element]
-            )
-    except KeyError as exc:
-        logger.error(f"KeyError: {exc}")
-        raise
-
-    try:
-        model_dict[collection]["design_model"][array_element] = parameter_dict["design_model"][
-            array_element
-        ]
-    except KeyError:
-        pass
-
-    try:
-        model_dict[collection]["deprecated_parameters"] = parameter_dict["deprecated_parameters"]
-    except KeyError:
-        pass
-
-    model_dict[collection]["model_version"] = model_name
-
-
-def _remove_deprecated_model_parameters(model_dict):
-    """
-    Remove deprecated parameters from all tables in a model dictionary.
-
-    Parameters
-    ----------
-    model_dict : dict
-        Production tables for a specific model version.
-    """
-    for table in model_dict.values():
-        for params in table.get("parameters", {}).values():
-            for param in table.get("deprecated_parameters", []):
-                if param in params:
-                    logger.info(
-                        f"Deprecated parameter {param} in production table {table['collection']}"
-                    )
-                    params.pop(param)
 
 
 def _confirm_remote_database_upload(db):
