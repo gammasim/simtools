@@ -63,6 +63,13 @@ def model_repository(tmp_test_directory):
         parameters / "LSTN-01/camera_body_diameter/camera_body_diameter-2.0.0.json",
         _parameter("LSTN-01", "camera_body_diameter", "2.0.0", 350.0),
     )
+    _write_json(
+        parameters / "global/iobuf_maximum/iobuf_maximum-1.0.0.json",
+        {
+            **_parameter(None, "iobuf_maximum", "1.0.0", 1000.0),
+            "site": None,
+        },
+    )
     return root
 
 
@@ -76,6 +83,17 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
 
     parameters = reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
     assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
+
+
+def test_reader_reads_global_parameter_by_version(model_repository):
+    """A versioned global parameter does not require a global caller scope."""
+    reader = SimulationModelReader.from_files(model_repository)
+
+    parameter = reader.get_model_parameter(
+        "iobuf_maximum", "North", "LSTN-01", parameter_version="1.0.0"
+    )
+
+    assert parameter["iobuf_maximum"]["value"] == pytest.approx(1000.0)
 
 
 def test_reader_factory_selects_filesystem_without_database(model_repository, mocker):
