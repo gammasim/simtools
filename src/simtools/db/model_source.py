@@ -41,7 +41,7 @@ class MongoDBModelSource:
 
     def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
         """Read parameter documents by name and version."""
-        key = (tuple(sorted(parameter_versions.items())), collection_name, instrument, site)
+        key = repr((parameter_versions, collection_name, instrument, site))
         if key in self._parameters:
             return deepcopy(self._parameters[key])
         query = {

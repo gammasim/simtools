@@ -51,6 +51,19 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
     assert source.read_parameters({}, "configuration_corsika", instrument="xSTx-design") == []
 
 
+def test_mongodb_source_accepts_list_values_in_parameter_cache_key():
+    """List-valued filters remain valid while constructing the cache key."""
+    handler = Mock(model_source_name="simulation-model-db")
+    handler._read_db.return_value = {"p": {"parameter": "p"}}
+    source = MongoDBModelSource(handler)
+
+    assert source.read_parameters({"p": ["1.0.0", "2.0.0"]}, "telescopes") == [{"parameter": "p"}]
+
+    assert source.read_parameters({"p": "1.0.0"}, ["telescopes"], instrument=["LSTN-01"]) == [
+        {"parameter": "p"}
+    ]
+
+
 def test_mongodb_source_caches_and_copies_reads():
     """Repeated source reads use per-instance caches and defensive copies."""
     handler = Mock(model_source_name="db")
