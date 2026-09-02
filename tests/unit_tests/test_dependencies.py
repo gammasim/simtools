@@ -291,6 +291,27 @@ def test_database_tag_accessors_keep_the_legacy_interface(mocker):
     assert get_database_version_or_name(version=False) == "test_db"
 
 
+def test_direct_dependency_manifest_includes_mongodb_only_when_installed(mocker):
+    """Optional MongoDB is reported when its extra has installed the distribution."""
+    import simtools.dependencies as dependencies
+
+    mocker.patch.object(
+        dependencies.metadata,
+        "requires",
+        return_value=["astropy", "pymongo; extra == 'mongodb'", "pytest; extra == 'tests'"],
+    )
+    mocker.patch.object(
+        dependencies,
+        "_distribution_version",
+        side_effect=lambda name: {"astropy": "8.0.0", "pymongo": "4.15.0"}.get(name),
+    )
+
+    assert dependencies.get_direct_python_dependency_versions() == {
+        "astropy": "8.0.0",
+        "pymongo": "4.15.0",
+    }
+
+
 def test_get_version_string_without_software_versions(mocker):
     mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
     mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")

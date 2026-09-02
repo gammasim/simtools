@@ -263,6 +263,7 @@ def get_version_string(run_time=None, include_software_versions=True):
 
     return (
         f"simtools version: {__version__}\n"
+        f"Model source: {_get_model_source_info()}\n"
         f"Database name: {get_database_tag_or_name(tag=False)}\n"
         f"Database release tag: {get_database_tag_or_name()}\n"
         f"sim_telarray version: {simtel_version}\n"
@@ -351,6 +352,7 @@ def build_dependency_manifest():
             "python_version": platform.python_version(),
             "pip_version": _distribution_version("pip"),
             "direct_python_dependencies": get_direct_python_dependency_versions(),
+            "model_source": _get_model_source_info(),
         },
         "build_options": _sanitize_build_options(build_options),
         "container": {
@@ -384,7 +386,7 @@ def get_direct_python_dependency_versions():
         return {}
     versions = {}
     for requirement in requirements:
-        if "extra ==" in requirement:
+        if "extra ==" in requirement and "extra == 'mongodb'" not in requirement:
             continue
         match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
         if not match:
@@ -606,6 +608,15 @@ def get_database_tag_or_name(tag=True):
     return settings.config.db_config and settings.config.db_config.get("db_simulation_model")
 
 
+def _get_model_source_info():
+    """Return the configured model-source selection for provenance output."""
+    model_reader = getattr(settings.config, "model_reader", None)
+    source_config = getattr(model_reader, "source_config", None)
+    if isinstance(source_config, dict):
+        return dict(source_config)
+    return None
+
+
 def get_database_version_or_name(version=True):
     """Return the database release tag or name using the deprecated interface."""
     return get_database_tag_or_name(tag=version)
@@ -804,6 +815,7 @@ def export_build_info(output_file, run_time=None):
     manifest = get_dependency_manifest(run_time)
     database_name = get_database_tag_or_name(tag=False)
     database_tag = get_database_tag_or_name()
+    model_source = _get_model_source_info()
     build_info = {
         "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
         "dependency_manifest": manifest,
@@ -813,6 +825,7 @@ def export_build_info(output_file, run_time=None):
         "runtime": {
             "database_name": database_name,
             "database_tag": database_tag,
+            "model_source": model_source,
         },
         "build_options": build_options,
         # Compatibility fields retained for existing consumers.
@@ -820,5 +833,6 @@ def export_build_info(output_file, run_time=None):
         "simtools": __version__,
         "database_name": database_name,
         "database_tag": database_tag,
+        "model_source": model_source,
     }
     ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))

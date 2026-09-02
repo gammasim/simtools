@@ -29,7 +29,7 @@ def test_mongodb_source_delegates_model_operations():
 def test_mongodb_source_builds_parameter_query_and_returns_documents():
     """Parameter lookup translates source-neutral filters into a DB query."""
     handler = Mock(model_source_name="simulation-model-db")
-    handler._read_db.return_value = {  # pylint: disable=protected-access
+    handler.read_parameter_documents.return_value = {
         "diameter": {"parameter": "diameter", "parameter_version": "1.0.0"}
     }
     source = MongoDBModelSource(handler)
@@ -39,7 +39,7 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
     )
 
     assert result == [{"parameter": "diameter", "parameter_version": "1.0.0"}]
-    handler._read_db.assert_called_once_with(  # pylint: disable=protected-access
+    handler.read_parameter_documents.assert_called_once_with(
         {
             "$or": [{"parameter": "diameter", "parameter_version": "1.0.0"}],
             "instrument": "LSTN-01",
@@ -47,15 +47,15 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
         },
         "telescopes",
     )
-    handler._read_db.reset_mock()  # pylint: disable=protected-access
-    handler._read_db.return_value = {}  # pylint: disable=protected-access
+    handler.read_parameter_documents.reset_mock()
+    handler.read_parameter_documents.return_value = {}
     assert source.read_parameters({}, "configuration_corsika", instrument="xSTx-design") == []
 
 
 def test_mongodb_source_accepts_list_values_in_parameter_cache_key():
     """List-valued filters remain valid while constructing the cache key."""
     handler = Mock(model_source_name="simulation-model-db")
-    handler._read_db.return_value = {"p": {"parameter": "p"}}
+    handler.read_parameter_documents.return_value = {"p": {"parameter": "p"}}
     source = MongoDBModelSource(handler)
 
     assert source.read_parameters({"p": ["1.0.0", "2.0.0"]}, "telescopes") == [{"parameter": "p"}]
@@ -71,7 +71,7 @@ def test_mongodb_source_caches_and_copies_reads():
     handler.get_model_versions.return_value = ["1.0.0"]
     production = {"collection": "telescopes", "parameters": {"LSTN-01": {}}}
     handler.read_production_table_from_db.return_value = production
-    handler._read_db.return_value = {"p": {"parameter": "p", "value": 1}}
+    handler.read_parameter_documents.return_value = {"p": {"parameter": "p", "value": 1}}
     source = MongoDBModelSource(handler)
 
     versions = source.get_model_versions()
@@ -91,4 +91,4 @@ def test_mongodb_source_caches_and_copies_reads():
     )
     handler.get_model_versions.assert_called_once_with("telescopes")
     handler.read_production_table_from_db.assert_called_once_with("telescopes", "1.0.0")
-    assert handler._read_db.call_count == 1  # pylint: disable=protected-access
+    assert handler.read_parameter_documents.call_count == 1

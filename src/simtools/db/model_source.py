@@ -59,9 +59,7 @@ class MongoDBModelSource:
             query["instrument"] = instrument
         if site:
             query["site"] = site
-        parameters = self.database_handler._read_db(  # pylint: disable=protected-access
-            query, collection_name
-        )
+        parameters = self.database_handler.read_parameter_documents(query, collection_name)
         self._parameters[key] = deepcopy(list(parameters.values()))
         return deepcopy(self._parameters[key])
 

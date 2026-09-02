@@ -30,16 +30,63 @@ def create_model_reader(simulation_models_path=None, database_handler=None):
         return SimulationModelReader.from_files(simulation_models_path)
 
     if database_handler is None:
-        from simtools.db.db_handler import (  # pylint: disable=import-outside-toplevel
-            DatabaseHandler,
-        )
-
-        database_handler = DatabaseHandler()
+        database_handler = _create_database_handler()
     from simtools.db.model_source import (  # pylint: disable=import-outside-toplevel
         MongoDBModelSource,
     )
 
     return SimulationModelReader(MongoDBModelSource(database_handler))
+
+
+def create_model_reader_from_source_config(source_config):
+    """Recreate a model reader from a worker-serializable source configuration.
+
+    Parameters
+    ----------
+    source_config : dict
+        Configuration returned by ``SimulationModelReader.source_config``.
+
+    Returns
+    -------
+    SimulationModelReader
+        Reader backed by the configured source.
+
+    Raises
+    ------
+    ValueError
+        If the source configuration is missing or unsupported.
+    """
+    if not isinstance(source_config, dict):
+        raise ValueError("Model source configuration must be a dictionary.")
+    source_type = source_config.get("type")
+    if source_type == "filesystem":
+        path = source_config.get("path")
+        if not path:
+            raise ValueError("Filesystem model source configuration requires a path.")
+        return create_model_reader(path)
+    if source_type == "mongodb":
+        database_handler = _create_database_handler()
+        if source_config.get("name"):
+            database_handler.db_name = source_config["name"]
+        return create_model_reader(database_handler=database_handler)
+    raise ValueError(f"Unsupported model source type: {source_type!r}.")
+
+
+def _create_database_handler():
+    """Construct the optional MongoDB handler with an actionable error."""
+    from simtools.db.db_handler import (  # pylint: disable=import-outside-toplevel
+        DatabaseHandler,
+    )
+    from simtools.db.mongo_db import (  # pylint: disable=import-outside-toplevel
+        MongoDBDependencyError,
+    )
+
+    try:
+        return DatabaseHandler()
+    except MongoDBDependencyError as exc:
+        raise RuntimeError(
+            "MongoDB fallback requires the optional dependency; install with the `mongodb` extra."
+        ) from exc
 
 
 def require_model_reader(model_reader=None):

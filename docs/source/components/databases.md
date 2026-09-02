@@ -3,7 +3,16 @@
 Simulation model parameters and production configurations are stored in databases (see
 [Simulation Models](simulation_models.md)) and synced with the
 [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
-The simtools package uses a MongoDB database to store production tables and simulation model parameters.
+The simtools package can use MongoDB to store production tables and simulation model parameters.
+MongoDB support is optional: install it with `pip install 'gammasimtools[mongodb]'` when using
+database administration commands or the MongoDB model-reader fallback.
+
+Normal applications read from a checked-out simulation-model repository when
+`simulation_models_path` (or `SIMTOOLS_SIMULATION_MODELS_PATH`) is configured. If no repository
+path is configured, the existing MongoDB configuration is used as a fallback. This keeps database
+backed tests and established workflows working while making repository reads independent of
+MongoDB. Without the optional dependency, MongoDB-only commands and the no-path fallback fail
+with an installation hint.
 
 ```{important}
 No direct write access to the simulation model database is allowed to general users.

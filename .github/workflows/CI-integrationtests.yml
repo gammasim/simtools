@@ -446,7 +446,7 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
-          pip install --no-cache-dir -e '.[tests,dev,doc]'
+          pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
 
       - name: Upload data to MongoDB
         if: env.SIMULATION_MODELS_PATH == ''

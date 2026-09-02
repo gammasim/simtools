@@ -5,7 +5,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from simtools.application.model_reader import create_model_reader, require_model_reader
+from simtools.application.model_reader import (
+    create_model_reader,
+    create_model_reader_from_source_config,
+    require_model_reader,
+)
 from simtools.settings import config
 
 
@@ -48,6 +52,17 @@ def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directo
     reader = create_model_reader()
 
     assert reader.source_name == str(root.resolve())
+
+
+def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
+    """Worker source reconstruction keeps the selected MongoDB name."""
+    handler = Mock(model_source_name="default-db")
+    mocker.patch("simtools.application.model_reader._create_database_handler", return_value=handler)
+
+    reader = create_model_reader_from_source_config({"type": "mongodb", "name": "worker-db"})
+
+    assert handler.db_name == "worker-db"
+    assert reader.source_name == "default-db"
 
 
 def test_require_model_reader_prefers_explicit_reader():

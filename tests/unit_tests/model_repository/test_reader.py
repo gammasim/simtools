@@ -1,8 +1,10 @@
 """Tests for source-neutral simulation-model reading."""
 
+import ast
 import json
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -155,6 +157,133 @@ def test_model_repository_import_does_not_load_database_modules():
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_path_first_startup_does_not_import_mongodb(tmp_test_directory):
+    """A filesystem reader can start when MongoDB dependencies are unavailable."""
+    repository = Path(tmp_test_directory)
+    (repository / "simulation-models/productions").mkdir(parents=True)
+    (repository / "simulation-models/model_parameters").mkdir(parents=True)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import builtins
+                import sys
+
+                real_import = builtins.__import__
+                blocked = ("pymongo", "gridfs", "bson", "simtools.db")
+
+                def guarded(name, *args, **kwargs):
+                    if any(name == item or name.startswith(item + ".") for item in blocked):
+                        raise ModuleNotFoundError(name=name)
+                    return real_import(name, *args, **kwargs)
+
+                builtins.__import__ = guarded
+                from simtools.application.model_reader import create_model_reader
+
+                create_model_reader(sys.argv[1])
+                """
+            ),
+            str(repository),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_normal_runtime_modules_do_not_construct_database_handlers(simtools_root_path):
+    """Database construction remains confined to the source-selection and DB packages."""
+    allowed_source_selection = {
+        simtools_root_path / "src/simtools/application/model_reader.py",
+        simtools_root_path / "src/simtools/db/model_source.py",
+        simtools_root_path / "src/simtools/db/mongo_db.py",
+    }
+    violations = [
+        str(path)
+        for path in _normal_runtime_files(simtools_root_path)
+        if path.name != "model_reader.py"
+        for violation in _boundary_violations(path, allowed_source_selection)
+    ]
+    assert violations == []
+
+
+def _normal_runtime_files(simtools_root_path):
+    """Yield Python files in modules that must remain database-independent."""
+    roots = (
+        "model",
+        "simulator.py",
+        "layout",
+        "reporting",
+        "visualization",
+        "data_model",
+        "configuration",
+        "application",
+        "testing",
+        "simtel",
+        "corsika",
+    )
+    for root_name in roots:
+        root = simtools_root_path / "src/simtools" / root_name
+        yield from root.rglob("*.py") if root.is_dir() else (root,)
+
+
+def _boundary_violations(path, allowed_source_selection):
+    """Return source-boundary violations found in one runtime module."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    nodes = list(ast.walk(tree))
+    checks = (
+        (_contains_database_handler_call(nodes), "DatabaseHandler construction"),
+        (_contains_database_import(nodes), "database import"),
+        (
+            path not in allowed_source_selection and _contains_mongodb_literal(nodes),
+            "MongoDB source literal",
+        ),
+        (
+            path not in allowed_source_selection and _contains_mongodb_adapter(nodes),
+            "MongoDB source adapter",
+        ),
+    )
+    return [message for present, message in checks if present]
+
+
+def _contains_database_handler_call(nodes):
+    """Return whether AST nodes construct a database handler."""
+    return any(
+        isinstance(node, ast.Call) and _called_name(node) == "DatabaseHandler" for node in nodes
+    )
+
+
+def _contains_database_import(nodes):
+    """Return whether AST nodes import the database package."""
+    return any(
+        isinstance(node, (ast.Import, ast.ImportFrom)) and "simtools.db" in ast.unparse(node)
+        for node in nodes
+    )
+
+
+def _contains_mongodb_literal(nodes):
+    """Return whether AST nodes contain the MongoDB source selector."""
+    return any(isinstance(node, ast.Constant) and node.value == "mongodb" for node in nodes)
+
+
+def _contains_mongodb_adapter(nodes):
+    """Return whether AST nodes reference the MongoDB source adapter."""
+    return any(isinstance(node, ast.Name) and node.id == "MongoDBModelSource" for node in nodes)
+
+
+def _called_name(node):
+    """Return the simple name of a called function."""
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return None
 
 
 def test_reader_facade_routes_source_operations_and_branches():

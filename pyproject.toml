@@ -37,7 +37,6 @@ dependencies = [
   "numpy",
   "packaging",
   "particle",
-  "pymongo",
   "pyproj",
   "python-dotenv",
   "pyyaml",
@@ -60,6 +59,9 @@ optional-dependencies.doc = [
 ]
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
+]
+optional-dependencies.mongodb = [
+  "pymongo",
 ]
 optional-dependencies.tests = [
   "psutil",
