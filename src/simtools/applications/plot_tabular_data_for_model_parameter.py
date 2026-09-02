@@ -43,10 +43,15 @@ def main():
         telescope=app_context.args.get("telescope"),
         output_path=app_context.io_handler.get_output_directory(),
         plot_type=app_context.args["plot_type"],
+        model_reader=app_context.model_reader,
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
-        plot_tables.plot(config=plot_config, output_file=output_file)
+        plot_tables.plot(
+            config=plot_config,
+            output_file=output_file,
+            model_reader=app_context.model_reader,
+        )
         MetadataCollector.dump(app_context.args, output_file=output_file, add_activity_name=True)
 
 

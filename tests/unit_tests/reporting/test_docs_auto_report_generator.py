@@ -17,8 +17,8 @@ def test__add_design_models_to_telescopes(io_handler):
     model_version = "6.0.0"
 
     # Mocking the design model responses
-    report_generator.db.get_design_model = MagicMock()
-    report_generator.db.get_design_model.side_effect = ["LSTN-design", None]
+    report_generator.model_reader.get_design_model = MagicMock()
+    report_generator.model_reader.get_design_model.side_effect = ["LSTN-design", None]
 
     result = report_generator._add_design_models_to_telescopes(model_version, telescopes)
 
@@ -111,7 +111,7 @@ def test__generate_array_element_report_combinations(io_handler, test_case):
 
     with (
         patch.multiple(
-            report_generator.db,
+            report_generator.model_reader,
             get_model_versions=MagicMock(return_value=test_case["mock_model_versions"]),
             get_array_elements=MagicMock(return_value=test_case["mock_array_elements"]),
         ),
@@ -170,7 +170,7 @@ def test__get_telescopes_from_layout(io_handler):
         report_generator = ReportGenerator(case["args"], output_path)
 
         with patch.multiple(
-            report_generator.db,
+            report_generator.model_reader,
             get_model_parameters_for_all_model_versions=MagicMock(
                 return_value=case["mock_layouts"]
             ),
@@ -183,12 +183,12 @@ def test__get_telescopes_from_layout(io_handler):
 
             # Verify DB methods were called correctly based on all_telescopes flag
             if case["args"]["all_telescopes"]:
-                report_generator.db.get_model_parameters_for_all_model_versions.assert_called_once()
+                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_called_once()
                 assert len(result) == len(case["expected_telescopes"])
             else:
                 # Verify DB methods were not called when all_telescopes=False
-                report_generator.db.get_model_parameters_for_all_model_versions.assert_not_called()
-                report_generator.db.get_design_model.assert_not_called()
+                report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_not_called()
+                report_generator.model_reader.get_design_model.assert_not_called()
                 assert result == {case["args"]["telescope"]}
 
 
@@ -410,7 +410,9 @@ def test__generate_single_array_element_report(io_handler):
         }
         expected_output_path = Path(output_path) / str(model_version)
 
-        mock_read_params_class.assert_called_once_with(expected_args, expected_output_path)
+        mock_read_params_class.assert_called_once_with(
+            expected_args, expected_output_path, report_generator.model_reader
+        )
 
         # Verify produce_array_element_report was called
         mock_read_params.produce_array_element_report.assert_called_once()
@@ -482,7 +484,7 @@ def test__generate_observatory_report_combinations(io_handler):
         report_generator = ReportGenerator(case["args"], io_handler.get_output_directory())
 
         with patch.object(
-            report_generator.db,
+            report_generator.model_reader,
             "get_model_versions",
             return_value=case["mock_model_versions"],
         ):
@@ -511,7 +513,9 @@ def test__generate_single_observatory_report(io_handler):
         }
         expected_output_path = Path(output_path) / str(args["model_version"])
 
-        mock_read_params_class.assert_called_once_with(expected_args, expected_output_path)
+        mock_read_params_class.assert_called_once_with(
+            expected_args, expected_output_path, report_generator.model_reader
+        )
 
         # Verify produce_observatory_report was called
         mock_read_params.produce_observatory_report.assert_called_once()
@@ -561,7 +565,9 @@ def test__generate_calibration_device_parameter_reports(io_handler):
     mock_model_versions = ["5.0.0", "6.0.0", "6.1.0"]
 
     with (
-        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
         patch.object(
             report_generator, "_process_calibration_devices_for_version"
         ) as mock_process_version,
@@ -583,11 +589,13 @@ def test__process_calibration_devices_for_version_with_devices(io_handler):
 
     with (
         patch.object(
-            report_generator.db,
+            report_generator.model_reader,
             "get_array_elements",
             return_value=mock_calibration_elements,
         ),
-        patch.object(report_generator.db, "get_design_model", return_value=mock_design_model),
+        patch.object(
+            report_generator.model_reader, "get_design_model", return_value=mock_design_model
+        ),
         patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
         ) as mock_read_params_class,
@@ -601,7 +609,7 @@ def test__process_calibration_devices_for_version_with_devices(io_handler):
         report_generator._process_calibration_devices_for_version("6.0.0")
 
         # Verify that get_array_elements was called with correct parameters
-        report_generator.db.get_array_elements.assert_called_once_with(
+        report_generator.model_reader.get_array_elements.assert_called_once_with(
             "6.0.0", collection="calibration_devices"
         )
 
@@ -624,7 +632,7 @@ def test__process_calibration_devices_for_version_no_devices(io_handler):
 
     # Test case 1: Empty calibration elements list
     with patch.object(
-        report_generator.db, "get_array_elements", return_value=[]
+        report_generator.model_reader, "get_array_elements", return_value=[]
     ) as mock_get_elements:
         with patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
@@ -643,7 +651,7 @@ def test__process_calibration_devices_for_version_no_devices(io_handler):
         "{'model_version': '5.0.0', 'collection': 'calibration_devices'}"
     )
 
-    with patch.object(report_generator.db, "get_array_elements", side_effect=mock_error):
+    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
         # Should not raise an exception, should log and return
         report_generator._process_calibration_devices_for_version("5.0.0")
 
@@ -656,7 +664,7 @@ def test__process_calibration_devices_for_version_unexpected_error(io_handler):
     # Mock unexpected ValueError
     mock_error = ValueError("Some unexpected error")
 
-    with patch.object(report_generator.db, "get_array_elements", side_effect=mock_error):
+    with patch.object(report_generator.model_reader, "get_array_elements", side_effect=mock_error):
         # Should re-raise unexpected ValueError
         with pytest.raises(ValueError, match="Some unexpected error"):
             report_generator._process_calibration_devices_for_version("5.0.0")
@@ -670,7 +678,9 @@ def test_auto_generate_simulation_configuration_reports(io_handler):
     mock_model_versions = ["5.0.0", "6.0.0"]
 
     with (
-        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
         patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
         ) as mock_read_params_class,
@@ -724,7 +734,9 @@ def test_auto_generate_calibration_reports(io_handler):
     mock_model_versions = ["5.0.0", "6.0.0"]
 
     with (
-        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
         patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
         ) as mock_read_params_class,
@@ -755,7 +767,9 @@ def test_auto_generate_calibration_reports_with_valueerror(io_handler):
     )
 
     with (
-        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
         patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
         ) as mock_read_params_class,
@@ -786,7 +800,9 @@ def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler):
     mock_error = ValueError("Some unexpected error")
 
     with (
-        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator.model_reader, "get_model_versions", return_value=mock_model_versions
+        ),
         patch(
             "simtools.reporting.docs_auto_report_generator.ReadParameters"
         ) as mock_read_params_class,

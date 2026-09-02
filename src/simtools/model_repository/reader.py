@@ -31,6 +31,10 @@ class FileSystemModelSource:
         self._model_versions = None
         self._validate_model_path()
 
+    def is_configured(self):
+        """Return whether this source is ready to read."""
+        return True
+
     @property
     def source_name(self):
         """Return a user-facing description of the model source."""
@@ -242,8 +246,7 @@ class SimulationModelReader:
 
     def is_configured(self):
         """Return whether the selected source is configured for reads."""
-        checker = getattr(self._source, "is_configured", None)
-        return checker() if checker is not None else True
+        return self._source.is_configured()
 
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
@@ -355,16 +358,6 @@ class SimulationModelReader:
         dest=None,
     ):
         """Export one model file or return a file-backed value as a table."""
-        export = getattr(self._source, "export_model_file", None)
-        if export is not None:
-            return export(
-                parameter=parameter,
-                site=site,
-                array_element_name=array_element_name,
-                model_version=model_version,
-                parameter_version=parameter_version,
-                export_file_as_table=export_file_as_table,
-            )
         parameters = self.get_model_parameter(
             parameter,
             site,

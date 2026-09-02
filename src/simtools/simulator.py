@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -67,7 +68,7 @@ class Simulator:
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
-        self.model_reader = model_reader or settings.config.model_reader
+        self.model_reader = require_model_reader(model_reader)
 
         self.site = settings.config.args.get("site", None)
         self.model_version = settings.config.args.get("model_version", None)

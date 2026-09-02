@@ -1,23 +1,18 @@
-"""Database-backed model-parameter output validation."""
+"""Source-neutral model-parameter output validation."""
 
 import numpy as np
 
 from simtools.application.model_reader import create_model_reader
-from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.testing.output_validation.reference import _compare_values
 from simtools.utils import general
 
 
 def validate(path, rule, configuration):
-    """Compare a generated parameter value with its database reference."""
+    """Compare a generated parameter value with its model reference."""
     parameter_name = rule["reference_parameter_name"]
     simulation_models_path = configuration.get("simulation_models_path")
-    model_reader = (
-        create_model_reader(simulation_models_path)
-        if simulation_models_path
-        else db_handler.DatabaseHandler()
-    )
+    model_reader = create_model_reader(simulation_models_path)
     reference = model_reader.get_model_parameter(
         parameter=parameter_name,
         site=configuration.get("site"),
@@ -43,5 +38,5 @@ def validate(path, rule, configuration):
             ) from exc
     if not _compare_values(generated_value, reference_value, rule["tolerance"], True):
         raise AssertionError(
-            f"Output '{path}' model parameter '{parameter_name}' differs from the database."
+            f"Output '{path}' model parameter '{parameter_name}' differs from the model reference."
         )

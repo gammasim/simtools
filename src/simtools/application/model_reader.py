@@ -1,6 +1,7 @@
 """Construct the configured simulation-model reader."""
 
 from simtools.model_repository.reader import SimulationModelReader
+from simtools.settings import config
 
 
 def create_model_reader(simulation_models_path=None, database_handler=None):
@@ -33,3 +34,28 @@ def create_model_reader(simulation_models_path=None, database_handler=None):
     )
 
     return SimulationModelReader(MongoDBModelSource(database_handler))
+
+
+def require_model_reader(model_reader=None):
+    """Return an explicit or application-configured model reader.
+
+    Parameters
+    ----------
+    model_reader : SimulationModelReader, optional
+        Reader explicitly supplied by a caller outside an application context.
+
+    Returns
+    -------
+    SimulationModelReader
+        The supplied reader or the reader selected during application startup.
+
+    Raises
+    ------
+    RuntimeError
+        If no simulation-model reader has been selected.
+    """
+    if model_reader is not None:
+        return model_reader
+    if config.model_reader is None:
+        raise RuntimeError("No simulation model reader is configured.")
+    return config.model_reader

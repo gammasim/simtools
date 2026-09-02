@@ -460,7 +460,9 @@ def test_load_visibility_from_site_model(mock_site_model_class, base_config):
     simulator = MultiIlluminatorSimulator(config=base_config)
 
     assert simulator.visibility.n_valid_pairs == 2
-    mock_site_model_class.assert_called_once_with(site="South", model_version="6.0.0")
+    mock_site_model_class.assert_called_once_with(
+        site="South", model_version="6.0.0", model_reader=simulator.model_reader
+    )
     mock_site_model.get_parameter_value.assert_called_once_with("illuminator_telescope_visibility")
 
 

@@ -8,10 +8,8 @@ import numpy as np
 import packaging.version
 
 import simtools.utils.general as gen
-from simtools import settings
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
-from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler, legacy_data_handler
 from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
@@ -33,11 +31,7 @@ def plot(config, output_file, data_path=None, model_reader=None):
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
     """
-    model_reader = model_reader or settings.config.model_reader
-    if model_reader is None:
-        data = read_table_data(config, data_path)
-    else:
-        data = read_table_data(config, data_path, model_reader=model_reader)
+    data = read_table_data(config, data_path, model_reader=model_reader)
 
     fig = visualize.plot_1d(
         data,
@@ -64,7 +58,6 @@ def read_table_data(config, data_path=None, model_reader=None):
     Dict
         Dict with table data (astropy tables).
     """
-    model_reader = model_reader or settings.config.model_reader
     data = {}
 
     for _config in config["tables"]:
@@ -137,24 +130,7 @@ def _read_table_from_model_database(table_config, model_reader=None):
     Table
         Astropy table
     """
-    if model_reader is None:
-        database = db_handler.DatabaseHandler()
-        export_path = table_config.get("db_export_path")
-        original_output_path = database.io_handler.output_path.get("default")
-        if export_path:
-            database.io_handler.set_paths(output_path=export_path)
-        try:
-            return database.export_model_file(
-                parameter=table_config["parameter"],
-                site=table_config["site"],
-                array_element_name=table_config.get("telescope"),
-                parameter_version=table_config.get("parameter_version"),
-                model_version=table_config.get("model_version"),
-                export_file_as_table=True,
-            )
-        finally:
-            if export_path:
-                database.io_handler.set_paths(output_path=original_output_path)
+    model_reader = require_model_reader(model_reader)
     destination = (
         table_config.get("db_export_path") or io_handler.IOHandler().get_output_directory()
     )
@@ -171,11 +147,7 @@ def _read_table_from_model_database(table_config, model_reader=None):
 
 def _read_parameter_dict_from_model_database(table_config, model_reader=None):
     """Read a model parameter dictionary from the model parameter database."""
-    model_reader = (
-        model_reader
-        or settings.config.model_reader
-        or create_model_reader(database_handler=db_handler.DatabaseHandler())
-    )
+    model_reader = require_model_reader(model_reader)
     parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
         site=table_config["site"],

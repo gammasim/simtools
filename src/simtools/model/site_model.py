@@ -203,7 +203,7 @@ class SiteModel(ModelParameter):
         except ValueError:
             return []
 
-        return self.db.get_array_elements_of_type(
+        return self.model_reader.get_array_elements_of_type(
             array_element_type=array_element_type,
             model_version=self.model_version,
             collection=collection,
@@ -229,7 +229,7 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
-        self.db.export_model_files(
+        self.model_reader.export_model_files(
             parameters={
                 "atmospheric_transmission_file": {
                     "value": self.get_parameter_value("atmospheric_profile"),
@@ -248,7 +248,7 @@ class SiteModel(ModelParameter):
         float
             Integrated flux value.
         """
-        table = self.db.get_ecsv_file_as_astropy_table(
+        table = self.model_reader.get_ecsv_file_as_astropy_table(
             file_name=self.get_parameter_value("nsb_spectrum")
         )
         table.sort("wavelength")

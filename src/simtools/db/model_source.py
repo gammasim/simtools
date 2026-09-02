@@ -66,11 +66,6 @@ class MongoDBModelSource:
             parameters=parameters, file_names=file_names, dest=dest
         )
 
-    def export_model_file(self, **kwargs):
-        """Export one model file through the database handler."""
-        kwargs.pop("dest", None)
-        return self.database_handler.export_model_file(**kwargs)
-
     def get_ecsv_file_as_astropy_table(self, file_name):
         """Read an ECSV model file."""
         return self.database_handler.get_ecsv_file_as_astropy_table(file_name)

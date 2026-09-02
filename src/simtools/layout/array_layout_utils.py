@@ -525,7 +525,7 @@ def get_array_layouts_from_db(
             site=site,
             model_version=model_version,
             ignore_software_version=ignore_software_version,
-            **({"model_reader": model_reader} if model_reader is not None else {}),
+            model_reader=model_reader,
         )
         layout_names = site_model.get_list_of_array_layouts()
 
@@ -537,7 +537,7 @@ def get_array_layouts_from_db(
             _layout_name,
             coordinate_system,
             ignore_software_version,
-            **({"model_reader": model_reader} if model_reader is not None else {}),
+            model_reader=model_reader,
         )
         for _layout_name in layout_names
     ]
@@ -644,7 +644,7 @@ def _get_array_layout_dict(
         array_elements=telescope_list,
         layout_name=layout_name,
         ignore_software_version=ignore_software_version,
-        **({"model_reader": model_reader} if model_reader is not None else {}),
+        model_reader=model_reader,
     )
     return {
         "name": layout_name if layout_name else "list",
@@ -684,7 +684,7 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version, model_r
     site_model = SiteModel(
         site=site,
         model_version=model_version,
-        **({"model_reader": model_reader} if model_reader is not None else {}),
+        model_reader=model_reader,
     )
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
@@ -730,7 +730,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
-            **({"model_reader": model_reader} if model_reader is not None else {}),
+            model_reader=model_reader,
         )["array_elements"]
 
     if args_dict["array_layout_parameter_file"] is not None:
@@ -750,7 +750,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
-            **({"model_reader": model_reader} if model_reader is not None else {}),
+            model_reader=model_reader,
         )
         if isinstance(layouts, list):
             return layouts, background_layout
@@ -767,7 +767,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
-            **({"model_reader": model_reader} if model_reader is not None else {}),
+            model_reader=model_reader,
         ), background_layout
 
     return [], background_layout

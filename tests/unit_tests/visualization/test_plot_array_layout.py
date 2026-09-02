@@ -773,19 +773,15 @@ def test_generate_plot_combinations_all_sites_and_versions(monkeypatch):
         "all_sites": True,
     }
 
-    mock_db_instance = Mock()
-    mock_db_instance.get_model_versions.return_value = ["6.0.0", "7.0.0"]
+    model_reader = Mock()
+    model_reader.get_model_versions.return_value = ["6.0.0", "7.0.0"]
 
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.db_handler.DatabaseHandler",
-        Mock(return_value=mock_db_instance),
-    )
     monkeypatch.setattr(
         "simtools.visualization.plot_array_layout.names.site_names",
         Mock(return_value=["North", "South"]),
     )
 
-    combinations = list(generate_plot_combinations(args))
+    combinations = list(generate_plot_combinations(args, model_reader=model_reader))
 
     assert combinations == [
         ("6.0.0", "North"),

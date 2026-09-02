@@ -167,6 +167,7 @@ def test_reader_facade_routes_source_operations_and_branches():
     ]
     source.export_model_files.return_value = {"model.dat": "copied"}
     source.get_ecsv_file_as_astropy_table.return_value = "table"
+    source.is_configured.return_value = True
     reader = SimulationModelReader(source)
 
     assert reader.get_model_parameter(
@@ -190,3 +191,4 @@ def test_reader_facade_routes_source_operations_and_branches():
         "model.dat": "copied"
     }
     assert reader.get_ecsv_file_as_astropy_table("model.ecsv") == "table"
+    assert reader.is_configured() is True

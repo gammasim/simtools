@@ -9,6 +9,7 @@ import numpy as np
 from astropy.table import QTable
 
 import simtools.utils.general as gen
+from simtools.application.model_reader import require_model_reader
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
@@ -66,7 +67,7 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
-        self.model_reader = model_reader
+        self.model_reader = require_model_reader(model_reader)
         self.site_model = None
         self.io_handler = io_handler.IOHandler()
         self.geo_coordinates = GeoCoordinates()

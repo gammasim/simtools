@@ -8,9 +8,9 @@ from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.data_model import row_table_utils, schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
 
@@ -195,12 +195,7 @@ class ModelDataWriter:
         ValueError
             If parameter with the same version exists in the database.
         """
-        model_reader = self.model_reader or settings.config.model_reader
-        if model_reader is None:
-            database = db_handler.DatabaseHandler()
-            if not database.is_configured():
-                return
-            model_reader = database
+        model_reader = require_model_reader(self.model_reader)
         if not model_reader.is_configured():
             return
         try:

@@ -8,6 +8,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.model.calibration_model import CalibrationModel
@@ -78,9 +79,7 @@ class SimulatorLightEmission(SimtelRunner):
             "label": f"temp_wavelength_query_{light_source}",
             "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(),
         }
-        selected_reader = model_reader or settings.config.model_reader
-        if selected_reader is not None:
-            calibration_kwargs["model_reader"] = selected_reader
+        calibration_kwargs["model_reader"] = require_model_reader(model_reader)
         calibration_model = CalibrationModel(**calibration_kwargs)
 
         wavelengths = calibration_model.get_parameter_value_with_unit("flasher_wavelength")
@@ -89,7 +88,7 @@ class SimulatorLightEmission(SimtelRunner):
     def __init__(self, light_emission_config, telescope=None, label=None, model_reader=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = model_reader or settings.config.model_reader
+        self.model_reader = require_model_reader(model_reader)
         self.io_handler = io_handler.IOHandler()
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
@@ -116,8 +115,7 @@ class SimulatorLightEmission(SimtelRunner):
             "calibration_device_type": light_emission_config.get("light_source_type"),
             "model_version": light_emission_config.get("model_version"),
         }
-        if self.model_reader is not None:
-            model_kwargs["model_reader"] = self.model_reader
+        model_kwargs["model_reader"] = self.model_reader
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(**model_kwargs)
         )

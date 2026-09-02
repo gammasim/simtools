@@ -7,9 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools import settings
-from simtools.application.model_reader import create_model_reader
-from simtools.db import db_handler
+from simtools.application.model_reader import require_model_reader
 from simtools.io import io_handler
 from simtools.model.camera import Camera
 from simtools.model.model_utils import is_two_mirror_telescope
@@ -49,11 +47,7 @@ def plot(config, output_file, model_reader=None):
     None
         The function saves the plot to the specified output file.
     """
-    model_reader = (
-        model_reader
-        or settings.config.model_reader
-        or create_model_reader(database_handler=db_handler.DatabaseHandler())
-    )
+    model_reader = require_model_reader(model_reader)
     output_directory = io_handler.IOHandler().get_output_directory()
     model_reader.export_model_file(
         parameter=config["parameter"],

@@ -11,7 +11,6 @@ from astropy.utils import iers
 import simtools.utils.general as gen
 from simtools import dependencies, version
 from simtools.application.model_reader import create_model_reader
-from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
@@ -250,7 +249,7 @@ def _prepare_runtime_environment_from_cli(args_dict):
     return run_time
 
 
-def _resolve_model_version_to_latest_patch(args_dict, logger, model_reader=None):
+def _resolve_model_version_to_latest_patch(args_dict, logger, model_reader):
     """
     Update model_version in args_dict to latest patch version if needed.
 
@@ -273,8 +272,6 @@ def _resolve_model_version_to_latest_patch(args_dict, logger, model_reader=None)
         return
 
     try:
-        if model_reader is None:
-            model_reader = create_model_reader(database_handler=db_handler.DatabaseHandler())
         model_versions = model_reader.get_model_versions()
     except (ValueError, KeyError, OSError) as exc:
         logger.warning(f"Could not resolve model versions, using version(s) as-is. Error: {exc}")

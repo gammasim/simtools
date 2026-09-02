@@ -2,8 +2,7 @@
 
 import logging
 
-from simtools import settings
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import require_model_reader
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -42,9 +41,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
     illuminator = job_spec["illuminator"]
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
-    model_reader = job_spec.get("model_reader") or create_model_reader(
-        config.get("simulation_models_path")
-    )
+    model_reader = require_model_reader()
 
     # Update configuration for this specific pair
     config["telescope"] = telescope
@@ -128,7 +125,7 @@ class MultiIlluminatorSimulator:
     ):
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = model_reader or settings.config.model_reader
+        self.model_reader = require_model_reader(model_reader)
 
         # Load visibility table from provided data or from the site model
         if visibility_data is None:
@@ -163,10 +160,9 @@ class MultiIlluminatorSimulator:
         # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
-        kwargs = {"site": config["site"], "model_version": config["model_version"]}
-        if model_reader is not None:
-            kwargs["model_reader"] = model_reader
-        site_model = SiteModel(**kwargs)
+        site_model = SiteModel(
+            site=config["site"], model_version=config["model_version"], model_reader=model_reader
+        )
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
     def simulate(self, wavelengths=None, illuminators=None, telescopes=None):
@@ -248,7 +244,6 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
-                    "model_reader": self.model_reader,
                 }
                 job_specs.append(job_spec)
 

@@ -6,8 +6,7 @@ import logging
 from collections.abc import Generator
 from pathlib import Path
 
-from simtools.application.model_reader import create_model_reader
-from simtools.db import db_handler
+from simtools.application.model_reader import require_model_reader
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import names
 
@@ -20,19 +19,13 @@ class ReportGenerator:
     def __init__(self, args, output_path, model_reader=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        simulation_models_path = args.get("simulation_models_path")
-        self._model_reader_explicit = model_reader is not None or bool(simulation_models_path)
-        self.model_reader = model_reader or (
-            create_model_reader(simulation_models_path)
-            if simulation_models_path
-            else db_handler.DatabaseHandler()
-        )
+        self.model_reader = require_model_reader(model_reader)
         self.args = args
         self.output_path = output_path
 
     @property
     def db(self):
-        """Backward-compatible alias for the selected model reader."""
+        """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
     @db.setter
@@ -41,15 +34,13 @@ class ReportGenerator:
 
     def _read_parameters(self, args, output_path):
         """Construct a report reader with the selected source."""
-        if self._model_reader_explicit:
-            return ReadParameters(args, output_path, self.model_reader)
-        return ReadParameters(args, output_path)
+        return ReadParameters(args, output_path, self.model_reader)
 
     def _add_design_models_to_telescopes(self, model_version, telescopes):
         """Add design models to the list of telescopes for a given model version."""
         updated_telescopes = telescopes.copy()  # Copy original list to avoid modifying it directly
         for telescope in telescopes:
-            design_model = self.db.get_design_model(model_version, telescope)  # Get design model
+            design_model = self.model_reader.get_design_model(model_version, telescope)
             if isinstance(design_model, str) and design_model not in updated_telescopes:
                 updated_telescopes.append(design_model)  # Add design model if not already present
         return updated_telescopes
@@ -81,7 +72,7 @@ class ReportGenerator:
         all_sites = names.site_names()
 
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -91,7 +82,7 @@ class ReportGenerator:
             """Get list of telescopes depending on input arguments."""
             if not self.args.get("all_telescopes"):
                 return [self.args["telescope"]]
-            telescopes = self.db.get_array_elements(model_version)
+            telescopes = self.model_reader.get_array_elements(model_version)
             all_telescopes = self._add_design_models_to_telescopes(model_version, telescopes)
             return self._filter_telescopes_by_site(all_telescopes, selected_sites)
 
@@ -141,7 +132,7 @@ class ReportGenerator:
             return {self.args["telescope"]}
 
         # Get layouts for all versions for this site
-        layouts = self.db.get_model_parameters_for_all_model_versions(
+        layouts = self.model_reader.get_model_parameters_for_all_model_versions(
             site=site, array_element_name=f"OBS-{site}", collection="sites"
         )
 
@@ -210,7 +201,7 @@ class ReportGenerator:
         selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
 
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -246,7 +237,7 @@ class ReportGenerator:
         the DB; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -268,7 +259,7 @@ class ReportGenerator:
         the DB; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -295,7 +286,7 @@ class ReportGenerator:
     def _generate_calibration_device_parameter_reports(self):
         """Generate parameter comparison reports for calibration devices for all model versions."""
         # Get all model versions since no specific version is provided when using --all_telescopes
-        model_versions = self.db.get_model_versions()
+        model_versions = self.model_reader.get_model_versions()
 
         for version in model_versions:
             self._process_calibration_devices_for_version(version)
@@ -304,14 +295,16 @@ class ReportGenerator:
         """Process calibration devices for a specific model version."""
         try:
             # Get all calibration devices for this version
-            calibration_array_elements = self.db.get_array_elements(
+            calibration_array_elements = self.model_reader.get_array_elements(
                 version, collection="calibration_devices"
             )
             array_elements = calibration_array_elements.copy()
 
             # Add design models
             for element in calibration_array_elements:
-                design_model = self.db.get_design_model(version, element, "calibration_devices")
+                design_model = self.model_reader.get_design_model(
+                    version, element, "calibration_devices"
+                )
                 if design_model and design_model not in array_elements:
                     array_elements.append(design_model)
 

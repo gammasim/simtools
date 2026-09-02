@@ -10,12 +10,11 @@ from tempfile import TemporaryDirectory
 import astropy.units as u
 
 import simtools.utils.general as gen
+from simtools.application.model_reader import require_model_reader
 from simtools.data_model import schema
 from simtools.data_model.validate_data import DataValidator
-from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
-from simtools.settings import config
 from simtools.simtel import simtel_table_reader
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
@@ -66,9 +65,7 @@ class ModelParameter:
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.model_reader = model_reader or config.model_reader
-        if self.model_reader is None:
-            self.model_reader = db_handler.DatabaseHandler()
+        self.model_reader = require_model_reader(model_reader)
 
         self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
@@ -97,7 +94,7 @@ class ModelParameter:
 
     @property
     def db(self):
-        """Backward-compatible alias for the selected model reader."""
+        """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
     @db.setter
