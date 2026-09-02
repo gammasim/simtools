@@ -637,11 +637,8 @@ def test__process_calibration_devices_for_version_no_devices(io_handler):
             # Verify that ReadParameters was NOT instantiated since no devices exist
             mock_read_params_class.assert_not_called()
 
-    # Test case 2: ValueError for missing calibration_devices collection
-    mock_error = ValueError(
-        "The following query returned zero results: "
-        "{'model_version': '5.0.0', 'collection': 'calibration_devices'}"
-    )
+    # Test case 2: ValueError for a missing calibration_devices production table
+    mock_error = ValueError("No production table for calibration_devices in model version 5.0.0")
 
     with patch.object(report_generator.db, "get_array_elements", side_effect=mock_error):
         # Should not raise an exception, should log and return

@@ -262,7 +262,9 @@ class ReportGenerator:
             except ValueError as err:
                 # Some model versions do not have calibration_devices in the DB;
                 msg = str(err)
-                if "calibration_devices" in msg and "zero results" in msg:
+                if "calibration_devices" in msg and (
+                    "zero results" in msg or "No production table" in msg
+                ):
                     logger.info(
                         f"Skipping model version {version}: no calibration devices defined ({msg})"
                     )
@@ -311,7 +313,9 @@ class ReportGenerator:
         except ValueError as err:
             # Some model versions may not have calibration_devices
             msg = str(err)
-            if "calibration_devices" in msg and "zero results" in msg:
+            if "calibration_devices" in msg and (
+                "zero results" in msg or "No production table" in msg
+            ):
                 logger.info(
                     f"Skipping model version {version}: no calibration devices defined ({msg})"
                 )
