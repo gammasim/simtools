@@ -408,12 +408,15 @@ def plot_camera_pixel_layout_from_args(app_context):
 
     label = "plot_camera_pixel_layout"
 
-    tel_model = TelescopeModel(
-        site=args_dict["site"],
-        telescope_name=args_dict["telescope"],
-        model_version=args_dict["model_version"],
-        label=label,
-    )
+    telescope_kwargs = {
+        "site": args_dict["site"],
+        "telescope_name": args_dict["telescope"],
+        "model_version": args_dict["model_version"],
+        "label": label,
+    }
+    if getattr(app_context, "model_reader", None) is not None:
+        telescope_kwargs["model_reader"] = app_context.model_reader
+    tel_model = TelescopeModel(**telescope_kwargs)
     tel_model.export_model_files()
 
     logger.info(f"\nPlot camera for {tel_model.name}\n")

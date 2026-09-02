@@ -15,6 +15,7 @@ from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
+from simtools.settings import config
 from simtools.simtel import simtel_table_reader
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
@@ -61,12 +62,13 @@ class ModelParameter:
         label=None,
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
+        model_reader=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.db = db_handler.DatabaseHandler()
-        if not self.db.is_configured():
-            raise RuntimeError("Database is not configured.")
+        self.model_reader = model_reader or config.model_reader
+        if self.model_reader is None:
+            self.model_reader = db_handler.DatabaseHandler()
 
         self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
@@ -80,7 +82,7 @@ class ModelParameter:
             if array_element_name is not None
             else None
         )
-        self.design_model = self.db.get_design_model(
+        self.design_model = self.model_reader.get_design_model(
             self.model_version, self.name, collection="telescopes"
         )
         self._config_file_directory = None
@@ -92,6 +94,15 @@ class ModelParameter:
         self._load_parameters_from_db()
 
         self.simtel_config_writer = None
+
+    @property
+    def db(self):
+        """Backward-compatible alias for the selected model reader."""
+        return self.model_reader
+
+    @db.setter
+    def db(self, reader):
+        self.model_reader = reader
 
     def _get_parameter_dict(self, par_name):
         """
@@ -298,7 +309,7 @@ class ModelParameter:
         for simulation_software in self._simulation_config_parameters:
             try:
                 self._simulation_config_parameters[simulation_software] = (
-                    self.db.get_simulation_configuration_parameters(
+                    self.model_reader.get_simulation_configuration_parameters(
                         site=self.site,
                         array_element_name=self.name,
                         model_version=self.model_version,
@@ -381,13 +392,13 @@ class ModelParameter:
 
         This is the main function to load the model parameters from the DB.
         """
-        if self.db is None:
+        if self.model_reader is None:
             return
 
         if self.name or self.site:
             # copy parameters dict, is it may be modified later on
             self.parameters = deepcopy(
-                self.db.get_model_parameters(
+                self.model_reader.get_model_parameters(
                     self.site, self.name, self.collection, self.model_version
                 )
             )
@@ -418,7 +429,7 @@ class ModelParameter:
         """
         with TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            self.db.export_model_files(file_names=[value], dest=temp_path)
+            self.model_reader.export_model_files(file_names=[value], dest=temp_path)
             return simtel_table_reader.resolve_dict_parameter_value(
                 value,
                 parameter_name,
@@ -627,7 +638,7 @@ class ModelParameter:
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version, parameter_store=None):
         """Overwrite model parameter from DB for a specific version."""
         target_parameters = self.parameters if parameter_store is None else parameter_store
-        _para_dict = self.db.get_model_parameter(
+        _para_dict = self.model_reader.get_model_parameter(
             parameter=par_name,
             site=self.site,
             array_element_name=self.name,
@@ -670,7 +681,7 @@ class ModelParameter:
         if array_element_name in changes_data:
             return array_element_name
 
-        design_type = self.db.get_design_model(
+        design_type = self.model_reader.get_design_model(
             model_version=self.model_version,
             array_element_name=array_element_name,
             collection=self.collection,
@@ -819,7 +830,7 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(
+        self.model_reader.export_model_files(
             parameters=pars_from_db,
             dest=destination_path or self.config_file_directory,
         )
@@ -901,7 +912,7 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
-        self.db.export_model_files(
+        self.model_reader.export_model_files(
             parameters={
                 "nsb_spectrum_at_2200m": {
                     "value": self._simulation_config_parameters["sim_telarray"][

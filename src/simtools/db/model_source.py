@@ -18,6 +18,10 @@ class MongoDBModelSource:
         """Return the configured database name."""
         return self.database_handler.model_source_name
 
+    def is_configured(self):
+        """Return whether the wrapped database handler is configured."""
+        return self.database_handler.is_configured()
+
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
         if collection_name not in self._model_versions:
@@ -61,6 +65,11 @@ class MongoDBModelSource:
         return self.database_handler.export_model_files(
             parameters=parameters, file_names=file_names, dest=dest
         )
+
+    def export_model_file(self, **kwargs):
+        """Export one model file through the database handler."""
+        kwargs.pop("dest", None)
+        return self.database_handler.export_model_file(**kwargs)
 
     def get_ecsv_file_as_astropy_table(self, file_name):
         """Read an ECSV model file."""

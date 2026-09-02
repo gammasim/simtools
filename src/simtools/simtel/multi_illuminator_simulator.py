@@ -2,6 +2,8 @@
 
 import logging
 
+from simtools import settings
+from simtools.application.model_reader import create_model_reader
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -40,6 +42,9 @@ def _simulate_illuminator_telescope_pair(job_spec):
     illuminator = job_spec["illuminator"]
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
+    model_reader = job_spec.get("model_reader") or create_model_reader(
+        config.get("simulation_models_path")
+    )
 
     # Update configuration for this specific pair
     config["telescope"] = telescope
@@ -54,6 +59,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
             light_emission_config=config,
             telescope=telescope,
             label=label,
+            model_reader=model_reader,
         )
 
         simulator.simulate()
@@ -118,13 +124,15 @@ class MultiIlluminatorSimulator:
         max_workers=None,
         backend="local",
         backend_config=None,
+        model_reader=None,
     ):
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
+        self.model_reader = model_reader or settings.config.model_reader
 
         # Load visibility table from provided data or from the site model
         if visibility_data is None:
-            visibility_data = self._load_visibility_from_site_model(config)
+            visibility_data = self._load_visibility_from_site_model(config, self.model_reader)
 
         self.visibility = IlluminatorTelescopeVisibility(visibility_data)
 
@@ -138,7 +146,7 @@ class MultiIlluminatorSimulator:
         self._logger.info("Using execution backend %s", self.backend)
 
     @staticmethod
-    def _load_visibility_from_site_model(config):
+    def _load_visibility_from_site_model(config, model_reader=None):
         """
         Load visibility data from the site model database.
 
@@ -155,10 +163,10 @@ class MultiIlluminatorSimulator:
         # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
-        site_model = SiteModel(
-            site=config["site"],
-            model_version=config["model_version"],
-        )
+        kwargs = {"site": config["site"], "model_version": config["model_version"]}
+        if model_reader is not None:
+            kwargs["model_reader"] = model_reader
+        site_model = SiteModel(**kwargs)
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
     def simulate(self, wavelengths=None, illuminators=None, telescopes=None):
@@ -218,7 +226,7 @@ class MultiIlluminatorSimulator:
             config_for_query["light_source"] = sample_illuminator
 
             wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(
-                config_for_query
+                config_for_query, model_reader=self.model_reader
             )
             self._logger.info(
                 f"Using {len(wavelengths)} wavelengths from model: "
@@ -240,6 +248,7 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
+                    "model_reader": self.model_reader,
                 }
                 job_specs.append(job_spec)
 

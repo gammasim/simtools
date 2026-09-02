@@ -85,6 +85,7 @@ def _argument(name, group, **kwargs):
 
 _RUN_TIME_GROUP = "run time"
 _DATABASE_CONFIGURATION_GROUP = "database configuration"
+_MODEL_REPOSITORY_GROUP = "model repository"
 _SIMULATION_MODEL_GROUP = "simulation model"
 _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
 _SHOWER_PARAMETERS_GROUP = "shower parameters"
@@ -402,7 +403,7 @@ DB_API_USER = _argument(
 
 SIMULATION_MODELS_PATH = _argument(
     "simulation_models_path",
-    _DATABASE_CONFIGURATION_GROUP,
+    _MODEL_REPOSITORY_GROUP,
     help=(
         "Path containing simulation model files; when set, model parameters are read "
         "from files instead of MongoDB."

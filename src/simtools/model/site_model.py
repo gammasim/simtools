@@ -44,6 +44,7 @@ class SiteModel(ModelParameter):
         label=None,
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
+        model_reader=None,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ class SiteModel(ModelParameter):
             collection="sites",
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
+            model_reader=model_reader,
         )
 
     def get_reference_point(self):

@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from simtools.application.model_reader import create_model_reader
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.testing.output_validation.reference import _compare_values
@@ -11,7 +12,13 @@ from simtools.utils import general
 def validate(path, rule, configuration):
     """Compare a generated parameter value with its database reference."""
     parameter_name = rule["reference_parameter_name"]
-    reference = db_handler.DatabaseHandler().get_model_parameter(
+    simulation_models_path = configuration.get("simulation_models_path")
+    model_reader = (
+        create_model_reader(simulation_models_path)
+        if simulation_models_path
+        else db_handler.DatabaseHandler()
+    )
+    reference = model_reader.get_model_parameter(
         parameter=parameter_name,
         site=configuration.get("site"),
         array_element_name=configuration.get("telescope"),

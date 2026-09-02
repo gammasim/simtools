@@ -12,6 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
+from simtools.application.model_reader import create_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
@@ -69,16 +70,35 @@ class ParameterDelta:
 class ReadParameters:
     """Read and manage model parameter data for report generation."""
 
-    def __init__(self, args, output_path):
+    def __init__(self, args, output_path, model_reader=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler()
+        simulation_models_path = args.get("simulation_models_path")
+        self._model_reader_explicit = model_reader is not None or bool(simulation_models_path)
+        self.model_reader = model_reader or (
+            create_model_reader(simulation_models_path)
+            if simulation_models_path
+            else db_handler.DatabaseHandler()
+        )
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
         self.observatory = args.get("observatory")
         self.software = args.get("simulation_software", None)
+
+    @property
+    def db(self):
+        """Backward-compatible alias for the selected model reader."""
+        return self.model_reader
+
+    @db.setter
+    def db(self, reader):
+        self.model_reader = reader
+
+    def _reader_kwargs(self):
+        """Return reader injection arguments for plotting helpers."""
+        return {"model_reader": self.model_reader} if self._model_reader_explicit else {}
 
     @property
     def model_version(self):
@@ -364,6 +384,7 @@ class ReadParameters:
             plot_pixels.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
+                **self._reader_kwargs(),
             )
             plot_names.append(plot_name)
         else:
@@ -425,6 +446,7 @@ class ReadParameters:
             telescope=tel,
             output_path=outpath,
             plot_type="all",
+            **self._reader_kwargs(),
         )
 
         if not config_data:
@@ -439,6 +461,7 @@ class ReadParameters:
                 plot_tables.plot(
                     config=plot_config,
                     output_file=image_output_file,
+                    **self._reader_kwargs(),
                 )
 
         return plot_names

@@ -29,9 +29,12 @@ class ModelDataWriter:
         Path to output file.
     """
 
-    def __init__(self, output_file=None, output_file_format=None, output_path=None):
+    def __init__(
+        self, output_file=None, output_file_format=None, output_path=None, model_reader=None
+    ):
         """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
+        self.model_reader = model_reader
         self.io_handler = io_handler.IOHandler()
         self.schema_dict = {}
         self.output_label = "model_data_writer"
@@ -95,6 +98,7 @@ class ModelDataWriter:
         unit=None,
         model_parameter_schema_version=None,
         check_db_for_existing_parameter=True,
+        model_reader=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -121,6 +125,8 @@ class ModelDataWriter:
             Version of the model parameter schema (if None, use schema version from schema dict).
         check_db_for_existing_parameter: bool
             If True, check if parameter with same version exists in DB before writing.
+        model_reader: object, optional
+            Reader used for the existing-parameter check.
 
         Returns
         -------
@@ -131,6 +137,7 @@ class ModelDataWriter:
             output_file=output_file,
             output_file_format="json",
             output_path=output_path,
+            model_reader=model_reader,
         )
         if check_db_for_existing_parameter and not settings.config.args.get(
             "ignore_existing_parameter_version", False
@@ -188,11 +195,16 @@ class ModelDataWriter:
         ValueError
             If parameter with the same version exists in the database.
         """
-        db = db_handler.DatabaseHandler()
-        if not db.is_configured():
+        model_reader = self.model_reader or settings.config.model_reader
+        if model_reader is None:
+            database = db_handler.DatabaseHandler()
+            if not database.is_configured():
+                return
+            model_reader = database
+        if not model_reader.is_configured():
             return
         try:
-            db.get_model_parameter(
+            model_reader.get_model_parameter(
                 parameter=parameter_name,
                 parameter_version=parameter_version,
                 site=names.get_site_from_array_element_name(instrument),

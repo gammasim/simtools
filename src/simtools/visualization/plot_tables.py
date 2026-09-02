@@ -8,9 +8,11 @@ import numpy as np
 import packaging.version
 
 import simtools.utils.general as gen
+from simtools import settings
+from simtools.application.model_reader import create_model_reader
 from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
-from simtools.io import ascii_handler, legacy_data_handler
+from simtools.io import ascii_handler, io_handler, legacy_data_handler
 from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
@@ -18,7 +20,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 _logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, data_path=None):
+def plot(config, output_file, data_path=None, model_reader=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -31,7 +33,11 @@ def plot(config, output_file, data_path=None):
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
     """
-    data = read_table_data(config, data_path)
+    model_reader = model_reader or settings.config.model_reader
+    if model_reader is None:
+        data = read_table_data(config, data_path)
+    else:
+        data = read_table_data(config, data_path, model_reader=model_reader)
 
     fig = visualize.plot_1d(
         data,
@@ -42,7 +48,7 @@ def plot(config, output_file, data_path=None):
     return output_file
 
 
-def read_table_data(config, data_path=None):
+def read_table_data(config, data_path=None, model_reader=None):
     """
     Read table data from file or parameter database.
 
@@ -58,6 +64,7 @@ def read_table_data(config, data_path=None):
     Dict
         Dict with table data (astropy tables).
     """
+    model_reader = model_reader or settings.config.model_reader
     data = {}
 
     for _config in config["tables"]:
@@ -74,7 +81,7 @@ def read_table_data(config, data_path=None):
             else:
                 table = read_simtel_table(_config.get("parameter"), file_name)
         elif "parameter" in _config:
-            table = _read_table_from_model_database(_config)
+            table = _read_table_from_model_database(_config, model_reader)
         else:
             raise ValueError("No table data defined in configuration.")
 
@@ -116,7 +123,7 @@ def _process_table_data(table, _config):
     )
 
 
-def _read_table_from_model_database(table_config):
+def _read_table_from_model_database(table_config, model_reader=None):
     """
     Read table data from model parameter database.
 
@@ -130,31 +137,46 @@ def _read_table_from_model_database(table_config):
     Table
         Astropy table
     """
-    db = db_handler.DatabaseHandler()
-    db_export_path = table_config.get("db_export_path")
-    original_output_path = db.io_handler.output_path.get("default")
+    if model_reader is None:
+        database = db_handler.DatabaseHandler()
+        export_path = table_config.get("db_export_path")
+        original_output_path = database.io_handler.output_path.get("default")
+        if export_path:
+            database.io_handler.set_paths(output_path=export_path)
+        try:
+            return database.export_model_file(
+                parameter=table_config["parameter"],
+                site=table_config["site"],
+                array_element_name=table_config.get("telescope"),
+                parameter_version=table_config.get("parameter_version"),
+                model_version=table_config.get("model_version"),
+                export_file_as_table=True,
+            )
+        finally:
+            if export_path:
+                database.io_handler.set_paths(output_path=original_output_path)
+    destination = (
+        table_config.get("db_export_path") or io_handler.IOHandler().get_output_directory()
+    )
+    return model_reader.export_model_file(
+        parameter=table_config["parameter"],
+        site=table_config["site"],
+        array_element_name=table_config.get("telescope"),
+        parameter_version=table_config.get("parameter_version"),
+        model_version=table_config.get("model_version"),
+        export_file_as_table=True,
+        dest=destination,
+    )
 
-    if db_export_path:
-        db.io_handler.set_paths(output_path=db_export_path)
 
-    try:
-        return db.export_model_file(
-            parameter=table_config["parameter"],
-            site=table_config["site"],
-            array_element_name=table_config.get("telescope"),
-            parameter_version=table_config.get("parameter_version"),
-            model_version=table_config.get("model_version"),
-            export_file_as_table=True,
-        )
-    finally:
-        if db_export_path:
-            db.io_handler.set_paths(output_path=original_output_path)
-
-
-def _read_parameter_dict_from_model_database(table_config):
+def _read_parameter_dict_from_model_database(table_config, model_reader=None):
     """Read a model parameter dictionary from the model parameter database."""
-    db = db_handler.DatabaseHandler()
-    parameter_dict = db.get_model_parameter(
+    model_reader = (
+        model_reader
+        or settings.config.model_reader
+        or create_model_reader(database_handler=db_handler.DatabaseHandler())
+    )
+    parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
         site=table_config["site"],
         array_element_name=table_config.get("telescope"),
@@ -215,7 +237,7 @@ def _select_schema_entry(schema_data, schema_version=None):
 
 
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type
+    parameter, parameter_version, site, telescope, output_path, plot_type, model_reader=None
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -248,7 +270,7 @@ def generate_plot_configurations(
         "telescope": telescope,
         "parameter_version": parameter_version,
     }
-    parameter_dict = _read_parameter_dict_from_model_database(table_config)
+    parameter_dict = _read_parameter_dict_from_model_database(table_config, model_reader)
 
     schema = gen.change_dict_keys_case(
         _select_schema_entry(
@@ -262,7 +284,7 @@ def generate_plot_configurations(
     if not configs:
         return None
 
-    table = _read_table_from_model_database(table_config)
+    table = _read_table_from_model_database(table_config, model_reader)
     valid_columns = _get_valid_columns(table)
 
     valid_configs = []

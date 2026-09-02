@@ -489,7 +489,12 @@ def get_array_layouts_from_parameter_file(
 
 
 def get_array_layouts_from_db(
-    layout_name, site, model_version, coordinate_system="ground", ignore_software_version=False
+    layout_name,
+    site,
+    model_version,
+    coordinate_system="ground",
+    ignore_software_version=False,
+    model_reader=None,
 ):
     """
     Retrieve all array layouts from the database and return as list of astropy tables.
@@ -520,6 +525,7 @@ def get_array_layouts_from_db(
             site=site,
             model_version=model_version,
             ignore_software_version=ignore_software_version,
+            **({"model_reader": model_reader} if model_reader is not None else {}),
         )
         layout_names = site_model.get_list_of_array_layouts()
 
@@ -531,6 +537,7 @@ def get_array_layouts_from_db(
             _layout_name,
             coordinate_system,
             ignore_software_version,
+            **({"model_reader": model_reader} if model_reader is not None else {}),
         )
         for _layout_name in layout_names
     ]
@@ -540,7 +547,12 @@ def get_array_layouts_from_db(
 
 
 def get_array_layouts_using_telescope_lists_from_db(
-    telescope_lists, site, model_version, coordinate_system="ground", ignore_software_version=False
+    telescope_lists,
+    site,
+    model_version,
+    coordinate_system="ground",
+    ignore_software_version=False,
+    model_reader=None,
 ):
     """
     Retrieve array layouts from the database using telescope lists.
@@ -584,6 +596,7 @@ def get_array_layouts_using_telescope_lists_from_db(
                 None,
                 coordinate_system,
                 ignore_software_version,
+                model_reader,
             )
         )
     return layouts
@@ -622,6 +635,7 @@ def _get_array_layout_dict(
     layout_name,
     coordinate_system,
     ignore_software_version=False,
+    model_reader=None,
 ):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
@@ -630,6 +644,7 @@ def _get_array_layout_dict(
         array_elements=telescope_list,
         layout_name=layout_name,
         ignore_software_version=ignore_software_version,
+        **({"model_reader": model_reader} if model_reader is not None else {}),
     )
     return {
         "name": layout_name if layout_name else "list",
@@ -640,7 +655,7 @@ def _get_array_layout_dict(
     }
 
 
-def get_array_elements_from_db_for_layouts(layouts, site, model_version):
+def get_array_elements_from_db_for_layouts(layouts, site, model_version, model_reader=None):
     """
     Get list of array elements from the database for given list of layout names.
 
@@ -666,7 +681,11 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     dict
         Dictionary mapping layout names to telescope IDs.
     """
-    site_model = SiteModel(site=site, model_version=model_version)
+    site_model = SiteModel(
+        site=site,
+        model_version=model_version,
+        **({"model_reader": model_reader} if model_reader is not None else {}),
+    )
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
     for layout_name in layout_names:
@@ -674,7 +693,17 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     return layout_dict
 
 
-def read_layouts(args_dict):
+def _validate_layout_file_args(args_dict):
+    """Validate the related array-layout parameter-file options."""
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        raise ValueError(
+            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
+        )
+
+
+def read_layouts(args_dict, model_reader=None):
     """
     Read array layouts from the database or parameter file.
 
@@ -690,12 +719,7 @@ def read_layouts(args_dict):
             - list: List of array layouts.
             - list or None: Background layout or None if not provided.
     """
-    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
-        "array_layout_parameter_file"
-    ):
-        raise ValueError(
-            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
-        )
+    _validate_layout_file_args(args_dict)
 
     background_layout = None
     ignore_software_version = args_dict.get("ignore_software_version", False)
@@ -706,6 +730,7 @@ def read_layouts(args_dict):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
+            **({"model_reader": model_reader} if model_reader is not None else {}),
         )["array_elements"]
 
     if args_dict["array_layout_parameter_file"] is not None:
@@ -725,6 +750,7 @@ def read_layouts(args_dict):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
+            **({"model_reader": model_reader} if model_reader is not None else {}),
         )
         if isinstance(layouts, list):
             return layouts, background_layout
@@ -741,6 +767,7 @@ def read_layouts(args_dict):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             ignore_software_version,
+            **({"model_reader": model_reader} if model_reader is not None else {}),
         ), background_layout
 
     return [], background_layout
