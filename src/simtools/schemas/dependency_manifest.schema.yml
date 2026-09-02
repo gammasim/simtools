@@ -52,11 +52,6 @@ properties:
         type: object
         additionalProperties:
           type: string
-      model_source:
-        type:
-        - object
-        - 'null'
-        additionalProperties: true
   build_options:
     type: object
   container:

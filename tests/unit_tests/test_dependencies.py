@@ -298,7 +298,7 @@ def test_direct_dependency_manifest_includes_mongodb_only_when_installed(mocker)
     mocker.patch.object(
         dependencies.metadata,
         "requires",
-        return_value=["astropy", "pymongo; extra == 'mongodb'", "pytest; extra == 'tests'"],
+        return_value=["astropy", 'pymongo; extra == "mongodb"', 'pytest; extra == "tests"'],
     )
     mocker.patch.object(
         dependencies,
@@ -596,6 +596,7 @@ def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
     assert manifest["source"] == "container-build"
     assert manifest["simtools"]["revision"] == "b" * 40
     assert manifest["runtime"]["direct_python_dependencies"] == {"astropy": "8.0.0"}
+    assert "model_source" not in manifest["runtime"]
 
     import jsonschema
 

@@ -20,6 +20,7 @@ from importlib import metadata
 from pathlib import Path
 
 import yaml
+from packaging.requirements import InvalidRequirement, Requirement
 
 from simtools import settings
 from simtools.configuration import defaults
@@ -352,7 +353,6 @@ def build_dependency_manifest():
             "python_version": platform.python_version(),
             "pip_version": _distribution_version("pip"),
             "direct_python_dependencies": get_direct_python_dependency_versions(),
-            "model_source": _get_model_source_info(),
         },
         "build_options": _sanitize_build_options(build_options),
         "container": {
@@ -386,12 +386,18 @@ def get_direct_python_dependency_versions():
         return {}
     versions = {}
     for requirement in requirements:
-        if "extra ==" in requirement and "extra == 'mongodb'" not in requirement:
+        try:
+            parsed_requirement = Requirement(requirement)
+        except InvalidRequirement:
             continue
-        match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
-        if not match:
+        marker = parsed_requirement.marker
+        if (
+            marker is not None
+            and "extra" in str(marker)
+            and not marker.evaluate({"extra": "mongodb"})
+        ):
             continue
-        name = match.group(1).lower().replace("_", "-")
+        name = parsed_requirement.name.lower().replace("_", "-")
         installed_version = _distribution_version(name)
         if installed_version is not None:
             versions[name] = installed_version

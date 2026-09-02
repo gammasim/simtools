@@ -1,7 +1,7 @@
 """Tests for the model-reader factory."""
 
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 import pytest
 
@@ -56,13 +56,14 @@ def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directo
 
 def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
     """Worker source reconstruction keeps the selected MongoDB name."""
-    handler = Mock(model_source_name="default-db")
+    handler = Mock()
+    type(handler).model_source_name = PropertyMock(side_effect=lambda: handler.db_name)
     mocker.patch("simtools.application.model_reader._create_database_handler", return_value=handler)
 
     reader = create_model_reader_from_source_config({"type": "mongodb", "name": "worker-db"})
 
     assert handler.db_name == "worker-db"
-    assert reader.source_name == "default-db"
+    assert reader.source_name == "worker-db"
 
 
 def test_require_model_reader_prefers_explicit_reader():
