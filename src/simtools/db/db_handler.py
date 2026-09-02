@@ -31,13 +31,13 @@ class DatabaseHandler:
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
-    production_table_cached = {}
     model_parameters_cached = {}
-    model_versions_cached = {}
 
     def __init__(self):
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
+        self.production_table_cached = {}
+        self.model_versions_cached = {}
         self.io_handler = io_handler.IOHandler()
         simulation_models_path = settings.config.args.get("simulation_models_path")
         if not isinstance(simulation_models_path, str | Path):
@@ -459,8 +459,8 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        # 'global' is a placeholder to ignore 'instrument' field in query.
-        if array_element_name and array_element_name != "global":
+        # 'xSTx-design' is a placeholder to ignore 'instrument' field in query.
+        if array_element_name and array_element_name != "xSTx-design":
             query_dict["instrument"] = array_element_name
         if site:
             query_dict["site"] = site
@@ -521,10 +521,9 @@ class DatabaseHandler:
         )
         if self.file_system_handler:
             return self.file_system_handler.read_production_table(collection_name, model_version)
+        cache_key = self._cache_key(None, None, model_version, collection_name)
         try:
-            return DatabaseHandler.production_table_cached[
-                self._cache_key(None, None, model_version, collection_name)
-            ]
+            return self.production_table_cached[cache_key]
         except KeyError:
             pass
 
@@ -533,13 +532,15 @@ class DatabaseHandler:
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
-        return {
+        production_table = {
             "collection": post["collection"],
             "model_version": post["model_version"],
             "parameters": post["parameters"],
             "design_model": post.get("design_model", {}),
             "entry_date": self.mongo_db_handler.get_entry_date_from_document(post),
         }
+        self.production_table_cached[cache_key] = production_table
+        return production_table
 
     def get_model_versions(self, collection_name="telescopes"):
         """
@@ -557,12 +558,12 @@ class DatabaseHandler:
         """
         if self.file_system_handler:
             return self.file_system_handler.get_model_versions()
-        if collection_name not in DatabaseHandler.model_versions_cached:
+        if collection_name not in self.model_versions_cached:
             collection = self.get_collection("production_tables", db_name=self.db_name)
-            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+            self.model_versions_cached[collection_name] = sorted(
                 {post["model_version"] for post in collection.find({"collection": collection_name})}
             )
-        return DatabaseHandler.model_versions_cached[collection_name]
+        return list(self.model_versions_cached[collection_name])
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -754,8 +755,8 @@ class DatabaseHandler:
         self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
         mongo_db_handler = self.require_mongodb("Adding a production table")
         mongo_db_handler.insert_one(production_table, "production_tables", db_name or self.db_name)
-        DatabaseHandler.production_table_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.production_table_cached.clear()
+        self.model_versions_cached.clear()
 
     def add_new_parameter(
         self,
@@ -893,7 +894,7 @@ class DatabaseHandler:
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.model_versions_cached.clear()
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
@@ -918,7 +919,7 @@ class DatabaseHandler:
             List of array elements
         """
         if collection == "configuration_corsika":
-            return ["global"]  # placeholder to ignore 'instrument' field in query.
+            return ["xSTx-design"]  # placeholder to ignore 'instrument' field in query.
         if collection == "sites":
             return [f"OBS-{site}"]
         if names.is_design_type(array_element_name):

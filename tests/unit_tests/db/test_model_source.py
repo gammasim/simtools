@@ -46,4 +46,33 @@ def test_mongodb_source_builds_parameter_query_and_returns_documents():
     )
     handler._read_db.reset_mock()  # pylint: disable=protected-access
     handler._read_db.return_value = {}  # pylint: disable=protected-access
-    assert source.read_parameters({}, "configuration_corsika", instrument="global") == []
+    assert source.read_parameters({}, "configuration_corsika", instrument="xSTx-design") == []
+
+
+def test_mongodb_source_caches_and_copies_reads():
+    """Repeated source reads use per-instance caches and defensive copies."""
+    handler = Mock(model_source_name="db")
+    handler.get_model_versions.return_value = ["1.0.0"]
+    production = {"collection": "telescopes", "parameters": {"LSTN-01": {}}}
+    handler.read_production_table_from_db.return_value = production
+    handler._read_db.return_value = {"p": {"parameter": "p", "value": 1}}
+    source = MongoDBModelSource(handler)
+
+    versions = source.get_model_versions()
+    versions.append("2.0.0")
+    assert source.get_model_versions() == ["1.0.0"]
+    table = source.read_production_table("telescopes", "1.0.0")
+    table["parameters"]["LSTN-01"]["changed"] = True
+    assert (
+        "changed"
+        not in source.read_production_table("telescopes", "1.0.0")["parameters"]["LSTN-01"]
+    )
+    parameters = source.read_parameters({"p": "1.0.0"}, "telescopes", instrument="LSTN-01")
+    parameters[0]["changed"] = True
+    assert (
+        "changed"
+        not in source.read_parameters({"p": "1.0.0"}, "telescopes", instrument="LSTN-01")[0]
+    )
+    handler.get_model_versions.assert_called_once_with("telescopes")
+    handler.read_production_table_from_db.assert_called_once_with("telescopes", "1.0.0")
+    assert handler._read_db.call_count == 1  # pylint: disable=protected-access
