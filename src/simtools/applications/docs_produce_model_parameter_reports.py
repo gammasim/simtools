@@ -37,12 +37,14 @@ def main():
         ReportGenerator(
             app_context.args,
             output_path,
+            app_context.model_reader,
         ).auto_generate_parameter_reports()
 
     else:
         ReadParameters(
             app_context.args,
             output_path,
+            app_context.model_reader,
         ).produce_model_parameter_reports()
 
         app_context.logger.info(

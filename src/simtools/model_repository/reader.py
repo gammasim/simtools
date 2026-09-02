@@ -10,6 +10,7 @@ from packaging.version import Version
 from simtools import settings
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
@@ -31,10 +32,19 @@ class FileSystemModelSource:
         self._model_versions = None
         self._validate_model_path()
 
+    def is_configured(self):
+        """Return whether this source is ready to read."""
+        return True
+
     @property
     def source_name(self):
         """Return a user-facing description of the model source."""
         return str(self.simulation_models_path)
+
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return {"type": "filesystem", "path": str(self.simulation_models_path)}
 
     def _validate_model_path(self):
         """Validate the required simulation-model directories."""
@@ -250,6 +260,15 @@ class SimulationModelReader:
         """Return a user-facing description of the selected source."""
         return self._source.source_name
 
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return getattr(self._source, "source_config", None)
+
+    def is_configured(self):
+        """Return whether the selected source is configured for reads."""
+        return self._source.is_configured()
+
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
         return self._source.get_model_versions(collection_name)
@@ -301,6 +320,18 @@ class SimulationModelReader:
                 parameters.update(self._read_parameters(versions, collection, element, site))
         return {key: parameters[key] for key in sorted(parameters)}
 
+    def get_model_parameters_for_all_model_versions(self, site, array_element_name, collection):
+        """Read resolved parameters for an element across all model versions."""
+        parameters = {}
+        for model_version in self.get_model_versions(collection):
+            try:
+                parameters[model_version] = self.get_model_parameters(
+                    site, array_element_name, collection, model_version
+                )
+            except KeyError, ValueError:
+                continue
+        return parameters
+
     def get_array_elements(self, model_version, collection="telescopes"):
         """Return array elements in a model version."""
         table = self.read_production_table(collection, model_version)
@@ -336,6 +367,40 @@ class SimulationModelReader:
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Export model files through the selected source."""
         return self._source.export_model_files(parameters, file_names, dest)
+
+    def export_model_file(
+        self,
+        parameter,
+        site,
+        array_element_name,
+        model_version=None,
+        parameter_version=None,
+        export_file_as_table=False,
+        dest=None,
+    ):
+        """Export one model file or return a file-backed value as a table."""
+        parameters = self.get_model_parameter(
+            parameter,
+            site,
+            array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+        )
+        parameter_data = parameters[parameter]
+        if parameter_data.get("type") == "dict" and isinstance(parameter_data.get("value"), dict):
+            return (
+                simtel_table_reader.row_data_to_astropy_table(parameter_data["value"])
+                if export_file_as_table
+                else None
+            )
+        if dest is None:
+            raise ValueError("Destination path is required to export a model file.")
+        self.export_model_files(parameters=parameters, dest=dest)
+        if export_file_as_table:
+            return simtel_table_reader.read_simtel_table(
+                parameter, Path(dest) / parameter_data["value"]
+            )
+        return None
 
     def get_ecsv_file_as_astropy_table(self, file_name):
         """Read an ECSV model file through the selected source."""

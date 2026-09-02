@@ -104,6 +104,7 @@ def test_export_array_elements_as_table_with_calibration_elements_flag():
     array_model.model_version = "6.0.2"
     array_model.label = "test"
     array_model.overwrite_model_parameter_dict = None
+    array_model.model_reader = Mock()
     array_model.array_elements = {"LSTS-01": None, "ILLS": None}
 
     telescope_model = Mock()
@@ -277,6 +278,7 @@ def test_build_calibration_models():
         array_model_north.model_version = "6.0.0"
         array_model_north.label = "test_label"
         array_model_north.overwrite_model_parameter_dict = None
+        array_model_north.model_reader = Mock()
 
         result = array_model_north._build_calibration_models(
             array_model_north,

@@ -33,7 +33,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     plot_tables.plot(config, output_file)
 
-    mock_read_table_data.assert_called_once_with(config, None)
+    mock_read_table_data.assert_called_once_with(config, None, model_reader=None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
 
@@ -99,9 +99,7 @@ def test_read_simtel_table_data_from_file_without_parameter_raises():
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_file(
-    mock_db_handler_class,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -130,9 +128,7 @@ def test_read_table_data_from_file(
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_model_database(
-    mock_db_handler_class,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -149,22 +145,22 @@ def test_read_table_data_from_model_database(
             }
         ]
     }
-    mock_db_handler = mock_db_handler_class.return_value
+    model_reader = mock.MagicMock()
     mock_table = mock.MagicMock()
-    mock_db_handler.export_model_file.return_value = mock_table
+    model_reader.export_model_file.return_value = mock_table
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
-    result = plot_tables.read_table_data(config)
+    result = plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler_class.assert_called_once_with()
-    mock_db_handler.export_model_file.assert_called_once_with(
+    model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
         array_element_name="test_telescope",
         parameter_version=None,
         model_version="test_version",
         export_file_as_table=True,
+        dest=mock.ANY,
     )
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
     assert result == {"test_table": mock_structure_array}
@@ -177,38 +173,36 @@ def test_read_table_data_no_table_data_defined():
         plot_tables.read_table_data(config)
 
 
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
-def test_export_model_file(mock_db_handler_class):
+def test_export_model_file():
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
-    mock_db_handler = mock_db_handler_class.return_value
+    model_reader = mock.MagicMock()
     mock_table = mock.MagicMock()
-    mock_db_handler.export_model_file.return_value = mock_table
+    model_reader.export_model_file.return_value = mock_table
 
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config)
+    plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler_class.assert_called_once_with()
-    mock_db_handler.export_model_file.assert_called_once_with(
+    model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
         array_element_name="test_telescope",
         parameter_version=None,
         model_version="test_version",
         export_file_as_table=True,
+        dest=mock.ANY,
     )
 
 
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
-def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_directory):
+def test_export_model_file_with_db_export_path(tmp_test_directory):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
@@ -216,21 +210,19 @@ def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_d
         "parameter": "test_parameter",
         "db_export_path": str(tmp_test_directory / "test_plot_tables"),
     }
-    mock_db_handler = mock_db_handler_class.return_value
-    mock_db_handler.io_handler.output_path.get.return_value = "output/default"
-    mock_db_handler.export_model_file.return_value = mock.MagicMock()
+    model_reader = mock.MagicMock()
+    model_reader.export_model_file.return_value = mock.MagicMock()
 
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config)
+    plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler.io_handler.set_paths.assert_any_call(
-        output_path=str(tmp_test_directory / "test_plot_tables")
+    assert model_reader.export_model_file.call_args.kwargs["dest"] == str(
+        tmp_test_directory / "test_plot_tables"
     )
-    mock_db_handler.io_handler.set_paths.assert_any_call(output_path="output/default")
 
 
 def test_read_table_and_normalize(tmp_test_directory):
@@ -607,6 +599,7 @@ def test_resolve_plot_output_path_file_and_directory(tmp_path):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
 @mock.patch("simtools.visualization.plot_tables.plt")
@@ -614,6 +607,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plt,
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
+    mock_plot_scaled_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -623,15 +617,16 @@ def test_plot_bias_curves_saves_and_closes_figure(
 
     output_path = tmp_path / "nested" / "bias.png"
     config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
+    proton_stats = {220: {"rate_hz": 5}}
 
-    plot_tables.plot_bias_curves(
-        {220: {"rate_hz": 10, "error_hz": 1}}, {220: {"rate_hz": 5}}, config, output_path
-    )
+    plot_tables.plot_bias_curves(nsb_stats, proton_stats, config, output_path)
 
     mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
-    mock_plot_nsb_curve.assert_called_once_with(mock_axis, {220: {"rate_hz": 10, "error_hz": 1}})
-    mock_plot_proton_curve.assert_called_once_with(mock_axis, {220: {"rate_hz": 5}})
-    mock_configure_axis.assert_called_once_with(mock_axis, config)
+    mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
+    mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
+    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats)
+    mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
     mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
     mock_plt.close.assert_called_once_with(mock_fig)
@@ -702,6 +697,39 @@ def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
     mock_plot_trend.assert_not_called()
 
 
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
+    axis = mock.MagicMock()
+    proton_stats = {
+        240: {"rate_hz": 20.0, "error_hz": 2.0},
+        220: {"rate_hz": 10.0, "error_hz": 1.0},
+    }
+
+    plot_tables._plot_scaled_proton_curve(axis, proton_stats)
+
+    # Rates should be scaled by 1.35
+    axis.errorbar.assert_called_once_with(
+        [220, 240],
+        [13.5, 27.0],  # 10.0 * 1.35, 20.0 * 1.35
+        yerr=[1.35, 2.7],  # 1.0 * 1.35, 2.0 * 1.35
+        fmt="^",
+        label="1.35 x Proton",
+        color="tab:red",
+        capsize=3,
+    )
+    mock_plot_trend.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
+
+
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_trend):
+    axis = mock.MagicMock()
+
+    plot_tables._plot_scaled_proton_curve(axis, {})
+
+    axis.errorbar.assert_not_called()
+    mock_plot_trend.assert_not_called()
+
+
 def test_plot_log_linear_trend_returns_without_plot_for_insufficient_data():
     axis = mock.MagicMock()
 
@@ -729,14 +757,15 @@ def test_configure_bias_curve_axis_with_legend():
     axis = mock.MagicMock()
     axis.get_legend_handles_labels.return_value = ([object()], ["NSB"])
     config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
+    proton_stats = {220: {"rate_hz": 5}}
 
-    plot_tables._configure_bias_curve_axis(axis, config)
+    plot_tables._configure_bias_curve_axis(axis, config, nsb_stats, proton_stats)
 
     axis.set_title.assert_called_once_with("Bias", fontsize=14, fontweight="bold")
     axis.set_xlabel.assert_called_once_with("Threshold", fontsize=12)
     axis.set_ylabel.assert_called_once_with("Trigger Rate [Hz]", fontsize=12)
     axis.set_yscale.assert_called_once_with("log")
-    axis.set_ylim.assert_called_once_with(1, 1e6)
     axis.grid.assert_called_once_with(which="both", alpha=0.3, linestyle=":")
     axis.legend.assert_called_once_with(fontsize=11, loc="best")
 
@@ -746,10 +775,88 @@ def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
     axis = mock.MagicMock()
     axis.get_legend_handles_labels.return_value = ([], [])
     config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    nsb_stats = {}
+    proton_stats = {}
 
-    plot_tables._configure_bias_curve_axis(axis, config)
+    plot_tables._configure_bias_curve_axis(axis, config, nsb_stats, proton_stats)
 
     axis.legend.assert_not_called()
     mock_logger.warning.assert_called_once_with(
         "No NSB or proton rates found; writing empty bias-curve plot"
     )
+
+
+@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
+@mock.patch("simtools.visualization.plot_tables.plt")
+def test_plot_bias_curves_with_trigger_threshold(
+    mock_plt,
+    mock_plot_nsb_curve,
+    mock_plot_proton_curve,
+    mock_plot_scaled_proton_curve,
+    mock_configure_axis,
+    tmp_path,
+):
+    """Test that trigger threshold vertical line is added."""
+    mock_fig = mock.MagicMock()
+    mock_axis = mock.MagicMock()
+    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+    mock_axis.axvline.return_value = mock.MagicMock()
+
+    output_path = tmp_path / "bias.png"
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    trigger_threshold = 250.0
+    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
+    proton_stats = {220: {"rate_hz": 5}}
+
+    plot_tables.plot_bias_curves(
+        nsb_stats,
+        proton_stats,
+        config,
+        output_path,
+        trigger_threshold,
+    )
+
+    mock_axis.axvline.assert_called_once()
+    call_kwargs = mock_axis.axvline.call_args[1]
+    assert call_kwargs["x"] == pytest.approx(trigger_threshold)
+    assert call_kwargs["color"] == "grey"
+    assert call_kwargs["linestyle"] == "--"
+    assert call_kwargs["linewidth"] == pytest.approx(1.5)
+    assert call_kwargs["alpha"] == pytest.approx(0.5)
+
+
+@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
+@mock.patch("simtools.visualization.plot_tables.plt")
+def test_plot_bias_curves_without_trigger_threshold(
+    mock_plt,
+    mock_plot_nsb_curve,
+    mock_plot_proton_curve,
+    mock_plot_scaled_proton_curve,
+    mock_configure_axis,
+    tmp_path,
+):
+    """Test that vertical line is skipped when no trigger threshold is provided."""
+    mock_fig = mock.MagicMock()
+    mock_axis = mock.MagicMock()
+    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+
+    output_path = tmp_path / "bias.png"
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    nsb_stats = {220: {"rate_hz": 10, "error_hz": 1}}
+    proton_stats = {220: {"rate_hz": 5}}
+
+    plot_tables.plot_bias_curves(
+        nsb_stats,
+        proton_stats,
+        config,
+        output_path,
+        trigger_threshold=None,  # No threshold provided
+    )
+
+    mock_axis.axvline.assert_not_called()

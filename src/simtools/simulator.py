@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -63,10 +64,11 @@ class Simulator:
         Extra commands to be added to the run script before the run command.
     """
 
-    def __init__(self, label=None, extra_commands=None):
+    def __init__(self, label=None, extra_commands=None, model_reader=None):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
+        self.model_reader = require_model_reader(model_reader)
 
         self.site = settings.config.args.get("site", None)
         self.model_version = settings.config.args.get("model_version", None)
@@ -153,6 +155,7 @@ class Simulator:
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
                 model_directory_subdir=model_subdir,
+                model_reader=self.model_reader,
             )
             cfg = CorsikaConfig(array_model=model, label=self.label, run_number=self.run_number)
             model.initialize_seeds(cfg.zenith_angle, cfg.azimuth_angle)
@@ -258,6 +261,7 @@ class Simulator:
         """
         base_args = dict(settings.config.args)
         base_db_config = dict(settings.config.db_config)
+        model_reader = settings.config.model_reader
         base_run_number = int(base_args.get("run_number", 1))
 
         events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
@@ -294,12 +298,14 @@ class Simulator:
                     run_args["flasher_photons"] = photons[idx]
 
                 settings.config.load(args=run_args, db_config=base_db_config)
+                settings.config.set_model_reader(model_reader)
 
                 simulator = cls(label=label)
                 simulator.simulate()
                 simulator.validate_simulations()
         finally:
             settings.config.load(args=base_args, db_config=base_db_config)
+            settings.config.set_model_reader(model_reader)
 
     def _get_corsika_file(self):
         """

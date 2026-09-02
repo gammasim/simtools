@@ -9,6 +9,7 @@ import numpy as np
 from astropy.table import QTable
 
 import simtools.utils.general as gen
+from simtools.application.model_reader import require_model_reader
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
@@ -57,6 +58,7 @@ class ArrayLayout:
         telescope_list_file=None,
         telescope_list_metadata_file=None,
         validate=False,
+        model_reader=None,
     ):
         """Initialize ArrayLayout."""
         self._logger = logging.getLogger(__name__)
@@ -65,6 +67,7 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
+        self.model_reader = require_model_reader(model_reader)
         self.site_model = None
         self.io_handler = io_handler.IOHandler()
         self.geo_coordinates = GeoCoordinates()
@@ -90,12 +93,14 @@ class ArrayLayout:
 
     def _initialize_site_parameters_from_db(self):
         """Initialize site parameters required for transformations using the database."""
-        self._logger.debug("Initialize parameters from DB")
+        self._logger.debug("Initialize parameters from the selected model source")
 
         try:
-            self.site_model = SiteModel(site=self.site, model_version=self.model_version)
+            self.site_model = SiteModel(
+                site=self.site, model_version=self.model_version, model_reader=self.model_reader
+            )
         except RuntimeError as e:
-            raise ValueError("No database configuration provided") from e
+            raise ValueError("No simulation model source configured") from e
         self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
             "corsika_observation_level", None
         )

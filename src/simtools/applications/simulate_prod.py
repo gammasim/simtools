@@ -282,7 +282,9 @@ def main():
         _execute_job_grid(app_context.args)
         return
 
-    simulator = Simulator(label=app_context.args.get("label"))
+    simulator = Simulator(
+        label=app_context.args.get("label"), model_reader=app_context.model_reader
+    )
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:
