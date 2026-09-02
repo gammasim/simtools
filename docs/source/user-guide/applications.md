@@ -106,6 +106,7 @@ simtools-plot-simulated-event-distributions <applications/simtools-plot-simulate
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-monte-carlo-statistics <applications/simtools-production-derive-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
+simtools-production-select-files <applications/simtools-production-select-files>
 simtools-resources-test-generate <applications/simtools-resources-test-generate>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
@@ -120,5 +121,6 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-write-production-metadata <applications/simtools-write-production-metadata>
 simtools-write-reduced-event-lists <applications/simtools-write-reduced-event-lists>
 simtools-write-trigger-histograms <applications/simtools-write-trigger-histograms>
