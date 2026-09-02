@@ -18,6 +18,15 @@ class MongoDBModelSource:
         """Return the configured database name."""
         return self.database_handler.model_source_name
 
+    @property
+    def source_config(self):
+        """Return the serializable source selection for worker processes."""
+        return {"type": "mongodb", "name": self.source_name}
+
+    def is_configured(self):
+        """Return whether the wrapped database handler is configured."""
+        return self.database_handler.is_configured()
+
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
         if collection_name not in self._model_versions:
@@ -37,7 +46,7 @@ class MongoDBModelSource:
 
     def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
         """Read parameter documents by name and version."""
-        key = (tuple(sorted(parameter_versions.items())), collection_name, instrument, site)
+        key = repr((parameter_versions, collection_name, instrument, site))
         if key in self._parameters:
             return deepcopy(self._parameters[key])
         query = {

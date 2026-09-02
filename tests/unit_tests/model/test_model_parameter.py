@@ -647,7 +647,7 @@ def test_overwrite_model_parameter_with_parameter_version(
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock get_model_parameter to return parameter dict
-    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=num_gains_dict)
+    mocker.patch.object(tel_model.model_reader, "get_model_parameter", return_value=num_gains_dict)
 
     # Call with only parameter_version (no value)
     tel_model.overwrite_model_parameter("num_gains", value=None, parameter_version="2.0.0")
@@ -701,7 +701,7 @@ def test_export_model_files_removes_added_parameter_files_from_export(
     telescope_model_lst, mocker, tmp_test_directory
 ):
     tel_model = copy.deepcopy(telescope_model_lst)
-    export_spy = mocker.patch.object(tel_model.db, "export_model_files")
+    export_spy = mocker.patch.object(tel_model.model_reader, "export_model_files")
     tel_model._added_parameter_files = ["num_gains"]
 
     tel_model.export_model_files(destination_path=tmp_test_directory, update_if_necessary=False)
@@ -940,7 +940,7 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
 
 def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
-    model_parameter.db = mocker.Mock()
+    model_parameter.model_reader = mocker.Mock()
     expected = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],

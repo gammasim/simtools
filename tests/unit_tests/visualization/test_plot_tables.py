@@ -33,7 +33,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     plot_tables.plot(config, output_file)
 
-    mock_read_table_data.assert_called_once_with(config, None)
+    mock_read_table_data.assert_called_once_with(config, None, model_reader=None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
 
@@ -99,9 +99,7 @@ def test_read_simtel_table_data_from_file_without_parameter_raises():
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_file(
-    mock_db_handler_class,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -130,9 +128,7 @@ def test_read_table_data_from_file(
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_model_database(
-    mock_db_handler_class,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -149,22 +145,22 @@ def test_read_table_data_from_model_database(
             }
         ]
     }
-    mock_db_handler = mock_db_handler_class.return_value
+    model_reader = mock.MagicMock()
     mock_table = mock.MagicMock()
-    mock_db_handler.export_model_file.return_value = mock_table
+    model_reader.export_model_file.return_value = mock_table
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
-    result = plot_tables.read_table_data(config)
+    result = plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler_class.assert_called_once_with()
-    mock_db_handler.export_model_file.assert_called_once_with(
+    model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
         array_element_name="test_telescope",
         parameter_version=None,
         model_version="test_version",
         export_file_as_table=True,
+        dest=mock.ANY,
     )
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
     assert result == {"test_table": mock_structure_array}
@@ -177,38 +173,36 @@ def test_read_table_data_no_table_data_defined():
         plot_tables.read_table_data(config)
 
 
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
-def test_export_model_file(mock_db_handler_class):
+def test_export_model_file():
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
-    mock_db_handler = mock_db_handler_class.return_value
+    model_reader = mock.MagicMock()
     mock_table = mock.MagicMock()
-    mock_db_handler.export_model_file.return_value = mock_table
+    model_reader.export_model_file.return_value = mock_table
 
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config)
+    plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler_class.assert_called_once_with()
-    mock_db_handler.export_model_file.assert_called_once_with(
+    model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
         array_element_name="test_telescope",
         parameter_version=None,
         model_version="test_version",
         export_file_as_table=True,
+        dest=mock.ANY,
     )
 
 
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
-def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_directory):
+def test_export_model_file_with_db_export_path(tmp_test_directory):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
@@ -216,21 +210,19 @@ def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_d
         "parameter": "test_parameter",
         "db_export_path": str(tmp_test_directory / "test_plot_tables"),
     }
-    mock_db_handler = mock_db_handler_class.return_value
-    mock_db_handler.io_handler.output_path.get.return_value = "output/default"
-    mock_db_handler.export_model_file.return_value = mock.MagicMock()
+    model_reader = mock.MagicMock()
+    model_reader.export_model_file.return_value = mock.MagicMock()
 
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config)
+    plot_tables.read_table_data(config, model_reader=model_reader)
 
-    mock_db_handler.io_handler.set_paths.assert_any_call(
-        output_path=str(tmp_test_directory / "test_plot_tables")
+    assert model_reader.export_model_file.call_args.kwargs["dest"] == str(
+        tmp_test_directory / "test_plot_tables"
     )
-    mock_db_handler.io_handler.set_paths.assert_any_call(output_path="output/default")
 
 
 def test_read_table_and_normalize(tmp_test_directory):
