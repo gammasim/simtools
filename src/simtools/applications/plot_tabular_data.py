@@ -70,6 +70,7 @@ def main():
         config=plot_config["plot"],
         output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
         data_path=app_context.args.get("table_data_path"),
+        model_reader=app_context.model_reader,
     )
 
     MetadataCollector.dump(

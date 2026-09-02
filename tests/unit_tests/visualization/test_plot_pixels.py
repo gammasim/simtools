@@ -20,10 +20,7 @@ from simtools.visualization import plot_pixels
 )
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_file")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-@mock.patch("simtools.visualization.plot_pixels.db_handler.DatabaseHandler")
-def test_plot_rotate_angle_kwarg(
-    mock_db_handler, mock_save, mock_plot_layout, rotate_angle, expected_extra_kwargs
-):
+def test_plot_rotate_angle_kwarg(mock_save, mock_plot_layout, rotate_angle, expected_extra_kwargs):
     config = {
         "parameter": "pixel_layout",
         "site": "North",
@@ -35,8 +32,7 @@ def test_plot_rotate_angle_kwarg(
     if rotate_angle is not None:
         config["rotate_angle"] = rotate_angle
 
-    mock_db_instance = mock.MagicMock()
-    mock_db_handler.return_value = mock_db_instance
+    model_reader = mock.MagicMock()
     mock_fig = mock.MagicMock()
     mock_plot_layout.return_value = mock_fig
 
@@ -45,7 +41,7 @@ def test_plot_rotate_angle_kwarg(
         mock_io.return_value = mock_io_instance
         mock_io_instance.get_output_directory.return_value = Path("/test/path")
 
-        plot_pixels.plot(config, "test.png")
+        plot_pixels.plot(config, "test.png", model_reader=model_reader)
 
         expected_path = Path("/test/path/test.dat")
         mock_plot_layout.assert_called_once_with(

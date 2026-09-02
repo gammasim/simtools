@@ -9,13 +9,15 @@ from simtools.testing.output_validation import model_parameters
 
 
 def test_validate_model_parameter_reports_mismatch(tmp_test_directory, mocker):
-    """Report when a generated parameter differs from its database value."""
+    """Report when a generated parameter differs from its model reference."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": [1.0, 2.0]}), encoding="utf-8")
-    database = mocker.patch.object(model_parameters.db_handler, "DatabaseHandler")
-    database.return_value.get_model_parameter.return_value = {"parameter": {"value": [1.0, 3.0]}}
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader.return_value.get_model_parameter.return_value = {
+        "parameter": {"value": [1.0, 3.0]}
+    }
 
-    with pytest.raises(AssertionError, match="differs from the database"):
+    with pytest.raises(AssertionError, match="differs from the model reference"):
         model_parameters.validate(
             output,
             {"reference_parameter_name": "parameter", "tolerance": 1.0e-5},
@@ -27,7 +29,7 @@ def test_validate_model_parameter_reports_mismatch(tmp_test_directory, mocker):
             },
         )
 
-    database.return_value.get_model_parameter.assert_called_once_with(
+    model_reader.return_value.get_model_parameter.assert_called_once_with(
         parameter="parameter",
         site="North",
         array_element_name="LSTN-01",
@@ -37,11 +39,13 @@ def test_validate_model_parameter_reports_mismatch(tmp_test_directory, mocker):
 
 
 def test_validate_model_parameter_applies_scaling(tmp_test_directory, mocker):
-    """Compare a generated parameter with a scaled database value."""
+    """Compare a generated parameter with a scaled model reference."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": [1.0, 2.0]}), encoding="utf-8")
-    database = mocker.patch.object(model_parameters.db_handler, "DatabaseHandler")
-    database.return_value.get_model_parameter.return_value = {"parameter": {"value": [2.0, 4.0]}}
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader.return_value.get_model_parameter.return_value = {
+        "parameter": {"value": [2.0, 4.0]}
+    }
 
     model_parameters.validate(
         output,
@@ -50,12 +54,30 @@ def test_validate_model_parameter_applies_scaling(tmp_test_directory, mocker):
     )
 
 
+def test_validate_model_parameter_reuses_explicit_reader(tmp_test_directory, mocker):
+    """Use the reader selected by the validation runner instead of creating another one."""
+    output = Path(tmp_test_directory) / "parameter.json"
+    output.write_text(json.dumps({"value": 1.0}), encoding="utf-8")
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {"parameter": {"value": 1.0}}
+    create_reader = mocker.patch.object(model_parameters, "create_model_reader")
+
+    model_parameters.validate(
+        output,
+        {"reference_parameter_name": "parameter", "tolerance": 1.0e-5},
+        {},
+        model_reader=model_reader,
+    )
+
+    create_reader.assert_not_called()
+
+
 def test_validate_model_parameter_rejects_unscalable_value(tmp_test_directory, mocker):
     """Report when a generated value cannot be scaled numerically."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": {"invalid": 1}}), encoding="utf-8")
-    database = mocker.patch.object(model_parameters.db_handler, "DatabaseHandler")
-    database.return_value.get_model_parameter.return_value = {"parameter": {"value": 2.0}}
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader.return_value.get_model_parameter.return_value = {"parameter": {"value": 2.0}}
 
     with pytest.raises(AssertionError, match="cannot be scaled"):
         model_parameters.validate(
