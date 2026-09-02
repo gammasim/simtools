@@ -110,3 +110,16 @@ def test_runner_skips_when_top_level_versions_do_not_match(mocker):
     )
 
     dispatch.assert_not_called()
+
+
+def test_runner_skips_configuration_without_application_configuration(mocker):
+    """Skip auto-generated tests that run the application without a configuration."""
+    dispatch = mocker.patch("simtools.testing.output_validation.runner.run_validator")
+
+    runner.validate_application_output(
+        {"application": "simtools-validate-optics", "test_name": "auto-no_config"},
+        from_command_line="7.0.0",
+        from_config_file="7.0.0",
+    )
+
+    dispatch.assert_not_called()

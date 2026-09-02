@@ -28,14 +28,17 @@ def validate_application_output(
     """
     if not versions_match(from_command_line, from_config_file):
         return
+    configuration = config.get("configuration")
+    if configuration is None:
+        return
     active_versions = from_command_line or from_config_file
     context = {
-        "configuration": config["configuration"],
+        "configuration": configuration,
         "model_reader": model_reader,
     }
     for integration_test in config.get("integration_tests", []):
         for descriptor in integration_test.get("test_outputs", []):
-            _validate_descriptor(descriptor, config["configuration"], active_versions, context)
+            _validate_descriptor(descriptor, configuration, active_versions, context)
 
 
 def _validate_descriptor(descriptor, configuration, active_versions, context):
