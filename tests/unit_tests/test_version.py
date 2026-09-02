@@ -217,6 +217,45 @@ def test_base_version_for_patch_delta(version_string, expected):
     assert version.base_version_for_patch_delta(version_string) == expected
 
 
+@pytest.mark.parametrize(
+    "version_string",
+    [
+        "v0.17.0",
+        "v1.2.3-rc1",
+        "v1.2.3-1a",
+        "v1.2.3+build.4",
+        "v7.8010",
+        "v2025-11-30-rc",
+    ],
+)
+def test_validate_release_tag(version_string):
+    assert version.is_valid_release_tag(version_string)
+    assert version.validate_release_tag(version_string) == version_string
+
+
+@pytest.mark.parametrize(
+    "version_string",
+    ["0.17.0", "vv0.17.0", "v", "latest", "v1oops", "v1.2.", "v1..2"],
+)
+def test_validate_release_tag_rejects_non_tags(version_string):
+    assert not version.is_valid_release_tag(version_string)
+    with pytest.raises(ValueError, match="v-prefixed semantic version"):
+        version.validate_release_tag(version_string)
+
+
+@pytest.mark.parametrize(
+    ("validator", "valid", "invalid"),
+    [
+        (version.is_valid_model_version, "0.16.0", "v0.16.0"),
+        (version.is_valid_package_version, "2.71", "v2.71"),
+        (version.is_valid_revision, "a" * 40, "a" * 39),
+    ],
+)
+def test_narrow_version_validators(validator, valid, invalid):
+    assert validator(valid)
+    assert not validator(invalid)
+
+
 def test_check_version_constraint():
     assert version.check_version_constraint("6.0.2", ">=6.0.0")
     assert version.check_version_constraint("6.0.2", "<=6.0.2")

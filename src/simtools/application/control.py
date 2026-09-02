@@ -299,10 +299,10 @@ def _version_info(args_dict, io_handler_instance, logger):
 
     logger.info(
         f"simtools: {version.__version__} "
-        f"DB: {dependencies.get_database_version_or_name(version=False)} "
-        f"{dependencies.get_database_version_or_name(version=True)} "
-        f"CORSIKA: {build_options.get('corsika_version')} "
-        f"sim_telarray: {build_options.get('simtel_version')}"
+        f"DB: {dependencies.get_database_tag_or_name(tag=False)} "
+        f"{dependencies.get_database_tag_or_name()} "
+        f"CORSIKA: {build_options.get('corsika_build_id')} "
+        f"sim_telarray: {build_options.get('simtel_tag')}"
     )
     logger.debug(f"Build options:\n {build_options}")
 

@@ -630,7 +630,6 @@ class ArrayLayout:
             "unit": "m",
             "type": "float64",
             "file": False,
-            "meta_parameter": False,
             "model_parameter_schema_version": "0.1.0",
         }
 

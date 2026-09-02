@@ -29,3 +29,4 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: random_mono_prob
+    meta_parameter_mode: add

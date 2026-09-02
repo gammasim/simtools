@@ -37,3 +37,4 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: dsum_shaping_file
+    meta_parameter_mode: add

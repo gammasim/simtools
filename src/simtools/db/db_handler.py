@@ -8,9 +8,9 @@ from pathlib import Path
 from simtools import settings
 from simtools.data_model import validate_data
 from simtools.db import parameter_exporter
-from simtools.db.file_system_model import FileSystemModelHandler
-from simtools.db.mongo_db import MongoDBHandler
+from simtools.db.mongo_db import MongoDBHandler, _resolve_model_tag
 from simtools.io import io_handler
+from simtools.model_repository.reader import FileSystemModelSource
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
@@ -25,25 +25,25 @@ class DatabaseHandler:
 
     Note the two types of version variables used in this class:
 
-    - db_simulation_model_version (from db_config): version of the simulation model database
+    - db_simulation_model_tag (from db_config): release tag of the simulation model database
     - model_version (from production_tables): version of the model contained in the database
     """
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
-    production_table_cached = {}
     model_parameters_cached = {}
-    model_versions_cached = {}
 
     def __init__(self):
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
+        self.production_table_cached = {}
+        self.model_versions_cached = {}
         self.io_handler = io_handler.IOHandler()
         simulation_models_path = settings.config.args.get("simulation_models_path")
         if not isinstance(simulation_models_path, str | Path):
             simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
         self.file_system_handler = (
-            FileSystemModelHandler(simulation_models_path) if simulation_models_path else None
+            FileSystemModelSource(simulation_models_path) if simulation_models_path else None
         )
 
         if self.file_system_handler:
@@ -59,7 +59,7 @@ class DatabaseHandler:
 
         self.db_name = (
             MongoDBHandler.get_db_name(
-                db_simulation_model_version=self.db_config.get("db_simulation_model_version"),
+                db_simulation_model_tag=self.db_config.get("db_simulation_model_tag"),
                 model_name=self.db_config.get("db_simulation_model"),
             )
             if self.db_config and not self.file_system_handler
@@ -90,16 +90,25 @@ class DatabaseHandler:
             raise RuntimeError(f"{operation} requires a MongoDB model source.")
         return self.mongo_db_handler
 
-    def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
+    def get_db_name(
+        self,
+        db_name=None,
+        db_simulation_model_tag=None,
+        model_name=None,
+        db_simulation_model_version=None,
+    ):
         """Build DB name from configuration."""
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         if db_name:
             return db_name
-        if db_simulation_model_version and model_name:
+        if db_simulation_model_tag and model_name:
             return MongoDBHandler.get_db_name(
-                db_simulation_model_version=db_simulation_model_version,
+                db_simulation_model_tag=db_simulation_model_tag,
                 model_name=model_name,
             )
-        if not (db_simulation_model_version or model_name):
+        if not (db_simulation_model_tag or model_name):
             return self.db_name
         return None
 
@@ -128,7 +137,11 @@ class DatabaseHandler:
         return bool(self.mongo_db_handler and self.mongo_db_handler.is_remote_database())
 
     def generate_compound_indexes_for_databases(
-        self, db_name, db_simulation_model, db_simulation_model_version
+        self,
+        db_name,
+        db_simulation_model,
+        db_simulation_model_tag=None,
+        db_simulation_model_version=None,
     ):
         """
         Generate compound indexes for several databases.
@@ -139,11 +152,14 @@ class DatabaseHandler:
             Name of the database.
         db_simulation_model: str
             Name of the simulation model.
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
         """
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         self.require_mongodb("Generating database indexes").generate_compound_indexes_for_databases(
-            db_name, db_simulation_model, db_simulation_model_version
+            db_name, db_simulation_model, db_simulation_model_tag
         )
 
     def get_model_parameter(
@@ -443,7 +459,7 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        # 'xSTX-design' is a placeholder to ignore 'instrument' field in query.
+        # 'xSTx-design' is a placeholder to ignore 'instrument' field in query.
         if array_element_name and array_element_name != "xSTx-design":
             query_dict["instrument"] = array_element_name
         if site:
@@ -505,10 +521,9 @@ class DatabaseHandler:
         )
         if self.file_system_handler:
             return self.file_system_handler.read_production_table(collection_name, model_version)
+        cache_key = self._cache_key(None, None, model_version, collection_name)
         try:
-            return DatabaseHandler.production_table_cached[
-                self._cache_key(None, None, model_version, collection_name)
-            ]
+            return self.production_table_cached[cache_key]
         except KeyError:
             pass
 
@@ -517,13 +532,15 @@ class DatabaseHandler:
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
-        return {
+        production_table = {
             "collection": post["collection"],
             "model_version": post["model_version"],
             "parameters": post["parameters"],
             "design_model": post.get("design_model", {}),
             "entry_date": self.mongo_db_handler.get_entry_date_from_document(post),
         }
+        self.production_table_cached[cache_key] = production_table
+        return production_table
 
     def get_model_versions(self, collection_name="telescopes"):
         """
@@ -541,12 +558,12 @@ class DatabaseHandler:
         """
         if self.file_system_handler:
             return self.file_system_handler.get_model_versions()
-        if collection_name not in DatabaseHandler.model_versions_cached:
+        if collection_name not in self.model_versions_cached:
             collection = self.get_collection("production_tables", db_name=self.db_name)
-            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+            self.model_versions_cached[collection_name] = sorted(
                 {post["model_version"] for post in collection.find({"collection": collection_name})}
             )
-        return DatabaseHandler.model_versions_cached[collection_name]
+        return list(self.model_versions_cached[collection_name])
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -738,8 +755,8 @@ class DatabaseHandler:
         self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
         mongo_db_handler = self.require_mongodb("Adding a production table")
         mongo_db_handler.insert_one(production_table, "production_tables", db_name or self.db_name)
-        DatabaseHandler.production_table_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.production_table_cached.clear()
+        self.model_versions_cached.clear()
 
     def add_new_parameter(
         self,
@@ -877,7 +894,7 @@ class DatabaseHandler:
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.model_versions_cached.clear()
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """

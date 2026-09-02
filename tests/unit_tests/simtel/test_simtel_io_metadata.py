@@ -44,7 +44,11 @@ def test_read_sim_telarray_metadata(mocker):
     eventio_file = mocker.patch.object(simtel_io_metadata, "EventIOFile")
     eventio_file.return_value.__enter__.return_value = [
         _FakeHistoryMeta(
-            {b"*Latitude": b" 28.0 ", b"Array_Config_Name": b" CTAO-North-Alpha "},
+            {
+                b"*Latitude": b" 28.0 ",
+                b"Array_Config_Name": b" CTAO-North-Alpha ",
+                b"simtools_simtel_version": b"v2025-11-30-rc",
+            },
             -1,
         ),
         _FakeHistoryMeta(
@@ -73,6 +77,54 @@ def test_read_sim_telarray_metadata(mocker):
 
     assert (float)(global_meta["latitude"]) > 0.0
     assert global_meta["array_config_name"] == "CTAO-North-Alpha"
+    assert global_meta["simtools_simtel_tag"] == "v2025-11-30-rc"
+    assert "simtools_simtel_version" not in global_meta
+
+
+def test_normalize_sim_telarray_metadata_maps_legacy_names():
+    metadata = {
+        "simtools_corsika_config_version": "v0.1.0",
+        "simtools_corsika_opt_patch_version": "v1.1.0",
+        "simtools_corsika_version": "78010",
+        "simtools_hessio_version": "v2025-12-01-rc",
+        "simtools_simtel_version": "v2025-11-30-rc",
+        "simtools_stdtools_version": "v2025-06-16-rc",
+        "custom_metadata": "preserved",
+    }
+
+    normalized = simtel_io_metadata.normalize_sim_telarray_metadata(metadata)
+
+    assert normalized == {
+        "simtools_corsika_config_tag": "v0.1.0",
+        "simtools_corsika_opt_patch_tag": "v1.1.0",
+        "simtools_corsika_build_id": "78010",
+        "simtools_hessio_tag": "v2025-12-01-rc",
+        "simtools_simtel_tag": "v2025-11-30-rc",
+        "simtools_stdtools_tag": "v2025-06-16-rc",
+        "custom_metadata": "preserved",
+    }
+
+
+def test_normalize_sim_telarray_metadata_resolves_corsika_source_tag():
+    normalized = simtel_io_metadata.normalize_sim_telarray_metadata(
+        {"simtools_corsika_version": "78010"},
+        dependency_catalog={"corsika": [{"tag": "v7.8010"}]},
+    )
+
+    assert normalized == {
+        "simtools_corsika_build_id": "78010",
+        "simtools_corsika_source_tag": "v7.8010",
+    }
+
+
+def test_normalize_sim_telarray_metadata_rejects_conflicting_aliases():
+    with pytest.raises(ValueError, match="Conflicting sim_telarray metadata values"):
+        simtel_io_metadata.normalize_sim_telarray_metadata(
+            {
+                "simtools_simtel_version": "v2025-11-30-rc",
+                "simtools_simtel_tag": "v2025-12-01-rc",
+            }
+        )
 
 
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)

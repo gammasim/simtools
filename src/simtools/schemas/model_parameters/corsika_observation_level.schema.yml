@@ -31,3 +31,4 @@ simulation_software:
     internal_parameter_name: OBSLEV
   - name: sim_telarray
     internal_parameter_name: altitude
+    meta_parameter_mode: add

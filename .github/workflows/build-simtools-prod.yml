@@ -104,7 +104,7 @@ jobs:
           echo "simtools_git_revision=${simtools_git_revision}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
@@ -120,7 +120,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
@@ -154,8 +154,8 @@ jobs:
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
-          cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+          cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
+          cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
 
   test-simtools-prod:
     permissions:

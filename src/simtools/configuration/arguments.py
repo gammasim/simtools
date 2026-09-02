@@ -24,6 +24,7 @@ class ArgumentDefinition:
     exclusive_group: str | None
     exclusive_group_required: bool
     preserve_by_version: bool
+    aliases: tuple[str, ...]
     kwargs: Mapping
 
     def __init__(
@@ -34,15 +35,19 @@ class ArgumentDefinition:
         exclusive_group=None,
         exclusive_group_required=False,
         preserve_by_version=False,
+        aliases=(),
         **kwargs,
     ):
         if not name or name.startswith("-"):
             raise ValueError(f"Invalid argument name: {name!r}")
+        if any(not alias or alias.startswith("-") for alias in aliases):
+            raise ValueError(f"Invalid argument aliases: {aliases!r}")
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "group", group)
         object.__setattr__(self, "exclusive_group", exclusive_group)
         object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
         object.__setattr__(self, "preserve_by_version", preserve_by_version)
+        object.__setattr__(self, "aliases", tuple(aliases))
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
@@ -53,6 +58,7 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=self.exclusive_group_required,
             preserve_by_version=self.preserve_by_version,
+            aliases=self.aliases,
             **{**self.kwargs, **overrides},
         )
 
@@ -67,6 +73,7 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=False,
             preserve_by_version=self.preserve_by_version,
+            aliases=self.aliases,
             **kwargs,
         )
 
@@ -297,6 +304,14 @@ FIGURE_FORMAT = _argument(
     default=["png"],
 )
 
+FIGURE_DPI = _argument(
+    "figure_dpi",
+    "execution",
+    help="PNG figure resolution in DPI",
+    type=int,
+    default=300,
+)
+
 EXPORT_BUILD_INFO = _argument(
     "export_build_info",
     "execution",
@@ -336,6 +351,7 @@ EXECUTION_ARGUMENTS = (
     LOG_FILE_PATH,
     DISABLE_LOG_FILE,
     FIGURE_FORMAT,
+    FIGURE_DPI,
     EXPORT_BUILD_INFO,
     IGNORE_EXISTING_PARAMETER_VERSION,
     VERSION,
@@ -438,11 +454,15 @@ DB_SIMULATION_MODEL = _argument(
     type=str.strip,
 )
 
-DB_SIMULATION_MODEL_VERSION = _argument(
-    "db_simulation_model_version",
+DB_SIMULATION_MODEL_TAG = _argument(
+    "db_simulation_model_tag",
     _DATABASE_CONFIGURATION_GROUP,
-    help="Simulation-model database version.",
+    help=(
+        "Simulation-model repository/database release tag (for example, v0.17.0). "
+        "--db_simulation_model_version remains a deprecated alias."
+    ),
     type=str.strip,
+    aliases=("db_simulation_model_version",),
 )
 
 DATABASE_ARGUMENTS = (
@@ -453,7 +473,7 @@ DATABASE_ARGUMENTS = (
     DB_SERVER,
     DB_API_AUTHENTICATION_DATABASE,
     DB_SIMULATION_MODEL,
-    DB_SIMULATION_MODEL_VERSION,
+    DB_SIMULATION_MODEL_TAG,
 )
 
 MODEL_VERSION = _argument(

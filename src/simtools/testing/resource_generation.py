@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import shutil
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -68,6 +69,30 @@ def get_resource_generation_directory(test_directory, simtools_version):
     if not config_dir.is_dir():
         raise FileNotFoundError(f"Resource-generation directory does not exist: {config_dir}")
     return config_dir
+
+
+def initialize_test_resources(test_directory, simtools_version, template_version):
+    """Create a release-specific resource directory from an existing version.
+
+    Only workflow inputs are copied. Generated, downloaded, and log files are
+    deliberately left out so the new release gets a clean resource set.
+    """
+    target_dir = get_integration_test_directory(test_directory, simtools_version)
+    template_dir = get_integration_test_directory(test_directory, template_version)
+    if target_dir.exists():
+        raise FileExistsError(f"Target integration-test directory already exists: {target_dir}")
+    if not template_dir.is_dir():
+        raise FileNotFoundError(
+            f"Template integration-test directory does not exist: {template_dir}"
+        )
+
+    target_dir.mkdir(parents=True)
+    shutil.copytree(template_dir / "config_files", target_dir / "config_files")
+    shutil.copytree(template_dir / "static", target_dir / "static")
+    runtime_file = template_dir / "run_time.yml"
+    if runtime_file.is_file():
+        shutil.copy2(runtime_file, target_dir / runtime_file.name)
+    return target_dir
 
 
 def run_configured_applications(args_dict, config_dir, log_dir, run_time, replacements):
@@ -349,9 +374,11 @@ def generate_test_resources(args_dict, run_time=None):
     """
     test_directory = Path(args_dict["test_directory"])
     simtools_version = args_dict["simtools_version"]
-    integration_test_dir = get_integration_test_directory(
-        args_dict["test_directory"], args_dict["simtools_version"]
-    )
+    integration_test_dir = get_integration_test_directory(test_directory, simtools_version)
+
+    template_version = args_dict.get("template_version")
+    if template_version and not integration_test_dir.exists():
+        initialize_test_resources(test_directory, simtools_version, template_version)
     if args_dict.get("test_static_files"):
         validate_static_files(integration_test_dir / "static" / STATIC_MANIFEST)
         return

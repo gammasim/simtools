@@ -164,6 +164,7 @@ def accumulate_histograms_by_telescope_config(
     skip_invalid_event_data_files=False,
     fill_efficiency_histogram=False,
     collect_trigger_topology=False,
+    minimum_triggered_telescopes=2,
 ):
     """
     Read one production once and accumulate histograms for all telescope configurations.
@@ -186,6 +187,8 @@ def accumulate_histograms_by_telescope_config(
         Skip malformed event-data files instead of aborting the run.
     fill_efficiency_histogram : bool, optional
         Whether to finalize with efficiency histograms enabled.
+    minimum_triggered_telescopes : int, optional
+        Minimum number of triggered telescopes within each telescope configuration.
 
     Returns
     -------
@@ -226,6 +229,7 @@ def accumulate_histograms_by_telescope_config(
                     triggered_data,
                     triggered_shower,
                     telescope_list=config["telescope_ids"],
+                    minimum_triggered_telescopes=minimum_triggered_telescopes,
                 )
             else:
                 filtered_triggered_data = triggered_data

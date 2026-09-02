@@ -83,6 +83,7 @@ def test_accumulate_histograms_by_telescope_config_accumulates_and_finalizes(moc
         "triggered_data",
         "triggered_shower",
         telescope_list=["LSTN-01"],
+        minimum_triggered_telescopes=2,
     )
     accumulator.accumulate.assert_called_once_with(
         "file_info", "shower", "filtered_shower", "filtered_data"

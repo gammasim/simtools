@@ -100,3 +100,32 @@ def test_fiducial_radius_from_shape():
     # Test for invalid shape
     with pytest.raises(ValueError, match=r"Unknown shape value 4\. Valid values are:"):
         transf.fiducial_radius_from_shape(10.0, 4)
+
+
+@pytest.mark.parametrize(
+    ("geographic_az", "expected_corsika_az"),
+    [
+        (0.0, 180.0),
+        (90.0, 90.0),
+        (180.0, 0.0),
+        (270.0, 270.0),
+        (360.0, 180.0),
+        (450.0, 90.0),
+        (-180.0, 0.0),
+        (45.7, 134.3),
+        (135.3, 44.7),
+        (225.5, 314.5),
+        (315.8, 224.2),
+    ],
+)
+def test_geographic_to_corsika_azimuth(geographic_az, expected_corsika_az):
+    """geographic_to_corsika_azimuth converts geographic azimuth to CORSIKA azimuth."""
+    assert transf.geographic_to_corsika_azimuth(geographic_az) == pytest.approx(expected_corsika_az)
+
+
+def test_geographic_to_corsika_azimuth_is_self_inverse():
+    """Applying the conversion twice must return the original value (modulo 360)."""
+    for az in [0.0, 45.0, 90.0, 135.0, 180.0, 270.0, 315.0]:
+        assert transf.geographic_to_corsika_azimuth(
+            transf.geographic_to_corsika_azimuth(az)
+        ) % 360 == pytest.approx(az % 360)

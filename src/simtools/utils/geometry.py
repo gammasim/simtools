@@ -186,6 +186,37 @@ def project_ground_to_corsika_shower_coordinates(
     return x_s, y_s, z_s
 
 
+def geographic_to_corsika_azimuth(az_deg):
+    """Convert geographic arrival azimuth to CORSIKA propagation azimuth.
+
+    The input is an astronomical/geographic azimuth: the direction from which
+    the primary arrives, measured clockwise from geographic North toward East.
+
+    CORSIKA phi describes the direction toward which the primary propagates
+    and increases from North toward West. The conversion therefore consists of:
+
+    1. Negating the angle because the two azimuth conventions increase in
+       opposite directions.
+    2. Adding 180 degrees to convert an arrival direction into the opposite
+       propagation direction.
+
+    No geomagnetic-field alignment correction is applied here.
+
+    Parameters
+    ----------
+    az_deg : float
+        Geographic arrival azimuth in degrees, measured clockwise from
+        geographic North toward East.
+
+    Returns
+    -------
+    float
+        CORSIKA propagation azimuth in degrees, before geomagnetic-field
+        alignment correction.
+    """
+    return (-az_deg + 180.0) % 360.0
+
+
 def fiducial_radius_from_shape(width, shape):
     """
     Calculate minimum radius including different geometrical shapes.

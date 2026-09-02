@@ -106,6 +106,37 @@ def test_telescope_filtering(mock_hdf5_file):
         assert "LSTN-03" in tel_list
 
 
+def test_telescope_filtering_requires_minimum_layout_multiplicity(mock_hdf5_file):
+    reader = EventDataReader(mock_hdf5_file)
+    _, _, triggered_shower, triggered_data = reader.read_event_data(mock_hdf5_file)
+    triggered_data.telescope_list = [
+        ["LSTN-01", "LSTN-02"],
+        ["LSTN-01", "MSTN-01"],
+    ]
+
+    filtered_data, _ = reader.filter_by_telescopes(
+        triggered_data,
+        triggered_shower,
+        telescope_list=["LSTN-01", "LSTN-02"],
+        minimum_triggered_telescopes=2,
+    )
+
+    assert filtered_data.telescope_list == [["LSTN-01", "LSTN-02"]]
+
+
+def test_telescope_filtering_rejects_zero_minimum(mock_hdf5_file):
+    reader = EventDataReader(mock_hdf5_file)
+    _, _, triggered_shower, triggered_data = reader.read_event_data(mock_hdf5_file)
+
+    with pytest.raises(ValueError, match="must be at least 1"):
+        reader.filter_by_telescopes(
+            triggered_data,
+            triggered_shower,
+            telescope_list=["LSTN-01"],
+            minimum_triggered_telescopes=0,
+        )
+
+
 def test_shower_coordinate_transformation(mock_hdf5_file):
     reader = EventDataReader(mock_hdf5_file)
     _, _, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)

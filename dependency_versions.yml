@@ -1,5 +1,5 @@
 ---
-schema_version: 0.2.0
+schema_version: 0.4.0
 python: "3.14"
 apptainer: "1.5.0"
 cpu-variants:
@@ -19,38 +19,45 @@ base-image:
   runtime-version: 9.8-minimal
   build-version: "9.8"
 corsika-interaction-tables:
-  version: v1.0.0
+  tag: v1.0.0
 model-database:
   name: CTAO-Simulation-Model
-  default-version: v0.17.0
+  default-tag: v0.17.1
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
-  version: v0.36.0
+  tag: v0.38.0
 production-combinations:
-  - corsika: "78010"
+  - corsika: v7.8010
     sim-telarray: v2025-11-30-rc
-  - corsika: "78050"
+  - corsika: v7.8050
     sim-telarray: v2025-11-30-rc
 corsika:
-  - version: "78010"
-    source-ref: v7.8010
+  - tag: v7.8010
     source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-version: v0.1.0
+    source-revision: 6b720388124871f8e07741e40e3446a7375efe78
+    config-tag: v0.1.0
     config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-version: v1.1.0
+    config-revision: 6766beb24abf2c71d413af681b3d77aa4f41548e
+    opt-patch-tag: v1.1.0
     opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
-  - version: "78050"
-    source-ref: v7.8050
+    opt-patch-revision: e481fdf9eaa45c2f1846823f5d3d68ea24cf3a47
+  - tag: v7.8050
     source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-version: v1.0.0
+    source-revision: 509b9ffaf1c1a2d88a4d9eeb298099e764d41b2a
+    config-tag: v1.0.0
     config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-version: v1.2.0
+    config-revision: 47e6d1f35310a9b32ba838f0c247609da2e619b3
+    opt-patch-tag: v1.2.0
     opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+    opt-patch-revision: 8b516bc33f6a364d9e9dade34b183d551babc144
 sim-telarray:
-  - version: v2025-11-30-rc
+  - tag: v2025-11-30-rc
     source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
-    hessio-version: v2025-12-01-rc
+    revision: 6de7bb5ce0d6b309fed959eee4fb071f55c91018
+    hessio-tag: v2025-12-01-rc
     hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
-    stdtools-version: v2025-06-16-rc
+    hessio-revision: b97b807b804aad29ecfeb54a57c54fc7c4fb0820
+    stdtools-tag: v2025-06-16-rc
     stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git
+    stdtools-revision: 9c109a4e2398e30dc014a24cf2b6bc15b61290e7

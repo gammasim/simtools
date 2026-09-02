@@ -28,3 +28,4 @@ source:
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: primary_hole_diameter
+    meta_parameter_mode: add

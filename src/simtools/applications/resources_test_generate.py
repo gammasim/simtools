@@ -21,6 +21,13 @@ _ARGUMENTS = (
         help="Version of simtools to generate resources for.",
     ),
     cli.ArgumentDefinition(
+        "template_version",
+        help=(
+            "Existing simtools-tests version to use as a template when the target "
+            "version does not exist."
+        ),
+    ),
+    cli.ArgumentDefinition(
         "download_only",
         action="store_true",
         help="Only download resources, do not generate new ones.",

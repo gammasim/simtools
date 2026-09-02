@@ -34,6 +34,7 @@ source:
   - Observation execution
 simulation_software:
   - name: sim_telarray
+    meta_parameter_mode: add
 ---
 title: Schema for dsum_threshold model parameter
 schema_version: 0.1.0

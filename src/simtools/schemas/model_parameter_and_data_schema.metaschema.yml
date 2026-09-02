@@ -290,6 +290,13 @@ definitions:
         type: string
         description: |-
           "Naming of parameter as used this simulation software"
+      meta_parameter_mode:
+        type: string
+        enum:
+          - add
+          - set
+        description: |-
+          meta parameter serialization mode
       set_meta_parameter:
         type: boolean
         description: |-

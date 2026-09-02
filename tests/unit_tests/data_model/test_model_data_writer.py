@@ -278,7 +278,6 @@ def test_get_validated_parameter_dict():
         "unit": None,
         "type": "int64",
         "file": False,
-        "meta_parameter": False,
         "model_parameter_schema_version": "0.1.0",
     }
 
@@ -298,7 +297,6 @@ def test_get_validated_parameter_dict():
         "unit": u.Unit("ns"),
         "type": "float64",
         "file": False,
-        "meta_parameter": False,
         "model_parameter_schema_version": "0.1.0",
     }
 
@@ -318,7 +316,6 @@ def test_get_validated_parameter_dict():
         "unit": u.Unit("m"),
         "type": "float64",
         "file": False,
-        "meta_parameter": False,
         "model_parameter_schema_version": "0.1.0",
     }
 

@@ -373,7 +373,7 @@ def test_get_simulation_software_name_from_parameter_name():
         names.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude", software_name=sim_telarray
         )
-        is None  # this is not a sim_telarray parameter
+        == "longitude"
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
@@ -394,18 +394,15 @@ def test_get_simulation_software_name_from_parameter_name():
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "reference_point_longitude",
-            software_name=sim_telarray,
-        )
-        is None
-    )
-    assert (
-        names.get_simulation_software_name_from_parameter_name(
-            "reference_point_longitude",
-            software_name=sim_telarray,
-            set_meta_parameter=True,
+            "reference_point_longitude", software_name=sim_telarray
         )
         == "longitude"
+    )
+    assert (
+        names.get_simulation_software_meta_parameter_mode(
+            "reference_point_longitude", software_name=sim_telarray
+        )
+        == "set"
     )
 
 
