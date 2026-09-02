@@ -7,6 +7,7 @@ from pathlib import Path
 from astropy.table import Table
 from packaging.version import Version
 
+from simtools import settings
 from simtools.io import ascii_handler
 from simtools.model_repository import files
 from simtools.simtel import simtel_table_reader
@@ -91,67 +92,82 @@ class FileSystemModelSource:
     def query_model_parameters(self, query, collection_name):
         """Read parameter files matching an internal source query."""
         parameter_queries = query.get("$or", [query])
-        instrument = query.get("instrument")
-        if not instrument and collection_name == "sites" and query.get("site"):
-            instrument = f"OBS-{query['site']}"
-        if not instrument and collection_name == "configuration_corsika":
-            instrument = "xSTx-design"
-        if not instrument:
-            raise ValueError(
-                f"Filesystem lookup for collection {collection_name} requires an array element name"
+        instrument = self._get_parameter_instrument(query, collection_name)
+        parameters = [
+            parameter
+            for parameter_query in parameter_queries
+            if (
+                parameter := self._read_query_parameter(
+                    parameter_query, query, collection_name, instrument
+                )
             )
-
-        parameters = []
-        for parameter_query in parameter_queries:
-            parameter = parameter_query.get("parameter")
-            parameter_version = parameter_query.get("parameter_version")
-            if not parameter or not parameter_version:
-                continue
-            parameter_path = self._parameter_path(
-                collection_name, instrument, parameter, parameter_version
-            )
-            if not parameter_path.is_file():
-                continue
-            parameter_data = self._read_parameter_file(parameter_path)
-            if self._matches_query(parameter_data, query):
-                parameters.append(parameter_data)
+        ]
         if not parameters:
             raise ValueError(f"No parameters found for {collection_name}: {query}")
         return parameters
 
     def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
         """Read parameter files by name and version."""
-        if not instrument and collection_name == "sites" and site:
-            instrument = f"OBS-{site}"
-        if not instrument and collection_name == "configuration_corsika":
-            instrument = "xSTx-design"
-        if not instrument:
-            raise ValueError(
-                f"Filesystem lookup for collection {collection_name} requires an array element name"
-            )
+        instrument = self._get_parameter_instrument(
+            {"instrument": instrument, "site": site}, collection_name
+        )
 
         parameters = []
         for parameter, parameter_version in parameter_versions.items():
+            parameter_scope = names.get_model_parameter_scope(
+                collection_name, instrument, parameter
+            )
             parameter_path = self._parameter_path(
-                collection_name, instrument, parameter, parameter_version
+                collection_name, parameter_scope, parameter, parameter_version
             )
             if not parameter_path.is_file():
                 continue
             parameter_data = self._read_parameter_file(parameter_path)
-            if self._matches_filters(parameter_data, instrument, site):
+            if self._matches_filters(parameter_data, parameter_scope, site):
                 parameters.append(parameter_data)
         if not parameters:
             raise ValueError(f"No parameters found for {collection_name}: {parameter_versions}")
         return parameters
 
+    @staticmethod
+    def _get_parameter_instrument(query, collection_name):
+        """Resolve the instrument scope used for a parameter lookup."""
+        instrument = query.get("instrument")
+        if instrument:
+            return instrument
+        if collection_name == "sites" and query.get("site"):
+            return f"OBS-{query['site']}"
+        if collection_name in ("configuration_corsika", "configuration_sim_telarray"):
+            return "global"
+        raise ValueError(
+            f"Filesystem lookup for collection {collection_name} requires an array element name"
+        )
+
+    def _read_query_parameter(self, parameter_query, query, collection_name, instrument):
+        """Read one parameter selected by a source query."""
+        parameter = parameter_query.get("parameter")
+        parameter_version = parameter_query.get("parameter_version")
+        if not parameter or not parameter_version:
+            return None
+        parameter_scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+        parameter_path = self._parameter_path(
+            collection_name, parameter_scope, parameter, parameter_version
+        )
+        if not parameter_path.is_file():
+            return None
+        parameter_data = self._read_parameter_file(parameter_path)
+        return (
+            parameter_data
+            if self._matches_filters(parameter_data, parameter_scope, query.get("site"))
+            else None
+        )
+
     def _parameter_path(self, collection_name, instrument, parameter, parameter_version):
         """Return the path for one parameter version."""
-        path = self.model_parameters_path
-        if collection_name in ("configuration_sim_telarray", "configuration_corsika"):
-            path /= collection_name
-        if collection_name != "configuration_corsika":
-            path /= instrument
-        return path / parameter / f"{parameter}-{parameter_version}.json"
+        scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+        return (
+            self.model_parameters_path / scope / parameter / f"{parameter}-{parameter_version}.json"
+        )
 
     def _read_parameter_file(self, parameter_path):
         """Read and cache one parameter JSON file."""
@@ -169,23 +185,18 @@ class FileSystemModelSource:
         return deepcopy(self._parameters[key])
 
     @staticmethod
-    def _matches_query(parameter_data, query):
-        """Return whether parameter metadata matches source query filters."""
-        return FileSystemModelSource._matches_filters(
-            parameter_data, query.get("instrument"), query.get("site")
-        )
-
-    @staticmethod
     def _matches_filters(parameter_data, instrument, site):
         """Return whether parameter metadata matches source filters."""
-        if instrument == "xSTx-design":
+        if instrument == "global":
             instrument = None
         if instrument and parameter_data.get("instrument") != instrument:
             return False
         parameter_sites = parameter_data.get("site")
         if site and isinstance(parameter_sites, list):
             return site in parameter_sites
-        return not site or parameter_sites == site
+        if not site or parameter_sites == site:
+            return True
+        return instrument is None and parameter_sites is None
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Copy referenced model files to a destination directory."""
@@ -346,7 +357,7 @@ class SimulationModelReader:
         if simulation_software == "corsika":
             return self.get_model_parameters(None, None, "configuration_corsika", model_version)
         if simulation_software == "sim_telarray":
-            if not site or not array_element_name:
+            if not site:
                 return {}
             return self.get_model_parameters(
                 site, array_element_name, "configuration_sim_telarray", model_version
@@ -408,15 +419,36 @@ class SimulationModelReader:
     def _get_array_element_list(self, array_element_name, site, production, collection):
         """Return the design and concrete elements represented by a request."""
         if collection == "configuration_corsika":
-            return ["xSTx-design"]
+            return ["global"]
         if collection == "sites":
             return [f"OBS-{site}"]
+        if collection == "configuration_sim_telarray":
+            return self._get_sim_telarray_array_element_list(array_element_name, production)
         if names.is_design_type(array_element_name):
             return [array_element_name]
-        if collection == "configuration_sim_telarray":
+        design = production["design_model"].get(array_element_name)
+        return [element for element in (design, array_element_name) if element]
+
+    def _get_sim_telarray_array_element_list(self, array_element_name, production):
+        """Return global, design, and concrete sim_telarray scopes."""
+        design_model = None
+        if array_element_name not in (None, "global") and not names.is_design_type(
+            array_element_name
+        ):
             source_collection = names.get_collection_name_from_array_element_name(
                 array_element_name
             )
-            production = self.read_production_table(source_collection, production["model_version"])
-        design = production["design_model"].get(array_element_name)
-        return [element for element in (design, array_element_name) if element]
+            telescope_production = self.read_production_table(
+                source_collection, production["model_version"]
+            )
+            design_model = telescope_production["design_model"].get(array_element_name)
+        try:
+            return names.get_sim_telarray_parameter_scopes(
+                array_element_name,
+                design_model,
+                settings.config.args.get("ignore_missing_design_model", False),
+            )
+        except KeyError as exc:
+            raise KeyError(
+                f"Failed to generate array element list for model query for {array_element_name}"
+            ) from exc

@@ -71,7 +71,7 @@ def simulation_models_path(tmp_test_directory):
             "model_version": "1.0.0",
             "production_table_name": "configuration_corsika",
             "parameters": {
-                "xSTx-design": {
+                "global": {
                     "corsika_cherenkov_photon_bunch_size": "1.0.0",
                     "corsika_particle_kinetic_energy_cutoff": "1.0.0",
                     "corsika_starting_grammage": "1.0.2",
@@ -84,7 +84,10 @@ def simulation_models_path(tmp_test_directory):
         {
             "model_version": "1.0.0",
             "production_table_name": "configuration_sim_telarray",
-            "parameters": {"LSTN-design": {"min_photons": "1.0.0"}},
+            "parameters": {
+                "global": {"iobuf_maximum": "1.0.0"},
+                "LSTN-design": {"min_photons": "1.0.0"},
+            },
         },
     )
 
@@ -120,7 +123,7 @@ def simulation_models_path(tmp_test_directory):
     _write_json(
         parameters
         / (
-            "configuration_corsika/corsika_cherenkov_photon_bunch_size/"
+            "global/corsika_cherenkov_photon_bunch_size/"
             "corsika_cherenkov_photon_bunch_size-1.0.0.json"
         ),
         _parameter(
@@ -134,7 +137,7 @@ def simulation_models_path(tmp_test_directory):
     _write_json(
         parameters
         / (
-            "configuration_corsika/corsika_particle_kinetic_energy_cutoff/"
+            "global/corsika_particle_kinetic_energy_cutoff/"
             "corsika_particle_kinetic_energy_cutoff-1.0.0.json"
         ),
         _parameter(
@@ -147,8 +150,7 @@ def simulation_models_path(tmp_test_directory):
         ),
     )
     _write_json(
-        parameters
-        / "configuration_corsika/corsika_starting_grammage/corsika_starting_grammage-1.0.2.json",
+        parameters / ("global/corsika_starting_grammage/corsika_starting_grammage-1.0.2.json"),
         _parameter(
             None,
             None,
@@ -163,8 +165,12 @@ def simulation_models_path(tmp_test_directory):
         ),
     )
     _write_json(
-        parameters / "configuration_sim_telarray/LSTN-design/min_photons/min_photons-1.0.0.json",
+        parameters / "LSTN-design/min_photons/min_photons-1.0.0.json",
         _parameter("LSTN-design", "North", "min_photons", "1.0.0", 2.0),
+    )
+    _write_json(
+        parameters / "global/iobuf_maximum/iobuf_maximum-1.0.0.json",
+        _parameter(None, None, "iobuf_maximum", "1.0.0", 1000, unit="byte"),
     )
     files = parameters / "Files"
     files.mkdir()

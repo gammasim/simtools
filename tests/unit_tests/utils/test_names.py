@@ -99,6 +99,7 @@ def test_validate_array_element_id_name(caplog):
 
 
 def test_get_site_from_array_element_name(invalid_name):
+    assert names.get_site_from_array_element_name(None) is None
     assert "North" == names.get_site_from_array_element_name("MSTN")
     assert "North" == names.get_site_from_array_element_name("MSTN-05")
     assert "South" == names.get_site_from_array_element_name("MSTS-05")
@@ -108,6 +109,26 @@ def test_get_site_from_array_element_name(invalid_name):
     assert "North" == names.get_site_from_array_element_name("OBS-North")
     assert "South" == names.get_site_from_array_element_name("OBS-South")
     assert "South" == names.get_site_from_array_element_name("South")
+
+
+def test_model_parameter_scope_and_simtelarray_scopes():
+    assert (
+        names.get_model_parameter_scope(
+            "configuration_sim_telarray", "LSTN-design", "iobuf_maximum"
+        )
+        == "global"
+    )
+    assert (
+        names.get_model_parameter_scope("telescopes", "LSTN-design", "camera_body_diameter")
+        == "LSTN-design"
+    )
+    assert names.get_sim_telarray_parameter_scopes("LSTN-01", "LSTN-design") == [
+        "global",
+        "LSTN-design",
+        "LSTN-01",
+    ]
+    with pytest.raises(KeyError, match="Missing design model"):
+        names.get_sim_telarray_parameter_scopes("LSTN-01")
 
 
 def test_get_collection_name_from_array_element_name():
@@ -403,6 +424,32 @@ def test_get_simulation_software_name_from_parameter_name():
             "reference_point_longitude", software_name=sim_telarray
         )
         == "set"
+    )
+
+
+@pytest.mark.parametrize(
+    "parameter_name",
+    [
+        "iobuf_maximum",
+        "iobuf_output_maximum",
+        "min_photoelectrons",
+        "min_photons",
+        "random_generator",
+        "sampled_output",
+        "save_pe_with_amplitude",
+        "store_photoelectrons",
+        "tailcut_scale",
+    ],
+)
+def test_sim_telarray_configuration_parameters_have_explicit_mappings(parameter_name):
+    assert names.get_simulation_software_name_from_parameter_name(parameter_name) == parameter_name
+
+
+def test_simtools_owned_sim_telarray_collection_parameter_has_no_sim_telarray_mapping():
+    parameter = "correct_nsb_spectrum_to_telescope_altitude"
+    assert names.get_simulation_software_name_from_parameter_name(parameter) is None
+    assert (
+        names.get_simulation_software_name_from_parameter_name(parameter, "simtools") == parameter
     )
 
 

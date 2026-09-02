@@ -13,6 +13,13 @@ from simtools.utils import names
 logger = logging.getLogger()
 
 
+def _is_missing_calibration_devices_error(message):
+    """Return whether an error indicates that calibration devices are unavailable."""
+    return "calibration_devices" in message and any(
+        reason in message for reason in ("zero results", "No production table")
+    )
+
+
 class ReportGenerator:
     """Automate report generation."""
 
@@ -275,7 +282,7 @@ class ReportGenerator:
             except ValueError as err:
                 # Some model versions do not have calibration_devices in the DB;
                 msg = str(err)
-                if "calibration_devices" in msg and "zero results" in msg:
+                if _is_missing_calibration_devices_error(msg):
                     logger.info(
                         f"Skipping model version {version}: no calibration devices defined ({msg})"
                     )
@@ -326,7 +333,7 @@ class ReportGenerator:
         except ValueError as err:
             # Some model versions may not have calibration_devices
             msg = str(err)
-            if "calibration_devices" in msg and "zero results" in msg:
+            if _is_missing_calibration_devices_error(msg):
                 logger.info(
                     f"Skipping model version {version}: no calibration devices defined ({msg})"
                 )
