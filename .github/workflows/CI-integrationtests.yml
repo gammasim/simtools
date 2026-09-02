@@ -204,7 +204,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
         run: |
-          BRANCH="corsika-sim-telarray-parameters"
+          BRANCH="main"
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
           fi
