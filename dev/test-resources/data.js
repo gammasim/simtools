@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788335857604,
+  "lastUpdate": 1788337258770,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -22258,6 +22258,552 @@ window.BENCHMARK_DATA = {
           {
             "name": "integration / 7.0.0 / simtools-validate-optics_run / peak_rss_mib",
             "value": 517.1328125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fdb7cddf353a7f3c6bbc55edcb11e0c974c560af",
+          "message": "Improve production metadata and accessing of production in file-based systems (#2496)\n\n* align job and run numbers\n\n* production metadata\n\n* revert LaPalma vs North\n\n* write metadata at end of production step\n\n* bug fix\n\n* sonarq complaints\n\n* fix docs; key error\n\n* improvements\n\n* naming\n\n* correct metadata\n\n* reviewers comments\n\n* changelog",
+          "timestamp": "2026-09-02T10:04:30+02:00",
+          "tree_id": "778d9c5b792aeda79b72d17c615cbf90e3858522",
+          "url": "https://github.com/gammasim/simtools/commit/fdb7cddf353a7f3c6bbc55edcb11e0c974c560af"
+        },
+        "date": 1788337242994,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 56.262068561999996,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260823.283.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 58.28,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260823.283.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 418.0234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260823.283.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration-session / 7.0.0 / wall_time_s",
+            "value": 829.9817097389999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration-session / 7.0.0 / cpu_time_s",
+            "value": 998.45,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration-session / 7.0.0 / peak_rss_mib",
+            "value": 1055.30859375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-compare-productions_run / wall_time_s",
+            "value": 8.236638549000006,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-compare-productions_run / cpu_time_s",
+            "value": 8.940000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-compare-productions_run / peak_rss_mib",
+            "value": 577.953125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-ctao-array-layouts_run / wall_time_s",
+            "value": 5.222335758000014,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-ctao-array-layouts_run / cpu_time_s",
+            "value": 2.68,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-ctao-array-layouts_run / peak_rss_mib",
+            "value": 339.578125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots0 / wall_time_s",
+            "value": 5.623316455999998,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots0 / cpu_time_s",
+            "value": 6.26,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots0 / peak_rss_mib",
+            "value": 431.6328125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots1 / wall_time_s",
+            "value": 6.6798505460000115,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots1 / cpu_time_s",
+            "value": 7.22,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-incident-angle_incident_angles_dual_mirror_debug_plots1 / peak_rss_mib",
+            "value": 441.16796875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-psf-parameters_run / wall_time_s",
+            "value": 30.582802129000015,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-psf-parameters_run / cpu_time_s",
+            "value": 24.55,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-derive-psf-parameters_run / peak_rss_mib",
+            "value": 447.2578125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-docs-produce-array-element-report_run / wall_time_s",
+            "value": 6.0202780750000215,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-docs-produce-array-element-report_run / cpu_time_s",
+            "value": 6.529999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-docs-produce-array-element-report_run / peak_rss_mib",
+            "value": 539.62890625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-generate-corsika-histograms_plot / wall_time_s",
+            "value": 5.612855224999976,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-generate-corsika-histograms_plot / cpu_time_s",
+            "value": 6.29,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-generate-corsika-histograms_plot / peak_rss_mib",
+            "value": 431.34765625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simtel-events_flasher_event_plots / wall_time_s",
+            "value": 8.052976911999963,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simtel-events_flasher_event_plots / cpu_time_s",
+            "value": 8.71,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simtel-events_flasher_event_plots / peak_rss_mib",
+            "value": 593.41796875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simulated-event-distributions_sim_telarray_input / wall_time_s",
+            "value": 11.435725841000021,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simulated-event-distributions_sim_telarray_input / cpu_time_s",
+            "value": 12.11,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-plot-simulated-event-distributions_sim_telarray_input / peak_rss_mib",
+            "value": 712.453125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-production-generate-grid_production_generate_grid_horizontal_density / wall_time_s",
+            "value": 6.32017219100004,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-production-generate-grid_production_generate_grid_horizontal_density / cpu_time_s",
+            "value": 7.19,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-production-generate-grid_production_generate_grid_horizontal_density / peak_rss_mib",
+            "value": 427.8125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direct_injection_lstn_filter_wheel_sequence / wall_time_s",
+            "value": 5.556555858999957,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direct_injection_lstn_filter_wheel_sequence / cpu_time_s",
+            "value": 5.83,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direct_injection_lstn_filter_wheel_sequence / peak_rss_mib",
+            "value": 624.5234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direction_injection_msfx_flashcam_south / wall_time_s",
+            "value": 6.758351481000034,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direction_injection_msfx_flashcam_south / cpu_time_s",
+            "value": 7.3100000000000005,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_direction_injection_msfx_flashcam_south / peak_rss_mib",
+            "value": 720.3203125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_alpha_north / wall_time_s",
+            "value": 10.998732461999964,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_alpha_north / cpu_time_s",
+            "value": 10.24,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_alpha_north / peak_rss_mib",
+            "value": 542.3515625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_different_intensities / wall_time_s",
+            "value": 17.61198213099999,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_different_intensities / cpu_time_s",
+            "value": 18.189999999999998,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_different_intensities / peak_rss_mib",
+            "value": 631.06640625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_single_event_value / wall_time_s",
+            "value": 12.676980162000007,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_single_event_value / cpu_time_s",
+            "value": 13.2,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-flasher_full_simulation_lst_filter_wheel_single_event_value / peak_rss_mib",
+            "value": 624.15234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-layout / wall_time_s",
+            "value": 14.273974033000002,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-layout / cpu_time_s",
+            "value": 14.66,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-layout / peak_rss_mib",
+            "value": 415.19921875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-multi-illuminator / wall_time_s",
+            "value": 8.505616385999986,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-multi-illuminator / cpu_time_s",
+            "value": 12.840000000000002,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-illuminator_run-multi-illuminator / peak_rss_mib",
+            "value": 725.8515625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-pedestals_pedestals_20_deg_north / wall_time_s",
+            "value": 6.365144048000047,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-pedestals_pedestals_20_deg_north / cpu_time_s",
+            "value": 6.8,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-pedestals_pedestals_20_deg_north / peak_rss_mib",
+            "value": 731.71484375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_20_deg_multiple_model_versions / wall_time_s",
+            "value": 16.655624778999993,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_20_deg_multiple_model_versions / cpu_time_s",
+            "value": 19.65,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_20_deg_multiple_model_versions / peak_rss_mib",
+            "value": 1048.91796875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_40_deg_south_corsika_only / wall_time_s",
+            "value": 5.731012613000075,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_40_deg_south_corsika_only / cpu_time_s",
+            "value": 6.340000000000002,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_40_deg_south_corsika_only / peak_rss_mib",
+            "value": 594.84765625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_62_deg_south_check_output / wall_time_s",
+            "value": 33.59732023000004,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_62_deg_south_check_output / cpu_time_s",
+            "value": 38.260000000000005,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_gamma_62_deg_south_check_output / peak_rss_mib",
+            "value": 1055.30859375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_proton_20_deg_north_check_output / wall_time_s",
+            "value": 10.187145265000026,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_proton_20_deg_north_check_output / cpu_time_s",
+            "value": 12.019999999999998,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-simulate-prod_proton_20_deg_north_check_output / peak_rss_mib",
+            "value": 848.9296875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTS / wall_time_s",
+            "value": 5.258131022000043,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTS / cpu_time_s",
+            "value": 5.699999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTS / peak_rss_mib",
+            "value": 537.75390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTN / wall_time_s",
+            "value": 5.2499733719999995,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTN / cpu_time_s",
+            "value": 5.680000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_MSTN / peak_rss_mib",
+            "value": 520.25390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_SSTS / wall_time_s",
+            "value": 5.347280087000058,
+            "unit": "wall_time_s",
+            "extra": "outcome=skipped | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_SSTS / cpu_time_s",
+            "value": 5.800000000000002,
+            "unit": "cpu_time_s",
+            "extra": "outcome=skipped | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-camera-efficiency_SSTS / peak_rss_mib",
+            "value": 520.25390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=skipped | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run / wall_time_s",
+            "value": 14.592897023999967,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run / cpu_time_s",
+            "value": 14.71,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run / peak_rss_mib",
+            "value": 507.78125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run-offset-directions-horizontal / wall_time_s",
+            "value": 5.091529630999958,
+            "unit": "wall_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run-offset-directions-horizontal / cpu_time_s",
+            "value": 5.339999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
+          },
+          {
+            "name": "integration / 7.0.0 / simtools-validate-optics_run-offset-directions-horizontal / peak_rss_mib",
+            "value": 497.90234375,
             "unit": "peak_rss_mib",
             "extra": "outcome=passed | python=3.14.7 | runner=Linux/X64 | runner_image=None/None | container=ghcr.io/gammasim/simtools-dev:latest | sample_interval_s=0.2"
           }
