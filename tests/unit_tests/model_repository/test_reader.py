@@ -77,6 +77,10 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
     """The facade resolves production versions and design inheritance."""
     reader = SimulationModelReader.from_files(model_repository)
 
+    assert reader.source_config == {
+        "type": "filesystem",
+        "path": str(model_repository.resolve()),
+    }
     assert reader.get_model_versions() == ["1.0.0"]
     assert reader.get_array_elements("1.0.0") == ["LSTN-01"]
     assert reader.get_design_model("1.0.0", "LSTN-01") == "LSTN-design"
@@ -185,6 +189,7 @@ def test_reader_facade_routes_source_operations_and_branches():
     ]
     source.export_model_files.return_value = {"model.dat": "copied"}
     source.get_ecsv_file_as_astropy_table.return_value = "table"
+    source.is_configured.return_value = True
     reader = SimulationModelReader(source)
 
     assert reader.get_model_parameter(
@@ -208,3 +213,42 @@ def test_reader_facade_routes_source_operations_and_branches():
         "model.dat": "copied"
     }
     assert reader.get_ecsv_file_as_astropy_table("model.ecsv") == "table"
+    assert reader.is_configured() is True
+
+
+def test_reader_facade_covers_all_version_and_export_paths(mocker):
+    """Cover the source-independent convenience methods."""
+    source = Mock(source_name="mock")
+    source.is_configured.return_value = True
+    source.get_model_versions.return_value = ["1.0.0", "2.0.0"]
+    reader = SimulationModelReader(source)
+
+    reader.get_model_parameters = Mock(side_effect=[{"p": 1}, KeyError("missing")])
+    assert reader.get_model_parameters_for_all_model_versions("North", "LSTN-01", "telescopes") == {
+        "1.0.0": {"p": 1}
+    }
+
+    reader.get_model_parameter = Mock(return_value={"p": {"type": "dict", "value": {"x": [1]}}})
+    row_table = mocker.patch(
+        "simtools.model_repository.reader.simtel_table_reader.row_data_to_astropy_table",
+        return_value="table",
+    )
+    assert reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True) == "table"
+    row_table.assert_called_once_with({"x": [1]})
+    assert reader.export_model_file("p", "North", "LSTN-01") is None
+
+    reader.get_model_parameter.return_value = {"p": {"value": "p.dat"}}
+    with pytest.raises(ValueError, match="Destination path is required"):
+        reader.export_model_file("p", "North", "LSTN-01")
+    reader.export_model_files = Mock()
+    assert reader.export_model_file("p", "North", "LSTN-01", dest="output") is None
+    read_table = mocker.patch(
+        "simtools.model_repository.reader.simtel_table_reader.read_simtel_table",
+        return_value="file-table",
+    )
+    assert (
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
+        == "file-table"
+    )
+    assert reader.export_model_files.call_count == 2
+    read_table.assert_called_once_with("p", Path("output") / "p.dat")

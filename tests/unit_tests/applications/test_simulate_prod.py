@@ -394,7 +394,9 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     with patch("simtools.applications.simulate_prod._write_job_metadata") as mock_write_metadata:
         app.main()
 
-    mock_simulator_class.assert_called_once_with(label="myprod")
+    mock_simulator_class.assert_called_once_with(
+        label="myprod", model_reader=mock_application_start.return_value.model_reader
+    )
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()
