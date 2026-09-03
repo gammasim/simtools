@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -120,6 +121,74 @@ def test_read_job_grid_rejects_non_integral_integer_columns(tmp_test_directory):
 
     with pytest.raises(TypeError):
         job_grid_io.read_job_grid(input_file)
+
+
+def test_job_grid_helpers_handle_optional_and_required_values():
+    assert job_grid_io._get_job_row_value({}, "scan_label") is job_grid_io._MISSING
+    with pytest.raises(KeyError):
+        job_grid_io._get_job_row_value({}, "run_number")
+    with pytest.raises(TypeError, match="run_number"):
+        job_grid_io._get_job_row_value({"run_number": None}, "run_number")
+
+    assert job_grid_io._serialize_field_value("scan_label", 123) == "123"
+    assert (
+        job_grid_io._cast_scalar("7", job_grid_io.JOB_GRID_SCHEMA.column_dtypes["run_number"]) == 7
+    )
+
+
+def test_deserialize_job_row_skips_masked_blank_and_none_values():
+    row = {
+        "run_number": np.ma.masked,
+        "scan_label": "   ",
+        "overwrite_model_parameters": None,
+        "primary": "gamma",
+    }
+
+    assert job_grid_io._deserialize_job_row(row) == {"primary": "gamma"}
+
+
+def test_normalize_job_grid_table_dtypes_only_casts_finite_integral_floats():
+    table = Table(
+        {"run_number": [1.0], "showers_per_run": [np.inf]},
+        dtype=[float, float],
+    )
+
+    normalized = job_grid_io._normalize_job_grid_table_dtypes(table)
+
+    assert normalized["run_number"].dtype.kind == "i"
+    assert normalized["showers_per_run"].dtype.kind == "f"
+
+
+def test_parameter_scan_overwrites_merge_existing_dict():
+    row = {**_job_rows()[0], "model_parameter_set": "scan"}
+    metadata = {"model_parameter_sets": {"scan": {"LSTN-01": {"asum_threshold": {"value": 220}}}}}
+    row["overwrite_model_parameters"] = {"LSTN-01": {"other": {"value": 1}}}
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata)
+
+    assert args["overwrite_model_parameters"] == {
+        "LSTN-01": {
+            "other": {"value": 1},
+            "asum_threshold": {"value": 220},
+        }
+    }
+
+
+def test_parameter_scan_overwrites_falls_back_to_file_and_ignores_unknown_set():
+    row = {**_job_rows()[0], "overwrite_model_parameters": "base.yml"}
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+    assert args["overwrite_model_parameters"] == "base.yml"
+
+    row["model_parameter_set"] = "missing"
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, {"model_parameter_sets": {}})
+    assert args["overwrite_model_parameters"] == "base.yml"
+
+
+def test_remote_path_forwarding_accepts_explicit_sources_and_skips_environment():
+    args = {"backend": "htcondor", "_metadata_configuration_sources": {"cli": {"path"}}}
+    assert job_grid_io._should_forward_path(args, "path")
+    assert not job_grid_io._should_forward_path(args, "other")
+    assert job_grid_io._should_forward_path({}, "path")
 
 
 def test_read_job_grid_row_raises_on_out_of_range(tmp_test_directory):

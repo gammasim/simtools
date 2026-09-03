@@ -151,6 +151,55 @@ def test_get_simulation_software_parameters(telescope_model_lst):
     assert isinstance(telescope_model_lst.get_simulation_software_parameters("corsika"), dict)
 
 
+def test_load_simulation_software_parameter_ignores_database_value_error(
+    telescope_model_lst, mocker
+):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mocker.patch.object(
+        telescope_copy.db,
+        "get_simulation_configuration_parameters",
+        side_effect=ValueError("missing configuration"),
+    )
+
+    telescope_copy._load_simulation_software_parameter_for_software("corsika")
+
+
+def test_apply_simulation_software_overwrites_ignores_unknown_software(telescope_model_lst):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy.overwrite_model_parameter_dict = {"unknown": {"num_gains": {"value": 2}}}
+
+    telescope_copy._apply_simulation_software_overwrites("unknown")
+
+
+def test_filter_overwrites_for_target_keeps_unknown_and_drops_ignored(mocker):
+    model_parameter = ModelParameter.__new__(ModelParameter)
+    mocker.patch(
+        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        side_effect=lambda name: {
+            "ignored": "configuration_corsika",
+            "known": "telescopes",
+        }[name],
+    )
+    overwrites = {
+        "LSTN-01": {
+            "ignored": {"value": 1},
+            "known": {"value": 2},
+        },
+        "not-a-model": "skip",
+    }
+
+    assert model_parameter._filter_overwrites_for_target(
+        overwrites, ("configuration_corsika",)
+    ) == {"LSTN-01": {"known": {"value": 2}}}
+
+
+def test_filter_overwrites_for_target_returns_input_without_filtering():
+    model_parameter = ModelParameter.__new__(ModelParameter)
+    overwrites = {"LSTN-01": {"num_gains": {"value": 2}}}
+
+    assert model_parameter._filter_overwrites_for_target(overwrites, None) is overwrites
+
+
 def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
     """Build realistic simulation overwrite changes used by overwrite-collection tests."""
     return {
