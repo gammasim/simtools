@@ -7,12 +7,13 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from astropy.table import QTable
 
 import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+from simtools.data_model import schema
+from simtools.data_model.table_asset import read_ecsv_asset
 from simtools.simtel import simtel_table_writer, simtel_validate_metadata
 from simtools.utils import names
 
@@ -126,6 +127,8 @@ class SimtelConfigWriter:
                 value["value"],
                 config_file_path,
                 None,
+                parameter_name=par,
+                parameter_data=value,
             )
             if simtel_name:
                 simtel_par[simtel_name] = simtel_value
@@ -532,6 +535,8 @@ class SimtelConfigWriter:
                 value["value"],
                 model_path,
                 telescope_model,
+                parameter_name=par,
+                parameter_data=value,
             )
             if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
@@ -542,7 +547,13 @@ class SimtelConfigWriter:
         file.write("\n")
 
     def _convert_model_parameters_to_simtel_format(
-        self, simtel_name, value, model_path, telescope_model
+        self,
+        simtel_name,
+        value,
+        model_path,
+        telescope_model,
+        parameter_name=None,
+        parameter_data=None,
     ):
         """
         Convert model parameter value to simtel format.
@@ -568,12 +579,17 @@ class SimtelConfigWriter:
         conversion_dict = {
             "array_triggers": self._write_array_triggers_file,
             "fadc_pulse_shape": lambda v, mp, tm: self._write_table_parameter_file(
-                "fadc_pulse_shape", v, mp, tm
+                "fadc_pulse_shape", v, mp, tm, parameter_name, parameter_data
             ),
         }
+        if simtel_name in {"primary_segmentation", "secondary_segmentation"} and isinstance(
+            value, list
+        ):
+            output = Path(model_path).parent / f"{parameter_name}-{Path(model_path).stem}.dat"
+            return simtel_name, simtel_table_writer.write_mirror_segmentation(value, output)
         if isinstance(value, str) and value.lower().endswith(".ecsv"):
             return simtel_name, self._write_table_parameter_file(
-                simtel_name, value, model_path, telescope_model
+                simtel_name, value, model_path, telescope_model, parameter_name, parameter_data
             )
         try:
             value = conversion_dict[simtel_name](value, model_path, telescope_model)
@@ -583,7 +599,15 @@ class SimtelConfigWriter:
             return None, None
         return simtel_name, value
 
-    def _write_table_parameter_file(self, parameter_name, value, model_path, _telescope_model):
+    def _write_table_parameter_file(
+        self,
+        parameter_name,
+        value,
+        model_path,
+        _telescope_model,
+        source_parameter=None,
+        parameter_data=None,
+    ):
         """
         Write a dict-valued table parameter to an ASCII file for sim_telarray.
 
@@ -608,7 +632,18 @@ class SimtelConfigWriter:
             source = dest_dir / Path(value).name
             if not source.is_file():
                 raise FileNotFoundError(f"Co-located ECSV table was not exported: {source}")
-            table = QTable.read(source, format="ascii.ecsv")
+            schema_entry = None
+            if parameter_data is not None:
+                schema_data = schema.get_model_parameter_schema(
+                    source_parameter, parameter_data.get("model_parameter_schema_version")
+                )
+                schema_entry = next(
+                    (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
+                    None,
+                )
+            table = read_ecsv_asset(
+                source, schema_entry=schema_entry, parameter_data=parameter_data
+            )
             return simtel_table_writer.write_simtel_table(table, dest_dir)
         if not isinstance(value, dict):
             return value

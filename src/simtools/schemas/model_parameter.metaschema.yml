@@ -25,6 +25,12 @@ definitions:
       file:
         type: boolean
         description: "This parameter is a file."
+      asset_location:
+        type: string
+        enum:
+          - parameter_directory
+          - shared_files
+        description: "Location of a file asset relative to its parameter or shared Files directory."
       instrument:
         anyOf:
           - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'

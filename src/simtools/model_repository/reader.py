@@ -1,5 +1,6 @@
 """Read simulation models through a source-neutral interface."""
 
+import filecmp
 import shutil
 from copy import deepcopy
 from pathlib import Path
@@ -126,7 +127,12 @@ class FileSystemModelSource:
                 continue
             parameter_data = self._read_parameter_file(parameter_path)
             value = parameter_data.get("value")
-            if parameter_data.get("file") and isinstance(value, str) and value.startswith("./"):
+            if (
+                parameter_data.get("file")
+                and isinstance(value, str)
+                and value.lower().endswith(".ecsv")
+                and parameter_data.get("model_parameter_schema_version") == "0.3.0"
+            ):
                 self.get_parameter_table(parameter_data)
             if self._matches_filters(parameter_data, parameter_scope, site):
                 parameters.append(parameter_data)
@@ -225,13 +231,19 @@ class FileSystemModelSource:
                 if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
             ]
         names_to_export = [file_names] if isinstance(file_names, str) else file_names or []
-        return [{"value": file_name} for file_name in names_to_export]
+        return [
+            {"value": file_name, "asset_location": "shared_files"} for file_name in names_to_export
+        ]
 
     def _copy_model_file(self, parameter, source, destination):
         """Copy one resolved model asset and return its export status."""
         target = destination / source.name
         if target.exists():
-            return "file exists"
+            if filecmp.cmp(source, target, shallow=False):
+                return "file exists"
+            raise FileExistsError(
+                f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+            )
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
         if source.suffix.lower() == ".ecsv" and parameter.get("parameter"):
@@ -240,7 +252,7 @@ class FileSystemModelSource:
         return "copied from filesystem"
 
     def resolve_parameter_asset(self, parameter_data):
-        """Resolve a parameter's asset using its JSON location or the legacy Files directory."""
+        """Resolve a parameter asset from its declared location."""
         value = parameter_data.get("value") if isinstance(parameter_data, dict) else parameter_data
         if not isinstance(value, str):
             raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
@@ -256,7 +268,12 @@ class FileSystemModelSource:
             )
         else:
             parameter_file = self.files_path / value
-        return resolve_asset_path(value, parameter_file, self.files_path)
+        asset_location = (
+            parameter_data.get("asset_location", "parameter_directory")
+            if isinstance(parameter_data, dict)
+            else "shared_files"
+        )
+        return resolve_asset_path(value, parameter_file, self.files_path, asset_location)
 
     def get_parameter_table(self, parameter_data):
         """Resolve and validate an ECSV table referenced by a parameter record."""
@@ -419,6 +436,10 @@ class SimulationModelReader:
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Export model files through the selected source."""
         return self._source.export_model_files(parameters, file_names, dest)
+
+    def get_parameter_table(self, parameter_data):
+        """Return the validated Astropy table referenced by a model parameter."""
+        return self._source.get_parameter_table(parameter_data)
 
     def export_model_file(
         self,

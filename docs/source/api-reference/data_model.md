@@ -97,3 +97,10 @@ Data products ingested or produced by simtools generally follows the CTAO data m
 .. automodule:: data_model.row_table_utils
    :members:
 ```
+
+## mirror_segmentation
+
+```{eval-rst}
+.. automodule:: data_model.mirror_segmentation
+   :members:
+```

@@ -7,9 +7,81 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.data_model import row_table_utils
+from simtools.data_model.mirror_segmentation import (
+    write_mirror_segmentation as _write_mirror_segmentation,
+)
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 
 logger = logging.getLogger(__name__)
+
+
+def write_mirror_segmentation(records, output_path):
+    """Write validated mirror-segmentation records for sim_telarray."""
+    return _write_mirror_segmentation(records, output_path)
+
+
+def write_camera_configuration(configuration, output_path):
+    """Write validated camera components in sim_telarray camera syntax.
+
+    ``configuration`` is a mapping containing ``rotate``, ``pixel_types``,
+    ``pixels`` and optional ``triggers``/``trigger_members`` sequences.  The
+    function deliberately accepts plain mappings so model-repository values
+    can be passed without an intermediate bespoke class.
+    """
+    output_path = Path(output_path)
+    if any(part == ".." for part in output_path.parts):
+        raise ValueError(f"Unsafe camera configuration path: {output_path}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    rotate = float(configuration.get("rotate", 0.0))
+    pixel_types = configuration.get("pixel_types", [])
+    pixels = configuration.get("pixels", [])
+    triggers = configuration.get("triggers", configuration.get("trigger_groups", []))
+    members = configuration.get("trigger_members", [])
+    members_by_group = {}
+    for member in members:
+        members_by_group.setdefault(member["group_id"], []).append(member)
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write("# Generated from camera model parameters\n")
+        file.write(f"Rotate {rotate:.12g}\n")
+        for item in pixel_types:
+            fields = [
+                "PixType",
+                str(item["type_id"]),
+                str(item.get("pmt_type", 0)),
+                str(item.get("cathode_shape", 0)),
+                str(item.get("cathode_diameter_cm", 0)),
+                str(item.get("funnel_shape", 0)),
+                str(item["funnel_diameter_cm"]),
+                str(item.get("funnel_depth_cm", 0)),
+                f'"{item.get("lightguide_angle", "none")}"',
+            ]
+            if item.get("lightguide_wavelength"):
+                fields.append(f'"{item["lightguide_wavelength"]}"')
+            file.write(" ".join(fields) + "\n")
+        for pixel in pixels:
+            file.write(
+                f"Pixel {pixel['pixel_id']} {pixel.get('type_id', 0)} "
+                f"{pixel['x_cm']} {pixel['y_cm']} {pixel.get('module', 0)} "
+                f"{pixel.get('board', 0)} {pixel.get('channel', 0)} "
+                f"{pixel.get('module_id', 0)} {int(bool(pixel.get('enabled', True)))} "
+                f"{pixel.get('relative_qe', 1.0)}\n"
+            )
+        for index, trigger in enumerate(triggers):
+            kind = trigger["kind"]
+            keyword = {
+                "majority": "MajorityTrigger",
+                "analogsum": "AnalogSumTrigger",
+                "digitalsum": "DigitalSumTrigger",
+            }.get(kind.lower(), kind)
+            multiplicity = (
+                "*"
+                if trigger.get("use_default_multiplicity", True)
+                else str(trigger["multiplicity"])
+            )
+            group_id = trigger.get("group_id", index)
+            ids = [str(member["pixel_id"]) for member in members_by_group.get(group_id, [])]
+            file.write(f"{keyword} {multiplicity} of {' '.join(ids)}\n")
+    return output_path.name
 
 
 def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None):
@@ -121,8 +193,30 @@ def _write_rpol_table(table, output_path):
     """Write a tidy wavelength/angle table in sim_telarray RPOL format."""
     angle_name = "angle" if "angle" in table.colnames else "incidence_angle"
     independent_name = "wavelength"
-    dependent = next(name for name in table.colnames if name not in (independent_name, angle_name))
+    dependent = table.meta.get("simtelarray_value_column")
+    if dependent is None:
+        dependent = next(
+            (
+                name
+                for name in ("reflectivity", "transmission", "efficiency")
+                if name in table.colnames
+            ),
+            None,
+        )
+    if dependent is None:
+        raise ValueError("RPOL ECSV table must define simtelarray_value_column")
+    if angle_name not in table.colnames or independent_name not in table.colnames:
+        raise ValueError("RPOL ECSV table must contain wavelength and angle columns")
     angles = list(dict.fromkeys(_raw_values(table[angle_name])))
+    values = {}
+    for row in table:
+        key = (
+            getattr(row[independent_name], "value", row[independent_name]),
+            getattr(row[angle_name], "value", row[angle_name]),
+        )
+        if key in values:
+            raise ValueError("RPOL ECSV table must contain one value per wavelength and angle")
+        values[key] = getattr(row[dependent], "value", row[dependent])
     comments = [
         line
         for line in _table_comments(table)
@@ -135,11 +229,14 @@ def _write_rpol_table(table, output_path):
         file.write("ANGLE= " + " ".join(str(angle) for angle in angles) + "\n")
         wavelengths = list(dict.fromkeys(_raw_values(table[independent_name])))
         for wavelength in wavelengths:
-            selection = [
-                getattr(row[dependent], "value", row[dependent])
-                for row in table
-                if getattr(row[independent_name], "value", row[independent_name]) == wavelength
-            ]
+            selection = []
+            for angle in angles:
+                try:
+                    selection.append(values[(wavelength, angle)])
+                except KeyError as exc:
+                    raise ValueError(
+                        "RPOL ECSV table must contain one value per wavelength and angle"
+                    ) from exc
             file.write(" ".join([str(wavelength), *(str(value) for value in selection)]) + "\n")
 
 

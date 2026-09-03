@@ -213,11 +213,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         one_dim_file: Path
             The file path and name with the new one-dimensional distribution
         """
-        incidence_angle_distribution_file = self._telescope_model.get_parameter_value(
-            weighting_distribution_parameter
-        )
         incidence_angle_distribution = self._telescope_model.read_incidence_angle_distribution(
-            incidence_angle_distribution_file
+            weighting_distribution_parameter
         )
         self._logger.warning(
             f"The {' '.join(two_dim_parameter.split('_'))} distribution "
@@ -225,10 +222,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
             "Instead of using the 2D distribution, the two dimensional distribution "
             "will be averaged, using the photon incidence angle distribution as weights. "
             "The incidence angle distribution is taken "
-            f"from the file - {incidence_angle_distribution_file})."
+            f"from the {weighting_distribution_parameter} model parameter)."
         )
         two_dim_distribution = self._telescope_model.read_two_dim_wavelength_angle(
-            self._telescope_model.get_parameter_value(two_dim_parameter)
+            two_dim_parameter
         )
         distribution_to_export = self._telescope_model.calc_average_curve(
             two_dim_distribution, incidence_angle_distribution

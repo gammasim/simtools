@@ -381,6 +381,19 @@ def test_write_table_parameter_file_passes_through_non_dict_value(
     assert result == "already_a_file.dat"
 
 
+def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_test_directory):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    result = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "primary_segmentation",
+        [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+        config_path,
+        None,
+        parameter_name="primary_mirror_segmentation",
+    )
+    assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
+    assert (Path(tmp_test_directory) / result[1]).is_file()
+
+
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
     model_parameters = {"test_param": {"value": 42}}
 

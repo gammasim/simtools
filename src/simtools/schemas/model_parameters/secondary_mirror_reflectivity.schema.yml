@@ -55,7 +55,6 @@ description: 'Secondary mirror reflectivity measured directly on the facet as fu
 data:
   - type: file
     unit: dimensionless
-    allow_extra_columns: true
     table_columns:
       - name: wavelength
         description: Wavelength
@@ -66,6 +65,11 @@ data:
         description: Mirror reflectivity
         type: float64
         unit: dimensionless
+        required: false
+      - name: angle
+        description: Incidence angle
+        type: float64
+        unit: deg
         required: false
     table_metadata:
       - name: parameter_name

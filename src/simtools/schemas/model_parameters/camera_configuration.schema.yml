@@ -1,0 +1,26 @@
+%YAML 1.2
+---
+title: Schema for camera_configuration model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_configuration
+description: Component references and inline data used to generate a camera file.
+data:
+  - type: dict
+    json_schema:
+      type: object
+      additionalProperties: false
+      required: [rotate, pixel_types, pixels]
+      properties:
+        rotate: {type: number}
+        pixel_types: {type: array, minItems: 1, items: {type: object}}
+        pixels: {type: array, minItems: 1, items: {type: object}}
+        triggers: {type: array, items: {type: object}}
+        trigger_members: {type: array, items: {type: object}}
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+source: [Initial instrument setup]
+simulation_software: [{name: sim_telarray}]

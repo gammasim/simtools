@@ -59,7 +59,6 @@ description: 'Mirror reflectivity measured directly on the facet as function of
 data:
   - type: file
     unit: dimensionless
-    allow_extra_columns: true
     table_columns:
       - name: wavelength
         description: Wavelength
@@ -73,6 +72,21 @@ data:
         required: false
       - name: reflectivity
         description: Mirror reflectivity
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: reflectivity_rms
+        description: Mirror reflectivity standard deviation
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: reflectivity_min
+        description: Minimum mirror reflectivity
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: reflectivity_max
+        description: Maximum mirror reflectivity
         type: float64
         unit: dimensionless
         required: false

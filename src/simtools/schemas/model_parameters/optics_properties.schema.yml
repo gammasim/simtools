@@ -55,11 +55,15 @@ data:
         type: float64
         unit: m2
         required: true
+        input_processing:
+          - allow_nan
       - name: eff_flen
         description: Effective focal length
         type: float64
         unit: cm
         required: true
+        input_processing:
+          - allow_nan
     table_metadata:
       - name: parameter_name
         description: Owning model parameter

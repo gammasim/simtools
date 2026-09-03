@@ -76,7 +76,6 @@ short_description: 'Wavelength dependence of the camera transmission, possibly a
 data:
   - type: file
     unit: dimensionless
-    allow_extra_columns: true
     table_columns:
       - name: wavelength
         description: Wavelength

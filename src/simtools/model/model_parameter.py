@@ -214,6 +214,16 @@ class ModelParameter:
             )
             return _value  # if unit is NoneType
 
+    def get_parameter_table(self, par_name):
+        """Return the validated ECSV table associated with a model parameter."""
+        parameter_data = self._get_parameter_dict(par_name)
+        try:
+            return self.model_reader.get_parameter_table(parameter_data)
+        except ValueError as exc:
+            raise InvalidModelParameterError(
+                f"Parameter {par_name} does not reference an ECSV table."
+            ) from exc
+
     def get_parameter_type(self, par_name):
         """
         Get the type of existing parameter of the model (value of 'type' field of DB entry).

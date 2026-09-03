@@ -67,6 +67,15 @@ class MongoDBModelSource:
             query, collection_name
         )
         self._parameters[key] = deepcopy(list(parameters.values()))
+        for parameter_data in self._parameters[key]:
+            value = parameter_data.get("value")
+            if (
+                parameter_data.get("file")
+                and isinstance(value, str)
+                and value.endswith(".ecsv")
+                and parameter_data.get("model_parameter_schema_version") == "0.3.0"
+            ):
+                self.get_parameter_table(parameter_data)
         return deepcopy(self._parameters[key])
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):

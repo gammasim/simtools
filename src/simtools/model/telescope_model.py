@@ -1,9 +1,7 @@
 """MC model of a telescope."""
 
 import logging
-from pathlib import Path
 
-import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
@@ -185,6 +183,14 @@ class TelescopeModel(ModelParameter):
 
     def _load_camera(self):
         """Load camera attribute by creating a Camera object with the camera config file."""
+        try:
+            configuration = self.get_parameter_value("camera_configuration")
+        except KeyError, InvalidModelParameterError, TypeError:
+            configuration = None
+        if isinstance(configuration, dict):
+            focal_length = self.get_telescope_effective_focal_length("cm", True)
+            self._camera = Camera.from_configuration(self.name, configuration, focal_length)
+            return
         camera_config_file = self.get_parameter_value("camera_config_file")
         focal_length = self.get_telescope_effective_focal_length("cm", True)
         try:
@@ -223,16 +229,14 @@ class TelescopeModel(ModelParameter):
             True if the file is a 2D map type.
         """
         try:
-            file_name = self.get_parameter_value(par)
+            table = self.get_parameter_table(par)
         except InvalidModelParameterError:
             logging.warning(f"Parameter {par} does not exist")
             return False
 
-        file = self.config_file_directory.joinpath(file_name)
-        with open(file, encoding="utf-8") as f:
-            return "@RPOL@" in f.read()
+        return table.meta.get("simtelarray_table_format") == "rpol_matrix"
 
-    def read_two_dim_wavelength_angle(self, file_name: str | Path) -> dict:
+    def read_two_dim_wavelength_angle(self, parameter_name: str) -> dict:
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
 
@@ -241,53 +245,57 @@ class TelescopeModel(ModelParameter):
 
         Parameters
         ----------
-        file_name: str or Path
-            File assumed to be in the model directory.
+        parameter_name: str
+            Name of the ECSV model parameter.
 
         Returns
         -------
         dict:
             dict of three arrays, wavelength, degrees, z.
         """
-        _file = self.config_file_directory.joinpath(file_name)
-        self._logger.debug("Reading two dimensional distribution from %s", _file)
-        line_to_start_from = 0
-        with open(_file, encoding="utf-8") as f:
-            for i_line, line in enumerate(f):
-                if line.startswith("ANGLE"):
-                    degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
-                    line_to_start_from = i_line + 1
-                    break  # The rest can be read with np.loadtxt
-
-        _data = np.loadtxt(_file, skiprows=line_to_start_from)
-
-        return {
-            "Wavelength": _data[:, 0],
-            "Angle": degrees,
-            "z": np.array(_data[:, 1:]).T,
-        }
+        table = self.get_parameter_table(parameter_name)
+        angle_name = "angle" if "angle" in table.colnames else "incidence_angle"
+        value_columns = [name for name in table.colnames if name not in {"wavelength", angle_name}]
+        if len(value_columns) != 1:
+            raise ValueError(
+                f"Two-dimensional table '{parameter_name}' must have one value column, "
+                f"found {value_columns}."
+            )
+        angles = np.unique(np.asarray(table[angle_name]))
+        wavelengths = np.unique(np.asarray(table["wavelength"]))
+        values = np.empty((len(angles), len(wavelengths)))
+        for angle_index, angle in enumerate(angles):
+            for wavelength_index, wavelength in enumerate(wavelengths):
+                selection = table[
+                    (np.asarray(table[angle_name]) == angle)
+                    & (np.asarray(table["wavelength"]) == wavelength)
+                ]
+                if len(selection) != 1:
+                    raise ValueError(
+                        f"Two-dimensional table '{parameter_name}' is not a complete grid."
+                    )
+                values[angle_index, wavelength_index] = selection[value_columns[0]][0]
+        return {"Wavelength": wavelengths, "Angle": angles, "z": values}
 
     def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""
-        ray_tracing_data = astropy.io.ascii.read(
-            self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
-        )
-        if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
+        ray_tracing_data = self.get_parameter_table("optics_properties")
+        if not np.isclose(ray_tracing_data["Off-axis_angle"][0], 0):
             msg = (
                 f"No value for the on-axis effective optical area exists."
-                f" The minimum off-axis angle is {ray_tracing_data['Off-axis angle'][0]}"
+                f" The minimum off-axis angle is {ray_tracing_data['Off-axis_angle'][0]}"
             )
             raise ValueError(msg)
         return ray_tracing_data["eff_area"][0]
 
-    def read_incidence_angle_distribution(self, incidence_angle_dist_file: str) -> Table:
+    def read_incidence_angle_distribution(self, parameter_name: str) -> Table:
         """
         Read the incidence angle distribution from a file.
 
         Parameters
         ----------
-        incidence_angle_dist_file: str
-            File name of the incidence angle distribution
+        parameter_name: str
+            Name of the incidence angle distribution parameter.
 
         Returns
         -------
@@ -296,9 +304,9 @@ class TelescopeModel(ModelParameter):
         """
         self._logger.debug(
             "Reading incidence angle distribution from %s",
-            self.config_file_directory.joinpath(incidence_angle_dist_file),
+            parameter_name,
         )
-        return astropy.io.ascii.read(self.config_file_directory.joinpath(incidence_angle_dist_file))
+        return self.get_parameter_table(parameter_name)
 
     @staticmethod
     def calc_average_curve(curves: dict, incidence_angle_dist: Table) -> Table:

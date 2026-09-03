@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock
 
 import astropy.table
 import pytest
@@ -154,10 +154,11 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
     assert f"Camera config file {camera_config_file} or config file directory" in caplog.text
 
 
-def test_is_file_2d_true(telescope_model_lst):
-    with patch("builtins.open", mock_open(read_data="something @RPOL@ inside")):
-        result = telescope_model_lst.is_file_2d("mirror_list")
-        assert result is True
+def test_is_file_2d_true(telescope_model_lst, monkeypatch):
+    table = astropy.table.QTable()
+    table.meta["simtelarray_table_format"] = "rpol_matrix"
+    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
+    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
 
 
 def test_is_file_2d_keyerror(telescope_model_lst, caplog):
@@ -167,17 +168,16 @@ def test_is_file_2d_keyerror(telescope_model_lst, caplog):
 
 
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis angle": [0.0], "eff_area": [123.4]})
-    with patch("astropy.io.ascii.read", return_value=fake_table):
-        result = telescope_model_lst.get_on_axis_eff_optical_area()
-        assert result == pytest.approx(123.4)
+    fake_table = astropy.table.Table({"Off-axis_angle": [0.0], "eff_area": [123.4]})
+    telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
+    assert telescope_model_lst.get_on_axis_eff_optical_area() == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis angle": [1.0], "eff_area": [123.4]})
-    with patch("astropy.io.ascii.read", return_value=fake_table):
-        with pytest.raises(ValueError, match=r"^No value for the on-axis"):
-            telescope_model_lst.get_on_axis_eff_optical_area()
+    fake_table = astropy.table.Table({"Off-axis_angle": [1.0], "eff_area": [123.4]})
+    telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
+    with pytest.raises(ValueError, match=r"^No value for the on-axis"):
+        telescope_model_lst.get_on_axis_eff_optical_area()
 
 
 def test_get_calibration_device_name(telescope_model_lst):
@@ -273,46 +273,35 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
     assert result == pytest.approx(16.0)
 
 
-def test_read_two_dim_wavelength_angle(telescope_model_lst, tmp_path):
-
-    tel_model = telescope_model_lst
-
-    # Create mock file in config directory
-    file_content = (
-        "# Test file\n"
-        "ANGLE = 0.0 10.0 20.0\n"
-        "300.0 0.8 0.75 0.7\n"
-        "400.0 0.9 0.85 0.8\n"
-        "500.0 0.95 0.9 0.85\n"
+def test_read_two_dim_wavelength_angle(telescope_model_lst):
+    table = astropy.table.QTable(
+        {
+            "wavelength": [300.0, 300.0, 400.0, 400.0],
+            "angle": [0.0, 10.0, 0.0, 10.0],
+            "reflectivity": [0.8, 0.75, 0.9, 0.85],
+        }
     )
+    telescope_model_lst.get_parameter_table = Mock(return_value=table)
 
-    mock_file_path = tel_model.config_file_directory / "test_2d.dat"
-    mock_file_path.write_text(file_content)
-
-    result = tel_model.read_two_dim_wavelength_angle("test_2d.dat")
+    result = telescope_model_lst.read_two_dim_wavelength_angle("mirror_reflectivity")
 
     assert "Wavelength" in result
     assert "Angle" in result
     assert "z" in result
-    assert len(result["Wavelength"]) == 3
-    assert len(result["Angle"]) == 3
-    assert result["z"].shape == (3, 3)
+    assert len(result["Wavelength"]) == 2
+    assert len(result["Angle"]) == 2
+    assert result["z"].shape == (2, 2)
 
 
 def test_read_incidence_angle_distribution(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    # Create a mock file in config directory
-    mock_file_path = tel_model.config_file_directory / "incidence.ecsv"
     incidence_table = astropy.table.Table(
         {
             "Incidence angle": [0.0, 10.0],
             "Fraction": [0.5, 0.3],
         }
     )
-    incidence_table.write(mock_file_path, format="ascii.ecsv", overwrite=True)
-
-    result = tel_model.read_incidence_angle_distribution("incidence.ecsv")
+    telescope_model_lst.get_parameter_table = Mock(return_value=incidence_table)
+    result = telescope_model_lst.read_incidence_angle_distribution("incidence_angle")
 
     assert isinstance(result, astropy.table.Table)
     assert len(result) == 2
