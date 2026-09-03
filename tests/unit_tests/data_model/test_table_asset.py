@@ -22,7 +22,6 @@ def _table():
             "site": "North",
             "source_file_name": "pulse.dat",
             "original_comments": [],
-            "conversion_tool": "test",
         }
     )
     return table

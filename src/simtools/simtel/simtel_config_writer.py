@@ -740,6 +740,7 @@ class SimtelConfigWriter:
             if not source.is_file():
                 raise FileNotFoundError(f"Co-located ECSV table was not exported: {source}")
             schema_entry = None
+            schema_data = {}
             if parameter_data is not None:
                 schema_data = schema.get_model_parameter_schema(
                     source_parameter, parameter_data.get("model_parameter_schema_version")
@@ -751,7 +752,17 @@ class SimtelConfigWriter:
             table = read_ecsv_asset(
                 source, schema_entry=schema_entry, parameter_data=parameter_data
             )
-            return simtel_table_writer.write_simtel_table(table, dest_dir)
+            table_format = next(
+                (
+                    software.get("table_format")
+                    for software in schema_data.get("simulation_software", [])
+                    if software.get("name") == "sim_telarray"
+                ),
+                None,
+            )
+            return simtel_table_writer.write_simtel_table(
+                table, dest_dir, table_format=table_format
+            )
         if not isinstance(value, dict):
             return value
         dest_dir = Path(model_path).parent

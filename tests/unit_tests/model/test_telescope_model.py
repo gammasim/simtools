@@ -124,7 +124,6 @@ def test_load_camera(telescope_model_lst, monkeypatch):
 
 def test_is_file_2d_true(telescope_model_lst, monkeypatch):
     table = astropy.table.QTable()
-    table.meta["simtelarray_table_format"] = "rpol_matrix"
     monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
     assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
 

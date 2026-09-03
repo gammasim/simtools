@@ -20,9 +20,8 @@ def test_write_mirror_segmentation(tmp_test_directory):
 def test_write_ecsv_table_uses_original_filename(tmp_test_directory):
     table = QTable({"time": [0.0, 1.0], "amplitude": [0.0, 1.0]})
     table.meta["simtelarray_original_file_name"] = "pulse.dat"
-    table.meta["simtelarray_table_format"] = "pulse"
 
-    result = simtel_table_writer.write_simtel_table(table, tmp_test_directory)
+    result = simtel_table_writer.write_simtel_table(table, tmp_test_directory, table_format="pulse")
 
     assert result == "pulse.dat"
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
@@ -50,11 +49,12 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
     table.meta.update(
         {
             "simtelarray_original_file_name": "reflectivity.dat",
-            "simtelarray_table_format": "rpol_matrix",
         }
     )
 
-    result = simtel_table_writer.write_simtel_table(table, tmp_test_directory)
+    result = simtel_table_writer.write_simtel_table(
+        table, tmp_test_directory, table_format="rpol_matrix"
+    )
 
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
         "#@RPOL@[ANGLE=] 2",

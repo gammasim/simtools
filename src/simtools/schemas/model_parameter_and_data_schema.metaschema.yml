@@ -335,6 +335,9 @@ definitions:
           - set
         description: |-
           meta parameter serialization mode
+      table_format:
+        type: string
+        description: sim_telarray table serialization format
       set_meta_parameter:
         type: boolean
         description: |-

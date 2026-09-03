@@ -7,6 +7,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.data_model import schema
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
@@ -227,12 +228,16 @@ class TelescopeModel(ModelParameter):
             True if the file is a 2D map type.
         """
         try:
-            table = self.get_parameter_table(par)
+            self.get_parameter_table(par)
         except InvalidModelParameterError:
             logging.warning(f"Parameter {par} does not exist")
             return False
 
-        return table.meta.get("simtelarray_table_format") == "rpol_matrix"
+        parameter_schema = schema.get_model_parameter_schema(par)
+        return any(
+            software.get("name") == "sim_telarray" and software.get("table_format") == "rpol_matrix"
+            for software in parameter_schema.get("simulation_software", [])
+        )
 
     def read_two_dim_wavelength_angle(self, parameter_name: str) -> dict:
         """

@@ -269,7 +269,9 @@ def _module_id(value):
     return f"0x{integer:x}"
 
 
-def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None):
+def write_simtel_table(
+    table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None, table_format=None
+):
     """Write a table parameter to a space-separated ASCII file for sim_telarray.
 
     Parameters
@@ -294,7 +296,7 @@ def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telesco
         If ``value`` does not contain ``columns`` and ``rows`` keys.
     """
     if isinstance(table_or_parameter, Table):
-        return _write_ecsv_table(table_or_parameter, value_or_dest)
+        return _write_ecsv_table(table_or_parameter, value_or_dest, table_format)
 
     parameter_name = table_or_parameter
     value = value_or_dest
@@ -318,7 +320,7 @@ def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telesco
     return file_name
 
 
-def _write_ecsv_table(table, dest_dir):
+def _write_ecsv_table(table, dest_dir, table_format=None):
     """Write a validated ECSV table in its original sim_telarray representation."""
     output_name = table.meta.get("simtelarray_original_file_name")
     if not output_name:
@@ -327,7 +329,7 @@ def _write_ecsv_table(table, dest_dir):
     if Path(output_name).name != output_name:
         raise ValueError(f"Unsafe sim_telarray output filename: {output_name}")
 
-    format_name = table.meta.get("simtelarray_table_format", "plain")
+    format_name = table_format or "plain"
     writers = {
         "plain": _write_plain_table,
         "pulse": _write_plain_table,

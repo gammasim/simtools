@@ -36,16 +36,8 @@ data:
         description: Original source comments
         type: array
         required: true
-      - name: conversion_tool
-        description: Conversion utility identifier
-        type: string
-        required: true
       - name: simtelarray_original_file_name
         description: Original simulator output basename
-        type: string
-        required: false
-      - name: simtelarray_table_format
-        description: Simulator serialization format
         type: string
         required: false
 instrument:
@@ -62,6 +54,7 @@ source:
 simulation_software:
   - name: corsika
   - name: sim_telarray
+    table_format: atmospheric_transmission
     meta_parameter_mode: add
 plot_configuration:
   - type: atmospheric_transmission
