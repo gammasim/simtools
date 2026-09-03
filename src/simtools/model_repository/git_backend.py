@@ -5,7 +5,7 @@ from pathlib import Path, PurePosixPath
 
 
 class GitModelSourceDependencyError(RuntimeError):
-    """Raised when the Git model source is selected without pygit2."""
+    """Raised when the Git model source is selected without its runtime dependency."""
 
 
 class GitObjectStore(ABC):
@@ -38,7 +38,7 @@ class Pygit2ObjectStore(GitObjectStore):
         except ImportError as exc:
             raise GitModelSourceDependencyError(
                 "The Git simulation-model source requires pygit2; "
-                "install simtools with the `git` extra."
+                "install simtools with its standard dependencies."
             ) from exc
 
         self.repository_path = Path(repository_path).expanduser().resolve()

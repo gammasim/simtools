@@ -535,7 +535,7 @@ def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
     """Git construction and source metadata are exposed by the facade."""
     git_source = Mock(source_name="models@commit", source_config={"type": "git"})
     git_class = mocker.patch(
-        "simtools.model_repository.git_model.GitModelSource", return_value=git_source
+        "simtools.model_repository.reader.GitModelSource", return_value=git_source
     )
 
     reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")

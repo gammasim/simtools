@@ -17,8 +17,8 @@ their referenced parameter JSON on first access, while large `Files/` payloads r
 
 If no repository source is configured, the existing MongoDB configuration is used as a fallback.
 MongoDB support is optional: install it with `pip install 'gammasimtools[mongodb]'` when using
-database administration commands or the MongoDB model-reader fallback. Install the Git reader with
-`pip install 'gammasimtools[git]'`.
+database administration commands or the MongoDB model-reader fallback. Git model reading is
+included in the standard installation.
 
 ```{important}
 No direct write access to the simulation model database is allowed to general users.

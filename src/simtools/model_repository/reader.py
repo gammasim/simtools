@@ -10,6 +10,7 @@ from packaging.version import Version
 from simtools import settings
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.git_model import GitModelSource
 from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.simtel import simtel_table_reader
 from simtools.utils import names
@@ -253,10 +254,6 @@ class SimulationModelReader:
     @classmethod
     def from_git(cls, repository_path, revision, object_store=None):
         """Create a reader for one immutable revision of a Git repository."""
-        from simtools.model_repository.git_model import (  # pylint: disable=import-outside-toplevel
-            GitModelSource,
-        )
-
         return cls(GitModelSource(repository_path, revision, object_store=object_store))
 
     @property

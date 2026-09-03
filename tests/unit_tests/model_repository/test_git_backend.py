@@ -70,12 +70,12 @@ def _install_pygit2(monkeypatch, repository):
     monkeypatch.setitem(sys.modules, "pygit2", pygit2)
 
 
-def test_pygit2_object_store_requires_optional_dependency(monkeypatch, tmp_test_directory):
+def test_pygit2_object_store_requires_runtime_dependency(monkeypatch, tmp_test_directory):
     """Selecting a Git source explains how to install its dependency."""
     monkeypatch.setitem(sys.modules, "pygit2", None)
 
     with pytest.raises(
-        GitModelSourceDependencyError, match="install simtools with the `git` extra"
+        GitModelSourceDependencyError, match="install simtools with its standard dependencies"
     ):
         Pygit2ObjectStore(tmp_test_directory)
 
