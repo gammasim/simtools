@@ -79,13 +79,13 @@ def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_di
         file=array_element_dir / "num_gains" / "num_gains-0.1.0.json",
         collection="telescopes",
         db=mock_db,
-        file_prefix=input_path / "Files",
+        file_prefix=array_element_dir / "num_gains",
     )
     mock_add_values_from_json_to_db.assert_any_call(
         file=array_element_dir / "mirror_list" / "mirror_list-0.2.1.json",
         collection="telescopes",
         db=mock_db,
-        file_prefix=input_path / "Files",
+        file_prefix=array_element_dir / "mirror_list",
     )
     assert mock_add_values_from_json_to_db.call_count == 2
 
@@ -119,37 +119,42 @@ def test_add_model_parameters_to_db_uses_parameter_schema_collection(
         file=simtel_parameter,
         collection="configuration_sim_telarray",
         db=mock_db,
-        file_prefix=input_path / "Files",
+        file_prefix=simtel_parameter.parent,
     )
     mock_add_values_from_json_to_db.assert_any_call(
         file=corsika_parameter,
         collection="configuration_corsika",
         db=mock_db,
-        file_prefix=input_path / "Files",
+        file_prefix=corsika_parameter.parent,
     )
     mock_add_values_from_json_to_db.assert_any_call(
         file=calibration_parameter,
         collection="calibration_devices",
         db=mock_db,
-        file_prefix=input_path / "Files",
+        file_prefix=calibration_parameter.parent,
     )
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
-def test_add_model_parameters_to_db_skip_files_collection(
+def test_add_model_parameters_to_db_processes_all_parameter_directories(
     mock_add_values_from_json_to_db, tmp_test_directory
 ):
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
-    files_dir = input_path / "Files"
-    files_dir.mkdir(parents=True, exist_ok=True)
-    (files_dir / "file1.json").touch()
+    parameter_dir = input_path / "LSTN-design" / "num_gains"
+    parameter_dir.mkdir(parents=True, exist_ok=True)
+    (parameter_dir / "file1.json").touch()
 
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[files_dir]):
+    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[parameter_dir]):
         with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
-    mock_add_values_from_json_to_db.assert_not_called()
+    mock_add_values_from_json_to_db.assert_called_once_with(
+        file=parameter_dir / "file1.json",
+        collection="telescopes",
+        db=mock_db,
+        file_prefix=parameter_dir,
+    )
 
 
 @patch("builtins.input")

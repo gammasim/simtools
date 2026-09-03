@@ -172,10 +172,8 @@ def simulation_models_path(tmp_test_directory):
         parameters / "global/iobuf_maximum/iobuf_maximum-1.0.0.json",
         _parameter(None, None, "iobuf_maximum", "1.0.0", 1000, unit="byte"),
     )
-    files = parameters / "Files"
-    files.mkdir()
-    (files / "model.dat").write_text("model data\n", encoding="utf-8")
-    Table({"value": [1.0]}).write(files / "model.ecsv", format="ascii.ecsv")
+    (parameters / "model.dat").write_text("model data\n", encoding="utf-8")
+    Table({"value": [1.0]}).write(parameters / "model.ecsv", format="ascii.ecsv")
     return model_root
 
 
@@ -374,7 +372,7 @@ def test_model_file_export_errors(simulation_models_path, tmp_test_directory):
         handler.export_model_files(file_names="model.dat")
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         handler.export_model_files(file_names="missing.dat", dest=tmp_test_directory)
-    with pytest.raises(ValueError, match="escapes model"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         handler.export_model_files(file_names="../outside.dat", dest=tmp_test_directory)
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         handler.get_ecsv_file_as_astropy_table("missing.ecsv")

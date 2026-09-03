@@ -505,7 +505,7 @@ class ReadParameters:
                 outfile.write(
                     f"\n\nThe full file can be found in the Simulation Model repository [here]"
                     f"({DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{input_file.name}).\n\n"
+                    "simulation-models/model_parameters).\n\n"
                 )
                 outfile.write("\n\n")
                 outfile.write("The first 30 lines of the file are:\n")
@@ -533,7 +533,7 @@ class ReadParameters:
                 return (
                     f"[{Path(value_data).name}]({DEFAULT_SIMULATIONS_REPO}"
                     f"/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{value_data})"
+                    "simulation-models/model_parameters)"
                 ).strip()
             plot_kwargs = {
                 key: value for key, value in (("telescope", telescope), ("site", site)) if value

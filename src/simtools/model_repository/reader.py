@@ -32,7 +32,6 @@ class FileSystemModelSource:
         self.model_parameters_path = (
             self.simulation_models_path / "simulation-models/model_parameters"
         )
-        self.files_path = self.model_parameters_path / "Files"
         self._production_tables = {}
         self._production_files = {}
         self._parameters = {}
@@ -248,7 +247,7 @@ class FileSystemModelSource:
         return "copied from filesystem"
 
     def resolve_parameter_asset(self, parameter_data):
-        """Resolve a parameter asset from its declared location."""
+        """Resolve a parameter asset relative to its parameter document."""
         value = parameter_data.get("value") if isinstance(parameter_data, dict) else parameter_data
         if not isinstance(value, str):
             raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
@@ -263,7 +262,7 @@ class FileSystemModelSource:
                 self.model_parameters_path / scope / parameter / f"{parameter}-{version}.json"
             )
         else:
-            parameter_file = self.files_path / value
+            parameter_file = self.model_parameters_path / value
         return resolve_asset_path(value, parameter_file)
 
     def get_parameter_table(self, parameter_data):
@@ -281,20 +280,10 @@ class FileSystemModelSource:
             parameter_data=parameter_data,
         )
 
-    def _safe_file_path(self, file_name):
-        """Resolve a model file without allowing path traversal."""
-        files_path = self.files_path.resolve()
-        source = (files_path / file_name).resolve()
-        if not source.is_relative_to(files_path):
-            raise ValueError(f"Model file path escapes model Files directory: {file_name}")
-        return source
-
     def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
         """Read an ECSV model file."""
-        source = (
-            self.resolve_parameter_asset(parameter_data)
-            if parameter_data is not None
-            else self._safe_file_path(file_name)
+        source = self.resolve_parameter_asset(
+            parameter_data if parameter_data is not None else {"value": file_name}
         )
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
