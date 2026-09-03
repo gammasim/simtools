@@ -226,7 +226,11 @@ def _initialize_runtime(
 
     model_reader = None
     if initialize_model_reader:
-        model_reader = create_model_reader(args_dict.get("simulation_models_path"))
+        model_reader = create_model_reader(
+            simulation_models_path=args_dict.get("simulation_models_path"),
+            simulation_models_git_path=args_dict.get("simulation_models_git_path"),
+            simulation_models_git_revision=args_dict.get("simulation_models_git_revision"),
+        )
         config.set_model_reader(model_reader)
         _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
     _version_info(args_dict, io_handler_instance, logger)

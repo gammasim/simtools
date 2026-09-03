@@ -19,7 +19,16 @@ def validate(path, rule, configuration, model_reader=None):
     """
     parameter_name = rule["reference_parameter_name"]
     if model_reader is None:
-        model_reader = create_model_reader(configuration.get("simulation_models_path"))
+        git_path = configuration.get("simulation_models_git_path")
+        git_revision = configuration.get("simulation_models_git_revision")
+        if git_path is None and git_revision is None:
+            model_reader = create_model_reader(configuration.get("simulation_models_path"))
+        else:
+            model_reader = create_model_reader(
+                simulation_models_path=configuration.get("simulation_models_path"),
+                simulation_models_git_path=git_path,
+                simulation_models_git_revision=git_revision,
+            )
     reference = model_reader.get_model_parameter(
         parameter=parameter_name,
         site=configuration.get("site"),

@@ -14,18 +14,37 @@ from simtools.testing import configuration, helpers, log_inspector, validate_out
 logger = logging.getLogger()
 
 
-def _get_simulation_models_path(config, request, simtools_root_path):
-    """Return the configured model path or skip MongoDB-only applications."""
+def _get_simulation_model_source(config, request, simtools_root_path):
+    """Return the configured model source or skip MongoDB-only applications."""
     simulation_models_path = request.config.getoption("simulation_models_path", default=None)
-    if not simulation_models_path:
-        return None
+    git_path = request.config.getoption("simulation_models_git_path", default=None)
+    git_revision = request.config.getoption("simulation_models_git_revision", default=None)
+    if not simulation_models_path and not git_path:
+        return None, None
     if config.get("requires_mongodb"):
         pytest.skip(f"{config['application']} requires MongoDB")
 
-    simulation_models_path = Path(simulation_models_path)
-    if not simulation_models_path.is_absolute():
-        simulation_models_path = Path(simtools_root_path) / simulation_models_path
-    return simulation_models_path.resolve()
+    if simulation_models_path:
+        simulation_models_path = Path(simulation_models_path)
+        if not simulation_models_path.is_absolute():
+            simulation_models_path = Path(simtools_root_path) / simulation_models_path
+        return simulation_models_path.resolve(), None
+
+    git_path = Path(git_path)
+    if not git_path.is_absolute():
+        git_path = Path(simtools_root_path) / git_path
+    return None, (git_path.resolve(), git_revision)
+
+
+def _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source):
+    """Set environment variables for the selected simulation-model source."""
+    if simulation_models_path:
+        monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
+    if git_source:
+        git_path, git_revision = git_source
+        monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(git_path))
+        if git_revision:
+            monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", git_revision)
 
 
 def pytest_generate_tests(metafunc):
@@ -83,9 +102,10 @@ def test_applications_from_config(
     if tmp_config.get("skip_integration_test"):
         pytest.skip(tmp_config["skip_integration_test"])
 
-    simulation_models_path = _get_simulation_models_path(tmp_config, request, simtools_root_path)
-    if simulation_models_path:
-        monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
+    simulation_models_path, git_source = _get_simulation_model_source(
+        tmp_config, request, simtools_root_path
+    )
+    _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
 
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
@@ -134,17 +154,36 @@ def test_applications_from_config(
     )
 
 
-def test_get_simulation_models_path(tmp_test_directory, mocker):
+def test_get_simulation_model_source_from_filesystem(tmp_test_directory, mocker):
     """Resolve a relative simulation-model path against the simtools root."""
     request = mocker.MagicMock()
     request.config.getoption.return_value = "../simulation-models"
     root_path = Path(tmp_test_directory) / "simtools"
 
-    path = _get_simulation_models_path(
+    path, git_source = _get_simulation_model_source(
         {"application": "simtools-simulate-prod"}, request, root_path
     )
 
     assert path == (root_path / "../simulation-models").resolve()
+    assert git_source is None
+
+
+def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
+    """Resolve Git source options and preserve their requested revision."""
+    request = mocker.MagicMock()
+    options = {
+        "simulation_models_path": None,
+        "simulation_models_git_path": "../simulation-models.git",
+        "simulation_models_git_revision": "HEAD",
+    }
+    request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
+
+    path, git_source = _get_simulation_model_source(
+        {"application": "simtools-simulate-prod"}, request, tmp_test_directory
+    )
+
+    assert path is None
+    assert git_source == ((Path(tmp_test_directory) / "../simulation-models.git").resolve(), "HEAD")
 
 
 def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
@@ -154,17 +193,14 @@ def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
     config = {"application": "simtools-mongodb-operation", "requires_mongodb": True}
 
     with pytest.raises(pytest.skip.Exception, match="simtools-mongodb-operation requires MongoDB"):
-        _get_simulation_models_path(config, request, tmp_test_directory)
+        _get_simulation_model_source(config, request, tmp_test_directory)
 
 
-def test_get_simulation_models_path_is_optional(tmp_test_directory, mocker):
+def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker):
     """Leave integration tests unchanged when no filesystem path is configured."""
     request = mocker.MagicMock()
     request.config.getoption.return_value = None
 
-    assert (
-        _get_simulation_models_path(
-            {"application": "simtools-simulate-prod"}, request, tmp_test_directory
-        )
-        is None
-    )
+    assert _get_simulation_model_source(
+        {"application": "simtools-simulate-prod"}, request, tmp_test_directory
+    ) == (None, None)

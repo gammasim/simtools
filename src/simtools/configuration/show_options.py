@@ -141,8 +141,7 @@ def _show_sites(_args_dict):
 
 
 def _show_model_versions(args_dict):
-    simulation_models_path = args_dict.get("simulation_models_path")
-    model_reader = create_model_reader(simulation_models_path)
+    model_reader = _create_model_reader(args_dict)
     return ShowOptionsResult(
         option_name="model_version",
         values=tuple(model_reader.get_model_versions()),
@@ -151,8 +150,7 @@ def _show_model_versions(args_dict):
 
 def _show_array_layout_names(args_dict):
     model_version = _get_single_model_version(args_dict, "array_layout_name")
-    simulation_models_path = args_dict.get("simulation_models_path")
-    model_reader = create_model_reader(simulation_models_path)
+    model_reader = _create_model_reader(args_dict)
     site = args_dict.get("site")
     sites = [site] if site else sorted(names.site_names())
     grouped_values = {
@@ -174,6 +172,19 @@ def _show_array_layout_names(args_dict):
         option_name="array_layout_name",
         grouped_values=grouped_values,
         notes=("Provide --site to limit array layouts to one site.",),
+    )
+
+
+def _create_model_reader(args_dict):
+    """Create a configured model reader for an option provider."""
+    git_path = args_dict.get("simulation_models_git_path")
+    git_revision = args_dict.get("simulation_models_git_revision")
+    if git_path is None and git_revision is None:
+        return create_model_reader(args_dict.get("simulation_models_path"))
+    return create_model_reader(
+        simulation_models_path=args_dict.get("simulation_models_path"),
+        simulation_models_git_path=git_path,
+        simulation_models_git_revision=git_revision,
     )
 
 

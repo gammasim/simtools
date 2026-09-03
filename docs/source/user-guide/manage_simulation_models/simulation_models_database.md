@@ -4,23 +4,30 @@
 The following applications are for testing, maintenance or debugging the simulation model database and repository.
 Note that the remote primary production database is modified only by the simulation models GitLab CI.
 
-## Reading from files
+## Reading from files or Git blobs
 
-Applications can read the simulation model from a local directory instead of MongoDB:
+Applications that use `SimulationModelReader` can read the simulation model
+from a local directory instead of MongoDB with
+`--simulation_models_path /path/to/model-files`.
+
+The supplied path must contain `simulation-models/productions` and
+`simulation-models/model_parameters`. A local Git object store can be used when one shared
+repository should serve several model revisions without multiple checkouts:
 
 ```console
-simtools-db-get-parameter-from-db \
-    --simulation_models_path /path/to/model-files \
-    --parameter camera_body_diameter \
-    --parameter_version 1.0.0 \
-    --site North \
-    --telescope LSTN-design
+simtools-simulate-prod \
+    --simulation_models_git_path /path/to/simulation-models.git \
+    --simulation_models_git_revision v0.17.2 \
+    --model_version 6.0.2
 ```
 
-The supplied path must contain
-`simulation-models/productions` and `simulation-models/model_parameters`. When the option is set,
-the filesystem source takes precedence over MongoDB configuration. Production tables and referenced
-parameter files are cached for the process lifetime; unrelated parameter versions are not read.
+The Git path may point to a normal, bare, or mirror repository. The revision is resolved once to a
+full commit ID, which is retained in worker configuration. Production tables and all parameter JSON
+files referenced by a selected model version are loaded in batches and cached for the process
+lifetime. Large files below `model_parameters/Files` are read only when explicitly exported.
+
+An explicit filesystem path takes precedence over a Git path; configuring both is an error. If
+neither is configured, the MongoDB source remains the fallback.
 
 Filesystem access is read-only. Database inspection, index generation, uploads, and inserts
 require MongoDB and report an error if used with only `--simulation_models_path`.

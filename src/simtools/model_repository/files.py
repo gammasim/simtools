@@ -1,6 +1,7 @@
 """Read and combine production-table files from a model repository."""
 
 import logging
+from pathlib import Path
 
 from packaging.version import Version
 
@@ -44,9 +45,36 @@ def read_production_tables(model_path, collection_name=None, production_files=No
     return model_dict
 
 
+def read_production_tables_from_documents(model_version, documents, collection_name=None):
+    """Read and merge production tables from parsed repository documents.
+
+    ``documents`` contains ``(model_name, file_name, document)`` tuples.  The
+    representation is shared by filesystem and Git readers so that both
+    sources apply patch history and production-table merging identically.
+    """
+    model_dict = {}
+    for model_name, file_name, document in documents:
+        if collection_name and (
+            names.get_collection_name_from_array_element_name(Path(file_name).stem, False)
+            != collection_name
+        ):
+            continue
+        _merge_production_table(model_dict, Path(file_name).stem, model_name, document)
+
+    for table in model_dict.values():
+        table["model_version"] = model_version
+    _remove_deprecated_model_parameters(model_dict)
+    return model_dict
+
+
 def _read_production_table(model_dict, file, model_name):
     """Read one production-table JSON file into an aggregate."""
-    array_element = file.stem
+    parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
+    _merge_production_table(model_dict, file.stem, model_name, parameter_dict)
+
+
+def _merge_production_table(model_dict, array_element, model_name, parameter_dict):
+    """Merge one parsed production-table document into an aggregate."""
     collection = names.get_collection_name_from_array_element_name(array_element, False)
     model_dict.setdefault(
         collection,
@@ -58,7 +86,6 @@ def _read_production_table(model_dict, file, model_name):
             "deprecated_parameters": [],
         },
     )
-    parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
     if array_element in ("configuration_corsika", "configuration_sim_telarray"):
         model_dict[collection]["parameters"] = parameter_dict["parameters"]
     else:

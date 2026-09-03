@@ -10,6 +10,7 @@ from simtools.application.model_reader import (
     create_model_reader_from_source_config,
     require_model_reader,
 )
+from simtools.model_repository.reader import SimulationModelReader
 from simtools.settings import config
 
 
@@ -54,6 +55,30 @@ def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directo
     assert reader.source_name == str(root.resolve())
 
 
+def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_directory):
+    """A Git path and revision select the Git source without MongoDB."""
+    git_path = Path(tmp_test_directory) / "models.git"
+    git_reader = Mock()
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=git_reader)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(git_path))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "v1")
+    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
+
+    assert create_model_reader() is git_reader
+    from_git.assert_called_once_with(str(git_path), "v1")
+    database_handler.assert_not_called()
+
+
+def test_create_model_reader_rejects_two_repository_sources(tmp_test_directory):
+    """Filesystem and Git sources cannot be selected simultaneously."""
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        create_model_reader(
+            simulation_models_path=tmp_test_directory,
+            simulation_models_git_path=tmp_test_directory,
+            simulation_models_git_revision="v1",
+        )
+
+
 def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
     """Worker source reconstruction keeps the selected MongoDB name."""
     handler = Mock()
@@ -64,6 +89,19 @@ def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
 
     assert handler.db_name == "worker-db"
     assert reader.source_name == "worker-db"
+
+
+def test_create_model_reader_from_source_config_reopens_git_revision(mocker):
+    """Workers reconstruct Git readers from the serialized commit."""
+    reader = Mock()
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=reader)
+
+    result = create_model_reader_from_source_config(
+        {"type": "git", "repository": "/models.git", "commit": "a" * 40}
+    )
+
+    assert result is reader
+    from_git.assert_called_once_with("/models.git", "a" * 40)
 
 
 def test_require_model_reader_prefers_explicit_reader():

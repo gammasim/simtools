@@ -7,12 +7,20 @@ The simtools package can use MongoDB to store production tables and simulation m
 MongoDB support is optional: install it with `pip install 'gammasimtools[mongodb]'` when using
 database administration commands or the MongoDB model-reader fallback.
 
-Normal applications read from a checked-out simulation-model repository when
-`simulation_models_path` (or `SIMTOOLS_SIMULATION_MODELS_PATH`) is configured. If no repository
-path is configured, the existing MongoDB configuration is used as a fallback. This keeps database
-backed tests and established workflows working while making repository reads independent of
-MongoDB. Without the optional dependency, MongoDB-only commands and the no-path fallback fail
-with an installation hint.
+Normal applications can read from a checked-out simulation-model repository when
+`simulation_models_path` (or `SIMTOOLS_SIMULATION_MODELS_PATH`) is configured. They can also read
+directly from a local normal, bare, or mirror Git repository with
+`simulation_models_git_path` and `simulation_models_git_revision` (or the corresponding
+`SIMTOOLS_SIMULATION_MODELS_GIT_*` variables). The Git source resolves the revision to an
+immutable commit and reads production tables, parameters, and model files directly from blobs;
+it never creates a checkout. An explicitly configured filesystem path takes precedence over Git,
+and Git takes precedence over the MongoDB fallback. The Git source warms production tables and
+their referenced parameter JSON on first access, while large `Files/` payloads remain lazy.
+
+If no repository source is configured, the existing MongoDB configuration is used as a fallback.
+MongoDB support is optional: install it with `pip install 'gammasimtools[mongodb]'` when using
+database administration commands or the MongoDB model-reader fallback. Install the Git reader with
+`pip install 'gammasimtools[git]'`.
 
 ```{important}
 No direct write access to the simulation model database is allowed to general users.
