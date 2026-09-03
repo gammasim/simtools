@@ -34,10 +34,11 @@ def _is_mongodb_application(config):
 def _has_mongodb_configuration(configuration=None):
     """Return whether required MongoDB settings are available to the application."""
     configuration = configuration or {}
-    values = [
-        configuration.get(variable.removeprefix("SIMTOOLS_").lower()) or os.environ.get(variable)
-        for variable in _MONGODB_ENVIRONMENT
-    ]
+    values = []
+    for variable in _MONGODB_ENVIRONMENT:
+        configuration_name = variable.removeprefix("SIMTOOLS_").lower()
+        value = configuration.get(configuration_name) or os.environ.get(variable)
+        values.append(value)
     model_tag = (
         configuration.get("db_simulation_model_tag")
         or configuration.get("db_simulation_model_version")

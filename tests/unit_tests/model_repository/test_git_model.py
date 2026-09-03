@@ -110,14 +110,17 @@ def test_git_source_reads_patch_history_and_ignores_non_json_files(tmp_test_dire
 
 
 def test_git_source_collects_parameter_paths_and_handles_missing_values():
-    """Parameter warm-up indexes only dictionary string references."""
+    """Parameter warm-up indexes instrument and global string references."""
     tables = {
         "telescopes": {
             "parameters": {
                 "LSTN-01": {"camera_body_diameter": "1.0.0", "ignored": 1},
                 "invalid": "not a mapping",
             }
-        }
+        },
+        "configuration_sim_telarray": {
+            "parameters": {"camera_body_diameter": "2.0.0", "ignored": 1}
+        },
     }
 
     paths = GitModelSource._parameter_paths(tables)
@@ -125,7 +128,13 @@ def test_git_source_collects_parameter_paths_and_handles_missing_values():
     expected_path = GitModelSource._parameter_path(
         "telescopes", "LSTN-01", "camera_body_diameter", "1.0.0"
     )
-    assert paths == {expected_path: ("camera_body_diameter", "1.0.0")}
+    global_path = GitModelSource._parameter_path(
+        "configuration_sim_telarray", "global", "camera_body_diameter", "2.0.0"
+    )
+    assert paths == {
+        expected_path: ("camera_body_diameter", "1.0.0"),
+        global_path: ("camera_body_diameter", "2.0.0"),
+    }
 
 
 def test_git_source_reads_and_filters_parameters(tmp_test_directory, mocker):

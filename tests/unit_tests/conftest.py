@@ -563,7 +563,7 @@ def mock_db_handler(request):
 
 
 @pytest.fixture(autouse=True)
-def patch_database_handler(request, mocker, simtools_settings):
+def patch_database_handler(request, mocker, monkeypatch, simtools_settings):
     """
     Install a source-neutral model reader for normal unit tests.
 
@@ -579,6 +579,13 @@ def patch_database_handler(request, mocker, simtools_settings):
         ):
             yield
         return
+
+    for variable in (
+        "SIMTOOLS_SIMULATION_MODELS_PATH",
+        "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION",
+    ):
+        monkeypatch.delenv(variable, raising=False)
 
     mock_model_reader = request.getfixturevalue("mock_model_reader")
     # Mock schema validation to avoid version check issues

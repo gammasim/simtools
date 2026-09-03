@@ -161,7 +161,7 @@ class GitModelSource:
         """Return unique parameter paths referenced by production tables."""
         paths = {}
         for collection, table in tables.items():
-            for instrument, parameters in table.get("parameters", {}).items():
+            for instrument, parameters in GitModelSource._parameter_sets(collection, table).items():
                 if not isinstance(parameters, dict):
                     continue
                 for parameter, version in parameters.items():
@@ -172,6 +172,14 @@ class GitModelSource:
                     )
                     paths[path] = (parameter, version)
         return paths
+
+    @staticmethod
+    def _parameter_sets(collection, table):
+        """Return parameter mappings grouped by their repository scope."""
+        parameters = table.get("parameters", {})
+        if collection in ("configuration_corsika", "configuration_sim_telarray"):
+            return {"global": parameters}
+        return parameters
 
     def _read_parameter_paths(self, paths):
         """Read all missing parameter paths in one source batch."""
