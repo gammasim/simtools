@@ -12,6 +12,37 @@ import pytest
 from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
+_MONGODB_ENVIRONMENT = (
+    "SIMTOOLS_DB_SERVER",
+    "SIMTOOLS_DB_API_USER",
+    "SIMTOOLS_DB_API_PW",
+    "SIMTOOLS_DB_API_PORT",
+    "SIMTOOLS_DB_SIMULATION_MODEL",
+)
+_MONGODB_MODEL_TAG_ENVIRONMENT = (
+    "SIMTOOLS_DB_SIMULATION_MODEL_TAG",
+    "SIMTOOLS_DB_SIMULATION_MODEL_VERSION",
+)
+
+
+def _is_mongodb_application(config):
+    """Return whether an integration application requires MongoDB."""
+    return config.get("requires_mongodb") or config["application"].startswith("simtools-db-")
+
+
+def _has_mongodb_configuration(configuration=None):
+    """Return whether required MongoDB settings are available to the application."""
+    configuration = configuration or {}
+    values = [
+        configuration.get(variable.removeprefix("SIMTOOLS_").lower()) or os.environ.get(variable)
+        for variable in _MONGODB_ENVIRONMENT
+    ]
+    model_tag = (
+        configuration.get("db_simulation_model_tag")
+        or configuration.get("db_simulation_model_version")
+        or next((os.environ.get(variable) for variable in _MONGODB_MODEL_TAG_ENVIRONMENT), None)
+    )
+    return all(values) and bool(model_tag)
 
 
 def _get_simulation_model_source(config, request, simtools_root_path):
@@ -21,7 +52,7 @@ def _get_simulation_model_source(config, request, simtools_root_path):
     git_revision = request.config.getoption("simulation_models_git_revision", default=None)
     if not simulation_models_path and not git_path:
         return None, None
-    if config.get("requires_mongodb"):
+    if _is_mongodb_application(config):
         pytest.skip(f"{config['application']} requires MongoDB")
 
     if simulation_models_path:
@@ -101,6 +132,10 @@ def test_applications_from_config(
 
     if tmp_config.get("skip_integration_test"):
         pytest.skip(tmp_config["skip_integration_test"])
+    if _is_mongodb_application(tmp_config) and not _has_mongodb_configuration(
+        tmp_config.get("configuration")
+    ):
+        pytest.skip(f"{tmp_config['application']} requires MongoDB configuration")
 
     simulation_models_path, git_source = _get_simulation_model_source(
         tmp_config, request, simtools_root_path
@@ -194,6 +229,48 @@ def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
 
     with pytest.raises(pytest.skip.Exception, match="simtools-mongodb-operation requires MongoDB"):
         _get_simulation_model_source(config, request, tmp_test_directory)
+
+
+def test_database_application_is_skipped_without_metadata(tmp_test_directory, mocker):
+    """Recognize database applications even when old configs lack metadata."""
+    request = mocker.MagicMock()
+    options = {
+        "simulation_models_path": None,
+        "simulation_models_git_path": "models.git",
+        "simulation_models_git_revision": "HEAD",
+    }
+    request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
+
+    with pytest.raises(
+        pytest.skip.Exception, match="simtools-db-get-array-layouts-from-db requires MongoDB"
+    ):
+        _get_simulation_model_source(
+            {"application": "simtools-db-get-array-layouts-from-db"},
+            request,
+            tmp_test_directory,
+        )
+
+
+def test_database_application_is_skipped_without_database_configuration(
+    tmp_test_directory, mocker, monkeypatch
+):
+    """Avoid launching DB applications when the test environment has no DB settings."""
+    request = mocker.MagicMock()
+    request.config.getoption.return_value = None
+    for variable in _MONGODB_ENVIRONMENT:
+        monkeypatch.delenv(variable, raising=False)
+
+    with pytest.raises(
+        pytest.skip.Exception,
+        match="simtools-db-get-file-from-db requires MongoDB configuration",
+    ):
+        test_applications_from_config(
+            tmp_test_directory,
+            {"application": "simtools-db-get-file-from-db"},
+            request,
+            tmp_test_directory,
+            monkeypatch,
+        )
 
 
 def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker):
