@@ -192,10 +192,7 @@ class TelescopeModel(ModelParameter):
         """Resolve the independent camera component parameters."""
         pixel_types = deepcopy(self.get_parameter_value("camera_pixel_types"))
         for pixel_type in pixel_types:
-            angle_parameter = pixel_type.get("lightguide_angle_parameter")
             wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
-            if angle_parameter:
-                pixel_type["lightguide_angle_file"] = f"{angle_parameter}-{self.name}.dat"
             if wavelength_parameter:
                 pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"
 

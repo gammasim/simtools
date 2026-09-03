@@ -22,7 +22,6 @@ data:
           - funnel_shape
           - funnel_diameter_cm
           - funnel_depth_cm
-          - lightguide_angle_parameter
         additionalProperties: false
         properties:
           type_id: {type: integer, minimum: 0}
@@ -32,7 +31,6 @@ data:
           funnel_shape: {type: integer, minimum: 0, maximum: 3}
           funnel_diameter_cm: {type: number, exclusiveMinimum: 0}
           funnel_depth_cm: {type: number, minimum: 0}
-          lightguide_angle_parameter: {type: string, minLength: 1}
           lightguide_wavelength_parameter: {type: string, minLength: 1}
           funnel_transparency: {type: number, minimum: 0, maximum: 1}
           funnel_wall_reflectivity: {type: number, minimum: 0, maximum: 1}

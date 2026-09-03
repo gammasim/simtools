@@ -167,14 +167,6 @@ class SimtelConfigWriter:
         for pixel_type in pixel_types:
             self._resolve_lightguide_file(
                 pixel_type,
-                "lightguide_angle_parameter",
-                "lightguide_angle_file",
-                parameters,
-                destination,
-                telescope_name,
-            )
-            self._resolve_lightguide_file(
-                pixel_type,
                 "lightguide_wavelength_parameter",
                 "lightguide_wavelength_file",
                 parameters,
