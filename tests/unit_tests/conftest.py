@@ -586,12 +586,17 @@ def patch_database_handler(request, mocker, simtools_settings):
 
     previous_model_reader = settings.config.model_reader
     settings.config.set_model_reader(mock_model_reader)
-    mocker.patch("simtools.application.control.create_model_reader", return_value=mock_model_reader)
     mocker.patch(
-        "simtools.configuration.show_options.create_model_reader", return_value=mock_model_reader
+        "simtools.application.control.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
     )
     mocker.patch(
-        "simtools.job_execution.worker.create_model_reader", return_value=mock_model_reader
+        "simtools.configuration.show_options.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
+    )
+    mocker.patch(
+        "simtools.job_execution.worker.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
     )
     yield
     settings.config.set_model_reader(previous_model_reader)

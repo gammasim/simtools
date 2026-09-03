@@ -72,6 +72,26 @@ def create_model_reader(
     return SimulationModelReader(MongoDBModelSource(database_handler))
 
 
+def create_model_reader_from_configuration(configuration):
+    """Create a model reader from an application or test configuration.
+
+    Parameters
+    ----------
+    configuration : dict
+        Mapping that may contain filesystem or Git model-source options.
+
+    Returns
+    -------
+    SimulationModelReader
+        Reader selected by the supplied source options.
+    """
+    return create_model_reader(
+        simulation_models_path=configuration.get("simulation_models_path"),
+        simulation_models_git_path=configuration.get("simulation_models_git_path"),
+        simulation_models_git_revision=configuration.get("simulation_models_git_revision"),
+    )
+
+
 def create_model_reader_from_source_config(source_config):
     """Recreate a model reader from a worker-serializable source configuration.
 
@@ -97,7 +117,7 @@ def create_model_reader_from_source_config(source_config):
         path = source_config.get("path")
         if not path:
             raise ValueError("Filesystem model source configuration requires a path.")
-        return create_model_reader(path)
+        return create_model_reader(simulation_models_path=path)
     if source_type == "git":
         repository = source_config.get("repository")
         commit = source_config.get("commit")

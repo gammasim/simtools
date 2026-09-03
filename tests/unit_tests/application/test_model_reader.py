@@ -7,6 +7,7 @@ import pytest
 
 from simtools.application.model_reader import (
     create_model_reader,
+    create_model_reader_from_configuration,
     create_model_reader_from_source_config,
     require_model_reader,
 )
@@ -91,6 +92,23 @@ def test_create_model_reader_uses_catalog_git_revision(catalog_model, mocker):
     from_git.assert_called_once_with("models.git", next(iter(catalog_model.values())))
 
 
+def test_create_model_reader_from_configuration_forwards_all_source_options(mocker):
+    """Configuration-based callers share the same source-selection path."""
+    reader = Mock()
+    create_reader = mocker.patch(
+        "simtools.application.model_reader.create_model_reader", return_value=reader
+    )
+    configuration = {
+        "simulation_models_path": "/models",
+        "simulation_models_git_path": "/models.git",
+        "simulation_models_git_revision": "commit",
+    }
+
+    assert create_model_reader_from_configuration(configuration) is reader
+
+    create_reader.assert_called_once_with(**configuration)
+
+
 def test_create_model_reader_rejects_catalog_without_git_revision(mocker):
     """A Git source cannot start when the catalog has no usable revision."""
     mocker.patch(
@@ -169,7 +187,7 @@ def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
         create_model_reader_from_source_config({"type": "filesystem", "path": "models"}) is reader
     )
 
-    create_reader.assert_called_once_with("models")
+    create_reader.assert_called_once_with(simulation_models_path="models")
 
 
 def test_create_model_reader_from_source_config_allows_unnamed_mongodb(mocker):

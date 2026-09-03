@@ -28,19 +28,31 @@ class _Node:
         return iter(self.children.values())
 
 
+class _TreeEntry:
+    """Minimal pygit2 tree entry referring to a separate Git object."""
+
+    def __init__(self, name, type_str, identifier):
+        self.name = name
+        self.type_str = type_str
+        self.id = identifier
+
+
 class _Repository:
     """Minimal pygit2 repository object."""
 
-    def __init__(self, commit, tree):
+    def __init__(self, commit, tree, objects=None):
         self.commit = commit
         self.tree = tree
+        self.objects = objects or {}
 
     def revparse_single(self, _):
         """Return a revision object that resolves to the configured commit."""
         return SimpleNamespace(peel=lambda _: self.commit)
 
-    def __getitem__(self, _):
-        return SimpleNamespace(tree=self.tree)
+    def __getitem__(self, identifier):
+        if identifier == str(self.commit.id):
+            return SimpleNamespace(tree=self.tree)
+        return self.objects[identifier]
 
 
 def _raise_invalid_repository(_):
@@ -90,14 +102,34 @@ def test_pygit2_object_store_rejects_unreadable_repository(monkeypatch, tmp_test
 
 
 def test_pygit2_object_store_reads_tree_blobs(monkeypatch, tmp_test_directory):
-    """Resolve revisions and read recursively discovered blob objects."""
+    """Resolve revisions and read recursively discovered pygit2 tree entries."""
     blob = _Node("model.json", "blob", data=b"{}")
     nested_blob = _Node("nested.json", "blob", data=b"[]")
-    nested_tree = _Node("nested", "tree", {"nested.json": nested_blob})
-    models_tree = _Node("models", "tree", {"model.json": blob, "nested": nested_tree})
-    root_tree = _Node("", "tree", {"models": models_tree})
+    nested_tree = _Node(
+        "nested",
+        "tree",
+        {"nested.json": _TreeEntry("nested.json", "blob", "nested-blob")},
+    )
+    models_tree = _Node(
+        "models",
+        "tree",
+        {
+            "model.json": _TreeEntry("model.json", "blob", "model-blob"),
+            "nested": _TreeEntry("nested", "tree", "nested-tree"),
+        },
+    )
+    root_tree = _Node("", "tree", {"models": _TreeEntry("models", "tree", "models-tree")})
     commit = SimpleNamespace(id="a" * 40)
-    repository = _Repository(commit, root_tree)
+    repository = _Repository(
+        commit,
+        root_tree,
+        {
+            "model-blob": blob,
+            "models-tree": models_tree,
+            "nested-blob": nested_blob,
+            "nested-tree": nested_tree,
+        },
+    )
     _install_pygit2(monkeypatch, repository)
     store = Pygit2ObjectStore(tmp_test_directory)
 

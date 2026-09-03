@@ -76,12 +76,18 @@ class Pygit2ObjectStore(GitObjectStore):
         obj = self._commit_tree(commit)
         for part in PurePosixPath(path).parts:
             try:
-                obj = obj[part]
+                obj = self._dereference_tree_entry(obj[part])
             except (KeyError, ValueError, TypeError) as exc:
                 raise FileNotFoundError(
                     f"Git path {path!r} not found at commit {commit} in {self.repository_path}"
                 ) from exc
         return obj
+
+    def _dereference_tree_entry(self, entry):
+        """Return the Git object represented by a pygit2 tree entry."""
+        if hasattr(entry, "id"):
+            return self._repository[entry.id]
+        return entry
 
     def iter_files(self, commit, prefix):
         """Return sorted regular-file paths below a tree prefix."""
@@ -89,7 +95,7 @@ class Pygit2ObjectStore(GitObjectStore):
         tree = self._commit_tree(commit)
         for part in prefix.parts:
             try:
-                tree = tree[part]
+                tree = self._dereference_tree_entry(tree[part])
             except (KeyError, ValueError, TypeError) as exc:
                 raise FileNotFoundError(
                     f"Git path {prefix!s} not found at commit {commit} in {self.repository_path}"
@@ -105,7 +111,7 @@ class Pygit2ObjectStore(GitObjectStore):
         for obj in tree:
             path = prefix / obj.name
             if obj.type_str == "tree":
-                self._append_files(obj, path, paths)
+                self._append_files(self._dereference_tree_entry(obj), path, paths)
             elif obj.type_str == "blob":
                 paths.append(path.as_posix())
 

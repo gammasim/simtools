@@ -10,7 +10,7 @@ from astropy.utils import iers
 
 import simtools.utils.general as gen
 from simtools import dependencies, version
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.io import io_handler
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
@@ -226,11 +226,7 @@ def _initialize_runtime(
 
     model_reader = None
     if initialize_model_reader:
-        model_reader = create_model_reader(
-            simulation_models_path=args_dict.get("simulation_models_path"),
-            simulation_models_git_path=args_dict.get("simulation_models_git_path"),
-            simulation_models_git_revision=args_dict.get("simulation_models_git_revision"),
-        )
+        model_reader = create_model_reader_from_configuration(args_dict)
         config.set_model_reader(model_reader)
         _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
     _version_info(args_dict, io_handler_instance, logger)

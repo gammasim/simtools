@@ -6,7 +6,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.configuration import defaults
 from simtools.corsika.build_options import get_installed_corsika_build_variants
 from simtools.corsika.primary_particle import PrimaryParticle
@@ -177,15 +177,7 @@ def _show_array_layout_names(args_dict):
 
 def _create_model_reader(args_dict):
     """Create a configured model reader for an option provider."""
-    git_path = args_dict.get("simulation_models_git_path")
-    git_revision = args_dict.get("simulation_models_git_revision")
-    if git_path is None and git_revision is None:
-        return create_model_reader(args_dict.get("simulation_models_path"))
-    return create_model_reader(
-        simulation_models_path=args_dict.get("simulation_models_path"),
-        simulation_models_git_path=git_path,
-        simulation_models_git_revision=git_revision,
-    )
+    return create_model_reader_from_configuration(args_dict)
 
 
 def _show_corsika_he_interaction(args_dict):

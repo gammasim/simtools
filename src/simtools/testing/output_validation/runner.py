@@ -1,6 +1,6 @@
 """Orchestration of integration-test output validation."""
 
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.testing.output_validation.artifacts import OutputArtifact
 from simtools.testing.output_validation.registry import run_validator
 
@@ -60,13 +60,5 @@ def _validate_rule(artifact, rule, configuration, context):
 
 
 def _create_model_reader(configuration):
-    """Create a reader while retaining the compact legacy call shape."""
-    git_path = configuration.get("simulation_models_git_path")
-    git_revision = configuration.get("simulation_models_git_revision")
-    if git_path is None and git_revision is None:
-        return create_model_reader(configuration.get("simulation_models_path"))
-    return create_model_reader(
-        simulation_models_path=configuration.get("simulation_models_path"),
-        simulation_models_git_path=git_path,
-        simulation_models_git_revision=git_revision,
-    )
+    """Create a reader for model-parameter output validation."""
+    return create_model_reader_from_configuration(configuration)
