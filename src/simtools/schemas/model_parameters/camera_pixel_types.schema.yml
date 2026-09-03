@@ -37,7 +37,9 @@ data:
           funnel_transparency: {type: number, minimum: 0, maximum: 1}
           funnel_wall_reflectivity: {type: number, minimum: 0, maximum: 1}
 instrument: {class: Camera}
-activity: {setting: [SetParameterFromExternal]}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
 source: [Initial instrument setup]
 simulation_software: [{name: sim_telarray}]
 ---
@@ -68,6 +70,8 @@ data:
           lightguide_angle: {type: string}
           lightguide_wavelength: {type: string}
 instrument: {class: Camera}
-activity: {setting: [SetParameterFromExternal]}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
 source: [Initial instrument setup]
 simulation_software: [{name: sim_telarray}]

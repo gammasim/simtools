@@ -17,6 +17,8 @@ data:
       - {name: use_default_multiplicity, description: Use simulator default multiplicity, type: int64, required: true}
       - {name: multiplicity, description: Trigger multiplicity, type: int64, required: false}
 instrument: {class: Camera}
-activity: {setting: [SetParameterFromExternal]}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
 source: [Initial instrument setup]
 simulation_software: [{name: sim_telarray}]

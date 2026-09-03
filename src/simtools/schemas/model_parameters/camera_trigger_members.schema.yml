@@ -17,6 +17,8 @@ data:
       - {name: pixel_id, description: Pixel identifier, type: int64, required: true}
       - {name: required, description: Required master marker, type: int64, required: true}
 instrument: {class: Camera}
-activity: {setting: [SetParameterFromExternal]}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
 source: [Initial instrument setup]
 simulation_software: [{name: sim_telarray}]
