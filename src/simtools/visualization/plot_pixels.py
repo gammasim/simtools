@@ -88,7 +88,7 @@ def _resolve_camera_components(model_reader, parameters):
     """Resolve camera component model parameters for plotting."""
     pixel_types = deepcopy(parameters["camera_pixel_types"]["value"])
     return {
-        "rotate": parameters["camera_config_rotate"]["value"],
+        "rotate": parameters["camera_rotate"]["value"],
         "pixel_types": pixel_types,
         "pixels": _table_records(model_reader, parameters["camera_pixel_layout"]),
         "triggers": _table_records(model_reader, parameters["camera_trigger_groups"]),

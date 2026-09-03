@@ -20,7 +20,7 @@ from simtools.utils import names
 logger = logging.getLogger(__name__)
 
 _CAMERA_COMPONENT_PARAMETERS = (
-    "camera_config_rotate",
+    "camera_rotate",
     "camera_pixel_types",
     "camera_pixel_layout",
     "camera_trigger_groups",
@@ -181,7 +181,7 @@ class SimtelConfigWriter:
                 f"camera_pixels={expected_pixels} does not match camera layout rows={len(pixels)}"
             )
         configuration = {
-            "rotate": self._parameter_value(parameters, "camera_config_rotate"),
+            "rotate": self._parameter_value(parameters, "camera_rotate"),
             "pixel_types": pixel_types,
             "pixels": pixels,
             "triggers": self._camera_table_records(

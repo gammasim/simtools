@@ -198,7 +198,7 @@ class TelescopeModel(ModelParameter):
                 pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"
 
         return {
-            "rotate": self.get_parameter_value("camera_config_rotate"),
+            "rotate": self.get_parameter_value("camera_rotate"),
             "pixel_types": pixel_types,
             "pixels": self._parameter_table_records("camera_pixel_layout"),
             "triggers": self._parameter_table_records("camera_trigger_groups"),

@@ -65,7 +65,7 @@ def test_plot_camera_components(mock_save, mock_plot_layout):
     }
     model_reader = mock.MagicMock()
     model_reader.get_model_parameters.return_value = {
-        "camera_config_rotate": {"value": 0.0},
+        "camera_rotate": {"value": 0.0},
         "camera_pixel_types": {"value": [{"funnel_shape": 1, "funnel_diameter_cm": 1.0}]},
         "camera_pixel_layout": {"value": "layout.ecsv"},
         "camera_trigger_groups": {"value": "groups.ecsv"},
