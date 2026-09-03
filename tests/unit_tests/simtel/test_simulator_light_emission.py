@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import astropy.units as u
 import numpy as np
@@ -1267,6 +1267,7 @@ def test___init__(tmp_test_directory):
             calibration_device_name="calibration_device",
             calibration_device_type=None,
             model_version="6.0.0",
+            model_reader=simulator_light_emission_instance.model_reader,
         )
 
         # Verify telescope model config file was written
@@ -1323,6 +1324,7 @@ def test___init___with_wavelength(tmp_test_directory):
             calibration_device_name="calibration_device",
             calibration_device_type=None,
             model_version="6.0.0",
+            model_reader=ANY,
         )
 
 

@@ -61,6 +61,27 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+## production_file_selection
+
+```{eval-rst}
+.. automodule:: production_configuration.production_file_selection
+   :members:
+```
+
+## production_comparison
+
+```{eval-rst}
+.. automodule:: production_configuration.production_comparison
+   :members:
+```
+
+## production_metadata
+
+```{eval-rst}
+.. automodule:: production_configuration.production_metadata
+   :members:
+```
+
 
 (angle-ranges)=
 

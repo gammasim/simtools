@@ -636,16 +636,23 @@ def test_add_additional_models(telescope_model_lst, mocker):
     # Test case 2: Single model
     mock_model = mocker.Mock()
     mock_model.parameters = {"new_param": "new_value"}
+    mock_model.get_simulation_software_parameters.return_value = {
+        "iobuf_maximum": {"value": 1000},
+        "min_photons": {"value": 3},
+    }
     mock_model.export_model_files = mocker.Mock()
 
     telescope_copy._add_additional_models(mock_model)
     assert "new_param" in telescope_copy.parameters
     assert telescope_copy.parameters["new_param"] == "new_value"
+    assert telescope_copy.parameters["iobuf_maximum"] == {"value": 1000}
+    assert "min_photons" not in telescope_copy.parameters
     mock_model.export_model_files.assert_called_once()
 
     # Test case 3: Dictionary of models
     mock_model2 = mocker.Mock()
     mock_model2.parameters = {"param2": "value2"}
+    mock_model2.get_simulation_software_parameters.return_value = {}
     mock_model2.export_model_files = mocker.Mock()
 
     models_dict = {"model1": mock_model, "model2": mock_model2}
@@ -689,7 +696,7 @@ def test_overwrite_model_parameter_with_parameter_version(
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock get_model_parameter to return parameter dict
-    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=num_gains_dict)
+    mocker.patch.object(tel_model.model_reader, "get_model_parameter", return_value=num_gains_dict)
 
     # Call with only parameter_version (no value)
     tel_model.overwrite_model_parameter("num_gains", value=None, parameter_version="2.0.0")
@@ -743,7 +750,7 @@ def test_export_model_files_removes_added_parameter_files_from_export(
     telescope_model_lst, mocker, tmp_test_directory
 ):
     tel_model = copy.deepcopy(telescope_model_lst)
-    export_spy = mocker.patch.object(tel_model.db, "export_model_files")
+    export_spy = mocker.patch.object(tel_model.model_reader, "export_model_files")
     tel_model._added_parameter_files = ["num_gains"]
 
     tel_model.export_model_files(destination_path=tmp_test_directory, update_if_necessary=False)
@@ -989,7 +996,7 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
 
 def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
-    model_parameter.db = mocker.Mock()
+    model_parameter.model_reader = mocker.Mock()
     expected = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],

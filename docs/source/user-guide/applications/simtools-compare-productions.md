@@ -25,6 +25,21 @@ array-layout references found in the input files are aggregated into one compari
 selected layouts, each layout is compared independently and written to its own directory below
 `output_path/<layout-name>/`.
 
+For production metadata manifests, pass the baseline and candidate metadata directories instead of
+legacy file descriptors. Repeated `select` expressions choose configurations, while `compare_by`
+lists configuration fields that are allowed to differ. Each matched configuration is written below
+`output_path/comparison-<configuration-hash>/`.
+
+```console
+simtools-compare-productions \
+    --baseline_path /data/baseline/trigger_histograms \
+    --candidate_path /data/candidate/trigger_histograms \
+    --select configuration.primary=gamma \
+    --compare_by configuration.atmosphere \
+    --array_layout_name CTAO-North-Alpha \
+    --output_path comparisons
+```
+
 ## Input and output
 
 | Role | Argument or file | Format | Description |

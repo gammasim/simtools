@@ -31,3 +31,4 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: tailcut_scale

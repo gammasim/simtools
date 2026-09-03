@@ -8,9 +8,9 @@ from pathlib import Path
 from simtools import settings
 from simtools.data_model import validate_data
 from simtools.db import parameter_exporter
-from simtools.db.file_system_model import FileSystemModelHandler
 from simtools.db.mongo_db import MongoDBHandler, _resolve_model_tag
 from simtools.io import io_handler
+from simtools.model_repository.reader import FileSystemModelSource
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
@@ -31,19 +31,19 @@ class DatabaseHandler:
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
-    production_table_cached = {}
     model_parameters_cached = {}
-    model_versions_cached = {}
 
     def __init__(self):
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
+        self.production_table_cached = {}
+        self.model_versions_cached = {}
         self.io_handler = io_handler.IOHandler()
         simulation_models_path = settings.config.args.get("simulation_models_path")
         if not isinstance(simulation_models_path, str | Path):
             simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
         self.file_system_handler = (
-            FileSystemModelHandler(simulation_models_path) if simulation_models_path else None
+            FileSystemModelSource(simulation_models_path) if simulation_models_path else None
         )
 
         if self.file_system_handler:
@@ -219,9 +219,12 @@ class DatabaseHandler:
             "parameter_version": parameter_version,
             "parameter": parameter,
         }
-        if array_element_name:
-            query["instrument"] = array_element_name
-        if site:
+        parameter_scope = names.get_model_parameter_scope(
+            collection_name, array_element_name, parameter
+        )
+        if parameter_scope and parameter_scope != "global":
+            query["instrument"] = parameter_scope
+        if site and parameter_scope != "global":
             query["site"] = site
         return self._read_db(query=query, collection_name=collection_name)
 
@@ -459,10 +462,9 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        # 'xSTX-design' is a placeholder to ignore 'instrument' field in query.
-        if array_element_name and array_element_name != "xSTx-design":
+        if array_element_name and array_element_name != "global":
             query_dict["instrument"] = array_element_name
-        if site:
+        if site and array_element_name != "global":
             query_dict["site"] = site
         return query_dict
 
@@ -521,10 +523,9 @@ class DatabaseHandler:
         )
         if self.file_system_handler:
             return self.file_system_handler.read_production_table(collection_name, model_version)
+        cache_key = self._cache_key(None, None, model_version, collection_name)
         try:
-            return DatabaseHandler.production_table_cached[
-                self._cache_key(None, None, model_version, collection_name)
-            ]
+            return self.production_table_cached[cache_key]
         except KeyError:
             pass
 
@@ -533,13 +534,15 @@ class DatabaseHandler:
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
-        return {
+        production_table = {
             "collection": post["collection"],
             "model_version": post["model_version"],
             "parameters": post["parameters"],
             "design_model": post.get("design_model", {}),
             "entry_date": self.mongo_db_handler.get_entry_date_from_document(post),
         }
+        self.production_table_cached[cache_key] = production_table
+        return production_table
 
     def get_model_versions(self, collection_name="telescopes"):
         """
@@ -557,12 +560,12 @@ class DatabaseHandler:
         """
         if self.file_system_handler:
             return self.file_system_handler.get_model_versions()
-        if collection_name not in DatabaseHandler.model_versions_cached:
+        if collection_name not in self.model_versions_cached:
             collection = self.get_collection("production_tables", db_name=self.db_name)
-            DatabaseHandler.model_versions_cached[collection_name] = sorted(
+            self.model_versions_cached[collection_name] = sorted(
                 {post["model_version"] for post in collection.find({"collection": collection_name})}
             )
-        return DatabaseHandler.model_versions_cached[collection_name]
+        return list(self.model_versions_cached[collection_name])
 
     def get_array_elements(self, model_version, collection="telescopes"):
         """
@@ -691,7 +694,7 @@ class DatabaseHandler:
                     model_version=model_version,
                     collection="configuration_sim_telarray",
                 )
-                if site and array_element_name
+                if site
                 else {}
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
@@ -754,8 +757,8 @@ class DatabaseHandler:
         self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
         mongo_db_handler = self.require_mongodb("Adding a production table")
         mongo_db_handler.insert_one(production_table, "production_tables", db_name or self.db_name)
-        DatabaseHandler.production_table_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.production_table_cached.clear()
+        self.model_versions_cached.clear()
 
     def add_new_parameter(
         self,
@@ -893,7 +896,29 @@ class DatabaseHandler:
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.model_parameters_cached.clear()
-        DatabaseHandler.model_versions_cached.clear()
+        self.model_versions_cached.clear()
+
+    def _get_sim_telarray_array_element_list(self, array_element_name, production_table):
+        """Return global, design, and telescope scopes for sim_telarray."""
+        design_model = None
+        if array_element_name not in (None, "global") and not names.is_design_type(
+            array_element_name
+        ):
+            telescope_table = self.read_production_table_from_db(
+                names.get_collection_name_from_array_element_name(array_element_name),
+                production_table["model_version"],
+            )
+            design_model = telescope_table["design_model"].get(array_element_name)
+        try:
+            return names.get_sim_telarray_parameter_scopes(
+                array_element_name,
+                design_model,
+                settings.config.args.get("ignore_missing_design_model", False),
+            )
+        except KeyError as exc:
+            raise KeyError(
+                f"Failed to generate array element list for DB query for {array_element_name}"
+            ) from exc
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
@@ -918,17 +943,13 @@ class DatabaseHandler:
             List of array elements
         """
         if collection == "configuration_corsika":
-            return ["xSTx-design"]  # placeholder to ignore 'instrument' field in query.
+            return ["global"]
+        if collection == "configuration_sim_telarray":
+            return self._get_sim_telarray_array_element_list(array_element_name, production_table)
         if collection == "sites":
             return [f"OBS-{site}"]
         if names.is_design_type(array_element_name):
             return [array_element_name]
-        if collection == "configuration_sim_telarray":
-            # get design model from 'telescope' or 'calibration_device' production tables
-            production_table = self.read_production_table_from_db(
-                names.get_collection_name_from_array_element_name(array_element_name),
-                production_table["model_version"],
-            )
         try:
             return [
                 production_table["design_model"][array_element_name],

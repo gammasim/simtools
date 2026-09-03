@@ -19,6 +19,13 @@ _ARGUMENTS = (
         ),
     ),
     cli.ArgumentDefinition(
+        "scaling_factor",
+        type=float,
+        required=True,
+        help=("Scaling factor to account for ions we didn't simulate"),
+        default=1.35,
+    ),
+    cli.ArgumentDefinition(
         "figure_file",
         type=Path,
         default=Path("bias_curve.png"),
@@ -37,19 +44,10 @@ _ARGUMENTS = (
         help="Output ECSV table file for proton rates. If not specified, no table is written.",
     ),
     cli.ArgumentDefinition(
-        "title", type=str, default="Trigger Rate Bias Curves", help="Plot title."
-    ),
-    cli.ArgumentDefinition(
-        "ymin",
-        type=float,
-        default=100.0,
-        help="Minimum trigger rate value for plotting. Default: 1e2",
-    ),
-    cli.ArgumentDefinition(
-        "ymax",
-        type=float,
-        default=500000.0,
-        help="Maximum trigger rate value for plotting. Default: 5e5",
+        "title",
+        type=str,
+        default="Trigger Rate Bias Curves",
+        help="Title for the bias curve plot. Default: 'Trigger Rate Bias Curves'",
     ),
 )
 
@@ -59,6 +57,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION(required=True),
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,

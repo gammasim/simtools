@@ -10,7 +10,7 @@ from astropy.utils import iers
 
 import simtools.utils.general as gen
 from simtools import dependencies, version
-from simtools.db import db_handler
+from simtools.application.model_reader import create_model_reader
 from simtools.io import io_handler
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
@@ -164,6 +164,7 @@ class ApplicationContext:
     db_config: dict
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
+    model_reader: object | None
     run_time: list | None = None
 
 
@@ -173,6 +174,7 @@ def _initialize_runtime(
     setup_io_handler=True,
     resolve_sim_software_executables=True,
     validate_simulation_dependencies=False,
+    initialize_model_reader=True,
 ):
     """Initialize common runtime services for parsed application configuration.
 
@@ -190,12 +192,15 @@ def _initialize_runtime(
     validate_simulation_dependencies : bool, optional
         Validate simulation executables and CORSIKA interaction tables after settings load.
         Set to True for applications that run simulations.
+    initialize_model_reader : bool, optional
+        Initialize the configured simulation-model reader. Set to False for applications
+        that only write a new model repository and do not read model data. Default is True.
 
     Returns
     -------
     ApplicationContext
-        Container holding parsed arguments, database configuration, logger, and the optional
-        IO handler instance.
+        Container holding parsed arguments, database configuration, logger, and optional IO
+        handler and model-reader instances.
 
     """
     _configure_iers_from_env()
@@ -219,7 +224,11 @@ def _initialize_runtime(
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
-    _resolve_model_version_to_latest_patch(args_dict, logger)
+    model_reader = None
+    if initialize_model_reader:
+        model_reader = create_model_reader(args_dict.get("simulation_models_path"))
+        config.set_model_reader(model_reader)
+        _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
     _version_info(args_dict, io_handler_instance, logger)
 
     run_time = _prepare_runtime_environment_from_cli(args_dict)
@@ -229,6 +238,7 @@ def _initialize_runtime(
         db_config=db_config,
         logger=logger,
         io_handler=io_handler_instance,
+        model_reader=model_reader,
         run_time=run_time,
     )
 
@@ -245,11 +255,11 @@ def _prepare_runtime_environment_from_cli(args_dict):
     return run_time
 
 
-def _resolve_model_version_to_latest_patch(args_dict, logger):
+def _resolve_model_version_to_latest_patch(args_dict, logger, model_reader):
     """
     Update model_version in args_dict to latest patch version if needed.
 
-    Updated to the latest patch version requires to setup a DB connection.
+    Patch-version resolution uses the selected simulation-model reader.
 
     Parameters
     ----------
@@ -268,10 +278,9 @@ def _resolve_model_version_to_latest_patch(args_dict, logger):
         return
 
     try:
-        db = db_handler.DatabaseHandler()
-        model_versions = db.get_model_versions()
+        model_versions = model_reader.get_model_versions()
     except (ValueError, KeyError, OSError) as exc:
-        logger.warning(f"Could not connect to database, using version(s) as-is. Error: {exc}")
+        logger.warning(f"Could not resolve model versions, using version(s) as-is. Error: {exc}")
         return
 
     def resolve(v, k):

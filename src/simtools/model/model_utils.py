@@ -5,6 +5,8 @@ import json
 import math
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
+from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
@@ -19,6 +21,7 @@ def initialize_simulation_models(
     telescope_name,
     calibration_device_name=None,
     calibration_device_type=None,
+    model_reader=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -49,6 +52,7 @@ def initialize_simulation_models(
         "model_version": model_version,
         "label": label,
         "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
+        "model_reader": require_model_reader(model_reader),
     }
 
     tel_model = TelescopeModel(telescope_name=telescope_name, **common)
@@ -165,7 +169,7 @@ def is_two_mirror_telescope(telescope_model_name: str) -> bool:
     return False
 
 
-def get_array_elements_for_layout(layout_name, site=None, model_version=None):
+def get_array_elements_for_layout(layout_name, site=None, model_version=None, model_reader=None):
     """
     Get array elements for a given array layout.
 
@@ -191,5 +195,6 @@ def get_array_elements_for_layout(layout_name, site=None, model_version=None):
         model_version=model_version or settings.config.args.get("model_version"),
         label="label",
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
+        model_reader=require_model_reader(model_reader),
     )
     return site_model.get_array_elements_for_layout(layout_name)

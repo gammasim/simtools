@@ -420,9 +420,14 @@ class CorsikaConfig:
             Dictionary with CORSIKA interaction parameters.
         """
         parameters = {}
-        if "corsika_first_interaction_height" in parameters_from_db:
+        first_interaction_height = parameters_from_db.get("corsika_first_interaction_height")
+        if first_interaction_height is not None:
             parameters["FIXHEI"] = self._input_config_first_interaction_height(
-                parameters_from_db["corsika_first_interaction_height"]
+                first_interaction_height
+            )
+        parameters["FIXCHI"] = [
+            self._input_config_corsika_starting_grammage(
+                parameters_from_db["corsika_starting_grammage"]
             )
         if "corsika_starting_grammage" in parameters_from_db:
             parameters["FIXCHI"] = [

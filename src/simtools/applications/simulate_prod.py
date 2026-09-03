@@ -20,7 +20,12 @@ from simtools.production_configuration.job_grid_io import (
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
 )
-from simtools.production_configuration.job_metadata import build_simulation_job_metadata
+from simtools.production_configuration.job_metadata import build_production_job_manifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+    check_manifest,
+    validate_required_production_outputs,
+)
 from simtools.simulator import Simulator
 
 logger = logging.getLogger(__name__)
@@ -294,6 +299,20 @@ def _validate_simulation_arguments(args_dict, parser):
         parser.error("the following argument is required for CORSIKA: --primary")
 
 
+def _write_job_metadata(args_dict, simulator, output_directory):
+    """Write and validate metadata for a completed simulation job."""
+    output_directory = Path(output_directory)
+    manifest_path = output_directory / _JOB_METADATA_FILE
+    manifest = build_production_job_manifest(args_dict, simulator, output_directory)
+    validate_required_production_outputs(
+        manifest["files"],
+        manifest["configuration"]["simulation_software"],
+        output_directory,
+    )
+    check_manifest(ProductionManifest(path=manifest_path, data=manifest))
+    write_data_to_file(manifest, manifest_path)
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -351,13 +370,12 @@ def main():
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
 
+    metadata_output_path = Path(app_context.args["output_path"])
     if app_context.args.get("grid_output_path"):
-        grid_output_path = Path(app_context.args["grid_output_path"])
-        simulator.pack_for_register(grid_output_path)
-        write_data_to_file(
-            build_simulation_job_metadata(app_context.args, simulator),
-            grid_output_path / _JOB_METADATA_FILE,
-        )
+        metadata_output_path = Path(app_context.args["grid_output_path"])
+        simulator.pack_for_register(metadata_output_path)
+
+    _write_job_metadata(app_context.args, simulator, metadata_output_path)
 
 
 if __name__ == "__main__":

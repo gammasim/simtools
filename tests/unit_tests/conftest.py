@@ -561,7 +561,7 @@ def mock_db_handler(request):
 
 
 @pytest.fixture(autouse=True)
-def patch_database_handler(request, mocker):
+def patch_database_handler(request, mocker, simtools_settings):
     """
     Automatically patch DatabaseHandler for all unit tests except those in db/.
 
@@ -584,7 +584,10 @@ def patch_database_handler(request, mocker):
 
     # Mock DatabaseHandler for all other unit tests
     with mock.patch("simtools.db.db_handler.DatabaseHandler", return_value=mock_db_handler):
+        previous_model_reader = settings.config.model_reader
+        settings.config.set_model_reader(mock_db_handler)
         yield
+        settings.config.set_model_reader(previous_model_reader)
 
 
 @pytest.fixture

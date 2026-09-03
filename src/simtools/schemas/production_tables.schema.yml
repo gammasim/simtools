@@ -28,7 +28,10 @@ definitions:
           additionalProperties:
             $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
         propertyNames:
-          $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+          anyOf:
+            - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+            - enum:
+                - global
       design_model:
         type: object
         description: Design models.
