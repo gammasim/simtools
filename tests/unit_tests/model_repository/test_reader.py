@@ -226,7 +226,7 @@ def test_normal_runtime_modules_do_not_construct_database_handlers(simtools_root
         str(path)
         for path in _normal_runtime_files(simtools_root_path)
         if path.name != "model_reader.py"
-        for violation in _boundary_violations(path, allowed_source_selection)
+        for _ in _boundary_violations(path, allowed_source_selection)
     ]
     assert violations == []
 
