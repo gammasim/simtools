@@ -1,9 +1,24 @@
 """Validation and serialization of mirror-segmentation model parameters."""
 
 import math
+from functools import lru_cache
 from pathlib import Path
 
-SHAPE_KINDS = {"square", "hex", "yhex", "circular"}
+from simtools.data_model import schema
+
+
+@lru_cache
+def _shape_kinds():
+    """Return shape kinds declared by the mirror-segmentation schemas."""
+    kinds = set()
+    for parameter in ("primary_mirror_segmentation", "secondary_mirror_segmentation"):
+        parameter_schema = schema.get_model_parameter_schema(parameter, "0.2.0")
+        json_schema = next(
+            item["json_schema"] for item in parameter_schema["data"] if item["type"] == "dict"
+        )
+        for item in json_schema["items"]["oneOf"]:
+            kinds.update(item.get("properties", {}).get("kind", {}).get("enum", []))
+    return frozenset(kinds - {"ring", "polygon"})
 
 
 def validate_segments(records):
@@ -32,7 +47,7 @@ def validate_segments(records):
         kind = record.get("kind")
         if kind == "ring":
             _validate_ring(record)
-        elif kind in SHAPE_KINDS:
+        elif kind in _shape_kinds():
             _validate_shape(record)
         elif kind == "polygon":
             _validate_polygon(record)
@@ -155,7 +170,7 @@ def _parse_segmentation_line(line):
     count = int(fields.pop(0))
     if kind == "ring":
         return _parse_ring(fields, line, kind, count)
-    if kind in SHAPE_KINDS:
+    if kind in _shape_kinds():
         return _parse_shape(fields, line, kind, count)
     if kind == "polygon":
         return _parse_polygon(fields, line, kind, count)
@@ -186,7 +201,7 @@ def write_mirror_segmentation(records, output_path):
                 f"RING {record['count']} {record['r_min_cm']} {record['r_max_cm']} "
                 f"{record['dphi_deg']} {record.get('phi0_deg', 0)} {record.get('gap_cm', 0)}"
             )
-        elif kind in SHAPE_KINDS:
+        elif kind in _shape_kinds():
             lines.append(
                 f"{kind.upper()} 1 {record['x_cm']} {record['y_cm']} "
                 f"{record['diameter_cm']} {record.get('rotation_deg', 0)}"
