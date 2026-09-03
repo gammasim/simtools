@@ -15,9 +15,9 @@ from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 logger = logging.getLogger(__name__)
 
 
-def write_mirror_segmentation(records, output_path):
+def write_mirror_segmentation(records, output_path, parameter_name, schema_version):
     """Write validated mirror-segmentation records for sim_telarray."""
-    return _write_mirror_segmentation(records, output_path)
+    return _write_mirror_segmentation(records, output_path, parameter_name, schema_version)
 
 
 def write_camera_configuration(configuration, output_path):

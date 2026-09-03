@@ -1,74 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for atmospheric_profile model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: atmospheric_profile
-description: Density, thickness, and index of refraction as function of altitude.
-data:
-  - type: file
-    unit: dimensionless
-    default: null
-instrument:
-  class: Site
-activity:
-  setting:
-    - SetParameterFromExternal
-  validation:
-    - ValidateParameterByExpert
-    - ValidateAtmosphericModel
-    - ValidateTelescopeSimulationModel
-source:
-  - Calibration
-simulation_software:
-  - name: corsika
-plot_configuration:
-  - type: density_vs_altitude
-    title: 'Atmospheric density profile'
-    xtitle: 'Height [km]'
-    ytitle: 'Density [g/cm^3]'
-    yscale: 'log'
-    no_markers: true
-    tables:
-      - parameter: atmospheric_profile
-        column_x: 'altitude'
-        column_y: 'density'
-  - type: refractive_index_vs_altitude
-    title: 'Atmospheric refractive index profile'
-    xtitle: 'Height [km]'
-    ytitle: 'refractive index (n-1)'
-    yscale: 'log'
-    no_markers: true
-    tables:
-      - parameter: atmospheric_profile
-        column_x: 'altitude'
-        column_y: 'refractive_index'
-  - type: pressure_vs_altitude
-    title: 'Atmospheric pressure profile'
-    xtitle: 'Height [km]'
-    ytitle: 'Pressure [mbar]'
-    yscale: 'log'
-    no_markers: true
-    tables:
-      - parameter: atmospheric_profile
-        column_x: 'altitude'
-        column_y: 'pressure'
-  - type: thickness_vs_altitude
-    title: 'Atmospheric thickness profile'
-    xtitle: 'Height [km]'
-    ytitle: 'Thickness [g/cm^2]'
-    yscale: 'log'
-    no_markers: true
-    tables:
-      - parameter: atmospheric_profile
-        column_x: 'altitude'
-        column_y: 'thickness'
-
----
-title: Schema for atmospheric_profile model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -103,7 +35,7 @@ data:
         description: Temperature
         type: float64
         unit: K
-        required: true
+        required: false
       - name: pressure
         description: Pressure
         type: float64
@@ -113,7 +45,7 @@ data:
         description: Water vapor partial pressure
         type: float64
         unit: dimensionless
-        required: true
+        required: false
     table_metadata:
       - name: parameter_name
         description: Owning model parameter
@@ -205,3 +137,70 @@ plot_configuration:
       - parameter: atmospheric_profile
         column_x: altitude
         column_y: thickness
+---
+title: Schema for atmospheric_profile model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: atmospheric_profile
+description: Density, thickness, and index of refraction as function of altitude.
+data:
+  - type: file
+    unit: dimensionless
+    default: null
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: corsika
+plot_configuration:
+  - type: density_vs_altitude
+    title: 'Atmospheric density profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Density [g/cm^3]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'density'
+  - type: refractive_index_vs_altitude
+    title: 'Atmospheric refractive index profile'
+    xtitle: 'Height [km]'
+    ytitle: 'refractive index (n-1)'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'refractive_index'
+  - type: pressure_vs_altitude
+    title: 'Atmospheric pressure profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Pressure [mbar]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'pressure'
+  - type: thickness_vs_altitude
+    title: 'Atmospheric thickness profile'
+    xtitle: 'Height [km]'
+    ytitle: 'Thickness [g/cm^2]'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_profile
+        column_x: 'altitude'
+        column_y: 'thickness'

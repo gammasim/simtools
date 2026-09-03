@@ -10,6 +10,8 @@ def test_write_mirror_segmentation(tmp_test_directory):
     result = simtel_table_writer.write_mirror_segmentation(
         [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
         tmp_test_directory / "segments.dat",
+        "primary_mirror_segmentation",
+        "0.2.0",
     )
     assert result == "segments.dat"
     assert "RING 2 1 2 90 0 0" in (tmp_test_directory / result).read_text(encoding="utf-8")

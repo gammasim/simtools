@@ -705,7 +705,12 @@ class SimtelConfigWriter:
             value, list
         ):
             output = Path(model_path).parent / f"{parameter_name}-{Path(model_path).stem}.dat"
-            return simtel_name, simtel_table_writer.write_mirror_segmentation(value, output)
+            return simtel_name, simtel_table_writer.write_mirror_segmentation(
+                value,
+                output,
+                parameter_name=parameter_name,
+                schema_version=parameter_data["model_parameter_schema_version"],
+            )
         if isinstance(value, str) and value.lower().endswith(".ecsv"):
             return simtel_name, self._write_table_parameter_file(
                 simtel_name, value, model_path, telescope_model, parameter_name, parameter_data

@@ -4,30 +4,44 @@ import math
 from functools import lru_cache
 from pathlib import Path
 
+from jsonschema.exceptions import ValidationError
+
 from simtools.data_model import schema
 
 
 @lru_cache
-def _shape_kinds():
-    """Return shape kinds declared by the mirror-segmentation schemas."""
-    kinds = set()
-    for parameter in ("primary_mirror_segmentation", "secondary_mirror_segmentation"):
-        parameter_schema = schema.get_model_parameter_schema(parameter, "0.2.0")
-        json_schema = next(
-            item["json_schema"] for item in parameter_schema["data"] if item["type"] == "dict"
-        )
-        for item in json_schema["items"]["oneOf"]:
-            kinds.update(item.get("properties", {}).get("kind", {}).get("enum", []))
-    return frozenset(kinds - {"ring", "polygon"})
+def _segmentation_json_schema(parameter_name, schema_version):
+    """Return the JSON schema for a mirror-segmentation parameter."""
+    parameter_schema = schema.get_model_parameter_schema(parameter_name, schema_version)
+    return next(item["json_schema"] for item in parameter_schema["data"] if item["type"] == "dict")
 
 
-def validate_segments(records):
+@lru_cache
+def _kind_required_fields(parameter_name, schema_version):
+    """Map schema-declared segmentation kinds to their required fields."""
+    definitions = {}
+    for item in _segmentation_json_schema(parameter_name, schema_version)["items"]["oneOf"]:
+        kinds = item["properties"]["kind"].get("enum", [])
+        for kind in kinds:
+            definitions[kind] = frozenset(item["required"])
+    return definitions
+
+
+def validate_segments(
+    records,
+    parameter_name,
+    schema_version,
+):
     """Validate mirror-segmentation records and return them unchanged.
 
     Parameters
     ----------
     records : list of dict
         Ring, shape, or polygon records.
+    parameter_name : str
+        Mirror-segmentation model parameter whose schema validates the records.
+    schema_version : str
+        Version of the selected parameter schema.
 
     Returns
     -------
@@ -39,82 +53,42 @@ def validate_segments(records):
     ValueError
         If a record is malformed or contains non-finite geometry.
     """
-    if not isinstance(records, list) or not records:
-        raise ValueError("Mirror segmentation must contain at least one record")
+    try:
+        schema.validate_dict_using_schema(
+            records,
+            json_schema=_segmentation_json_schema(parameter_name, schema_version),
+        )
+    except ValidationError as exc:
+        raise ValueError(f"Invalid mirror segmentation: {exc.message}") from exc
     for record in records:
-        if not isinstance(record, dict) or set(record) - _allowed_keys(record):
-            raise ValueError(f"Invalid mirror segmentation record: {record!r}")
-        kind = record.get("kind")
-        if kind == "ring":
+        _validate_finite_values(record)
+        required_fields = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
+        if "r_min_cm" in required_fields:
             _validate_ring(record)
-        elif kind in _shape_kinds():
-            _validate_shape(record)
-        elif kind == "polygon":
+        elif "vertices_cm" in required_fields:
             _validate_polygon(record)
-        else:
-            raise ValueError(f"Unknown mirror segmentation kind: {kind!r}")
     return records
 
 
-def _allowed_keys(record):
-    common = {"kind", "count", "rotation_deg"}
-    if record.get("kind") == "ring":
-        return common | {"r_min_cm", "r_max_cm", "dphi_deg", "phi0_deg", "gap_cm"}
-    if record.get("kind") == "polygon":
-        return common | {"vertices_cm"}
-    return common | {"x_cm", "y_cm", "diameter_cm"}
-
-
-def _number(record, key, minimum=None, positive=False):
-    value = record.get(key)
-    if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
-        raise ValueError(f"Mirror segmentation field '{key}' must be finite numeric")
-    if positive and value <= 0:
-        raise ValueError(f"Mirror segmentation field '{key}' must be positive")
-    if minimum is not None and value < minimum:
-        raise ValueError(f"Mirror segmentation field '{key}' must be >= {minimum}")
-    return value
-
-
-def _optional_number(record, key, minimum=None):
-    if key in record:
-        _number(record, key, minimum=minimum)
+def _validate_finite_values(value):
+    """Reject non-finite numbers, which JSON Schema does not constrain."""
+    if isinstance(value, dict):
+        for item in value.values():
+            _validate_finite_values(item)
+    elif isinstance(value, list):
+        for item in value:
+            _validate_finite_values(item)
+    elif isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("Mirror segmentation values must be finite")
 
 
 def _validate_ring(record):
-    count = record.get("count")
-    if not isinstance(count, int) or isinstance(count, bool) or count <= 0:
-        raise ValueError("Ring count must be a positive integer")
-    r_min = _number(record, "r_min_cm", minimum=0)
-    r_max = _number(record, "r_max_cm", minimum=0)
-    if r_max <= r_min:
+    if record["r_max_cm"] <= record["r_min_cm"]:
         raise ValueError("Ring r_max_cm must be greater than r_min_cm")
-    _number(record, "dphi_deg", positive=True)
-    _optional_number(record, "phi0_deg")
-    _optional_number(record, "gap_cm", minimum=0)
-
-
-def _validate_shape(record):
-    if record.get("count", 1) != 1:
-        raise ValueError("Individual mirror shapes must have count=1")
-    _number(record, "x_cm")
-    _number(record, "y_cm")
-    _number(record, "diameter_cm", positive=True)
-    _optional_number(record, "rotation_deg")
 
 
 def _validate_polygon(record):
-    if record.get("count", 1) != 1:
-        raise ValueError("Individual polygons must have count=1")
     vertices = record.get("vertices_cm")
-    if not isinstance(vertices, list) or len(vertices) < 3:
-        raise ValueError("A polygon must contain at least three vertices")
-    for vertex in vertices:
-        if not isinstance(vertex, dict) or set(vertex) != {"x_cm", "y_cm"}:
-            raise ValueError("Polygon vertices must contain only x_cm and y_cm")
-        _number(vertex, "x_cm")
-        _number(vertex, "y_cm")
-    _optional_number(record, "rotation_deg")
     area = sum(
         first["x_cm"] * second["y_cm"] - second["x_cm"] * first["y_cm"]
         for first, second in zip(vertices, vertices[1:] + vertices[:1], strict=False)
@@ -164,46 +138,83 @@ def _parse_polygon(fields, line, kind, count):
     }
 
 
-def _parse_segmentation_line(line):
+def _parse_segmentation_line(line, parameter_name, schema_version):
     fields = line.replace(",", " ").split()
     kind = fields.pop(0).lower()
     count = int(fields.pop(0))
-    if kind == "ring":
+    required_fields = _kind_required_fields(parameter_name, schema_version).get(kind)
+    if required_fields is None:
+        raise ValueError(f"Unknown mirror segmentation kind: {kind}")
+    if "r_min_cm" in required_fields:
         return _parse_ring(fields, line, kind, count)
-    if kind in _shape_kinds():
-        return _parse_shape(fields, line, kind, count)
-    if kind == "polygon":
+    if "vertices_cm" in required_fields:
         return _parse_polygon(fields, line, kind, count)
-    raise ValueError(f"Unknown mirror segmentation kind: {kind}")
+    return _parse_shape(fields, line, kind, count)
 
 
-def parse_segmentation_file(path):
-    """Parse a legacy sim_telarray mirror-segmentation file into records."""
+def parse_segmentation_file(
+    path,
+    parameter_name,
+    schema_version,
+):
+    """Parse a sim_telarray mirror-segmentation file into validated records.
+
+    Parameters
+    ----------
+    path : str or Path
+        Input segmentation file.
+    parameter_name : str
+        Mirror-segmentation model parameter whose schema validates the records.
+    schema_version : str
+        Version of the selected parameter schema.
+    """
     records = []
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         line = line.split("#", 1)[0].strip()
         if line:
-            records.append(_parse_segmentation_line(line))
-    return validate_segments(records)
+            records.append(_parse_segmentation_line(line, parameter_name, schema_version))
+    return validate_segments(records, parameter_name, schema_version)
 
 
-def write_mirror_segmentation(records, output_path):
-    """Write validated records in sim_telarray segmentation syntax."""
-    validate_segments(records)
+def write_mirror_segmentation(
+    records,
+    output_path,
+    parameter_name,
+    schema_version,
+):
+    """Write validated records in sim_telarray segmentation syntax.
+
+    Parameters
+    ----------
+    records : list of dict
+        Mirror-segmentation records.
+    output_path : str or Path
+        Output segmentation file.
+    parameter_name : str
+        Mirror-segmentation model parameter whose schema validates the records.
+    schema_version : str
+        Version of the selected parameter schema.
+
+    Returns
+    -------
+    str
+        Name of the output file.
+    """
+    validate_segments(records, parameter_name, schema_version)
     output_path = Path(output_path)
     if ".." in output_path.parts:
         raise ValueError(f"Unsafe mirror segmentation output path: {output_path}")
     lines = ["# Generated by simtools from validated mirror segmentation records"]
     for record in records:
-        kind = record["kind"]
-        if kind == "ring":
+        required_fields = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
+        if "r_min_cm" in required_fields:
             lines.append(
                 f"RING {record['count']} {record['r_min_cm']} {record['r_max_cm']} "
                 f"{record['dphi_deg']} {record.get('phi0_deg', 0)} {record.get('gap_cm', 0)}"
             )
-        elif kind in _shape_kinds():
+        elif "vertices_cm" not in required_fields:
             lines.append(
-                f"{kind.upper()} 1 {record['x_cm']} {record['y_cm']} "
+                f"{record['kind'].upper()} 1 {record['x_cm']} {record['y_cm']} "
                 f"{record['diameter_cm']} {record.get('rotation_deg', 0)}"
             )
         else:

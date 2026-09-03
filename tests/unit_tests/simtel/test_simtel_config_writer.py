@@ -389,9 +389,33 @@ def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_t
         config_path,
         None,
         parameter_name="primary_mirror_segmentation",
+        parameter_data={"model_parameter_schema_version": "0.2.0"},
     )
     assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
     assert (Path(tmp_test_directory) / result[1]).is_file()
+
+
+def test_convert_segmentation_records_uses_parameter_schema_version(
+    simtel_config_writer, tmp_test_directory
+):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    with mock.patch(
+        "simtools.simtel.simtel_config_writer.simtel_table_writer.write_mirror_segmentation",
+        return_value="primary_mirror_segmentation-telescope.dat",
+    ) as write_mirror_segmentation:
+        simtel_config_writer._convert_model_parameters_to_simtel_format(
+            "primary_segmentation",
+            [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+            config_path,
+            None,
+            parameter_name="primary_mirror_segmentation",
+            parameter_data={"model_parameter_schema_version": "0.2.0"},
+        )
+
+    assert write_mirror_segmentation.call_args.kwargs == {
+        "parameter_name": "primary_mirror_segmentation",
+        "schema_version": "0.2.0",
+    }
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):

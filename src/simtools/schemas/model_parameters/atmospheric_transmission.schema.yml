@@ -1,80 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for atmospheric_transmission model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: atmospheric_transmission
-description: |-
-  Optical thickness as a function of photon emission altitude
-  and wavelength.
-data:
-  - type: file
-    unit: dimensionless
-    default: 'atm_trans_2147_1_10_2_0_2147.dat'
-instrument:
-  class: Site
-activity:
-  setting:
-    - SetParameterFromExternal
-  validation:
-    - ValidateParameterByExpert
-    - ValidateAtmosphericModel
-    - ValidateTelescopeSimulationModel
-source:
-  - Calibration
-simulation_software:
-  - name: corsika
-  - name: sim_telarray
-    meta_parameter_mode: add
-plot_configuration:
-  - type: atmospheric_transmission
-    title: 'Atmospheric transmission profile'
-    xtitle: 'Wavelength [nm]'
-    ytitle: 'Extinction'
-    yscale: 'log'
-    no_markers: true
-    tables:
-      - parameter: atmospheric_transmission
-        label: '30 km'
-        column_x: 'wavelength'
-        column_y: 'extinction'
-        select_values:
-          column_name: 'altitude'
-          value: 30.0
-      - parameter: atmospheric_transmission
-        label: '15 km'
-        column_x: 'wavelength'
-        column_y: 'extinction'
-        select_values:
-          column_name: 'altitude'
-          value: 15.0
-      - parameter: atmospheric_transmission
-        label: '10 km'
-        column_x: 'wavelength'
-        column_y: 'extinction'
-        select_values:
-          column_name: 'altitude'
-          value: 10.0
-      - parameter: atmospheric_transmission
-        label: '5 km'
-        column_x: 'wavelength'
-        column_y: 'extinction'
-        select_values:
-          column_name: 'altitude'
-          value: 5.0
-      - parameter: atmospheric_transmission
-        label: '2.4 km'
-        column_x: 'wavelength'
-        column_y: 'extinction'
-        select_values:
-          column_name: 'altitude'
-          value: 2.358
-
----
-title: Schema for atmospheric_transmission model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -196,4 +122,77 @@ plot_configuration:
         column_y: extinction
         select_values:
           column_name: altitude
+          value: 2.358
+---
+title: Schema for atmospheric_transmission model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: atmospheric_transmission
+description: |-
+  Optical thickness as a function of photon emission altitude
+  and wavelength.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'atm_trans_2147_1_10_2_0_2147.dat'
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: corsika
+  - name: sim_telarray
+    meta_parameter_mode: add
+plot_configuration:
+  - type: atmospheric_transmission
+    title: 'Atmospheric transmission profile'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Extinction'
+    yscale: 'log'
+    no_markers: true
+    tables:
+      - parameter: atmospheric_transmission
+        label: '30 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 30.0
+      - parameter: atmospheric_transmission
+        label: '15 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 15.0
+      - parameter: atmospheric_transmission
+        label: '10 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 10.0
+      - parameter: atmospheric_transmission
+        label: '5 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
+          value: 5.0
+      - parameter: atmospheric_transmission
+        label: '2.4 km'
+        column_x: 'wavelength'
+        column_y: 'extinction'
+        select_values:
+          column_name: 'altitude'
           value: 2.358
