@@ -10,10 +10,8 @@ short_description: Fake mirror list to be used for camera efficiency calculation
   ('testeff' program).
 description: 'Fake mirror list to be used for camera efficiency calculations (''testeff''
   program).
-
   Allows to obtain realistic distributions of the photon incidence angles on the camera
   plan.
-
   Not to be used for actual simulations.'
 data:
   - type: file

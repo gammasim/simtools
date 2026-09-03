@@ -8,11 +8,8 @@ meta_schema_version: 0.1.0
 name: correct_nsb_spectrum_to_telescope_altitude
 description: 'Correct the night-sky background spectrum to the telescope altitude
   from the altitude where
-
   the Benn & Ellison spectrum was measured.
-
   The correction is done within sim_telarray
-
   and is based on the atmospheric transmission to 2200 m a.s.l (atm_trans_2200_1_3_0_0_0.dat).'
 data:
   - type: file

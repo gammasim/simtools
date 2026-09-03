@@ -8,7 +8,6 @@ meta_schema_version: 0.1.0
 name: secondary_mirror_reflectivity
 description: 'Secondary mirror reflectivity measured directly on the facet as function
   of
-
   wavelength.'
 data:
   - type: file

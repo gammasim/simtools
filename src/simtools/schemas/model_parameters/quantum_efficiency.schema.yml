@@ -7,15 +7,10 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: quantum_efficiency
 description: 'Quantum or photon detection efficiency
-
   averaged over all pixels per camera.
-
   Random pixel-to-pixel variations are calculated using
-
   the qe_variation parameter. Pixel-to-pixel differences
-
   in detection efficiency using scaling factors can be
-
   specified in the camera_config_file.'
 data:
   - type: file

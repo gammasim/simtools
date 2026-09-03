@@ -7,9 +7,7 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: fadc_pulse_shape
 description: '(F)ADC pulse shape (amplitude vs time) for low and high gain
-
   readout chain.  The pulse amplitude scale is ignored and the pulses are
-
   re-scaled to peak values of par:fadc-amplitude times par:fadc-sensitivity.'
 short_description: (F)ADC pulse shape (amplitude vs time).
 data:

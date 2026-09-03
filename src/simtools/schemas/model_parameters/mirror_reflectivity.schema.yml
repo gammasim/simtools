@@ -7,11 +7,8 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: mirror_reflectivity
 description: 'Mirror reflectivity measured directly on the facet as function of
-
   wavelength. For dual mirror telescopes without explicit reflectivity
-
   table given for the secondary, this reflectivity given here is
-
   applied twice.'
 data:
   - type: file
