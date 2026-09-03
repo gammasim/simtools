@@ -20,26 +20,26 @@ def write_mirror_segmentation(records, output_path, parameter_name, schema_versi
     return _write_mirror_segmentation(records, output_path, parameter_name, schema_version)
 
 
-def write_camera_configuration(configuration, output_path):
+def write_camera_file(camera_components, output_path):
     """Write validated camera components in sim_telarray camera syntax.
 
-    ``configuration`` is a mapping containing ``rotate``, ``pixel_types``,
+    ``camera_components`` is a mapping containing ``rotate``, ``pixel_types``,
     ``pixels`` and optional ``triggers``/``trigger_members`` sequences. The
     function deliberately accepts plain mappings so model-repository values
     can be passed without an intermediate bespoke class.
     """
     output_path = Path(output_path)
-    _validate_camera_configuration(configuration)
+    _validate_camera_components(camera_components)
     if any(part == ".." for part in output_path.parts):
         raise ValueError(f"Unsafe camera configuration path: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = _camera_configuration_lines(configuration)
+    lines = _camera_file_lines(camera_components)
     output_path.write_text("".join(lines), encoding="utf-8")
     return output_path.name
 
 
-def _camera_configuration_lines(configuration):
-    """Build serialized lines for a camera configuration."""
+def _camera_file_lines(configuration):
+    """Build serialized sim_telarray camera-file lines."""
     rotate = float(configuration.get("rotate", 0.0))
     pixel_types = configuration.get("pixel_types", [])
     pixels = configuration.get("pixels", [])
@@ -151,7 +151,7 @@ def _trigger_member_token(member_rows):
     return f"{prefix}{first['pixel_id']}[{slaves}]"
 
 
-def _validate_camera_configuration(configuration):
+def _validate_camera_components(configuration):
     """Validate camera component records before serializing them."""
     pixel_types = configuration.get("pixel_types", [])
     pixels = configuration.get("pixels", [])

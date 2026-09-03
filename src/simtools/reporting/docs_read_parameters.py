@@ -317,7 +317,7 @@ class ReadParameters:
             key: value for key, value in (("telescope", telescope), ("site", site)) if value
         }
 
-        if parameter == "camera_configuration":
+        if parameter == "camera_pixel_layout":
             plot_names = self._plot_camera_config(
                 parameter,
                 parameter_version,
@@ -350,7 +350,7 @@ class ReadParameters:
     def _plot_camera_config(
         self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
     ):
-        """Generate plots for camera configuration files."""
+        """Generate plots for camera component files."""
         if not parameter_version:
             return []
 
@@ -378,7 +378,7 @@ class ReadParameters:
             plot_names.append(plot_name)
         else:
             logger.info(
-                "Camera configuration file plot already exists: %s",
+                "Camera component file plot already exists: %s",
                 plot_path,
             )
             plot_names.append(plot_name)

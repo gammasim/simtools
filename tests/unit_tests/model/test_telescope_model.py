@@ -108,7 +108,7 @@ def test_load_camera(telescope_model_lst, monkeypatch):
     configuration = {"rotate": 0.0, "pixel_types": [], "pixels": []}
 
     resolve_mock = Mock(return_value=configuration)
-    monkeypatch.setattr(tel_model, "_resolve_camera_configuration", resolve_mock)
+    monkeypatch.setattr(tel_model, "_resolve_camera_components", resolve_mock)
     tel_model.get_telescope_effective_focal_length = Mock(return_value=focal_length)
     camera_mock = Mock()
     monkeypatch.setattr("simtools.model.telescope_model.Camera", camera_mock)

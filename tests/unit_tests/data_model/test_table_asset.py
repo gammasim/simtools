@@ -97,6 +97,24 @@ def test_read_ecsv_asset_validates_schema_and_identity(tmp_test_directory):
     assert result.colnames == ["time", "amplitude"]
 
 
+def test_read_ecsv_asset_requires_standard_model_parameter_metadata(tmp_test_directory):
+    table = _table()
+    del table.meta["site"]
+    path = Path(tmp_test_directory) / "table.ecsv"
+    table.write(path, format="ascii.ecsv")
+
+    with pytest.raises(ValueError, match="Missing required ECSV metadata: site"):
+        read_ecsv_asset(
+            path,
+            parameter_data={
+                "parameter": "fadc_pulse_shape",
+                "parameter_version": "1.0.0",
+                "instrument": "LSTN-01",
+                "site": "North",
+            },
+        )
+
+
 def test_read_ecsv_asset_rejects_missing_description(tmp_test_directory):
     table = _table()
     table["amplitude"].info.description = None

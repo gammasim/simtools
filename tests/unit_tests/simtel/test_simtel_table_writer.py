@@ -100,7 +100,7 @@ def test_write_simtel_table_raises_on_missing_rows_key(tmp_test_directory):
         )
 
 
-def test_write_camera_configuration_preserves_pixel_fields_and_members(tmp_test_directory):
+def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory):
     configuration = {
         "rotate": 10.893,
         "pixel_types": [
@@ -184,9 +184,7 @@ def test_write_camera_configuration_preserves_pixel_fields_and_members(tmp_test_
         ],
     }
 
-    result = simtel_table_writer.write_camera_configuration(
-        configuration, tmp_test_directory / "camera.dat"
-    )
+    result = simtel_table_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
 
     assert result == "camera.dat"
     lines = (tmp_test_directory / result).read_text(encoding="utf-8").splitlines()
@@ -213,7 +211,7 @@ def test_write_camera_configuration_preserves_pixel_fields_and_members(tmp_test_
     assert lines[6] == "MajorityTrigger * of +0[1] 2"
 
 
-def test_write_camera_configuration_rejects_invalid_trigger_and_module_id(tmp_test_directory):
+def test_write_camera_file_rejects_invalid_trigger_and_module_id(tmp_test_directory):
     configuration = {
         "pixel_types": [
             {
@@ -250,6 +248,4 @@ def test_write_camera_configuration_rejects_invalid_trigger_and_module_id(tmp_te
         "trigger_members": [],
     }
     with pytest.raises(ValueError, match="Invalid camera module ID"):
-        simtel_table_writer.write_camera_configuration(
-            configuration, tmp_test_directory / "camera.dat"
-        )
+        simtel_table_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")

@@ -1,36 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for fake_mirror_list model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: fake_mirror_list
-short_description: Fake mirror list to be used for camera efficiency calculations ('testeff' program).
-description: |-
-  Fake mirror list to be used for camera efficiency calculations ('testeff' program).
-  Allows to obtain realistic distributions of the photon incidence angles on the camera plan.
-  Not to be used for actual simulations.
-data:
-  - type: file
-    unit: dimensionless
-    default: null
-instrument:
-  class: Structure
-activity:
-  setting:
-    - SetParameterFromExternal
-  validation:
-    - ValidateParameterByExpert
-    - ValidateCameraEfficiency
-source:
-  - Initial instrument setup
-simulation_software:
-  - name: testeff
-
----
-title: Schema for fake_mirror_list model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -85,22 +55,6 @@ data:
         unit: dimensionless
         required: true
     table_metadata:
-      - name: parameter_name
-        description: Owning model parameter
-        type: string
-        required: true
-      - name: parameter_version
-        description: Owning parameter version
-        type: string
-        required: true
-      - name: instrument
-        description: Owning instrument
-        type: string
-        required: true
-      - name: site
-        description: Owning site
-        type: string
-        required: true
       - name: source_file_name
         description: Original source basename
         type: string
@@ -121,6 +75,35 @@ data:
         description: Simulator serialization format
         type: string
         required: false
+instrument:
+  class: Structure
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraEfficiency
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: testeff
+---
+title: Schema for fake_mirror_list model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: fake_mirror_list
+short_description: Fake mirror list to be used for camera efficiency calculations ('testeff' program).
+description: |-
+  Fake mirror list to be used for camera efficiency calculations ('testeff' program).
+  Allows to obtain realistic distributions of the photon incidence angles on the camera plan.
+  Not to be used for actual simulations.
+data:
+  - type: file
+    unit: dimensionless
+    default: null
 instrument:
   class: Structure
 activity:

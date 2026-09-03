@@ -1,37 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for camera_pixel_types model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-name: camera_pixel_types
-description: Pixel and lightguide type definitions for a camera.
-data:
-  - type: dict
-    json_schema:
-      type: array
-      minItems: 1
-      items:
-        type: object
-        required: [type_id, funnel_diameter_cm]
-        additionalProperties: false
-        properties:
-          type_id: {type: integer, minimum: 0}
-          pmt_type: {type: integer}
-          cathode_shape: {type: integer}
-          cathode_diameter_cm: {type: number, exclusiveMinimum: 0}
-          funnel_shape: {type: integer}
-          funnel_diameter_cm: {type: number, exclusiveMinimum: 0}
-          funnel_depth_cm: {type: number, minimum: 0}
-          lightguide_angle: {type: string}
-          lightguide_wavelength: {type: string}
-instrument: {class: Camera}
-activity: {setting: [SetParameterFromExternal]}
-source: [Initial instrument setup]
-simulation_software: [{name: sim_telarray}]
----
-title: Schema for camera_pixel_types model parameter
 schema_version: 0.2.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -67,6 +36,37 @@ data:
           lightguide_wavelength_parameter: {type: string, minLength: 1}
           funnel_transparency: {type: number, minimum: 0, maximum: 1}
           funnel_wall_reflectivity: {type: number, minimum: 0, maximum: 1}
+instrument: {class: Camera}
+activity: {setting: [SetParameterFromExternal]}
+source: [Initial instrument setup]
+simulation_software: [{name: sim_telarray}]
+---
+title: Schema for camera_pixel_types model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_pixel_types
+description: Pixel and lightguide type definitions for a camera.
+data:
+  - type: dict
+    json_schema:
+      type: array
+      minItems: 1
+      items:
+        type: object
+        required: [type_id, funnel_diameter_cm]
+        additionalProperties: false
+        properties:
+          type_id: {type: integer, minimum: 0}
+          pmt_type: {type: integer}
+          cathode_shape: {type: integer}
+          cathode_diameter_cm: {type: number, exclusiveMinimum: 0}
+          funnel_shape: {type: integer}
+          funnel_diameter_cm: {type: number, exclusiveMinimum: 0}
+          funnel_depth_cm: {type: number, minimum: 0}
+          lightguide_angle: {type: string}
+          lightguide_wavelength: {type: string}
 instrument: {class: Camera}
 activity: {setting: [SetParameterFromExternal]}
 source: [Initial instrument setup]

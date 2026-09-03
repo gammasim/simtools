@@ -165,6 +165,19 @@ def create_all_non_hardstereo_same_params_scenario():
     ]
 
 
+def test_write_camera_file_skips_models_without_camera_components(
+    simtel_config_writer, tmp_test_directory
+):
+    assert simtel_config_writer._write_camera_file({}, tmp_test_directory / "config.cfg") is None
+
+
+def test_write_camera_file_requires_all_camera_components(simtel_config_writer, tmp_test_directory):
+    with pytest.raises(ValueError, match="Camera component parameters are missing"):
+        simtel_config_writer._write_camera_file(
+            {"camera_pixel_types": {"value": []}}, tmp_test_directory / "config.cfg"
+        )
+
+
 # Common trigger line strings to reduce duplication
 LSTS_HARDSTEREO_LINE = "Trigger 2 of 1, 2 width 120.0 hardstereo"
 MSTS_HARDSTEREO_LINE = "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"

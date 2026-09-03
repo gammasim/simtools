@@ -57,16 +57,16 @@ def plot(config, output_file, model_reader=None):
     if config.get("rotate_angle") is not None:
         plot_kwargs["rotate_angle"] = config.get("rotate_angle")
 
-    if config["parameter"] == "camera_configuration":
+    if config["parameter"] == "camera_pixel_layout":
         parameters = model_reader.get_model_parameters(
             site=config["site"],
             array_element_name=config.get("telescope"),
             collection="telescopes",
             model_version=config.get("model_version"),
         )
-        camera_configuration = _resolve_camera_configuration(model_reader, parameters)
+        camera_components = _resolve_camera_components(model_reader, parameters)
         fig = plot_pixel_layout_from_configuration(
-            camera_configuration, config["telescope"], **plot_kwargs
+            camera_components, config["telescope"], **plot_kwargs
         )
     else:
         model_reader.export_model_file(
@@ -84,18 +84,15 @@ def plot(config, output_file, model_reader=None):
     plt.close(fig)
 
 
-def _resolve_camera_configuration(model_reader, parameters):
+def _resolve_camera_components(model_reader, parameters):
     """Resolve camera component model parameters for plotting."""
-    manifest = parameters["camera_configuration"]["value"]
-    pixel_types = deepcopy(parameters[manifest["camera_pixel_types"]]["value"])
+    pixel_types = deepcopy(parameters["camera_pixel_types"]["value"])
     return {
-        "rotate": parameters[manifest["camera_config_rotate"]]["value"],
+        "rotate": parameters["camera_config_rotate"]["value"],
         "pixel_types": pixel_types,
-        "pixels": _table_records(model_reader, parameters[manifest["camera_pixel_layout"]]),
-        "triggers": _table_records(model_reader, parameters[manifest["camera_trigger_groups"]]),
-        "trigger_members": _table_records(
-            model_reader, parameters[manifest["camera_trigger_members"]]
-        ),
+        "pixels": _table_records(model_reader, parameters["camera_pixel_layout"]),
+        "triggers": _table_records(model_reader, parameters["camera_trigger_groups"]),
+        "trigger_members": _table_records(model_reader, parameters["camera_trigger_members"]),
     }
 
 

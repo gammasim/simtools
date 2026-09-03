@@ -16,11 +16,6 @@ data:
       - {name: kind, description: Trigger kind, type: string, required: true}
       - {name: use_default_multiplicity, description: Use simulator default multiplicity, type: int64, required: true}
       - {name: multiplicity, description: Trigger multiplicity, type: int64, required: false}
-    table_metadata:
-      - {name: parameter_name, description: Owning model parameter, type: string, required: true}
-      - {name: parameter_version, description: Owning parameter version, type: string, required: true}
-      - {name: instrument, description: Owning instrument, type: string, required: true}
-      - {name: site, description: Owning site, type: string, required: true}
 instrument: {class: Camera}
 activity: {setting: [SetParameterFromExternal]}
 source: [Initial instrument setup]

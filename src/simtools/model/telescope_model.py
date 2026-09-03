@@ -184,28 +184,13 @@ class TelescopeModel(ModelParameter):
 
     def _load_camera(self):
         """Load the camera from its validated component parameters."""
-        configuration = self._resolve_camera_configuration()
+        configuration = self._resolve_camera_components()
         focal_length = self.get_telescope_effective_focal_length("cm", True)
         self._camera = Camera.from_configuration(self.name, configuration, focal_length)
 
-    def _resolve_camera_configuration(self):
-        """Resolve the manifest and its selected camera component parameters."""
-        manifest = self.get_parameter_value("camera_configuration")
-        if not isinstance(manifest, dict):
-            return None
-
-        required = (
-            "camera_config_rotate",
-            "camera_pixel_types",
-            "camera_pixel_layout",
-            "camera_trigger_groups",
-            "camera_trigger_members",
-        )
-        component_names = {key: manifest.get(key) for key in required}
-        if any(not isinstance(value, str) for value in component_names.values()):
-            raise ValueError("Camera configuration manifest contains invalid component references")
-
-        pixel_types = deepcopy(self.get_parameter_value(component_names["camera_pixel_types"]))
+    def _resolve_camera_components(self):
+        """Resolve the independent camera component parameters."""
+        pixel_types = deepcopy(self.get_parameter_value("camera_pixel_types"))
         for pixel_type in pixel_types:
             angle_parameter = pixel_type.get("lightguide_angle_parameter")
             wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
@@ -215,13 +200,11 @@ class TelescopeModel(ModelParameter):
                 pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"
 
         return {
-            "rotate": self.get_parameter_value(component_names["camera_config_rotate"]),
+            "rotate": self.get_parameter_value("camera_config_rotate"),
             "pixel_types": pixel_types,
-            "pixels": self._parameter_table_records(component_names["camera_pixel_layout"]),
-            "triggers": self._parameter_table_records(component_names["camera_trigger_groups"]),
-            "trigger_members": self._parameter_table_records(
-                component_names["camera_trigger_members"]
-            ),
+            "pixels": self._parameter_table_records("camera_pixel_layout"),
+            "triggers": self._parameter_table_records("camera_trigger_groups"),
+            "trigger_members": self._parameter_table_records("camera_trigger_members"),
         }
 
     def _parameter_table_records(self, parameter_name):

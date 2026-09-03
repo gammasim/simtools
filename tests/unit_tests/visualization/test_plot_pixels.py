@@ -56,24 +56,15 @@ def test_plot_rotate_angle_kwarg(mock_save, mock_plot_layout, rotate_angle, expe
 
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_configuration")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-def test_plot_camera_configuration(mock_save, mock_plot_layout):
+def test_plot_camera_components(mock_save, mock_plot_layout):
     config = {
-        "parameter": "camera_configuration",
+        "parameter": "camera_pixel_layout",
         "site": "North",
         "telescope": "LSTN-01",
         "model_version": "6.0.0",
     }
     model_reader = mock.MagicMock()
     model_reader.get_model_parameters.return_value = {
-        "camera_configuration": {
-            "value": {
-                "camera_config_rotate": "camera_config_rotate",
-                "camera_pixel_types": "camera_pixel_types",
-                "camera_pixel_layout": "camera_pixel_layout",
-                "camera_trigger_groups": "camera_trigger_groups",
-                "camera_trigger_members": "camera_trigger_members",
-            }
-        },
         "camera_config_rotate": {"value": 0.0},
         "camera_pixel_types": {"value": [{"funnel_shape": 1, "funnel_diameter_cm": 1.0}]},
         "camera_pixel_layout": {"value": "layout.ecsv"},

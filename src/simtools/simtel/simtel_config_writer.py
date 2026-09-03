@@ -19,6 +19,14 @@ from simtools.utils import names
 
 logger = logging.getLogger(__name__)
 
+_CAMERA_COMPONENT_PARAMETERS = (
+    "camera_config_rotate",
+    "camera_pixel_types",
+    "camera_pixel_layout",
+    "camera_trigger_groups",
+    "camera_trigger_members",
+)
+
 
 class SimtelConfigWriter:
     """
@@ -123,7 +131,7 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format.
         """
         simtel_par = {}
-        camera_file = self._write_camera_configuration_file(
+        camera_file = self._write_camera_file(
             parameters, config_file_path, telescope_name=telescope_name
         )
         if camera_file is not None:
@@ -144,33 +152,18 @@ class SimtelConfigWriter:
 
         return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
 
-    def _write_camera_configuration_file(self, parameters, config_file_path, telescope_name=None):
-        """Resolve camera components and write the generated camera file."""
-        manifest_data = parameters.get("camera_configuration")
-        if manifest_data is None:
+    def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
+        """Write a sim_telarray camera file from independent camera parameters."""
+        component_names = set(_CAMERA_COMPONENT_PARAMETERS) & set(parameters)
+        if not component_names:
             return None
-        manifest = manifest_data.get("value")
-        if not isinstance(manifest, dict):
-            raise ValueError("camera_configuration must contain a component manifest")
-
-        component_names = {
-            key: manifest.get(key)
-            for key in (
-                "camera_config_rotate",
-                "camera_pixel_types",
-                "camera_pixel_layout",
-                "camera_trigger_groups",
-                "camera_trigger_members",
-            )
-        }
-        if any(not isinstance(value, str) for value in component_names.values()):
-            raise ValueError("camera_configuration contains an invalid component reference")
+        missing = sorted(set(_CAMERA_COMPONENT_PARAMETERS) - component_names)
+        if missing:
+            raise ValueError(f"Camera component parameters are missing: {missing}")
 
         destination = Path(config_file_path).parent
         telescope_name = telescope_name or Path(config_file_path).stem
-        pixel_types = deepcopy(
-            self._parameter_value(parameters, component_names["camera_pixel_types"])
-        )
+        pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
         for pixel_type in pixel_types:
             self._resolve_lightguide_file(
                 pixel_type,
@@ -189,27 +182,25 @@ class SimtelConfigWriter:
                 telescope_name,
             )
 
-        pixels = self._camera_table_records(
-            parameters, component_names["camera_pixel_layout"], destination
-        )
+        pixels = self._camera_table_records(parameters, "camera_pixel_layout", destination)
         expected_pixels = self._parameter_value(parameters, "camera_pixels")
         if expected_pixels is not None and int(expected_pixels) != len(pixels):
             raise ValueError(
                 f"camera_pixels={expected_pixels} does not match camera layout rows={len(pixels)}"
             )
         configuration = {
-            "rotate": self._parameter_value(parameters, component_names["camera_config_rotate"]),
+            "rotate": self._parameter_value(parameters, "camera_config_rotate"),
             "pixel_types": pixel_types,
             "pixels": pixels,
             "triggers": self._camera_table_records(
-                parameters, component_names["camera_trigger_groups"], destination
+                parameters, "camera_trigger_groups", destination
             ),
             "trigger_members": self._camera_table_records(
-                parameters, component_names["camera_trigger_members"], destination
+                parameters, "camera_trigger_members", destination
             ),
         }
-        output = destination / f"camera_configuration-{telescope_name}.dat"
-        return simtel_table_writer.write_camera_configuration(configuration, output)
+        output = destination / f"camera-{telescope_name}.dat"
+        return simtel_table_writer.write_camera_file(configuration, output)
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):
@@ -965,12 +956,15 @@ class SimtelConfigWriter:
             if key in parameters:
                 parameters[key]["value"] = val
 
-        camera_configuration = parameters.pop("camera_configuration", None)
+        camera_components = {
+            name: parameters.pop(name)
+            for name in _CAMERA_COMPONENT_PARAMETERS
+            if name in parameters
+        }
         try:
             self.write_telescope_config_file(config_file_path, parameters, telescope_name)
         finally:
-            if camera_configuration is not None:
-                parameters["camera_configuration"] = camera_configuration
+            parameters.update(camera_components)
 
         config_file_directory = Path(config_file_path).parent
         self._write_dummy_mirror_list_files(config_file_directory, telescope_name)

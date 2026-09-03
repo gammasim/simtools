@@ -1,49 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for mirror_reflectivity model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: mirror_reflectivity
-description: |-
-  Mirror reflectivity measured directly on the facet as function of
-  wavelength. For dual mirror telescopes without explicit reflectivity
-  table given for the secondary, this reflectivity given here is
-  applied twice.
-data:
-  - type: file
-    unit: dimensionless
-    default: 'no_such_reflectivity.dat'
-instrument:
-  class: Structure
-activity:
-  setting:
-    - SetParameterFromExternal
-    - SetTelescopeEfficiency
-  validation:
-    - ValidateParameterByExpert
-    - ValidateTelescopeEfficiency
-    - ValidateTriggerPerformance
-    - ValidateTelescopeSimulationModel
-source:
-  - Calibration
-simulation_software:
-  - name: sim_telarray
-plot_configuration:
-  - type: mirror_reflectivity
-    title: 'Mirror reflectivity'
-    xtitle: 'Wavelength [nm]'
-    ytitle: 'Reflectivity'
-    no_markers: true
-    tables:
-      - parameter: mirror_reflectivity
-        column_x: 'wavelength'
-        column_y: 'reflectivity'
-
----
-title: Schema for mirror_reflectivity model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -91,22 +48,6 @@ data:
         unit: dimensionless
         required: false
     table_metadata:
-      - name: parameter_name
-        description: Owning model parameter
-        type: string
-        required: true
-      - name: parameter_version
-        description: Owning parameter version
-        type: string
-        required: true
-      - name: instrument
-        description: Owning instrument
-        type: string
-        required: true
-      - name: site
-        description: Owning site
-        type: string
-        required: true
       - name: source_file_name
         description: Original source basename
         type: string
@@ -152,3 +93,45 @@ plot_configuration:
       - parameter: mirror_reflectivity
         column_x: wavelength
         column_y: reflectivity
+---
+title: Schema for mirror_reflectivity model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: mirror_reflectivity
+description: |-
+  Mirror reflectivity measured directly on the facet as function of
+  wavelength. For dual mirror telescopes without explicit reflectivity
+  table given for the secondary, this reflectivity given here is
+  applied twice.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'no_such_reflectivity.dat'
+instrument:
+  class: Structure
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetTelescopeEfficiency
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTriggerPerformance
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+plot_configuration:
+  - type: mirror_reflectivity
+    title: 'Mirror reflectivity'
+    xtitle: 'Wavelength [nm]'
+    ytitle: 'Reflectivity'
+    no_markers: true
+    tables:
+      - parameter: mirror_reflectivity
+        column_x: 'wavelength'
+        column_y: 'reflectivity'

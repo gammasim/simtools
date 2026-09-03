@@ -1,59 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for pm_photoelectron_spectrum model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: pm_photoelectron_spectrum
-description: |-
-  Single photoelectron (p.e.) response distribution
-  (takes into account afterpulsing and the photoelectron collection
-  efficiency for PMT cameras).
-data:
-  - type: file
-    unit: dimensionless
-    default: 'no_such_pe_spectrum.dat'
-instrument:
-  class: Camera
-activity:
-  setting:
-    - SetParameterFromExternal
-    - SetSinglePhotoElectronResponse
-  validation:
-    - ValidateParameterByExpert
-    - ValidateSinglePhotoElectronResponse
-    - ValidateCameraChargeResponse
-    - ValidateCameraLinearity
-    - ValidateCameraGainsAndEfficiency
-    - ValidateTelescopeSimulationModel
-source:
-  - Calibration
-simulation_software:
-  - name: sim_telarray
-plot_configuration:
-  - type: pm_photoelectron_spectrum
-    title: 'Single p.e. response'
-    xtitle: 'Amplitude'
-    ytitle: 'Response'
-    xscale: 'linear'
-    yscale: 'log'
-    xlim: [0., 40.]
-    ylim: [1.e-11, null]
-    no_markers: true
-    tables:
-      - parameter: pm_photoelectron_spectrum
-        label: 'prompt'
-        column_x: 'amplitude'
-        column_y: 'response'
-      - parameter: pm_photoelectron_spectrum
-        label: 'prompt + afterpulsing'
-        column_x: 'amplitude'
-        column_y: 'response_with_ap'
-
----
-title: Schema for pm_photoelectron_spectrum model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -84,22 +31,6 @@ data:
         unit: dimensionless
         required: false
     table_metadata:
-      - name: parameter_name
-        description: Owning model parameter
-        type: string
-        required: true
-      - name: parameter_version
-        description: Owning parameter version
-        type: string
-        required: true
-      - name: instrument
-        description: Owning instrument
-        type: string
-        required: true
-      - name: site
-        description: Owning site
-        type: string
-        required: true
       - name: source_file_name
         description: Original source basename
         type: string
@@ -160,3 +91,55 @@ plot_configuration:
         label: prompt + afterpulsing
         column_x: amplitude
         column_y: response_with_ap
+---
+title: Schema for pm_photoelectron_spectrum model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: pm_photoelectron_spectrum
+description: |-
+  Single photoelectron (p.e.) response distribution
+  (takes into account afterpulsing and the photoelectron collection
+  efficiency for PMT cameras).
+data:
+  - type: file
+    unit: dimensionless
+    default: 'no_such_pe_spectrum.dat'
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetSinglePhotoElectronResponse
+  validation:
+    - ValidateParameterByExpert
+    - ValidateSinglePhotoElectronResponse
+    - ValidateCameraChargeResponse
+    - ValidateCameraLinearity
+    - ValidateCameraGainsAndEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+plot_configuration:
+  - type: pm_photoelectron_spectrum
+    title: 'Single p.e. response'
+    xtitle: 'Amplitude'
+    ytitle: 'Response'
+    xscale: 'linear'
+    yscale: 'log'
+    xlim: [0., 40.]
+    ylim: [1.e-11, null]
+    no_markers: true
+    tables:
+      - parameter: pm_photoelectron_spectrum
+        label: 'prompt'
+        column_x: 'amplitude'
+        column_y: 'response'
+      - parameter: pm_photoelectron_spectrum
+        label: 'prompt + afterpulsing'
+        column_x: 'amplitude'
+        column_y: 'response_with_ap'

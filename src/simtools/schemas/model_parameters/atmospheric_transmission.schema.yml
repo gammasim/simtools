@@ -29,22 +29,6 @@ data:
         unit: dimensionless
         required: true
     table_metadata:
-      - name: parameter_name
-        description: Owning model parameter
-        type: string
-        required: true
-      - name: parameter_version
-        description: Owning parameter version
-        type: string
-        required: true
-      - name: instrument
-        description: Owning instrument
-        type: string
-        required: true
-      - name: site
-        description: Owning site
-        type: string
-        required: true
       - name: source_file_name
         description: Original source basename
         type: string

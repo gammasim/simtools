@@ -256,7 +256,7 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
     ("parameter", "parameter_version", "patched_method", "return_value"),
     [
         ("some_param", "1.0.0", "_plot_parameter_tables", ["plot2"]),
-        ("camera_configuration", "1.0.0", "_plot_camera_config", ["camera_plot"]),
+        ("camera_pixel_layout", "1.0.0", "_plot_camera_config", ["camera_plot"]),
         ("mirror_list", "1.0.0", "_plot_mirror_config", ["mirror_plot"]),
         (
             "primary_mirror_segmentation",
@@ -340,7 +340,7 @@ def test__plot_parameter_tables(tmp_test_directory, mocker):
     mocker.patch.object(plot_tables, "generate_plot_configurations", return_value=None)
 
     result = read_parameters._plot_parameter_tables(
-        "camera_configuration", "1.0.0", Path(tmp_test_directory)
+        "camera_pixel_layout", "1.0.0", Path(tmp_test_directory)
     )
     assert result == []
 
@@ -1080,12 +1080,12 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
     ("parameter_version", "preexisting_plot"),
     [(None, False), ("1.0.0", False), ("1.0.0", True)],
 )
-def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, preexisting_plot):
+def test__plot_camera_components(tmp_test_directory, mocker, parameter_version, preexisting_plot):
     read_parameters = ReadParameters(
         args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
         output_path=tmp_test_directory,
     )
-    input_file = Path(tmp_test_directory / "camera_configuration.json")
+    input_file = Path(tmp_test_directory / "camera_pixel_layout.ecsv")
     input_file.touch()
     plot_name = input_file.stem.replace(".", "-")
     plot_path = Path(tmp_test_directory / f"{plot_name}.png")
@@ -1094,7 +1094,7 @@ def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, pree
 
     mock_plot = mocker.patch("simtools.visualization.plot_pixels.plot")
     result = read_parameters._plot_camera_config(
-        "camera_configuration", parameter_version, input_file, tmp_test_directory
+        "camera_pixel_layout", parameter_version, input_file, tmp_test_directory
     )
 
     assert result == ([] if parameter_version is None else [plot_name])
@@ -1108,7 +1108,7 @@ def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, pree
                 "parameter_version": "1.0.0",
                 "site": "North",
                 "model_version": "6.0.0",
-                "parameter": "camera_configuration",
+                "parameter": "camera_pixel_layout",
             },
             output_file=plot_path.with_suffix(""),
             model_reader=read_parameters.model_reader,

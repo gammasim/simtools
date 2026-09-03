@@ -1,42 +1,6 @@
 %YAML 1.2
 ---
 title: Schema for camera_filter_incidence_angle model parameter
-schema_version: 0.1.0
-meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
-meta_schema_version: 0.1.0
-developer_note: To be replaced by a data table
-name: camera_filter_incidence_angle
-description: |-
-  Distribution of incidence angle on the camera filter.
-data:
-  - type: file
-    unit: dimensionless
-    default: 'no_such_file.dat'
-instrument:
-  class: Structure
-activity:
-  setting:
-    - SetParameterFromExternal
-  validation:
-    - ValidateParameterByExpert
-source:
-  - SimPipe Derived
-simulation_software:
-  - name: simtools
-plot_configuration:
-  - type: camera_filter_incidence_angle
-    title: 'Photon incident angles'
-    xtitle: 'Photon incident angle [deg]'
-    ytitle: 'Fraction'
-    no_markers: true
-    tables:
-      - parameter: camera_filter_incidence_angle
-        column_x: 'Incidence angle'
-        column_y: 'Fraction'
-
----
-title: Schema for camera_filter_incidence_angle model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
@@ -58,22 +22,6 @@ data:
         unit: dimensionless
         required: true
     table_metadata:
-      - name: parameter_name
-        description: Owning model parameter
-        type: string
-        required: true
-      - name: parameter_version
-        description: Owning parameter version
-        type: string
-        required: true
-      - name: instrument
-        description: Owning instrument
-        type: string
-        required: true
-      - name: site
-        description: Owning site
-        type: string
-        required: true
       - name: source_file_name
         description: Original source basename
         type: string
@@ -115,3 +63,38 @@ plot_configuration:
       - parameter: camera_filter_incidence_angle
         column_x: Incidence angle
         column_y: Fraction
+---
+title: Schema for camera_filter_incidence_angle model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: camera_filter_incidence_angle
+description: |-
+  Distribution of incidence angle on the camera filter.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'no_such_file.dat'
+instrument:
+  class: Structure
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - SimPipe Derived
+simulation_software:
+  - name: simtools
+plot_configuration:
+  - type: camera_filter_incidence_angle
+    title: 'Photon incident angles'
+    xtitle: 'Photon incident angle [deg]'
+    ytitle: 'Fraction'
+    no_markers: true
+    tables:
+      - parameter: camera_filter_incidence_angle
+        column_x: 'Incidence angle'
+        column_y: 'Fraction'
