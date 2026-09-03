@@ -24,3 +24,33 @@ activity:
   setting: [SetParameterFromExternal]
 source: [Initial instrument setup]
 simulation_software: [{name: sim_telarray}]
+---
+title: Schema for camera_configuration model parameter
+schema_version: 0.2.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_configuration
+description: References to the validated components of a camera configuration.
+data:
+  - type: dict
+    json_schema:
+      type: object
+      additionalProperties: false
+      required:
+        - camera_config_rotate
+        - camera_pixel_types
+        - camera_pixel_layout
+        - camera_trigger_groups
+        - camera_trigger_members
+      properties:
+        camera_config_rotate: {type: string, const: camera_config_rotate}
+        camera_pixel_types: {type: string, const: camera_pixel_types}
+        camera_pixel_layout: {type: string, const: camera_pixel_layout}
+        camera_trigger_groups: {type: string, const: camera_trigger_groups}
+        camera_trigger_members: {type: string, const: camera_trigger_members}
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+source: [Initial instrument setup]
+simulation_software: [{name: sim_telarray}]

@@ -2,6 +2,7 @@
 """Functions for plotting pixel layout information."""
 
 import logging
+from copy import deepcopy
 from pathlib import Path
 
 import astropy.units as u
@@ -49,16 +50,6 @@ def plot(config, output_file, model_reader=None):
     """
     model_reader = require_model_reader(model_reader)
     output_directory = io_handler.IOHandler().get_output_directory()
-    model_reader.export_model_file(
-        parameter=config["parameter"],
-        site=config["site"],
-        array_element_name=config.get("telescope"),
-        parameter_version=config.get("parameter_version"),
-        model_version=config.get("model_version"),
-        export_file_as_table=False,
-        dest=output_directory,
-    )
-    data_file_path = Path(output_directory / f"{config['file_name']}")
     plot_kwargs = {
         "pixels_id_to_print": 80,
         "focal_length": config.get("focal_length", 1.0),
@@ -66,9 +57,102 @@ def plot(config, output_file, model_reader=None):
     if config.get("rotate_angle") is not None:
         plot_kwargs["rotate_angle"] = config.get("rotate_angle")
 
-    fig = plot_pixel_layout_from_file(data_file_path, config["telescope"], **plot_kwargs)
+    if config["parameter"] == "camera_configuration":
+        parameters = model_reader.get_model_parameters(
+            site=config["site"],
+            array_element_name=config.get("telescope"),
+            collection="telescopes",
+            model_version=config.get("model_version"),
+        )
+        camera_configuration = _resolve_camera_configuration(model_reader, parameters)
+        fig = plot_pixel_layout_from_configuration(
+            camera_configuration, config["telescope"], **plot_kwargs
+        )
+    else:
+        model_reader.export_model_file(
+            parameter=config["parameter"],
+            site=config["site"],
+            array_element_name=config.get("telescope"),
+            parameter_version=config.get("parameter_version"),
+            model_version=config.get("model_version"),
+            export_file_as_table=False,
+            dest=output_directory,
+        )
+        data_file_path = Path(output_directory / f"{config['file_name']}")
+        fig = plot_pixel_layout_from_file(data_file_path, config["telescope"], **plot_kwargs)
     visualize.save_figure(fig, output_file)
     plt.close(fig)
+
+
+def _resolve_camera_configuration(model_reader, parameters):
+    """Resolve camera component model parameters for plotting."""
+    manifest = parameters["camera_configuration"]["value"]
+    pixel_types = deepcopy(parameters[manifest["camera_pixel_types"]]["value"])
+    return {
+        "rotate": parameters[manifest["camera_config_rotate"]]["value"],
+        "pixel_types": pixel_types,
+        "pixels": _table_records(model_reader, parameters[manifest["camera_pixel_layout"]]),
+        "triggers": _table_records(model_reader, parameters[manifest["camera_trigger_groups"]]),
+        "trigger_members": _table_records(
+            model_reader, parameters[manifest["camera_trigger_members"]]
+        ),
+    }
+
+
+def _table_records(model_reader, parameter):
+    """Convert a model parameter table into scalar records."""
+    table = model_reader.get_parameter_table(parameter)
+    return [
+        {column: getattr(row[column], "value", row[column]) for column in table.colnames}
+        for row in table
+    ]
+
+
+def plot_pixel_layout_from_configuration(configuration, telescope_model_name, **kwargs):
+    """Plot a pixel layout from resolved camera component parameters.
+
+    Parameters
+    ----------
+    configuration : dict
+        Resolved camera component data containing ``rotate``, ``pixel_types``
+        and ``pixels``.
+    telescope_model_name : str
+        Name/model of the telescope.
+    **kwargs
+        Plot options accepted by :func:`plot_pixel_layout_from_file`.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure.
+    """
+    logger.info("Plotting pixel layout for %s from camera components", telescope_model_name)
+    camera = Camera.from_configuration(
+        telescope_model_name,
+        configuration,
+        kwargs.get("focal_length", 1.0),
+    )
+    raw_pixels = Camera.initialize_pixel_dict()
+    first_type = configuration["pixel_types"][0]
+    raw_pixels["pixel_shape"] = first_type.get("funnel_shape", 1)
+    raw_pixels["pixel_diameter"] = first_type.get("funnel_diameter_cm", 1.0)
+    raw_pixels["rotate_angle"] = np.deg2rad(float(configuration.get("rotate", 0.0)))
+    raw_pixels["x"] = np.asarray([item["x_cm"] for item in configuration["pixels"]])
+    raw_pixels["y"] = np.asarray([item["y_cm"] for item in configuration["pixels"]])
+    raw_pixels["pix_id"] = [item["pixel_id"] for item in configuration["pixels"]]
+    raw_pixels["pix_on"] = [bool(item.get("enabled", True)) for item in configuration["pixels"]]
+    _apply_telescope_specific_pixel_transform(
+        camera,
+        rotate_angle=kwargs.get("rotate_angle"),
+        raw_pixels=raw_pixels,
+    )
+    return _create_pixel_plot(
+        camera,
+        pixels_id_to_print=kwargs.get("pixels_id_to_print", 50),
+        title=kwargs.get("title"),
+        xtitle=kwargs.get("xtitle"),
+        ytitle=kwargs.get("ytitle"),
+    )
 
 
 def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
@@ -287,9 +371,14 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
     add_arrow_label(x_origin, y_origin_pix, y_dx, y_dy, "$\\mathrm{y}_\\mathrm{pix}$", 0.45)
 
 
-def _apply_telescope_specific_pixel_transform(camera, camera_config_file, rotate_angle=None):
+def _apply_telescope_specific_pixel_transform(
+    camera, camera_config_file=None, rotate_angle=None, raw_pixels=None
+):
     """Apply telescope-specific pixel position adjustments in-place."""
-    raw_pixels = Camera.read_pixel_list(camera_config_file)
+    if raw_pixels is None:
+        if camera_config_file is None:
+            raise ValueError("A camera config file or raw pixel layout is required")
+        raw_pixels = Camera.read_pixel_list(camera_config_file)
     x_pos = np.asarray(raw_pixels["x"], dtype=float)
     y_pos = np.asarray(raw_pixels["y"], dtype=float)
 

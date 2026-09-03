@@ -24,14 +24,22 @@ def write_camera_configuration(configuration, output_path):
     """Write validated camera components in sim_telarray camera syntax.
 
     ``configuration`` is a mapping containing ``rotate``, ``pixel_types``,
-    ``pixels`` and optional ``triggers``/``trigger_members`` sequences.  The
+    ``pixels`` and optional ``triggers``/``trigger_members`` sequences. The
     function deliberately accepts plain mappings so model-repository values
     can be passed without an intermediate bespoke class.
     """
     output_path = Path(output_path)
+    _validate_camera_configuration(configuration)
     if any(part == ".." for part in output_path.parts):
         raise ValueError(f"Unsafe camera configuration path: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = _camera_configuration_lines(configuration)
+    output_path.write_text("".join(lines), encoding="utf-8")
+    return output_path.name
+
+
+def _camera_configuration_lines(configuration):
+    """Build serialized lines for a camera configuration."""
     rotate = float(configuration.get("rotate", 0.0))
     pixel_types = configuration.get("pixel_types", [])
     pixels = configuration.get("pixels", [])
@@ -40,48 +48,225 @@ def write_camera_configuration(configuration, output_path):
     members_by_group = {}
     for member in members:
         members_by_group.setdefault(member["group_id"], []).append(member)
-    with output_path.open("w", encoding="utf-8") as file:
-        file.write("# Generated from camera model parameters\n")
-        file.write(f"Rotate {rotate:.12g}\n")
-        for item in pixel_types:
-            fields = [
-                "PixType",
-                str(item["type_id"]),
-                str(item.get("pmt_type", 0)),
-                str(item.get("cathode_shape", 0)),
-                str(item.get("cathode_diameter_cm", 0)),
-                str(item.get("funnel_shape", 0)),
-                str(item["funnel_diameter_cm"]),
-                str(item.get("funnel_depth_cm", 0)),
-                f'"{item.get("lightguide_angle", "none")}"',
-            ]
-            if item.get("lightguide_wavelength"):
-                fields.append(f'"{item["lightguide_wavelength"]}"')
-            file.write(" ".join(fields) + "\n")
-        for pixel in pixels:
-            file.write(
-                f"Pixel {pixel['pixel_id']} {pixel.get('type_id', 0)} "
-                f"{pixel['x_cm']} {pixel['y_cm']} {pixel.get('module', 0)} "
-                f"{pixel.get('board', 0)} {pixel.get('channel', 0)} "
-                f"{pixel.get('module_id', 0)} {int(bool(pixel.get('enabled', True)))} "
-                f"{pixel.get('relative_qe', 1.0)}\n"
-            )
-        for index, trigger in enumerate(triggers):
-            kind = trigger["kind"]
-            keyword = {
-                "majority": "MajorityTrigger",
-                "analogsum": "AnalogSumTrigger",
-                "digitalsum": "DigitalSumTrigger",
-            }.get(kind.lower(), kind)
-            multiplicity = (
-                "*"
-                if trigger.get("use_default_multiplicity", True)
-                else str(trigger["multiplicity"])
-            )
-            group_id = trigger.get("group_id", index)
-            ids = [str(member["pixel_id"]) for member in members_by_group.get(group_id, [])]
-            file.write(f"{keyword} {multiplicity} of {' '.join(ids)}\n")
-    return output_path.name
+    lines = ["# Generated from camera model parameters\n", f"Rotate {rotate:.12g}\n"]
+    lines.extend(_pixel_type_lines(pixel_types))
+    lines.extend(_pixel_lines(pixels))
+    lines.extend(_trigger_lines(triggers, members_by_group))
+    return lines
+
+
+def _pixel_type_lines(pixel_types):
+    """Build PixType lines."""
+    lines = []
+    for item in pixel_types:
+        angle_file = item.get("lightguide_angle_file")
+        wavelength_file = item.get("lightguide_wavelength_file")
+        if not angle_file and item.get("funnel_transparency") is None:
+            raise ValueError("Camera pixel type has no resolved lightguide or transparency")
+        fields = [
+            "PixType",
+            str(item["type_id"]),
+            str(item["pmt_type"]),
+            str(item["cathode_shape"]),
+            str(item["cathode_diameter_cm"]),
+            str(item["funnel_shape"]),
+            str(item["funnel_diameter_cm"]),
+            str(item["funnel_depth_cm"]),
+        ]
+        if angle_file:
+            fields.append(f'"{_safe_basename(angle_file, "lightguide angle")}"')
+        else:
+            fields.extend((str(item["funnel_transparency"]), str(item["funnel_wall_reflectivity"])))
+        if wavelength_file:
+            fields.append(f'"{_safe_basename(wavelength_file, "lightguide wavelength")}"')
+        lines.append(" ".join(fields) + "\n")
+    return lines
+
+
+def _pixel_lines(pixels):
+    """Build Pixel lines."""
+    lines = []
+    for pixel in pixels:
+        values = [
+            pixel["pixel_id"],
+            pixel["type_id"],
+            pixel["x_cm"],
+            pixel["y_cm"],
+            pixel["module"],
+            pixel["board"],
+            pixel["channel"],
+            _module_id(pixel["module_id"]),
+            int(bool(pixel["enabled"])),
+            pixel["relative_qe"],
+            pixel["relative_gain"],
+            pixel["z_offset_cm"],
+            pixel["rotation_deg"],
+            pixel["normal_x"],
+            pixel["normal_y"],
+        ]
+        lines.append("Pixel " + " ".join(str(value) for value in values) + "\n")
+    return lines
+
+
+def _trigger_lines(triggers, members_by_group):
+    """Build trigger lines."""
+    return [
+        _trigger_line(trigger, index, members_by_group) for index, trigger in enumerate(triggers)
+    ]
+
+
+def _trigger_line(trigger, index, members_by_group):
+    """Build one trigger line."""
+    keyword = {
+        "majority": "MajorityTrigger",
+        "analogsum": "AnalogSumTrigger",
+        "digitalsum": "DigitalSumTrigger",
+    }.get(trigger["kind"].lower())
+    if keyword is None:
+        raise ValueError(f"Unsupported camera trigger kind: {trigger['kind']}")
+    multiplicity = (
+        "*" if bool(trigger["use_default_multiplicity"]) else str(trigger["multiplicity"])
+    )
+    group_id = trigger.get("group_id", index)
+    tokens = _trigger_member_tokens(members_by_group.get(group_id, []))
+    return f"{keyword} {multiplicity} of {' '.join(tokens)}\n"
+
+
+def _trigger_member_tokens(members):
+    """Build sim_telarray tokens for normalized trigger members."""
+    grouped_members = {}
+    for member in members:
+        grouped_members.setdefault(member["member_order"], []).append(member)
+    return [_trigger_member_token(rows) for rows in grouped_members.values()]
+
+
+def _trigger_member_token(member_rows):
+    """Build one scalar or bracketed trigger member token."""
+    member_rows.sort(key=lambda row: row["pixel_order"])
+    first = member_rows[0]
+    prefix = "+" if bool(first["required"]) else ""
+    if len(member_rows) == 1:
+        return prefix + str(first["pixel_id"])
+    slaves = ",".join(str(row["pixel_id"]) for row in member_rows[1:])
+    return f"{prefix}{first['pixel_id']}[{slaves}]"
+
+
+def _validate_camera_configuration(configuration):
+    """Validate camera component records before serializing them."""
+    pixel_types = configuration.get("pixel_types", [])
+    pixels = configuration.get("pixels", [])
+    triggers = configuration.get("triggers", configuration.get("trigger_groups", []))
+    members = configuration.get("trigger_members", [])
+    if not pixel_types or not pixels:
+        raise ValueError("Camera configuration requires pixel types and pixels")
+    type_ids = _validate_pixel_types(pixel_types)
+    _validate_pixels(pixels, type_ids)
+    _validate_triggers(triggers, members, pixels)
+
+
+def _validate_pixel_types(pixel_types):
+    """Validate pixel types and return their IDs."""
+    type_ids = [item.get("type_id") for item in pixel_types]
+    if len(set(type_ids)) != len(type_ids):
+        raise ValueError("Camera pixel type IDs must be unique")
+    for item in pixel_types:
+        if item.get("lightguide_angle_file"):
+            _safe_basename(item["lightguide_angle_file"], "lightguide angle")
+        elif (
+            item.get("funnel_transparency") is None or item.get("funnel_wall_reflectivity") is None
+        ):
+            raise ValueError("Camera pixel type has no resolved lightguide or transparency")
+    return type_ids
+
+
+def _validate_pixels(pixels, type_ids):
+    """Validate pixel ordering and foreign keys."""
+    pixel_ids = [item.get("pixel_id") for item in pixels]
+    if pixel_ids != list(range(len(pixels))):
+        raise ValueError("Camera pixel IDs must be contiguous and ordered")
+    if not any(bool(item.get("enabled")) for item in pixels):
+        raise ValueError("Camera configuration must contain an enabled pixel")
+    if any(item.get("type_id") not in type_ids for item in pixels):
+        raise ValueError("Camera pixel references an unknown pixel type")
+
+
+def _validate_triggers(triggers, members, pixels):
+    """Validate trigger groups and their foreign keys."""
+    pixel_ids = [item.get("pixel_id") for item in pixels]
+    group_ids = [item.get("group_id") for item in triggers]
+    if group_ids != list(range(len(triggers))):
+        raise ValueError("Camera trigger group IDs must be contiguous and ordered")
+    members_by_group = {}
+    for member in members:
+        members_by_group.setdefault(member.get("group_id"), []).append(member)
+    if set(members_by_group) - set(group_ids):
+        raise ValueError("Camera trigger member references an unknown group")
+    for trigger in triggers:
+        _validate_trigger(trigger, members_by_group.get(trigger["group_id"], []), pixel_ids)
+
+
+def _validate_trigger(trigger, members, pixel_ids):
+    """Validate one trigger group and its normalized member rows."""
+    _validate_trigger_kind(trigger)
+    use_default = bool(trigger.get("use_default_multiplicity"))
+    multiplicity = trigger.get("multiplicity")
+    _validate_trigger_multiplicity(use_default, multiplicity)
+    if not members:
+        raise ValueError(f"Camera trigger group has no members: {trigger['group_id']}")
+    _validate_trigger_members(members, pixel_ids)
+
+
+def _validate_trigger_kind(trigger):
+    """Validate the trigger kind."""
+    if trigger.get("kind", "").lower() not in {"majority", "analogsum", "digitalsum"}:
+        raise ValueError(f"Unsupported camera trigger kind: {trigger.get('kind')}")
+
+
+def _validate_trigger_multiplicity(use_default, multiplicity):
+    """Validate default or explicit trigger multiplicity."""
+    if use_default:
+        if multiplicity not in (None, 0):
+            raise ValueError("Default trigger multiplicity must not be positive")
+        return
+    if multiplicity is None or int(multiplicity) < 1:
+        raise ValueError("Explicit trigger multiplicity must be positive")
+
+
+def _validate_trigger_members(members, pixel_ids):
+    """Validate normalized trigger member rows."""
+    member_orders = sorted({member["member_order"] for member in members})
+    if member_orders != list(range(len(member_orders))):
+        raise ValueError("Camera trigger member orders must be contiguous")
+    for member_order in member_orders:
+        rows = sorted(
+            (row for row in members if row["member_order"] == member_order),
+            key=lambda row: row["pixel_order"],
+        )
+        if [row["pixel_order"] for row in rows] != list(range(len(rows))):
+            raise ValueError("Camera trigger pixel orders must be contiguous")
+        if rows[0]["required"] and any(row["required"] for row in rows[1:]):
+            raise ValueError("Only the first pixel of a trigger member may be required")
+        if any(row["pixel_id"] not in pixel_ids for row in rows):
+            raise ValueError("Camera trigger contains an unknown pixel ID")
+
+
+def _safe_basename(value, label):
+    """Return a safe generated dependency basename."""
+    path = Path(value)
+    if path.name != str(value) or path.name in {"", ".", ".."}:
+        raise ValueError(f"Unsafe {label} filename: {value}")
+    return path.name
+
+
+def _module_id(value):
+    """Format a module ID as a safe hexadecimal sim_telarray token."""
+    try:
+        integer = int(str(value), 0)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid camera module ID: {value}") from exc
+    if integer < 0:
+        raise ValueError(f"Invalid camera module ID: {value}")
+    return f"0x{integer:x}"
 
 
 def write_simtel_table(table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None):

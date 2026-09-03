@@ -317,7 +317,7 @@ class ReadParameters:
             key: value for key, value in (("telescope", telescope), ("site", site)) if value
         }
 
-        if parameter == "camera_config_file":
+        if parameter == "camera_configuration":
             plot_names = self._plot_camera_config(
                 parameter,
                 parameter_version,
@@ -1080,7 +1080,6 @@ class ReadParameters:
         file.write("The latest parameter version is plotted below.\n\n")
 
         if parameter in (
-            "camera_config_file",
             "mirror_list",
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
@@ -1115,7 +1114,6 @@ class ReadParameters:
         image_path = outpath / filename_png
 
         plot_descriptions = {
-            "camera_config_file": "Camera configuration plot",
             "mirror_list": "Mirror panel layout",
             "primary_mirror_segmentation": "Primary mirror segmentation",
             "secondary_mirror_segmentation": "Secondary mirror segmentation",

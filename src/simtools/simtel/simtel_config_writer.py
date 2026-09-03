@@ -80,9 +80,11 @@ class SimtelConfigWriter:
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
-        simtel_par = self._get_parameters_for_sim_telarray(parameters, config_file_path)
         telescope_name = telescope_name or self._telescope_model_name
         _telescope_design_model = telescope_design_model or self._telescope_design_model
+        simtel_par = self._get_parameters_for_sim_telarray(
+            parameters, config_file_path, telescope_name=telescope_name
+        )
 
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
@@ -101,7 +103,7 @@ class SimtelConfigWriter:
             ):
                 file.write(f"{meta}\n")
 
-    def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
+    def _get_parameters_for_sim_telarray(self, parameters, config_file_path, telescope_name=None):
         """
         Convert parameter dictionary to sim_telarray configuration file format.
 
@@ -121,6 +123,11 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format.
         """
         simtel_par = {}
+        camera_file = self._write_camera_configuration_file(
+            parameters, config_file_path, telescope_name=telescope_name
+        )
+        if camera_file is not None:
+            simtel_par["camera_config_file"] = camera_file
         for par, value in parameters.items():
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 self._get_sim_telarray_config_parameter_name(par),
@@ -136,6 +143,118 @@ class SimtelConfigWriter:
             simtel_par["stars"] = None
 
         return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
+
+    def _write_camera_configuration_file(self, parameters, config_file_path, telescope_name=None):
+        """Resolve camera components and write the generated camera file."""
+        manifest_data = parameters.get("camera_configuration")
+        if manifest_data is None:
+            return None
+        manifest = manifest_data.get("value")
+        if not isinstance(manifest, dict):
+            raise ValueError("camera_configuration must contain a component manifest")
+
+        component_names = {
+            key: manifest.get(key)
+            for key in (
+                "camera_config_rotate",
+                "camera_pixel_types",
+                "camera_pixel_layout",
+                "camera_trigger_groups",
+                "camera_trigger_members",
+            )
+        }
+        if any(not isinstance(value, str) for value in component_names.values()):
+            raise ValueError("camera_configuration contains an invalid component reference")
+
+        destination = Path(config_file_path).parent
+        telescope_name = telescope_name or Path(config_file_path).stem
+        pixel_types = deepcopy(
+            self._parameter_value(parameters, component_names["camera_pixel_types"])
+        )
+        for pixel_type in pixel_types:
+            self._resolve_lightguide_file(
+                pixel_type,
+                "lightguide_angle_parameter",
+                "lightguide_angle_file",
+                parameters,
+                destination,
+                telescope_name,
+            )
+            self._resolve_lightguide_file(
+                pixel_type,
+                "lightguide_wavelength_parameter",
+                "lightguide_wavelength_file",
+                parameters,
+                destination,
+                telescope_name,
+            )
+
+        pixels = self._camera_table_records(
+            parameters, component_names["camera_pixel_layout"], destination
+        )
+        expected_pixels = self._parameter_value(parameters, "camera_pixels")
+        if expected_pixels is not None and int(expected_pixels) != len(pixels):
+            raise ValueError(
+                f"camera_pixels={expected_pixels} does not match camera layout rows={len(pixels)}"
+            )
+        configuration = {
+            "rotate": self._parameter_value(parameters, component_names["camera_config_rotate"]),
+            "pixel_types": pixel_types,
+            "pixels": pixels,
+            "triggers": self._camera_table_records(
+                parameters, component_names["camera_trigger_groups"], destination
+            ),
+            "trigger_members": self._camera_table_records(
+                parameters, component_names["camera_trigger_members"], destination
+            ),
+        }
+        output = destination / f"camera_configuration-{telescope_name}.dat"
+        return simtel_table_writer.write_camera_configuration(configuration, output)
+
+    @staticmethod
+    def _parameter_value(parameters, parameter_name):
+        """Return a selected parameter value or ``None`` for an absent optional value."""
+        data = parameters.get(parameter_name)
+        return None if data is None else data.get("value")
+
+    def _camera_table_records(self, parameters, parameter_name, destination):
+        """Read one exported camera component table into scalar records."""
+        table = self._read_camera_table(parameters, parameter_name, destination)
+        return [
+            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
+            for row in table
+        ]
+
+    @staticmethod
+    def _read_camera_table(parameters, parameter_name, destination):
+        """Read and validate an exported camera component table."""
+        parameter_data = parameters.get(parameter_name)
+        if parameter_data is None:
+            raise ValueError(f"Camera component parameter is missing: {parameter_name}")
+        value = parameter_data.get("value")
+        source = Path(destination) / Path(value).name
+        if not source.is_file():
+            raise FileNotFoundError(f"Camera component table was not exported: {source}")
+        schema_data = schema.get_model_parameter_schema(
+            parameter_name, parameter_data.get("model_parameter_schema_version")
+        )
+        schema_entry = next(
+            entry for entry in schema_data.get("data", []) if entry.get("type") == "file"
+        )
+        return read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter_data)
+
+    def _resolve_lightguide_file(
+        self, pixel_type, parameter_key, output_key, parameters, destination, telescope_name
+    ):
+        """Export a selected lightguide table and store its generated basename."""
+        parameter_name = pixel_type.pop(parameter_key, None)
+        if parameter_name is None:
+            return
+        table = self._read_camera_table(parameters, parameter_name, destination)
+        table.meta["simtelarray_original_file_name"] = f"{parameter_name}-{telescope_name}.dat"
+        pixel_type[output_key] = simtel_table_writer.write_simtel_table(table, destination)
+        if len(table) == 0:
+            raise ValueError(f"Selected lightguide parameter is empty: {parameter_name}")
 
     @staticmethod
     def _get_sim_telarray_config_parameter_name(parameter_name):
@@ -841,7 +960,12 @@ class SimtelConfigWriter:
             if key in parameters:
                 parameters[key]["value"] = val
 
-        self.write_telescope_config_file(config_file_path, parameters, telescope_name)
+        camera_configuration = parameters.pop("camera_configuration", None)
+        try:
+            self.write_telescope_config_file(config_file_path, parameters, telescope_name)
+        finally:
+            if camera_configuration is not None:
+                parameters["camera_configuration"] = camera_configuration
 
         config_file_directory = Path(config_file_path).parent
         self._write_dummy_mirror_list_files(config_file_directory, telescope_name)

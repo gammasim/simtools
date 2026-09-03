@@ -102,56 +102,24 @@ def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
         tel_model._load_mirrors()
 
 
-def test_load_camera(telescope_model_lst, monkeypatch, caplog):
+def test_load_camera(telescope_model_lst, monkeypatch):
     tel_model = telescope_model_lst
-    tel_model.write_sim_telarray_config_file()
-    camera_config_file = "camera_CTA-LST-1_analogsum21_v2020-04-14.dat"
     focal_length = 100
+    configuration = {"rotate": 0.0, "pixel_types": [], "pixels": []}
 
-    # Mock necessary methods and attributes
-    tel_model.get_parameter_value = Mock(return_value=camera_config_file)
+    resolve_mock = Mock(return_value=configuration)
+    monkeypatch.setattr(tel_model, "_resolve_camera_configuration", resolve_mock)
     tel_model.get_telescope_effective_focal_length = Mock(return_value=focal_length)
-    find_file_mock = Mock()
-    monkeypatch.setattr(gen, "find_file", find_file_mock)
     camera_mock = Mock()
     monkeypatch.setattr("simtools.model.telescope_model.Camera", camera_mock)
 
-    # Test case 1: File found in config directory
-    find_file_mock.return_value = camera_config_file
     tel_model._load_camera()
-    camera_mock.assert_called_with(
-        telescope_name=tel_model.name,
-        camera_config_file=camera_config_file,
-        focal_length=focal_length,
-    )
-    assert tel_model._camera == camera_mock.return_value
-    find_file_mock.reset_mock()
-    caplog.clear()
 
-    # Test case 2: File not found in config directory, found in model_path
-    monkeypatch.setattr(tel_model, "_camera", None)
-    find_file_mock.side_effect = [FileNotFoundError, camera_config_file]
-    tel_model.io_handler.model_path = "model_path"
-    with caplog.at_level(logging.WARNING):
-        tel_model._load_camera()
-    assert (
-        f"Camera config file {camera_config_file} not found in the config directory" in caplog.text
+    resolve_mock.assert_called_once_with()
+    camera_mock.from_configuration.assert_called_once_with(
+        tel_model.name, configuration, focal_length
     )
-    assert find_file_mock.call_count == 2
-    camera_mock.assert_called_with(
-        telescope_name=tel_model.name,
-        camera_config_file=camera_config_file,
-        focal_length=focal_length,
-    )
-    assert tel_model._camera == camera_mock.return_value
-    caplog.clear()
-
-    # Test case 3: TypeError
-    monkeypatch.setattr(tel_model, "_camera", None)
-    find_file_mock.side_effect = TypeError("Undefined camera config file")
-    with pytest.raises(TypeError):
-        tel_model._load_camera()
-    assert f"Camera config file {camera_config_file} or config file directory" in caplog.text
+    assert tel_model._camera == camera_mock.from_configuration.return_value
 
 
 def test_is_file_2d_true(telescope_model_lst, monkeypatch):

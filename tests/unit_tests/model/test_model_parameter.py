@@ -521,9 +521,11 @@ def test_updating_export_model_files(model_version):
     tel.write_sim_telarray_config_file()
 
     # Changing a parameter that is a file
-    logger.debug("Changing a parameter that IS a file - camera_config_file")
+    logger.debug("Changing a parameter that IS a file - mirror_list")
     tel.overwrite_model_parameter(
-        "camera_config_file", tel.get_parameter_value("camera_config_file")
+        "mirror_list",
+        tel.get_parameter_value("mirror_list"),
+        metadata={"model_parameter_schema_version": "0.1.0"},
     )
     logger.debug(
         "tel._is_exported_model_files should be False because a parameter that "

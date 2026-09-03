@@ -1,0 +1,27 @@
+%YAML 1.2
+---
+title: Schema for camera_trigger_members model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_trigger_members
+description: Normalized trigger membership used to generate a sim_telarray camera file.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - {name: group_id, description: Trigger group identifier, type: int64, required: true}
+      - {name: member_order, description: Member order, type: int64, required: true}
+      - {name: pixel_order, description: Pixel order in member, type: int64, required: true}
+      - {name: pixel_id, description: Pixel identifier, type: int64, required: true}
+      - {name: required, description: Required master marker, type: int64, required: true}
+    table_metadata:
+      - {name: parameter_name, description: Owning model parameter, type: string, required: true}
+      - {name: parameter_version, description: Owning parameter version, type: string, required: true}
+      - {name: instrument, description: Owning instrument, type: string, required: true}
+      - {name: site, description: Owning site, type: string, required: true}
+instrument: {class: Camera}
+activity: {setting: [SetParameterFromExternal]}
+source: [Initial instrument setup]
+simulation_software: [{name: sim_telarray}]

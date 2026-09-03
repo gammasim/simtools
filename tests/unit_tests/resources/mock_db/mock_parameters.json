@@ -54,11 +54,6 @@
     "type": "uint64",
     "file": false
   },
-  "camera_config_file": {
-    "value": "camera_config_dummy.dat",
-    "type": "str",
-    "file": true
-  },
   "optics_properties": {
     "value": "optics_properties_dummy.dat",
     "type": "str",

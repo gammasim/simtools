@@ -1,6 +1,7 @@
 """MC model of a telescope."""
 
 import logging
+from copy import deepcopy
 
 import numpy as np
 from astropy.table import Table
@@ -182,37 +183,54 @@ class TelescopeModel(ModelParameter):
         return eff_focal_length
 
     def _load_camera(self):
-        """Load camera attribute by creating a Camera object with the camera config file."""
-        try:
-            configuration = self.get_parameter_value("camera_configuration")
-        except KeyError, InvalidModelParameterError, TypeError:
-            configuration = None
-        if isinstance(configuration, dict):
-            focal_length = self.get_telescope_effective_focal_length("cm", True)
-            self._camera = Camera.from_configuration(self.name, configuration, focal_length)
-            return
-        camera_config_file = self.get_parameter_value("camera_config_file")
+        """Load the camera from its validated component parameters."""
+        configuration = self._resolve_camera_configuration()
         focal_length = self.get_telescope_effective_focal_length("cm", True)
-        try:
-            camera_config_file_path = gen.find_file(camera_config_file, self.config_file_directory)
-        except TypeError as exc:
-            self._logger.error(
-                f"Camera config file {camera_config_file} or "
-                f"config file directory ({self.config_file_directory}) is None"
-            )
-            raise TypeError from exc
-        except FileNotFoundError:
-            self._logger.warning(
-                f"Camera config file {camera_config_file} not found in the config directory "
-                f"{self.config_file_directory}. Using the one found in the model_path"
-            )
-            camera_config_file_path = gen.find_file(camera_config_file, self.io_handler.model_path)
+        self._camera = Camera.from_configuration(self.name, configuration, focal_length)
 
-        self._camera = Camera(
-            telescope_name=self.name,
-            camera_config_file=camera_config_file_path,
-            focal_length=focal_length,
+    def _resolve_camera_configuration(self):
+        """Resolve the manifest and its selected camera component parameters."""
+        manifest = self.get_parameter_value("camera_configuration")
+        if not isinstance(manifest, dict):
+            return None
+
+        required = (
+            "camera_config_rotate",
+            "camera_pixel_types",
+            "camera_pixel_layout",
+            "camera_trigger_groups",
+            "camera_trigger_members",
         )
+        component_names = {key: manifest.get(key) for key in required}
+        if any(not isinstance(value, str) for value in component_names.values()):
+            raise ValueError("Camera configuration manifest contains invalid component references")
+
+        pixel_types = deepcopy(self.get_parameter_value(component_names["camera_pixel_types"]))
+        for pixel_type in pixel_types:
+            angle_parameter = pixel_type.get("lightguide_angle_parameter")
+            wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
+            if angle_parameter:
+                pixel_type["lightguide_angle_file"] = f"{angle_parameter}-{self.name}.dat"
+            if wavelength_parameter:
+                pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"
+
+        return {
+            "rotate": self.get_parameter_value(component_names["camera_config_rotate"]),
+            "pixel_types": pixel_types,
+            "pixels": self._parameter_table_records(component_names["camera_pixel_layout"]),
+            "triggers": self._parameter_table_records(component_names["camera_trigger_groups"]),
+            "trigger_members": self._parameter_table_records(
+                component_names["camera_trigger_members"]
+            ),
+        }
+
+    def _parameter_table_records(self, parameter_name):
+        """Return scalar records from a validated model-parameter table."""
+        table = self.get_parameter_table(parameter_name)
+        return [
+            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
+            for row in table
+        ]
 
     def is_file_2d(self, par: str) -> bool:
         """

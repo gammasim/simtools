@@ -63,15 +63,26 @@ class Camera:
 
     @classmethod
     def from_configuration(cls, telescope_name, configuration, focal_length):
-        """Build a camera from validated component model parameters."""
+        """Build a camera from resolved, validated component model parameters.
+
+        Parameters
+        ----------
+        telescope_name : str
+            Telescope name.
+        configuration : dict
+            Resolved camera components. The mapping contains ``rotate``,
+            ``pixel_types``, ``pixels``, ``triggers`` and ``trigger_members``.
+        focal_length : float
+            Camera focal length in the same unit as the layout positions.
+        """
         pixels = cls.initialize_pixel_dict()
         layout = configuration.get("pixels", configuration.get("pixel_layout", []))
         if not layout:
             raise ValueError("Camera configuration contains no pixel layout")
         first_type = configuration.get("pixel_types", [{}])[0]
-        pixels["pixel_shape"] = first_type.get("shape", first_type.get("pixel_shape", 1))
+        pixels["pixel_shape"] = first_type.get("funnel_shape", first_type.get("shape", 1))
         pixels["pixel_diameter"] = first_type.get(
-            "diameter_cm", first_type.get("funnel_diameter_cm", 1.0)
+            "funnel_diameter_cm", first_type.get("diameter_cm", 1.0)
         )
         pixels["rotate_angle"] = np.deg2rad(float(configuration.get("rotate", 0.0)))
         for item in layout:
@@ -79,6 +90,12 @@ class Camera:
             pixels["y"].append(float(item["y_cm"]))
             pixels["pix_id"].append(int(item["pixel_id"]))
             pixels["pix_on"].append(bool(item.get("enabled", True)))
+        if first_type.get("lightguide_angle_file"):
+            pixels["lightguide_efficiency_angle_file"] = first_type["lightguide_angle_file"]
+        if first_type.get("lightguide_wavelength_file"):
+            pixels["lightguide_efficiency_wavelength_file"] = first_type[
+                "lightguide_wavelength_file"
+            ]
         cls.validate_pixels(pixels, "camera configuration")
         instance = cls.__new__(cls)
         instance._logger = logging.getLogger(__name__)
