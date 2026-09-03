@@ -735,7 +735,7 @@ class IncidentAnglesCalculator:
         combined_table = vstack(tables)
 
         parameter_mapping = {
-            "camera_filter_incidence_angle": "angle_incidence_focal",
+            "camera_filter_photon_incident_angle": "angle_incidence_focal",
             "primary_mirror_incidence_angle": "angle_incidence_primary",
             "secondary_mirror_incidence_angle": "angle_incidence_secondary",
         }

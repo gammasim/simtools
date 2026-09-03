@@ -203,7 +203,7 @@ def test_get_one_dim_distribution(model_version_prod5, site_model_south, mocker,
     )
 
     camera_filter_file = simulator_camera_efficiency_prod5._get_one_dim_distribution(
-        "camera_filter", "camera_filter_incidence_angle"
+        "camera_filter", "camera_filter_photon_incident_angle"
     )
     assert camera_filter_file.exists()
 

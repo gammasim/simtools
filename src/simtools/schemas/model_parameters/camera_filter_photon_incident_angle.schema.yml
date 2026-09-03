@@ -1,18 +1,18 @@
 %YAML 1.2
 ---
-title: Schema for camera_filter_incidence_angle model parameter
+title: Schema for camera_filter_photon_incident_angle model parameter
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: camera_filter_incidence_angle
-description: Distribution of incidence angle on the camera filter.
+name: camera_filter_photon_incident_angle
+description: Distribution of photon incident angles at the camera filter.
 data:
   - type: file
     unit: dimensionless
     table_columns:
       - name: incidence_angle
-        description: Incidence angle
+        description: Photon incident angle
         type: float64
         unit: deg
         required: true
@@ -54,25 +54,25 @@ source:
 simulation_software:
   - name: simtools
 plot_configuration:
-  - type: camera_filter_incidence_angle
+  - type: camera_filter_photon_incident_angle
     title: Photon incident angles
     xtitle: Photon incident angle [deg]
     ytitle: Fraction
     no_markers: true
     tables:
-      - parameter: camera_filter_incidence_angle
+      - parameter: camera_filter_photon_incident_angle
         column_x: Incidence angle
         column_y: Fraction
 ---
-title: Schema for camera_filter_incidence_angle model parameter
+title: Schema for camera_filter_photon_incident_angle model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 developer_note: To be replaced by a data table
-name: camera_filter_incidence_angle
+name: camera_filter_photon_incident_angle
 description: |-
-  Distribution of incidence angle on the camera filter.
+  Distribution of photon incident angles at the camera filter.
 data:
   - type: file
     unit: dimensionless
@@ -89,12 +89,12 @@ source:
 simulation_software:
   - name: simtools
 plot_configuration:
-  - type: camera_filter_incidence_angle
+  - type: camera_filter_photon_incident_angle
     title: 'Photon incident angles'
     xtitle: 'Photon incident angle [deg]'
     ytitle: 'Fraction'
     no_markers: true
     tables:
-      - parameter: camera_filter_incidence_angle
+      - parameter: camera_filter_photon_incident_angle
         column_x: 'Incidence angle'
         column_y: 'Fraction'

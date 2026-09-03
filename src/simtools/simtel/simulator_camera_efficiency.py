@@ -95,7 +95,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         # testeff does not support 2D distributions
         if self._telescope_model.is_file_2d("camera_filter"):
             camera_filter_file = self._get_one_dim_distribution(
-                "camera_filter", "camera_filter_incidence_angle"
+                "camera_filter", "camera_filter_photon_incident_angle"
             )
 
         mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")

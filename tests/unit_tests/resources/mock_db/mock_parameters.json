@@ -59,8 +59,8 @@
     "type": "str",
     "file": true
   },
-  "camera_filter_incidence_angle": {
-    "value": "camera_filter_incidence_angle_dummy.dat",
+  "camera_filter_photon_incident_angle": {
+    "value": "camera_filter_photon_incident_angle_dummy.dat",
     "type": "str",
     "file": true
   },
