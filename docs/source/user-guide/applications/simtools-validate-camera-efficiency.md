@@ -7,7 +7,7 @@
 ```
 
 ```{eval-rst}
-Uses the sim_telarray tool "testeff" to calculate the camera efficiency.
+Calculates camera efficiency directly from validated optical and atmospheric model tables.
 The results of telescope throughput including optical and camera components for Cherenkov (left)
 and NSB light (right) as a function of wavelength are plotted. See examples below.
 
