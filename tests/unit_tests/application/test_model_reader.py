@@ -70,6 +70,38 @@ def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_di
     database_handler.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "catalog_model",
+    [
+        {"git-revision": "a" * 40},
+        {"default-tag": "v1.2.3"},
+        {"default-version": "1.2.3"},
+    ],
+)
+def test_create_model_reader_uses_catalog_git_revision(catalog_model, mocker):
+    """A missing Git revision falls back through the dependency catalog."""
+    mocker.patch(
+        "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
+        return_value={"model-database": catalog_model},
+    )
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=Mock())
+
+    create_model_reader(simulation_models_git_path="models.git")
+
+    from_git.assert_called_once_with("models.git", next(iter(catalog_model.values())))
+
+
+def test_create_model_reader_rejects_catalog_without_git_revision(mocker):
+    """A Git source cannot start when the catalog has no usable revision."""
+    mocker.patch(
+        "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
+        return_value={"model-database": {}},
+    )
+
+    with pytest.raises(ValueError, match="Git simulation-model revision is required"):
+        create_model_reader(simulation_models_git_path="models.git")
+
+
 def test_create_model_reader_rejects_two_repository_sources(tmp_test_directory):
     """Filesystem and Git sources cannot be selected simultaneously."""
     with pytest.raises(ValueError, match="cannot be configured together"):
@@ -103,6 +135,13 @@ def test_create_model_reader_from_source_config_reopens_git_revision(mocker):
 
     assert result is reader
     from_git.assert_called_once_with("/models.git", "a" * 40)
+
+
+@pytest.mark.parametrize("source_config", [{"type": "git"}, {"type": "git", "repository": "repo"}])
+def test_create_model_reader_from_source_config_rejects_incomplete_git_config(source_config):
+    """Worker Git configurations must include both repository and commit."""
+    with pytest.raises(ValueError, match="requires repository and commit"):
+        create_model_reader_from_source_config(source_config)
 
 
 @pytest.mark.parametrize(

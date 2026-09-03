@@ -43,6 +43,11 @@ class _Repository:
         return SimpleNamespace(tree=self.tree)
 
 
+def _raise_invalid_repository(_):
+    """Raise the repository-open error used by the invalid-repository test."""
+    raise OSError("invalid repository")
+
+
 def _install_pygit2(monkeypatch, repository):
     """Install a minimal pygit2 substitute and return the resolved commit."""
     pygit2 = SimpleNamespace(
@@ -75,7 +80,7 @@ def test_pygit2_object_store_rejects_unreadable_repository(monkeypatch, tmp_test
     """A path that pygit2 cannot open reports a readable error."""
     pygit2 = SimpleNamespace(
         Commit=object(),
-        Repository=lambda _: (_ for _ in ()).throw(OSError("invalid repository")),
+        Repository=_raise_invalid_repository,
         BlobIO=lambda blob: io.BytesIO(blob.data),
     )
     monkeypatch.setitem(sys.modules, "pygit2", pygit2)

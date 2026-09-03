@@ -16,6 +16,7 @@ from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
+_PRODUCTIONS_PATH = PurePosixPath("simulation-models/productions")
 
 
 class GitModelSource:
@@ -54,7 +55,7 @@ class GitModelSource:
         """Return semantically sorted production versions."""
         del collection_name
         if self._model_versions is None:
-            prefix = PurePosixPath("simulation-models/productions")
+            prefix = _PRODUCTIONS_PATH
             versions = {
                 PurePosixPath(path).relative_to(prefix).parts[0]
                 for path in self._object_store.iter_files(self.commit, prefix.as_posix())
@@ -125,7 +126,7 @@ class GitModelSource:
 
     def _production_documents(self, model_version):
         """Read all production JSON documents for a version and its patch history."""
-        model_prefix = PurePosixPath("simulation-models/productions") / model_version
+        model_prefix = _PRODUCTIONS_PATH / model_version
         files_in_version = self._object_store.iter_files(self.commit, model_prefix.as_posix())
         model_names = [model_version]
         info_path = model_prefix / "info.yml"
@@ -138,7 +139,7 @@ class GitModelSource:
         model_names = sorted(set(model_names), key=Version)
         documents = []
         for model_name in model_names:
-            prefix = PurePosixPath("simulation-models/productions") / model_name
+            prefix = _PRODUCTIONS_PATH / model_name
             for path in self._object_store.iter_files(self.commit, prefix.as_posix()):
                 if path.endswith(".json"):
                     documents.append(
