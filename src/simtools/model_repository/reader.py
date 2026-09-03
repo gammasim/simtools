@@ -229,9 +229,7 @@ class FileSystemModelSource:
                 if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
             ]
         names_to_export = [file_names] if isinstance(file_names, str) else file_names or []
-        return [
-            {"value": file_name, "asset_location": "shared_files"} for file_name in names_to_export
-        ]
+        return [{"value": file_name} for file_name in names_to_export]
 
     def _copy_model_file(self, parameter, source, destination):
         """Copy one resolved model asset and return its export status."""
@@ -266,12 +264,7 @@ class FileSystemModelSource:
             )
         else:
             parameter_file = self.files_path / value
-        asset_location = (
-            parameter_data.get("asset_location", "parameter_directory")
-            if isinstance(parameter_data, dict)
-            else "shared_files"
-        )
-        return resolve_asset_path(value, parameter_file, self.files_path, asset_location)
+        return resolve_asset_path(value, parameter_file)
 
     def get_parameter_table(self, parameter_data):
         """Resolve and validate an ECSV table referenced by a parameter record."""

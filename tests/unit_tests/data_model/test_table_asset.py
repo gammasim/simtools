@@ -30,9 +30,8 @@ def _table():
 
 def test_resolve_parameter_relative_path(tmp_test_directory):
     parameter_file = Path(tmp_test_directory) / "par" / "parameter.json"
-    files_path = Path(tmp_test_directory) / "Files"
     assert (
-        resolve_asset_path("table.ecsv", parameter_file, files_path)
+        resolve_asset_path("table.ecsv", parameter_file)
         == (parameter_file.parent / "table.ecsv").resolve()
     )
 
@@ -40,16 +39,7 @@ def test_resolve_parameter_relative_path(tmp_test_directory):
 def test_resolve_asset_rejects_traversal(tmp_test_directory):
     parameter_file = Path(tmp_test_directory) / "par" / "parameter.json"
     with pytest.raises(ValueError, match="escapes parameter directory"):
-        resolve_asset_path("../table.ecsv", parameter_file, Path(tmp_test_directory) / "Files")
-
-
-def test_resolve_shared_asset_path(tmp_test_directory):
-    parameter_file = Path(tmp_test_directory) / "par" / "parameter.json"
-    files_path = Path(tmp_test_directory) / "Files"
-    assert (
-        resolve_asset_path("camera.dat", parameter_file, files_path, asset_location="shared_files")
-        == (files_path / "camera.dat").resolve()
-    )
+        resolve_asset_path("../table.ecsv", parameter_file)
 
 
 def test_read_ecsv_asset_validates_schema_and_identity(tmp_test_directory):

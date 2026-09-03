@@ -7,30 +7,20 @@ import numpy as np
 from astropy.table import QTable, unique
 
 
-def resolve_asset_path(value, parameter_file, files_path, asset_location="parameter_directory"):
+def resolve_asset_path(value, parameter_file):
     """Resolve a model-parameter asset path.
 
-    Assets are relative to their parameter JSON file by default. The temporary
-    ``shared_files`` location names an asset below the repository's shared Files directory.
-    Absolute paths and path traversal are rejected.
+    Assets are relative to their parameter JSON file. Absolute paths and path traversal
+    are rejected.
     """
     value_path = Path(value)
     if value_path.is_absolute():
         raise ValueError(f"Model asset path must be relative: {value}")
 
-    if asset_location == "parameter_directory":
-        root = Path(parameter_file).parent.resolve()
-        candidate = (root / value_path).resolve()
-        if not candidate.is_relative_to(root):
-            raise ValueError(f"Model asset path escapes parameter directory: {value}")
-        return candidate
-
-    if asset_location != "shared_files":
-        raise ValueError(f"Unknown model asset location: {asset_location}")
-    root = Path(files_path).resolve()
+    root = Path(parameter_file).parent.resolve()
     candidate = (root / value_path).resolve()
     if not candidate.is_relative_to(root):
-        raise ValueError(f"Model asset path escapes model Files directory: {value}")
+        raise ValueError(f"Model asset path escapes parameter directory: {value}")
     return candidate
 
 
