@@ -28,6 +28,13 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
+## parsing
+
+```{eval-rst}
+.. automodule:: model_repository.parsing
+   :members:
+```
+
 ## application model-reader factory
 
 ```{eval-rst}
