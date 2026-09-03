@@ -10,6 +10,7 @@ from simtools.application.model_reader import (
     create_model_reader_from_source_config,
     require_model_reader,
 )
+from simtools.db.mongo_db import MongoDBDependencyError
 from simtools.settings import config
 
 
@@ -64,6 +65,57 @@ def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
 
     assert handler.db_name == "worker-db"
     assert reader.source_name == "worker-db"
+
+
+@pytest.mark.parametrize(
+    ("source_config", "message"),
+    [
+        (None, "must be a dictionary"),
+        ({"type": "filesystem"}, "requires a path"),
+        ({"type": "unsupported"}, "Unsupported model source type"),
+    ],
+)
+def test_create_model_reader_from_source_config_rejects_invalid_config(source_config, message):
+    """Invalid worker source configurations fail with actionable errors."""
+    with pytest.raises(ValueError, match=message):
+        create_model_reader_from_source_config(source_config)
+
+
+def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
+    """A filesystem source configuration delegates to the normal factory."""
+    reader = Mock()
+    create_reader = mocker.patch(
+        "simtools.application.model_reader.create_model_reader", return_value=reader
+    )
+
+    assert (
+        create_model_reader_from_source_config({"type": "filesystem", "path": "models"}) is reader
+    )
+
+    create_reader.assert_called_once_with("models")
+
+
+def test_create_model_reader_from_source_config_allows_unnamed_mongodb(mocker):
+    """A MongoDB source configuration may use the handler's default database name."""
+    handler = Mock(model_source_name="default-db")
+    mocker.patch("simtools.application.model_reader._create_database_handler", return_value=handler)
+
+    reader = create_model_reader_from_source_config({"type": "mongodb"})
+
+    assert reader.source_name == "default-db"
+
+
+def test_create_model_reader_reports_missing_mongodb_dependency(mocker):
+    """The MongoDB fallback reports how to install its optional dependency."""
+    mocker.patch(
+        "simtools.db.db_handler.DatabaseHandler",
+        side_effect=MongoDBDependencyError("MongoDB unavailable"),
+    )
+
+    with pytest.raises(RuntimeError, match="install with the `mongodb` extra") as error:
+        create_model_reader()
+
+    assert isinstance(error.value.__cause__, MongoDBDependencyError)
 
 
 def test_require_model_reader_prefers_explicit_reader():
