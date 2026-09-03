@@ -404,6 +404,8 @@ properties:
     properties:
       name: {type: string, minLength: 1}
       default-tag: {"$ref": "#/definitions/tag"}
+      repository-url: {type: string, pattern: "^https://"}
+      git-revision: {"$ref": "#/definitions/revision"}
   simtools-tests:
     type: object
     additionalProperties: false

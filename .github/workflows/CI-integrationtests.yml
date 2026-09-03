@@ -228,7 +228,7 @@ jobs:
         id: restore_simulation_models
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
-          path: simulation-models
+          path: simulation-models.git
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
           restore-keys: |
             simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
@@ -236,8 +236,8 @@ jobs:
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
         run: |
-          CLONE_DIR="simulation-models-clone"
-          CACHE_DIR="simulation-models"
+          CLONE_DIR="simulation-models.git-clone"
+          CACHE_DIR="simulation-models.git"
           rm -rf "$CLONE_DIR"
           CLONE_SUCCESS=false
 
@@ -246,11 +246,12 @@ jobs:
               -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
               -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
               -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "$CLONE_DIR"
+              clone --bare --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" \
+                "$SIM_MODELS_REPO" "$CLONE_DIR"
             then
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+              echo "Successfully cloned simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
               CLONE_SUCCESS=true
               break
             fi
@@ -263,12 +264,12 @@ jobs:
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "Failed to clone simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
+            echo "Failed to clone simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
             exit 1
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
           fi
 
 
@@ -276,7 +277,7 @@ jobs:
         if: steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
-          path: simulation-models
+          path: simulation-models.git
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
 
       - name: Upload simulation models repository
@@ -284,7 +285,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: simulation-models-repo
-          path: simulation-models
+          path: simulation-models.git
           if-no-files-found: error
           retention-days: 30
 
@@ -341,7 +342,7 @@ jobs:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
-      SIMULATION_MODELS_PATH: ../simulation-models
+      SIMULATION_MODELS_GIT_PATH: ../simulation-models.git
 
     strategy:
       fail-fast: false
@@ -377,7 +378,8 @@ jobs:
       - name: Create runtime environment (.env)
         run: |
           {
-            echo "SIMTOOLS_SIMULATION_MODELS_PATH=$SIMULATION_MODELS_PATH"
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
@@ -404,7 +406,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: simulation-models-repo
-          path: ../simulation-models
+          path: ../simulation-models.git
 
       - name: Extend PATH (sim_telarray)
         run: |
@@ -413,7 +415,7 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+          pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
 
       - name: Install resource benchmark dependency (prod container)
         if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
@@ -422,7 +424,7 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
-          pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
+          pip install --no-cache-dir -e '.[tests,dev,doc,git,mongodb]'
 
       - name: Integration tests
         shell: bash -l {0}
@@ -431,7 +433,10 @@ jobs:
           for variable in ${!SIMTOOLS_DB_@}; do
             unset "$variable"
           done
-          MODEL_SOURCE_ARGS=(--simulation_models_path="$SIMULATION_MODELS_PATH")
+          MODEL_SOURCE_ARGS=(
+            --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
+            --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
+          )
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
               "${MODEL_SOURCE_ARGS[@]}" \

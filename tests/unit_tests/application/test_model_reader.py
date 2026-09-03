@@ -7,10 +7,12 @@ import pytest
 
 from simtools.application.model_reader import (
     create_model_reader,
+    create_model_reader_from_configuration,
     create_model_reader_from_source_config,
     require_model_reader,
 )
 from simtools.db.mongo_db import MongoDBDependencyError
+from simtools.model_repository.reader import SimulationModelReader
 from simtools.settings import config
 
 
@@ -55,6 +57,79 @@ def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directo
     assert reader.source_name == str(root.resolve())
 
 
+def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_directory):
+    """A Git path and revision select the Git source without MongoDB."""
+    git_path = Path(tmp_test_directory) / "models.git"
+    git_reader = Mock()
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=git_reader)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(git_path))
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "v1")
+    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
+
+    assert create_model_reader() is git_reader
+    from_git.assert_called_once_with(str(git_path), "v1")
+    database_handler.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "catalog_model",
+    [
+        {"git-revision": "a" * 40},
+        {"default-tag": "v1.2.3"},
+        {"default-version": "1.2.3"},
+    ],
+)
+def test_create_model_reader_uses_catalog_git_revision(catalog_model, mocker):
+    """A missing Git revision falls back through the dependency catalog."""
+    mocker.patch(
+        "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
+        return_value={"model-database": catalog_model},
+    )
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=Mock())
+
+    create_model_reader(simulation_models_git_path="models.git")
+
+    from_git.assert_called_once_with("models.git", next(iter(catalog_model.values())))
+
+
+def test_create_model_reader_from_configuration_forwards_all_source_options(mocker):
+    """Configuration-based callers share the same source-selection path."""
+    reader = Mock()
+    create_reader = mocker.patch(
+        "simtools.application.model_reader.create_model_reader", return_value=reader
+    )
+    configuration = {
+        "simulation_models_path": "/models",
+        "simulation_models_git_path": "/models.git",
+        "simulation_models_git_revision": "commit",
+    }
+
+    assert create_model_reader_from_configuration(configuration) is reader
+
+    create_reader.assert_called_once_with(**configuration)
+
+
+def test_create_model_reader_rejects_catalog_without_git_revision(mocker):
+    """A Git source cannot start when the catalog has no usable revision."""
+    mocker.patch(
+        "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
+        return_value={"model-database": {}},
+    )
+
+    with pytest.raises(ValueError, match="Git simulation-model revision is required"):
+        create_model_reader(simulation_models_git_path="models.git")
+
+
+def test_create_model_reader_rejects_two_repository_sources(tmp_test_directory):
+    """Filesystem and Git sources cannot be selected simultaneously."""
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        create_model_reader(
+            simulation_models_path=tmp_test_directory,
+            simulation_models_git_path=tmp_test_directory,
+            simulation_models_git_revision="v1",
+        )
+
+
 def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
     """Worker source reconstruction keeps the selected MongoDB name."""
     handler = Mock()
@@ -65,6 +140,26 @@ def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
 
     assert handler.db_name == "worker-db"
     assert reader.source_name == "worker-db"
+
+
+def test_create_model_reader_from_source_config_reopens_git_revision(mocker):
+    """Workers reconstruct Git readers from the serialized commit."""
+    reader = Mock()
+    from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=reader)
+
+    result = create_model_reader_from_source_config(
+        {"type": "git", "repository": "/models.git", "commit": "a" * 40}
+    )
+
+    assert result is reader
+    from_git.assert_called_once_with("/models.git", "a" * 40)
+
+
+@pytest.mark.parametrize("source_config", [{"type": "git"}, {"type": "git", "repository": "repo"}])
+def test_create_model_reader_from_source_config_rejects_incomplete_git_config(source_config):
+    """Worker Git configurations must include both repository and commit."""
+    with pytest.raises(ValueError, match="requires repository and commit"):
+        create_model_reader_from_source_config(source_config)
 
 
 @pytest.mark.parametrize(
@@ -92,7 +187,7 @@ def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
         create_model_reader_from_source_config({"type": "filesystem", "path": "models"}) is reader
     )
 
-    create_reader.assert_called_once_with("models")
+    create_reader.assert_called_once_with(simulation_models_path="models")
 
 
 def test_create_model_reader_from_source_config_allows_unnamed_mongodb(mocker):
