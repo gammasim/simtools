@@ -19,6 +19,8 @@ from simtools.simtel import simtel_table_reader
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
+ECSV_SUFFIX = ".ecsv"
+
 
 class FileSystemModelSource:
     """Read-only source backed by a checked-out simulation-model repository."""
@@ -132,7 +134,7 @@ class FileSystemModelSource:
             if (
                 parameter_data.get("file")
                 and isinstance(value, str)
-                and value.lower().endswith(".ecsv")
+                and value.lower().endswith(ECSV_SUFFIX)
                 and parameter_data.get("model_parameter_schema_version") == "0.3.0"
             ):
                 self.get_parameter_table(parameter_data)
@@ -242,7 +244,7 @@ class FileSystemModelSource:
             )
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
-        if source.suffix.lower() == ".ecsv" and parameter.get("parameter"):
+        if source.suffix.lower() == ECSV_SUFFIX and parameter.get("parameter"):
             self.get_parameter_table(parameter)
         shutil.copy2(source, target)
         return "copied from filesystem"
@@ -474,7 +476,7 @@ class SimulationModelReader:
             value = parameter_data.get("value")
             if (
                 isinstance(value, str)
-                and value.lower().endswith(".ecsv")
+                and value.lower().endswith(ECSV_SUFFIX)
                 and hasattr(self._source, "get_parameter_table")
             ):
                 return self._source.get_parameter_table(parameter_data)

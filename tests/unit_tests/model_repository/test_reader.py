@@ -152,6 +152,22 @@ def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
     assert other_source._parameters == {}
 
 
+def test_filesystem_source_validates_ecsv_before_copying(
+    model_repository, mocker, tmp_test_directory
+):
+    source = FileSystemModelSource(model_repository)
+    source_file = model_repository / "simulation-models/model_parameters/example.ecsv"
+    source_file.write_text("# example\n", encoding="utf-8")
+    validate_table = mocker.patch.object(source, "get_parameter_table")
+
+    result = source._copy_model_file(
+        {"parameter": "example"}, source_file, Path(tmp_test_directory)
+    )
+
+    assert result == "copied from filesystem"
+    validate_table.assert_called_once_with({"parameter": "example"})
+
+
 def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
     """A missing repository fails with a useful path error."""
     with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):
@@ -514,10 +530,17 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     row_table.assert_called_once_with({"x": [1]})
     assert reader.export_model_file("p", "North", "LSTN-01") is None
 
+    reader.get_model_parameter.return_value = {"p": {"value": "p.ecsv"}}
+    reader.export_model_files = Mock()
+    source.get_parameter_table.return_value = "ecsv-table"
+    assert (
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
+        == "ecsv-table"
+    )
+
     reader.get_model_parameter.return_value = {"p": {"value": "p.dat"}}
     with pytest.raises(ValueError, match="Destination path is required"):
         reader.export_model_file("p", "North", "LSTN-01")
-    reader.export_model_files = Mock()
     assert reader.export_model_file("p", "North", "LSTN-01", dest="output") is None
     read_table = mocker.patch(
         "simtools.model_repository.reader.simtel_table_reader.read_simtel_table",
@@ -527,7 +550,7 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
         reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
         == "file-table"
     )
-    assert reader.export_model_files.call_count == 2
+    assert reader.export_model_files.call_count == 3
     read_table.assert_called_once_with("p", Path("output") / "p.dat")
 
 

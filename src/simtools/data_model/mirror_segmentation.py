@@ -93,7 +93,7 @@ def _validate_polygon(record):
         first["x_cm"] * second["y_cm"] - second["x_cm"] * first["y_cm"]
         for first, second in zip(vertices, vertices[1:] + vertices[:1], strict=False)
     )
-    if math.isclose(area, 0):
+    if math.isclose(area, 0, abs_tol=1e-12):
         raise ValueError("Polygon vertices must enclose a non-zero area")
 
 

@@ -105,6 +105,24 @@ def test_validate_rejects_invalid_ring_and_polygon():
         )
 
 
+def test_validate_rejects_polygon_with_area_below_absolute_tolerance():
+    with pytest.raises(ValueError, match="non-zero area"):
+        validate_segments(
+            [
+                {
+                    "kind": "polygon",
+                    "vertices_cm": [
+                        {"x_cm": 0, "y_cm": 0},
+                        {"x_cm": 1, "y_cm": 0},
+                        {"x_cm": 0, "y_cm": 1e-13},
+                    ],
+                }
+            ],
+            PARAMETER_NAME,
+            SCHEMA_VERSION,
+        )
+
+
 def test_validate_rejects_nonfinite_values():
     with pytest.raises(ValueError, match="finite"):
         validate_segments(
