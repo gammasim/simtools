@@ -2,6 +2,7 @@
 # Integration tests for applications from config file
 
 import copy
+import importlib
 import logging
 import os
 import subprocess
@@ -51,6 +52,10 @@ def _get_simulation_model_source(config, request, simtools_root_path):
     git_path = request.config.getoption("simulation_models_git_path", default=None)
     git_revision = request.config.getoption("simulation_models_git_revision", default=None)
     if not simulation_models_path and not git_path:
+        simulation_models_path = os.environ.get("SIMTOOLS_SIMULATION_MODELS_PATH")
+        git_path = os.environ.get("SIMTOOLS_SIMULATION_MODELS_GIT_PATH")
+        git_revision = os.environ.get("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
+    if not simulation_models_path and not git_path:
         return None, None
     if _is_mongodb_application(config):
         pytest.skip(f"{config['application']} requires MongoDB")
@@ -70,12 +75,53 @@ def _get_simulation_model_source(config, request, simtools_root_path):
 def _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source):
     """Set environment variables for the selected simulation-model source."""
     if simulation_models_path:
+        monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
+        monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
         monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
     if git_source:
         git_path, git_revision = git_source
+        monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
         monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(git_path))
         if git_revision:
             monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", git_revision)
+
+
+def _get_model_source_arguments(application):
+    """Return the model-source argument names accepted by an application."""
+    module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
+    try:
+        definition = importlib.import_module(module_name).APPLICATION
+    except ImportError, AttributeError:
+        return set()
+    return {argument.name for argument in definition.all_arguments}
+
+
+def _set_simulation_model_source_configuration(config, simulation_models_path, git_source):
+    """Replace a workflow's configured source with the selected test source.
+
+    The model-source options are only written to workflows of applications using
+    the standard model-source arguments. Applications defining
+    ``simulation_models_path`` as an application-specific argument are not
+    modified; they read the selected source from the environment variables set
+    by ``_set_simulation_model_source_env``.
+    """
+    if not simulation_models_path and not git_source:
+        return
+    source_config = config.get("configuration")
+    if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
+        return
+    if "simulation_models_git_path" not in _get_model_source_arguments(config["application"]):
+        return
+    source_config.pop("simulation_models_path", None)
+    source_config.pop("simulation_models_git_path", None)
+    source_config.pop("simulation_models_git_revision", None)
+    if simulation_models_path:
+        source_config["simulation_models_path"] = str(simulation_models_path)
+        return
+    git_path, git_revision = git_source
+    source_config["simulation_models_git_path"] = str(git_path)
+    if git_revision:
+        source_config["simulation_models_git_revision"] = git_revision
 
 
 def pytest_generate_tests(metafunc):
@@ -141,6 +187,7 @@ def test_applications_from_config(
         tmp_config, request, simtools_root_path
     )
     _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
+    _set_simulation_model_source_configuration(tmp_config, simulation_models_path, git_source)
 
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
@@ -221,6 +268,166 @@ def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
     assert git_source == ((Path(tmp_test_directory) / "../simulation-models.git").resolve(), "HEAD")
 
 
+def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mocker, monkeypatch):
+    """Use the Git source configured in .env when no command-line option is given."""
+    request = mocker.MagicMock()
+    request.config.getoption.return_value = None
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", "../simulation-models.git")
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "6.0.2")
+
+    path, git_source = _get_simulation_model_source(
+        {"application": "simtools-simulate-prod"}, request, tmp_test_directory
+    )
+
+    assert path is None
+    assert git_source == (
+        (Path(tmp_test_directory) / "../simulation-models.git").resolve(),
+        "6.0.2",
+    )
+
+
+def test_git_source_replaces_filesystem_source_in_workflow_configuration(
+    tmp_test_directory, mocker
+):
+    """A selected Git source overrides a filesystem source embedded in a workflow."""
+    mocker.patch(
+        "tests.integration_tests.test_applications_from_config._get_model_source_arguments",
+        return_value={
+            "simulation_models_path",
+            "simulation_models_git_path",
+            "simulation_models_git_revision",
+        },
+    )
+    config = {
+        "application": "simtools-simulate-prod",
+        "configuration": {
+            "simulation_models_path": "../simulation-models",
+            "simulation_models_git_revision": "old-revision",
+        },
+    }
+
+    _set_simulation_model_source_configuration(
+        config,
+        None,
+        ((Path(tmp_test_directory) / "models.git").resolve(), "7.0.0"),
+    )
+
+    assert config["configuration"] == {
+        "simulation_models_git_path": str((Path(tmp_test_directory) / "models.git").resolve()),
+        "simulation_models_git_revision": "7.0.0",
+    }
+
+
+def test_unsupported_application_does_not_receive_model_source_configuration(
+    tmp_test_directory, mocker
+):
+    """Do not write model-source options into workflows that reject those arguments."""
+    mocker.patch(
+        "tests.integration_tests.test_applications_from_config._get_model_source_arguments",
+        return_value=set(),
+    )
+    config = {"application": "simtools-derive-photon-electron-spectrum", "configuration": {}}
+
+    _set_simulation_model_source_configuration(
+        config,
+        None,
+        ((Path(tmp_test_directory) / "models.git").resolve(), "7.0.0"),
+    )
+
+    assert config["configuration"] == {}
+
+
+def test_filesystem_source_supported_arguments_only(tmp_test_directory, mocker):
+    """Inject a filesystem source only for applications using the model-source arguments."""
+    mocker.patch(
+        "tests.integration_tests.test_applications_from_config._get_model_source_arguments",
+        return_value={"simulation_models_path", "simulation_models_git_path"},
+    )
+    config = {"application": "simtools-simulate-prod", "configuration": {}}
+
+    _set_simulation_model_source_configuration(
+        config,
+        Path(tmp_test_directory) / "simulation-models",
+        None,
+    )
+
+    assert config["configuration"] == {
+        "simulation_models_path": str(Path(tmp_test_directory) / "simulation-models")
+    }
+
+
+def test_application_specific_model_path_is_not_overridden(tmp_test_directory, mocker):
+    """Leave an application-specific ``simulation_models_path`` argument untouched."""
+    mocker.patch(
+        "tests.integration_tests.test_applications_from_config._get_model_source_arguments",
+        return_value={"simulation_models_path"},
+    )
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"simulation_models_path": "../simulation-models"},
+    }
+
+    _set_simulation_model_source_configuration(
+        config,
+        None,
+        ((Path(tmp_test_directory) / "models.git").resolve(), "7.0.0"),
+    )
+
+    assert config["configuration"] == {"simulation_models_path": "../simulation-models"}
+
+
+def test_git_source_replaces_stale_revision(tmp_test_directory, mocker):
+    """Replace a stale Git revision when injecting a Git source."""
+    mocker.patch(
+        "tests.integration_tests.test_applications_from_config._get_model_source_arguments",
+        return_value={"simulation_models_git_path", "simulation_models_git_revision"},
+    )
+    config = {
+        "application": "simtools-simulate-prod",
+        "configuration": {"simulation_models_git_revision": "old-revision"},
+    }
+
+    _set_simulation_model_source_configuration(
+        config,
+        None,
+        ((Path(tmp_test_directory) / "models.git").resolve(), "7.0.0"),
+    )
+
+    assert config["configuration"] == {
+        "simulation_models_git_path": str((Path(tmp_test_directory) / "models.git").resolve()),
+        "simulation_models_git_revision": "7.0.0",
+    }
+
+
+def test_git_source_does_not_skip_application_with_model_path_argument(
+    tmp_test_directory, mocker, monkeypatch
+):
+    """Run workflows using an application-specific model path also for a Git source."""
+    request = mocker.MagicMock()
+    options = {
+        "simulation_models_path": None,
+        "simulation_models_git_path": "models.git",
+        "simulation_models_git_revision": "HEAD",
+    }
+    request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "test_name": "run",
+        "configuration": {"simulation_models_path": "../simulation-models"},
+    }
+    run = mocker.patch("subprocess.run")
+    run.return_value = mocker.MagicMock(returncode=0, stdout="", stderr="")
+    validate = mocker.patch("simtools.testing.validate_output.validate_application_output")
+
+    test_applications_from_config(
+        tmp_test_directory, config, request, Path(tmp_test_directory), monkeypatch
+    )
+
+    assert run.called
+    validate.assert_called_once()
+    assert config["configuration"]["simulation_models_path"] == "../simulation-models"
+
+
 def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
     """Skip MongoDB-only applications when filesystem model access is selected."""
     request = mocker.MagicMock()
@@ -273,10 +480,12 @@ def test_database_application_is_skipped_without_database_configuration(
         )
 
 
-def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker):
+def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker, monkeypatch):
     """Leave integration tests unchanged when no filesystem path is configured."""
     request = mocker.MagicMock()
     request.config.getoption.return_value = None
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", raising=False)
 
     assert _get_simulation_model_source(
         {"application": "simtools-simulate-prod"}, request, tmp_test_directory

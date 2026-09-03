@@ -247,11 +247,13 @@ def test_git_source_reads_ecsv_and_rejects_invalid_file_paths(tmp_test_directory
     source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
 
     assert source.get_ecsv_file_as_astropy_table(file_name)["value"].tolist() == [1, 2]
+    assert store.reads == [path]
     with pytest.raises(ValueError, match="escapes model Files"):
         source.get_ecsv_file_as_astropy_table("../values.ecsv")
-    mocker.patch.object(store, "open_blob", side_effect=FileNotFoundError)
+    missing = mocker.patch.object(store, "read_blob", side_effect=FileNotFoundError)
     with pytest.raises(FileNotFoundError, match="Model file not found at commit"):
         source.get_ecsv_file_as_astropy_table(file_name)
+    missing.assert_called_once()
 
 
 def test_git_source_preloads_tables_and_parameters_once(tmp_test_directory):

@@ -3,6 +3,7 @@
 import logging
 import threading
 from copy import deepcopy
+from io import BytesIO
 from pathlib import Path, PurePosixPath
 from time import perf_counter
 
@@ -272,8 +273,9 @@ class GitModelSource:
         """Read an ECSV model file from a Git blob."""
         source_path = self._safe_file_path(file_name)
         try:
-            with self._object_store.open_blob(self.commit, source_path) as source:
-                return Table.read(source, format="ascii.ecsv")
+            return Table.read(
+                BytesIO(self._object_store.read_blob(self.commit, source_path)), format="ascii.ecsv"
+            )
         except FileNotFoundError as exc:
             raise FileNotFoundError(
                 f"Model file not found at commit {self.commit}: {source_path}"
