@@ -36,6 +36,7 @@ applications:
     site: North
     view_cone: 0 deg 5 deg
     zenith_angle: 20
+    simulation_models_path: ../simulation-models
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

@@ -2,8 +2,10 @@
 
 import logging
 
+from simtools.application.model_reader import create_model_reader, require_model_reader
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
+from simtools.settings import config as runtime_config
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general
 
@@ -27,6 +29,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         - site: str - site name (North/South)
         - label: str - base label for the simulation
         - config: dict - light emission configuration
+        - model_source: dict - serializable model-source selection
 
     Returns
     -------
@@ -40,20 +43,21 @@ def _simulate_illuminator_telescope_pair(job_spec):
     illuminator = job_spec["illuminator"]
     telescope = job_spec["telescope"]
     config = job_spec["config"].copy()
-
-    # Update configuration for this specific pair
-    config["telescope"] = telescope
-    config["light_source"] = illuminator
-
-    label = job_spec["label"]
-
     try:
+        model_reader = _get_worker_model_reader(job_spec)
+
+        # Update configuration for this specific pair
+        config["telescope"] = telescope
+        config["light_source"] = illuminator
+
+        label = job_spec["label"]
         _logger.info(f"Starting simulation for {illuminator} -> {telescope}")
 
         simulator = SimulatorLightEmission(
             light_emission_config=config,
             telescope=telescope,
             label=label,
+            model_reader=model_reader,
         )
 
         simulator.simulate()
@@ -78,6 +82,28 @@ def _simulate_illuminator_telescope_pair(job_spec):
             "success": False,
             "error": str(exc),
         }
+
+
+def _get_worker_model_reader(job_spec):
+    """Select the model reader in a worker without relying on global state."""
+    source_config = job_spec.get("model_source")
+    configured_reader = runtime_config.model_reader
+    if configured_reader is not None:
+        configured_source = getattr(configured_reader, "source_config", None)
+        if source_config is None or configured_source == source_config:
+            return configured_reader
+    if source_config and source_config.get("type") == "filesystem":
+        return create_model_reader(source_config["path"])
+    if source_config and source_config.get("type") == "mongodb":
+        from simtools.db.db_handler import (  # pylint: disable=import-outside-toplevel
+            DatabaseHandler,
+        )
+
+        database_handler = DatabaseHandler()
+        if source_config.get("name"):
+            database_handler.db_name = source_config["name"]
+        return create_model_reader(database_handler=database_handler)
+    return require_model_reader()
 
 
 class MultiIlluminatorSimulator:
@@ -118,13 +144,15 @@ class MultiIlluminatorSimulator:
         max_workers=None,
         backend="local",
         backend_config=None,
+        model_reader=None,
     ):
         """Initialize the multi-illuminator simulator."""
         self._logger = logging.getLogger(__name__)
+        self.model_reader = require_model_reader(model_reader)
 
         # Load visibility table from provided data or from the site model
         if visibility_data is None:
-            visibility_data = self._load_visibility_from_site_model(config)
+            visibility_data = self._load_visibility_from_site_model(config, self.model_reader)
 
         self.visibility = IlluminatorTelescopeVisibility(visibility_data)
 
@@ -138,7 +166,7 @@ class MultiIlluminatorSimulator:
         self._logger.info("Using execution backend %s", self.backend)
 
     @staticmethod
-    def _load_visibility_from_site_model(config):
+    def _load_visibility_from_site_model(config, model_reader=None):
         """
         Load visibility data from the site model database.
 
@@ -156,8 +184,7 @@ class MultiIlluminatorSimulator:
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
         site_model = SiteModel(
-            site=config["site"],
-            model_version=config["model_version"],
+            site=config["site"], model_version=config["model_version"], model_reader=model_reader
         )
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
@@ -218,7 +245,7 @@ class MultiIlluminatorSimulator:
             config_for_query["light_source"] = sample_illuminator
 
             wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(
-                config_for_query
+                config_for_query, model_reader=self.model_reader
             )
             self._logger.info(
                 f"Using {len(wavelengths)} wavelengths from model: "
@@ -227,6 +254,9 @@ class MultiIlluminatorSimulator:
 
         # Build job specs for all wavelength-pair combinations
         job_specs = []
+        model_source = self.model_reader.source_config
+        if not isinstance(model_source, dict):
+            model_source = None
         for wavelength in wavelengths:
             for illuminator, telescope in all_pairs:
                 # Create config with wavelength
@@ -240,6 +270,7 @@ class MultiIlluminatorSimulator:
                     "site": self.base_config.get("site"),
                     "label": self.label,
                     "config": config_with_wl,
+                    "model_source": model_source,
                 }
                 job_specs.append(job_spec)
 

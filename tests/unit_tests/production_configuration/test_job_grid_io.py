@@ -304,21 +304,21 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert "prod_high_nsb" in command
     assert str(overwrite_path) in command
     assert str(model_path) in command
-    assert str(tmp_test_directory / "output" / "job-000000") in command
-    assert str(tmp_test_directory / "grid" / "job-000000") in command
+    assert str(tmp_test_directory / "output" / "job-000001") in command
+    assert str(tmp_test_directory / "grid" / "job-000001") in command
     assert "--no-reduced_event_lists" in command
     assert "--no-correct_for_b_field_alignment" in command
     assert str(corsika_path) in command
     assert jobs[0].mount_paths == (
-        tmp_test_directory / "output" / "job-000000",
-        tmp_test_directory / "grid" / "job-000000",
+        tmp_test_directory / "output" / "job-000001",
+        tmp_test_directory / "grid" / "job-000001",
         corsika_path.parent,
         model_path,
         overwrite_path.parent,
     )
     assert jobs[0].output_paths == (
-        tmp_test_directory / "output" / "job-000000",
-        tmp_test_directory / "grid" / "job-000000",
+        tmp_test_directory / "output" / "job-000001",
+        tmp_test_directory / "grid" / "job-000001",
     )
     nested_args = app.APPLICATION.build_parser().parse_args(command[5:])
     assert nested_args.reduced_event_lists is False
@@ -330,6 +330,35 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert command[core_scatter_index + 1] == "10 200.0 m"
     view_cone_index = command.index("--view_cone")
     assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"
+
+
+def test_build_simulate_prod_job_specs_uses_one_based_job_names(tmp_test_directory):
+    """Use one-based names for job IDs and both production output directories."""
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "grid_output_path": tmp_test_directory / "grid",
+    }
+    rows = _job_rows()
+    rows.append({**rows[0], "run_number": 11})
+
+    jobs = job_grid_io.build_simulate_prod_job_specs(
+        args,
+        rows,
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    assert [job.job_id for job in jobs] == ["job-000001", "job-000002"]
+    assert [job.output_paths for job in jobs] == [
+        (
+            tmp_test_directory / "output" / "job-000001",
+            tmp_test_directory / "grid" / "job-000001",
+        ),
+        (
+            tmp_test_directory / "output" / "job-000002",
+            tmp_test_directory / "grid" / "job-000002",
+        ),
+    ]
 
 
 def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_directory):

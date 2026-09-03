@@ -493,11 +493,12 @@ def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
 def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, metadata):
     """Build one local command job for a production-grid row."""
     job_args = _job_args_for_simulate_prod(args_dict, row, parser, metadata)
-    output_path = output_root / f"job-{index:06d}"
+    job_name = f"job-{index + 1:06d}"
+    output_path = output_root / job_name
     job_args["output_path"] = str(output_path)
     mount_paths = [output_path]
     output_paths = [output_path]
-    _add_grid_output_path(job_args, index, mount_paths, output_paths)
+    _add_grid_output_path(job_args, job_name, mount_paths, output_paths)
     _add_scan_label(job_args, row)
     _normalize_simulate_prod_paths(job_args, args_dict)
     _add_simulate_prod_input_mount_paths(job_args, mount_paths)
@@ -514,7 +515,7 @@ def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, me
     ]
     command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
     return JobSpec(
-        f"job-{index:06d}",
+        job_name,
         index,
         command=tuple(command),
         mount_paths=tuple(mount_paths),
@@ -538,11 +539,11 @@ def _job_args_for_simulate_prod(args_dict, row, parser, metadata):
     }
 
 
-def _add_grid_output_path(job_args, index, mount_paths, output_paths):
+def _add_grid_output_path(job_args, job_name, mount_paths, output_paths):
     """Add a per-job grid output path and its expected output mount."""
     if not job_args.get("grid_output_path"):
         return
-    grid_output_path = Path(job_args["grid_output_path"]) / f"job-{index:06d}"
+    grid_output_path = Path(job_args["grid_output_path"]) / job_name
     job_args["grid_output_path"] = str(grid_output_path)
     mount_paths.append(grid_output_path)
     output_paths.append(grid_output_path)
