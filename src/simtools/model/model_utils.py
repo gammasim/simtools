@@ -6,7 +6,6 @@ import math
 
 from simtools import settings
 from simtools.application.model_reader import require_model_reader
-from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
