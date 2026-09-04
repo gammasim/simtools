@@ -2,7 +2,6 @@
 
 import astropy.units as u
 import pytest
-from bson.objectid import ObjectId
 
 from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import schema
@@ -118,7 +117,7 @@ def test_array_model_export_excludes_database_bookkeeping_fields():
     database_parameter = {
         "value": [],
         "unit": None,
-        "_id": ObjectId(),
+        "_id": "database id",
         "entry_date": "database timestamp",
     }
     array_model.site_model = type(

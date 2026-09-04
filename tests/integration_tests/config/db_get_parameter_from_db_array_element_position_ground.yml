@@ -20,6 +20,7 @@ applications:
       - type: reference
         file: ${generated:model_parameters/array_element_position_ground-2.0.0.json}
         tolerance: 1.0e-05
+  requires_mongodb: true
   test_name: telescope_parameter_array_element_position_ground
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

@@ -63,15 +63,15 @@ pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-### Run with simulation models from files
+### Run with simulation models from Git
 
-To run the integration tests without MongoDB, pass the directory containing
-`simulation-models/productions` and `simulation-models/model_parameters`:
+To run the integration tests without MongoDB, pass a local Git repository and revision:
 
 ```bash
 pytest --no-cov -v \
   --model_version 7.0.0 \
-  --simulation_models_path ../simulation-models \
+  --simulation_models_git_path ../simulation-models.git \
+  --simulation_models_git_revision v0.17.2 \
   tests/integration_tests/test_applications_from_config.py
 ```
 
@@ -80,12 +80,13 @@ The integration harness passes the path to each application subprocess. To run o
 ```bash
 pytest --no-cov -vv \
   --model_version 7.0.0 \
-  --simulation_models_path ../simulation-models \
+  --simulation_models_git_path ../simulation-models.git \
+  --simulation_models_git_revision v0.17.2 \
   'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-array-element-report_run]'
 ```
 
-The filesystem source takes precedence over MongoDB settings. Integration workflows marked with
-`requires_mongodb: true` are skipped.
+Filesystem and Git sources take precedence over MongoDB settings, but cannot be configured
+together. Integration workflows marked with `requires_mongodb: true` are skipped.
 
 ## Resources
 

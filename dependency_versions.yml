@@ -23,6 +23,8 @@ corsika-interaction-tables:
 model-database:
   name: CTAO-Simulation-Model
   default-tag: v0.17.2
+  repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git
+  git-revision: d889ef1cceb3ef5f0d908ee707055b0c7ff6d4bb
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
