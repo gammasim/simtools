@@ -196,22 +196,31 @@ def test_fill_corsika_configuration_model_version(
         )
         mock_model_parameter.return_value = mock_params
 
-        args_dict = {
-            "model_version": ["5.0.0", "6.0.0"],
-            "azimuth_angle": 0 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "event_number_first_shower": 1,
-            "showers_per_run": 100,
-            "eslope": 2.0,
-            "energy_range": [10 * u.GeV, 10000 * u.GeV],
-            "view_cone": [0 * u.deg, 0 * u.deg],
-            "core_scatter": [10, 140000 * u.cm],
-            "correct_for_b_field_alignment": True,
-        }
-        config = corsika_config_mock_array_model._fill_corsika_configuration(args_dict)
+        # Also patch the direct DB call so _fill_corsika_configuration_from_db succeeds
+        with patch(
+            "simtools.corsika.corsika_config.db_handler.DatabaseHandler"
+        ) as mock_db_handler_cls:
+            mock_db_instance = mock_db_handler_cls.return_value
+            mock_db_instance.get_simulation_configuration_parameters.return_value = (
+                get_standard_corsika_parameters
+            )
+
+            args_dict = {
+                "model_version": ["5.0.0", "6.0.0"],
+                "azimuth_angle": 0 * u.deg,
+                "zenith_angle": 20 * u.deg,
+                "event_number_first_shower": 1,
+                "showers_per_run": 100,
+                "eslope": 2.0,
+                "energy_range": [10 * u.GeV, 10000 * u.GeV],
+                "view_cone": [0 * u.deg, 0 * u.deg],
+                "core_scatter": [10, 140000 * u.cm],
+                "correct_for_b_field_alignment": True,
+            }
+            config = corsika_config_mock_array_model._fill_corsika_configuration(args_dict)
 
         # Verify ModelParameter was instantiated with the correct model (the first one)
-        mock_model_parameter.assert_called_with(model_version="5.0.0")
+        mock_model_parameter.assert_any_call(model_version="5.0.0")
         mock_params.get_simulation_software_parameters.assert_called_with("corsika")
 
         assert isinstance(config, dict)
@@ -721,7 +730,15 @@ def test_fill_corsika_configuration_variations(
             get_standard_corsika_parameters
         )
         mock_model_parameter.return_value = mock_params
-        result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(["5.0.0"])
+        # Also patch the direct DB call
+        with patch(
+            "simtools.corsika.corsika_config.db_handler.DatabaseHandler"
+        ) as mock_db_handler_cls:
+            mock_db_instance = mock_db_handler_cls.return_value
+            mock_db_instance.get_simulation_configuration_parameters.return_value = (
+                get_standard_corsika_parameters
+            )
+            result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(["5.0.0"])
         assert all(
             key in result
             for key in [

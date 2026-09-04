@@ -151,6 +151,55 @@ def test_get_simulation_software_parameters(telescope_model_lst):
     assert isinstance(telescope_model_lst.get_simulation_software_parameters("corsika"), dict)
 
 
+def test_load_simulation_software_parameter_ignores_database_value_error(
+    telescope_model_lst, mocker
+):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mocker.patch.object(
+        telescope_copy.db,
+        "get_simulation_configuration_parameters",
+        side_effect=ValueError("missing configuration"),
+    )
+
+    telescope_copy._load_simulation_software_parameter_for_software("corsika")
+
+
+def test_apply_simulation_software_overwrites_ignores_unknown_software(telescope_model_lst):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy.overwrite_model_parameter_dict = {"unknown": {"num_gains": {"value": 2}}}
+
+    telescope_copy._apply_simulation_software_overwrites("unknown")
+
+
+def test_filter_overwrites_for_target_keeps_unknown_and_drops_ignored(mocker):
+    model_parameter = ModelParameter.__new__(ModelParameter)
+    mocker.patch(
+        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        side_effect=lambda name: {
+            "ignored": "configuration_corsika",
+            "known": "telescopes",
+        }[name],
+    )
+    overwrites = {
+        "LSTN-01": {
+            "ignored": {"value": 1},
+            "known": {"value": 2},
+        },
+        "not-a-model": "skip",
+    }
+
+    assert model_parameter._filter_overwrites_for_target(
+        overwrites, ("configuration_corsika",)
+    ) == {"LSTN-01": {"known": {"value": 2}}}
+
+
+def test_filter_overwrites_for_target_returns_input_without_filtering():
+    model_parameter = ModelParameter.__new__(ModelParameter)
+    overwrites = {"LSTN-01": {"num_gains": {"value": 2}}}
+
+    assert model_parameter._filter_overwrites_for_target(overwrites, None) is overwrites
+
+
 def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
     """Build realistic simulation overwrite changes used by overwrite-collection tests."""
     return {
@@ -558,7 +607,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     telescope_copy.write_sim_telarray_config_file()
     mock_export.assert_called_once_with(update_if_necessary=True)
-    mock_load_writer.assert_called_once_with(label=None)
+    mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     mock_writer.write_telescope_config_file.assert_called_once()
 
     mock_export.reset_mock()
@@ -570,7 +619,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
     assert mock_export.call_count == 2  # Called for both models
-    mock_load_writer.assert_called_once_with(label=None)
+    mock_load_writer.assert_called_once_with(label="test-telescope-model-lst")
     assert telescope_copy.parameters.get("test_param") == "test_value"
     mock_writer.write_telescope_config_file.assert_called_once()
 
@@ -753,7 +802,9 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
     telescope_name = "LSTN-01"
     changes = {
         telescope_name: {
-            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_spectrum_overwritten.dat"}
+            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_spectrum_overwritten.dat"},
+            "min_photoelectrons": {"value": 0},
+            "min_photons": {"value": 0},
         }
     }
 
@@ -771,6 +822,11 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
         ]["value"]
         == "nsb_spectrum_overwritten.dat"
     )
+    assert (
+        tel_model.get_simulation_software_parameters("sim_telarray")["min_photoelectrons"]["value"]
+        == 0
+    )
+    assert tel_model.get_simulation_software_parameters("sim_telarray")["min_photons"]["value"] == 0
 
 
 def test_check_corsika_simulation_software_parameter_with_overwrite(model_version, mock_db_handler):
@@ -791,7 +847,7 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(model_versio
     )
 
     changes = {
-        telescope_name: {
+        "configuration_corsika": {
             corsika_parameter: {
                 "value": 2.5,
             }

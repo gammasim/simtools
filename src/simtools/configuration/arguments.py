@@ -523,7 +523,7 @@ UPDATED_PARAMETER_VERSION = _argument(
 OVERWRITE_MODEL_PARAMETERS = _argument(
     "overwrite_model_parameters",
     _SIMULATION_MODEL_GROUP,
-    help="File name to overwrite model parameters from DB with provided values",
+    help="Dictionary with model parameters to overwrite",
     type=str,
 )
 

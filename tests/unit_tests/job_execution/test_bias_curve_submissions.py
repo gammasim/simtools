@@ -144,6 +144,10 @@ def test_scan_config_contains_nsb_base_overwrite_and_trigger_scan(tmp_test_direc
     telescope_changes = overwrite["changes"]["LSTN-01"]
     assert telescope_changes["min_photons"]["value"] == 0
     assert telescope_changes["min_photoelectrons"]["value"] == 0
+    assert telescope_changes["disc_bins"]["value"] == 100
+    assert telescope_changes["fadc_bins"]["value"] == 100
+    assert telescope_changes["disc_start"]["value"] == 0
+    assert telescope_changes["fadc_sum_bins"]["value"] == 100
     assert "asum_threshold" not in telescope_changes
 
     assert overwrite["changes"]["OBS-North"]["nsb_scaling_factor"]["value"] == 2

@@ -1,6 +1,7 @@
 """Application configuration."""
 
 import argparse
+import json
 import logging
 import os
 import shlex
@@ -442,6 +443,10 @@ class Configurator:
     @staticmethod
     def _normalize_scalar_config_value(key, value, parser=None):
         """Normalize a scalar config value to one or more argument tokens."""
+        # Special handling for dictionary values (e.g., overwrite_model_parameters)
+        if isinstance(value, dict):
+            return [json.dumps(value)]
+
         expected_nargs = Configurator._get_fixed_nargs(parser, key)
         if not (isinstance(value, str) and isinstance(expected_nargs, int) and expected_nargs > 1):
             return [str(value)]

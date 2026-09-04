@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 """Helper functions related to model parameters."""
 
+import json
 import math
 
 from simtools import settings
 from simtools.application.model_reader import require_model_reader
-from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
@@ -73,29 +73,53 @@ def initialize_simulation_models(
 
 def read_overwrite_model_parameter_dict(overwrite_model_parameters=None):
     """
-    Read overwrite model parameters dictionary from file.
+    Read overwrite model parameters dictionary.
 
     Parameters
     ----------
-    overwrite_model_parameters: str, optional
-        File name with overwrite model parameters.
+    overwrite_model_parameters: dict or str, optional
+        Either a dictionary with model parameters to overwrite, or a file path.
 
     Returns
     -------
     dict
         Dictionary with model parameters to overwrite.
     """
-    overwrite_model_parameter_dict = {}
     overwrite_model_parameters = overwrite_model_parameters or settings.config.args.get(
         "overwrite_model_parameters"
     )
-    if overwrite_model_parameters is not None:
-        overwrite_model_parameter_dict = schema.validate_dict_using_schema(
-            data=ascii_handler.collect_data_from_file(file_name=overwrite_model_parameters),
-            schema_file="simulation_models_info.schema.yml",
-        ).get("changes", {})
+    if overwrite_model_parameters is None:
+        return {}
 
-    return overwrite_model_parameter_dict
+    if isinstance(overwrite_model_parameters, dict):
+        return _extract_changes_from_dict(overwrite_model_parameters)
+
+    if isinstance(overwrite_model_parameters, str):
+        return _extract_changes_from_string(overwrite_model_parameters)
+
+    return {}
+
+
+def _extract_changes_from_dict(overwrite_dict):
+    """Extract changes from a dictionary."""
+    if "changes" in overwrite_dict:
+        return overwrite_dict["changes"]
+    return overwrite_dict
+
+
+def _extract_changes_from_string(overwrite_str):
+    """Extract changes from a string (JSON or file path)."""
+    try:
+        parsed_data = json.loads(overwrite_str)
+        if isinstance(parsed_data, dict):
+            return _extract_changes_from_dict(parsed_data)
+    except json.JSONDecodeError:
+        pass
+
+    data = ascii_handler.collect_data_from_file(file_name=overwrite_str)
+    if isinstance(data, dict):
+        return _extract_changes_from_dict(data)
+    return {}
 
 
 def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:

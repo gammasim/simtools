@@ -67,11 +67,67 @@ def test_initialize_simulation_models_with_calibration_device(mocker):
 
 
 def test_read_overwrite_model_parameter_dict_with_file(mocker):
-    mocker.patch("simtools.model.model_utils.ascii_handler.collect_data_from_file")
-    mock_schema = mocker.patch("simtools.model.model_utils.schema.validate_dict_using_schema")
-    mock_schema.return_value = {"changes": {"param1": "value1"}}
+    mock_collect = mocker.patch("simtools.model.model_utils.ascii_handler.collect_data_from_file")
+    mock_collect.return_value = {"changes": {"param1": "value1"}}
 
     result = model_utils.read_overwrite_model_parameter_dict("test_file.yml")
+
+    assert result == {"param1": "value1"}
+    mock_collect.assert_called_once_with(file_name="test_file.yml")
+
+
+def test_read_overwrite_model_parameter_dict_with_none():
+    assert model_utils.read_overwrite_model_parameter_dict(None) == {}
+
+
+def test_read_overwrite_model_parameter_dict_with_dict():
+    result = model_utils.read_overwrite_model_parameter_dict({"changes": {"param1": "value1"}})
+
+    assert result == {"param1": "value1"}
+
+
+def test_read_overwrite_model_parameter_dict_with_dict_no_changes_key():
+    result = model_utils.read_overwrite_model_parameter_dict({"param1": "value1"})
+
+    assert result == {"param1": "value1"}
+
+
+def test_read_overwrite_model_parameter_dict_with_json_string():
+    overwrite_str = '{"changes": {"param1": "value1"}}'
+
+    result = model_utils.read_overwrite_model_parameter_dict(overwrite_str)
+
+    assert result == {"param1": "value1"}
+
+
+def test_read_overwrite_model_parameter_dict_with_file_no_changes_key(mocker):
+    mock_collect = mocker.patch("simtools.model.model_utils.ascii_handler.collect_data_from_file")
+    mock_collect.return_value = {"param1": "value1"}
+
+    result = model_utils.read_overwrite_model_parameter_dict("test_file.yml")
+
+    assert result == {"param1": "value1"}
+
+
+def test_read_overwrite_model_parameter_dict_with_file_non_dict_data(mocker):
+    mocker.patch(
+        "simtools.model.model_utils.ascii_handler.collect_data_from_file",
+        return_value=["not", "a", "dict"],
+    )
+
+    result = model_utils.read_overwrite_model_parameter_dict("test_file.yml")
+
+    assert result == {}
+
+
+def test_read_overwrite_model_parameter_dict_uses_settings_config(mocker):
+    mocker.patch.object(
+        model_utils.settings.config,
+        "_args",
+        {"overwrite_model_parameters": {"changes": {"param1": "value1"}}},
+    )
+
+    result = model_utils.read_overwrite_model_parameter_dict()
 
     assert result == {"param1": "value1"}
 

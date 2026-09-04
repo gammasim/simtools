@@ -53,8 +53,8 @@ class ArrayModel:
         the array element positions).
     calibration_device_types: List[str], optional
         List of calibration device types (e.g., 'flat_fielding') attached to each telescope.
-    overwrite_model_parameters: str, optional
-        File name to overwrite model parameters from DB with provided values.
+    overwrite_model_parameters: dict or str, optional
+        Dictionary with model parameters to overwrite, or file path to YAML file.
     """
 
     def __init__(
