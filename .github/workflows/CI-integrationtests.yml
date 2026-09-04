@@ -451,10 +451,11 @@ jobs:
       - name: Upload data to MongoDB
         if: matrix.model_source == 'mongodb'
         run: |
+          git clone --local ../simulation-models.git ../simulation-models
           simtools-db-upload-model-repository \
             --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
             --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
-            --repository_dir ../simulation-models.git
+            --repository_dir ../simulation-models
 
       - name: Integration tests
         shell: bash -l {0}
