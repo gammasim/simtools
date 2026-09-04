@@ -96,6 +96,12 @@ def test_collect_data_from_file_exceptions(io_handler) -> None:
         ascii_handler.collect_data_from_file(test_unsupported)
 
 
+def test_collect_data_from_bytes_wraps_parser_errors():
+    """In-memory parsing exposes a stable error type for malformed data."""
+    with pytest.raises(ValueError, match=r"^Failed to read file invalid.json"):
+        ascii_handler.collect_data_from_bytes(b"{invalid json", "invalid.json")
+
+
 def test_collect_dict_from_url():
     _file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     _reference_dict = ascii_handler.collect_data_from_file(_file)

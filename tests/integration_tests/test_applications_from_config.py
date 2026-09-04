@@ -39,11 +39,14 @@ def _has_mongodb_configuration(configuration=None):
         configuration_name = variable.removeprefix("SIMTOOLS_").lower()
         value = configuration.get(configuration_name) or os.environ.get(variable)
         values.append(value)
-    model_tag = (
-        configuration.get("db_simulation_model_tag")
-        or configuration.get("db_simulation_model_version")
-        or next((os.environ.get(variable) for variable in _MONGODB_MODEL_TAG_ENVIRONMENT), None)
+    model_tag = configuration.get("db_simulation_model_tag") or configuration.get(
+        "db_simulation_model_version"
     )
+    if not model_tag:
+        for variable in _MONGODB_MODEL_TAG_ENVIRONMENT:
+            model_tag = os.environ.get(variable)
+            if model_tag:
+                break
     return all(values) and bool(model_tag)
 
 

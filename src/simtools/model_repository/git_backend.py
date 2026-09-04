@@ -46,7 +46,7 @@ class Pygit2ObjectStore(GitObjectStore):
             raise FileNotFoundError(f"Git model repository does not exist: {self.repository_path}")
         try:
             self._repository = pygit2.Repository(str(self.repository_path))
-        except (KeyError, OSError, ValueError) as exc:
+        except (KeyError, OSError, ValueError, pygit2.GitError) as exc:
             raise ValueError(
                 f"Not a readable Git model repository: {self.repository_path}"
             ) from exc

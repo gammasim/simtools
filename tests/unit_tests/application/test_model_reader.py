@@ -57,6 +57,15 @@ def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directo
     assert reader.source_name == str(root.resolve())
 
 
+def test_create_model_reader_rejects_conflicting_environment_sources(monkeypatch):
+    """Filesystem and Git environment sources cannot be selected together."""
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", "/models")
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", "/models.git")
+
+    with pytest.raises(ValueError, match="cannot be configured together"):
+        create_model_reader()
+
+
 def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_directory):
     """A Git path and revision select the Git source without MongoDB."""
     git_path = Path(tmp_test_directory) / "models.git"

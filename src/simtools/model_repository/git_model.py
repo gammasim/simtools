@@ -128,7 +128,12 @@ class GitModelSource:
     def _production_documents(self, model_version):
         """Read all production JSON documents for a version and its patch history."""
         model_prefix = _PRODUCTIONS_PATH / model_version
-        files_in_version = self._object_store.iter_files(self.commit, model_prefix.as_posix())
+        try:
+            files_in_version = self._object_store.iter_files(self.commit, model_prefix.as_posix())
+        except FileNotFoundError as exc:
+            raise ValueError(
+                f"Model version {model_version} not found in {self.source_name}"
+            ) from exc
         model_names = [model_version]
         info_path = model_prefix / "info.yml"
         if info_path.as_posix() in files_in_version:

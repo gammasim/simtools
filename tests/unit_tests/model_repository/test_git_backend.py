@@ -64,6 +64,7 @@ def _install_pygit2(monkeypatch, repository):
     """Install a minimal pygit2 substitute and return the resolved commit."""
     pygit2 = SimpleNamespace(
         Commit=object(),
+        GitError=type("GitError", (Exception,), {}),
         Repository=lambda _: repository,
         BlobIO=lambda blob: io.BytesIO(blob.data),
     )
@@ -92,6 +93,7 @@ def test_pygit2_object_store_rejects_unreadable_repository(monkeypatch, tmp_test
     """A path that pygit2 cannot open reports a readable error."""
     pygit2 = SimpleNamespace(
         Commit=object(),
+        GitError=type("GitError", (Exception,), {}),
         Repository=_raise_invalid_repository,
         BlobIO=lambda blob: io.BytesIO(blob.data),
     )

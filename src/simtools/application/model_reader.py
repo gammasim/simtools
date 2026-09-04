@@ -34,11 +34,6 @@ def create_model_reader(
     SimulationModelReader
         Reader backed by the selected source.
     """
-    if simulation_models_path and simulation_models_git_path:
-        raise ValueError(
-            "Filesystem and Git simulation-model sources cannot be configured together."
-        )
-
     if (
         simulation_models_path is None
         and simulation_models_git_path is None
@@ -47,6 +42,11 @@ def create_model_reader(
         simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
         simulation_models_git_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH")
         simulation_models_git_revision = os.getenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
+
+    if simulation_models_path and simulation_models_git_path:
+        raise ValueError(
+            "Filesystem and Git simulation-model sources cannot be configured together."
+        )
 
     if simulation_models_path:
         return SimulationModelReader.from_files(simulation_models_path)

@@ -74,7 +74,7 @@ def collect_data_from_bytes(data, file_name, yaml_document=None):
             io.StringIO(text), logical_name, suffix, yaml_document
         )
     except Exception as exc:  # pylint: disable=broad-except
-        raise type(exc)(f"Failed to read file {logical_name}: {exc}") from exc
+        raise ValueError(f"Failed to read file {logical_name}: {exc}") from exc
 
 
 def _resolve_configured_test_resource_paths(data, test_resources_path=None):

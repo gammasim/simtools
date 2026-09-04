@@ -344,11 +344,24 @@ jobs:
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
       SIMULATION_MODELS_GIT_PATH: ../simulation-models.git
 
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api
+          MONGO_INITDB_ROOT_PASSWORD: password
+        options: >-
+          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-latest"]') }}
         model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
+        model_source: [git, mongodb]
 
     defaults:
       run:
@@ -378,8 +391,17 @@ jobs:
       - name: Create runtime environment (.env)
         run: |
           {
-            echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
-            echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
+            if [ "${{ matrix.model_source }}" = "git" ]; then
+              echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
+              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
+            else
+              echo "SIMTOOLS_DB_SERVER=mongodb"
+              echo "SIMTOOLS_DB_API_USER=api"
+              echo "SIMTOOLS_DB_API_PW=password"
+              echo "SIMTOOLS_DB_API_PORT=27017"
+              echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
+              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG=$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
+            fi
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
@@ -415,7 +437,7 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+          pip install --no-cache-dir pygit2 pymongo pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
 
       - name: Install resource benchmark dependency (prod container)
         if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
@@ -426,22 +448,33 @@ jobs:
         run: |
           pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
 
+      - name: Upload data to MongoDB
+        if: matrix.model_source == 'mongodb'
+        run: |
+          simtools-db-upload-model-repository \
+            --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
+            --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
+            --repository_dir ../simulation-models.git
+
       - name: Integration tests
         shell: bash -l {0}
         run: |
           cat .env
-          for variable in ${!SIMTOOLS_DB_@}; do
-            unset "$variable"
-          done
-          MODEL_SOURCE_ARGS=(
-            --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
-            --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-          )
+          MODEL_SOURCE_ARGS=()
+          if [ "${{ matrix.model_source }}" = "git" ]; then
+            for variable in ${!SIMTOOLS_DB_@}; do
+              unset "$variable"
+            done
+            MODEL_SOURCE_ARGS=(
+              --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
+              --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
+            )
+          fi
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
               "${MODEL_SOURCE_ARGS[@]}" \
               -n 0 --no-cov \
-              --resource-benchmark-output=resource-benchmark-${{ matrix.model_version }} \
+              --resource-benchmark-output=resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }} \
               --resource-benchmark-mode=integration \
               --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
               tests/integration_tests/
@@ -455,7 +488,7 @@ jobs:
         if: ${{ always() && inputs.benchmark }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
-          name: resource-benchmark-${{ matrix.model_version }}
-          path: resource-benchmark-${{ matrix.model_version }}
+          name: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}
+          path: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}
           if-no-files-found: error
           retention-days: 30

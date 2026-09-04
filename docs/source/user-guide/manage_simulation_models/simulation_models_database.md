@@ -26,8 +26,8 @@ full commit ID, which is retained in worker configuration. Production tables and
 files referenced by a selected model version are loaded in batches and cached for the process
 lifetime. Large files below `model_parameters/Files` are read only when explicitly exported.
 
-An explicit filesystem path takes precedence over a Git path; configuring both is an error. If
-neither is configured, the MongoDB source remains the fallback.
+Filesystem and Git paths are mutually exclusive; configuring both is an error. If neither is
+configured, the MongoDB source remains the fallback.
 
 Filesystem access is read-only. Database inspection, index generation, uploads, and inserts
 require MongoDB and report an error if used with only `--simulation_models_path`.
