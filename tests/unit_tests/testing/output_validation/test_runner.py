@@ -69,7 +69,9 @@ def test_runner_creates_one_reader_for_model_validations(tmp_test_directory, moc
     output = Path(tmp_test_directory) / "result.json"
     output.touch()
     reader = mocker.Mock()
-    create_reader = mocker.patch.object(runner, "create_model_reader", return_value=reader)
+    create_reader = mocker.patch.object(
+        runner, "create_model_reader_from_configuration", return_value=reader
+    )
     dispatch = mocker.patch.object(runner, "run_validator")
     config = {
         "configuration": {},
@@ -92,7 +94,7 @@ def test_runner_creates_one_reader_for_model_validations(tmp_test_directory, moc
 
     runner.validate_application_output(config)
 
-    create_reader.assert_called_once_with(None)
+    create_reader.assert_called_once_with(config["configuration"])
     assert all(
         call.args[2]["configuration"] is config["configuration"] for call in dispatch.call_args_list
     )

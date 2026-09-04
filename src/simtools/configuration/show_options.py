@@ -6,7 +6,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.configuration import defaults
 from simtools.corsika.build_options import get_installed_corsika_build_variants
 from simtools.corsika.primary_particle import PrimaryParticle
@@ -141,8 +141,7 @@ def _show_sites(_args_dict):
 
 
 def _show_model_versions(args_dict):
-    simulation_models_path = args_dict.get("simulation_models_path")
-    model_reader = create_model_reader(simulation_models_path)
+    model_reader = _create_model_reader(args_dict)
     return ShowOptionsResult(
         option_name="model_version",
         values=tuple(model_reader.get_model_versions()),
@@ -151,8 +150,7 @@ def _show_model_versions(args_dict):
 
 def _show_array_layout_names(args_dict):
     model_version = _get_single_model_version(args_dict, "array_layout_name")
-    simulation_models_path = args_dict.get("simulation_models_path")
-    model_reader = create_model_reader(simulation_models_path)
+    model_reader = _create_model_reader(args_dict)
     site = args_dict.get("site")
     sites = [site] if site else sorted(names.site_names())
     grouped_values = {
@@ -175,6 +173,11 @@ def _show_array_layout_names(args_dict):
         grouped_values=grouped_values,
         notes=("Provide --site to limit array layouts to one site.",),
     )
+
+
+def _create_model_reader(args_dict):
+    """Create a configured model reader for an option provider."""
+    return create_model_reader_from_configuration(args_dict)
 
 
 def _show_corsika_he_interaction(args_dict):

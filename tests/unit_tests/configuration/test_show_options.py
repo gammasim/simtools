@@ -124,11 +124,39 @@ def test_show_model_versions_uses_selected_reader(monkeypatch):
         def get_model_versions(self):
             return ["7.0.0", "7.1.0"]
 
-    monkeypatch.setattr(show_options, "create_model_reader", lambda *_: FakeModelReader())
+    monkeypatch.setattr(
+        show_options, "create_model_reader_from_configuration", lambda *_: FakeModelReader()
+    )
 
     result = show_options.resolve_show_options({"show_options": "model_version"})
 
     assert result.values == ("7.0.0", "7.1.0")
+
+
+def test_show_model_versions_uses_configured_git_source(mocker):
+    """Git source options are forwarded before runtime initialization."""
+    reader = mocker.Mock()
+    reader.get_model_versions.return_value = ["7.0.0"]
+    create_reader = mocker.patch.object(
+        show_options, "create_model_reader_from_configuration", return_value=reader
+    )
+
+    result = show_options.resolve_show_options(
+        {
+            "show_options": "model_version",
+            "simulation_models_git_path": "/models.git",
+            "simulation_models_git_revision": "v1",
+        }
+    )
+
+    assert result.values == ("7.0.0",)
+    create_reader.assert_called_once_with(
+        {
+            "show_options": "model_version",
+            "simulation_models_git_path": "/models.git",
+            "simulation_models_git_revision": "v1",
+        }
+    )
 
 
 def test_show_array_layout_names_groups_all_sites(monkeypatch):

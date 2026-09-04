@@ -6,55 +6,42 @@ import re
 from pathlib import Path
 from threading import Lock as _Lock
 
-import gridfs
 import jsonschema
 from astropy.table import Table
-from bson.objectid import ObjectId
-from pymongo import MongoClient, monitoring
 
+try:
+    import gridfs
+    from bson.objectid import ObjectId
+    from pymongo import MongoClient, monitoring
+except ModuleNotFoundError as exc:  # pragma: no cover - tested in no-extra subprocesses
+    gridfs = None  # pylint: disable=invalid-name
+    ObjectId = None  # pylint: disable=invalid-name
+    MongoClient = None  # pylint: disable=invalid-name
+    monitoring = None  # pylint: disable=invalid-name
+    _MONGODB_IMPORT_ERROR = exc
+else:
+    _MONGODB_IMPORT_ERROR = None
+
+from simtools.constants import DATABASE_SCHEMA
+from simtools.data_model.schema_loader import load_schema
 from simtools.io import ascii_handler
 
-logging.getLogger("pymongo").setLevel(logging.WARNING)
+jsonschema_db_dict = load_schema(DATABASE_SCHEMA)
+
+if _MONGODB_IMPORT_ERROR is None:
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
-jsonschema_db_dict = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema#",
-    "type": "object",
-    "description": "MongoDB configuration",
-    "properties": {
-        "db_server": {"type": "string", "description": "DB server address"},
-        "db_api_port": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 65535,
-            "default": 27017,
-            "description": "Port to use",
-        },
-        "db_api_user": {"type": "string", "description": "API username"},
-        "db_api_pw": {"type": "string", "description": "Password for the API user"},
-        "db_api_authentication_database": {
-            "type": ["string", "null"],
-            "default": "admin",
-            "description": "DB with user info (optional)",
-        },
-        "db_simulation_model": {
-            "type": "string",
-            "description": "Name of simulation model database",
-        },
-        "db_simulation_model_tag": {
-            "type": "string",
-            "description": "Release tag of simulation model database",
-        },
-    },
-    "required": [
-        "db_server",
-        "db_api_port",
-        "db_api_user",
-        "db_api_pw",
-        "db_simulation_model",
-        "db_simulation_model_tag",
-    ],
-}
+class MongoDBDependencyError(RuntimeError):
+    """Raised when MongoDB functionality is used without the optional extra."""
+
+
+def _require_mongodb_dependency():
+    """Raise an actionable error when MongoDB support is not installed."""
+    if _MONGODB_IMPORT_ERROR is not None:
+        raise MongoDBDependencyError(
+            "MongoDB support requires the optional dependency; install with the `mongodb` extra."
+        ) from _MONGODB_IMPORT_ERROR
 
 
 def _resolve_model_tag(db_simulation_model_tag, db_simulation_model_version):
@@ -74,7 +61,7 @@ def _resolve_model_tag(db_simulation_model_tag, db_simulation_model_version):
     )
 
 
-class IdleConnectionMonitor(monitoring.ConnectionPoolListener):
+class IdleConnectionMonitor(monitoring.ConnectionPoolListener if monitoring else object):
     """
     A listener to track MongoDB connection pool activity.
 
@@ -142,12 +129,13 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
-    db_client: MongoClient | None = None
+    db_client = None
     _lock = _Lock()
     _logger = logging.getLogger(__name__)
 
     def __init__(self, db_config=None):
         """Initialize the MongoDBHandler class."""
+        _require_mongodb_dependency()
         self.db_config = MongoDBHandler.validate_db_config(db_config)
 
         if self.db_config:
