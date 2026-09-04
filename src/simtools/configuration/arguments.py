@@ -412,6 +412,22 @@ SIMULATION_MODELS_PATH = _argument(
     default=None,
 )
 
+SIMULATION_MODELS_GIT_PATH = _argument(
+    "simulation_models_git_path",
+    _MODEL_REPOSITORY_GROUP,
+    help="Path to a local normal, bare, or mirror Git repository containing simulation models.",
+    type=Path,
+    default=None,
+)
+
+SIMULATION_MODELS_GIT_REVISION = _argument(
+    "simulation_models_git_revision",
+    _MODEL_REPOSITORY_GROUP,
+    help="Git tag, ref, or commit to read from the simulation-model repository.",
+    type=str,
+    default=None,
+)
+
 DATABASE_NAME = _argument(
     "database_name",
     "application",
@@ -468,6 +484,8 @@ DB_SIMULATION_MODEL_TAG = _argument(
 
 DATABASE_ARGUMENTS = (
     SIMULATION_MODELS_PATH,
+    SIMULATION_MODELS_GIT_PATH,
+    SIMULATION_MODELS_GIT_REVISION,
     DB_API_USER,
     DB_API_PW,
     DB_API_PORT,

@@ -31,6 +31,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,
+    initialize_model_reader=False,
     use_dependency_defaults=False,
     initialize_output=True,
     setup_io_handler=False,

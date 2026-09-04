@@ -1,6 +1,6 @@
 """Orchestration of integration-test output validation."""
 
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.testing.output_validation.artifacts import OutputArtifact
 from simtools.testing.output_validation.registry import run_validator
 
@@ -55,5 +55,10 @@ def _validate_descriptor(descriptor, configuration, active_versions, context):
 def _validate_rule(artifact, rule, configuration, context):
     """Run one validation rule, creating a shared model reader if needed."""
     if rule["type"] == "model_parameter" and context["model_reader"] is None:
-        context["model_reader"] = create_model_reader(configuration.get("simulation_models_path"))
+        context["model_reader"] = _create_model_reader(configuration)
     run_validator(artifact, rule, context)
+
+
+def _create_model_reader(configuration):
+    """Create a reader for model-parameter output validation."""
+    return create_model_reader_from_configuration(configuration)

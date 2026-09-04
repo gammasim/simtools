@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from simtools.application.model_reader import create_model_reader
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.io import ascii_handler
 from simtools.testing.output_validation.reference import _compare_values
 from simtools.utils import general
@@ -19,7 +19,7 @@ def validate(path, rule, configuration, model_reader=None):
     """
     parameter_name = rule["reference_parameter_name"]
     if model_reader is None:
-        model_reader = create_model_reader(configuration.get("simulation_models_path"))
+        model_reader = create_model_reader_from_configuration(configuration)
     reference = model_reader.get_model_parameter(
         parameter=parameter_name,
         site=configuration.get("site"),

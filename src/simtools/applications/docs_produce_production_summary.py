@@ -17,6 +17,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
+    initialize_model_reader=False,
 )
 
 

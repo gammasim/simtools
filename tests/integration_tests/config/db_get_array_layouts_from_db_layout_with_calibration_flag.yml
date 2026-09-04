@@ -17,6 +17,7 @@ applications:
     output_path: simtools-output
     site: South
   model_version_use_current: true
+  requires_mongodb: true
   test_name: layout_with_calibration_flag
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

@@ -18,6 +18,18 @@ def pytest_addoption(parser):
         default=None,
         help="Read simulation models from files at this path.",
     )
+    parser.addoption(
+        "--simulation_models_git_path",
+        action="store",
+        default=None,
+        help="Read simulation models from a local Git repository at this path.",
+    )
+    parser.addoption(
+        "--simulation_models_git_revision",
+        action="store",
+        default=None,
+        help="Git revision used for the simulation-model reader.",
+    )
 
 
 @pytest.fixture(autouse=True)

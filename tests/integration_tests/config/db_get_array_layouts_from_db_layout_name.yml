@@ -12,6 +12,7 @@ applications:
         ">=7.0.0": CTAO-North-Alpha
     model_version: 6.0.2
     site: North
+  requires_mongodb: true
   test_name: layout_name
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0
