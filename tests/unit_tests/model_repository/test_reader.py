@@ -271,9 +271,9 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     model_repository, tmp_test_directory
 ):
     """Referenced files are copied once and cannot escape the Files directory."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    (files_path / "nested/model.dat").parent.mkdir(parents=True)
-    (files_path / "nested/model.dat").write_bytes(b"model")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "nested/model.dat").parent.mkdir(parents=True)
+    (parameters_path / "nested/model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -283,7 +283,7 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
         "nested/model.dat": "file exists"
     }
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.export_model_files(file_names="../model.dat", dest=destination)
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.export_model_files(file_names="missing.dat", dest=destination)
@@ -293,9 +293,8 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
 
 def test_filesystem_source_exports_parameter_file_values(model_repository, tmp_test_directory):
     """File-valued parameters are selected when file names are omitted."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    (files_path / "model.dat").write_bytes(b"model")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -309,15 +308,14 @@ def test_filesystem_source_reads_ecsv_and_rejects_missing_file(
     model_repository, tmp_test_directory
 ):
     """ECSV model files are exposed as Astropy tables."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    Table({"value": [1, 2]}).write(files_path / "values.ecsv", format="ascii.ecsv")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    Table({"value": [1, 2]}).write(parameters_path / "values.ecsv", format="ascii.ecsv")
     source = FileSystemModelSource(model_repository)
 
     assert source.get_ecsv_file_as_astropy_table("values.ecsv")["value"].tolist() == [1, 2]
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.get_ecsv_file_as_astropy_table("missing.ecsv")
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.get_ecsv_file_as_astropy_table("../values.ecsv")
 
 

@@ -10,7 +10,7 @@ from packaging.version import Version
 
 from simtools import settings
 from simtools.data_model import schema
-from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
+from simtools.data_model.table_asset import read_ecsv_asset
 from simtools.io import ascii_handler
 from simtools.model_repository import files
 from simtools.model_repository.git_model import GitModelSource
@@ -213,7 +213,7 @@ class FileSystemModelSource:
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
         return {
-            source.name: self._copy_model_file(parameter, source, destination)
+            parameter["value"]: self._copy_model_file(parameter, source, destination)
             for parameter in self._files_to_export(parameters, file_names)
             for source in [self.resolve_parameter_asset(parameter)]
         }
@@ -232,7 +232,8 @@ class FileSystemModelSource:
 
     def _copy_model_file(self, parameter, source, destination):
         """Copy one resolved model asset and return its export status."""
-        target = destination / source.name
+        file_name = parameter.get("value", source.name)
+        target = destination / file_name
         if target.exists():
             if filecmp.cmp(source, target, shallow=False):
                 return "file exists"
@@ -243,27 +244,20 @@ class FileSystemModelSource:
             raise FileNotFoundError(f"Model file not found: {source}")
         if source.suffix.lower() == ECSV_SUFFIX and parameter.get("parameter"):
             self.get_parameter_table(parameter)
+        target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         return "copied from filesystem"
 
     def resolve_parameter_asset(self, parameter_data):
-        """Resolve a parameter asset relative to its parameter document."""
+        """Resolve a parameter asset below the model parameters directory."""
         value = parameter_data.get("value") if isinstance(parameter_data, dict) else parameter_data
         if not isinstance(value, str):
             raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
-        parameter = parameter_data.get("parameter") if isinstance(parameter_data, dict) else None
-        version = (
-            parameter_data.get("parameter_version") if isinstance(parameter_data, dict) else None
-        )
-        instrument = parameter_data.get("instrument") if isinstance(parameter_data, dict) else None
-        if parameter and version:
-            scope = instrument or "global"
-            parameter_file = (
-                self.model_parameters_path / scope / parameter / f"{parameter}-{version}.json"
-            )
-        else:
-            parameter_file = self.model_parameters_path / value
-        return resolve_asset_path(value, parameter_file)
+        parameters_root = self.model_parameters_path.resolve()
+        source = (parameters_root / value).resolve()
+        if not source.is_relative_to(parameters_root):
+            raise ValueError(f"Model file path escapes parameter directory: {value}")
+        return source
 
     def get_parameter_table(self, parameter_data):
         """Resolve and validate an ECSV table referenced by a parameter record."""
