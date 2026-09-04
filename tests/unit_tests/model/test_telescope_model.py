@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock
 
 import astropy.table
 import pytest
@@ -102,62 +102,30 @@ def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
         tel_model._load_mirrors()
 
 
-def test_load_camera(telescope_model_lst, monkeypatch, caplog):
+def test_load_camera(telescope_model_lst, monkeypatch):
     tel_model = telescope_model_lst
-    tel_model.write_sim_telarray_config_file()
-    camera_config_file = "camera_CTA-LST-1_analogsum21_v2020-04-14.dat"
     focal_length = 100
+    configuration = {"rotate": 0.0, "pixel_types": [], "pixels": []}
 
-    # Mock necessary methods and attributes
-    tel_model.get_parameter_value = Mock(return_value=camera_config_file)
+    resolve_mock = Mock(return_value=configuration)
+    monkeypatch.setattr(tel_model, "_resolve_camera_components", resolve_mock)
     tel_model.get_telescope_effective_focal_length = Mock(return_value=focal_length)
-    find_file_mock = Mock()
-    monkeypatch.setattr(gen, "find_file", find_file_mock)
     camera_mock = Mock()
     monkeypatch.setattr("simtools.model.telescope_model.Camera", camera_mock)
 
-    # Test case 1: File found in config directory
-    find_file_mock.return_value = camera_config_file
     tel_model._load_camera()
-    camera_mock.assert_called_with(
-        telescope_name=tel_model.name,
-        camera_config_file=camera_config_file,
-        focal_length=focal_length,
+
+    resolve_mock.assert_called_once_with()
+    camera_mock.from_configuration.assert_called_once_with(
+        tel_model.name, configuration, focal_length
     )
-    assert tel_model._camera == camera_mock.return_value
-    find_file_mock.reset_mock()
-    caplog.clear()
-
-    # Test case 2: File not found in config directory, found in model_path
-    monkeypatch.setattr(tel_model, "_camera", None)
-    find_file_mock.side_effect = [FileNotFoundError, camera_config_file]
-    tel_model.io_handler.model_path = "model_path"
-    with caplog.at_level(logging.WARNING):
-        tel_model._load_camera()
-    assert (
-        f"Camera config file {camera_config_file} not found in the config directory" in caplog.text
-    )
-    assert find_file_mock.call_count == 2
-    camera_mock.assert_called_with(
-        telescope_name=tel_model.name,
-        camera_config_file=camera_config_file,
-        focal_length=focal_length,
-    )
-    assert tel_model._camera == camera_mock.return_value
-    caplog.clear()
-
-    # Test case 3: TypeError
-    monkeypatch.setattr(tel_model, "_camera", None)
-    find_file_mock.side_effect = TypeError("Undefined camera config file")
-    with pytest.raises(TypeError):
-        tel_model._load_camera()
-    assert f"Camera config file {camera_config_file} or config file directory" in caplog.text
+    assert tel_model._camera == camera_mock.from_configuration.return_value
 
 
-def test_is_file_2d_true(telescope_model_lst):
-    with patch("builtins.open", mock_open(read_data="something @RPOL@ inside")):
-        result = telescope_model_lst.is_file_2d("mirror_list")
-        assert result is True
+def test_is_file_2d_true(telescope_model_lst, monkeypatch):
+    table = astropy.table.QTable()
+    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
+    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
 
 
 def test_is_file_2d_keyerror(telescope_model_lst, caplog):
@@ -167,17 +135,16 @@ def test_is_file_2d_keyerror(telescope_model_lst, caplog):
 
 
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis angle": [0.0], "eff_area": [123.4]})
-    with patch("astropy.io.ascii.read", return_value=fake_table):
-        result = telescope_model_lst.get_on_axis_eff_optical_area()
-        assert result == pytest.approx(123.4)
+    fake_table = astropy.table.Table({"Off-axis_angle": [0.0], "eff_area": [123.4]})
+    telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
+    assert telescope_model_lst.get_on_axis_eff_optical_area() == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis angle": [1.0], "eff_area": [123.4]})
-    with patch("astropy.io.ascii.read", return_value=fake_table):
-        with pytest.raises(ValueError, match=r"^No value for the on-axis"):
-            telescope_model_lst.get_on_axis_eff_optical_area()
+    fake_table = astropy.table.Table({"Off-axis_angle": [1.0], "eff_area": [123.4]})
+    telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
+    with pytest.raises(ValueError, match=r"^No value for the on-axis"):
+        telescope_model_lst.get_on_axis_eff_optical_area()
 
 
 def test_get_calibration_device_name(telescope_model_lst):
@@ -273,46 +240,35 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
     assert result == pytest.approx(16.0)
 
 
-def test_read_two_dim_wavelength_angle(telescope_model_lst, tmp_path):
-
-    tel_model = telescope_model_lst
-
-    # Create mock file in config directory
-    file_content = (
-        "# Test file\n"
-        "ANGLE = 0.0 10.0 20.0\n"
-        "300.0 0.8 0.75 0.7\n"
-        "400.0 0.9 0.85 0.8\n"
-        "500.0 0.95 0.9 0.85\n"
+def test_read_two_dim_wavelength_angle(telescope_model_lst):
+    table = astropy.table.QTable(
+        {
+            "wavelength": [300.0, 300.0, 400.0, 400.0],
+            "angle": [0.0, 10.0, 0.0, 10.0],
+            "reflectivity": [0.8, 0.75, 0.9, 0.85],
+        }
     )
+    telescope_model_lst.get_parameter_table = Mock(return_value=table)
 
-    mock_file_path = tel_model.config_file_directory / "test_2d.dat"
-    mock_file_path.write_text(file_content)
-
-    result = tel_model.read_two_dim_wavelength_angle("test_2d.dat")
+    result = telescope_model_lst.read_two_dim_wavelength_angle("mirror_reflectivity")
 
     assert "Wavelength" in result
     assert "Angle" in result
     assert "z" in result
-    assert len(result["Wavelength"]) == 3
-    assert len(result["Angle"]) == 3
-    assert result["z"].shape == (3, 3)
+    assert len(result["Wavelength"]) == 2
+    assert len(result["Angle"]) == 2
+    assert result["z"].shape == (2, 2)
 
 
 def test_read_incidence_angle_distribution(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    # Create a mock file in config directory
-    mock_file_path = tel_model.config_file_directory / "incidence.ecsv"
     incidence_table = astropy.table.Table(
         {
             "Incidence angle": [0.0, 10.0],
             "Fraction": [0.5, 0.3],
         }
     )
-    incidence_table.write(mock_file_path, format="ascii.ecsv", overwrite=True)
-
-    result = tel_model.read_incidence_angle_distribution("incidence.ecsv")
+    telescope_model_lst.get_parameter_table = Mock(return_value=incidence_table)
+    result = telescope_model_lst.read_incidence_angle_distribution("incidence_angle")
 
     assert isinstance(result, astropy.table.Table)
     assert len(result) == 2

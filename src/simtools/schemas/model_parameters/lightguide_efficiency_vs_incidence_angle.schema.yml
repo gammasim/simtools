@@ -1,6 +1,60 @@
 %YAML 1.2
 ---
 title: Schema for lightguide_efficiency_vs_incidence_angle model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: lightguide_efficiency_vs_incidence_angle
+description: 'Lightguide efficiency as a function of incidence angle.
+  The wavelength dependence is averaged over, weighting by the
+  Cherenkov spectrum on the ground.'
+short_description: Lightguide efficiency as a function of incidence angle.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: angle
+        description: Incidence angle
+        type: float64
+        unit: deg
+        required: false
+      - name: efficiency
+        description: Light-guide efficiency
+        type: float64
+        unit: dimensionless
+        required: true
+    table_metadata:
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetLightGuideEfficiency
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: simtools
+plot_configuration:
+  - type: lightguide_efficiency_vs_incidence_angle
+    title: Light guide efficiency
+    xtitle: Incident angle [deg]
+    ytitle: Efficiency
+    no_markers: true
+    tables:
+      - parameter: lightguide_efficiency_vs_incidence_angle
+        column_x: angle
+        column_y: efficiency
+---
+title: Schema for lightguide_efficiency_vs_incidence_angle model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

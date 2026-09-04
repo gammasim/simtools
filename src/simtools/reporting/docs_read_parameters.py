@@ -317,7 +317,7 @@ class ReadParameters:
             key: value for key, value in (("telescope", telescope), ("site", site)) if value
         }
 
-        if parameter == "camera_config_file":
+        if parameter == "camera_pixel_layout":
             plot_names = self._plot_camera_config(
                 parameter,
                 parameter_version,
@@ -350,7 +350,7 @@ class ReadParameters:
     def _plot_camera_config(
         self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
     ):
-        """Generate plots for camera configuration files."""
+        """Generate plots for camera component files."""
         if not parameter_version:
             return []
 
@@ -378,7 +378,7 @@ class ReadParameters:
             plot_names.append(plot_name)
         else:
             logger.info(
-                "Camera configuration file plot already exists: %s",
+                "Camera component file plot already exists: %s",
                 plot_path,
             )
             plot_names.append(plot_name)
@@ -505,7 +505,7 @@ class ReadParameters:
                 outfile.write(
                     f"\n\nThe full file can be found in the Simulation Model repository [here]"
                     f"({DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{input_file.name}).\n\n"
+                    "simulation-models/model_parameters).\n\n"
                 )
                 outfile.write("\n\n")
                 outfile.write("The first 30 lines of the file are:\n")
@@ -533,7 +533,7 @@ class ReadParameters:
                 return (
                     f"[{Path(value_data).name}]({DEFAULT_SIMULATIONS_REPO}"
                     f"/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{value_data})"
+                    "simulation-models/model_parameters)"
                 ).strip()
             plot_kwargs = {
                 key: value for key, value in (("telescope", telescope), ("site", site)) if value
@@ -1080,7 +1080,6 @@ class ReadParameters:
         file.write("The latest parameter version is plotted below.\n\n")
 
         if parameter in (
-            "camera_config_file",
             "mirror_list",
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
@@ -1115,7 +1114,6 @@ class ReadParameters:
         image_path = outpath / filename_png
 
         plot_descriptions = {
-            "camera_config_file": "Camera configuration plot",
             "mirror_list": "Mirror panel layout",
             "primary_mirror_segmentation": "Primary mirror segmentation",
             "secondary_mirror_segmentation": "Secondary mirror segmentation",

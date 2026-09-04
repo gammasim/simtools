@@ -61,6 +61,53 @@ class Camera:
         # Empty list of edge pixels, to be calculated only when necessary.
         self._edge_pixel_indices = None
 
+    @classmethod
+    def from_configuration(cls, telescope_name, configuration, focal_length):
+        """Build a camera from resolved, validated component model parameters.
+
+        Parameters
+        ----------
+        telescope_name : str
+            Telescope name.
+        configuration : dict
+            Resolved camera components. The mapping contains ``rotate``,
+            ``pixel_types``, ``pixels``, ``triggers`` and ``trigger_members``.
+        focal_length : float
+            Camera focal length in the same unit as the layout positions.
+        """
+        pixels = cls.initialize_pixel_dict()
+        layout = configuration.get("pixels", configuration.get("pixel_layout", []))
+        if not layout:
+            raise ValueError("Camera configuration contains no pixel layout")
+        first_type = configuration.get("pixel_types", [{}])[0]
+        pixels["pixel_shape"] = first_type.get("funnel_shape", first_type.get("shape", 1))
+        pixels["pixel_diameter"] = first_type.get(
+            "funnel_diameter_cm", first_type.get("diameter_cm", 1.0)
+        )
+        pixels["rotate_angle"] = np.deg2rad(float(configuration.get("rotate", 0.0)))
+        for item in layout:
+            pixels["x"].append(float(item["x_cm"]))
+            pixels["y"].append(float(item["y_cm"]))
+            pixels["pix_id"].append(int(item["pixel_id"]))
+            pixels["pix_on"].append(bool(item.get("enabled", True)))
+        if first_type.get("lightguide_angle_file"):
+            pixels["lightguide_efficiency_angle_file"] = first_type["lightguide_angle_file"]
+        if first_type.get("lightguide_wavelength_file"):
+            pixels["lightguide_efficiency_wavelength_file"] = first_type[
+                "lightguide_wavelength_file"
+            ]
+        cls.validate_pixels(pixels, "camera configuration")
+        instance = cls.__new__(cls)
+        instance._logger = logging.getLogger(__name__)
+        instance.telescope_name = telescope_name
+        instance.focal_length = focal_length
+        if instance.focal_length <= 0:
+            raise ValueError("The focal length must be larger than zero")
+        instance.pixels = instance._rotate_pixels(pixels)
+        instance._neighbors = None
+        instance._edge_pixel_indices = None
+        return instance
+
     @staticmethod
     def read_pixel_list(camera_config_file: str | Path) -> dict:
         """

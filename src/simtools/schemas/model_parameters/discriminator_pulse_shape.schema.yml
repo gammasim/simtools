@@ -1,6 +1,83 @@
 %YAML 1.2
 ---
 title: Schema for discriminator_pulse_shape model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: discriminator_pulse_shape
+description: Pulse shape at the discriminator/comparator of an individual pixel.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: time
+        description: Time
+        type: float64
+        unit: ns
+        required: true
+      - name: amplitude
+        description: Amplitude
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: amplitude_low_gain
+        description: Low-gain amplitude
+        type: float64
+        unit: dimensionless
+        required: false
+    table_metadata:
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+    table_format: pulse
+    meta_parameter_mode: add
+plot_configuration:
+  - type: discriminator_pulse_shape
+    title: Discriminator pulse shape
+    xtitle: Time [ns]
+    ytitle: Amplitude [a.u.]
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: time
+        column_y: amplitude
+  - type: discriminator_pulse_shape_low_gain
+    title: Discriminator pulse shape (low gain)
+    xtitle: Time [ns]
+    ytitle: Amplitude [a.u.]
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: time
+        column_y: amplitude (low gain)
+  - type: discriminator_pulse_shape_high_and_low_gain
+    title: Discriminator pulse shape (high and low gain)
+    xtitle: Time [ns]
+    ytitle: Amplitude [a.u.]
+    no_markers: true
+    tables:
+      - parameter: discriminator_pulse_shape
+        column_x: time
+        column_y: amplitude
+      - parameter: discriminator_pulse_shape
+        column_x: time
+        column_y: amplitude (low gain)
+---
+title: Schema for discriminator_pulse_shape model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

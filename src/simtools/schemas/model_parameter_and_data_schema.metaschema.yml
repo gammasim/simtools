@@ -130,6 +130,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TableColumn'
+      table_metadata:
+        type: array
+        items:
+          $ref: '#/definitions/TableMetadata'
+      allow_extra_columns:
+        type: boolean
+        description: "allow format-dependent optional columns beyond table_columns"
       required:
         type: boolean
       condition:
@@ -247,6 +254,37 @@ definitions:
       - name
       - type
     title: TableColumn
+  TableMetadata:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: "table metadata key"
+      description:
+        type: string
+        description: "table metadata description"
+      required:
+        type: boolean
+        description: "whether the metadata key is required"
+      type:
+        type: string
+        enum:
+          - string
+          - number
+          - boolean
+          - array
+          - object
+          - "null"
+        description: "JSON-compatible metadata value type"
+      allowed_values:
+        type: array
+        description: "permitted metadata values"
+    required:
+      - description
+      - name
+      - type
+    title: TableMetadata
   Instrument:
     type: object
     additionalProperties: false
@@ -297,6 +335,9 @@ definitions:
           - set
         description: |-
           meta parameter serialization mode
+      table_format:
+        type: string
+        description: sim_telarray table serialization format
       set_meta_parameter:
         type: boolean
         description: |-

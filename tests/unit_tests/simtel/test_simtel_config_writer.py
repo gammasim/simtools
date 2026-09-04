@@ -165,6 +165,19 @@ def create_all_non_hardstereo_same_params_scenario():
     ]
 
 
+def test_write_camera_file_skips_models_without_camera_components(
+    simtel_config_writer, tmp_test_directory
+):
+    assert simtel_config_writer._write_camera_file({}, tmp_test_directory / "config.cfg") is None
+
+
+def test_write_camera_file_requires_all_camera_components(simtel_config_writer, tmp_test_directory):
+    with pytest.raises(ValueError, match="Camera component parameters are missing"):
+        simtel_config_writer._write_camera_file(
+            {"camera_pixel_types": {"value": []}}, tmp_test_directory / "config.cfg"
+        )
+
+
 # Common trigger line strings to reduce duplication
 LSTS_HARDSTEREO_LINE = "Trigger 2 of 1, 2 width 120.0 hardstereo"
 MSTS_HARDSTEREO_LINE = "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"
@@ -379,6 +392,43 @@ def test_write_table_parameter_file_passes_through_non_dict_value(
     )
 
     assert result == "already_a_file.dat"
+
+
+def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_test_directory):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    result = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "primary_segmentation",
+        [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+        config_path,
+        None,
+        parameter_name="primary_mirror_segmentation",
+        parameter_data={"model_parameter_schema_version": "0.2.0"},
+    )
+    assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
+    assert (Path(tmp_test_directory) / result[1]).is_file()
+
+
+def test_convert_segmentation_records_uses_parameter_schema_version(
+    simtel_config_writer, tmp_test_directory
+):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    with mock.patch(
+        "simtools.simtel.simtel_config_writer.simtel_table_writer.write_mirror_segmentation",
+        return_value="primary_mirror_segmentation-telescope.dat",
+    ) as write_mirror_segmentation:
+        simtel_config_writer._convert_model_parameters_to_simtel_format(
+            "primary_segmentation",
+            [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+            config_path,
+            None,
+            parameter_name="primary_mirror_segmentation",
+            parameter_data={"model_parameter_schema_version": "0.2.0"},
+        )
+
+    assert write_mirror_segmentation.call_args.kwargs == {
+        "parameter_name": "primary_mirror_segmentation",
+        "schema_version": "0.2.0",
+    }
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):

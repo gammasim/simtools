@@ -54,6 +54,55 @@ def test_plot_rotate_angle_kwarg(mock_save, mock_plot_layout, rotate_angle, expe
         mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
+@mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_configuration")
+@mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
+def test_plot_camera_components(mock_save, mock_plot_layout):
+    config = {
+        "parameter": "camera_pixel_layout",
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.0",
+    }
+    model_reader = mock.MagicMock()
+    model_reader.get_model_parameters.return_value = {
+        "camera_rotate": {"value": 0.0},
+        "camera_pixel_types": {"value": [{"funnel_shape": 1, "funnel_diameter_cm": 1.0}]},
+        "camera_pixel_layout": {"value": "layout.ecsv"},
+        "camera_trigger_groups": {"value": "groups.ecsv"},
+        "camera_trigger_members": {"value": "members.ecsv"},
+    }
+    model_reader.get_parameter_table.side_effect = [
+        mock_table([{"pixel_id": 0, "x_cm": 0.0, "y_cm": 0.0, "enabled": 1}]),
+        mock_table([]),
+        mock_table([]),
+    ]
+    mock_fig = mock.MagicMock()
+    mock_plot_layout.return_value = mock_fig
+
+    with mock.patch("simtools.visualization.plot_pixels.io_handler.IOHandler") as mock_io:
+        mock_io.return_value.get_output_directory.return_value = Path("/test/path")
+        plot_pixels.plot(config, "test.png", model_reader=model_reader)
+
+    mock_plot_layout.assert_called_once()
+    assert mock_plot_layout.call_args.args[0]["pixels"][0]["pixel_id"] == 0
+    mock_save.assert_called_once_with(mock_fig, "test.png")
+
+
+def mock_table(rows):
+    """Return a minimal table-like object for component plotting tests."""
+    table = mock.MagicMock()
+    table.colnames = list(rows[0]) if rows else []
+    table.__iter__.return_value = iter([mock_row(row) for row in rows])
+    return table
+
+
+def mock_row(values):
+    """Return a row-like mapping for component plotting tests."""
+    row = mock.MagicMock()
+    row.__getitem__.side_effect = values.__getitem__
+    return row
+
+
 def test_plot_pixel_layout_from_file_smoke():
     camera = mock.MagicMock()
     camera.telescope_name = "LSTN-01"

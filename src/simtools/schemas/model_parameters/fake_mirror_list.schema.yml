@@ -1,6 +1,76 @@
 %YAML 1.2
 ---
 title: Schema for fake_mirror_list model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fake_mirror_list
+short_description: Fake mirror list to be used for camera efficiency calculations
+  ('testeff' program).
+description: 'Fake mirror list to be used for camera efficiency calculations (''testeff''
+  program).
+  Allows to obtain realistic distributions of the photon incidence angles on the camera
+  plan.
+  Not to be used for actual simulations.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: mirror_x
+        description: Mirror x position
+        type: float64
+        unit: cm
+        required: true
+      - name: mirror_y
+        description: Mirror y position
+        type: float64
+        unit: cm
+        required: true
+      - name: mirror_diameter
+        description: Mirror diameter
+        type: float64
+        unit: cm
+        required: true
+      - name: focal_length
+        description: Mirror focal length
+        type: float64
+        unit: cm
+        required: true
+      - name: shape_type
+        description: Mirror shape code
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: mirror_z
+        description: Mirror z position
+        type: float64
+        unit: cm
+        required: true
+      - name: mirror_panel_id
+        description: Mirror panel identifier
+        type: int64
+        unit: dimensionless
+        required: true
+    table_metadata:
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+instrument:
+  class: Structure
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraEfficiency
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: testeff
+---
+title: Schema for fake_mirror_list model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

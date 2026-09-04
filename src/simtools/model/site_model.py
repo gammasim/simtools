@@ -249,7 +249,8 @@ class SiteModel(ModelParameter):
             Integrated flux value.
         """
         table = self.model_reader.get_ecsv_file_as_astropy_table(
-            file_name=self.get_parameter_value("nsb_spectrum")
+            file_name=self.get_parameter_value("nsb_spectrum"),
+            parameter_data=self.parameters.get("nsb_spectrum"),
         )
         table.sort("wavelength")
         wl = table["wavelength"].quantity.to(u.nm)

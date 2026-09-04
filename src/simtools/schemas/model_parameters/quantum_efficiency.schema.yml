@@ -1,6 +1,69 @@
 %YAML 1.2
 ---
 title: Schema for quantum_efficiency model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: quantum_efficiency
+description: 'Quantum or photon detection efficiency
+  averaged over all pixels per camera.
+  Random pixel-to-pixel variations are calculated using
+  the qe_variation parameter. Pixel-to-pixel differences
+  in detection efficiency using scaling factors can be
+  specified in the camera_config_file.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: efficiency
+        description: Quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: efficiency_rms
+        description: Quantum efficiency uncertainty
+        type: float64
+        unit: dimensionless
+        required: false
+    table_metadata:
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+    - ValidateCameraGainsAndEfficiency
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+    table_format: plain
+plot_configuration:
+  - type: quantum_efficiency
+    title: Quantum/detection efficiency
+    xtitle: Wavelength [nm]
+    ytitle: Quantum/detection efficiency
+    no_markers: true
+    tables:
+      - parameter: quantum_efficiency
+        column_x: wavelength
+        column_y: efficiency
+---
+title: Schema for quantum_efficiency model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

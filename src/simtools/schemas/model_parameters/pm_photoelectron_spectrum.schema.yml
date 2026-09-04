@@ -1,6 +1,81 @@
 %YAML 1.2
 ---
 title: Schema for pm_photoelectron_spectrum model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: pm_photoelectron_spectrum
+description: 'Single photoelectron (p.e.) response distribution
+  (takes into account afterpulsing and the photoelectron collection
+  efficiency for PMT cameras).'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: amplitude
+        description: Signal amplitude
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: response
+        description: Prompt response
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: response_with_ap
+        description: Response including afterpulsing
+        type: float64
+        unit: dimensionless
+        required: false
+    table_metadata:
+      - name: simtelarray_original_file_name
+        description: Original simulator output basename
+        type: string
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetSinglePhotoElectronResponse
+  validation:
+    - ValidateParameterByExpert
+    - ValidateSinglePhotoElectronResponse
+    - ValidateCameraChargeResponse
+    - ValidateCameraLinearity
+    - ValidateCameraGainsAndEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+    table_format: plain
+plot_configuration:
+  - type: pm_photoelectron_spectrum
+    title: Single p.e. response
+    xtitle: Amplitude
+    ytitle: Response
+    xscale: linear
+    yscale: log
+    xlim:
+      - 0.0
+      - 40.0
+    ylim:
+      - 1.0e-11
+      - null
+    no_markers: true
+    tables:
+      - parameter: pm_photoelectron_spectrum
+        label: prompt
+        column_x: amplitude
+        column_y: response
+      - parameter: pm_photoelectron_spectrum
+        label: prompt + afterpulsing
+        column_x: amplitude
+        column_y: response_with_ap
+---
+title: Schema for pm_photoelectron_spectrum model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

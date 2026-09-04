@@ -20,7 +20,6 @@ data:
     allowed_range:
       min: 0
       max: 1
-
 instrument:
   class: Calibration
 activity:

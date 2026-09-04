@@ -1,6 +1,10 @@
 """Adapt the MongoDB model handler to the model-reader source protocol."""
 
 from copy import deepcopy
+from pathlib import Path
+
+from simtools.data_model import schema
+from simtools.data_model.table_asset import validate_table_asset
 
 
 class MongoDBModelSource:
@@ -61,6 +65,15 @@ class MongoDBModelSource:
             query["site"] = site
         parameters = self.database_handler.read_parameter_documents(query, collection_name)
         self._parameters[key] = deepcopy(list(parameters.values()))
+        for parameter_data in self._parameters[key]:
+            value = parameter_data.get("value")
+            if (
+                parameter_data.get("file")
+                and isinstance(value, str)
+                and value.endswith(".ecsv")
+                and parameter_data.get("model_parameter_schema_version") == "0.3.0"
+            ):
+                self.get_parameter_table(parameter_data)
         return deepcopy(self._parameters[key])
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):
@@ -69,6 +82,24 @@ class MongoDBModelSource:
             parameters=parameters, file_names=file_names, dest=dest
         )
 
-    def get_ecsv_file_as_astropy_table(self, file_name):
+    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
         """Read an ECSV model file."""
+        if parameter_data is not None:
+            return self.get_parameter_table(parameter_data)
         return self.database_handler.get_ecsv_file_as_astropy_table(file_name)
+
+    def get_parameter_table(self, parameter_data):
+        """Read and validate an ECSV table referenced by a parameter record."""
+        value = parameter_data.get("value")
+        if not isinstance(value, str) or not value.lower().endswith(".ecsv"):
+            raise ValueError("Parameter does not reference an ECSV table")
+        table = self.get_ecsv_file_as_astropy_table(Path(value).name)
+        schema_dict = schema.get_model_parameter_schema(
+            parameter_data.get("parameter"), parameter_data.get("model_parameter_schema_version")
+        )
+        entries = [entry for entry in schema_dict.get("data", []) if entry.get("type") == "file"]
+        return validate_table_asset(
+            table,
+            schema_entry=entries[0] if entries else None,
+            parameter_data=parameter_data,
+        )
