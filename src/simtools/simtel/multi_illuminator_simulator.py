@@ -2,7 +2,10 @@
 
 import logging
 
-from simtools.application.model_reader import create_model_reader, require_model_reader
+from simtools.application.model_reader import (
+    create_model_reader_from_source_config,
+    require_model_reader,
+)
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.settings import config as runtime_config
@@ -92,17 +95,8 @@ def _get_worker_model_reader(job_spec):
         configured_source = getattr(configured_reader, "source_config", None)
         if source_config is None or configured_source == source_config:
             return configured_reader
-    if source_config and source_config.get("type") == "filesystem":
-        return create_model_reader(source_config["path"])
-    if source_config and source_config.get("type") == "mongodb":
-        from simtools.db.db_handler import (  # pylint: disable=import-outside-toplevel
-            DatabaseHandler,
-        )
-
-        database_handler = DatabaseHandler()
-        if source_config.get("name"):
-            database_handler.db_name = source_config["name"]
-        return create_model_reader(database_handler=database_handler)
+    if source_config:
+        return create_model_reader_from_source_config(source_config)
     return require_model_reader()
 
 

@@ -6,11 +6,8 @@ from pathlib import Path
 import pytest
 from astropy.table import Table
 
-from simtools.db import db_handler
 from simtools.model_repository import reader as reader_module
 from simtools.model_repository.reader import FileSystemModelSource, SimulationModelReader
-
-pytestmark = pytest.mark.db_unit_test
 
 
 def _write_json(path, data):
@@ -182,14 +179,6 @@ def simulation_models_path(tmp_test_directory):
     return model_root
 
 
-@pytest.fixture(autouse=True)
-def clear_file_system_caches():
-    """Prevent filesystem cache state from leaking between tests."""
-    db_handler.DatabaseHandler.model_parameters_cached.clear()
-    yield
-    db_handler.DatabaseHandler.model_parameters_cached.clear()
-
-
 def test_file_system_handler_reads_production_and_parameters(simulation_models_path):
     handler = FileSystemModelSource(simulation_models_path)
 
@@ -281,47 +270,7 @@ def test_file_system_handler_reads_requested_production_collection_only(
     assert file_index_spy.call_count == 1
 
 
-def test_database_handler_uses_files_without_mongodb(simulation_models_path, mocker):
-    settings_mock = mocker.patch("simtools.db.db_handler.settings")
-    settings_mock.config.args = {"simulation_models_path": simulation_models_path}
-    settings_mock.config.db_config = {"invalid": "mongo config must not be validated"}
-    mongo_handler = mocker.patch("simtools.db.db_handler.MongoDBHandler")
-
-    database = db_handler.DatabaseHandler()
-    parameters = database.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
-    layouts = database.get_model_parameter(
-        "array_layouts", "North", None, parameter_version="1.0.0"
-    )
-    corsika = database.get_simulation_configuration_parameters("corsika", None, None, "1.0.0")
-    sim_telarray = database.get_simulation_configuration_parameters(
-        "sim_telarray", "North", "LSTN-01", "1.0.0"
-    )
-
-    assert database.is_configured()
-    assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
-    assert layouts["array_layouts"]["value"] == [{"name": "test", "elements": ["LSTN-01"]}]
-    assert corsika["corsika_cherenkov_photon_bunch_size"]["value"] == pytest.approx(5.0)
-    assert corsika["corsika_particle_kinetic_energy_cutoff"]["unit"] == "GeV"
-    assert corsika["corsika_starting_grammage"]["unit"] == "g/cm2"
-    assert sim_telarray["min_photons"]["value"] == pytest.approx(2.0)
-    assert sim_telarray["iobuf_maximum"]["value"] == 1000
-    mongo_handler.assert_not_called()
-
-
-def test_database_handler_uses_environment_path(simulation_models_path, mocker, monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
-    settings_mock = mocker.patch("simtools.db.db_handler.settings")
-    settings_mock.config.args = {}
-    settings_mock.config.db_config = {"invalid": "mongo config must not be validated"}
-    mongo_handler = mocker.patch("simtools.db.db_handler.MongoDBHandler")
-
-    database = db_handler.DatabaseHandler()
-
-    assert database.model_source_name == str(simulation_models_path.resolve())
-    mongo_handler.assert_not_called()
-
-
-def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_directory):
+def test_file_export(simulation_models_path, tmp_test_directory):
     handler = FileSystemModelSource(simulation_models_path)
     destination = Path(tmp_test_directory) / "export"
 
@@ -335,16 +284,6 @@ def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_dir
     assert handler.export_model_files(parameters=parameters, dest=destination) == {
         "model.dat": "file exists"
     }
-
-
-def test_database_handler_rejects_mongodb_operation(simulation_models_path, mocker):
-    settings_mock = mocker.patch("simtools.db.db_handler.settings")
-    settings_mock.config.args = {"simulation_models_path": simulation_models_path}
-    settings_mock.config.db_config = {}
-    database = db_handler.DatabaseHandler()
-
-    with pytest.raises(RuntimeError, match="requires a MongoDB model source"):
-        database.get_collection("telescopes")
 
 
 def test_invalid_model_path_fails_without_fallback(tmp_test_directory):

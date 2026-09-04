@@ -19,6 +19,22 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
+## Git backend and source
+
+```{eval-rst}
+.. automodule:: model_repository.git_backend
+   :members:
+.. automodule:: model_repository.git_model
+   :members:
+```
+
+## parsing
+
+```{eval-rst}
+.. automodule:: model_repository.parsing
+   :members:
+```
+
 ## application model-reader factory
 
 ```{eval-rst}

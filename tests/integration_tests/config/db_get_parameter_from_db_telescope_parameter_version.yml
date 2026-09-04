@@ -21,6 +21,7 @@ applications:
       - type: reference
         file: ${generated:model_parameters/mirror_list-2.0.0.json}
         tolerance: 1.0e-05
+  requires_mongodb: true
   test_name: telescope_parameter_parameter_version
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

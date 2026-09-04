@@ -63,9 +63,7 @@ class MongoDBModelSource:
             query["instrument"] = instrument
         if site and instrument != "global":
             query["site"] = site
-        parameters = self.database_handler._read_db(  # pylint: disable=protected-access
-            query, collection_name
-        )
+        parameters = self.database_handler.read_parameter_documents(query, collection_name)
         self._parameters[key] = deepcopy(list(parameters.values()))
         for parameter_data in self._parameters[key]:
             value = parameter_data.get("value")

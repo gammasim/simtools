@@ -13,8 +13,10 @@ from simtools.data_model import schema
 from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.git_model import GitModelSource
+from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.simtel import simtel_table_reader
-from simtools.utils import names, value_conversion
+from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
 
@@ -185,13 +187,7 @@ class FileSystemModelSource:
         key = str(parameter_path)
         if key not in self._parameters:
             data = ascii_handler.collect_data_from_file(file_name=parameter_path)
-            data["value"], _ = value_conversion.split_value_and_unit(
-                data["value"], "int" in data.get("type", "float")
-            )
-            data["value"], base_unit, _ = value_conversion.get_value_unit_type(
-                value=data["value"], unit_str=data.get("unit")
-            )
-            data["unit"] = value_conversion.normalize_model_parameter_unit(data["value"], base_unit)
+            data = normalize_model_parameter(data)
             self._parameters[key] = data
         return deepcopy(self._parameters[key])
 
@@ -323,6 +319,11 @@ class SimulationModelReader:
     def from_files(cls, simulation_models_path):
         """Create a reader for a checked-out model repository."""
         return cls(FileSystemModelSource(simulation_models_path))
+
+    @classmethod
+    def from_git(cls, repository_path, revision, object_store=None):
+        """Create a reader for one immutable revision of a Git repository."""
+        return cls(GitModelSource(repository_path, revision, object_store=object_store))
 
     @property
     def source_name(self):
