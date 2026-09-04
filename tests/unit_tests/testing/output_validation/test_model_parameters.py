@@ -12,7 +12,7 @@ def test_validate_model_parameter_reports_mismatch(tmp_test_directory, mocker):
     """Report when a generated parameter differs from its model reference."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": [1.0, 2.0]}), encoding="utf-8")
-    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader_from_configuration")
     model_reader.return_value.get_model_parameter.return_value = {
         "parameter": {"value": [1.0, 3.0]}
     }
@@ -42,7 +42,7 @@ def test_validate_model_parameter_applies_scaling(tmp_test_directory, mocker):
     """Compare a generated parameter with a scaled model reference."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": [1.0, 2.0]}), encoding="utf-8")
-    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader_from_configuration")
     model_reader.return_value.get_model_parameter.return_value = {
         "parameter": {"value": [2.0, 4.0]}
     }
@@ -60,7 +60,7 @@ def test_validate_model_parameter_reuses_explicit_reader(tmp_test_directory, moc
     output.write_text(json.dumps({"value": 1.0}), encoding="utf-8")
     model_reader = mocker.Mock()
     model_reader.get_model_parameter.return_value = {"parameter": {"value": 1.0}}
-    create_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    create_reader = mocker.patch.object(model_parameters, "create_model_reader_from_configuration")
 
     model_parameters.validate(
         output,
@@ -76,7 +76,7 @@ def test_validate_model_parameter_rejects_unscalable_value(tmp_test_directory, m
     """Report when a generated value cannot be scaled numerically."""
     output = Path(tmp_test_directory) / "parameter.json"
     output.write_text(json.dumps({"value": {"invalid": 1}}), encoding="utf-8")
-    model_reader = mocker.patch.object(model_parameters, "create_model_reader")
+    model_reader = mocker.patch.object(model_parameters, "create_model_reader_from_configuration")
     model_reader.return_value.get_model_parameter.return_value = {"parameter": {"value": 2.0}}
 
     with pytest.raises(AssertionError, match="cannot be scaled"):

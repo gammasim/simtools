@@ -107,8 +107,10 @@ def common_mock_read_cache(mocker, db):
 
 @pytest.fixture
 def common_mock_read_db(mocker, db):
-    """Common fixture for mocking _read_db."""
-    return mocker.patch.object(db, "_read_db", return_value={"param1": {"value": "value1"}})
+    """Common fixture for mocking MongoDB parameter reads."""
+    return mocker.patch.object(
+        db, "read_parameter_documents", return_value={"param1": {"value": "value1"}}
+    )
 
 
 def assert_model_parameter_calls(
@@ -168,14 +170,14 @@ def test_get_model_parameters(
     common_mock_read_cache.assert_has_calls(
         [
             call(
-                db_handler.DatabaseHandler.model_parameters_cached,
+                mock_db_handler.model_parameters_cached,
                 names.validate_site_name(site),
                 "LSTN-design",
                 model_version,
                 collection,
             ),
             call(
-                db_handler.DatabaseHandler.model_parameters_cached,
+                mock_db_handler.model_parameters_cached,
                 names.validate_site_name(site),
                 "LSTN-01",
                 model_version,
@@ -326,7 +328,7 @@ def test_get_model_parameters_with_cache(mock_db_handler, mocker, standard_test_
         array_element_name, site, {"parameters": {"LSTN-01": {"param1": "v1"}}}, collection
     )
     mock_read_cache.assert_called_once_with(
-        db_handler.DatabaseHandler.model_parameters_cached,
+        mock_db_handler.model_parameters_cached,
         names.validate_site_name(site),
         "LSTN-01",
         model_version,
@@ -531,7 +533,7 @@ def test_get_query_from_parameter_version_table(db):
 
 
 def test_get_global_simtelarray_parameter_by_version_omits_telescope_scope(db, mocker):
-    read_db = mocker.patch.object(db, "_read_db", return_value={})
+    read_parameters = mocker.patch.object(db, "read_parameter_documents", return_value={})
 
     db.get_model_parameter(
         "iobuf_maximum",
@@ -540,13 +542,13 @@ def test_get_global_simtelarray_parameter_by_version_omits_telescope_scope(db, m
         parameter_version="1.0.0",
     )
 
-    read_db.assert_called_once_with(
+    read_parameters.assert_called_once_with(
         query={"parameter": "iobuf_maximum", "parameter_version": "1.0.0"},
         collection_name="configuration_sim_telarray",
     )
 
 
-def test_read_db(db, mocker):
+def test_read_parameter_documents(db, mocker):
     doc1_id = ObjectId()
     doc2_id = ObjectId()
     mock_query_db = mocker.patch.object(
@@ -561,7 +563,7 @@ def test_read_db(db, mocker):
     query = {"parameter_version": "1.0.0"}
     collection_name = "test_collection"
 
-    result = db._read_db(query, collection_name)
+    result = db.read_parameter_documents(query, collection_name)
 
     mock_query_db.assert_called_once_with(query, collection_name, db.db_name)
     assert result == {
@@ -592,7 +594,7 @@ def test_read_db(db, mocker):
         match=r"The following query for test_collection returned zero results: "
         r"{'parameter_version': '1.0.0'}",
     ):
-        db._read_db(query, collection_name)
+        db.read_parameter_documents(query, collection_name)
 
 
 def setup_production_table_cached(db, cache_key, model_version, param):
@@ -870,16 +872,16 @@ def test_read_cache(db):
 
 def test_reset_parameter_cache(db):
     # Populate the cache dictionaries
-    db_handler.DatabaseHandler.model_parameters_cached = {"key2": "value2"}
+    db.model_parameters_cached = {"key2": "value2"}
 
     # Ensure the caches are populated
-    assert db_handler.DatabaseHandler.model_parameters_cached
+    assert db.model_parameters_cached
 
     # Call the method to reset the caches
     db._reset_parameter_cache()
 
     # Check that the caches are cleared
-    assert not db_handler.DatabaseHandler.model_parameters_cached
+    assert not db.model_parameters_cached
 
 
 def test_get_array_element_list_configuration_corsika(db):
@@ -1013,7 +1015,7 @@ def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test
     params = test_case["params"]
     mock_read_db = mocker.patch.object(
         db,
-        "_read_db",
+        "read_parameter_documents",
         return_value={"test_param": {"value": "test_value"}},
     )
 

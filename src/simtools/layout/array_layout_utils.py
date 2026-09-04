@@ -348,7 +348,7 @@ def validate_array_layout_subset_of_reference(
     return {"name": layout_name, "elements": list(elements)}
 
 
-def prepare_array_layouts_for_submission(db, args_dict):
+def prepare_array_layouts_for_submission(model_reader, args_dict):
     """Read or construct array layouts for the submit application.
 
     The legacy file input is returned unchanged. Direct input reads the base
@@ -357,8 +357,8 @@ def prepare_array_layouts_for_submission(db, args_dict):
 
     Parameters
     ----------
-    db : DatabaseHandler
-        Configured model parameter database or filesystem handler.
+    model_reader : SimulationModelReader
+        Configured source-neutral simulation-model reader.
     args_dict : dict
         Parsed application arguments.
 
@@ -401,7 +401,7 @@ def prepare_array_layouts_for_submission(db, args_dict):
         raise ValueError("Direct layout input requires: " + ", ".join(missing))
 
     model_version = _get_single_model_version(args_dict["model_version"])
-    parameter_data = db.get_model_parameter(
+    parameter_data = model_reader.get_model_parameter(
         parameter="array_layouts",
         site=args_dict["site"],
         array_element_name=None,

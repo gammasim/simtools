@@ -1,12 +1,15 @@
 """Tests for source-neutral simulation-model reading."""
 
+import ast
 import json
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from astropy.table import Table
 
 from simtools.application.model_reader import create_model_reader
 from simtools.model_repository import files as repository_files
@@ -155,6 +158,153 @@ def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
         FileSystemModelSource(Path(tmp_test_directory) / "missing")
 
 
+def test_filesystem_source_rejects_incomplete_repository(tmp_test_directory):
+    """A repository must contain both model directory trees."""
+    root = Path(tmp_test_directory) / "models"
+    (root / "simulation-models/productions").mkdir(parents=True)
+
+    with pytest.raises(FileNotFoundError, match="Expected simulation models directory"):
+        FileSystemModelSource(root)
+
+
+def test_filesystem_source_caches_versions_and_validates_tables(model_repository, mocker):
+    """Version and production-table reads are cached and validate their keys."""
+    source = FileSystemModelSource(model_repository)
+    source.get_model_versions()
+    (model_repository / "simulation-models/productions/9.0.0").mkdir()
+    assert source.get_model_versions() == ["1.0.0"]
+
+    source.read_production_table("telescopes", "1.0.0")
+    read_tables = mocker.spy(repository_files, "read_production_tables")
+    source.read_production_table("telescopes", "1.0.0")
+    read_tables.assert_not_called()
+
+    with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
+        source.read_production_table("telescopes", "2.0.0")
+    with pytest.raises(ValueError, match="No production table for sites"):
+        source.read_production_table("sites", "1.0.0")
+
+
+@pytest.mark.parametrize(
+    ("query", "collection", "expected_instrument"),
+    [
+        ({"instrument": "LSTN-01"}, "telescopes", "LSTN-01"),
+        ({"site": "North"}, "sites", "OBS-North"),
+        ({"site": "North"}, "configuration_corsika", "global"),
+        ({"site": "North"}, "configuration_sim_telarray", "global"),
+    ],
+)
+def test_filesystem_source_resolves_parameter_scopes(query, collection, expected_instrument):
+    """Filesystem queries use the same scopes as the database source."""
+    assert FileSystemModelSource._get_parameter_instrument(query, collection) == expected_instrument
+
+
+def test_filesystem_source_rejects_ambiguous_parameter_scope():
+    """An element scope is required for non-global filesystem collections."""
+    with pytest.raises(ValueError, match="requires an array element name"):
+        FileSystemModelSource._get_parameter_instrument({}, "telescopes")
+
+
+def test_filesystem_source_queries_and_filters_parameters(model_repository):
+    """Queries support OR clauses and reject missing or mismatched parameters."""
+    source = FileSystemModelSource(model_repository)
+    query = {
+        "instrument": "LSTN-01",
+        "site": "North",
+        "$or": [
+            {"parameter": "missing", "parameter_version": "1.0.0"},
+            {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"},
+        ],
+    }
+    result = source.query_model_parameters(query, "telescopes")
+    assert result[0]["value"] == pytest.approx(350.0)
+
+    with pytest.raises(ValueError, match="No parameters found"):
+        source.query_model_parameters(
+            {
+                "instrument": "LSTN-01",
+                "parameter": "camera_body_diameter",
+                "parameter_version": "2.0.0",
+                "site": "South",
+            },
+            "telescopes",
+        )
+
+    with pytest.raises(ValueError, match="No parameters found"):
+        source.read_parameters(
+            {"missing": "1.0.0"}, "telescopes", instrument="LSTN-01", site="North"
+        )
+
+
+@pytest.mark.parametrize(
+    ("data", "instrument", "site", "matches"),
+    [
+        ({"instrument": "LSTN-01", "site": "North"}, "LSTN-01", "North", True),
+        ({"instrument": "MSTN-01", "site": "North"}, "LSTN-01", "North", False),
+        ({"instrument": "LSTN-01", "site": ["North", "South"]}, "LSTN-01", "South", True),
+        ({"instrument": "LSTN-01", "site": "North"}, "LSTN-01", "South", False),
+        ({"instrument": None, "site": None}, "global", "North", True),
+    ],
+)
+def test_filesystem_source_matches_parameter_filters(data, instrument, site, matches):
+    """Instrument and site filters handle scalar, list, and global metadata."""
+    assert FileSystemModelSource._matches_filters(data, instrument, site) is matches
+
+
+def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
+    model_repository, tmp_test_directory
+):
+    """Referenced files are copied once and cannot escape the Files directory."""
+    files_path = model_repository / "simulation-models/model_parameters/Files"
+    (files_path / "nested/model.dat").parent.mkdir(parents=True)
+    (files_path / "nested/model.dat").write_bytes(b"model")
+    destination = Path(tmp_test_directory) / "exported"
+    source = FileSystemModelSource(model_repository)
+
+    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
+        "nested/model.dat": "copied from filesystem"
+    }
+    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
+        "nested/model.dat": "file exists"
+    }
+    with pytest.raises(ValueError, match="escapes model Files"):
+        source.export_model_files(file_names="../model.dat", dest=destination)
+    with pytest.raises(FileNotFoundError, match="Model file not found"):
+        source.export_model_files(file_names="missing.dat", dest=destination)
+    with pytest.raises(ValueError, match="Destination path is required"):
+        source.export_model_files(file_names="nested/model.dat")
+
+
+def test_filesystem_source_exports_parameter_file_values(model_repository, tmp_test_directory):
+    """File-valued parameters are selected when file names are omitted."""
+    files_path = model_repository / "simulation-models/model_parameters/Files"
+    files_path.mkdir(parents=True, exist_ok=True)
+    (files_path / "model.dat").write_bytes(b"model")
+    destination = Path(tmp_test_directory) / "exported"
+    source = FileSystemModelSource(model_repository)
+
+    result = source.export_model_files(
+        parameters={"file": {"file": True, "value": "model.dat"}}, dest=destination
+    )
+    assert result == {"model.dat": "copied from filesystem"}
+
+
+def test_filesystem_source_reads_ecsv_and_rejects_missing_file(
+    model_repository, tmp_test_directory
+):
+    """ECSV model files are exposed as Astropy tables."""
+    files_path = model_repository / "simulation-models/model_parameters/Files"
+    files_path.mkdir(parents=True, exist_ok=True)
+    Table({"value": [1, 2]}).write(files_path / "values.ecsv", format="ascii.ecsv")
+    source = FileSystemModelSource(model_repository)
+
+    assert source.get_ecsv_file_as_astropy_table("values.ecsv")["value"].tolist() == [1, 2]
+    with pytest.raises(FileNotFoundError, match="Model file not found"):
+        source.get_ecsv_file_as_astropy_table("missing.ecsv")
+    with pytest.raises(ValueError, match="escapes model Files"):
+        source.get_ecsv_file_as_astropy_table("../values.ecsv")
+
+
 def test_model_repository_import_does_not_load_database_modules():
     """Filesystem reading has no database or MongoDB import dependency."""
     result = subprocess.run(
@@ -173,6 +323,133 @@ def test_model_repository_import_does_not_load_database_modules():
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_path_first_startup_does_not_import_mongodb(tmp_test_directory):
+    """A filesystem reader can start when MongoDB dependencies are unavailable."""
+    repository = Path(tmp_test_directory)
+    (repository / "simulation-models/productions").mkdir(parents=True)
+    (repository / "simulation-models/model_parameters").mkdir(parents=True)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import builtins
+                import sys
+
+                real_import = builtins.__import__
+                blocked = ("pymongo", "gridfs", "bson", "simtools.db")
+
+                def guarded(name, *args, **kwargs):
+                    if any(name == item or name.startswith(item + ".") for item in blocked):
+                        raise ModuleNotFoundError(name=name)
+                    return real_import(name, *args, **kwargs)
+
+                builtins.__import__ = guarded
+                from simtools.application.model_reader import create_model_reader
+
+                create_model_reader(sys.argv[1])
+                """
+            ),
+            str(repository),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_normal_runtime_modules_do_not_construct_database_handlers(simtools_root_path):
+    """Database construction remains confined to the source-selection and DB packages."""
+    allowed_source_selection = {
+        simtools_root_path / "src/simtools/application/model_reader.py",
+        simtools_root_path / "src/simtools/db/model_source.py",
+        simtools_root_path / "src/simtools/db/mongo_db.py",
+    }
+    violations = [
+        str(path)
+        for path in _normal_runtime_files(simtools_root_path)
+        if path.name != "model_reader.py"
+        for _ in _boundary_violations(path, allowed_source_selection)
+    ]
+    assert violations == []
+
+
+def _normal_runtime_files(simtools_root_path):
+    """Yield Python files in modules that must remain database-independent."""
+    roots = (
+        "model",
+        "simulator.py",
+        "layout",
+        "reporting",
+        "visualization",
+        "data_model",
+        "configuration",
+        "application",
+        "testing",
+        "simtel",
+        "corsika",
+    )
+    for root_name in roots:
+        root = simtools_root_path / "src/simtools" / root_name
+        yield from root.rglob("*.py") if root.is_dir() else (root,)
+
+
+def _boundary_violations(path, allowed_source_selection):
+    """Return source-boundary violations found in one runtime module."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    nodes = list(ast.walk(tree))
+    checks = (
+        (_contains_database_handler_call(nodes), "DatabaseHandler construction"),
+        (_contains_database_import(nodes), "database import"),
+        (
+            path not in allowed_source_selection and _contains_mongodb_literal(nodes),
+            "MongoDB source literal",
+        ),
+        (
+            path not in allowed_source_selection and _contains_mongodb_adapter(nodes),
+            "MongoDB source adapter",
+        ),
+    )
+    return [message for present, message in checks if present]
+
+
+def _contains_database_handler_call(nodes):
+    """Return whether AST nodes construct a database handler."""
+    return any(
+        isinstance(node, ast.Call) and _called_name(node) == "DatabaseHandler" for node in nodes
+    )
+
+
+def _contains_database_import(nodes):
+    """Return whether AST nodes import the database package."""
+    return any(
+        isinstance(node, (ast.Import, ast.ImportFrom)) and "simtools.db" in ast.unparse(node)
+        for node in nodes
+    )
+
+
+def _contains_mongodb_literal(nodes):
+    """Return whether AST nodes contain the MongoDB source selector."""
+    return any(isinstance(node, ast.Constant) and node.value == "mongodb" for node in nodes)
+
+
+def _contains_mongodb_adapter(nodes):
+    """Return whether AST nodes reference the MongoDB source adapter."""
+    return any(isinstance(node, ast.Name) and node.id == "MongoDBModelSource" for node in nodes)
+
+
+def _called_name(node):
+    """Return the simple name of a called function."""
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return None
 
 
 def test_reader_facade_routes_source_operations_and_branches():
@@ -252,3 +529,96 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     )
     assert reader.export_model_files.call_count == 2
     read_table.assert_called_once_with("p", Path("output") / "p.dat")
+
+
+def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
+    """Git construction and source metadata are exposed by the facade."""
+    git_source = Mock(source_name="models@commit", source_config={"type": "git"})
+    git_class = mocker.patch(
+        "simtools.model_repository.reader.GitModelSource", return_value=git_source
+    )
+
+    reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")
+
+    git_class.assert_called_once_with("models.git", "abc", object_store="store")
+    assert reader.source_name == "models@commit"
+    assert reader.source_config == {"type": "git"}
+
+    source_without_config = Mock(spec=["source_name", "is_configured"])
+    assert SimulationModelReader(source_without_config).source_config is None
+
+
+def test_reader_facade_handles_value_errors_across_model_versions():
+    """Unavailable model versions are skipped during aggregate reads."""
+    source = Mock()
+    source.get_model_versions.return_value = ["1.0.0"]
+    reader = SimulationModelReader(source)
+    reader.get_model_parameters = Mock(side_effect=ValueError("not available"))
+
+    assert (
+        reader.get_model_parameters_for_all_model_versions("North", "LSTN-01", "telescopes") == {}
+    )
+
+
+def test_reader_facade_selects_all_array_element_scope_branches(mocker):
+    """Scope selection handles global, design, and concrete requests."""
+    source = Mock()
+    source.read_production_table.return_value = {
+        "model_version": "1.0.0",
+        "design_model": {"LSTN-01": "LSTN-design"},
+    }
+    reader = SimulationModelReader(source)
+    simtel_scopes = mocker.patch.object(
+        reader, "_get_sim_telarray_array_element_list", return_value=["global"]
+    )
+
+    assert reader._get_array_element_list(None, None, {}, "configuration_corsika") == ["global"]
+    assert reader._get_array_element_list("LSTN-01", "North", {}, "configuration_sim_telarray") == [
+        "global"
+    ]
+    simtel_scopes.assert_called_once()
+    assert reader._get_array_element_list("LSTN-design", None, {}, "telescopes") == ["LSTN-design"]
+    assert reader._get_array_element_list(
+        "LSTN-01", None, source.read_production_table.return_value, "telescopes"
+    ) == [
+        "LSTN-design",
+        "LSTN-01",
+    ]
+
+
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
+    """Concrete sim_telarray scopes use design data or configured fallbacks."""
+    source = Mock()
+    source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
+    reader = SimulationModelReader(source)
+    args = {"ignore_missing_design_model": False}
+    mocker.patch.object(reader_module.settings.config, "_args", new=args)
+
+    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+        "global",
+        "LSTN-design",
+        "LSTN-01",
+    ]
+    assert reader._get_sim_telarray_array_element_list("global", {}) == ["global"]
+    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}) == [
+        "global",
+        "LSTN-design",
+    ]
+
+    source.read_production_table.return_value = {"design_model": {}}
+    args["ignore_missing_design_model"] = True
+    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+        "global",
+        "LSTN-01",
+        "LSTN-01",
+        "LSTN-design",
+    ]
+
+    scopes = mocker.patch.object(
+        reader_module.names,
+        "get_sim_telarray_parameter_scopes",
+        side_effect=KeyError("missing"),
+    )
+    with pytest.raises(KeyError, match="Failed to generate array element list"):
+        reader._get_sim_telarray_array_element_list(None, {})
+    scopes.assert_called_once()

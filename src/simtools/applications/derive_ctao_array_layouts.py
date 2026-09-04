@@ -5,7 +5,6 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.constants import DEFAULT_COMPUTING_REPO
-from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
     merge_array_layouts,
     retrieve_ctao_array_layouts,
@@ -56,8 +55,7 @@ def main():
         branch_name=app_context.args["repository_branch"],
     )
 
-    db = db_handler.DatabaseHandler()
-    db_array_layouts = db.get_model_parameter(
+    db_array_layouts = app_context.model_reader.get_model_parameter(
         parameter="array_layouts",
         site=app_context.args["site"],
         array_element_name=None,

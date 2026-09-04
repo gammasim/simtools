@@ -4,7 +4,6 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
     prepare_array_layouts_for_submission,
     validate_array_layouts_with_db,
@@ -69,11 +68,10 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
     args_dict = app_context.args
-    db = db_handler.DatabaseHandler()
-
-    array_layouts, model_version = prepare_array_layouts_for_submission(db, args_dict)
+    model_reader = app_context.model_reader
+    array_layouts, model_version = prepare_array_layouts_for_submission(model_reader, args_dict)
     array_layouts = validate_array_layouts_with_db(
-        production_table=db.read_production_table_from_db(
+        production_table=model_reader.read_production_table(
             collection_name="telescopes", model_version=model_version
         ),
         array_layouts=array_layouts,

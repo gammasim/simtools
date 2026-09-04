@@ -166,7 +166,9 @@ def test_initialize_runtime_without_io_handler():
 
 def test_initialize_runtime_without_model_reader(mocker):
     """Write-only applications do not require a checked-out model repository."""
-    model_reader = mocker.patch("simtools.application.control.create_model_reader")
+    model_reader = mocker.patch(
+        "simtools.application.control.create_model_reader_from_configuration"
+    )
     app_context = _initialize_runtime(
         {"log_level": "info"}, {}, setup_io_handler=False, initialize_model_reader=False
     )

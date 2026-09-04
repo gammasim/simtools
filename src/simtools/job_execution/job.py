@@ -18,6 +18,7 @@ class JobSpec:
     initargs: tuple[Any, ...] = ()
     runtime_args: dict[str, Any] | None = None
     runtime_db_config: dict[str, Any] | None = None
+    model_source_config: dict[str, Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     resources: dict[str, Any] = field(default_factory=dict)
     mount_paths: tuple[Path, ...] = ()
