@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788515455932,
+  "lastUpdate": 1788584559906,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -25534,6 +25534,46 @@ window.BENCHMARK_DATA = {
             "value": 422.4921875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260823.283.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Gernot Maier",
+            "username": "GernotMaier",
+            "email": "gernot.maier@desy.de"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "be87e37e2c31c97f8755b4d81efe9d1bc94e5b99",
+          "message": "Simulation models reader major update (#2506)\n\n* Refactoring of simulation models reader: introduce the reader and filesystem implementation\n\n* test files\n\n* changelog\n\n* coverage\n\n* simplification\n\n* copilot reviewers comments\n\n* PR2 on simulation models refactoring\n\n* simplify\n\n* improve coverage\n\n* key vs list\n\n* fix model reader init\n\n* correct path settings\n\n* fix configure\n\n* Fix MongoDB worker reader source restoration\n\nCo-authored-by: GernotMaier <14001688+GernotMaier@users.noreply.github.com>\n\n* linter error\n\n* Reduce number of trigger to `CORSIKA` and `sim_telarray` build CI.\n\n* Isolate MongoDB-related code\n\n* DB schema\n\n* bug fix\n\n* unit test fix\n\n* trigger hsitograms\n\n* CI without mongoDB; integration tests\n\n* changelog\n\n* correct model reader\n\n* sonar fix\n\n* testing\n\n* Git backend for simulation models reader (#2507)\n\n* Git backend for simulation models reader\n\n* tests\n\n* tests\n\n* tests\n\n* unit test coverage\n\n* bug fix\n\n* test for mongoDB configuration\n\n* fix integration tests\n\n* fix initialize\n\n* consistent installation\n\n* remove lines\n\n* improved testing\n\n* fix mongo clone\n\n* remove mongodb integration tests\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: GernotMaier <14001688+GernotMaier@users.noreply.github.com>",
+          "timestamp": "2026-09-04T09:29:11Z",
+          "url": "https://github.com/gammasim/simtools/commit/be87e37e2c31c97f8755b4d81efe9d1bc94e5b99"
+        },
+        "date": 1788584545151,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 60.01309161399999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 62.58999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 422.9921875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
