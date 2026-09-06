@@ -392,8 +392,11 @@ def _write_rpol_table(table, output_path):
         )
     if dependent is None:
         raise ValueError("RPOL ECSV table must define simtelarray_value_column")
-    if angle_name not in table.colnames or independent_name not in table.colnames:
-        raise ValueError("RPOL ECSV table must contain wavelength and angle columns")
+    if independent_name not in table.colnames:
+        raise ValueError("RPOL ECSV table must contain a wavelength column")
+    if angle_name not in table.colnames:
+        _write_plain_table(table, output_path)
+        return
     angles = list(dict.fromkeys(_raw_values(table[angle_name])))
     values = {}
     for row in table:

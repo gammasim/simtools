@@ -26,6 +26,7 @@ _CAMERA_COMPONENT_PARAMETERS = (
     "camera_trigger_groups",
     "camera_trigger_members",
 )
+_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER = "lightguide_efficiency_vs_incidence_angle"
 
 
 class SimtelConfigWriter:
@@ -165,6 +166,19 @@ class SimtelConfigWriter:
         telescope_name = telescope_name or Path(config_file_path).stem
         pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
         for pixel_type in pixel_types:
+            angle_parameter = pixel_type.pop("lightguide_angle_parameter", None)
+            if angle_parameter is None and pixel_type.get("funnel_transparency") is None:
+                angle_parameter = self._get_default_lightguide_angle_parameter(parameters)
+            if angle_parameter is not None:
+                pixel_type["lightguide_angle_parameter"] = angle_parameter
+                self._resolve_lightguide_file(
+                    pixel_type,
+                    "lightguide_angle_parameter",
+                    "lightguide_angle_file",
+                    parameters,
+                    destination,
+                    telescope_name,
+                )
             self._resolve_lightguide_file(
                 pixel_type,
                 "lightguide_wavelength_parameter",
@@ -193,6 +207,14 @@ class SimtelConfigWriter:
         }
         output = destination / f"camera-{telescope_name}.dat"
         return simtel_table_writer.write_camera_file(configuration, output)
+
+    @staticmethod
+    def _get_default_lightguide_angle_parameter(parameters):
+        """Return the selected global angle-dependent lightguide parameter, if present."""
+        parameter_data = parameters.get(_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER)
+        if parameter_data is not None and parameter_data.get("value") is not None:
+            return _DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER
+        return None
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):

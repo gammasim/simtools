@@ -178,6 +178,56 @@ def test_write_camera_file_requires_all_camera_components(simtel_config_writer, 
         )
 
 
+def test_write_camera_file_resolves_selected_default_lightguide(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    parameters = {
+        "camera_rotate": {"value": 0.0},
+        "camera_pixel_types": {
+            "value": [
+                {
+                    "type_id": 1,
+                    "pmt_type": 0,
+                    "cathode_shape": 0,
+                    "cathode_diameter_cm": 1.0,
+                    "funnel_shape": 1,
+                    "funnel_diameter_cm": 1.0,
+                    "funnel_depth_cm": 0.0,
+                }
+            ]
+        },
+        "camera_pixel_layout": {"value": "layout.ecsv"},
+        "camera_trigger_groups": {"value": "groups.ecsv"},
+        "camera_trigger_members": {"value": "members.ecsv"},
+        "lightguide_efficiency_vs_incidence_angle": {"value": "angle.ecsv"},
+    }
+    mocker.patch.object(simtel_config_writer, "_camera_table_records", return_value=[])
+
+    def resolve_lightguide(pixel_type, parameter_key, output_key, *_args):
+        pixel_type.pop(parameter_key, None)
+        pixel_type[output_key] = "angle.dat"
+
+    mocker.patch.object(
+        simtel_config_writer, "_resolve_lightguide_file", side_effect=resolve_lightguide
+    )
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_table_writer.write_camera_file"
+    )
+
+    simtel_config_writer._write_camera_file(parameters, tmp_test_directory / "config.cfg")
+
+    configuration = write_camera.call_args.args[0]
+    assert configuration["pixel_types"][0]["lightguide_angle_file"] == "angle.dat"
+    assert simtel_config_writer._resolve_lightguide_file.call_args_list[0] == mocker.call(
+        mocker.ANY,
+        "lightguide_angle_parameter",
+        "lightguide_angle_file",
+        parameters,
+        tmp_test_directory,
+        "config",
+    )
+
+
 # Common trigger line strings to reduce duplication
 LSTS_HARDSTEREO_LINE = "Trigger 2 of 1, 2 width 120.0 hardstereo"
 MSTS_HARDSTEREO_LINE = "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"

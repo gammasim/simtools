@@ -13,6 +13,8 @@ from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.utils import names
 
+_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER = "lightguide_efficiency_vs_incidence_angle"
+
 
 class TelescopeModel(ModelParameter):
     """
@@ -193,6 +195,13 @@ class TelescopeModel(ModelParameter):
         """Resolve the independent camera component parameters."""
         pixel_types = deepcopy(self.get_parameter_value("camera_pixel_types"))
         for pixel_type in pixel_types:
+            angle_parameter = pixel_type.get("lightguide_angle_parameter")
+            if angle_parameter is None and pixel_type.get("funnel_transparency") is None:
+                lightguide_data = self.parameters.get(_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER)
+                if lightguide_data is not None and lightguide_data.get("value") is not None:
+                    angle_parameter = _DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER
+            if angle_parameter:
+                pixel_type["lightguide_angle_file"] = f"{angle_parameter}-{self.name}.dat"
             wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
             if wavelength_parameter:
                 pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"

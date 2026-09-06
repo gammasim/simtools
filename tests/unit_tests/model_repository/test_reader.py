@@ -270,7 +270,7 @@ def test_filesystem_source_matches_parameter_filters(data, instrument, site, mat
 def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     model_repository, tmp_test_directory
 ):
-    """Referenced files are copied once and cannot escape the Files directory."""
+    """Referenced files are copied once and cannot escape the parameter directory."""
     parameters_path = model_repository / "simulation-models/model_parameters"
     (parameters_path / "nested/model.dat").parent.mkdir(parents=True)
     (parameters_path / "nested/model.dat").write_bytes(b"model")

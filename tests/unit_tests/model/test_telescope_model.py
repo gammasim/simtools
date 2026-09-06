@@ -122,6 +122,35 @@ def test_load_camera(telescope_model_lst, monkeypatch):
     assert tel_model._camera == camera_mock.from_configuration.return_value
 
 
+def test_resolve_camera_components_uses_selected_default_lightguide(
+    telescope_model_lst, monkeypatch
+):
+    telescope_model_lst.parameters["camera_pixel_types"] = {
+        "value": [
+            {
+                "type_id": 1,
+                "pmt_type": 0,
+                "cathode_shape": 0,
+                "cathode_diameter_cm": 1.0,
+                "funnel_shape": 1,
+                "funnel_diameter_cm": 1.0,
+                "funnel_depth_cm": 0.0,
+            }
+        ]
+    }
+    telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
+    telescope_model_lst.parameters["lightguide_efficiency_vs_incidence_angle"] = {
+        "value": "lightguide.ecsv"
+    }
+    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+
+    result = telescope_model_lst._resolve_camera_components()
+
+    assert result["pixel_types"][0]["lightguide_angle_file"] == (
+        "lightguide_efficiency_vs_incidence_angle-LSTN-01.dat"
+    )
+
+
 def test_is_file_2d_true(telescope_model_lst, monkeypatch):
     table = astropy.table.QTable()
     monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))

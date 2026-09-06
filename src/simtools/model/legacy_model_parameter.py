@@ -115,6 +115,58 @@ def _update_file_backed_table_parameter(
     }
 
 
+def _update_optional_table_parameter(parameters, parameter_name, schema_version, value_resolver):
+    """Update a legacy optional table parameter to the current schema."""
+    para_data = parameters[parameter_name]
+    value = para_data.get("value")
+    if value is None:
+        return _update_unset_parameter(para_data, schema_version)
+    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], str):
+        value = value[0]
+        para_data = {**para_data, "value": value}
+    if isinstance(value, str):
+        _log_schema_update(
+            para_data["parameter"],
+            para_data["model_parameter_schema_version"],
+            schema_version,
+        )
+        return _update_file_backed_table_parameter(
+            parameter_name,
+            {**parameters, parameter_name: para_data},
+            schema_version,
+            value_resolver=value_resolver,
+        )
+    if not row_table_utils.is_row_table_dict(value):
+        raise ValueError(_get_unsupported_update_message(para_data, schema_version))
+
+    _log_schema_update(
+        para_data["parameter"],
+        para_data["model_parameter_schema_version"],
+        schema_version,
+    )
+    return {
+        para_data["parameter"]: {
+            "value": value,
+            "model_parameter_schema_version": schema_version,
+        }
+    }
+
+
+def _update_unset_parameter(para_data, schema_version):
+    """Update an unset optional parameter to the current schema version."""
+    _log_schema_update(
+        para_data["parameter"],
+        para_data["model_parameter_schema_version"],
+        schema_version,
+    )
+    return {
+        para_data["parameter"]: {
+            "value": None,
+            "model_parameter_schema_version": schema_version,
+        }
+    }
+
+
 @register_update("dsum_threshold")
 def _update_dsum_threshold(parameters, schema_version, value_resolver=None):
     """Update legacy dsum_threshold parameter."""
@@ -200,6 +252,38 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
             }
         }
 
+    raise ValueError(_get_unsupported_update_message(para_data, schema_version))
+
+
+@register_update("dsum_shaping")
+def _update_dsum_shaping(parameters, schema_version, value_resolver=None):
+    """Update legacy dsum_shaping parameter."""
+    return _update_optional_table_parameter(
+        parameters,
+        "dsum_shaping",
+        schema_version,
+        value_resolver,
+    )
+
+
+@register_update("mirror_list")
+def _update_mirror_list(parameters, schema_version, value_resolver=None):
+    """Update legacy mirror_list parameter."""
+    return _update_optional_table_parameter(
+        parameters,
+        "mirror_list",
+        schema_version,
+        value_resolver,
+    )
+
+
+@register_update("secondary_mirror_segmentation")
+def _update_secondary_mirror_segmentation(parameters, schema_version, value_resolver=None):
+    """Update an unset legacy secondary_mirror_segmentation parameter."""
+    _ = value_resolver
+    para_data = parameters["secondary_mirror_segmentation"]
+    if para_data.get("value") is None:
+        return _update_unset_parameter(para_data, schema_version)
     raise ValueError(_get_unsupported_update_message(para_data, schema_version))
 
 

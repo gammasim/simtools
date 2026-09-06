@@ -5,10 +5,13 @@ import pytest
 from simtools.model.legacy_model_parameter import (
     _get_unsupported_update_message,
     _update_corsika_starting_grammage,
+    _update_dsum_shaping,
     _update_dsum_threshold,
     _update_fadc_pulse_shape,
     _update_file_backed_table_parameter,
     _update_flasher_pulse_shape,
+    _update_mirror_list,
+    _update_secondary_mirror_segmentation,
     apply_legacy_updates_to_parameters,
     update_parameter,
 )
@@ -77,6 +80,114 @@ def test_update_dsum_threshold_unsupported_version():
         ValueError, match=r"Unsupported update for legacy parameter dsum_threshold.*0.2.0 to 0.3.0"
     ):
         _update_dsum_threshold(parameters, "0.3.0")
+
+
+@pytest.mark.parametrize("file_flag", [True, False])
+def test_update_dsum_shaping_from_file_to_embedded_row_data(mocker, file_flag):
+    expected_value = {
+        "columns": ["sample", "coefficient"],
+        "column_units": ["", ""],
+        "rows": [[0, 0.1], [1, 0.2]],
+    }
+    parameters = {
+        "dsum_shaping": {
+            "parameter": "dsum_shaping",
+            "value": "shaping.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": file_flag,
+        }
+    }
+    resolver = mocker.Mock(return_value=expected_value)
+
+    result = _update_dsum_shaping(parameters, "0.3.0", value_resolver=resolver)
+
+    resolver.assert_called_once_with("dsum_shaping", "shaping.dat")
+    assert result["dsum_shaping"]["value"] == expected_value
+    assert result["dsum_shaping"]["model_parameter_schema_version"] == "0.3.0"
+    assert result["dsum_shaping"]["type"] == "dict"
+    assert result["dsum_shaping"]["file"] is False
+
+
+def test_update_dsum_shaping_preserves_embedded_row_data():
+    value = {
+        "columns": ["sample", "coefficient"],
+        "column_units": ["dimensionless", "dimensionless"],
+        "rows": [[0, 0.1], [1, 0.2]],
+    }
+    parameters = {
+        "dsum_shaping": {
+            "parameter": "dsum_shaping",
+            "value": value,
+            "model_parameter_schema_version": "0.1.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    result = _update_dsum_shaping(parameters, "0.3.0")
+
+    assert result["dsum_shaping"] == {
+        "value": value,
+        "model_parameter_schema_version": "0.3.0",
+    }
+
+
+def test_update_dsum_shaping_preserves_unset_file_value():
+    parameters = {
+        "dsum_shaping": {
+            "parameter": "dsum_shaping",
+            "value": None,
+            "model_parameter_schema_version": "0.1.0",
+            "type": "string",
+            "file": True,
+        }
+    }
+
+    result = _update_dsum_shaping(parameters, "0.3.0")
+
+    assert result["dsum_shaping"] == {
+        "value": None,
+        "model_parameter_schema_version": "0.3.0",
+    }
+
+
+def test_update_mirror_list_preserves_unset_file_value():
+    parameters = {
+        "mirror_list": {
+            "parameter": "mirror_list",
+            "value": None,
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+
+    result = _update_mirror_list(parameters, "0.3.0")
+
+    assert result["mirror_list"] == {
+        "value": None,
+        "model_parameter_schema_version": "0.3.0",
+    }
+
+
+def test_update_secondary_mirror_segmentation_preserves_unset_file_value():
+    parameters = {
+        "secondary_mirror_segmentation": {
+            "parameter": "secondary_mirror_segmentation",
+            "value": None,
+            "model_parameter_schema_version": "0.1.0",
+            "type": "string",
+            "file": True,
+        }
+    }
+
+    result = _update_secondary_mirror_segmentation(parameters, "0.2.0")
+
+    assert result["secondary_mirror_segmentation"] == {
+        "value": None,
+        "model_parameter_schema_version": "0.2.0",
+    }
 
 
 def test_update_parameter_with_unregistered_handler():

@@ -64,6 +64,20 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
     ]
 
 
+def test_write_rpol_table_preserves_one_dimensional_table(tmp_test_directory):
+    table = QTable({"wavelength": [300.0, 400.0], "reflectivity": [0.8, 0.9]})
+    table.meta["simtelarray_original_file_name"] = "reflectivity.dat"
+
+    result = simtel_table_writer.write_simtel_table(
+        table, tmp_test_directory, table_format="rpol_matrix"
+    )
+
+    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+        "300.0 0.8",
+        "400.0 0.9",
+    ]
+
+
 def test_write_simtel_table_two_columns(tmp_test_directory):
     value = {
         "columns": ["time", "amplitude"],

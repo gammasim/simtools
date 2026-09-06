@@ -10,7 +10,7 @@ from packaging.version import Version
 
 from simtools import settings
 from simtools.data_model import schema
-from simtools.data_model.table_asset import read_ecsv_asset
+from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
 from simtools.model_repository.git_model import GitModelSource
@@ -249,15 +249,23 @@ class FileSystemModelSource:
         return "copied from filesystem"
 
     def resolve_parameter_asset(self, parameter_data):
-        """Resolve a parameter asset below the model parameters directory."""
+        """Resolve a parameter asset relative to its parameter document."""
         value = parameter_data.get("value") if isinstance(parameter_data, dict) else parameter_data
         if not isinstance(value, str):
             raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
-        parameters_root = self.model_parameters_path.resolve()
-        source = (parameters_root / value).resolve()
-        if not source.is_relative_to(parameters_root):
-            raise ValueError(f"Model file path escapes parameter directory: {value}")
-        return source
+        parameter = parameter_data.get("parameter") if isinstance(parameter_data, dict) else None
+        version = (
+            parameter_data.get("parameter_version") if isinstance(parameter_data, dict) else None
+        )
+        instrument = parameter_data.get("instrument") if isinstance(parameter_data, dict) else None
+        if parameter and version:
+            scope = instrument or "global"
+            parameter_file = (
+                self.model_parameters_path / scope / parameter / f"{parameter}-{version}.json"
+            )
+        else:
+            parameter_file = self.model_parameters_path / "parameter.json"
+        return resolve_asset_path(value, parameter_file)
 
     def get_parameter_table(self, parameter_data):
         """Resolve and validate an ECSV table referenced by a parameter record."""
