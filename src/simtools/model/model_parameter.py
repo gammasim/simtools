@@ -859,6 +859,13 @@ class ModelParameter:
         self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
+        if "correct_nsb_spectrum_to_telescope_altitude" in self._simulation_config_parameters.get(
+            "sim_telarray", {}
+        ):
+            self.export_nsb_spectrum_to_telescope_altitude_correction_file(
+                model_directory=self.config_file_directory
+            )
+
         self._add_additional_models(additional_models)
 
         # Ensure the writer label matches the config file naming label.
@@ -930,14 +937,14 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
+        parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+        parameter = deepcopy(self._simulation_config_parameters["sim_telarray"][parameter_name])
+        parameter["parameter"] = parameter_name
+        parameter.setdefault("parameter_version", Path(parameter["value"]).stem.rsplit("-", 1)[-1])
+        parameter.setdefault("instrument", self.design_model or self.name)
+        parameter.setdefault("site", self.site)
+        parameter["file"] = True
         self.model_reader.export_model_files(
-            parameters={
-                "nsb_spectrum_at_2200m": {
-                    "value": self._simulation_config_parameters["sim_telarray"][
-                        "correct_nsb_spectrum_to_telescope_altitude"
-                    ]["value"],
-                    "file": True,
-                }
-            },
+            parameters={parameter_name: parameter},
             dest=model_directory,
         )

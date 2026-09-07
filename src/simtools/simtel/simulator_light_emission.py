@@ -660,6 +660,12 @@ class SimulatorLightEmission(SimtelRunner):
             "-DNUM_TELESCOPES=1",
         ]
 
+        atmospheric_transmission = self.site_model.get_parameter_value("atmospheric_transmission")
+        if str(atmospheric_transmission).lower().endswith(".ecsv"):
+            atmospheric_transmission = (
+                f"atmospheric_transmission-{Path(self.telescope_model.config_file_path).stem}.dat"
+            )
+
         options = [
             (
                 "altitude",
@@ -669,7 +675,7 @@ class SimulatorLightEmission(SimtelRunner):
             ),
             (
                 "atmospheric_transmission",
-                self.site_model.get_parameter_value("atmospheric_transmission"),
+                atmospheric_transmission,
             ),
             ("TRIGGER_TELESCOPES", "1"),
             ("TELTRIG_MIN_SIGSUM", "2"),

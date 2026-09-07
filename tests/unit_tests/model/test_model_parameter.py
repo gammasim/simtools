@@ -579,6 +579,54 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
 
 
+def test_write_sim_telarray_config_file_exports_nsb_correction_file(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._simulation_config_parameters["sim_telarray"][
+        "correct_nsb_spectrum_to_telescope_altitude"
+    ] = {"value": "correction.ecsv"}
+
+    mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_export_nsb = mocker.patch.object(
+        TelescopeModel, "export_nsb_spectrum_to_telescope_altitude_correction_file"
+    )
+    mock_writer = mocker.Mock()
+    mocker.patch.object(
+        TelescopeModel,
+        "_load_simtel_config_writer",
+        side_effect=lambda *args, **kwargs: setattr(
+            telescope_copy, "simtel_config_writer", mock_writer
+        ),
+    )
+
+    telescope_copy.write_sim_telarray_config_file()
+
+    mock_export_nsb.assert_called_once_with(model_directory=telescope_copy.config_file_directory)
+
+
+def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+    parameter = {
+        "value": "correction-1.0.0.ecsv",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTS-design",
+        "site": "North",
+    }
+    telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
+    mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
+
+    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(
+        model_directory=telescope_copy.config_file_directory
+    )
+
+    exported = mock_export.call_args.kwargs["parameters"][parameter_name]
+    assert exported["parameter"] == parameter_name
+    assert exported["parameter_version"] == "1.0.0"
+    assert exported["instrument"] == "LSTS-design"
+    assert exported["site"] == "North"
+    assert exported["file"] is True
+
+
 def test_add_additional_models(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
 

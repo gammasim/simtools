@@ -61,6 +61,25 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
         assert "Bypass_Optics=1" not in options
 
 
+def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simulator_instance):
+    simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-04.cfg"
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2200 * u.m
+    simulator_instance.site_model.get_parameter_value.return_value = (
+        "atmospheric_transmission-2.0.0.ecsv"
+    )
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+
+    with (
+        patch.object(simulator_instance, "_get_telescope_pointing", return_value=[0, 0]),
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+    ):
+        mock_settings.config.sim_telarray_exe = "/mock/simtel/bin/sim_telarray"
+
+        script = simulator_instance._make_simtel_script()
+
+    assert "-C atmospheric_transmission=atmospheric_transmission-CTAO-MSTN-04.dat" in script
+
+
 def test_calculate_distance_focal_plane_calibration_device(simulator_instance):
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = 10 * u.m
     simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
