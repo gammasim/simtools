@@ -355,6 +355,33 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
 
 
+def test_write_tel_config_file_orders_generated_parameters_and_metadata(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    mocker.patch.object(
+        simtel_config_writer,
+        "_write_camera_file",
+        return_value="camera-MSTS-03.dat",
+    )
+    config_file = Path(tmp_test_directory) / "CTAO-MSTS-03.cfg"
+
+    simtel_config_writer.write_telescope_config_file(
+        config_file,
+        {"fadc_pulse_shape": {"value": "pulse.dat"}},
+        telescope_name="MSTS-03",
+    )
+
+    lines = config_file.read_text(encoding="utf-8").splitlines()
+    parameter_lines = [line for line in lines if " = " in line and not line.startswith("%")]
+    assert parameter_lines[:3] == [
+        "camera_config_file = camera-MSTS-03.dat",
+        "fadc_pulse_shape = pulse.dat",
+        "stars = none",
+    ]
+    assert "metaparam telescope add camera_config_file" in lines
+    assert "metaparam telescope add fadc_pulse_shape" in lines
+
+
 def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel(None) == "none"
     assert simtel_config_writer._get_value_string_for_simtel(True) == 1

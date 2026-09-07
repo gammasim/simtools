@@ -270,7 +270,12 @@ def _module_id(value):
 
 
 def write_simtel_table(
-    table_or_parameter, value_or_dest, dest_dir=None, telescope_name=None, table_format=None
+    table_or_parameter,
+    value_or_dest,
+    dest_dir=None,
+    telescope_name=None,
+    table_format=None,
+    output_name=None,
 ):
     """Write a table parameter to a space-separated ASCII file for sim_telarray.
 
@@ -284,6 +289,9 @@ def write_simtel_table(
         Directory to write the file into.
     telescope_name : str
         Telescope name, used as filename suffix.
+    output_name : str, optional
+        Output basename for an ECSV table. If omitted, use the filename stored
+        in ``simtelarray_original_file_name`` metadata.
 
     Returns
     -------
@@ -296,7 +304,7 @@ def write_simtel_table(
         If ``value`` does not contain ``columns`` and ``rows`` keys.
     """
     if isinstance(table_or_parameter, Table):
-        return _write_ecsv_table(table_or_parameter, value_or_dest, table_format)
+        return _write_ecsv_table(table_or_parameter, value_or_dest, table_format, output_name)
 
     parameter_name = table_or_parameter
     value = value_or_dest
@@ -320,9 +328,9 @@ def write_simtel_table(
     return file_name
 
 
-def _write_ecsv_table(table, dest_dir, table_format=None):
+def _write_ecsv_table(table, dest_dir, table_format=None, output_name=None):
     """Write a validated ECSV table in its original sim_telarray representation."""
-    output_name = table.meta.get("simtelarray_original_file_name")
+    output_name = output_name or table.meta.get("simtelarray_original_file_name")
     if not output_name:
         raise ValueError("ECSV table metadata must define simtelarray_original_file_name")
     output_path = Path(dest_dir) / Path(output_name).name

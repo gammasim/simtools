@@ -31,6 +31,20 @@ def test_write_ecsv_table_uses_original_filename(tmp_test_directory):
     ]
 
 
+def test_write_ecsv_table_accepts_output_filename(tmp_test_directory):
+    table = QTable({"time": [0.0], "amplitude": [1.0]})
+    table.meta["simtelarray_original_file_name"] = "pulse.dat"
+
+    result = simtel_table_writer.write_simtel_table(
+        table,
+        tmp_test_directory,
+        table_format="pulse",
+        output_name="fadc_pulse_shape-CTAO-MSTS-03.dat",
+    )
+
+    assert result == "fadc_pulse_shape-CTAO-MSTS-03.dat"
+
+
 def test_write_ecsv_table_rejects_unsafe_filename(tmp_test_directory):
     table = QTable({"x": [1.0]})
     table.meta["simtelarray_original_file_name"] = "../pulse.dat"

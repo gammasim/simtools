@@ -103,12 +103,16 @@ class SimtelConfigWriter:
 
             for simtel_name, simtel_value in simtel_par.items():
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
-            for meta in self._get_sim_telarray_metadata(
+            metadata = self._get_sim_telarray_metadata(
                 "telescope",
                 parameters,
                 telescope_name,
                 telescope_design_model=_telescope_design_model,
-            ):
+                additional_meta_parameters=(
+                    ["camera_config_file"] if "camera_config_file" in simtel_par else []
+                ),
+            )
+            for meta in metadata:
                 file.write(f"{meta}\n")
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path, telescope_name=None):
@@ -152,7 +156,9 @@ class SimtelConfigWriter:
         if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
             simtel_par["stars"] = None
 
-        return self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par)
+        return dict(
+            sorted(self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par).items())
+        )
 
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
         """Write a sim_telarray camera file from independent camera parameters."""
@@ -339,6 +345,7 @@ class SimtelConfigWriter:
         telescope_model_name,
         additional_metadata=None,
         telescope_design_model=None,
+        additional_meta_parameters=None,
     ):
         """
         Return sim_telarray metadata.
@@ -395,6 +402,9 @@ class SimtelConfigWriter:
             raise ValueError(f"Unknown metadata type {config_type}")
 
         self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
+
+        for parameter in additional_meta_parameters or []:
+            meta_parameters.append(f"{prefix} add {parameter}")
 
         if additional_metadata:
             for key, value in additional_metadata.items():
@@ -774,7 +784,14 @@ class SimtelConfigWriter:
                 None,
             )
             return simtel_table_writer.write_simtel_table(
-                table, dest_dir, table_format=table_format
+                table,
+                dest_dir,
+                table_format=table_format,
+                output_name=(
+                    f"{source_parameter}-{Path(model_path).stem}.dat"
+                    if _telescope_model is None and source_parameter
+                    else None
+                ),
             )
         if not isinstance(value, dict):
             return value
