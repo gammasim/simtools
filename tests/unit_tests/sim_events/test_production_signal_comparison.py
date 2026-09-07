@@ -66,13 +66,17 @@ def test_collect_signal_metrics_rejects_incomplete_event(mocker):
     )
     mocker.patch(
         "simtools.sim_events.production_comparison.read_events",
-        return_value=([1], {}, [{"adc_samples": np.ones((1, 2, 20)), "pixel_lists": {}}]),
+        return_value=([1], {}, [{"adc_samples": np.ones((1, 2, 20))}]),
     )
 
     with pytest.raises(ValueError, match="incomplete signal data"):
         production_comparison.collect_signal_metrics(
             [ProductionDescriptor("baseline", ["baseline.simtel"])]
         )
+
+
+def test_get_triggered_pixel_count_treats_empty_pixel_lists_as_zero():
+    assert production_comparison._get_triggered_pixel_count({"pixel_lists": {}}) == 0
 
 
 def test_collect_signal_metrics_requires_input_files():
