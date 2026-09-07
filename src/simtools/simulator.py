@@ -688,6 +688,9 @@ class Simulator:
         simtools_log_file = general.get_simtools_log_file()
         histogram_files = general.ensure_list(self.get_files(file_type="sim_telarray_histogram"))
         corsika_log_files = general.ensure_list(self.get_files(file_type="corsika_log"))
+        resource_files = general.ensure_list(self.get_files(file_type="corsika_resources"))
+        resource_files += general.ensure_list(self.get_files(file_type="sim_telarray_resources"))
+        resource_files += general.ensure_list(self.get_files(file_type="multi_pipe_resources"))
         corsika_output_files = (
             general.ensure_list(self.get_files(file_type="corsika_output"))
             if settings.config.args.get("save_corsika_output")
@@ -706,7 +709,7 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        files_to_copy = log_files + histogram_files + corsika_log_files
+        files_to_copy = log_files + histogram_files + corsika_log_files + resource_files
         for model in self.array_models:
             files_to_copy += general.ensure_list(model.pack_model_files())
 

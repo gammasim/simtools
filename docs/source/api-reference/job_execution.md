@@ -12,6 +12,13 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
+(process-accounting)=
+
+```{eval-rst}
+.. automodule:: job_execution.process_accounting
+   :members:
+```
+
 (execution)=
 
 ```{eval-rst}
