@@ -23,10 +23,10 @@ TIME_NS_LABEL = "time [ns]"
 R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 PIXEL_LABEL = "N pixels"
 
-PEDESTAL_WINDOW_START = -10
-INTEGRATION_WINDOW_START = 4
+PEDESTAL_WINDOW_START = trace.PEDESTAL_WINDOW_START
+INTEGRATION_WINDOW_START = trace.INTEGRATION_WINDOW_START
+DEFAULT_SUM_THRESHOLD = trace.DEFAULT_SUM_THRESHOLD
 DEFAULT_HISTOGRAM_BINS = 50
-DEFAULT_SUM_THRESHOLD = 10.0
 DEFAULT_TIME_TRACES_PIXELS = 3
 DEFAULT_STEP_TRACES_INTERVAL = 10
 
@@ -131,20 +131,15 @@ class PlotSimtelEvent:
         event_data = {}
         n_samples = None
         for idx, event in zip(_event_index, _events):
-            adc_samples = trace.get_adc_samples_per_gain(event.get("adc_samples", None))
+            adc_samples, pedestals, image = trace.get_trace_data(event["adc_samples"])
             number_of_pixels, n_samples = adc_samples.shape
-            pedestals = trace.calculate_pedestals(
-                adc_samples, start=n_samples + PEDESTAL_WINDOW_START, end=n_samples
-            )
             event_data[idx] = EventData(
                 event_id=idx,
                 adc_samples=adc_samples,
                 number_of_pixels=number_of_pixels,
                 n_samples=n_samples,
                 pedestals=pedestals,
-                image=trace.trace_integration(
-                    adc_samples, pedestals=pedestals, window=(INTEGRATION_WINDOW_START, n_samples)
-                ),
+                image=image,
             )
         self.time_axis = None
         if len(event_data):

@@ -108,6 +108,18 @@ def test_trace_integration_no_pedestals():
     assert np.allclose(result, expected)
 
 
+def test_get_trace_data_uses_high_gain_and_shared_windows():
+    adc_samples = np.full((2, 2, 20), 20.0)
+    adc_samples[0, 0, 4] = 30.0
+    adc_samples[1, :, :] = 100.0
+
+    samples, pedestals, integrated_signal = trace.get_trace_data(adc_samples)
+
+    assert np.array_equal(samples, adc_samples[0])
+    assert np.allclose(pedestals, [20.0, 20.0])
+    assert np.allclose(integrated_signal, [10.0, 0.0])
+
+
 # ============================================================================
 # find_signal_peaks tests - parametrized
 # ============================================================================
