@@ -10,6 +10,7 @@ from pathlib import Path
 
 import astropy.units as u
 import jsonschema
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -188,7 +189,7 @@ def test_get_site(args_dict_site, tmp_test_directory):
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, simple_test_file, mocker
+    args_dict_site, tmp_test_directory, simple_test_file, mocker
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -229,26 +230,77 @@ def test_read_input_metadata_from_file(
     local_ecsv_file = Path(tmp_test_directory) / "input_metadata.ecsv"
     table.write(local_ecsv_file, format="ascii.ecsv", overwrite=True)
     metadata_1.args_dict["input_meta"] = local_ecsv_file
-    mocker.patch.object(metadata_collector.schema, "validate_dict_using_schema")
+    validate_schema = mocker.patch.object(metadata_collector.schema, "validate_dict_using_schema")
     assert len(metadata_1._read_input_metadata_from_file()) > 0
+    mocker.stop(validate_schema)
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
     with pytest.raises(FileNotFoundError, match=r"^No files found:"):
         metadata_1._read_input_metadata_from_file()
 
-    with caplog.at_level(logging.WARNING):
-        simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
-        simtel_file.write_bytes(b"")
-        metadata_1.args_dict["input_meta"] = simtel_file
-        metadata_1._read_input_metadata_from_file()
-    assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
+    simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
+    simtel_file.write_bytes(b"")
+    mocker.patch.object(
+        metadata_collector,
+        "read_sim_telarray_metadata",
+        return_value=(
+            {
+                "site_config_name": "South",
+                "array_config_name": "CTAO-South-Alpha",
+                "simtools_simtel_tag": "v2026-01-01",
+                "simtools_model_production_version": "6.0.2",
+            },
+            {
+                1: {"optics_config_variant": "MSTS-01"},
+            },
+        ),
+    )
+    validate_simtel_metadata = mocker.patch.object(
+        metadata_collector.simtel_validate_metadata, "validate_metadata_values"
+    )
+    metadata_1.args_dict["input_meta"] = simtel_file
+    simtel_metadata = metadata_1._read_input_metadata_from_file()[0]
+    assert validate_simtel_metadata.call_args_list == [
+        mocker.call(
+            {
+                "site_config_name": "South",
+                "array_config_name": "CTAO-South-Alpha",
+                "simtools_simtel_tag": "v2026-01-01",
+                "simtools_model_production_version": "6.0.2",
+            }
+        ),
+        mocker.call({"optics_config_variant": "MSTS-01"}),
+    ]
+    assert simtel_metadata["cta"]["product"]["filename"] == str(simtel_file)
+    assert simtel_metadata["cta"]["product"]["format"] == "simtel"
+    assert simtel_metadata["cta"]["instrument"]["site"] == "South"
+    assert simtel_metadata["cta"]["instrument"]["id"] == "CTAO-South-Alpha"
+    assert simtel_metadata["cta"]["product"]["data"]["model"]["version"] is None
+    assert (
+        '"simtools_model_production_version": "6.0.2"'
+        in simtel_metadata["cta"]["context"]["notes"][0]["text"]
+    )
+    assert simtel_metadata["cta"]["context"]["associated_elements"][0]["id"] == "MSTS-01"
 
-    with caplog.at_level(logging.WARNING):
-        corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
-        corsika_file.write_bytes(b"")
-        metadata_1.args_dict["input_meta"] = corsika_file
-        metadata_1._read_input_metadata_from_file()
-    assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
+    corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
+    corsika_file.write_bytes(b"")
+    mocker.patch.object(
+        metadata_collector,
+        "get_corsika_run_and_event_headers",
+        return_value=(
+            np.array((42, 7.8010), dtype=[("run_number", "i4"), ("version", "f4")]),
+            np.array((1, 14), dtype=[("event_number", "i4"), ("particle_id", "i4")]),
+        ),
+    )
+    metadata_1.args_dict["input_meta"] = corsika_file
+    corsika_metadata = metadata_1._read_input_metadata_from_file()[0]
+    assert corsika_metadata["cta"]["product"]["filename"] == str(corsika_file)
+    assert corsika_metadata["cta"]["product"]["format"] == "corsika"
+    assert corsika_metadata["cta"]["activity"]["software"] == {
+        "name": "corsika",
+        "version": "7.8010",
+    }
+    assert '"run_number": 42' in corsika_metadata["cta"]["context"]["notes"][0]["text"]
 
     metadata_1.args_dict["input_meta"] = simple_test_file
     with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
@@ -261,6 +313,67 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
         with pytest.raises(FileNotFoundError):
             metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
     assert "Failed reading metadata for" in caplog.text
+
+
+def test_read_input_metadata_from_simtel_rejects_invalid_registry_value(
+    args_dict_site, tmp_test_directory, mocker
+):
+    simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
+    simtel_file.write_bytes(b"")
+    mocker.patch.object(
+        metadata_collector,
+        "read_sim_telarray_metadata",
+        return_value=({"azimuth_angle": "not-a-number"}, {}),
+    )
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    with pytest.raises(ValueError, match=r"could not convert string to float"):
+        collector._read_input_metadata_from_simtel(simtel_file)
+
+
+def test_metadata_collector_eventio_helpers_handle_incomplete_values(args_dict_site):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    assert collector._header_to_dict(None) == {}
+    assert collector._header_to_dict({"run_number": 42}) == {"run_number": 42}
+    assert collector._header_to_dict([42]) == [42]
+    assert collector._header_to_dict(np.array([(42,)], dtype=[("run_number", "i4")])) == {
+        "run_number": 42
+    }
+    assert collector._get_valid_site(None) is None
+    assert collector._get_valid_site("invalid") is None
+    assert collector._simtel_associated_elements(
+        {1: {}, 2: {"optics_config_variant": "INVALID-01"}}, "South"
+    ) == [{"site": "South", "class": "telescope", "type": None, "id": "INVALID-01"}]
+
+
+def test_read_input_metadata_from_simtel_without_metadata(args_dict_site, mocker):
+    mocker.patch.object(
+        metadata_collector,
+        "read_sim_telarray_metadata",
+        return_value=(None, None),
+    )
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    metadata = collector._read_input_metadata_from_simtel("empty.simtel")
+
+    assert metadata["cta"]["context"]["associated_elements"][0]["id"] is None
+
+
+def test_read_input_metadata_from_corsika_rejects_missing_headers(
+    args_dict_site, tmp_test_directory, mocker
+):
+    corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
+    corsika_file.write_bytes(b"")
+    mocker.patch.object(
+        metadata_collector,
+        "get_corsika_run_and_event_headers",
+        return_value=(None, None),
+    )
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    with pytest.raises(ValueError, match=r"^CORSIKA file has no complete run and event header:"):
+        collector._read_input_metadata_from_corsika(corsika_file)
 
 
 def test_fill_product_meta(args_dict_site):
