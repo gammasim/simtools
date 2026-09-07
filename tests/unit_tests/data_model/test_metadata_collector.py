@@ -230,8 +230,9 @@ def test_read_input_metadata_from_file(
     local_ecsv_file = Path(tmp_test_directory) / "input_metadata.ecsv"
     table.write(local_ecsv_file, format="ascii.ecsv", overwrite=True)
     metadata_1.args_dict["input_meta"] = local_ecsv_file
-    mocker.patch.object(metadata_collector.schema, "validate_dict_using_schema")
+    validate_schema = mocker.patch.object(metadata_collector.schema, "validate_dict_using_schema")
     assert len(metadata_1._read_input_metadata_from_file()) > 0
+    mocker.stop(validate_schema)
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
     with pytest.raises(FileNotFoundError, match=r"^No files found:"):
@@ -274,7 +275,11 @@ def test_read_input_metadata_from_file(
     assert simtel_metadata["cta"]["product"]["format"] == "simtel"
     assert simtel_metadata["cta"]["instrument"]["site"] == "South"
     assert simtel_metadata["cta"]["instrument"]["id"] == "CTAO-South-Alpha"
-    assert simtel_metadata["cta"]["product"]["data"]["model"]["version"] == "6.0.2"
+    assert simtel_metadata["cta"]["product"]["data"]["model"]["version"] is None
+    assert (
+        '"simtools_model_production_version": "6.0.2"'
+        in simtel_metadata["cta"]["context"]["notes"][0]["text"]
+    )
     assert simtel_metadata["cta"]["context"]["associated_elements"][0]["id"] == "MSTS-01"
 
     corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
@@ -283,8 +288,8 @@ def test_read_input_metadata_from_file(
         metadata_collector,
         "get_corsika_run_and_event_headers",
         return_value=(
-            np.array([(42, 7.8010)], dtype=[("run_number", "i4"), ("version", "f8")]),
-            np.array([(1, 14)], dtype=[("event_number", "i4"), ("particle_id", "i4")]),
+            np.array((42, 7.8010), dtype=[("run_number", "i4"), ("version", "f4")]),
+            np.array((1, 14), dtype=[("event_number", "i4"), ("particle_id", "i4")]),
         ),
     )
     metadata_1.args_dict["input_meta"] = corsika_file
@@ -293,7 +298,7 @@ def test_read_input_metadata_from_file(
     assert corsika_metadata["cta"]["product"]["format"] == "corsika"
     assert corsika_metadata["cta"]["activity"]["software"] == {
         "name": "corsika",
-        "version": "7.801",
+        "version": "7.8010",
     }
     assert '"run_number": 42' in corsika_metadata["cta"]["context"]["notes"][0]["text"]
 
@@ -324,6 +329,22 @@ def test_read_input_metadata_from_simtel_rejects_invalid_registry_value(
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     with pytest.raises(ValueError, match=r"could not convert string to float"):
         collector._read_input_metadata_from_simtel(simtel_file)
+
+
+def test_read_input_metadata_from_corsika_rejects_missing_headers(
+    args_dict_site, tmp_test_directory, mocker
+):
+    corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
+    corsika_file.write_bytes(b"")
+    mocker.patch.object(
+        metadata_collector,
+        "get_corsika_run_and_event_headers",
+        return_value=(None, None),
+    )
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    with pytest.raises(ValueError, match=r"^CORSIKA file has no complete run and event header:"):
+        collector._read_input_metadata_from_corsika(corsika_file)
 
 
 def test_fill_product_meta(args_dict_site):

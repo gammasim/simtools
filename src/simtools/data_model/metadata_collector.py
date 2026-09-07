@@ -505,7 +505,6 @@ class MetadataCollector:
             site=site,
             instrument_id=array_layout,
             format_name="simtel",
-            model_version=global_metadata.get("simtools_model_production_version"),
             raw_metadata={
                 "global": global_metadata,
                 "telescopes": telescope_metadata,
@@ -519,13 +518,17 @@ class MetadataCollector:
     def _read_input_metadata_from_corsika(self, metadata_file_name):
         """Read CORSIKA headers and adapt them to the CTA metadata model."""
         run_header, event_header = get_corsika_run_and_event_headers(metadata_file_name)
+        if run_header is None or event_header is None:
+            raise ValueError(
+                f"CORSIKA file has no complete run and event header: {metadata_file_name}"
+            )
         run_header = self._header_to_dict(run_header)
         event_header = self._header_to_dict(event_header)
         version = run_header.get("version")
         return self._build_eventio_input_metadata(
             metadata_file_name,
             software_name="corsika",
-            software_version=str(version) if version is not None else None,
+            software_version=(f"{float(version):.4f}" if version is not None else None),
             format_name="corsika",
             raw_metadata={"run_header": run_header, "event_header": event_header},
         )
@@ -539,15 +542,12 @@ class MetadataCollector:
         raw_metadata,
         site=None,
         instrument_id=None,
-        model_version=None,
     ):
         """Build schema-compatible metadata for an EventIO input file."""
         metadata = metadata_model.get_default_metadata_dict(observatory=self.observatory)
         cta_metadata = metadata[self.observatory]
         cta_metadata["product"].update({"filename": str(metadata_file_name), "format": format_name})
         cta_metadata["product"]["data"].update({"category": "SIM", "type": "Event"})
-        if model_version is not None:
-            cta_metadata["product"]["data"]["model"]["version"] = str(model_version)
         cta_metadata["instrument"].update(
             {
                 "site": site,
