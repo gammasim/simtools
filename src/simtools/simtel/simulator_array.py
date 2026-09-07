@@ -1,9 +1,11 @@
 """Simulation runner for array simulations."""
 
+import shlex
 from pathlib import Path
 
 from simtools import settings
 from simtools.io import io_handler
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 
 
@@ -63,12 +65,33 @@ class SimulatorArray(SimtelRunner):
                     file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
-            for _ in range(self.runs_per_set):
-                file.write(
-                    f"{sim_telarray_env_as_string()} "
-                    + " ".join(command)
-                    + f" 2>&1 | gzip > {log_file}\n"
+            resources_file = self.runner_service.get_file_name(
+                file_type="sim_telarray_resources", run_number=run_number
+            )
+            resource_files = []
+            for run_index in range(self.runs_per_set):
+                process_resources_file = resources_file
+                if self.runs_per_set > 1:
+                    process_resources_file = resources_file.with_name(
+                        f"{resources_file.stem}.part{run_index + 1:04d}{resources_file.suffix}"
+                    )
+                resource_files.append(process_resources_file)
+                accounting_command = build_accounting_command(
+                    command,
+                    process_resources_file,
+                    "sim_telarray",
+                    run_number,
+                    model_version=self.corsika_config.array_model.model_version,
+                    log_file=log_file,
+                    input_file=corsika_file,
                 )
+                file.write(f"{sim_telarray_env_as_string()} {shlex.join(accounting_command)}\n")
+
+            if self.file_list is None:
+                self.file_list = {}
+            self.file_list["sim_telarray_resources"] = (
+                resource_files[0] if len(resource_files) == 1 else resource_files
+            )
 
     def make_run_command(self, run_number=None, input_file=None):
         """

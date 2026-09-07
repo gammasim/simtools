@@ -241,6 +241,8 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     corsika_log_file = source_dir / f"corsika_{model_version}.log.gz"
     with gzip.open(corsika_log_file, "wt", encoding="utf-8") as handle:
         handle.write("corsika")
+    resource_file = source_dir / f"corsika_{model_version}.resources.json"
+    resource_file.write_text("{}", encoding="utf-8")
     model_archive = source_dir / f"model_files_{model_version}.tar.gz"
     model_archive.write_text("model", encoding="utf-8")
     simtools_log_file = source_dir / "simtools.log"
@@ -251,6 +253,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
         "sim_telarray_log": [str(log_file)],
         "sim_telarray_histogram": [str(histogram_file)],
         "corsika_log": [str(corsika_log_file)],
+        "corsika_resources": [str(resource_file)],
         "sim_telarray_event_data": [],
     }
     mocker.patch.object(
@@ -277,6 +280,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
         directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8"
     ) as handle:
         assert handle.read() == "corsika"
+    assert (directory_for_grid_upload / resource_file.name).read_text(encoding="utf-8") == "{}"
     assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
     assert not output_file.exists()
     assert (directory_for_grid_upload / output_file.name).read_text(encoding="utf-8") == "output"
