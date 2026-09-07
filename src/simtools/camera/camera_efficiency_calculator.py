@@ -1,10 +1,13 @@
 """Calculate camera efficiency from validated model tables."""
 
+from pathlib import Path
+
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
 from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.simtel.simtel_table_reader import read_simtel_table
 
 _WAVELENGTHS = np.arange(200.0, 1001.0)
 
@@ -31,14 +34,22 @@ def _interpolate(x, y, points):
 
 def _parameter_table(model, parameter_name):
     """Read the validated ECSV table associated with a model parameter."""
-    return model.get_parameter_table(parameter_name)
+    get_table = getattr(model, "get_parameter_table", None)
+    if get_table is not None:
+        return get_table(parameter_name)
+
+    file_name = model.get_parameter_value(parameter_name)
+    file_path = Path(file_name)
+    if not file_path.is_absolute():
+        file_path = model.config_file_directory / file_path
+    return read_simtel_table(parameter_name, file_path)
 
 
 def _table_from_file(file_name):
-    """Read an explicitly supplied ECSV NSB spectrum."""
+    """Read an explicitly supplied NSB spectrum in ECSV or sim_telarray format."""
     if isinstance(file_name, Table):
         return file_name
-    return Table.read(file_name, format="ascii.ecsv")
+    return read_simtel_table("nsb_reference_spectrum", file_name)
 
 
 def _value_column(table, candidates):
@@ -295,13 +306,11 @@ class CameraEfficiencyCalculator:
             mirror_table, angle, angle_efficiency
         )
         wavelength_table = self._optional_parameter_table("lightguide_efficiency_vs_wavelength")
-        funnel = (
-            np.full_like(wavelengths, mean_funnel)
-            if wavelength_table is None or len(wavelength_table) == 0
-            else _spectral_curve(
+        funnel = np.full_like(wavelengths, mean_funnel)
+        if wavelength_table is not None and len(wavelength_table) > 0:
+            funnel *= _spectral_curve(
                 wavelength_table, wavelengths, candidates=("efficiency", "transmission")
             )
-        )
         return mirror_area, funnel, edge
 
     def _nsb_values(self, atmosphere, wavelengths, airmass):

@@ -1,5 +1,7 @@
 """Tests for the in-process camera-efficiency calculator."""
 
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -10,6 +12,7 @@ from simtools.camera.camera_efficiency_calculator import (
     _atmospheric_transmission,
     _emission_altitude,
     _interpolate,
+    _parameter_table,
     _spectral_curve,
 )
 
@@ -17,6 +20,26 @@ from simtools.camera.camera_efficiency_calculator import (
 def test_interpolate_clips_and_sorts_support_points():
     result = _interpolate([10.0, 0.0], [2.0, 1.0], [-1.0, 5.0, 20.0])
     np.testing.assert_allclose(result, [1.0, 1.5, 2.0])
+
+
+def test_parameter_table_reads_exported_model_file(mocker, tmp_test_directory):
+    class Model:
+        config_file_directory = Path(tmp_test_directory)
+
+        @staticmethod
+        def get_parameter_value(_):
+            return "quantum_efficiency.ecsv"
+
+    expected = Table()
+    read_table = mocker.patch(
+        "simtools.camera.camera_efficiency_calculator.read_simtel_table", return_value=expected
+    )
+
+    assert _parameter_table(Model(), "quantum_efficiency") is expected
+
+    read_table.assert_called_once_with(
+        "quantum_efficiency", tmp_test_directory / "quantum_efficiency.ecsv"
+    )
 
 
 def test_spectral_curve_averages_angle_dependent_table():
@@ -225,7 +248,7 @@ def test_calculator_returns_camera_efficiency_table():
         "mirror_reflectivity": spectrum.copy(),
         "camera_filter": Table({"wavelength": [200.0, 1000.0] * u.nm, "transmission": [1.0, 1.0]}),
         "lightguide_efficiency_vs_incidence_angle": Table(
-            {"angle": [0.0, 20.0] * u.deg, "efficiency": [1.0, 1.0]}
+            {"angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]}
         ),
         "lightguide_efficiency_vs_wavelength": spectrum.copy(),
         "mirror_list": Table(
@@ -260,4 +283,4 @@ def test_calculator_returns_camera_efficiency_table():
     result = CameraEfficiencyCalculator(telescope, site).calculate()
     assert len(result) == 801
     assert result.colnames[:3] == ["wl", "eff", "eff_atm"]
-    assert result["eff"][200] == pytest.approx(0.1125)
+    assert result["eff"][200] == pytest.approx(0.09)
