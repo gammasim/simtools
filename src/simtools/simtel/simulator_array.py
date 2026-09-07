@@ -4,6 +4,7 @@ from pathlib import Path
 
 from simtools import settings
 from simtools.io import io_handler
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 
 
@@ -64,11 +65,19 @@ class SimulatorArray(SimtelRunner):
                 file.write("# End of extras\n\n")
 
             for _ in range(self.runs_per_set):
-                file.write(
-                    f"{sim_telarray_env_as_string()} "
-                    + " ".join(command)
-                    + f" 2>&1 | gzip > {log_file}\n"
+                resources_file = self.runner_service.get_file_name(
+                    file_type="sim_telarray_resources", run_number=run_number
                 )
+                accounting_command = build_accounting_command(
+                    command,
+                    resources_file,
+                    "sim_telarray",
+                    run_number,
+                    model_version=self.corsika_config.array_model.model_version,
+                    log_file=log_file,
+                    input_file=corsika_file,
+                )
+                file.write(f"{sim_telarray_env_as_string()} " + " ".join(accounting_command) + "\n")
 
     def make_run_command(self, run_number=None, input_file=None):
         """

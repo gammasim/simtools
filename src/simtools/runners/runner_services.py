@@ -22,6 +22,10 @@ FILES_AND_PATHS = {
         "suffix": ".corsika.log.gz",
         "sub_dir_type": "run_number",
     },
+    "corsika_resources": {
+        "suffix": ".corsika.resources.json",
+        "sub_dir_type": "run_number",
+    },
     # Generic iact output
     "iact_output": {
         "suffix": ".iact.gz",
@@ -44,6 +48,10 @@ FILES_AND_PATHS = {
         "suffix": ".reduced_event_data.hdf5",
         "sub_dir_type": "run_number",
     },
+    "sim_telarray_resources": {
+        "suffix": ".simtel.resources.json",
+        "sub_dir_type": "run_number",
+    },
     # light_emission
     "light_emission_log": {
         "suffix": ".light_emission.log.gz",
@@ -56,6 +64,10 @@ FILES_AND_PATHS = {
     },
     "multi_pipe_script": {
         "suffix": ".multi_pipe.sh",
+        "sub_dir_type": "run_number",
+    },
+    "multi_pipe_resources": {
+        "suffix": ".multipipe.resources.json",
         "sub_dir_type": "run_number",
     },
     # job submission

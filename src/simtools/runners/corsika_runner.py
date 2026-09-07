@@ -1,9 +1,11 @@
 """Generate run scripts and directories for CORSIKA simulations."""
 
 import logging
+import shlex
 from pathlib import Path
 
 from simtools import settings
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -101,10 +103,11 @@ class CorsikaRunner:
 
     def _export_run_script(self, run_number, sub_script, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""
-        corsika_log_file = self.runner_service.get_file_name(
-            "corsika_log", run_number=run_number
-        ).with_suffix("")  # remove .gz from log file
+        corsika_log_file = self.runner_service.get_file_name("corsika_log", run_number=run_number)
         corsika_input = self.runner_service.get_file_name("corsika_input", run_number=run_number)
+        resources_file = self.runner_service.get_file_name(
+            "corsika_resources", run_number=run_number
+        )
         sub_script = Path(sub_script)
         with open(sub_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")
@@ -120,12 +123,17 @@ class CorsikaRunner:
             file.write('mkdir -p "$CORSIKA_DATA"\n')
             file.write('cd "$CORSIKA_DATA" || exit 2\n')
 
-            file.write("\n# Running corsika\n")
-            file.write(
-                f"{self._corsika_executable()} < {corsika_input} > {corsika_log_file} 2>&1\n"
+            accounting_command = build_accounting_command(
+                [self._corsika_executable()],
+                resources_file,
+                "corsika",
+                run_number,
+                model_version=self.corsika_config.array_model.model_version,
+                log_file=corsika_log_file,
+                input_file=corsika_input,
             )
-            file.write("\n# Cleanup\n")
-            file.write(f"gzip {corsika_log_file}\n")
+            file.write("\n# Running corsika\n")
+            file.write(shlex.join(accounting_command) + "\n")
 
     def get_resources(self, runtime=None):
         """Return computing resources used."""
