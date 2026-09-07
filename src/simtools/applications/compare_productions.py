@@ -85,6 +85,8 @@ def _post_parse(args_dict, _config_sources, parser):
         args_dict.get("baseline_path") and args_dict.get("candidate_path")
     ):
         parser.error("'--baseline_path' and '--candidate_path' must be used together.")
+    if args_dict.get("comparison_level") == "signal" and not has_legacy_input:
+        parser.error("Signal-level comparison requires '--production' sim_telarray inputs.")
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -136,6 +138,7 @@ def _run_signal_comparison(app_context):
         for statistics_file in plot_signal_level_production_comparison.plot(
             metrics_by_telescope,
             output_path=app_context.io_handler.get_output_directory(),
+            figure_format=app_context.args.get("figure_format"),
         )
     ]
 

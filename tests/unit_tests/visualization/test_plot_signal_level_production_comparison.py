@@ -56,6 +56,7 @@ def test_plot_writes_one_set_per_telescope(tmp_test_directory):
         "candidate"
     )
     assert statistics["plot_statistics"]["signals"]["comparisons"][0]["valid"]
+    assert statistics["plot_statistics"]["signals"]["metric_type"] == "sample_distribution"
     assert statistics["plot_statistics"]["signals"]["metric"] == "ks"
     assert statistics["plot_statistics"]["triggered_pixels"]["metric"] == "wasserstein"
 
@@ -95,6 +96,7 @@ def test_plot_uses_log_y_axis_for_pedestals_and_signals(
         "simtools.visualization.plot_signal_level_production_comparison.plt.subplots",
         return_value=(figure, axes),
     )
+    mocker.patch("simtools.visualization.plot_signal_level_production_comparison.save_figure")
 
     plot_signal_level_production_comparison._plot_observable(
         [_metrics("baseline")],
@@ -108,6 +110,38 @@ def test_plot_uses_log_y_axis_for_pedestals_and_signals(
     )
 
     axes.set_yscale.assert_called_once_with("log")
+
+
+def test_plot_forwards_figure_format(mocker, tmp_test_directory):
+    figure = mocker.MagicMock()
+    axes = mocker.MagicMock()
+    mocker.patch(
+        "simtools.visualization.plot_signal_level_production_comparison.plt.subplots",
+        return_value=(figure, axes),
+    )
+    save_figure = mocker.patch(
+        "simtools.visualization.plot_signal_level_production_comparison.save_figure"
+    )
+
+    plot_signal_level_production_comparison._plot_observable(
+        [_metrics("baseline")],
+        Path(tmp_test_directory),
+        "signals",
+        "Integrated signal",
+        "signals.png",
+        "ks",
+        4,
+        True,
+        figure_format=["pdf"],
+    )
+
+    save_figure.assert_called_once_with(
+        figure,
+        Path(tmp_test_directory) / "signals",
+        figure_format=["pdf"],
+        dpi=300,
+        close=True,
+    )
 
 
 def test_plot_annotates_comparison_statistics(mocker, tmp_test_directory):

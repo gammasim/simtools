@@ -122,13 +122,14 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
         "comparison_level": "signal",
         "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
         "telescope_name": ["LSTN-01"],
+        "figure_format": ["pdf"],
     }
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
     mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
     mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
-    mocker.patch(
+    mock_plot = mocker.patch(
         "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
         return_value=[statistics_file],
     )
@@ -142,6 +143,11 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     )
     mock_dump.assert_called_once()
     assert mock_dump.call_args.args[1] == statistics_file
+    mock_plot.assert_called_once_with(
+        mocker.ANY,
+        output_path=output_directory,
+        figure_format=["pdf"],
+    )
 
 
 def test_signal_comparison_uses_array_layout_name_as_telescope_selection(
@@ -241,6 +247,24 @@ def test_application_parses_productions_without_select(monkeypatch):
     args, _ = compare_productions.APPLICATION._parse()
 
     assert args["select"] == []
+
+
+def test_signal_comparison_requires_production_inputs(mocker):
+    parser = mocker.Mock()
+
+    compare_productions._post_parse(
+        {
+            "comparison_level": "signal",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "Signal-level comparison requires '--production' sim_telarray inputs."
+    )
 
 
 def test_main_rejects_unimplemented_comparison_level(mocker):

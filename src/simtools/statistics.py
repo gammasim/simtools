@@ -101,6 +101,8 @@ def _comparison_result(metric, value=None, pvalue=None):
         result[value_keys[metric]] = float(value)
     if pvalue is not None:
         result["pvalue"] = float(pvalue)
+        if metric == "ks":
+            result["ks_pvalue"] = float(pvalue)
     return result
 
 

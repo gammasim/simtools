@@ -1,8 +1,8 @@
 ---
 $schema: http://json-schema.org/draft-06/schema#
-title: Event-level production comparison statistics
+title: Production comparison statistics
 description: |
-  Schema for the machine-readable report written by simtools-compare-productions.
+  Schema for machine-readable reports written by simtools-compare-productions.
 schema_version: 1.0.0
 schema_name: production_comparison_statistics.schema
 type: object
@@ -53,7 +53,7 @@ definitions:
         type: [string, 'null']
       metric_type:
         type: string
-        enum: [aligned_counts, quantity_distribution]
+        enum: [aligned_counts, quantity_distribution, sample_distribution]
       metric:
         $ref: '#/definitions/MetricName'
       metadata:
@@ -120,8 +120,6 @@ definitions:
             $ref: '#/definitions/Counts'
         required:
           - candidate_label
-          - baseline_counts
-          - candidate_counts
 
   QuantityComparison:
     type: object

@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-compare-productions
+  docs:
+    title: Compare signal-level production products
+    summary: Compare per-telescope pedestal, signal, timing, and trigger distributions.
   configuration:
     comparison_level: signal
     production:
@@ -10,12 +13,25 @@ applications:
     - ${generated:full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst}
     output_path: simtools-output
   integration_tests:
-  - output_file: LSTN-04/pedestals.png
-  - output_file: LSTN-04/signals.png
-  - output_file: LSTN-04/peak_timing.png
-  - output_file: LSTN-04/triggered_pixels.png
-  - output_file: LSTN-04/comparison_statistics.json
-  - output_file: LSTN-04/comparison_statistics.meta.yml
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: pedestals.png
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: signals.png
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: peak_timing.png
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: triggered_pixels.png
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: comparison_statistics.json
+    - path_descriptor: output_path
+      output_sub_path: LSTN-04
+      file: comparison_statistics.meta.yml
   test_name: signal
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

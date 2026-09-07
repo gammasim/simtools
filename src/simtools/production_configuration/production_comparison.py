@@ -118,11 +118,15 @@ def _production_descriptor_pairs_from_metadata(args_dict):
             [
                 ProductionDescriptor(
                     label="baseline",
-                    input_files=[str(_single_trigger_histogram_file(baseline_by_key[key]))],
+                    trigger_histogram_files=[
+                        str(_single_trigger_histogram_file(baseline_by_key[key]))
+                    ],
                 ),
                 ProductionDescriptor(
                     label="candidate",
-                    input_files=[str(_single_trigger_histogram_file(candidate_by_key[key]))],
+                    trigger_histogram_files=[
+                        str(_single_trigger_histogram_file(candidate_by_key[key]))
+                    ],
                 ),
             ],
         )

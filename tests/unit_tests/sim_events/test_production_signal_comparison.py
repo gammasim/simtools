@@ -26,8 +26,12 @@ def test_collect_signal_metrics_for_all_input_telescopes(mocker):
         return_value={1: "LSTN-01", 2: "MSTN-01"},
     )
     mocker.patch(
-        "simtools.sim_events.production_comparison.read_events",
-        side_effect=lambda _file, _telescope, **_kwargs: ([1], {}, [_event()]),
+        "simtools.sim_events.production_comparison.read_events_for_telescopes",
+        side_effect=lambda _file, telescopes, **_kwargs: (
+            [1],
+            {},
+            {telescope: [_event()] for telescope in telescopes},
+        ),
     )
 
     metrics = production_comparison.collect_signal_metrics(
@@ -49,8 +53,8 @@ def test_collect_signal_metrics_selects_requested_telescopes(mocker):
         return_value={1: "LSTN-01", 2: "MSTN-01"},
     )
     mocker.patch(
-        "simtools.sim_events.production_comparison.read_events",
-        return_value=([1], {}, [_event()]),
+        "simtools.sim_events.production_comparison.read_events_for_telescopes",
+        return_value=([1], {}, {"MSTN-01": [_event()]}),
     )
 
     metrics = production_comparison.collect_signal_metrics(
@@ -91,6 +95,28 @@ def test_collect_signal_metrics_rejects_missing_layout_telescope(mocker):
         )
 
 
+def test_collect_signal_metrics_selection_ignores_unselected_telescope_differences(mocker):
+    mocker.patch(
+        "simtools.sim_events.production_comparison"
+        ".get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        side_effect=[{1: "LSTN-01"}, {1: "LSTN-01", 2: "MSTN-01"}],
+    )
+    mocker.patch(
+        "simtools.sim_events.production_comparison.read_events_for_telescopes",
+        return_value=([1], {}, {"LSTN-01": [_event()]}),
+    )
+
+    metrics = production_comparison.collect_signal_metrics(
+        [
+            ProductionDescriptor("baseline", ["baseline.simtel"]),
+            ProductionDescriptor("candidate", ["candidate.simtel"]),
+        ],
+        telescope_names=["LSTN-01"],
+    )
+
+    assert set(metrics) == {"LSTN-01"}
+
+
 def test_collect_signal_metrics_rejects_incomplete_event(mocker):
     mocker.patch(
         "simtools.sim_events.production_comparison"
@@ -98,8 +124,8 @@ def test_collect_signal_metrics_rejects_incomplete_event(mocker):
         return_value={1: "LSTN-01"},
     )
     mocker.patch(
-        "simtools.sim_events.production_comparison.read_events",
-        return_value=([1], {}, [{"adc_samples": np.ones((1, 2, 20))}]),
+        "simtools.sim_events.production_comparison.read_events_for_telescopes",
+        return_value=([1], {}, {"LSTN-01": [{"adc_samples": np.ones((1, 2, 20))}]}),
     )
 
     with pytest.raises(ValueError, match="incomplete signal data"):
@@ -144,8 +170,10 @@ def test_collect_signal_metrics_rejects_missing_telescope_data(mocker, events, e
         return_value={1: "LSTN-01"},
     )
     mocker.patch(
-        "simtools.sim_events.production_comparison.read_events",
-        return_value=(None, None, events),
+        "simtools.sim_events.production_comparison.read_events_for_telescopes",
+        side_effect=lambda *_args, **_kwargs: (
+            (None, None, None) if events is None else ([1], {}, {"LSTN-01": events})
+        ),
     )
 
     with pytest.raises(ValueError, match=error_match):

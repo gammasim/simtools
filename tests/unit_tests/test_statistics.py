@@ -75,6 +75,7 @@ def test_compare_samples_with_statistics_returns_statistics():
 
     assert result["value"] is not None
     assert result["pvalue"] is not None
+    assert result["ks_pvalue"] == pytest.approx(result["pvalue"])
     assert result["valid"]
     assert result["reason"] == "ok"
 

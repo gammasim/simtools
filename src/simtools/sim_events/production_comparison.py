@@ -13,7 +13,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
     _load_dense_histogram_payloads,
 )
-from simtools.simtel.simtel_event_reader import read_events
+from simtools.simtel.simtel_event_reader import read_events_for_telescopes
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
@@ -25,12 +25,12 @@ class ProductionDescriptor:
     """Descriptor for one production input provided."""
 
     label: str
-    input_files: list[str]
+    trigger_histogram_files: list[str]
 
     @property
-    def trigger_histogram_files(self):
-        """Return input files using the legacy descriptor attribute name."""
-        return self.input_files
+    def input_files(self):
+        """Return input files using the generalized descriptor attribute name."""
+        return self.trigger_histogram_files
 
 
 @dataclass
@@ -107,7 +107,9 @@ def parse_production_arguments(production_arguments):
         resolved_files = [str(path) for path in resolve_file_patterns(patterns)]
         if len(resolved_files) == 0:
             raise ValueError(f"Production '{label}' does not resolve to any files.")
-        descriptors.append(ProductionDescriptor(label=label, input_files=resolved_files))
+        descriptors.append(
+            ProductionDescriptor(label=label, trigger_histogram_files=resolved_files)
+        )
 
     return descriptors
 
@@ -480,25 +482,30 @@ def _discover_telescope_names(production_descriptors, requested_telescope_names=
     if not input_files:
         raise ValueError("Signal comparison has no sim_telarray input files.")
 
-    expected = None
+    available_by_file = {}
     for input_file in input_files:
         mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(input_file)
-        available = {str(name) for name in mapping.values()}
-        if expected is None:
-            expected = available
-        elif available != expected:
+        available_by_file[input_file] = {str(name) for name in mapping.values()}
+
+    if requested_telescope_names is not None:
+        requested = set(ensure_string_lists(requested_telescope_names))
+        missing = {
+            input_file: sorted(requested - available)
+            for input_file, available in available_by_file.items()
+            if requested - available
+        }
+        if missing:
+            raise ValueError(f"Requested telescope(s) not found in input files: {missing}.")
+        return sorted(requested)
+
+    expected = next(iter(available_by_file.values()))
+    for input_file, available in available_by_file.items():
+        if available != expected:
             raise ValueError(
                 f"Input '{input_file}' has telescope set {sorted(available)}; expected "
                 f"the shared telescope set {sorted(expected)}."
             )
-    if requested_telescope_names is None:
-        return sorted(expected)
-
-    requested = set(ensure_string_lists(requested_telescope_names))
-    missing = sorted(requested - expected)
-    if missing:
-        raise ValueError(f"Requested telescope(s) not found in input files: {missing}.")
-    return sorted(requested)
+    return sorted(expected)
 
 
 def _collect_production_signal_metrics(production, telescope_names):
@@ -508,8 +515,7 @@ def _collect_production_signal_metrics(production, telescope_names):
         for name in telescope_names
     }
     for input_file in production.input_files:
-        for telescope_name in telescope_names:
-            _collect_file_metrics(input_file, telescope_name, values[telescope_name])
+        _collect_file_metrics(input_file, telescope_names, values)
 
     result = {}
     for telescope_name, telescope_values in values.items():
@@ -530,34 +536,36 @@ def _concatenate_values(values):
     return np.concatenate(values) if values else np.array([])
 
 
-def _collect_file_metrics(input_file, telescope_name, values):
-    """Collect metrics from one file and telescope."""
-    _event_ids, _telescope_description, events = read_events(
+def _collect_file_metrics(input_file, telescope_names, values):
+    """Collect metrics from one file for all requested telescopes."""
+    _event_ids, _telescope_descriptions, events_by_telescope = read_events_for_telescopes(
         input_file,
-        telescope_name,
+        telescope_names,
         event_ids=None,
         max_events=None,
     )
-    if events is None:
-        raise ValueError(f"Telescope '{telescope_name}' was not found in input '{input_file}'.")
+    if events_by_telescope is None:
+        raise ValueError(f"Telescope '{telescope_names[0]}' was not found in input '{input_file}'.")
 
-    for event in events:
-        try:
-            samples, pedestals, signals = trace.get_trace_data(event["adc_samples"])
-            peak_samples, _pixel_ids, _found_count = trace.trace_maxima(
-                samples, sum_threshold=trace.DEFAULT_SUM_THRESHOLD
-            )
-            trigger_pixels = _get_triggered_pixel_count(event)
-        except (AttributeError, KeyError, TypeError, ValueError) as exc:
-            raise ValueError(
-                f"Input '{input_file}' has incomplete signal data for telescope '{telescope_name}'."
-            ) from exc
+    for telescope_name in telescope_names:
+        for event in events_by_telescope[telescope_name]:
+            try:
+                samples, pedestals, signals = trace.get_trace_data(event["adc_samples"])
+                peak_samples, _pixel_ids, _found_count = trace.trace_maxima(
+                    samples, sum_threshold=trace.DEFAULT_SUM_THRESHOLD
+                )
+                trigger_pixels = _get_triggered_pixel_count(event)
+            except (AttributeError, KeyError, TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Input '{input_file}' has incomplete signal data for telescope "
+                    f"'{telescope_name}'."
+                ) from exc
 
-        values["pedestals"].append(np.asarray(pedestals))
-        values["signals"].append(np.asarray(signals))
-        if peak_samples is not None:
-            values["peak_timing"].append(np.asarray(peak_samples))
-        values["triggered_pixels"].append(np.asarray([trigger_pixels]))
+            values[telescope_name]["pedestals"].append(np.asarray(pedestals))
+            values[telescope_name]["signals"].append(np.asarray(signals))
+            if peak_samples is not None:
+                values[telescope_name]["peak_timing"].append(np.asarray(peak_samples))
+            values[telescope_name]["triggered_pixels"].append(np.asarray([trigger_pixels]))
 
 
 def _get_triggered_pixel_count(event):

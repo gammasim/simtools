@@ -3,14 +3,15 @@
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.io import ascii_handler
 from simtools.statistics import compare_samples_with_statistics
+from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_event_level_production_comparison import (
     _annotate_comparison_statistics,
 )
+from simtools.visualization.visualize import save_figure
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ _OBSERVABLES = (
 )
 
 
-def plot(metrics_by_telescope, output_path, bins=40):
+def plot(metrics_by_telescope, output_path, bins=40, figure_format=None):
     """Create signal comparison plots for every telescope in a layout.
 
     Parameters
@@ -39,6 +40,8 @@ def plot(metrics_by_telescope, output_path, bins=40):
         Base output directory.
     bins : int, optional
         Number of histogram bins.
+    figure_format : list[str] or str, optional
+        Figure formats to write. Defaults to the configured formats or ``["png"]``.
 
     Returns
     -------
@@ -49,14 +52,16 @@ def plot(metrics_by_telescope, output_path, bins=40):
     for telescope_name, metrics in metrics_by_telescope.items():
         telescope_path = Path(output_path) / telescope_name
         telescope_path.mkdir(parents=True, exist_ok=True)
-        comparison_statistics = _plot_telescope_comparisons(metrics, telescope_path, bins)
+        comparison_statistics = _plot_telescope_comparisons(
+            metrics, telescope_path, bins, figure_format
+        )
         statistics_file = telescope_path / "comparison_statistics.json"
         ascii_handler.write_data_to_file(comparison_statistics, statistics_file, sort_keys=True)
         statistics_files.append(statistics_file)
     return statistics_files
 
 
-def _plot_telescope_comparisons(metrics, output_path, bins):
+def _plot_telescope_comparisons(metrics, output_path, bins, figure_format=None):
     """Plot all observables for one telescope and return their statistics."""
     if not metrics:
         raise ValueError("At least one production is required for signal comparison.")
@@ -76,6 +81,7 @@ def _plot_telescope_comparisons(metrics, output_path, bins):
             metric,
             bins,
             log_y,
+            figure_format,
         )
         if plot_statistics is not None:
             statistics["plot_statistics"][observable] = plot_statistics
@@ -93,7 +99,9 @@ def _production_summary(metrics):
     }
 
 
-def _plot_observable(metrics, output_path, observable, x_label, filename, metric, bins, log_y):
+def _plot_observable(
+    metrics, output_path, observable, x_label, filename, metric, bins, log_y, figure_format=None
+):
     """Plot one observable and calculate candidate statistics."""
     samples = [np.asarray(getattr(item, observable)) for item in metrics]
     non_empty = [values for values in samples if values.size]
@@ -125,13 +133,13 @@ def _plot_observable(metrics, output_path, observable, x_label, filename, metric
         comparisons.append(comparison)
     statistics = {
         "baseline_label": metrics[0].label,
-        "metric_type": "aligned_counts",
+        "metric_type": "sample_distribution",
         "metric": metric,
         "metadata": {"bin_edges": bin_edges.tolist()},
         "comparisons": comparisons,
     }
     _annotate_comparison_statistics(ax, statistics)
     ax.legend()
-    fig.savefig(output_path / filename, dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    output_file = Path(output_path) / Path(filename).with_suffix("")
+    save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
     return statistics
