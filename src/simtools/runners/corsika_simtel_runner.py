@@ -1,10 +1,12 @@
 """Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality."""
 
 import logging
+import shlex
 import stat
 
 import simtools.utils.general as gen
 from simtools import settings
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.runners import corsika_runner, runner_services, simtel_runner
 from simtools.simtel.simulator_array import SimulatorArray
 
@@ -114,10 +116,21 @@ class CorsikaSimtelRunner:
                     run_number=run_number,
                     input_file="-",  # instruct sim_telarray to take input from stdout
                 )
+                resources_file = simulator_array.runner_service.get_file_name(
+                    file_type="sim_telarray_resources", run_number=run_number
+                )
+                accounting_command = build_accounting_command(
+                    run_command,
+                    resources_file,
+                    "sim_telarray",
+                    run_number,
+                    model_version=simulator_array.corsika_config.array_model.model_version,
+                    log_file=log_file,
+                )
                 file.write(
                     f"{simtel_runner.sim_telarray_env_as_string()} "
-                    + " ".join(run_command)
-                    + f" | gzip > {log_file} 2>&1\n"
+                    + shlex.join(accounting_command)
+                    + "\n"
                 )
                 file.write("\n")
 
@@ -145,11 +158,21 @@ class CorsikaSimtelRunner:
             "multi_pipe_script", run_number=run_number
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
-            multipipe_command = settings.config.sim_telarray_path.joinpath(
-                f"bin/multipipe_corsika -c {multipipe_file} {self.sequential} "
-                "|| echo 'Fan-out failed'"
+            multipipe_command = [
+                settings.config.sim_telarray_path / "bin/multipipe_corsika",
+                "-c",
+                multipipe_file,
+            ]
+            if self.sequential:
+                multipipe_command.append(self.sequential)
+            accounting_command = build_accounting_command(
+                multipipe_command,
+                self.runner_service.get_file_name("multi_pipe_resources", run_number=run_number),
+                "multipipe",
+                run_number,
+                model_version=self.base_corsika_config.array_model.model_version,
             )
-            file.write(f"{multipipe_command}")
+            file.write(shlex.join(accounting_command) + " || echo 'Fan-out failed'")
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 
@@ -180,14 +203,22 @@ class CorsikaSimtelRunner:
             self.file_list.update(self.corsika_runner.file_list)
 
         for simulator_array in self.simulator_array:
-            _tmp_list = simulator_array.file_list
-            for key, data in _tmp_list.items():
-                if key in self.file_list:
-                    # in case of multiple sim_telarray instances, make list of files
-                    if not isinstance(self.file_list[key], list):
-                        self.file_list[key] = [self.file_list[key]]
-                    self.file_list[key].append(data)
-                else:
-                    self.file_list[key] = [data]
+            self._merge_runner_file_list(simulator_array.file_list)
 
         return self.file_list
+
+    def _merge_runner_file_list(self, runner_file_list):
+        """Merge one simulator-array file list into the combined file list."""
+        for key, data in runner_file_list.items():
+            if not isinstance(data, list):
+                data = [data]
+            if key in self.file_list:
+                self._append_runner_files(key, data)
+            else:
+                self.file_list[key] = data
+
+    def _append_runner_files(self, key, data):
+        """Append runner files, normalizing an existing single path to a list."""
+        if not isinstance(self.file_list[key], list):
+            self.file_list[key] = [self.file_list[key]]
+        self.file_list[key].extend(data)

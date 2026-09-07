@@ -16,11 +16,28 @@ The first production is the baseline. Every following production is compared wit
 so at least two production descriptors are required and production order matters. Production
 labels must be unique.
 
-The application currently performs event-level comparisons only. Trigger-histogram files should
+The application supports event-level and signal-level comparisons. Trigger-histogram files should
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
-Use `array_layout_name` to restrict the comparison to selected layouts. Without this option, all
+For signal-level comparisons, use `--comparison_level signal` with sim_telarray files. By default,
+all telescopes shared by the input files are processed. Use `--array_layout_name` with one or more
+telescope names to restrict the comparison, for example:
+
+```console
+simtools-compare-productions \
+    --comparison_level signal \
+    --array_layout_name LSTN-01 MSTN-01 \
+    --production flat /data/flat/run.simtel.zst \
+    --production curved /data/curved/run.simtel.zst \
+    --output_path signal-comparisons
+```
+
+`--telescope_name` is also accepted as an alias for signal-level telescope selection. Use only
+one of these options at a time.
+
+For event-level comparisons, use `array_layout_name` to restrict the comparison to selected layouts.
+Without this option, all
 array-layout references found in the input files are aggregated into one comparison. With multiple
 selected layouts, each layout is compared independently and written to its own directory below
 `output_path/<layout-name>/`.
@@ -45,7 +62,8 @@ simtools-compare-productions \
 | Role | Argument or file | Format | Description |
 | --- | --- | --- | --- |
 | Input | `production` | HDF5 | Repeated label and comma-separated file-pattern pairs. |
-| Input | `array_layout_name` | Array-layout name | Optional selection of references to aggregate. |
+| Input | `array_layout_name` | Array-layout or telescope name(s) | Optional selection for event-level layouts or signal-level telescopes. |
+| Input | `telescope_name` | Telescope name(s) | Optional alias for signal-level telescope selection. |
 | Output | `output_path` | Directory | Directory for figures and the statistics report. |
 | Output | `comparison_statistics.json` | JSON | Machine-readable comparison statistics. |
 | Output | `comparison_statistics.meta.yml` | YAML | Metadata sidecar for the statistics report. |
@@ -72,5 +90,5 @@ be selected.
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: compare_productions_run.yml
+    :file: compare_productions_events.yml
 ```

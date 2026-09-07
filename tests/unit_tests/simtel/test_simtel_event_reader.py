@@ -2,7 +2,7 @@
 
 import pytest
 
-from simtools.simtel.simtel_event_reader import read_events
+from simtools.simtel.simtel_event_reader import read_events, read_events_for_telescopes
 
 
 class FakeSimTelFile:
@@ -71,3 +71,39 @@ def test_read_events_with_event_range(
     assert event_ids == expected_ids
     assert tel_desc == {"name": "TEST"}
     assert events == expected_events
+
+
+def test_read_events_for_telescopes_reads_selected_telescopes_in_one_pass(monkeypatch):
+    tel_descriptions = {1: {"name": "LST"}, 2: {"name": "MST"}}
+    events_data = [
+        {
+            "event_id": event_id,
+            "telescope_events": {1: f"lst-{event_id}", 2: f"mst-{event_id}"},
+        }
+        for event_id in range(2)
+    ]
+    simtel_file_calls = []
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_event_reader."
+        "get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        lambda _file: {1: "LSTN-01", 2: "MSTN-01"},
+    )
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_event_reader.SimTelFile",
+        lambda *args, **kwargs: (
+            simtel_file_calls.append((args, kwargs))
+            or FakeSimTelFile(1, tel_descriptions, events_data)
+        ),
+    )
+
+    event_ids, descriptions, events = read_events_for_telescopes(
+        "file.simtel", ["LSTN-01", "MSTN-01"]
+    )
+
+    assert event_ids == [0, 1]
+    assert descriptions == {"LSTN-01": {"name": "LST"}, "MSTN-01": {"name": "MST"}}
+    assert events == {
+        "LSTN-01": ["lst-0", "lst-1"],
+        "MSTN-01": ["mst-0", "mst-1"],
+    }
+    assert len(simtel_file_calls) == 1

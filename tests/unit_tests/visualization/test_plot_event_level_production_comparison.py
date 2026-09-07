@@ -324,6 +324,8 @@ def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_direc
 
     comparison = statistics["comparisons"][0]
     assert comparison["metric"] == "jensen_shannon"
+    assert comparison["jensen_shannon_distance"] > 0
+    assert statistics["metadata"]["categories"] == ["LSTN-01", "MSTN-01"]
     assert comparison["value"] > 0
     assert statistics["metadata"]["category_count"] == 2
     assert statistics["metadata"]["display_categories"] == ["LSTN-01"]
@@ -342,12 +344,15 @@ def test_histogram_quantity_comparison_uses_binned_ks():
         "simulated_samples": None,
         "triggered_samples": None,
     }
+    baseline["bin_edges"] = np.array([0.0, 1.0, 2.0])
+    candidate["bin_edges"] = np.array([0.0, 1.0, 2.0])
 
     result = plot_event_level_production_comparison._compare_distribution_data(
         baseline, candidate, "simulated"
     )
 
     assert result["metric"] == "ks"
+    assert result["ks_statistic"] == pytest.approx(0.5)
     assert result["value"] == pytest.approx(0.5)
 
 
