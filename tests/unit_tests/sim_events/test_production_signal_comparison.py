@@ -10,7 +10,12 @@ def _event(triggered_pixels=3):
     adc_samples[0, 0, 4] = 30.0
     return {
         "adc_samples": adc_samples,
-        "pixel_lists": {1: {"pixels": np.arange(triggered_pixels)}},
+        "pixel_lists": {
+            1: {
+                "pixels": triggered_pixels,
+                "pixel_list": np.arange(triggered_pixels),
+            }
+        },
     }
 
 

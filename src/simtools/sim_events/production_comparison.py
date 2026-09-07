@@ -540,4 +540,4 @@ def _get_triggered_pixel_count(event):
         pixel_list = pixel_lists.get(1)
     if pixel_list is None:
         raise ValueError("Event contains no triggered or selected pixel list.")
-    return len(pixel_list["pixels"])
+    return int(pixel_list["pixels"])
