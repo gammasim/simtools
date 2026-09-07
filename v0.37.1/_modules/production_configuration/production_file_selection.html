@@ -1,0 +1,1145 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.production_file_selection &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../_static/documentation_options.js?v=8dc928a0"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/production_file_selection';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.37.1" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.production_file_selection</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.production_file_selection</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Discover, filter, group, and validate production metadata manifests."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">isclose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sim_telarray_metadata</span>
+
+<span class="n">SIMULATE_PROD_JOB_METADATA</span> <span class="o">=</span> <span class="s2">"simulate_prod_job_metadata.yml"</span>
+
+<span class="n">_RUN_NUMBER_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?:^|_)run0*(\d+)(?:_|\.|$)"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_with_compression_suffixes</span><span class="p">(</span><span class="o">*</span><span class="n">suffixes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return suffixes with supported compression extensions."""</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">compressed_suffix</span>
+        <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">suffixes</span>
+        <span class="k">for</span> <span class="n">compressed_suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.zst"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.gz"</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="n">_FILE_TYPE_SUFFIXES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"reduced_event_data"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".reduced_event_data.hdf5"</span><span class="p">),</span>
+    <span class="s2">"sim_telarray"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".simtel"</span><span class="p">),</span>
+    <span class="s2">"sim_telarray_log"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".simtel.log"</span><span class="p">),</span>
+    <span class="s2">"sim_telarray_histogram"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span>
+        <span class="s2">".hdata"</span><span class="p">,</span>
+        <span class="s2">".histogram"</span><span class="p">,</span>
+        <span class="s2">".histogram.hdf5"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"corsika"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".corsika"</span><span class="p">),</span>
+    <span class="s2">"corsika_log"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".corsika.log"</span><span class="p">),</span>
+    <span class="s2">"trigger_histograms"</span><span class="p">:</span> <span class="n">_with_compression_suffixes</span><span class="p">(</span><span class="s2">".trigger_histograms.hdf5"</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="n">_MANIFEST_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"simulate_prod_job"</span><span class="p">:</span> <span class="s2">"simulate_prod_job_metadata.schema.yml"</span><span class="p">,</span>
+    <span class="s2">"trigger_histograms"</span><span class="p">:</span> <span class="s2">"trigger_histograms_metadata.schema.yml"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_manifest_schema_metadata">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.get_manifest_schema_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_manifest_schema_metadata</span><span class="p">(</span><span class="n">product_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the current schema name and version for a manifest product type."""</span>
+    <span class="n">schema_file</span> <span class="o">=</span> <span class="n">_MANIFEST_SCHEMAS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">product_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown production manifest product type: </span><span class="si">{</span><span class="n">product_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">definition</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">load_schema</span><span class="p">(</span><span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="n">schema_file</span><span class="p">,</span> <span class="s2">"latest"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"schema_name"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">definition</span><span class="p">[</span><span class="s2">"schema_name"</span><span class="p">])</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span><span class="s2">".schema"</span><span class="p">),</span>
+        <span class="s2">"schema_version"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">definition</span><span class="p">[</span><span class="s2">"schema_version"</span><span class="p">]),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_registered_manifest_schema_versions</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return schema versions registered for known manifest product types."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">get_manifest_schema_metadata</span><span class="p">(</span><span class="n">product_type</span><span class="p">)[</span><span class="s2">"schema_version"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">product_type</span> <span class="ow">in</span> <span class="n">_MANIFEST_SCHEMAS</span>
+    <span class="p">}</span>
+
+
+<span class="n">_GROUPING_EXCLUDE_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"run_number"</span><span class="p">,</span>
+    <span class="s2">"random_seed"</span><span class="p">,</span>
+    <span class="s2">"corsika_seeds"</span><span class="p">,</span>
+    <span class="s2">"sim_telarray_seed"</span><span class="p">,</span>
+    <span class="s2">"sim_telarray_seed_file"</span><span class="p">,</span>
+    <span class="s2">"sim_telarray_instrument_seed"</span><span class="p">,</span>
+    <span class="s2">"sim_telarray_random_instrument_instances"</span><span class="p">,</span>
+    <span class="s2">"event_number_first_shower"</span><span class="p">,</span>
+    <span class="s2">"correct_for_b_field_alignment"</span><span class="p">,</span>
+    <span class="s2">"output_path"</span><span class="p">,</span>
+    <span class="s2">"grid_output_path"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_SIMTEL_METADATA_MANIFEST_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"primary"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"primary"</span><span class="p">,</span> <span class="s2">"primary_particle"</span><span class="p">,</span> <span class="s2">"particle"</span><span class="p">),</span>
+    <span class="s2">"azimuth_angle"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"azimuth"</span><span class="p">,</span> <span class="s2">"azimuth_angle"</span><span class="p">),</span>
+    <span class="s2">"zenith_angle"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"zenith"</span><span class="p">,</span> <span class="s2">"zenith_angle"</span><span class="p">),</span>
+    <span class="s2">"energy_min"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"energy_min"</span><span class="p">,),</span>
+    <span class="s2">"energy_max"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"energy_max"</span><span class="p">,),</span>
+    <span class="s2">"view_cone_min"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"viewcone_min"</span><span class="p">,</span> <span class="s2">"view_cone_min"</span><span class="p">),</span>
+    <span class="s2">"view_cone_max"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"viewcone_max"</span><span class="p">,</span> <span class="s2">"view_cone_max"</span><span class="p">),</span>
+    <span class="s2">"core_scatter_max"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"core_scatter_max"</span><span class="p">,),</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="ProductionManifest">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.ProductionManifest">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProductionManifest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A loaded production metadata manifest and its file path."""</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the manifest parent directory."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the run number recorded in this manifest."""</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{})[</span><span class="s2">"run_number"</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="ProductionFileGroup">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.ProductionFileGroup">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProductionFileGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Selected production files sharing one simulation configuration."""</span>
+
+    <span class="n">configuration</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">run_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">file_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">missing_run_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">duplicate_run_numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">files_by_run_number</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_manifests">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.find_manifests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_manifests</span><span class="p">(</span><span class="n">production_path</span><span class="p">,</span> <span class="n">manifest_name</span><span class="o">=</span><span class="n">SIMULATE_PROD_JOB_METADATA</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return sorted production metadata manifests below a directory."""</span>
+    <span class="n">production_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">production_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">production_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Production path not found: </span><span class="si">{</span><span class="n">production_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">production_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">manifest_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="load_manifest">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.load_manifest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_manifest</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load and validate one production manifest YAML file."""</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+    <span class="n">_validate_manifest_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">manifest_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ProductionManifest</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">manifest_path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="discover_manifests">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.discover_manifests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">discover_manifests</span><span class="p">(</span><span class="n">production_path</span><span class="p">,</span> <span class="n">manifest_name</span><span class="o">=</span><span class="n">SIMULATE_PROD_JOB_METADATA</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load all production metadata manifests below a directory."""</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">load_manifest</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">find_manifests</span><span class="p">(</span><span class="n">production_path</span><span class="p">,</span> <span class="n">manifest_name</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="discover_product_manifests">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.discover_product_manifests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">discover_product_manifests</span><span class="p">(</span><span class="n">production_path</span><span class="p">,</span> <span class="n">product_type</span><span class="p">,</span> <span class="n">manifest_pattern</span><span class="o">=</span><span class="s2">"*.yml"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load all manifests of one product type below a directory."""</span>
+    <span class="n">production_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">production_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">production_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Production path not found: </span><span class="si">{</span><span class="n">production_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">manifests</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">production_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">manifest_pattern</span><span class="p">)):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"product_type"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">product_type</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_validate_manifest_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">manifests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ProductionManifest</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">manifests</span></div>
+
+
+
+<div class="viewcode-block" id="select_file_groups">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.select_file_groups">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_file_groups</span><span class="p">(</span>
+    <span class="n">production_path</span><span class="p">,</span>
+    <span class="n">selections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">file_type</span><span class="o">=</span><span class="s2">"reduced_event_data"</span><span class="p">,</span>
+    <span class="n">require_complete_runs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">manifest_name</span><span class="o">=</span><span class="n">SIMULATE_PROD_JOB_METADATA</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Discover manifests, filter jobs, and group selected files by configuration."""</span>
+    <span class="n">manifests</span> <span class="o">=</span> <span class="n">discover_manifests</span><span class="p">(</span><span class="n">production_path</span><span class="p">,</span> <span class="n">manifest_name</span><span class="o">=</span><span class="n">manifest_name</span><span class="p">)</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="n">filter_manifests</span><span class="p">(</span><span class="n">manifests</span><span class="p">,</span> <span class="n">selections</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">group_selected_files</span><span class="p">(</span><span class="n">selected</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">require_complete_runs</span><span class="p">:</span>
+        <span class="n">incomplete</span> <span class="o">=</span> <span class="p">[</span><span class="n">group</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">missing_run_numbers</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">incomplete</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Missing run numbers in selected production groups: "</span>
+                <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">missing_run_numbers</span><span class="p">))</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">incomplete</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"metadata_files_read"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">manifests</span><span class="p">),</span>
+        <span class="s2">"matching_jobs"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">),</span>
+        <span class="s2">"configuration_groups"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">),</span>
+        <span class="s2">"groups"</span><span class="p">:</span> <span class="n">groups</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="filter_manifests">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.filter_manifests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_manifests</span><span class="p">(</span><span class="n">manifests</span><span class="p">,</span> <span class="n">selections</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return manifests matching all selection expressions."""</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="p">[</span><span class="n">_parse_selection</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span> <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">selections</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">manifest</span>
+        <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">manifests</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">_selection_matches</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">expected</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">expected</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">)</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="group_selected_files">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.group_selected_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">group_selected_files</span><span class="p">(</span><span class="n">manifests</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">"reduced_event_data"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Group selected files by all configuration fields except the run number."""</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">manifests</span><span class="p">:</span>
+        <span class="n">check_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">_manifest_files</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">file_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Manifest </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2"> lists no files of type '</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">_normalized_group_key</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span>
+            <span class="n">ProductionFileGroup</span><span class="p">(</span>
+                <span class="n">configuration</span><span class="o">=</span><span class="n">_configuration_without_excluded_keys</span><span class="p">(</span>
+                    <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">run_number</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">files_by_run_number</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">run_number</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="n">grouped</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+        <span class="n">_sort_group_by_run_number</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">duplicate_run_numbers</span> <span class="o">=</span> <span class="n">_duplicate_run_numbers</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">duplicate_run_numbers</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Duplicate run numbers in selected production group: "</span>
+                <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">duplicate_run_numbers</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">missing_run_numbers</span> <span class="o">=</span> <span class="n">_missing_run_numbers</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">grouped</span></div>
+
+
+
+<div class="viewcode-block" id="check_manifest">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.check_manifest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate a manifest against its output directory and listed files."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">ProductionManifest</span><span class="p">):</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">load_manifest</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+
+    <span class="n">_validate_manifest_structure</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">seen_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">unverifiable_fields</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="k">for</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">relative_paths</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"files"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">relative_path</span> <span class="ow">in</span> <span class="n">relative_paths</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">_resolve_relative_manifest_path</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">seen_paths</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Duplicate output file listed in </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">relative_path</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">seen_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Manifest </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2"> references missing file: </span><span class="si">{</span><span class="n">relative_path</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">_validate_file_type</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">_validate_filename_run_number</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">manifest</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">"sim_telarray"</span><span class="p">:</span>
+                <span class="n">unverifiable_fields</span> <span class="o">=</span> <span class="n">_compare_simtel_metadata</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="p">,</span>
+                    <span class="n">manifest</span><span class="p">,</span>
+                    <span class="n">unverifiable_fields</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"product_type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"simulate_prod_job"</span><span class="p">:</span>
+        <span class="n">_check_declared_production_inventory</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">seen_paths</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"unverifiable_fields"</span><span class="p">:</span> <span class="n">unverifiable_fields</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="inventory_production_files">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.inventory_production_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inventory_production_files</span><span class="p">(</span><span class="n">job_directory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return nested production outputs grouped by manifest file type.</span>
+
+<span class="sd">    Paths in the returned inventory are relative to ``job_directory`` so that</span>
+<span class="sd">    manifests can describe the standard ``sim_telarray/runNNNNNN`` and</span>
+<span class="sd">    ``corsika/runNNNNNN`` output layout.</span>
+<span class="sd">    """</span>
+    <span class="n">job_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">job_directory</span><span class="p">)</span>
+    <span class="n">inventory</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">job_directory</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()):</span>
+        <span class="n">file_type</span> <span class="o">=</span> <span class="n">_production_file_type</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">relative_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">job_directory</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+            <span class="n">inventory</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">relative_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inventory</span></div>
+
+
+
+<div class="viewcode-block" id="validate_required_production_outputs">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.validate_required_production_outputs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_required_production_outputs</span><span class="p">(</span><span class="n">file_inventory</span><span class="p">,</span> <span class="n">simulation_software</span><span class="p">,</span> <span class="n">job_directory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Require the principal simulation output before marking a job complete."""</span>
+    <span class="n">required_type</span> <span class="o">=</span> <span class="s2">"corsika"</span> <span class="k">if</span> <span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">"corsika"</span> <span class="k">else</span> <span class="s2">"sim_telarray"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_inventory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">required_type</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Incomplete production job </span><span class="si">{</span><span class="n">job_directory</span><span class="si">}</span><span class="s2">: no '</span><span class="si">{</span><span class="n">required_type</span><span class="si">}</span><span class="s2">' output file found."</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="stable_configuration_hash">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.stable_configuration_hash">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stable_configuration_hash</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a short stable hash for normalized configuration data."""</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">normalize_for_comparison</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="n">length</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="write_selection_file">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.write_selection_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_selection_file</span><span class="p">(</span><span class="n">selection_result</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Write selected file groups to a YAML file."""</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"product_type"</span><span class="p">:</span> <span class="s2">"production_file_selection"</span><span class="p">,</span>
+        <span class="s2">"metadata_files_read"</span><span class="p">:</span> <span class="n">selection_result</span><span class="p">[</span><span class="s2">"metadata_files_read"</span><span class="p">],</span>
+        <span class="s2">"matching_jobs"</span><span class="p">:</span> <span class="n">selection_result</span><span class="p">[</span><span class="s2">"matching_jobs"</span><span class="p">],</span>
+        <span class="s2">"configuration_groups"</span><span class="p">:</span> <span class="n">selection_result</span><span class="p">[</span><span class="s2">"configuration_groups"</span><span class="p">],</span>
+        <span class="s2">"groups"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"configuration"</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">configuration</span><span class="p">,</span>
+                <span class="s2">"run_numbers"</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span><span class="p">,</span>
+                <span class="s2">"missing_run_numbers"</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">missing_run_numbers</span><span class="p">,</span>
+                <span class="s2">"files"</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">file_paths</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">selection_result</span><span class="p">[</span><span class="s2">"groups"</span><span class="p">]</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="selection_summary">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.selection_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">selection_summary</span><span class="p">(</span><span class="n">selection_result</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a compact summary string for logging or console output."""</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">run_number</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">selection_result</span><span class="p">[</span><span class="s2">"groups"</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">run_number</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">missing_run_numbers</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Metadata files read: </span><span class="si">{</span><span class="n">selection_result</span><span class="p">[</span><span class="s1">'metadata_files_read'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"Matching jobs: </span><span class="si">{</span><span class="n">selection_result</span><span class="p">[</span><span class="s1">'matching_jobs'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"Configuration groups: </span><span class="si">{</span><span class="n">selection_result</span><span class="p">[</span><span class="s1">'configuration_groups'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"Missing runs: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">missing</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_for_comparison">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.production_file_selection.normalize_for_comparison">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_for_comparison</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Normalize quantities and containers for exact matching and grouping."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_quantity_comparison_value</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_quantity_comparison_value</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">normalize_for_comparison</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GROUPING_EXCLUDE_KEYS</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">normalize_for_comparison</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_manifest_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">manifest_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate required manifest fields and supported version."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Malformed metadata in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: expected a mapping."</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"schema_version"</span><span class="p">,</span> <span class="s2">"product_type"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"configuration"</span><span class="p">,</span> <span class="s2">"files"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Malformed metadata in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: missing '</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+    <span class="n">product_type</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"product_type"</span><span class="p">]</span>
+    <span class="n">expected_version</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">get_manifest_schema_metadata</span><span class="p">(</span><span class="n">product_type</span><span class="p">)[</span><span class="s2">"schema_version"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">product_type</span> <span class="ow">in</span> <span class="n">_MANIFEST_SCHEMAS</span>
+        <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"schema_version"</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_get_registered_manifest_schema_versions</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unsupported production metadata schema version in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">'schema_version'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">expected_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"schema_version"</span><span class="p">])</span> <span class="o">!=</span> <span class="n">expected_version</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unsupported production metadata schema version in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">'schema_version'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"complete"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Production job is not complete in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"configuration"</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Malformed metadata in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: configuration is not a mapping."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">"product_type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"simulate_prod_job"</span> <span class="ow">and</span> <span class="s2">"run_number"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"configuration"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Malformed metadata in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: missing configuration.run_number."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"files"</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Malformed metadata in </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">: files is not a mapping."</span><span class="p">)</span>
+    <span class="n">schema_file</span> <span class="o">=</span> <span class="n">_MANIFEST_SCHEMAS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"product_type"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
+            <span class="n">ascii_handler</span><span class="o">.</span><span class="n">to_builtin</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="n">schema_file</span><span class="p">,</span>
+            <span class="n">offline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_selection</span><span class="p">(</span><span class="n">selection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Parse a KEY=VALUE selection expression."""</span>
+    <span class="k">if</span> <span class="s2">"="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Selection must use KEY=VALUE syntax: </span><span class="si">{</span><span class="n">selection</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">expected</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Selection key is empty: </span><span class="si">{</span><span class="n">selection</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">expected</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\"</span><span class="s2">'"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_selection_matches</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether one dotted-path selection matches."""</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">_get_dotted_value</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"."</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">_get_dotted_value</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"configuration.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_values_match</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_dotted_value</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a nested value addressed by a dotted key path."""</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">part</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">part</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_values_match</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether a manifest value matches a command-line selection value."""</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_quantity_matches</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">expected</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantity_matches</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether a stored quantity matches a textual quantity exactly after conversion."""</span>
+    <span class="n">stored</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">expected_quantity</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">expected</span>
+    <span class="k">if</span> <span class="n">expected_quantity</span><span class="o">.</span><span class="n">unit</span> <span class="o">==</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">:</span>
+        <span class="n">expected_quantity</span> <span class="o">=</span> <span class="n">expected_quantity</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="n">stored</span><span class="o">.</span><span class="n">unit</span>
+    <span class="k">return</span> <span class="n">stored</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">expected_quantity</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span> <span class="ow">and</span> <span class="n">isclose</span><span class="p">(</span>
+        <span class="n">stored</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">expected_quantity</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span> <span class="n">expected_quantity</span><span class="o">.</span><span class="n">value</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantity_comparison_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a normalized comparable representation of a quantity."""</span>
+    <span class="n">quantity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="mi">12</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">si</span><span class="o">.</span><span class="n">unit</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_configuration_without_excluded_keys</span><span class="p">(</span><span class="n">configuration</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return configuration fields used for grouping."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">configuration</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GROUPING_EXCLUDE_KEYS</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalized_group_key</span><span class="p">(</span><span class="n">configuration</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a stable normalized grouping key for a configuration."""</span>
+    <span class="k">return</span> <span class="n">normalize_for_comparison</span><span class="p">(</span><span class="n">_configuration_without_excluded_keys</span><span class="p">(</span><span class="n">configuration</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_manifest_files</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">file_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return absolute paths for files of the requested manifest file type."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">_resolve_relative_manifest_path</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">relative_path</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"files"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_relative_manifest_path</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve one manifest-relative path and reject paths escaping the job directory."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">relative_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Manifest file path must be relative: </span><span class="si">{</span><span class="n">relative_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resolved</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Manifest file path escapes job directory: </span><span class="si">{</span><span class="n">relative_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">resolved</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_file_type</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">manifest_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate a file suffix for known manifest file types."""</span>
+    <span class="n">suffixes</span> <span class="o">=</span> <span class="n">_FILE_TYPE_SUFFIXES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">suffixes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span> <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">suffixes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Manifest </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2"> lists </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> as '</span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">', "</span>
+            <span class="s2">"but its suffix is inconsistent."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_production_file_type</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the manifest type for a recognized production output file."""</span>
+    <span class="k">for</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">suffixes</span> <span class="ow">in</span> <span class="n">_FILE_TYPE_SUFFIXES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">"trigger_histograms"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span> <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">suffixes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">file_type</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_declared_production_inventory</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">declared_paths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Require the manifest to list every recognized production output."""</span>
+    <span class="n">actual_paths</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">directory</span> <span class="o">/</span> <span class="n">relative_path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">inventory_production_files</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">relative_path</span> <span class="ow">in</span> <span class="n">paths</span>
+    <span class="p">}</span>
+    <span class="n">unexpected</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">actual_paths</span> <span class="o">-</span> <span class="n">declared_paths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unexpected</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unexpected production files not listed in </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unexpected</span><span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_filename_run_number</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">manifest</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate encoded run numbers when the filename contains one."""</span>
+    <span class="k">if</span> <span class="s2">"run_number"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{}):</span>
+        <span class="k">return</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_RUN_NUMBER_PATTERN</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">run_number</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Run number mismatch for </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: filename encodes "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="si">}</span><span class="s2">, manifest records </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">run_number</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compare_simtel_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">manifest</span><span class="p">,</span> <span class="n">unverifiable_fields</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare manifest configuration with matching embedded sim_telarray metadata."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">metadata</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unverifiable_fields</span>
+
+    <span class="n">remaining</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">unverifiable_fields</span><span class="p">)</span>
+    <span class="n">configuration</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">manifest_key</span><span class="p">,</span> <span class="n">metadata_keys</span> <span class="ow">in</span> <span class="n">_SIMTEL_METADATA_MANIFEST_KEYS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">manifest_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">configuration</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">metadata_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">metadata_keys</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metadata_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_embedded_metadata_matches</span><span class="p">(</span><span class="n">configuration</span><span class="p">[</span><span class="n">manifest_key</span><span class="p">],</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata_key</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Manifest </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2"> field configuration.</span><span class="si">{</span><span class="n">manifest_key</span><span class="si">}</span><span class="s2"> does not match "</span>
+                <span class="sa">f</span><span class="s2">"embedded sim_telarray metadata in </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">remaining</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">manifest_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">remaining</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedded_metadata_matches</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">,</span> <span class="n">metadata_value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether one embedded metadata value matches a manifest value."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">manifest_value</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="n">manifest_value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">:</span> <span class="n">manifest_value</span><span class="o">.</span><span class="n">unit</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_quantity_matches</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata_value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest_value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata_value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sort_group_by_run_number</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Sort grouped run numbers and files by run number."""</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">file_path</span>
+        <span class="k">for</span> <span class="n">run_number</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">run_numbers</span>
+        <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">files_by_run_number</span><span class="p">[</span><span class="n">run_number</span><span class="p">]</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_duplicate_run_numbers</span><span class="p">(</span><span class="n">run_numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return sorted duplicate run numbers."""</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">duplicates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">run_number</span> <span class="ow">in</span> <span class="n">run_numbers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">run_number</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">duplicates</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">duplicates</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_missing_run_numbers</span><span class="p">(</span><span class="n">run_numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return missing run numbers between the minimum and maximum selected run."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">run_numbers</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">present</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">run_numbers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">run_number</span>
+        <span class="k">for</span> <span class="n">run_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">present</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">present</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">run_number</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">present</span>
+    <span class="p">]</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
