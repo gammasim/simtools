@@ -170,6 +170,7 @@ class CorsikaSimtelRunner:
                 self.runner_service.get_file_name("multi_pipe_resources", run_number=run_number),
                 "multipipe",
                 run_number,
+                model_version=self.base_corsika_config.array_model.model_version,
             )
             file.write(shlex.join(accounting_command) + " || echo 'Fan-out failed'")
 
@@ -202,14 +203,22 @@ class CorsikaSimtelRunner:
             self.file_list.update(self.corsika_runner.file_list)
 
         for simulator_array in self.simulator_array:
-            _tmp_list = simulator_array.file_list
-            for key, data in _tmp_list.items():
-                if key in self.file_list:
-                    # in case of multiple sim_telarray instances, make list of files
-                    if not isinstance(self.file_list[key], list):
-                        self.file_list[key] = [self.file_list[key]]
-                    self.file_list[key].append(data)
-                else:
-                    self.file_list[key] = [data]
+            self._merge_runner_file_list(simulator_array.file_list)
 
         return self.file_list
+
+    def _merge_runner_file_list(self, runner_file_list):
+        """Merge one simulator-array file list into the combined file list."""
+        for key, data in runner_file_list.items():
+            if not isinstance(data, list):
+                data = [data]
+            if key in self.file_list:
+                self._append_runner_files(key, data)
+            else:
+                self.file_list[key] = data
+
+    def _append_runner_files(self, key, data):
+        """Append runner files, normalizing an existing single path to a list."""
+        if not isinstance(self.file_list[key], list):
+            self.file_list[key] = [self.file_list[key]]
+        self.file_list[key].extend(data)
