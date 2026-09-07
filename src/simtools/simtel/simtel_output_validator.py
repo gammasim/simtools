@@ -285,6 +285,11 @@ def _resolve_file_parameter_value(model_value, parameter_name, model):
     if not isinstance(model_value, str) or not model_value.lower().endswith(".ecsv"):
         return model_value
 
+    model_name = getattr(model, "name", None)
+    config_file_path = getattr(model, "config_file_path", None)
+    if isinstance(model_name, str) and isinstance(config_file_path, (str, Path)):
+        return f"{parameter_name}-{Path(config_file_path).stem}.dat"
+
     model_directory = getattr(model, "config_file_directory", None)
     if model_directory is None:
         return model_value

@@ -140,8 +140,10 @@ class SimtelConfigWriter:
         )
         if camera_file is not None:
             simtel_par["camera_config_file"] = camera_file
+        elif "camera_config_file" in parameters:
+            simtel_par["camera_config_file"] = parameters["camera_config_file"]["value"]
         for par, value in parameters.items():
-            if par in _CAMERA_COMPONENT_PARAMETERS:
+            if par in _CAMERA_COMPONENT_PARAMETERS or par == "camera_config_file":
                 continue
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 self._get_sim_telarray_config_parameter_name(par),
@@ -420,6 +422,8 @@ class SimtelConfigWriter:
             return
 
         for key, value in model_parameters.items():
+            if key == "camera_config_file":
+                continue
             simtel_name = names.get_simulation_software_name_from_parameter_name(
                 key, software_name="sim_telarray"
             )
@@ -995,6 +999,10 @@ class SimtelConfigWriter:
         for key, val in dummy_defaults.items():
             if key in parameters:
                 parameters[key]["value"] = val
+
+        parameters["camera_config_file"] = {
+            "value": dummy_defaults["camera_config_file"],
+        }
 
         camera_components = {
             name: parameters.pop(name)

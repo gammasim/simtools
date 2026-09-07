@@ -231,6 +231,25 @@ def test_file_parameter():
     assert len(result) == 0
 
 
+def test_file_parameter_for_telescope_uses_generated_filename():
+    model_mock = MagicMock()
+    model_mock.name = "MSTS-01"
+    model_mock.config_file_path = Path("/model/CTAO-MSTS-01.cfg")
+
+    for parameter_name in ("discriminator_pulse_shape", "fadc_pulse_shape", "mirror_list"):
+        metadata = {parameter_name: f"{parameter_name}-CTAO-MSTS-01.dat"}
+        model_mock.parameters = {
+            parameter_name: {
+                "value": f"{parameter_name}-1.0.0.ecsv",
+                "type": "file",
+            },
+        }
+
+        result = _assert_model_parameters(metadata, model_mock)
+
+        assert result == []
+
+
 def test_missing_parameter_in_metadata():
     metadata = {}
     model_mock = MagicMock()

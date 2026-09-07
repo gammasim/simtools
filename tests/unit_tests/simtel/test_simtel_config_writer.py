@@ -382,6 +382,20 @@ def test_write_tel_config_file_orders_generated_parameters_and_metadata(
     assert "metaparam telescope add fadc_pulse_shape" in lines
 
 
+def test_write_dummy_telescope_configuration_includes_camera_file(
+    simtel_config_writer, tmp_test_directory
+):
+    config_file = Path(tmp_test_directory) / "InvalidTelescope.cfg"
+
+    simtel_config_writer.write_dummy_telescope_configuration_file(
+        {"num_gains": {"value": 1}}, config_file, "InvalidTelescope"
+    )
+
+    lines = config_file.read_text(encoding="utf-8").splitlines()
+    assert "camera_config_file = InvalidTelescope_single_pixel_camera.dat" in lines
+    assert "metaparam telescope add camera_config_file" in lines
+
+
 def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel(None) == "none"
     assert simtel_config_writer._get_value_string_for_simtel(True) == 1
