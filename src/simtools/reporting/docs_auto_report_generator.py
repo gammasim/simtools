@@ -6,29 +6,49 @@ import logging
 from collections.abc import Generator
 from pathlib import Path
 
-from simtools.db import db_handler
+from simtools.application.model_reader import require_model_reader
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import names
 
 logger = logging.getLogger()
 
 
+def _is_missing_calibration_devices_error(message):
+    """Return whether an error indicates that calibration devices are unavailable."""
+    return "calibration_devices" in message and any(
+        reason in message for reason in ("zero results", "No production table")
+    )
+
+
 class ReportGenerator:
     """Automate report generation."""
 
-    def __init__(self, args, output_path):
+    def __init__(self, args, output_path, model_reader=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler()
+        self.model_reader = require_model_reader(model_reader)
         self.args = args
         self.output_path = output_path
+
+    @property
+    def db(self):
+        """Return the selected reader under the historical attribute name."""
+        return self.model_reader
+
+    @db.setter
+    def db(self, reader):
+        self.model_reader = reader
+
+    def _read_parameters(self, args, output_path):
+        """Construct a report reader with the selected source."""
+        return ReadParameters(args, output_path, self.model_reader)
 
     def _add_design_models_to_telescopes(self, model_version, telescopes):
         """Add design models to the list of telescopes for a given model version."""
         updated_telescopes = telescopes.copy()  # Copy original list to avoid modifying it directly
         for telescope in telescopes:
-            design_model = self.db.get_design_model(model_version, telescope)  # Get design model
-            if design_model and design_model not in updated_telescopes:
+            design_model = self.model_reader.get_design_model(model_version, telescope)
+            if isinstance(design_model, str) and design_model not in updated_telescopes:
                 updated_telescopes.append(design_model)  # Add design model if not already present
         return updated_telescopes
 
@@ -59,7 +79,7 @@ class ReportGenerator:
         all_sites = names.site_names()
 
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -69,7 +89,7 @@ class ReportGenerator:
             """Get list of telescopes depending on input arguments."""
             if not self.args.get("all_telescopes"):
                 return [self.args["telescope"]]
-            telescopes = self.db.get_array_elements(model_version)
+            telescopes = self.model_reader.get_array_elements(model_version)
             all_telescopes = self._add_design_models_to_telescopes(model_version, telescopes)
             return self._filter_telescopes_by_site(all_telescopes, selected_sites)
 
@@ -98,7 +118,7 @@ class ReportGenerator:
         )
 
         output_path = Path(self.output_path) / str(model_version)
-        ReadParameters(self.args, output_path).produce_array_element_report()
+        self._read_parameters(self.args, output_path).produce_array_element_report()
 
         logger.info(
             f"Markdown report generated for {site} "
@@ -119,7 +139,7 @@ class ReportGenerator:
             return {self.args["telescope"]}
 
         # Get layouts for all versions for this site
-        layouts = self.db.get_model_parameters_for_all_model_versions(
+        layouts = self.model_reader.get_model_parameters_for_all_model_versions(
             site=site, array_element_name=f"OBS-{site}", collection="sites"
         )
 
@@ -166,7 +186,7 @@ class ReportGenerator:
                 }
             )
 
-            ReadParameters(self.args, self.output_path).produce_model_parameter_reports()
+            self._read_parameters(self.args, self.output_path).produce_model_parameter_reports()
 
             logger.info(
                 f"Markdown report generated for {site} Telescope {telescope}: {self.output_path}"
@@ -188,7 +208,7 @@ class ReportGenerator:
         selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
 
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -208,7 +228,7 @@ class ReportGenerator:
         )
 
         output_path = Path(self.output_path) / str(model_version)
-        ReadParameters(self.args, output_path).produce_observatory_report()
+        self._read_parameters(self.args, output_path).produce_observatory_report()
 
         logger.info(f"Observatory report generated for {site} (v{model_version}): {output_path}")
 
@@ -224,7 +244,7 @@ class ReportGenerator:
         the DB; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -234,7 +254,7 @@ class ReportGenerator:
             self.args.update({"model_version": version})
             output_path = Path(self.output_path) / str(version)
 
-            ReadParameters(self.args, output_path).produce_simulation_configuration_report()
+            self._read_parameters(self.args, output_path).produce_simulation_configuration_report()
 
             logger.info(f"Configuration reports for (v{version}) produced: {output_path}")
 
@@ -246,7 +266,7 @@ class ReportGenerator:
         the DB; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
-            self.db.get_model_versions()
+            self.model_reader.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
@@ -257,12 +277,12 @@ class ReportGenerator:
             output_path = Path(self.output_path) / str(version)
 
             try:
-                ReadParameters(self.args, output_path).produce_calibration_reports()
+                self._read_parameters(self.args, output_path).produce_calibration_reports()
                 logger.info(f"Calibration reports for (v{version}) produced: {output_path}")
             except ValueError as err:
                 # Some model versions do not have calibration_devices in the DB;
                 msg = str(err)
-                if "calibration_devices" in msg and "zero results" in msg:
+                if _is_missing_calibration_devices_error(msg):
                     logger.info(
                         f"Skipping model version {version}: no calibration devices defined ({msg})"
                     )
@@ -273,7 +293,7 @@ class ReportGenerator:
     def _generate_calibration_device_parameter_reports(self):
         """Generate parameter comparison reports for calibration devices for all model versions."""
         # Get all model versions since no specific version is provided when using --all_telescopes
-        model_versions = self.db.get_model_versions()
+        model_versions = self.model_reader.get_model_versions()
 
         for version in model_versions:
             self._process_calibration_devices_for_version(version)
@@ -282,14 +302,16 @@ class ReportGenerator:
         """Process calibration devices for a specific model version."""
         try:
             # Get all calibration devices for this version
-            calibration_array_elements = self.db.get_array_elements(
+            calibration_array_elements = self.model_reader.get_array_elements(
                 version, collection="calibration_devices"
             )
             array_elements = calibration_array_elements.copy()
 
             # Add design models
             for element in calibration_array_elements:
-                design_model = self.db.get_design_model(version, element, "calibration_devices")
+                design_model = self.model_reader.get_design_model(
+                    version, element, "calibration_devices"
+                )
                 if design_model and design_model not in array_elements:
                     array_elements.append(design_model)
 
@@ -299,7 +321,7 @@ class ReportGenerator:
                 version_args["model_version"] = version
 
                 # Generate parameter comparison reports for calibration devices
-                ReadParameters(
+                self._read_parameters(
                     version_args, self.output_path
                 ).generate_model_parameter_reports_for_devices(array_elements)
 
@@ -311,7 +333,7 @@ class ReportGenerator:
         except ValueError as err:
             # Some model versions may not have calibration_devices
             msg = str(err)
-            if "calibration_devices" in msg and "zero results" in msg:
+            if _is_missing_calibration_devices_error(msg):
                 logger.info(
                     f"Skipping model version {version}: no calibration devices defined ({msg})"
                 )

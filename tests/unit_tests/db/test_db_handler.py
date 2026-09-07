@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import logging
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from bson.objectid import ObjectId
@@ -107,8 +107,10 @@ def common_mock_read_cache(mocker, db):
 
 @pytest.fixture
 def common_mock_read_db(mocker, db):
-    """Common fixture for mocking _read_db."""
-    return mocker.patch.object(db, "_read_db", return_value={"param1": {"value": "value1"}})
+    """Common fixture for mocking MongoDB parameter reads."""
+    return mocker.patch.object(
+        db, "read_parameter_documents", return_value={"param1": {"value": "value1"}}
+    )
 
 
 def assert_model_parameter_calls(
@@ -168,14 +170,14 @@ def test_get_model_parameters(
     common_mock_read_cache.assert_has_calls(
         [
             call(
-                db_handler.DatabaseHandler.model_parameters_cached,
+                mock_db_handler.model_parameters_cached,
                 names.validate_site_name(site),
                 "LSTN-design",
                 model_version,
                 collection,
             ),
             call(
-                db_handler.DatabaseHandler.model_parameters_cached,
+                mock_db_handler.model_parameters_cached,
                 names.validate_site_name(site),
                 "LSTN-01",
                 model_version,
@@ -326,7 +328,7 @@ def test_get_model_parameters_with_cache(mock_db_handler, mocker, standard_test_
         array_element_name, site, {"parameters": {"LSTN-01": {"param1": "v1"}}}, collection
     )
     mock_read_cache.assert_called_once_with(
-        db_handler.DatabaseHandler.model_parameters_cached,
+        mock_db_handler.model_parameters_cached,
         names.validate_site_name(site),
         "LSTN-01",
         model_version,
@@ -520,7 +522,7 @@ def test_get_query_from_parameter_version_table(db):
         ("LSTN-01", None, {"$or": or_list, "instrument": "LSTN-01"}),
         (None, "North", {"$or": or_list, "site": "North"}),
         (None, None, {"$or": or_list}),
-        ("xSTx-design", "North", {"$or": or_list, "site": "North"}),
+        ("global", "North", {"$or": or_list}),
     ]
 
     for array_element_name, site, expected in test_cases:
@@ -530,7 +532,23 @@ def test_get_query_from_parameter_version_table(db):
         assert result == expected
 
 
-def test_read_db(db, mocker):
+def test_get_global_simtelarray_parameter_by_version_omits_telescope_scope(db, mocker):
+    read_parameters = mocker.patch.object(db, "read_parameter_documents", return_value={})
+
+    db.get_model_parameter(
+        "iobuf_maximum",
+        "North",
+        "LSTN-01",
+        parameter_version="1.0.0",
+    )
+
+    read_parameters.assert_called_once_with(
+        query={"parameter": "iobuf_maximum", "parameter_version": "1.0.0"},
+        collection_name="configuration_sim_telarray",
+    )
+
+
+def test_read_parameter_documents(db, mocker):
     doc1_id = ObjectId()
     doc2_id = ObjectId()
     mock_query_db = mocker.patch.object(
@@ -545,7 +563,7 @@ def test_read_db(db, mocker):
     query = {"parameter_version": "1.0.0"}
     collection_name = "test_collection"
 
-    result = db._read_db(query, collection_name)
+    result = db.read_parameter_documents(query, collection_name)
 
     mock_query_db.assert_called_once_with(query, collection_name, db.db_name)
     assert result == {
@@ -576,19 +594,19 @@ def test_read_db(db, mocker):
         match=r"The following query for test_collection returned zero results: "
         r"{'parameter_version': '1.0.0'}",
     ):
-        db._read_db(query, collection_name)
+        db.read_parameter_documents(query, collection_name)
 
 
-def setup_production_table_cached(cache_key, model_version, param):
+def setup_production_table_cached(db, cache_key, model_version, param):
     """Helper to set up production table cache."""
-    db_handler.DatabaseHandler.production_table_cached[cache_key] = {
+    db.production_table_cached[cache_key] = {
         "collection": model_version,
         "model_version": model_version,
         "parameters": param,
         "design_model": {},
         "entry_date": ObjectId().generation_time,
     }
-    return db_handler.DatabaseHandler.production_table_cached[cache_key]
+    return db.production_table_cached[cache_key]
 
 
 def test_read_production_table_from_db_with_cache(db, mocker, test_db):
@@ -597,11 +615,11 @@ def test_read_production_table_from_db_with_cache(db, mocker, test_db):
     param = {"param1": "value1"}
 
     # Mock get_model_versions to return the expected model version
-    mocker.patch.object(db, "get_model_versions", return_value=[model_version])
+    mocker.patch.object(db, "get_model_versions", return_value=[model_version, "2.0.0"])
 
     # Test with cache hit
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
-    cached_result = setup_production_table_cached("cache_key", model_version, param)
+    cached_result = setup_production_table_cached(db, "cache_key", model_version, param)
 
     result = db.read_production_table_from_db(collection_name, model_version)
 
@@ -639,14 +657,28 @@ def test_read_production_table_from_db_with_cache(db, mocker, test_db):
     assert result["design_model"] == {}
     assert "entry_date" in result
 
-    # Test with no results
+    # Test with no results for a different version
+    db.production_table_cached.clear()
     mocker.patch.object(db.mongo_db_handler, "find_one", return_value=None)
     with pytest.raises(
         ValueError,
         match=r"The following query returned zero results: "
-        r"{'model_version': '1.0.0', 'collection': 'telescopes'}",
+        r"{'model_version': '2.0.0', 'collection': 'telescopes'}",
     ):
-        db.read_production_table_from_db(collection_name, model_version)
+        db.read_production_table_from_db(collection_name, "2.0.0")
+
+
+def test_get_model_versions_cache_is_instance_owned(db, mocker):
+    """Version lists are cached per database handler and returned safely."""
+    collection = Mock()
+    collection.find.return_value = [{"model_version": "1.0.0"}]
+    mocker.patch.object(db, "get_collection", return_value=collection)
+
+    versions = db.get_model_versions("telescopes")
+    versions.append("2.0.0")
+
+    assert db.get_model_versions("telescopes") == ["1.0.0"]
+    collection.find.assert_called_once_with({"collection": "telescopes"})
 
 
 def test_get_array_elements_of_type(mock_db_handler, mocker):
@@ -707,12 +739,14 @@ def test_get_simulation_configuration_parameters(db, mocker):
         == return_value
     )
     assert mock_get_model_parameters.call_count == 2
-    assert db.get_simulation_configuration_parameters(software, "North", None, "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert (
+        db.get_simulation_configuration_parameters(software, "North", None, "6.0.0") == return_value
+    )
+    assert mock_get_model_parameters.call_count == 3
     assert db.get_simulation_configuration_parameters(software, None, "LSTN-design", "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert mock_get_model_parameters.call_count == 3
     assert db.get_simulation_configuration_parameters(software, None, None, "6.0.0") == {}
-    assert mock_get_model_parameters.call_count == 2
+    assert mock_get_model_parameters.call_count == 3
 
     with pytest.raises(ValueError, match=r"Unknown simulation software: wrong"):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
@@ -838,16 +872,16 @@ def test_read_cache(db):
 
 def test_reset_parameter_cache(db):
     # Populate the cache dictionaries
-    db_handler.DatabaseHandler.model_parameters_cached = {"key2": "value2"}
+    db.model_parameters_cached = {"key2": "value2"}
 
     # Ensure the caches are populated
-    assert db_handler.DatabaseHandler.model_parameters_cached
+    assert db.model_parameters_cached
 
     # Call the method to reset the caches
     db._reset_parameter_cache()
 
     # Check that the caches are cleared
-    assert not db_handler.DatabaseHandler.model_parameters_cached
+    assert not db.model_parameters_cached
 
 
 def test_get_array_element_list_configuration_corsika(db):
@@ -858,7 +892,7 @@ def test_get_array_element_list_configuration_corsika(db):
 
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
 
-    assert result == ["xSTx-design"]
+    assert result == ["global"]
 
 
 def test_get_array_element_list_sites(db):
@@ -981,7 +1015,7 @@ def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test
     params = test_case["params"]
     mock_read_db = mocker.patch.object(
         db,
-        "_read_db",
+        "read_parameter_documents",
         return_value={"test_param": {"value": "test_value"}},
     )
 
@@ -1142,11 +1176,11 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
     mock_read_production_table.assert_called_once_with("telescopes", model_version)
-    assert result == ["LSTN-design", "LSTN-01"]
+    assert result == ["global", "LSTN-design", "LSTN-01"]
 
     mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
     with pytest.raises(
-        KeyError, match=r"Failed generated array element list for db query for LSTN-01"
+        KeyError, match=r"Failed to generate array element list for DB query for LSTN-01"
     ):
         db._get_array_element_list(array_element_name, site, production_table, collection)
 

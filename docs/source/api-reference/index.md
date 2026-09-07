@@ -19,6 +19,7 @@ db_handler
 io
 job_execution
 mc_model
+model_repository
 production_configuration
 ray_tracing
 reporting

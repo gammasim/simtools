@@ -285,7 +285,7 @@ def test_plot_camera_pixel_layout_from_args(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler, model_reader=MagicMock())
 
     mock_camera = _mock_camera()
     mock_tel_model = MagicMock()
@@ -307,6 +307,7 @@ def test_plot_camera_pixel_layout_from_args(tmp_test_directory):
             telescope_name="LSTN-01",
             model_version="5.0.0",
             label="plot_camera_pixel_layout",
+            model_reader=app_context.model_reader,
         )
         mock_tel_model.export_model_files.assert_called_once()
         mock_camera.calc_fov.assert_called_once()

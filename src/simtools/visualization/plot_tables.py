@@ -8,9 +8,9 @@ import numpy as np
 import packaging.version
 
 import simtools.utils.general as gen
+from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
-from simtools.db import db_handler
-from simtools.io import ascii_handler, legacy_data_handler
+from simtools.io import ascii_handler, io_handler, legacy_data_handler
 from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
@@ -18,7 +18,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 _logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, data_path=None):
+def plot(config, output_file, data_path=None, model_reader=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -31,7 +31,7 @@ def plot(config, output_file, data_path=None):
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
     """
-    data = read_table_data(config, data_path)
+    data = read_table_data(config, data_path, model_reader=model_reader)
 
     fig = visualize.plot_1d(
         data,
@@ -42,7 +42,7 @@ def plot(config, output_file, data_path=None):
     return output_file
 
 
-def read_table_data(config, data_path=None):
+def read_table_data(config, data_path=None, model_reader=None):
     """
     Read table data from file or parameter database.
 
@@ -74,7 +74,7 @@ def read_table_data(config, data_path=None):
             else:
                 table = read_simtel_table(_config.get("parameter"), file_name)
         elif "parameter" in _config:
-            table = _read_table_from_model_database(_config)
+            table = _read_table_from_model_database(_config, model_reader)
         else:
             raise ValueError("No table data defined in configuration.")
 
@@ -116,7 +116,7 @@ def _process_table_data(table, _config):
     )
 
 
-def _read_table_from_model_database(table_config):
+def _read_table_from_model_database(table_config, model_reader=None):
     """
     Read table data from model parameter database.
 
@@ -130,31 +130,25 @@ def _read_table_from_model_database(table_config):
     Table
         Astropy table
     """
-    db = db_handler.DatabaseHandler()
-    db_export_path = table_config.get("db_export_path")
-    original_output_path = db.io_handler.output_path.get("default")
-
-    if db_export_path:
-        db.io_handler.set_paths(output_path=db_export_path)
-
-    try:
-        return db.export_model_file(
-            parameter=table_config["parameter"],
-            site=table_config["site"],
-            array_element_name=table_config.get("telescope"),
-            parameter_version=table_config.get("parameter_version"),
-            model_version=table_config.get("model_version"),
-            export_file_as_table=True,
-        )
-    finally:
-        if db_export_path:
-            db.io_handler.set_paths(output_path=original_output_path)
+    model_reader = require_model_reader(model_reader)
+    destination = (
+        table_config.get("db_export_path") or io_handler.IOHandler().get_output_directory()
+    )
+    return model_reader.export_model_file(
+        parameter=table_config["parameter"],
+        site=table_config["site"],
+        array_element_name=table_config.get("telescope"),
+        parameter_version=table_config.get("parameter_version"),
+        model_version=table_config.get("model_version"),
+        export_file_as_table=True,
+        dest=destination,
+    )
 
 
-def _read_parameter_dict_from_model_database(table_config):
+def _read_parameter_dict_from_model_database(table_config, model_reader=None):
     """Read a model parameter dictionary from the model parameter database."""
-    db = db_handler.DatabaseHandler()
-    parameter_dict = db.get_model_parameter(
+    model_reader = require_model_reader(model_reader)
+    parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
         site=table_config["site"],
         array_element_name=table_config.get("telescope"),
@@ -215,7 +209,7 @@ def _select_schema_entry(schema_data, schema_version=None):
 
 
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type
+    parameter, parameter_version, site, telescope, output_path, plot_type, model_reader=None
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -248,7 +242,7 @@ def generate_plot_configurations(
         "telescope": telescope,
         "parameter_version": parameter_version,
     }
-    parameter_dict = _read_parameter_dict_from_model_database(table_config)
+    parameter_dict = _read_parameter_dict_from_model_database(table_config, model_reader)
 
     schema = gen.change_dict_keys_case(
         _select_schema_entry(
@@ -262,7 +256,7 @@ def generate_plot_configurations(
     if not configs:
         return None
 
-    table = _read_table_from_model_database(table_config)
+    table = _read_table_from_model_database(table_config, model_reader)
     valid_columns = _get_valid_columns(table)
 
     valid_configs = []
@@ -329,7 +323,7 @@ def resolve_plot_output_path(output, file_name="bias_curve.png"):
     return output_path / file_name
 
 
-def plot_bias_curves(nsb_stats, proton_stats, config, output_path):
+def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_threshold=None):
     """
     Plot NSB and proton bias curves.
 
@@ -343,12 +337,27 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path):
         Plot configuration with title, ymin, and ymax.
     output_path : Path or str
         Output path for plot image.
+    trigger_threshold : float, optional
+        Trigger threshold value to annotate on the plot.
     """
     fig, axis = plt.subplots(figsize=(10, 7))
 
     _plot_nsb_curve(axis, nsb_stats)
     _plot_proton_curve(axis, proton_stats)
-    _configure_bias_curve_axis(axis, config)
+    _plot_scaled_proton_curve(axis, proton_stats)
+
+    # Add vertical line at trigger threshold if provided (before legend creation)
+    if trigger_threshold is not None:
+        axis.axvline(
+            x=trigger_threshold,
+            color="grey",
+            linestyle="--",
+            linewidth=1.5,
+            alpha=0.5,
+            label=f"Trigger Threshold: {trigger_threshold:.1f}",
+        )
+
+    _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats)
 
     fig.tight_layout()
     output_path = Path(output_path)
@@ -401,6 +410,32 @@ def _plot_proton_curve(axis, proton_stats):
     _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
 
 
+def _plot_scaled_proton_curve(axis, proton_stats):
+    """Plot 1.35 * proton trigger rates for bias curve intersection."""
+    if not proton_stats:
+        return
+
+    proton_thresholds = sorted(proton_stats.keys())
+    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
+    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
+
+    # Scale by 1.35
+    scaled_proton_rates = [1.35 * r for r in proton_rates]
+    scaled_proton_errors = [1.35 * e for e in proton_errors]
+
+    axis.errorbar(
+        proton_thresholds,
+        scaled_proton_rates,
+        yerr=scaled_proton_errors,
+        fmt="^",
+        label="1.35 x Proton",
+        color="tab:red",
+        capsize=3,
+    )
+
+    _plot_log_linear_trend(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
+
+
 def _plot_log_linear_trend(axis, thresholds, rates, color):
     """Plot a log-linear trend line when at least two positive rates are available."""
     if len(thresholds) < 2:
@@ -420,13 +455,35 @@ def _plot_log_linear_trend(axis, thresholds, rates, color):
     axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
 
 
-def _configure_bias_curve_axis(axis, config):
+def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
     """Configure bias-curve axis labels, scaling, and legend."""
     axis.set_title(config["title"], fontsize=14, fontweight="bold")
     axis.set_xlabel("Threshold", fontsize=12)
     axis.set_ylabel("Trigger Rate [Hz]", fontsize=12)
     axis.set_yscale("log")
-    axis.set_ylim(config["ymin"], config["ymax"])
+
+    # Dynamically set y-axis limits based on data
+    all_rates = []
+    scaling_factor = config.get("scaling_factor", 1.35)
+    if nsb_stats:
+        all_rates.extend(stats["rate_hz"] for stats in nsb_stats.values() if stats["rate_hz"] > 0)
+    if proton_stats:
+        proton_rates = [stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0]
+        all_rates.extend(proton_rates)
+        all_rates.extend(scaling_factor * rate for rate in proton_rates)
+
+    if all_rates:
+        # Add 10% padding above and below
+        y_min = min(all_rates) * 0.9
+        y_max = max(all_rates) * 1.1
+        # Ensure reasonable minimum for log scale
+        if y_min <= 0:
+            y_min = 0.1
+        axis.set_ylim(y_min, y_max)
+    else:
+        # Fallback to config values if no data
+        axis.set_ylim(config.get("ymin", 1), config.get("ymax", 1e6))
+
     axis.grid(which="both", alpha=0.3, linestyle=":")
 
     handles, _ = axis.get_legend_handles_labels()

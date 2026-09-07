@@ -44,6 +44,7 @@ class TelescopeModel(ModelParameter):
         label=None,
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
+        model_reader=None,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -53,6 +54,7 @@ class TelescopeModel(ModelParameter):
             label=label,
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
+            model_reader=model_reader,
         )
 
         self._logger = logging.getLogger(__name__)

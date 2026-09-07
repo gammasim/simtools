@@ -61,7 +61,7 @@ RUN python"${PYTHON_VERSION}" -m venv env \
   && . env/bin/activate \
   && python -m pip install --no-cache-dir --upgrade pip \
   && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_GAMMASIMTOOLS="${SIMTOOLS_VERSION}" \
-    pip install --no-cache-dir /workdir/simtools \
+    pip install --no-cache-dir '/workdir/simtools[mongodb]' \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \
   && pip cache purge && rm -rf /root/.cache \
   && mkdir -p /opt/simtools/provenance \

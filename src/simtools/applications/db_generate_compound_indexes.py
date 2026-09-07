@@ -13,6 +13,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS,),
     database=True,
+    initialize_model_reader=False,
     setup_io_handler=False,
 )
 

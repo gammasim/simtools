@@ -25,3 +25,4 @@ source:
   - Configuration
 simulation_software:
   - name: sim_telarray
+    internal_parameter_name: iobuf_maximum

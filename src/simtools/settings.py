@@ -26,6 +26,7 @@ class _Config:
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
         self._corsika_build_variants = None
+        self._model_reader = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
         self.activity_id = get_uuid()
@@ -48,6 +49,7 @@ class _Config:
             If False, skip resolving CORSIKA executable.
 
         """
+        self._model_reader = None
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
         self.activity_id = self._get_activity_id(args)
@@ -134,6 +136,15 @@ class _Config:
     def args(self):
         """Command line arguments."""
         return self._args
+
+    @property
+    def model_reader(self):
+        """Reader selected for the current application context."""
+        return self._model_reader
+
+    def set_model_reader(self, reader):
+        """Set the reader selected for the current application context."""
+        self._model_reader = reader
 
     @property
     def db_config(self):

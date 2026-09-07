@@ -39,6 +39,92 @@ db_collections_to_class_keys = {
     "configuration_corsika": ["configuration_corsika"],
 }
 
+SIM_TELARRAY_GLOBAL_PARAMETERS = frozenset(
+    {
+        "iobuf_maximum",
+        "iobuf_output_maximum",
+        "random_generator",
+        "save_pe_with_amplitude",
+    }
+)
+
+
+def is_global_sim_telarray_parameter(parameter_name):
+    """Return whether a sim_telarray parameter has global scope.
+
+    Parameters
+    ----------
+    parameter_name : str
+        Model parameter name.
+
+    Returns
+    -------
+    bool
+        True if the parameter is global.
+    """
+    return parameter_name in SIM_TELARRAY_GLOBAL_PARAMETERS
+
+
+def get_model_parameter_scope(collection_name, instrument, parameter_name):
+    """Return the instrument scope used to store a model parameter.
+
+    Parameters
+    ----------
+    collection_name : str
+        Model parameter collection.
+    instrument : str or None
+        Instrument or requested scope.
+    parameter_name : str
+        Model parameter name.
+
+    Returns
+    -------
+    str or None
+        Filesystem scope for the parameter.
+    """
+    if collection_name == "configuration_corsika" or (
+        collection_name == "configuration_sim_telarray"
+        and is_global_sim_telarray_parameter(parameter_name)
+    ):
+        return "global"
+    return "global" if instrument == "global" else instrument
+
+
+def get_sim_telarray_parameter_scopes(
+    array_element_name, design_model=None, ignore_missing_design_model=False
+):
+    """Return the global, design, and telescope scopes for sim_telarray.
+
+    Parameters
+    ----------
+    array_element_name : str or None
+        Telescope, design, or global scope.
+    design_model : str or None
+        Design model associated with a concrete telescope.
+    ignore_missing_design_model : bool
+        Whether to use fallback scopes when the design model is missing.
+
+    Returns
+    -------
+    list of str
+        Scopes in lookup order.
+
+    Raises
+    ------
+    KeyError
+        If a concrete telescope has no design model and fallback is disabled.
+    """
+    if array_element_name in (None, "global"):
+        return ["global"]
+    if is_design_type(array_element_name):
+        return ["global", array_element_name]
+    if design_model:
+        return ["global", design_model, array_element_name]
+    if ignore_missing_design_model:
+        element_type = get_array_element_type_from_name(array_element_name)
+        return ["global", array_element_name, f"{element_type}-01", f"{element_type}-design"]
+    raise KeyError(f"Missing design model for {array_element_name}")
+
 
 @cache
 def array_elements():
@@ -625,6 +711,8 @@ def get_site_from_array_element_name(array_element_name):
     str, list
         Site name(s).
     """
+    if array_element_name is None:
+        return None
     try:  # e.g. instrument is 'North' as given for the site parameters
         if array_element_name.startswith("OBS"):
             return validate_site_name(array_element_name.split("-")[1])

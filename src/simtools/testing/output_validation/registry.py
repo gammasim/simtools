@@ -80,8 +80,11 @@ def validate_simtel_config(artifact, rule, _context):
 
 
 def validate_model_parameter(artifact, rule, context):
-    """Compare a generated model parameter with its database value."""
-    model_parameters.validate(artifact.path, rule, context["configuration"])
+    """Compare a generated model parameter with its selected model source."""
+    kwargs = {}
+    if context.get("model_reader") is not None:
+        kwargs["model_reader"] = context["model_reader"]
+    model_parameters.validate(artifact.path, rule, context["configuration"], **kwargs)
 
 
 VALIDATORS = {

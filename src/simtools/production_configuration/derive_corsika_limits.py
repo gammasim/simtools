@@ -544,7 +544,7 @@ def _resolve_trigger_histogram_files(trigger_histogram_file):
     """
     if any(character in trigger_histogram_file for character in "*?["):
         try:
-            return [str(path) for path in resolve_file_patterns(trigger_histogram_file)]
+            return [str(path) for path in sorted(resolve_file_patterns(trigger_histogram_file))]
         except FileNotFoundError as exc:
             raise ValueError(
                 f"No trigger-histogram files matched pattern '{trigger_histogram_file}'."

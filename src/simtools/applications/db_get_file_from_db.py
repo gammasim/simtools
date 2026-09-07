@@ -25,6 +25,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,
+    initialize_model_reader=False,
     initialize_output=True,
     usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
 )

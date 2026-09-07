@@ -7,6 +7,7 @@ import pytest
 
 from simtools.simtel.multi_illuminator_simulator import (
     MultiIlluminatorSimulator,
+    _get_worker_model_reader,
     _simulate_illuminator_telescope_pair,
 )
 
@@ -421,6 +422,44 @@ def test_simulate_illuminator_telescope_pair_failure(mock_sim_class):
     assert "Simulation failed" in result["error"]
 
 
+def test_worker_uses_serialized_model_source(mocker):
+    """Workers reconstruct a filesystem reader from the serialized source selection."""
+    reader = mocker.Mock()
+    create_reader = mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.create_model_reader_from_source_config",
+        return_value=reader,
+    )
+
+    assert (
+        _get_worker_model_reader({"model_source": {"type": "filesystem", "path": "/models"}})
+        is reader
+    )
+    create_reader.assert_called_once_with({"type": "filesystem", "path": "/models"})
+
+
+def test_worker_recreates_database_reader_from_source_config(mocker):
+    """A worker can recreate a database reader without process-global state."""
+    reader = mocker.Mock()
+    create_reader = mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.create_model_reader_from_source_config",
+        return_value=reader,
+    )
+    mocker.patch(
+        "simtools.simtel.multi_illuminator_simulator.require_model_reader",
+        side_effect=RuntimeError,
+    )
+    mocker.patch("simtools.simtel.multi_illuminator_simulator.runtime_config")
+
+    assert (
+        _get_worker_model_reader(
+            {"model_source": {"type": "mongodb", "name": "simulation-model-db"}}
+        )
+        is reader
+    )
+
+    create_reader.assert_called_once_with({"type": "mongodb", "name": "simulation-model-db"})
+
+
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_empty_visibility_table(mock_pool, base_config):
     """Test simulate() with visibility data having no valid pairs."""
@@ -460,7 +499,9 @@ def test_load_visibility_from_site_model(mock_site_model_class, base_config):
     simulator = MultiIlluminatorSimulator(config=base_config)
 
     assert simulator.visibility.n_valid_pairs == 2
-    mock_site_model_class.assert_called_once_with(site="South", model_version="6.0.0")
+    mock_site_model_class.assert_called_once_with(
+        site="South", model_version="6.0.0", model_reader=simulator.model_reader
+    )
     mock_site_model.get_parameter_value.assert_called_once_with("illuminator_telescope_visibility")
 
 

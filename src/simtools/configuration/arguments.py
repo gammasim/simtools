@@ -85,6 +85,7 @@ def _argument(name, group, **kwargs):
 
 _RUN_TIME_GROUP = "run time"
 _DATABASE_CONFIGURATION_GROUP = "database configuration"
+_MODEL_REPOSITORY_GROUP = "model repository"
 _SIMULATION_MODEL_GROUP = "simulation model"
 _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
 _SHOWER_PARAMETERS_GROUP = "shower parameters"
@@ -402,12 +403,28 @@ DB_API_USER = _argument(
 
 SIMULATION_MODELS_PATH = _argument(
     "simulation_models_path",
-    _DATABASE_CONFIGURATION_GROUP,
+    _MODEL_REPOSITORY_GROUP,
     help=(
         "Path containing simulation model files; when set, model parameters are read "
         "from files instead of MongoDB."
     ),
     type=Path,
+    default=None,
+)
+
+SIMULATION_MODELS_GIT_PATH = _argument(
+    "simulation_models_git_path",
+    _MODEL_REPOSITORY_GROUP,
+    help="Path to a local normal, bare, or mirror Git repository containing simulation models.",
+    type=Path,
+    default=None,
+)
+
+SIMULATION_MODELS_GIT_REVISION = _argument(
+    "simulation_models_git_revision",
+    _MODEL_REPOSITORY_GROUP,
+    help="Git tag, ref, or commit to read from the simulation-model repository.",
+    type=str,
     default=None,
 )
 
@@ -467,6 +484,8 @@ DB_SIMULATION_MODEL_TAG = _argument(
 
 DATABASE_ARGUMENTS = (
     SIMULATION_MODELS_PATH,
+    SIMULATION_MODELS_GIT_PATH,
+    SIMULATION_MODELS_GIT_REVISION,
     DB_API_USER,
     DB_API_PW,
     DB_API_PORT,

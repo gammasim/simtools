@@ -131,6 +131,7 @@ def main():
         max_workers=app_context.args.get("max_workers"),
         backend=app_context.args.get("backend", "local"),
         backend_config=app_context.args.get("backend_config"),
+        model_reader=app_context.model_reader,
     )
 
     results = simulator.simulate(

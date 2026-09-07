@@ -157,7 +157,9 @@ def main():
     app_context = APPLICATION.start()
 
     if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
-        for model_version, site in generate_plot_combinations(app_context.args):
+        for model_version, site in generate_plot_combinations(
+            app_context.args, app_context.model_reader
+        ):
             run_args = app_context.args.copy()
             run_args.update(
                 {
@@ -166,7 +168,9 @@ def main():
                     "ignore_software_version": True,
                 }
             )
-            layouts, background_layout = layout_utils.read_layouts(run_args)
+            layouts, background_layout = layout_utils.read_layouts(
+                run_args, app_context.model_reader
+            )
             plot_array_layouts(
                 run_args,
                 app_context.io_handler.get_output_directory(),
@@ -174,7 +178,9 @@ def main():
                 background_layout,
             )
     else:
-        layouts, background_layout = layout_utils.read_layouts(app_context.args)
+        layouts, background_layout = layout_utils.read_layouts(
+            app_context.args, app_context.model_reader
+        )
         plot_array_layouts(
             app_context.args,
             app_context.io_handler.get_output_directory(),

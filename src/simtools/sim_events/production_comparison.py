@@ -27,6 +27,11 @@ class ProductionDescriptor:
     label: str
     input_files: list[str]
 
+    @property
+    def trigger_histogram_files(self):
+        """Return input files using the legacy descriptor attribute name."""
+        return self.input_files
+
 
 @dataclass
 class ProductionEventMetrics:

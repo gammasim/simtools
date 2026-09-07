@@ -1111,6 +1111,7 @@ def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, pree
                 "parameter": "camera_config_file",
             },
             output_file=plot_path.with_suffix(""),
+            model_reader=read_parameters.model_reader,
         )
 
 

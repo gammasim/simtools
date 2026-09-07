@@ -57,7 +57,9 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    simulator = Simulator(label=app_context.args.get("label"))
+    simulator = Simulator(
+        label=app_context.args.get("label"), model_reader=app_context.model_reader
+    )
     simulator.simulate()
     simulator.validate_simulations()
 

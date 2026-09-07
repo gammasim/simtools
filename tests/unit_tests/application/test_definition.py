@@ -118,7 +118,33 @@ def test_start_delegates_to_common_startup(mocker):
         "setup_io_handler": False,
         "resolve_sim_software_executables": True,
         "validate_simulation_dependencies": False,
+        "initialize_model_reader": True,
     }
+
+
+def test_start_can_skip_model_reader_initialization(mocker):
+    """Write-only applications can start without an existing model repository."""
+    startup = mocker.patch(
+        "simtools.application.definition._initialize_runtime", return_value="context"
+    )
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        initialize_model_reader=False,
+    )
+    mocker.patch.object(ApplicationDefinition, "_parse", return_value=({}, {}))
+
+    assert application.start() == "context"
+    assert startup.call_args.kwargs["initialize_model_reader"] is False
+
+
+def test_array_position_writer_does_not_require_model_reader():
+    """The array-position writer can create a repository from an empty output directory."""
+    application = importlib.import_module(
+        "simtools.applications.maintain_simulation_model_write_array_element_positions"
+    ).APPLICATION
+
+    assert application.initialize_model_reader is False
 
 
 def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch, tmp_test_directory):

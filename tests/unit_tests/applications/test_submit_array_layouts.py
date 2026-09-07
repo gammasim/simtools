@@ -20,12 +20,12 @@ def _direct_args():
 
 
 def test_main_builds_merges_and_writes_direct_layout(mocker):
-    app_context = SimpleNamespace(args=_direct_args())
+    model_reader = mocker.Mock()
+    app_context = SimpleNamespace(args=_direct_args(), model_reader=model_reader)
     mocker.patch(
         "simtools.application.definition.ApplicationDefinition.start", return_value=app_context
     )
 
-    database = mocker.patch.object(submit_array_layouts.db_handler, "DatabaseHandler")
     mocker.patch.object(
         submit_array_layouts,
         "prepare_array_layouts_for_submission",
@@ -45,14 +45,14 @@ def test_main_builds_merges_and_writes_direct_layout(mocker):
             "7.0.0",
         ),
     )
-    database.return_value.read_production_table_from_db.return_value = {
+    model_reader.read_production_table.return_value = {
         "parameters": {"MSTS-01": {}, "MSTS-301": {}},
     }
     writer = mocker.patch.object(submit_array_layouts, "write_array_layouts")
 
     submit_array_layouts.main()
 
-    database.return_value.read_production_table_from_db.assert_called_once_with(
+    model_reader.read_production_table.assert_called_once_with(
         collection_name="telescopes", model_version="7.0.0"
     )
     written_layouts = writer.call_args.kwargs["array_layouts"]["value"]
@@ -71,11 +71,11 @@ def test_main_retains_legacy_file_input(mocker):
             "array_element_list": None,
         }
     )
-    app_context = SimpleNamespace(args=args)
+    model_reader = mocker.Mock()
+    app_context = SimpleNamespace(args=args, model_reader=model_reader)
     mocker.patch(
         "simtools.application.definition.ApplicationDefinition.start", return_value=app_context
     )
-    database = mocker.patch.object(submit_array_layouts.db_handler, "DatabaseHandler")
     mocker.patch.object(
         submit_array_layouts,
         "prepare_array_layouts_for_submission",
@@ -84,7 +84,7 @@ def test_main_retains_legacy_file_input(mocker):
             "7.0.0",
         ),
     )
-    database.return_value.read_production_table_from_db.return_value = {
+    model_reader.read_production_table.return_value = {
         "parameters": {"MSTS-01": {}},
     }
     writer = mocker.patch.object(submit_array_layouts, "write_array_layouts")

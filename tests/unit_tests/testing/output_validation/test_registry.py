@@ -117,6 +117,23 @@ def test_registry_delegates_table_and_schema_validators(mocker):
     metadata.assert_called_once_with(artifact.path, {"required_keys": ["summary"]})
 
 
+def test_registry_passes_selected_model_reader(mocker):
+    """Model-parameter validation receives the reader selected for the run."""
+    validate = mocker.patch.object(registry.model_parameters, "validate")
+    artifact = OutputArtifact(Path("output.json"), {})
+    reader = mocker.Mock()
+    context = {"configuration": {}, "model_reader": reader}
+
+    registry.validate_model_parameter(artifact, {"type": "model_parameter"}, context)
+
+    validate.assert_called_once_with(
+        artifact.path,
+        {"type": "model_parameter"},
+        {},
+        model_reader=reader,
+    )
+
+
 def test_registry_delegates_hdf5_validators(mocker):
     """Delegate HDF5 dataset and product validation."""
     artifact = OutputArtifact(Path("output.hdf5"), {})

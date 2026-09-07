@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools import settings
+from simtools.application.model_reader import require_model_reader
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.io.ascii_handler import to_builtin
@@ -67,11 +68,13 @@ class ArrayModel:
         overwrite_model_parameters=None,
         ignore_software_version=False,
         model_directory_subdir=None,
+        model_reader=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
+        self.model_reader = require_model_reader(model_reader)
         self.label = label
         self.layout_name = (
             layout_name[0]
@@ -130,6 +133,7 @@ class ArrayModel:
             label=self.label,
             overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
             ignore_software_version=self.ignore_software_version,
+            model_reader=self.model_reader,
         )
 
         # Case 1: array_elements is a file name
@@ -282,6 +286,7 @@ class ArrayModel:
                 label=self.label,
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                 ignore_software_version=self.ignore_software_version,
+                model_reader=self.model_reader,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],
@@ -314,6 +319,7 @@ class ArrayModel:
                 model_version=self.model_version,
                 label=self.label,
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
+                model_reader=self.model_reader,
             )
         return calibration_models
 
@@ -567,6 +573,7 @@ class ArrayModel:
                     model_version=self.model_version,
                     label=self.label,
                     overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
+                    model_reader=self.model_reader,
                 )
 
                 xyz = calibration_model.get_parameter_value_with_unit(

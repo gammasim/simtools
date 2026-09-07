@@ -277,6 +277,13 @@ def _validate_model_and_test_components(catalog, schema_version):
             else "Invalid model database version."
         )
         raise ValueError(message)
+    model = catalog["model-database"]
+    if model.get("repository-url") is not None and not str(model["repository-url"]).startswith(
+        "https://"
+    ):
+        raise ValueError("Simulation-model repository URL must use HTTPS.")
+    if model.get("git-revision") is not None:
+        _validate_revision(model["git-revision"], "simulation-model repository")
     if schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
         _validate_simtools_tests(catalog["simtools-tests"])
 

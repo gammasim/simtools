@@ -413,6 +413,7 @@ def plot_camera_pixel_layout_from_args(app_context):
         telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
         label=label,
+        model_reader=app_context.model_reader,
     )
     tel_model.export_model_files()
 

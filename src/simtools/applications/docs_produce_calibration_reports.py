@@ -27,7 +27,11 @@ def main():
 
     output_path = app_context.io_handler.get_output_directory()
 
-    generator = ReportGenerator(args=app_context.args, output_path=output_path)
+    generator = ReportGenerator(
+        args=app_context.args,
+        output_path=output_path,
+        model_reader=app_context.model_reader,
+    )
     generator.auto_generate_calibration_reports()
 
     if app_context.args.get("all_model_versions"):

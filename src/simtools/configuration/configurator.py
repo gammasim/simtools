@@ -11,9 +11,12 @@ import astropy.units as u
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
 from simtools import dependency_versions
-from simtools.db.mongo_db import jsonschema_db_dict
+from simtools.constants import DATABASE_SCHEMA
+from simtools.data_model.schema_loader import load_schema
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
+
+jsonschema_db_dict = load_schema(DATABASE_SCHEMA)
 
 
 class Configurator:
@@ -403,7 +406,9 @@ class Configurator:
             return boolean_tokens
 
         if isinstance(value, list):
-            return [option, *map(str, value)]
+            if value:
+                return [option, *map(str, value)]
+            return [option] if action is not None and action.nargs == "*" else []
 
         if Configurator._is_scalar_config_value(value):
             return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]

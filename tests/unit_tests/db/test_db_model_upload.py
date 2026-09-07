@@ -31,58 +31,22 @@ def test_add_values_from_json_to_db(mock_collect_data_from_file):
     )
 
 
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-def test_read_production_table(mock_collect_data_from_file):
-    mock_collect_data_from_file.return_value = {
-        "parameters": {"LSTN-design": {"param1": "param_value_1"}},
-        "design_model": {"LSTN-design": "design_value_1"},
-    }
-    model_dict = {}
-    file = Mock()
-    file.stem = "LSTN-design"
-    model_name = "test_model"
-
-    db_model_upload._read_production_table(model_dict, file, model_name)
-
-    assert "LSTN-design" in model_dict["telescopes"]["parameters"]
-    assert model_dict["telescopes"]["parameters"]["LSTN-design"]["param1"] == "param_value_1"
-    assert model_dict["telescopes"]["design_model"]["LSTN-design"] == "design_value_1"
-
-    file.stem = "MSTx-NectarCam"
-    with pytest.raises(KeyError, match="MSTx-NectarCam"):
-        db_model_upload._read_production_table(model_dict, file, model_name)
-
-    file.stem = "configuration_corsika"
-    mock_collect_data_from_file.return_value = {"parameters": "config_param_value"}
-
-    db_model_upload._read_production_table(model_dict, file, model_name)
-
-    assert model_dict["configuration_corsika"]["parameters"] == "config_param_value"
-
-
-@patch("simtools.db.db_model_upload._read_production_table")
-def test_add_production_tables_to_db(mock_read_production_table, tmp_test_directory, caplog):
+@patch("simtools.db.db_model_upload.read_production_tables")
+def test_add_production_tables_to_db(mock_read_production_tables, tmp_test_directory, caplog):
     mock_db = Mock()
-    input_path = Path(tmp_test_directory)
+    input_path = Path(tmp_test_directory) / "productions"
     model_dir = input_path / "1.0.0"
     model_dir.mkdir(parents=True, exist_ok=True)
-    (model_dir / "file1.json").touch()
-    (model_dir / "MSTS-02.json").touch()
-
-    mock_read_production_table.side_effect = lambda model_dict, file, _: model_dict.update(
-        {
-            "telescopes": {
-                "parameters": {"MSTS-02": "param_value"},
-                "design_model": {"MSTS-02": "MSTx-FlashCam"},
-            }
+    mock_read_production_tables.return_value = {
+        "telescopes": {
+            "model_version": "1.0.0",
+            "parameters": {"MSTS-02": "param_value"},
+            "design_model": {"MSTS-02": "MSTx-FlashCam"},
         }
-    )
+    }
 
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
-        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
-            db_model_upload.add_production_tables_to_db(input_path, mock_db)
+    db_model_upload.add_production_tables_to_db(input_path, mock_db)
 
-    assert mock_read_production_table.call_count == 2
     mock_db.add_production_table.assert_called_once_with(
         production_table={
             "parameters": {"MSTS-02": "param_value"},
@@ -91,32 +55,10 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
         },
     )
 
-    mock_read_production_table.side_effect = lambda model_dict, file, _: model_dict.update(
-        {"telescopes": {"parameters": {}, "design_model": {}}}
-    )
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
-        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
-            with caplog.at_level("INFO"):
-                db_model_upload.add_production_tables_to_db(input_path, mock_db)
+    mock_read_production_tables.return_value = {"telescopes": {"parameters": {}}}
+    with caplog.at_level("INFO"):
+        db_model_upload.add_production_tables_to_db(input_path, mock_db)
     assert "No production table for telescopes in model version 1.0.0" in caplog.text
-
-    # Test with info.yml file containing model_version_history
-    caplog.clear()
-    info_content = {"model_version_history": ["0.9.0", "0.8.0"]}
-    info_file = model_dir / "info.yml"
-    with open(info_file, "w") as f:
-        f.write('model_version_history: ["0.9.0", "0.8.0"]\n')
-
-    with patch(
-        "simtools.db.db_model_upload.ascii_handler.collect_data_from_file",
-        return_value=info_content,
-    ):
-        with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
-            with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
-                with caplog.at_level("INFO"):
-                    db_model_upload.add_production_tables_to_db(input_path, mock_db)
-    assert "model_version_history" in info_content
-    assert "Reading production tables from repository" in caplog.text
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
@@ -124,27 +66,73 @@ def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_di
     mock_db = Mock()
     input_path = Path(tmp_test_directory)
     array_element_dir = input_path / "LSTS-01"
-    array_element_dir.mkdir(parents=True, exist_ok=True)
-    (array_element_dir / "num_gains-0.1.0.json").touch()
-    (array_element_dir / "mirror_list-0.2.1.json").touch()
+    (array_element_dir / "num_gains").mkdir(parents=True, exist_ok=True)
+    (array_element_dir / "mirror_list").mkdir(parents=True, exist_ok=True)
+    (array_element_dir / "num_gains" / "num_gains-0.1.0.json").touch()
+    (array_element_dir / "mirror_list" / "mirror_list-0.2.1.json").touch()
 
     with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[array_element_dir]):
         with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_any_call(
-        file=array_element_dir / "num_gains-0.1.0.json",
+        file=array_element_dir / "num_gains" / "num_gains-0.1.0.json",
         collection="telescopes",
         db=mock_db,
         file_prefix=input_path / "Files",
     )
     mock_add_values_from_json_to_db.assert_any_call(
-        file=array_element_dir / "mirror_list-0.2.1.json",
+        file=array_element_dir / "mirror_list" / "mirror_list-0.2.1.json",
         collection="telescopes",
         db=mock_db,
         file_prefix=input_path / "Files",
     )
     assert mock_add_values_from_json_to_db.call_count == 2
+
+
+@patch("simtools.db.db_model_upload.add_values_from_json_to_db")
+def test_add_model_parameters_to_db_uses_parameter_schema_collection(
+    mock_add_values_from_json_to_db, tmp_test_directory
+):
+    mock_db = Mock()
+    input_path = Path(tmp_test_directory)
+    simtel_parameter = input_path / "LSTN-design" / "min_photons" / "min_photons-1.0.0.json"
+    corsika_parameter = (
+        input_path / "global" / "corsika_iact_io_buffer" / "corsika_iact_io_buffer-1.0.0.json"
+    )
+    calibration_parameter = (
+        input_path
+        / "ILLN-01"
+        / "array_element_position_ground"
+        / "array_element_position_ground-2.0.0.json"
+    )
+    simtel_parameter.parent.mkdir(parents=True, exist_ok=True)
+    corsika_parameter.parent.mkdir(parents=True, exist_ok=True)
+    calibration_parameter.parent.mkdir(parents=True, exist_ok=True)
+    simtel_parameter.touch()
+    corsika_parameter.touch()
+    calibration_parameter.touch()
+
+    db_model_upload.add_model_parameters_to_db(input_path, mock_db)
+
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=simtel_parameter,
+        collection="configuration_sim_telarray",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=corsika_parameter,
+        collection="configuration_corsika",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
+    mock_add_values_from_json_to_db.assert_any_call(
+        file=calibration_parameter,
+        collection="calibration_devices",
+        db=mock_db,
+        file_prefix=input_path / "Files",
+    )
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
@@ -162,117 +150,6 @@ def test_add_model_parameters_to_db_skip_files_collection(
             db_model_upload.add_model_parameters_to_db(input_path, mock_db)
 
     mock_add_values_from_json_to_db.assert_not_called()
-
-
-def test_remove_deprecated_model_parameters():
-    model_dict = {
-        "telescopes": {
-            "collection": "telescopes",
-            "model_version": "1.0.0",
-            "parameters": {
-                "LSTN-01": {
-                    "param1": "value1",
-                    "deprecated_param": "deprecated_value",
-                    "param2": "value2",
-                },
-                "MSTS-01": {"param3": "value3", "deprecated_param": "another_deprecated_value"},
-            },
-            "design_model": {"LSTN-01": "LST"},
-            "deprecated_parameters": ["deprecated_param"],
-        },
-        "sites": {
-            "collection": "sites",
-            "model_version": "1.0.0",
-            "parameters": {"North": {"altitude": "2147m", "old_param": "old_value"}},
-            "deprecated_parameters": ["old_param"],
-        },
-        "configuration": {
-            "collection": "configuration",
-            "model_version": "1.0.0",
-            "parameters": {"config_param": "config_value"},
-        },
-    }
-
-    db_model_upload._remove_deprecated_model_parameters(model_dict)
-
-    assert "deprecated_param" not in model_dict["telescopes"]["parameters"]["LSTN-01"]
-    assert "deprecated_param" not in model_dict["telescopes"]["parameters"]["MSTS-01"]
-    assert "param1" in model_dict["telescopes"]["parameters"]["LSTN-01"]
-    assert "param2" in model_dict["telescopes"]["parameters"]["LSTN-01"]
-    assert "param3" in model_dict["telescopes"]["parameters"]["MSTS-01"]
-
-    assert "old_param" not in model_dict["sites"]["parameters"]["North"]
-    assert "altitude" in model_dict["sites"]["parameters"]["North"]
-
-    assert "config_param" in model_dict["configuration"]["parameters"]
-
-
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-@patch("simtools.db.db_model_upload._read_production_table")
-def test_read_production_tables_basic(
-    mock_read_production_table, mock_collect_data, tmp_test_directory
-):
-    model_path = Path(tmp_test_directory) / "1.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-    (model_path / "LSTN-01.json").touch()
-    (model_path / "MSTS-02.json").touch()
-    (model_path / "OBS-North.json").touch()
-
-    mock_read_production_table.side_effect = lambda md, file, model: md.update(
-        {
-            "telescopes": {
-                "collection": "telescopes",
-                "model_version": model,
-                "parameters": {"LSTN-01": {"param1": "value1"}},
-                "design_model": {},
-                "deprecated_parameters": [],
-            }
-        }
-    )
-
-    result = db_model_upload._read_production_tables(model_path, collection_name="telescopes")
-
-    assert mock_read_production_table.call_count == 2
-    assert "telescopes" in result
-    assert result["telescopes"]["model_version"] == "1.0.0"
-
-
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-def test_read_production_tables_with_info_yml(mock_collect_data, tmp_test_directory):
-    model_path = Path(tmp_test_directory) / "2.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-    (model_path / "info.yml").touch()
-    (model_path / "LSTN-01.json").touch()
-
-    # Create parent directory with older version
-    old_model_path = model_path.parent / "1.0.0"
-    old_model_path.mkdir(parents=True, exist_ok=True)
-    (old_model_path / "LSTN-01.json").touch()
-
-    # Mock info.yml content
-    mock_collect_data.return_value = {
-        "model_version_history": ["1.0.0"],
-        "model_update": "patch_update",
-    }
-
-    with patch("simtools.db.db_model_upload._read_production_table") as mock_read_table:
-        mock_read_table.side_effect = lambda md, file, model: md.update(
-            {
-                "telescopes": {
-                    "collection": "telescopes",
-                    "model_version": model,
-                    "parameters": {},
-                    "design_model": {},
-                    "deprecated_parameters": [],
-                }
-            }
-        )
-
-        result = db_model_upload._read_production_tables(model_path)
-
-        # Should read from both 1.0.0 and 2.0.0 directories
-        assert mock_read_table.call_count == 2
-        assert result["telescopes"]["model_version"] == "2.0.0"
 
 
 @patch("builtins.input")

@@ -7,7 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.db import db_handler
+from simtools.application.model_reader import require_model_reader
 from simtools.io import io_handler
 from simtools.model.camera import Camera
 from simtools.model.model_utils import is_two_mirror_telescope
@@ -24,7 +24,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file):
+def plot(config, output_file, model_reader=None):
     """
     Plot pixel layout based on configuration.
 
@@ -47,16 +47,18 @@ def plot(config, output_file):
     None
         The function saves the plot to the specified output file.
     """
-    db = db_handler.DatabaseHandler()
-    db.export_model_file(
+    model_reader = require_model_reader(model_reader)
+    output_directory = io_handler.IOHandler().get_output_directory()
+    model_reader.export_model_file(
         parameter=config["parameter"],
         site=config["site"],
         array_element_name=config.get("telescope"),
         parameter_version=config.get("parameter_version"),
         model_version=config.get("model_version"),
         export_file_as_table=False,
+        dest=output_directory,
     )
-    data_file_path = Path(io_handler.IOHandler().get_output_directory() / f"{config['file_name']}")
+    data_file_path = Path(output_directory / f"{config['file_name']}")
     plot_kwargs = {
         "pixels_id_to_print": 80,
         "focal_length": config.get("focal_length", 1.0),

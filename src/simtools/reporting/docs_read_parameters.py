@@ -12,8 +12,8 @@ from pathlib import Path
 
 import numpy as np
 
+from simtools.application.model_reader import require_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
-from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
@@ -69,16 +69,25 @@ class ParameterDelta:
 class ReadParameters:
     """Read and manage model parameter data for report generation."""
 
-    def __init__(self, args, output_path):
+    def __init__(self, args, output_path, model_reader=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler()
+        self.model_reader = require_model_reader(model_reader)
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
         self.observatory = args.get("observatory")
         self.software = args.get("simulation_software", None)
+
+    @property
+    def db(self):
+        """Return the selected reader under the historical attribute name."""
+        return self.model_reader
+
+    @db.setter
+    def db(self, reader):
+        self.model_reader = reader
 
     @property
     def model_version(self):
@@ -215,7 +224,7 @@ class ReadParameters:
 
     def _produce_array_element_delta_report(self, base_model_version):
         """Produce a compact delta report for patch model versions."""
-        base_parameter_data = self.db.get_model_parameters(
+        base_parameter_data = self.model_reader.get_model_parameters(
             site=self.site,
             array_element_name=self.array_element,
             collection="telescopes",
@@ -224,7 +233,7 @@ class ReadParameters:
         if not base_parameter_data:
             return False
 
-        current_parameter_data = self.db.get_model_parameters(
+        current_parameter_data = self.model_reader.get_model_parameters(
             site=self.site,
             array_element_name=self.array_element,
             collection="telescopes",
@@ -260,7 +269,7 @@ class ReadParameters:
 
     def _produce_observatory_delta_report(self, base_model_version):
         """Produce a compact delta report for observatory parameters."""
-        base_parameter_data = self.db.get_model_parameters(
+        base_parameter_data = self.model_reader.get_model_parameters(
             site=self.site,
             array_element_name="OBS-" + self.site,
             collection="sites",
@@ -269,7 +278,7 @@ class ReadParameters:
         if not base_parameter_data:
             return False
 
-        current_parameter_data = self.db.get_model_parameters(
+        current_parameter_data = self.model_reader.get_model_parameters(
             site=self.site,
             array_element_name="OBS-" + self.site,
             collection="sites",
@@ -364,6 +373,7 @@ class ReadParameters:
             plot_pixels.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
+                model_reader=self.model_reader,
             )
             plot_names.append(plot_name)
         else:
@@ -425,6 +435,7 @@ class ReadParameters:
             telescope=tel,
             output_path=outpath,
             plot_type="all",
+            model_reader=self.model_reader,
         )
 
         if not config_data:
@@ -439,6 +450,7 @@ class ReadParameters:
                 plot_tables.plot(
                     config=plot_config,
                     output_file=image_output_file,
+                    model_reader=self.model_reader,
                 )
 
         return plot_names
@@ -447,7 +459,7 @@ class ReadParameters:
         """Get the appropriate telescope design type for file naming (e.g., LSTN-design)."""
         model_version = model_version or self.model_version
         telescope = telescope or self.array_element
-        telescope_design = self.db.get_design_model(
+        telescope_design = self.model_reader.get_design_model(
             model_version, telescope, collection="telescopes"
         )
 
@@ -600,7 +612,7 @@ class ReadParameters:
     def _export_model_files_for_version(self, version, all_param_data):
         """Export model files for a given model version."""
         Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
-        self.db.export_model_files(
+        self.model_reader.export_model_files(
             parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
         )
 
@@ -649,7 +661,7 @@ class ReadParameters:
         list
             A list of dictionaries containing model version, parameter value, description.
         """
-        all_versions = self.db.get_model_versions()
+        all_versions = self.model_reader.get_model_versions()
         all_versions.reverse()  # latest first
         grouped_data = defaultdict(list)
 
@@ -710,7 +722,7 @@ class ReadParameters:
         list: A list of lists containing parameter names, values with units,
                 descriptions, and short descriptions.
         """
-        all_parameter_data = self.db.get_model_parameters(
+        all_parameter_data = self.model_reader.get_model_parameters(
             site=telescope_model.site,
             array_element_name=telescope_model.name,
             collection=collection,
@@ -718,7 +730,9 @@ class ReadParameters:
         )
 
         Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
-        self.db.export_model_files(parameters=all_parameter_data, dest=f"{self.output_path}/model")
+        self.model_reader.export_model_files(
+            parameters=all_parameter_data, dest=f"{self.output_path}/model"
+        )
         parameter_descriptions = self.get_all_parameter_descriptions()
         data = []
         dict_tables = []
@@ -813,7 +827,7 @@ class ReadParameters:
 
         results = []
         dict_tables = []
-        telescopes = self.db.get_array_elements(self.model_version)
+        telescopes = self.model_reader.get_array_elements(self.model_version)
         for telescope in telescopes:
             valid_site = names.get_site_from_array_element_name(telescope)
             sites = valid_site if isinstance(valid_site, list) else [valid_site]
@@ -825,7 +839,7 @@ class ReadParameters:
 
     def _get_simulation_configuration_data_for_telescope_site(self, telescope, site):
         """Retrieve and format simulation-configuration parameter data for one telescope-site."""
-        param_dict = self.db.get_simulation_configuration_parameters(
+        param_dict = self.model_reader.get_simulation_configuration_parameters(
             simulation_software=self.software,
             site=site,
             array_element_name=telescope,
@@ -838,7 +852,7 @@ class ReadParameters:
 
         model_output_path = Path(f"{self.output_path}/model")
         model_output_path.mkdir(parents=True, exist_ok=True)
-        self.db.export_model_files(parameters=param_dict, dest=str(model_output_path))
+        self.model_reader.export_model_files(parameters=param_dict, dest=str(model_output_path))
 
         data = []
         dict_tables = []
@@ -974,7 +988,7 @@ class ReadParameters:
         Path(output_path).mkdir(parents=True, exist_ok=True)
 
         all_parameter_names = names.model_parameters(None).keys()
-        all_parameter_data = self.db.get_model_parameters_for_all_model_versions(
+        all_parameter_data = self.model_reader.get_model_parameters_for_all_model_versions(
             site=self.site, array_element_name=self.array_element, collection=collection
         )
 
@@ -1231,7 +1245,7 @@ class ReadParameters:
         output_filename = Path(self.output_path / f"OBS-{self.site}.md")
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
-        all_parameter_data = self.db.get_model_parameters(
+        all_parameter_data = self.model_reader.get_model_parameters(
             site=self.site,
             array_element_name="OBS-" + self.site,
             collection="sites",
@@ -1243,7 +1257,9 @@ class ReadParameters:
             return
 
         Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
-        self.db.export_model_files(parameters=all_parameter_data, dest=f"{self.output_path}/model")
+        self.model_reader.export_model_files(
+            parameters=all_parameter_data, dest=f"{self.output_path}/model"
+        )
 
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# Observatory Parameters - {self.site} Site\n\n")
@@ -1359,7 +1375,7 @@ class ReadParameters:
             device_sites = names.get_site_from_array_element_name(calibration_device)
             site = device_sites[0] if isinstance(device_sites, list) else device_sites
 
-            all_parameter_data = self.db.get_model_parameters(
+            all_parameter_data = self.model_reader.get_model_parameters(
                 site=site,
                 array_element_name=calibration_device,
                 collection="calibration_devices",
@@ -1370,7 +1386,7 @@ class ReadParameters:
             output_filename.parent.mkdir(parents=True, exist_ok=True)
             data, dict_tables = self.get_calibration_data(all_parameter_data, calibration_device)
 
-            design_model = self.db.get_design_model(
+            design_model = self.model_reader.get_design_model(
                 self.model_version, calibration_device, "calibration_devices"
             )
 
@@ -1380,12 +1396,12 @@ class ReadParameters:
 
     def _collect_calibration_array_elements(self):
         """Return a list of calibration devices including their design models."""
-        calibration_array_elements = self.db.get_array_elements(
+        calibration_array_elements = self.model_reader.get_array_elements(
             self.model_version, collection="calibration_devices"
         )
         array_elements = calibration_array_elements.copy()
         for element in calibration_array_elements:
-            design_model = self.db.get_design_model(
+            design_model = self.model_reader.get_design_model(
                 self.model_version, element, "calibration_devices"
             )
             if design_model and design_model not in array_elements:

@@ -28,7 +28,11 @@ def main():
 
     output_path = app_context.io_handler.get_output_directory()
 
-    report_generator = ReportGenerator(args=app_context.args, output_path=output_path)
+    report_generator = ReportGenerator(
+        args=app_context.args,
+        output_path=output_path,
+        model_reader=app_context.model_reader,
+    )
     report_generator.auto_generate_simulation_configuration_reports()
 
     app_context.logger.info(
