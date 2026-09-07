@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from simtools.sim_events.production_comparison import ProductionSignalMetrics
 from simtools.visualization import plot_signal_level_production_comparison
@@ -76,3 +77,57 @@ def test_plot_skips_observable_without_values(tmp_test_directory):
     with (telescope_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         statistics = json.load(file_handle)
     assert "peak_timing" not in statistics["plot_statistics"]
+
+
+@pytest.mark.parametrize(
+    ("observable", "x_label", "filename"),
+    [
+        ("pedestals", "Pedestal", "pedestals.png"),
+        ("signals", "Integrated signal", "signals.png"),
+    ],
+)
+def test_plot_uses_log_y_axis_for_pedestals_and_signals(
+    mocker, tmp_test_directory, observable, x_label, filename
+):
+    figure = mocker.MagicMock()
+    axes = mocker.MagicMock()
+    mocker.patch(
+        "simtools.visualization.plot_signal_level_production_comparison.plt.subplots",
+        return_value=(figure, axes),
+    )
+
+    plot_signal_level_production_comparison._plot_observable(
+        [_metrics("baseline")],
+        Path(tmp_test_directory),
+        observable,
+        x_label,
+        filename,
+        "ks",
+        4,
+        True,
+    )
+
+    axes.set_yscale.assert_called_once_with("log")
+
+
+def test_plot_annotates_comparison_statistics(mocker, tmp_test_directory):
+    annotate = mocker.patch(
+        "simtools.visualization.plot_signal_level_production_comparison."
+        "_annotate_comparison_statistics"
+    )
+
+    plot_signal_level_production_comparison._plot_observable(
+        [_metrics("baseline"), _metrics("candidate", 1.2)],
+        Path(tmp_test_directory),
+        "signals",
+        "Integrated signal",
+        "signals.png",
+        "ks",
+        4,
+        False,
+    )
+
+    annotate.assert_called_once()
+    statistics = annotate.call_args.args[1]
+    assert statistics["metric"] == "ks"
+    assert statistics["comparisons"][0]["candidate_label"] == "candidate"

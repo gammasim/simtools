@@ -42,6 +42,39 @@ def test_collect_signal_metrics_for_all_input_telescopes(mocker):
     assert mock_mapping.call_count == 2
 
 
+def test_collect_signal_metrics_selects_requested_telescopes(mocker):
+    mocker.patch(
+        "simtools.sim_events.production_comparison"
+        ".get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        return_value={1: "LSTN-01", 2: "MSTN-01"},
+    )
+    mocker.patch(
+        "simtools.sim_events.production_comparison.read_events",
+        return_value=([1], {}, [_event()]),
+    )
+
+    metrics = production_comparison.collect_signal_metrics(
+        [ProductionDescriptor("baseline", ["baseline.simtel"])],
+        telescope_names=["MSTN-01"],
+    )
+
+    assert set(metrics) == {"MSTN-01"}
+
+
+def test_collect_signal_metrics_rejects_unknown_requested_telescope(mocker):
+    mocker.patch(
+        "simtools.sim_events.production_comparison"
+        ".get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        return_value={1: "LSTN-01"},
+    )
+
+    with pytest.raises(ValueError, match="Requested telescope"):
+        production_comparison.collect_signal_metrics(
+            [ProductionDescriptor("baseline", ["baseline.simtel"])],
+            telescope_names=["MSTN-01"],
+        )
+
+
 def test_collect_signal_metrics_rejects_missing_layout_telescope(mocker):
     mocker.patch(
         "simtools.sim_events.production_comparison"

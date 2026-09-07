@@ -4,6 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import telescope
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.production_comparison import write_production_comparison
@@ -58,7 +59,17 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_layout_name",
         nargs="+",
-        help="Restrict event-level comparison to the selected array layout name(s).",
+        help=(
+            "Restrict event-level comparison to selected array layout name(s), or signal-level "
+            "comparison to selected telescope name(s)."
+        ),
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "telescope_name",
+        nargs="+",
+        type=telescope,
+        help="Restrict signal-level comparison to the selected telescope name(s).",
         required=False,
     ),
 )
@@ -109,10 +120,17 @@ def main():
 
 def _run_signal_comparison(app_context):
     """Run signal-level comparison and return generated statistics files."""
-    if app_context.args.get("array_layout_name"):
-        raise ValueError("array_layout_name is only supported for event-level comparison.")
+    array_layout_names = app_context.args.get("array_layout_name")
+    telescope_names = app_context.args.get("telescope_name")
+    if array_layout_names and telescope_names:
+        raise ValueError(
+            "Use only one of --array_layout_name and --telescope_name for signal comparison."
+        )
     production_descriptors = parse_production_arguments(app_context.args["production"])
-    metrics_by_telescope = collect_signal_metrics(production_descriptors)
+    metrics_by_telescope = collect_signal_metrics(
+        production_descriptors,
+        telescope_names=array_layout_names or telescope_names,
+    )
     return [
         (statistics_file, None)
         for statistics_file in plot_signal_level_production_comparison.plot(

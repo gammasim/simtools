@@ -420,13 +420,16 @@ def _build_per_type_histogram_metrics(label, simulated_histograms, accumulators)
     return per_type
 
 
-def collect_signal_metrics(production_descriptors):
+def collect_signal_metrics(production_descriptors, telescope_names=None):
     """Collect telescope-level signal metrics for each production.
 
     Parameters
     ----------
     production_descriptors : list[ProductionDescriptor]
         Production descriptors containing sim_telarray input files.
+    telescope_names : str or list[str], optional
+        Restrict the metrics to one or more telescope names. If omitted, all
+        telescopes shared by the input files are processed.
 
     Returns
     -------
@@ -439,20 +442,38 @@ def collect_signal_metrics(production_descriptors):
         If a required telescope is absent or no event data is available for a
         telescope.
     """
-    telescope_names = _discover_telescope_names(production_descriptors)
-    if not telescope_names:
+    selected_telescope_names = _discover_telescope_names(production_descriptors, telescope_names)
+    if not selected_telescope_names:
         raise ValueError("The sim_telarray inputs contain no telescopes.")
 
-    metrics_by_telescope = {name: [] for name in telescope_names}
+    metrics_by_telescope = {name: [] for name in selected_telescope_names}
     for production in production_descriptors:
-        metrics = _collect_production_signal_metrics(production, telescope_names)
+        metrics = _collect_production_signal_metrics(production, selected_telescope_names)
         for telescope_name, telescope_metrics in metrics.items():
             metrics_by_telescope[telescope_name].append(telescope_metrics)
     return metrics_by_telescope
 
 
-def _discover_telescope_names(production_descriptors):
-    """Discover and validate the telescope set represented by all input files."""
+def _discover_telescope_names(production_descriptors, requested_telescope_names=None):
+    """Discover and validate the telescope set represented by all input files.
+
+    Parameters
+    ----------
+    production_descriptors : list[ProductionDescriptor]
+        Production descriptors containing sim_telarray input files.
+    requested_telescope_names : str or list[str], optional
+        Telescope names to select from the shared input telescope set.
+
+    Returns
+    -------
+    list[str]
+        Selected telescope names.
+
+    Raises
+    ------
+    ValueError
+        If a requested telescope is not present in the input files.
+    """
     input_files = [
         input_file for production in production_descriptors for input_file in production.input_files
     ]
@@ -470,7 +491,14 @@ def _discover_telescope_names(production_descriptors):
                 f"Input '{input_file}' has telescope set {sorted(available)}; expected "
                 f"the shared telescope set {sorted(expected)}."
             )
-    return sorted(expected)
+    if requested_telescope_names is None:
+        return sorted(expected)
+
+    requested = set(ensure_string_lists(requested_telescope_names))
+    missing = sorted(requested - expected)
+    if missing:
+        raise ValueError(f"Requested telescope(s) not found in input files: {missing}.")
+    return sorted(requested)
 
 
 def _collect_production_signal_metrics(production, telescope_names):

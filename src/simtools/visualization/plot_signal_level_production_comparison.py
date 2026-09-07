@@ -8,14 +8,23 @@ import numpy as np
 
 from simtools.io import ascii_handler
 from simtools.statistics import compare_samples_with_statistics
+from simtools.visualization.plot_event_level_production_comparison import (
+    _annotate_comparison_statistics,
+)
 
 _logger = logging.getLogger(__name__)
 
 _OBSERVABLES = (
-    ("pedestals", "Pedestal", "pedestals.png", "ks"),
-    ("signals", "Integrated signal", "signals.png", "ks"),
-    ("peak_timing", "Peak sample", "peak_timing.png", "ks"),
-    ("triggered_pixels", "Triggered pixels per event", "triggered_pixels.png", "wasserstein"),
+    ("pedestals", "Pedestal", "pedestals.png", "ks", True),
+    ("signals", "Integrated signal", "signals.png", "ks", True),
+    ("peak_timing", "Peak sample", "peak_timing.png", "ks", False),
+    (
+        "triggered_pixels",
+        "Triggered pixels per event",
+        "triggered_pixels.png",
+        "wasserstein",
+        False,
+    ),
 )
 
 
@@ -57,7 +66,7 @@ def _plot_telescope_comparisons(metrics, output_path, bins):
         "comparison_sets": [_production_summary(item) for item in metrics[1:]],
         "plot_statistics": {},
     }
-    for observable, x_label, filename, metric in _OBSERVABLES:
+    for observable, x_label, filename, metric, log_y in _OBSERVABLES:
         plot_statistics = _plot_observable(
             metrics,
             output_path,
@@ -66,6 +75,7 @@ def _plot_telescope_comparisons(metrics, output_path, bins):
             filename,
             metric,
             bins,
+            log_y,
         )
         if plot_statistics is not None:
             statistics["plot_statistics"][observable] = plot_statistics
@@ -83,7 +93,7 @@ def _production_summary(metrics):
     }
 
 
-def _plot_observable(metrics, output_path, observable, x_label, filename, metric, bins):
+def _plot_observable(metrics, output_path, observable, x_label, filename, metric, bins, log_y):
     """Plot one observable and calculate candidate statistics."""
     samples = [np.asarray(getattr(item, observable)) for item in metrics]
     non_empty = [values for values in samples if values.size]
@@ -102,10 +112,9 @@ def _plot_observable(metrics, output_path, observable, x_label, filename, metric
     ax.set_xlabel(x_label)
     ax.set_ylabel("Fraction")
     ax.set_title(f"{x_label} comparison")
+    if log_y:
+        ax.set_yscale("log")
     ax.grid(alpha=0.25)
-    ax.legend()
-    fig.savefig(output_path / filename, dpi=300, bbox_inches="tight")
-    plt.close(fig)
 
     comparisons = []
     for item, values in zip(metrics[1:], samples[1:]):
@@ -114,10 +123,15 @@ def _plot_observable(metrics, output_path, observable, x_label, filename, metric
         comparison = compare_samples_with_statistics(samples[0], values, bin_edges, metric=metric)
         comparison["candidate_label"] = item.label
         comparisons.append(comparison)
-    return {
+    statistics = {
         "baseline_label": metrics[0].label,
         "metric_type": "aligned_counts",
         "metric": metric,
         "metadata": {"bin_edges": bin_edges.tolist()},
         "comparisons": comparisons,
     }
+    _annotate_comparison_statistics(ax, statistics)
+    ax.legend()
+    fig.savefig(output_path / filename, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    return statistics

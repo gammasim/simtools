@@ -121,12 +121,13 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     app_context.args = {
         "comparison_level": "signal",
         "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
+        "telescope_name": ["LSTN-01"],
     }
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
     mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
-    mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
+    mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
     mocker.patch(
         "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
         return_value=[statistics_file],
@@ -135,20 +136,49 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
 
     compare_productions.main()
 
+    mock_collect.assert_called_once_with(
+        mocker.ANY,
+        telescope_names=["LSTN-01"],
+    )
     mock_dump.assert_called_once()
     assert mock_dump.call_args.args[1] == statistics_file
 
 
-def test_signal_comparison_rejects_array_layout_name(mocker):
+def test_signal_comparison_uses_array_layout_name_as_telescope_selection(
+    mocker, tmp_test_directory
+):
     app_context = mocker.MagicMock()
     app_context.args = {
         "comparison_level": "signal",
-        "array_layout_name": ["CTAO-North-Alpha"],
+        "array_layout_name": ["LSTN-03"],
+        "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
+    }
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+    app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
+    mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
+    mocker.patch(
+        "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
+        return_value=[],
+    )
+
+    compare_productions.main()
+
+    mock_collect.assert_called_once_with(mocker.ANY, telescope_names=["LSTN-03"])
+
+
+def test_signal_comparison_rejects_two_telescope_selection_options(mocker):
+    app_context = mocker.MagicMock()
+    app_context.args = {
+        "comparison_level": "signal",
+        "array_layout_name": ["LSTN-03"],
+        "telescope_name": ["MSTN-01"],
     }
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
 
-    with pytest.raises(ValueError, match="only supported for event-level"):
+    with pytest.raises(ValueError, match="Use only one of"):
         compare_productions.main()
 
 
@@ -161,6 +191,8 @@ def test_application_exposes_events_comparison_level_without_unused_output_argum
         "skip_output_validation",
     }.isdisjoint(argument_names)
     assert "comparison_level" in argument_names
+    assert "array_layout_name" in argument_names
+    assert "telescope_name" in argument_names
     assert {"test", "ignore_existing_parameter_version"}.isdisjoint(argument_names)
     assert "figure_format" in argument_names
 
@@ -179,10 +211,14 @@ def test_comparison_level_argument_accepts_events():
             "candidate.hdf5",
             "--comparison_level",
             "events",
+            "--telescope_name",
+            "LSTN-01",
+            "MSTN-01",
         ]
     )
 
     assert args.comparison_level == "events"
+    assert args.telescope_name == ["LSTN-01", "MSTN-01"]
 
 
 def test_application_parses_productions_without_select(monkeypatch):
