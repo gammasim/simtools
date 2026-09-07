@@ -103,6 +103,11 @@ class CameraEfficiency:
         """Calculate camera efficiency using the in-process ECSV calculator."""
         self._logger.info("Simulating CameraEfficiency")
 
+        if not self.config.get("skip_correction_to_nsb_spectrum", False):
+            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
+                model_directory=self.telescope_model.config_file_directory
+            )
+
         calculator = CameraEfficiencyCalculator(
             telescope_model=self.telescope_model,
             site_model=self.site_model,

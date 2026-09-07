@@ -44,6 +44,28 @@ def test_parameter_table_reads_exported_model_file(mocker, tmp_test_directory, p
     )
 
 
+def test_parameter_table_reads_nsb_correction_from_simtel_configuration(mocker, tmp_test_directory):
+    class Model:
+        config_file_directory = Path(tmp_test_directory)
+
+        @staticmethod
+        def get_simulation_software_parameters(name):
+            assert name == "sim_telarray"
+            return {"correct_nsb_spectrum_to_telescope_altitude": {"value": "atm_trans_2200.dat"}}
+
+    expected = Table()
+    read_table = mocker.patch(
+        "simtools.camera.camera_efficiency_calculator.read_simtel_table", return_value=expected
+    )
+
+    result = _parameter_table(Model(), "correct_nsb_spectrum_to_telescope_altitude")
+
+    assert result is expected
+    read_table.assert_called_once_with(
+        "atmospheric_transmission", tmp_test_directory / "atm_trans_2200.dat"
+    )
+
+
 def test_spectral_curve_averages_angle_dependent_table():
     table = Table(
         {
@@ -68,6 +90,35 @@ def test_spectral_curve_averages_angle_dependent_table():
         np.array([400.0, 500.0]),
         model=Model(),
         weighting_parameter="incidence",
+    )
+    np.testing.assert_allclose(result, [0.5, 0.3])
+
+
+def test_spectral_curve_averages_rpol_columns():
+    table = Table(
+        {
+            "wavelength": [400.0, 500.0] * u.nm,
+            "transmission_0deg": [0.8, 0.6],
+            "transmission_10deg": [0.4, 0.2],
+        }
+    )
+
+    class Model:
+        def get_parameter_table(self, name):
+            assert name == "incidence"
+            return Table(
+                {
+                    "incidence_angle": [0.0, 10.0] * u.deg,
+                    "fraction": [0.25, 0.75],
+                }
+            )
+
+    result = _spectral_curve(
+        table,
+        np.array([400.0, 500.0]),
+        model=Model(),
+        weighting_parameter="incidence",
+        candidates=("transmission", "efficiency"),
     )
     np.testing.assert_allclose(result, [0.5, 0.3])
 

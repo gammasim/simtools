@@ -91,12 +91,19 @@ def test_report(camera_efficiency_lst):
 
 
 def test_simulate(camera_efficiency_lst, caplog, mocker):
+    export_correction = mocker.patch.object(
+        camera_efficiency_lst.telescope_model,
+        "export_nsb_spectrum_to_telescope_altitude_correction_file",
+    )
     mock_calculate = mocker.patch.object(
         CameraEfficiencyCalculator, "calculate", return_value=Table()
     )
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.simulate()
         assert "Simulating CameraEfficiency" in caplog.text
+    export_correction.assert_called_once_with(
+        model_directory=camera_efficiency_lst.telescope_model.config_file_directory
+    )
     mock_calculate.assert_called_once()
 
 

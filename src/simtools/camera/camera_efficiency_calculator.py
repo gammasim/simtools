@@ -10,6 +10,7 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.simtel.simtel_table_reader import read_simtel_table
 
 _WAVELENGTHS = np.arange(200.0, 1001.0)
+_NSB_CORRECTION_PARAMETER = "correct_nsb_spectrum_to_telescope_altitude"
 
 
 def _column_values(table, name, unit=None):
@@ -38,12 +39,20 @@ def _parameter_table(model, parameter_name):
     if get_table is not None:
         return get_table(parameter_name)
 
-    file_name = model.get_parameter_value(parameter_name)
+    if parameter_name == _NSB_CORRECTION_PARAMETER:
+        simulation_parameters = model.get_simulation_software_parameters("sim_telarray") or {}
+        file_name = simulation_parameters[parameter_name]["value"]
+    else:
+        file_name = model.get_parameter_value(parameter_name)
     file_path = Path(file_name)
     if not file_path.is_absolute():
         file_path = model.config_file_directory / file_path
     reader_parameter_name = (
-        "mirror_list" if parameter_name == "fake_mirror_list" else parameter_name
+        "mirror_list"
+        if parameter_name == "fake_mirror_list"
+        else "atmospheric_transmission"
+        if parameter_name == _NSB_CORRECTION_PARAMETER
+        else parameter_name
     )
     return read_simtel_table(reader_parameter_name, file_path)
 
