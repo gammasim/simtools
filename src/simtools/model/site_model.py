@@ -255,4 +255,4 @@ class SiteModel(ModelParameter):
         self._logger.debug(
             f"NSB integral between {wavelength_min} and {wavelength_max}: {integral_cm2}"
         )
-        return integral_cm2.value
+        return float(getattr(integral_cm2, "value", integral_cm2))

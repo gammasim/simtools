@@ -137,3 +137,21 @@ def test_get_nsb_integrated_flux(model_version, mocker):
     assert isinstance(result, float)
     assert result > 0
     get_parameter_table.assert_called_once_with("nsb_spectrum")
+
+
+def test_get_nsb_integrated_flux_returns_zero_for_empty_wavelength_range(model_version, mocker):
+    site_model = SiteModel(
+        site="South",
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+
+    table = QTable()
+    table["wavelength"] = [700, 800] * u.nm
+    table["differential_photon_rate"] = [1, 2] * (1 / (u.nm * u.cm**2 * u.ns * u.sr))
+    get_parameter_table = mocker.patch.object(site_model, "get_parameter_table", return_value=table)
+
+    result = site_model.get_nsb_integrated_flux()
+
+    assert result == pytest.approx(0.0)
+    get_parameter_table.assert_called_once_with("nsb_spectrum")
