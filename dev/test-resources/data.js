@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788781427370,
+  "lastUpdate": 1788787728955,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -25698,6 +25698,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 422.2890625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72258533cbcf597c6936e1f2ba21cd9c42d2bf21",
+          "message": "Improve metadata collection and validation to include `sim_telarray` output. (#2513)\n\n* Metadata collector for sim_telarray\n\n* changelog\n\n* Fixes triggered by copilot review\n\n* unit tests",
+          "timestamp": "2026-09-07T15:09:52+02:00",
+          "tree_id": "08f3583c18ad407763a9453959e9c80054c4dceb",
+          "url": "https://github.com/gammasim/simtools/commit/72258533cbcf597c6936e1f2ba21cd9c42d2bf21"
+        },
+        "date": 1788787711609,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 65.405014763,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 67.63000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 422.34765625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
           }
