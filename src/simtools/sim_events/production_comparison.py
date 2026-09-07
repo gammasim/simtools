@@ -25,12 +25,7 @@ class ProductionDescriptor:
     """Descriptor for one production input provided."""
 
     label: str
-    trigger_histogram_files: list[str]
-
-    @property
-    def input_files(self):
-        """Return input files using the generalized descriptor attribute name."""
-        return self.trigger_histogram_files
+    input_files: list[str]
 
 
 @dataclass
@@ -107,9 +102,7 @@ def parse_production_arguments(production_arguments):
         resolved_files = [str(path) for path in resolve_file_patterns(patterns)]
         if len(resolved_files) == 0:
             raise ValueError(f"Production '{label}' does not resolve to any files.")
-        descriptors.append(
-            ProductionDescriptor(label=label, trigger_histogram_files=resolved_files)
-        )
+        descriptors.append(ProductionDescriptor(label=label, input_files=resolved_files))
 
     return descriptors
 
