@@ -213,7 +213,10 @@ def _plot_trigger_multiplicity(
     statistics = _build_aligned_count_statistics(
         metrics_per_production,
         counts_per_label,
-        metadata={"bin_count": len(bin_edges) - 1},
+        metadata={
+            "bin_edges": bin_edges.astype(float).tolist(),
+            "bin_count": len(bin_edges) - 1,
+        },
         metric="wasserstein",
         bin_edges=bin_edges,
     )
@@ -422,6 +425,7 @@ def _plot_grouped_fraction_bars(
             for metrics in metrics_per_production
         },
         metadata={
+            "categories": list(statistics_categories),
             "category_count": len(statistics_categories),
             "display_categories": list(categories),
         },
@@ -626,6 +630,7 @@ def _plot_quantity_distribution(
             "triggered": trig_counts,
             "simulated_samples": simulated_samples,
             "triggered_samples": triggered_samples,
+            "bin_edges": bin_edges,
         }
         _plot_distribution_series(
             ax,
@@ -804,7 +809,12 @@ def _build_aligned_count_statistics(
             metric=metric,
             bin_edges=bin_edges,
         )
-        result["candidate_label"] = metrics.label
+        result = {
+            **result,
+            "candidate_label": metrics.label,
+            "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
+            "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
+        }
         stats_summary["comparisons"].append(result)
     return stats_summary
 
@@ -860,13 +870,19 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     sample_key = f"{event_kind}_samples"
     if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
         return compare_samples_with_statistics(
-            baseline_data[sample_key], candidate_data[sample_key]
+            baseline_data[sample_key],
+            candidate_data[sample_key],
+            baseline_data["bin_edges"],
         )
-    return compare_histogram_counts(
+    result = compare_histogram_counts(
         baseline_data[event_kind],
         candidate_data[event_kind],
         metric="ks",
     )
+    result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=int).tolist()
+    result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=int).tolist()
+    result["bin_edges"] = np.asarray(baseline_data["bin_edges"], dtype=float).tolist()
+    return result
 
 
 def _annotate_comparison_statistics(ax, statistics):
@@ -903,6 +919,11 @@ def _annotate_comparison_statistics(ax, statistics):
     )
 
 
+def _annotate_ks_statistics(ax, statistics):
+    """Backward-compatible alias for metric-neutral comparison annotations."""
+    _annotate_comparison_statistics(ax, statistics)
+
+
 def _format_statistic_value(value):
     """Format statistic values for plot text annotations."""
     if value is None:
@@ -918,7 +939,13 @@ def _format_metric_value(statistics):
         "wasserstein": "W1",
     }
     metric = statistics.get("metric", "ks")
-    return metric_labels.get(metric, metric), _format_statistic_value(statistics.get("value"))
+    value_key = {
+        "ks": "ks_statistic",
+        "jensen_shannon": "jensen_shannon_distance",
+        "wasserstein": "wasserstein_distance",
+    }.get(metric, "value")
+    value = statistics.get(value_key, statistics.get("value"))
+    return metric_labels.get(metric, metric), _format_statistic_value(value)
 
 
 def _initialize_comparison_statistics(metrics_per_production):

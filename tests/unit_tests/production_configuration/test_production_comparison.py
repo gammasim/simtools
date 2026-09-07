@@ -110,9 +110,7 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
     assert len(pairs) == 2
     assert all(len(descriptors) == 2 for _, descriptors in pairs)
     assert all(
-        len(descriptor.trigger_histogram_files) == 1
-        for _, descriptors in pairs
-        for descriptor in descriptors
+        len(descriptor.input_files) == 1 for _, descriptors in pairs for descriptor in descriptors
     )
 
 
