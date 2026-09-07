@@ -339,7 +339,13 @@ def _clean_scan_grid_metadata(output_file):
 
     # Create clean metadata with only essential fields
     clean_meta = {}
-    for key in ["model_parameter_sets", "site", "simulation_software"]:
+    for key in [
+        "model_parameter_sets",
+        "site",
+        "simulation_software",
+        "job_grid_summary",
+        "job_grid_format_version",
+    ]:
         if key in table.meta:
             clean_meta[key] = table.meta[key]
 
