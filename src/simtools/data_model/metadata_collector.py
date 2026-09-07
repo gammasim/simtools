@@ -7,8 +7,10 @@ implementation of the observatory metadata model.
 """
 
 import getpass
+import json
 import logging
 import re
+from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
 
@@ -16,10 +18,13 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools.constants import METADATA_JSON_SCHEMA
+from simtools.constants import METADATA_JSON_SCHEMA, SIM_TELARRAY_META_PARAMETER_REGISTRY
 from simtools.data_model import metadata_model, schema
 from simtools.io import ascii_handler, io_handler
 from simtools.settings import config
+from simtools.sim_events.file_info import get_corsika_run_and_event_headers
+from simtools.simtel import simtel_validate_metadata
+from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.utils import names
 
 _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
@@ -468,14 +473,10 @@ class MetadataCollector:
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
             elif Path(metadata_file).suffix == ".ecsv":
                 _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
-            elif Path(metadata_file).name.endswith((".simtel.zst", ".simtel")):
-                self._logger.warning(
-                    "Metadata extraction from sim_telarray files is not supported yet."
-                )
-                continue
-            elif Path(metadata_file).name.endswith((".corsika.zst", ".corsika")):
-                self._logger.warning("Metadata extraction from CORSIKA files is not supported yet.")
-                continue
+            elif Path(metadata_file).name.endswith((".simtel.zst", ".simtel.gz", ".simtel")):
+                _input_metadata = self._read_input_metadata_from_simtel(metadata_file)
+            elif Path(metadata_file).name.endswith((".corsika.zst", ".corsika.gz", ".corsika")):
+                _input_metadata = self._read_input_metadata_from_corsika(metadata_file)
             else:
                 raise ValueError(f"Unknown metadata file format: {metadata_file}")
 
@@ -483,6 +484,140 @@ class MetadataCollector:
             metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
 
         return metadata
+
+    def _read_input_metadata_from_simtel(self, metadata_file_name):
+        """Read sim_telarray metadata and adapt it to the CTA metadata model."""
+        global_metadata, telescope_metadata = read_sim_telarray_metadata(metadata_file_name)
+        global_metadata = global_metadata or {}
+        telescope_metadata = telescope_metadata or {}
+        self._logger.debug(
+            "Validating sim_telarray metadata against %s", SIM_TELARRAY_META_PARAMETER_REGISTRY
+        )
+        simtel_validate_metadata.validate_metadata_values(global_metadata)
+        for metadata in telescope_metadata.values():
+            simtel_validate_metadata.validate_metadata_values(metadata)
+        site = self._get_valid_site(global_metadata.get("site_config_name"))
+        array_layout = global_metadata.get("array_config_name")
+        metadata = self._build_eventio_input_metadata(
+            metadata_file_name,
+            software_name="sim_telarray",
+            software_version=global_metadata.get("simtools_simtel_tag"),
+            site=site,
+            instrument_id=array_layout,
+            format_name="simtel",
+            raw_metadata={
+                "global": global_metadata,
+                "telescopes": telescope_metadata,
+            },
+        )
+        associated_elements = self._simtel_associated_elements(telescope_metadata, site)
+        if associated_elements:
+            metadata[self.observatory]["context"]["associated_elements"] = associated_elements
+        return metadata
+
+    def _read_input_metadata_from_corsika(self, metadata_file_name):
+        """Read CORSIKA headers and adapt them to the CTA metadata model."""
+        run_header, event_header = get_corsika_run_and_event_headers(metadata_file_name)
+        if run_header is None or event_header is None:
+            raise ValueError(
+                f"CORSIKA file has no complete run and event header: {metadata_file_name}"
+            )
+        run_header = self._header_to_dict(run_header)
+        event_header = self._header_to_dict(event_header)
+        version = run_header.get("version")
+        return self._build_eventio_input_metadata(
+            metadata_file_name,
+            software_name="corsika",
+            software_version=(f"{float(version):.4f}" if version is not None else None),
+            format_name="corsika",
+            raw_metadata={"run_header": run_header, "event_header": event_header},
+        )
+
+    def _build_eventio_input_metadata(
+        self,
+        metadata_file_name,
+        software_name,
+        software_version,
+        format_name,
+        raw_metadata,
+        site=None,
+        instrument_id=None,
+    ):
+        """Build schema-compatible metadata for an EventIO input file."""
+        metadata = metadata_model.get_default_metadata_dict(observatory=self.observatory)
+        cta_metadata = metadata[self.observatory]
+        cta_metadata["product"].update({"filename": str(metadata_file_name), "format": format_name})
+        cta_metadata["product"]["data"].update({"category": "SIM", "type": "Event"})
+        cta_metadata["instrument"].update(
+            {
+                "site": site,
+                "class": "array" if instrument_id else None,
+                "id": instrument_id,
+            }
+        )
+        cta_metadata["process"]["type"] = "simulation"
+        cta_metadata["activity"].update(
+            {
+                "type": "software",
+                "software": {"name": software_name, "version": software_version},
+            }
+        )
+        cta_metadata["context"]["notes"] = [
+            {
+                "title": f"{format_name} metadata",
+                "text": json.dumps(ascii_handler.to_builtin(raw_metadata), sort_keys=True),
+            }
+        ]
+        return metadata
+
+    @staticmethod
+    def _header_to_dict(header):
+        """Convert a parsed CORSIKA header to a JSON-compatible dictionary."""
+        if header is None:
+            return {}
+        if isinstance(header, Mapping):
+            return ascii_handler.to_builtin(header)
+
+        field_names = getattr(getattr(header, "dtype", None), "names", None)
+        if field_names:
+            record = header[0] if getattr(header, "shape", ()) else header
+            return {name: ascii_handler.to_builtin(record[name]) for name in field_names}
+        return ascii_handler.to_builtin(header)
+
+    @staticmethod
+    def _get_valid_site(site):
+        """Return a validated CTA site or ``None`` for unavailable metadata."""
+        if site is None:
+            return None
+        try:
+            return names.validate_site_name(site)
+        except TypeError, ValueError:
+            return None
+
+    def _simtel_associated_elements(self, telescope_metadata, site):
+        """Convert sim_telarray telescope metadata into CTA instrument entries."""
+        associated_elements = []
+        for metadata in telescope_metadata.values():
+            telescope_name = metadata.get("optics_config_variant") or metadata.get(
+                "camera_config_variant"
+            )
+            if telescope_name is None:
+                continue
+            try:
+                telescope_type = names.get_array_element_type_from_name(telescope_name)
+                telescope_site = names.get_site_from_array_element_name(telescope_name)
+            except TypeError, ValueError:
+                telescope_type = None
+                telescope_site = site
+            associated_elements.append(
+                {
+                    "site": telescope_site,
+                    "class": "telescope",
+                    "type": telescope_type,
+                    "id": telescope_name,
+                }
+            )
+        return associated_elements
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
         """Read input metadata from ecsv file."""
