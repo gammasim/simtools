@@ -1385,16 +1385,24 @@ def test__get_telescope_pointing(simulator_instance):
     simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
     simulator_instance._logger.reset_mock()
 
-    with patch.object(
-        simulator_instance,
-        "_calibration_pointing_direction",
-        return_value=(None, [45.0, 180.0, 90.0, 0.0]),
-    ) as mock_pointing:
+    with (
+        patch.object(
+            simulator_instance,
+            "_calibration_pointing_direction",
+            return_value=(None, [45.0, 180.0, 90.0, 0.0]),
+        ) as mock_pointing,
+        patch.object(
+            simulator_instance,
+            "_get_illuminator_position",
+            return_value=[10.0 * u.m, 20.0 * u.m, 39.0 * u.m],
+        ) as mock_position,
+    ):
         result = simulator_instance._get_telescope_pointing()
 
         # Should return tel_theta, tel_phi (first two angles)
         assert result == (45.0, 180.0)
-        mock_pointing.assert_called_once()
+        mock_pointing.assert_called_once_with(10.0 * u.m, 20.0 * u.m, 39.0 * u.m)
+        mock_position.assert_called_once_with()
         simulator_instance._logger.info.assert_not_called()
 
 

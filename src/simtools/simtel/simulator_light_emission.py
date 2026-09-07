@@ -302,7 +302,8 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_emission_config.get("light_source_position") is not None:
             self._logger.info("Using fixed (vertical up) telescope pointing.")
             return 0.0, 0.0
-        _, angles = self._calibration_pointing_direction()
+        illuminator_position = self._get_illuminator_position()
+        _, angles = self._calibration_pointing_direction(*illuminator_position)
         return angles[0], angles[1]
 
     def _calibration_pointing_direction(self, x_cal=None, y_cal=None, z_cal=None):
