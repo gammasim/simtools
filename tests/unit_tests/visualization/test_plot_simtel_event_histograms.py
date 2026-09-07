@@ -979,8 +979,9 @@ def test_create_2d_plot_renders_single_point_limit_curve(tmp_test_directory):
 def test_add_lines_handles_multi_point_and_malformed_limit_curves():
     fig, ax = plt.subplots()
 
-    _add_lines(ax, {"curve": {"x": [100.0, 200.0], "y": [1.0, 2.0]}})
-    _add_lines(ax, {"curve": {"x": [100.0], "y": [1.0, 2.0]}})
+    with plt.rc_context({"lines.marker": "o"}):
+        _add_lines(ax, {"curve": {"x": [100.0, 200.0], "y": [1.0, 2.0]}})
+        _add_lines(ax, {"curve": {"x": [100.0], "y": [1.0, 2.0]}})
 
     assert len(ax.lines) == 1
     assert ax.lines[0].get_marker() == "None"

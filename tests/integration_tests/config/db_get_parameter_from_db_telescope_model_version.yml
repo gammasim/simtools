@@ -20,6 +20,7 @@ applications:
       file: ref_LST1_2022_04_01.dat
     - path_descriptor: output_path
       file: ref_LST1_2022_04_01.ecsv
+  requires_mongodb: true
   test_name: telescope_parameter_model_version
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

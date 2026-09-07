@@ -15,6 +15,7 @@ applications:
     output_file: array_layout_south_ground_from_list.ecsv
     output_path: simtools-output
     site: South
+  requires_mongodb: true
   test_name: layout_list
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

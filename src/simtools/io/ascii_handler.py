@@ -1,5 +1,6 @@
 """Helper module for ASCII file operations."""
 
+import io
 import json
 import logging
 import os
@@ -46,6 +47,34 @@ def collect_data_from_file(file_name, yaml_document=None, test_resources_path=No
     # broad exception to catch all possible errors in reading the file
     except Exception as exc:  # pylint: disable=broad-except
         raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
+
+
+def collect_data_from_bytes(data, file_name, yaml_document=None):
+    """Collect JSON or YAML data from an in-memory byte string.
+
+    Parameters
+    ----------
+    data : bytes
+        UTF-8 encoded file contents.
+    file_name : str or pathlib.Path
+        Logical file name used to select the parser and report errors.
+    yaml_document : int, optional
+        YAML document index for multi-document YAML files.
+
+    Returns
+    -------
+    dict or list
+        Parsed file contents.
+    """
+    logical_name = str(file_name)
+    suffix = Path(logical_name).suffix.lower()
+    try:
+        text = data.decode("utf-8")
+        return _collect_data_from_different_file_types(
+            io.StringIO(text), logical_name, suffix, yaml_document
+        )
+    except Exception as exc:  # pylint: disable=broad-except
+        raise ValueError(f"Failed to read file {logical_name}: {exc}") from exc
 
 
 def _resolve_configured_test_resource_paths(data, test_resources_path=None):

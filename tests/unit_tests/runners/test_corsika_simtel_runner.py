@@ -59,6 +59,22 @@ def test_get_resources(corsika_simtel_runner, mocker):
     get_resources.assert_called_once_with(runtime=2.5)
 
 
+def test_update_file_list_flattens_repeated_resource_files(corsika_simtel_runner, mocker):
+    corsika_simtel_runner.file_list = {}
+    corsika_simtel_runner.corsika_runner.file_list = {}
+    first_array = mocker.Mock(file_list={"sim_telarray_resources": ["first", "second"]})
+    second_array = mocker.Mock(file_list={"sim_telarray_resources": "third"})
+    corsika_simtel_runner.simulator_array = [first_array, second_array]
+
+    corsika_simtel_runner.update_file_list_from_runners()
+
+    assert corsika_simtel_runner.file_list["sim_telarray_resources"] == [
+        "first",
+        "second",
+        "third",
+    ]
+
+
 def test_prepare_run(corsika_simtel_runner, tmp_path):
     # prepare_run now requires sub_script parameter and doesn't return the script path
     script_path = tmp_path / "test_script.sh"
@@ -88,6 +104,10 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
     with open(script) as f:
         script_content = f.read()
         assert simtel_command in script_content
+        assert (
+            f"--model-version {corsika_simtel_runner.base_corsika_config.array_model.model_version}"
+            in script_content
+        )
         assert "-C telescope_theta=20" in script_content
         assert "-C telescope_phi=0" in script_content
         assert show_all in script_content
