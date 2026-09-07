@@ -47,6 +47,32 @@ def test_execute_job_spec_initializes_serialized_runtime(mocker):
     function.assert_called_once_with(2)
 
 
+def test_execute_job_spec_restores_serialized_model_source(mocker):
+    """Workers reopen the immutable model source recorded at submission time."""
+    config = mocker.patch("simtools.job_execution.worker.config")
+    io_handler = mocker.patch("simtools.job_execution.worker.io_handler.IOHandler")
+    source_config = {"type": "git", "repository": "/models.git", "commit": "a" * 40}
+    reader = mocker.Mock()
+    restore_reader = mocker.patch(
+        "simtools.job_execution.worker.create_model_reader_from_source_config",
+        return_value=reader,
+    )
+    job = JobSpec(
+        "job-000000",
+        0,
+        function=lambda value: value,
+        item=2,
+        runtime_args={},
+        model_source_config=source_config,
+    )
+
+    assert execute_job_spec(job) == 2
+
+    restore_reader.assert_called_once_with(source_config)
+    config.set_model_reader.assert_called_once_with(reader)
+    io_handler.return_value.set_paths.assert_called_once_with(output_path=None, model_path=None)
+
+
 def test_worker_writes_failure_result_for_invalid_payload(tmp_test_directory):
     """Malformed payloads produce a durable failure record."""
     run_directory = Path(tmp_test_directory)

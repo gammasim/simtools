@@ -853,7 +853,12 @@ def _add_lines(ax, lines):
         curve_x = np.asarray(curve.get("x", []), dtype=float).ravel()
         curve_y = np.asarray(curve.get("y", []), dtype=float).ravel()
         if curve_x.size and curve_x.size == curve_y.size:
-            curve_params = {"color": "r", "linestyle": "--", "linewidth": 1.0}
+            curve_params = {
+                "color": "r",
+                "linestyle": "--",
+                "linewidth": 1.0,
+                "marker": "None",
+            }
             if curve_x.size == 1:
                 curve_params.update(marker="o", markersize=3.0)
             ax.plot(curve_x, curve_y, **curve_params)

@@ -14,6 +14,8 @@ GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
 PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
+# Path to MongoDB configuration schema
+DATABASE_SCHEMA = SCHEMA_PATH / "database.schema.yml"
 # Path to run time environment json schema
 RUN_TIME_ENVIRONMENT_SCHEMA = SCHEMA_PATH / "run_time_environment.schema.yml"
 # Path to model parameter metaschema

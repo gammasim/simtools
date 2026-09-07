@@ -34,16 +34,12 @@ from simtools.configuration.arguments import (
 )
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.db import db_handler
-from simtools.db.mongo_db import MongoDBHandler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
-DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
-
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _GITHUB_RAW_BASE = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
@@ -477,12 +473,12 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler(request):
+def mock_model_reader(request):
     """
-    Mock DatabaseHandler for unit tests.
+    Mock source-neutral model reader for non-database unit tests.
 
     Provides common mock behaviors to avoid real database connections.
-    Returns a MagicMock configured with typical DatabaseHandler methods.
+    Returns a MagicMock configured with typical model-reader methods.
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
     if _is_db_unit_test(request):
@@ -539,7 +535,7 @@ def mock_db_handler(request):
     ):
         return _mock_get_array_elements_of_type(array_element_type, all_array_elements)
 
-    # Configure mock database
+    # Configure the source-neutral reader
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.side_effect = mock_get_design_model
@@ -560,34 +556,57 @@ def mock_db_handler(request):
     return mock_db
 
 
-@pytest.fixture(autouse=True)
-def patch_database_handler(request, mocker, simtools_settings):
-    """
-    Automatically patch DatabaseHandler for all unit tests except those in db/.
+@pytest.fixture
+def mock_db_handler(request):
+    """Compatibility fixture returning the configured model-reader mock."""
+    return request.getfixturevalue("mock_model_reader")
 
-    This global fixture prevents unit tests from trying to connect to real databases.
-    Tests in tests/unit_tests/db/ are excluded from this mocking.
-    Also patches model parameter schema validation to avoid schema version mismatches.
+
+@pytest.fixture(autouse=True)
+def patch_database_handler(request, mocker, monkeypatch, simtools_settings):
+    """
+    Install a source-neutral model reader for normal unit tests.
+
+    Database tests retain their real handler and are isolated in ``tests/unit_tests/db``.
     """
     # Skip mocking for tests in db/ directory
     if _is_db_unit_test(request):
+        from simtools.db import db_handler  # pylint: disable=import-outside-toplevel
+
         with mock.patch(
             "simtools.db.db_handler.DatabaseHandler",
-            new=DATABASE_HANDLER_CLASS,
+            new=db_handler.DatabaseHandler,
         ):
             yield
         return
 
-    mock_db_handler = request.getfixturevalue("mock_db_handler")
+    for variable in (
+        "SIMTOOLS_SIMULATION_MODELS_PATH",
+        "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION",
+    ):
+        monkeypatch.delenv(variable, raising=False)
+
+    mock_model_reader = request.getfixturevalue("mock_model_reader")
     # Mock schema validation to avoid version check issues
     mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
 
-    # Mock DatabaseHandler for all other unit tests
-    with mock.patch("simtools.db.db_handler.DatabaseHandler", return_value=mock_db_handler):
-        previous_model_reader = settings.config.model_reader
-        settings.config.set_model_reader(mock_db_handler)
-        yield
-        settings.config.set_model_reader(previous_model_reader)
+    previous_model_reader = settings.config.model_reader
+    settings.config.set_model_reader(mock_model_reader)
+    mocker.patch(
+        "simtools.application.control.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
+    )
+    mocker.patch(
+        "simtools.configuration.show_options.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
+    )
+    mocker.patch(
+        "simtools.job_execution.worker.create_model_reader_from_configuration",
+        return_value=mock_model_reader,
+    )
+    yield
+    settings.config.set_model_reader(previous_model_reader)
 
 
 @pytest.fixture
@@ -595,9 +614,10 @@ def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
     if not _is_db_unit_test(request):
-        db_instance = db_handler.DatabaseHandler()
-        yield db_instance
-        return
+        pytest.skip("The db fixture is restricted to database unit tests.")
+
+    from simtools.db import db_handler  # pylint: disable=import-outside-toplevel
+    from simtools.db.mongo_db import MongoDBHandler  # pylint: disable=import-outside-toplevel
 
     request.getfixturevalue("reset_db_client")
 
@@ -634,7 +654,7 @@ def db(request):
     mock_mongo_client.close = MagicMock()
 
     with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
-        db_instance = DATABASE_HANDLER_CLASS()
+        db_instance = db_handler.DatabaseHandler()
         MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
         # Explicitly close the mock client to avoid un-raisable exception warnings

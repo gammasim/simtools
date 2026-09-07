@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+$schema: https://json-schema.org/draft/2020-12/schema
+title: MongoDB configuration schema
+description: Configuration for the optional MongoDB model source and database commands.
+type: object
+properties:
+  db_server:
+    type: string
+    description: DB server address.
+  db_api_port:
+    type: integer
+    minimum: 1
+    maximum: 65535
+    default: 27017
+    description: Port to use.
+  db_api_user:
+    type: string
+    description: API username.
+  db_api_pw:
+    type: string
+    description: Password for the API user.
+  db_api_authentication_database:
+    type:
+      - string
+      - 'null'
+    default: admin
+    description: DB with user info (optional).
+  db_simulation_model:
+    type: string
+    description: Name of the simulation model database.
+  db_simulation_model_tag:
+    type: string
+    description: Release tag of the simulation model database.
+required:
+  - db_server
+  - db_api_port
+  - db_api_user
+  - db_api_pw
+  - db_simulation_model
+  - db_simulation_model_tag
