@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788775554309,
+  "lastUpdate": 1788780439804,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -25614,6 +25614,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 421.9140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a20e0c97210e8a799b03a7c9af0fcdbe1eac369",
+          "message": " Add signal-level production comparison to simtools-compare-productions. (#2469)\n\n* test statistics for production comparison\n\n* schema\n\n* Signal and pedestals comparison\n\n* camera plotting\n\n* statistics\n\n* fix docu; pedestal vec\n\n* len pixel trigger\n\n* pixel list\n\n* fix signal comparision\n\n* reviewers comments\n\n* remove legacy trigger histograms",
+          "timestamp": "2026-09-07T13:08:17+02:00",
+          "tree_id": "4b0c21601c6dab8df164965b8ad49fd64a7eb5a0",
+          "url": "https://github.com/gammasim/simtools/commit/6a20e0c97210e8a799b03a7c9af0fcdbe1eac369"
+        },
+        "date": 1788780424117,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 48.39557424899999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 48.24,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 419.9609375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
           }
