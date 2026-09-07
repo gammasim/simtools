@@ -268,6 +268,7 @@ def test__add_illuminator_command_options(simulator_instance):
     mock_wavelength.to.return_value.value = 450
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
         [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],  # array_element_position_ground
+        9.0 * u.m,  # illuminator_tower_height
         mock_wavelength,  # flasher_wavelength
     ]
 
@@ -299,7 +300,7 @@ def test__add_illuminator_command_options(simulator_instance):
         assert len(result) == 8
         assert result[0] == "-x 100.0"  # 1.0m -> 100.0cm
         assert result[1] == "-y 200.0"  # 2.0m -> 200.0cm
-        assert result[2] == "-z 300.0"  # 3.0m -> 300.0cm
+        assert result[2] == "-z 1200.0"  # ground altitude plus 9.0m tower height
         assert result[3] == "-d 0.1,0.2,0.3"  # pointing vector from _calibration_pointing_direction
         assert result[4] == "-n 1000000"  # flasher_photons
         assert result[5] == "-s 450"  # wavelength in nm
@@ -727,10 +728,9 @@ def test__get_light_source_command(simulator_instance):
 
 def test__get_illuminator_pointing_vector_computed_from_position(simulator_instance):
     simulator_instance.light_emission_config = {}
-    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
-        10.0 * u.m,
-        20.0 * u.m,
-        30.0 * u.m,
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
+        [10.0 * u.m, 20.0 * u.m, 30.0 * u.m],
+        9.0 * u.m,
     ]
 
     with patch.object(
@@ -742,6 +742,31 @@ def test__get_illuminator_pointing_vector_computed_from_position(simulator_insta
 
     assert vec == [0.1, 0.2, 0.3]
     mock_pointing.assert_called_once()
+
+
+def test__get_illuminator_position_adds_tower_height(simulator_instance):
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = [
+        [10.0 * u.m, 20.0 * u.m, 30.0 * u.m],
+        9.0 * u.m,
+    ]
+
+    position = simulator_instance._get_illuminator_position()
+
+    assert position == (10.0 * u.m, 20.0 * u.m, 39.0 * u.m)
+    assert simulator_instance.calibration_model.get_parameter_value_with_unit.call_args_list == [
+        (("array_element_position_ground",),),
+        (("illuminator_tower_height",),),
+    ]
+
+
+def test__get_illuminator_position_keeps_configured_position(simulator_instance):
+    configured_position = [10.0 * u.m, 20.0 * u.m, 39.0 * u.m]
+    simulator_instance.light_emission_config = {"light_source_position": configured_position}
+
+    position = simulator_instance._get_illuminator_position()
+
+    assert position == configured_position
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
 
 
 def test__should_use_telpos_file_rule(simulator_instance):
@@ -779,11 +804,18 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         mock_atmo.assert_called_once_with("/config/dir")
 
     # Test default path (non-flasher)
-    with patch.object(
-        simulator_instance,
-        "_write_telescope_position_file",
-        return_value=f"{tmp_test_directory}/telpos.txt",
-    ) as mock_telpos:
+    with (
+        patch.object(
+            simulator_instance,
+            "_write_telescope_position_file",
+            return_value=f"{tmp_test_directory}/telpos.txt",
+        ) as mock_telpos,
+        patch.object(
+            simulator_instance,
+            "_get_illuminator_position",
+            return_value=[1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
+        ),
+    ):
         # Default-down pointing: do not use telpos file.
         simulator_instance.light_emission_config = {
             "light_source_type": "illuminator",
