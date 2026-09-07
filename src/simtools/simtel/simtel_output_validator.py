@@ -2,6 +2,7 @@
 
 import logging
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
@@ -186,7 +187,7 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     any
         Extracted parameter value.
     """
-    if parameter_type not in ("string", "dict", "boolean"):
+    if parameter_type not in ("string", "file", "dict", "boolean"):
         config_reader = SimtelConfigReader()
         value, _ = config_reader.extract_value_from_sim_telarray_column(
             [metadata[sim_telarray_name]], parameter_type
@@ -262,8 +263,10 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             continue
 
         parameter_type = model.parameters[param]["type"]
-        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         model_value = model.parameters[param]["value"]
+        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
+        if parameter_type == "file":
+            model_value = _resolve_file_parameter_value(model_value, param, model)
         value = _resolve_dict_parameter_metadata_value(
             value, model_value, parameter_type, param, model
         )
@@ -275,6 +278,29 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             invalid_parameter_list.append(error)
 
     return invalid_parameter_list
+
+
+def _resolve_file_parameter_value(model_value, parameter_name, model):
+    """Resolve the generated sim_telarray filename for an ECSV file parameter."""
+    if not isinstance(model_value, str) or not model_value.lower().endswith(".ecsv"):
+        return model_value
+
+    model_directory = getattr(model, "config_file_directory", None)
+    if model_directory is None:
+        return model_value
+
+    source = Path(model_directory) / Path(model_value).name
+    try:
+        table = simtel_table_reader.read_simtel_table(parameter_name, source)
+    except (FileNotFoundError, OSError, ValueError, TypeError) as exc:
+        _logger.debug(
+            "Unable to resolve file-valued sim_telarray metadata for %s: %s",
+            parameter_name,
+            exc,
+        )
+        return model_value
+
+    return table.meta.get("simtelarray_original_file_name", model_value)
 
 
 def _resolve_dict_parameter_metadata_value(value, model_value, parameter_type, param, model):
@@ -387,7 +413,7 @@ def is_equal(value1, value2, value_type):
     if value1 is None or value2 is None:
         if value1 in ("none", None) and value2 in ("none", None):
             return True
-    if value_type == "string":
+    if value_type in ("string", "file"):
         return str(value1).strip() == str(value2).strip()
     if value_type == "dict":
         return value1 == value2

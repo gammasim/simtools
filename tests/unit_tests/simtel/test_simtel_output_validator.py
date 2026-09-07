@@ -204,6 +204,33 @@ def test_string_parameter():
     assert len(result) == 0
 
 
+def test_file_parameter():
+    metadata = {"atmospheric_transmission": "atm_trans.dat"}
+    model_mock = MagicMock()
+    model_mock.parameters = {
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission-1.0.0.ecsv",
+            "type": "file",
+        },
+    }
+    model_mock.config_file_directory = Path("/model")
+
+    table = MagicMock()
+    table.meta = {"simtelarray_original_file_name": "atm_trans.dat"}
+    with patch(
+        "simtools.simtel.simtel_output_validator.simtel_table_reader.read_simtel_table",
+        return_value=table,
+    ) as read_table:
+        result = _assert_model_parameters(metadata, model_mock)
+
+    read_table.assert_called_once_with(
+        "atmospheric_transmission",
+        Path("/model/atmospheric_transmission-1.0.0.ecsv"),
+    )
+
+    assert len(result) == 0
+
+
 def test_missing_parameter_in_metadata():
     metadata = {}
     model_mock = MagicMock()

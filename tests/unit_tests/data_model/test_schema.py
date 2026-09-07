@@ -49,6 +49,17 @@ def test_get_model_parameter_schema_file():
         schema.get_model_parameter_schema_file("not_a_parameter")
 
 
+def test_camera_pixel_types_schema_has_explicit_lightguide_reference():
+    current = schema.get_model_parameter_schema("camera_pixel_types", "0.3.0")
+    previous = schema.get_model_parameter_schema("camera_pixel_types", "0.2.0")
+
+    current_properties = current["data"][0]["json_schema"]["items"]["properties"]
+    previous_properties = previous["data"][0]["json_schema"]["items"]["properties"]
+
+    assert "lightguide_angle_parameter" in current_properties
+    assert "lightguide_angle_parameter" not in previous_properties
+
+
 def test_get_model_parameter_schema_returns_independent_copies():
     schema_loader.clear_cache()
     schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")

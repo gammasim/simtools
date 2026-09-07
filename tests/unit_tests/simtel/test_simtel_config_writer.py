@@ -178,7 +178,7 @@ def test_write_camera_file_requires_all_camera_components(simtel_config_writer, 
         )
 
 
-def test_write_camera_file_resolves_selected_default_lightguide(
+def test_write_camera_file_resolves_explicit_lightguide(
     simtel_config_writer, tmp_test_directory, mocker
 ):
     parameters = {
@@ -193,13 +193,13 @@ def test_write_camera_file_resolves_selected_default_lightguide(
                     "funnel_shape": 1,
                     "funnel_diameter_cm": 1.0,
                     "funnel_depth_cm": 0.0,
+                    "lightguide_angle_parameter": "lightguide_efficiency_vs_incidence_angle",
                 }
             ]
         },
         "camera_pixel_layout": {"value": "layout.ecsv"},
         "camera_trigger_groups": {"value": "groups.ecsv"},
         "camera_trigger_members": {"value": "members.ecsv"},
-        "lightguide_efficiency_vs_incidence_angle": {"value": "angle.ecsv"},
     }
     mocker.patch.object(simtel_config_writer, "_camera_table_records", return_value=[])
 
@@ -272,6 +272,27 @@ def test_write_array_config_file(
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
+
+
+def test_write_array_config_file_uses_config_path_for_site_tables(
+    simtel_config_writer, telescope_model_lst, io_handler, site_model_north, mocker
+):
+    config_file = io_handler.get_output_file(file_name="simtel-config-writer_array.cfg")
+    site_model_north.parameters["atmospheric_profile"] = {
+        "parameter": "atmospheric_profile",
+        "value": "atmospheric_profile.ecsv",
+    }
+    write_table = mocker.patch.object(
+        simtel_config_writer, "_write_table_parameter_file", return_value="atmospheric.dat"
+    )
+
+    simtel_config_writer.write_array_config_file(
+        config_file_path=config_file,
+        telescope_model={"LSTN-01": telescope_model_lst},
+        site_model=site_model_north,
+    )
+
+    assert write_table.call_args.args[2] == config_file
 
 
 def test_write_array_config_file_raises_for_too_long_include_filename(

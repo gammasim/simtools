@@ -146,8 +146,7 @@ class CorsikaSimtelRunner:
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
             multipipe_command = settings.config.sim_telarray_path.joinpath(
-                f"bin/multipipe_corsika -c {multipipe_file} {self.sequential} "
-                "|| echo 'Fan-out failed'"
+                f"bin/multipipe_corsika -c {multipipe_file} {self.sequential}"
             )
             file.write(f"{multipipe_command}")
 

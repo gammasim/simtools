@@ -20,6 +20,7 @@ from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
 ECSV_SUFFIX = ".ecsv"
+_SOURCE_VALUE_KEY = "_simtools_export_source_value"
 
 
 class FileSystemModelSource:
@@ -212,11 +213,12 @@ class FileSystemModelSource:
             raise ValueError("Destination path is required to export model files.")
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
-        return {
-            parameter["value"]: self._copy_model_file(parameter, source, destination)
-            for parameter in self._files_to_export(parameters, file_names)
-            for source in [self.resolve_parameter_asset(parameter)]
-        }
+        exported = {}
+        for parameter in self._files_to_export(parameters, file_names):
+            source = self.resolve_parameter_asset(parameter)
+            status = self._copy_model_file(parameter, source, destination)
+            exported[parameter.get("value", source.name)] = status
+        return exported
 
     @staticmethod
     def _files_to_export(parameters, file_names):
@@ -237,9 +239,18 @@ class FileSystemModelSource:
         if target.exists():
             if filecmp.cmp(source, target, shallow=False):
                 return "file exists"
-            raise FileExistsError(
-                f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+            file_name = self._get_collision_file_name(file_name, source)
+            target = destination / file_name
+            parameter[_SOURCE_VALUE_KEY] = parameter.get(
+                _SOURCE_VALUE_KEY, parameter.get("value", source.name)
             )
+            parameter["value"] = file_name
+            if target.exists():
+                if filecmp.cmp(source, target, shallow=False):
+                    return "file exists"
+                raise FileExistsError(
+                    f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+                )
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
         if source.suffix.lower() == ECSV_SUFFIX and parameter.get("parameter"):
@@ -248,9 +259,20 @@ class FileSystemModelSource:
         shutil.copy2(source, target)
         return "copied from filesystem"
 
+    @staticmethod
+    def _get_collision_file_name(file_name, source):
+        """Return a deterministic basename qualified by the model scope."""
+        path = Path(file_name)
+        scope = source.parent.parent.name
+        return f"{path.stem}-{scope}{path.suffix}"
+
     def resolve_parameter_asset(self, parameter_data):
         """Resolve a parameter asset relative to its parameter document."""
-        value = parameter_data.get("value") if isinstance(parameter_data, dict) else parameter_data
+        value = (
+            parameter_data.get(_SOURCE_VALUE_KEY, parameter_data.get("value"))
+            if isinstance(parameter_data, dict)
+            else parameter_data
+        )
         if not isinstance(value, str):
             raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
         parameter = parameter_data.get("parameter") if isinstance(parameter_data, dict) else None

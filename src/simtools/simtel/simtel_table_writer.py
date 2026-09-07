@@ -352,15 +352,6 @@ def _table_comments(table):
     return [f"# {comment}" if comment else "#" for comment in comments]
 
 
-def _row_values(table, row):
-    """Return serializable scalar values from an Astropy row."""
-    values = []
-    for name in table.colnames:
-        value = row[name]
-        values.append(getattr(value, "value", value))
-    return values
-
-
 def _raw_values(values):
     """Return plain scalar values from an Astropy column or iterable."""
     return [getattr(value, "value", value) for value in values]
@@ -372,8 +363,9 @@ def _write_plain_table(table, output_path):
         file.write("\n".join(_table_comments(table)))
         if table.meta.get("original_comments"):
             file.write("\n")
-        for row in table:
-            file.write(" ".join(str(value) for value in _row_values(table, row)) + "\n")
+        columns = [_raw_values(table[name]) for name in table.colnames]
+        for row in zip(*columns):
+            file.write(" ".join(str(value) for value in row) + "\n")
 
 
 def _write_rpol_table(table, output_path):
@@ -399,14 +391,14 @@ def _write_rpol_table(table, output_path):
         return
     angles = list(dict.fromkeys(_raw_values(table[angle_name])))
     values = {}
-    for row in table:
-        key = (
-            getattr(row[independent_name], "value", row[independent_name]),
-            getattr(row[angle_name], "value", row[angle_name]),
-        )
+    wavelengths = _raw_values(table[independent_name])
+    angle_values = _raw_values(table[angle_name])
+    dependent_values = _raw_values(table[dependent])
+    for wavelength, angle, value in zip(wavelengths, angle_values, dependent_values):
+        key = (wavelength, angle)
         if key in values:
             raise ValueError("RPOL ECSV table must contain one value per wavelength and angle")
-        values[key] = getattr(row[dependent], "value", row[dependent])
+        values[key] = value
     comments = [
         line
         for line in _table_comments(table)
@@ -417,8 +409,7 @@ def _write_rpol_table(table, output_path):
             file.write(f"{line}\n")
         file.write("#@RPOL@[ANGLE=] 2\n")
         file.write("ANGLE= " + " ".join(str(angle) for angle in angles) + "\n")
-        wavelengths = list(dict.fromkeys(_raw_values(table[independent_name])))
-        for wavelength in wavelengths:
+        for wavelength in dict.fromkeys(wavelengths):
             selection = []
             for angle in angles:
                 try:
@@ -434,17 +425,22 @@ def _write_atmospheric_transmission(table, output_path):
     """Write a tidy atmospheric transmission table in sim_telarray matrix format."""
     altitude_name = "altitude"
     dependent = "extinction"
+    wavelengths = _raw_values(table["wavelength"])
     altitudes = list(dict.fromkeys(_raw_values(table[altitude_name])))
+    observatory_level = table.meta.get("observatory_level")
+    observatory_level = getattr(observatory_level, "value", observatory_level)
+    values_by_wavelength = {}
+    for wavelength, extinction in zip(wavelengths, _raw_values(table[dependent])):
+        values_by_wavelength.setdefault(wavelength, []).append(extinction)
     with output_path.open("w", encoding="utf-8") as file:
         for line in _table_comments(table):
             file.write(f"{line}\n")
-        file.write("# H1= " + " ".join(str(value) for value in altitudes) + "\n")
-        for wavelength in dict.fromkeys(_raw_values(table["wavelength"])):
-            values = [
-                getattr(row[dependent], "value", row[dependent])
-                for row in table
-                if getattr(row["wavelength"], "value", row["wavelength"]) == wavelength
-            ]
+        header = "# H1= " + " ".join(str(value) for value in altitudes)
+        if observatory_level is not None:
+            header = f"# H2= {observatory_level}, {header[2:]}"
+        file.write(header + "\n")
+        for wavelength in dict.fromkeys(wavelengths):
+            values = values_by_wavelength[wavelength]
             file.write(" ".join([str(wavelength), *(str(value) for value in values)]) + "\n")
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import astropy.units as u
 import pytest
 from astropy.table import QTable
 
@@ -75,6 +76,30 @@ def test_write_rpol_table_preserves_one_dimensional_table(tmp_test_directory):
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
         "300.0 0.8",
         "400.0 0.9",
+    ]
+
+
+def test_write_atmospheric_transmission_groups_rows_by_wavelength(tmp_test_directory):
+    table = QTable(
+        {
+            "wavelength": [300.0, 300.0, 400.0, 400.0],
+            "altitude": [2.0, 1.0, 2.0, 1.0],
+            "extinction": [0.2, 0.1, 0.4, 0.3],
+        }
+    )
+    table.meta["simtelarray_original_file_name"] = "atmosphere.dat"
+    table.meta["observatory_level"] = 1.5 * u.km
+
+    result = simtel_table_writer.write_simtel_table(
+        table,
+        tmp_test_directory,
+        table_format="atmospheric_transmission",
+    )
+
+    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+        "# H2= 1.5, H1= 2.0 1.0",
+        "300.0 0.2 0.1",
+        "400.0 0.4 0.3",
     ]
 
 

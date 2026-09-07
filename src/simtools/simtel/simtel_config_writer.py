@@ -26,7 +26,6 @@ _CAMERA_COMPONENT_PARAMETERS = (
     "camera_trigger_groups",
     "camera_trigger_members",
 )
-_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER = "lightguide_efficiency_vs_incidence_angle"
 
 
 class SimtelConfigWriter:
@@ -138,6 +137,8 @@ class SimtelConfigWriter:
         if camera_file is not None:
             simtel_par["camera_config_file"] = camera_file
         for par, value in parameters.items():
+            if par in _CAMERA_COMPONENT_PARAMETERS:
+                continue
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 self._get_sim_telarray_config_parameter_name(par),
                 value["value"],
@@ -167,8 +168,6 @@ class SimtelConfigWriter:
         pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
         for pixel_type in pixel_types:
             angle_parameter = pixel_type.pop("lightguide_angle_parameter", None)
-            if angle_parameter is None and pixel_type.get("funnel_transparency") is None:
-                angle_parameter = self._get_default_lightguide_angle_parameter(parameters)
             if angle_parameter is not None:
                 pixel_type["lightguide_angle_parameter"] = angle_parameter
                 self._resolve_lightguide_file(
@@ -209,14 +208,6 @@ class SimtelConfigWriter:
         return simtel_table_writer.write_camera_file(configuration, output)
 
     @staticmethod
-    def _get_default_lightguide_angle_parameter(parameters):
-        """Return the selected global angle-dependent lightguide parameter, if present."""
-        parameter_data = parameters.get(_DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER)
-        if parameter_data is not None and parameter_data.get("value") is not None:
-            return _DEFAULT_LIGHTGUIDE_ANGLE_PARAMETER
-        return None
-
-    @staticmethod
     def _parameter_value(parameters, parameter_name):
         """Return a selected parameter value or ``None`` for an absent optional value."""
         data = parameters.get(parameter_name)
@@ -225,10 +216,10 @@ class SimtelConfigWriter:
     def _camera_table_records(self, parameters, parameter_name, destination):
         """Read one exported camera component table into scalar records."""
         table = self._read_camera_table(parameters, parameter_name, destination)
-        return [
-            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
-            for row in table
+        columns = [
+            [getattr(value, "value", value) for value in table[column]] for column in table.colnames
         ]
+        return [dict(zip(table.colnames, row)) for row in zip(*columns)]
 
     @staticmethod
     def _read_camera_table(parameters, parameter_name, destination):
@@ -485,7 +476,7 @@ class SimtelConfigWriter:
             self._write_site_parameters(
                 file,
                 global_parameters,
-                config_file_directory,
+                config_file_path,
                 telescope_model,
                 additional_metadata,
             )
@@ -812,13 +803,20 @@ class SimtelConfigWriter:
         )
 
         array_triggers_file = "array_triggers.dat"
-        with open(model_path / array_triggers_file, "w", encoding="utf-8") as file:
+        model_directory = self._get_model_directory(model_path)
+        with open(model_directory / array_triggers_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
             self._write_trigger_lines(
                 file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
             )
 
         return array_triggers_file
+
+    @staticmethod
+    def _get_model_directory(model_path):
+        """Return the configuration directory for a directory or config-file path."""
+        path = Path(model_path)
+        return path if path.is_dir() else path.parent
 
     def _group_telescopes_by_type(self, telescope_model):
         """Group telescopes by their type."""

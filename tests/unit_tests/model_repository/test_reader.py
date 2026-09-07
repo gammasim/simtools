@@ -168,6 +168,42 @@ def test_filesystem_source_validates_ecsv_before_copying(
     validate_table.assert_called_once_with({"parameter": "example"})
 
 
+def test_filesystem_source_qualifies_colliding_assets(model_repository, tmp_test_directory):
+    source = FileSystemModelSource(model_repository)
+    first_source = (
+        model_repository / "simulation-models/model_parameters/first/camera_filter/shared.dat"
+    )
+    second_source = (
+        model_repository / "simulation-models/model_parameters/second/camera_filter/shared.dat"
+    )
+    first_source.parent.mkdir(parents=True)
+    second_source.parent.mkdir(parents=True)
+    first_source.write_text("first\n", encoding="utf-8")
+    second_source.write_text("second\n", encoding="utf-8")
+    destination = Path(tmp_test_directory) / "exported"
+    first_parameter = {
+        "file": True,
+        "instrument": "first",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+    second_parameter = {
+        "file": True,
+        "instrument": "second",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+
+    source._copy_model_file(first_parameter, first_source, destination)
+    source._copy_model_file(second_parameter, second_source, destination)
+
+    assert second_parameter["value"] == "shared-second.dat"
+    assert (destination / "shared-second.dat").read_text(encoding="utf-8") == "second\n"
+    assert source.resolve_parameter_asset(second_parameter) == second_source.resolve()
+
+
 def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
     """A missing repository fails with a useful path error."""
     with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):

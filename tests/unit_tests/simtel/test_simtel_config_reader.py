@@ -218,6 +218,10 @@ def testextract_value_from_sim_telarray_column(config_reader_num_gains):
     assert _config.extract_value_from_sim_telarray_column(["none"], dtype="str") == (None, 1)
     assert _config.extract_value_from_sim_telarray_column(["none"], dtype=None) == (None, 1)
     assert _config.extract_value_from_sim_telarray_column(["22"], dtype=None) == ("22", 1)
+    assert _config.extract_value_from_sim_telarray_column(["atm_trans.dat"], dtype="file") == (
+        "atm_trans.dat",
+        1,
+    )
 
     # default
     assert _config.extract_value_from_sim_telarray_column(["2"], dtype="int") == (2, 1)

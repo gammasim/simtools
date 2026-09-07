@@ -4,6 +4,7 @@ import logging
 
 import astropy.units as u
 import pytest
+from astropy.table import QTable
 
 from simtools.model.site_model import SiteModel
 
@@ -95,28 +96,21 @@ def test_get_list_of_array_layouts(model_version):
     assert "test_layout" in _north.get_list_of_array_layouts()
 
 
-def test_export_atmospheric_transmission_file(model_version, tmp_path, mocker):
+def test_export_atmospheric_transmission_file(model_version, tmp_test_directory, mocker):
     _south = SiteModel(
         site="South",
         label="testing-sitemodel",
         model_version=model_version,
     )
 
-    mocker.patch.object(_south, "get_parameter_value", return_value="test_atmospheric_profile")
     mocker.patch.object(_south.db, "export_model_files")
 
-    model_directory = tmp_path / "model"
-    model_directory.mkdir()
+    model_directory = tmp_test_directory / "model"
 
     _south.export_atmospheric_transmission_file(model_directory)
 
     _south.db.export_model_files.assert_called_once_with(
-        parameters={
-            "atmospheric_transmission_file": {
-                "value": "test_atmospheric_profile",
-                "file": True,
-            }
-        },
+        parameters={"atmospheric_profile": _south.parameters["atmospheric_profile"]},
         dest=model_directory,
     )
 
@@ -128,27 +122,18 @@ def test_get_nsb_integrated_flux(model_version, mocker):
         model_version=model_version,
     )
 
-    # Build a minimal fake table object with distinct columns to avoid
-    # MagicMock __getitem__ returning the same mock for different keys.
-    class Col:
-        def __init__(self, q):
-            self.quantity = q
-
-    class FakeTable(dict):
-        def sort(self, key):
-            # no-op for the simple test
-            return None
-
     wl_q = [300, 400, 500, 600, 700] * u.nm
     rate_q = [1, 2, 3, 4, 5] * (1 / (u.nm * u.cm**2 * u.ns * u.sr))
 
-    mock_table = FakeTable()
-    mock_table["wavelength"] = Col(wl_q)
-    mock_table["differential photon rate"] = Col(rate_q)
+    mock_table = QTable()
+    mock_table["wavelength"] = wl_q
+    mock_table["differential_photon_rate"] = rate_q
 
-    mocker.patch.object(_south.db, "get_ecsv_file_as_astropy_table", return_value=mock_table)
-    mocker.patch.object(_south, "get_parameter_value", return_value="test_nsb_spectrum.ecsv")
+    get_parameter_table = mocker.patch.object(
+        _south, "get_parameter_table", return_value=mock_table
+    )
     result = _south.get_nsb_integrated_flux(wavelength_min=300 * u.nm, wavelength_max=650 * u.nm)
 
     assert isinstance(result, float)
     assert result > 0
+    get_parameter_table.assert_called_once_with("nsb_spectrum")

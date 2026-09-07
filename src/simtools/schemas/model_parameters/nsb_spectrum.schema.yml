@@ -48,7 +48,7 @@ plot_configuration:
     tables:
       - parameter: nsb_spectrum
         column_x: wavelength
-        column_y: differential photon rate
+        column_y: differential_photon_rate
 ---
 title: Schema for nsb_spectrum model parameter
 schema_version: 0.1.0
@@ -85,4 +85,4 @@ plot_configuration:
     tables:
       - parameter: nsb_spectrum
         column_x: 'wavelength'
-        column_y: 'differential photon rate'
+        column_y: differential_photon_rate

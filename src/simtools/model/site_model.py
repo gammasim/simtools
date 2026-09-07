@@ -229,13 +229,9 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
+        atmospheric_profile = self.parameters["atmospheric_profile"].copy()
         self.model_reader.export_model_files(
-            parameters={
-                "atmospheric_transmission_file": {
-                    "value": self.get_parameter_value("atmospheric_profile"),
-                    "file": True,
-                }
-            },
+            parameters={"atmospheric_profile": atmospheric_profile},
             dest=model_directory,
         )
 
@@ -248,13 +244,12 @@ class SiteModel(ModelParameter):
         float
             Integrated flux value.
         """
-        table = self.model_reader.get_ecsv_file_as_astropy_table(
-            file_name=self.get_parameter_value("nsb_spectrum"),
-            parameter_data=self.parameters.get("nsb_spectrum"),
-        )
+        table = self.get_parameter_table("nsb_spectrum")
         table.sort("wavelength")
-        wl = table["wavelength"].quantity.to(u.nm)
-        rate = table["differential photon rate"].quantity.to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
+        wavelength_column = table["wavelength"]
+        rate_column = table["differential_photon_rate"]
+        wl = getattr(wavelength_column, "quantity", wavelength_column).to(u.nm)
+        rate = getattr(rate_column, "quantity", rate_column).to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
         mask = (wl >= wavelength_min) & (wl <= wavelength_max)
         integral_cm2 = np.trapezoid(rate[mask], wl[mask])
         self._logger.debug(
