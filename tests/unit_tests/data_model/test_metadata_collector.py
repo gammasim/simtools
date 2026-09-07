@@ -331,6 +331,35 @@ def test_read_input_metadata_from_simtel_rejects_invalid_registry_value(
         collector._read_input_metadata_from_simtel(simtel_file)
 
 
+def test_metadata_collector_eventio_helpers_handle_incomplete_values(args_dict_site):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    assert collector._header_to_dict(None) == {}
+    assert collector._header_to_dict({"run_number": 42}) == {"run_number": 42}
+    assert collector._header_to_dict([42]) == [42]
+    assert collector._header_to_dict(np.array([(42,)], dtype=[("run_number", "i4")])) == {
+        "run_number": 42
+    }
+    assert collector._get_valid_site(None) is None
+    assert collector._get_valid_site("invalid") is None
+    assert collector._simtel_associated_elements(
+        {1: {}, 2: {"optics_config_variant": "INVALID-01"}}, "South"
+    ) == [{"site": "South", "class": "telescope", "type": None, "id": "INVALID-01"}]
+
+
+def test_read_input_metadata_from_simtel_without_metadata(args_dict_site, mocker):
+    mocker.patch.object(
+        metadata_collector,
+        "read_sim_telarray_metadata",
+        return_value=(None, None),
+    )
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    metadata = collector._read_input_metadata_from_simtel("empty.simtel")
+
+    assert metadata["cta"]["context"]["associated_elements"][0]["id"] is None
+
+
 def test_read_input_metadata_from_corsika_rejects_missing_headers(
     args_dict_site, tmp_test_directory, mocker
 ):
