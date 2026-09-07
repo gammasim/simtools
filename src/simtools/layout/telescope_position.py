@@ -330,9 +330,9 @@ class TelescopePosition:
         if xx is None or yy is None:
             return np.nan, np.nan
         if isinstance(xx, u.Quantity):
-            xx = xx.value
+            xx = xx.to_value(u.Unit(crs_from.axis_info[0].unit_name))
         if isinstance(yy, u.Quantity):
-            yy = yy.value
+            yy = yy.to_value(u.Unit(crs_from.axis_info[1].unit_name))
         _to_x, _to_y = transformer.transform(xx=xx, yy=yy)
         if np.isinf(_to_x) or np.isinf(_to_y):
             return np.nan, np.nan
