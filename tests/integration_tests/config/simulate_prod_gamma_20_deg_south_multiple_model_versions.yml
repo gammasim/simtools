@@ -11,7 +11,7 @@ applications:
       by_version:
         <7.0.0: alpha
         '>=7.0.0': CTAO-South-Alpha
-    azimuth_angle: 85.
+    azimuth_angle: 85.0
     core_scatter: 5 700 m
     corsika_seeds:
     - 534
