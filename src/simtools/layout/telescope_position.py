@@ -14,6 +14,21 @@ def _cached_transformer(crs_from, crs_to):
     return pyproj.Transformer.from_crs(crs_from, crs_to)
 
 
+def _astropy_unit_from_pyproj_axis(axis):
+    """Return the Astropy unit corresponding to a pyproj axis."""
+    pyproj_unit_aliases = {
+        "metre": u.m,
+        "kilometre": u.km,
+        "centimetre": u.cm,
+        "millimetre": u.mm,
+        "micrometre": u.um,
+        "nanometre": u.nm,
+    }
+    if axis.unit_name in pyproj_unit_aliases:
+        return pyproj_unit_aliases[axis.unit_name]
+    return u.Unit(axis.unit_name)
+
+
 class InvalidCoordSystemErrorError(Exception):
     """Exception for invalid coordinate system."""
 
@@ -330,9 +345,9 @@ class TelescopePosition:
         if xx is None or yy is None:
             return np.nan, np.nan
         if isinstance(xx, u.Quantity):
-            xx = xx.to_value(u.Unit(crs_from.axis_info[0].unit_name))
+            xx = xx.to_value(_astropy_unit_from_pyproj_axis(crs_from.axis_info[0]))
         if isinstance(yy, u.Quantity):
-            yy = yy.to_value(u.Unit(crs_from.axis_info[1].unit_name))
+            yy = yy.to_value(_astropy_unit_from_pyproj_axis(crs_from.axis_info[1]))
         _to_x, _to_y = transformer.transform(xx=xx, yy=yy)
         if np.isinf(_to_x) or np.isinf(_to_y):
             return np.nan, np.nan

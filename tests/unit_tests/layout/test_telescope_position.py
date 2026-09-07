@@ -11,6 +11,7 @@ import pytest
 from simtools.layout.telescope_position import (
     InvalidCoordSystemErrorError,
     TelescopePosition,
+    _astropy_unit_from_pyproj_axis,
 )
 
 logger = logging.getLogger()
@@ -119,6 +120,21 @@ def test_get_coordinate_variable():
     # some units can't be converted
     with pytest.raises(u.UnitsError):
         tel._get_coordinate_value(5.0 * u.deg, u.Unit("m"))
+
+
+@pytest.mark.parametrize(
+    ("pyproj_unit_name", "expected_unit"),
+    [
+        ("metre", u.m),
+        ("kilometre", u.km),
+        ("centimetre", u.cm),
+        ("millimetre", u.mm),
+    ],
+)
+def test_astropy_unit_from_pyproj_axis(pyproj_unit_name, expected_unit):
+    axis = type("Axis", (), {"unit_name": pyproj_unit_name})()
+
+    assert _astropy_unit_from_pyproj_axis(axis) == expected_unit
 
 
 def test_set_coordinates():
