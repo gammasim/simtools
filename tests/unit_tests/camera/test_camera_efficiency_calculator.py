@@ -22,23 +22,25 @@ def test_interpolate_clips_and_sorts_support_points():
     np.testing.assert_allclose(result, [1.0, 1.5, 2.0])
 
 
-def test_parameter_table_reads_exported_model_file(mocker, tmp_test_directory):
+@pytest.mark.parametrize("parameter_name", ["quantum_efficiency", "fake_mirror_list"])
+def test_parameter_table_reads_exported_model_file(mocker, tmp_test_directory, parameter_name):
     class Model:
         config_file_directory = Path(tmp_test_directory)
 
         @staticmethod
         def get_parameter_value(_):
-            return "quantum_efficiency.ecsv"
+            return f"{parameter_name}.ecsv"
 
     expected = Table()
     read_table = mocker.patch(
         "simtools.camera.camera_efficiency_calculator.read_simtel_table", return_value=expected
     )
 
-    assert _parameter_table(Model(), "quantum_efficiency") is expected
+    assert _parameter_table(Model(), parameter_name) is expected
 
     read_table.assert_called_once_with(
-        "quantum_efficiency", tmp_test_directory / "quantum_efficiency.ecsv"
+        "mirror_list" if parameter_name == "fake_mirror_list" else parameter_name,
+        tmp_test_directory / f"{parameter_name}.ecsv",
     )
 
 

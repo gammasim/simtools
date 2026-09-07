@@ -42,7 +42,10 @@ def _parameter_table(model, parameter_name):
     file_path = Path(file_name)
     if not file_path.is_absolute():
         file_path = model.config_file_directory / file_path
-    return read_simtel_table(parameter_name, file_path)
+    reader_parameter_name = (
+        "mirror_list" if parameter_name == "fake_mirror_list" else parameter_name
+    )
+    return read_simtel_table(reader_parameter_name, file_path)
 
 
 def _table_from_file(file_name):
