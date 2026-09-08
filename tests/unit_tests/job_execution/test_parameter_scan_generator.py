@@ -310,3 +310,56 @@ def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
             scan_config_path,
             Path(tmp_test_directory) / "scan_grid.ecsv",
         )
+
+
+def test_clean_scan_grid_metadata_removes_unwanted_keys(tmp_test_directory):
+    from astropy.table import Table
+
+    output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    # Create a table with metadata including both wanted and unwanted keys
+    table = Table([[1, 2], [3, 4]], names=["col1", "col2"])
+    table.meta = {
+        "model_parameter_sets": {"set1": {"param": 1}},
+        "site": "South",
+        "simulation_software": "sim_telarray",
+        "job_grid_summary": {"total": 10},
+        "job_grid_format_version": "1.0",
+        "unwanted_key": "should_be_removed",
+        "another_unwanted": 123,
+    }
+    table.write(output_file, format="ascii.ecsv", overwrite=True)
+
+    # Clean the metadata
+    parameter_scan_generator._clean_scan_grid_metadata(str(output_file))
+
+    # Reload and verify only allowed keys remain
+    cleaned_table = Table.read(output_file, format="ascii.ecsv")
+    assert "model_parameter_sets" in cleaned_table.meta
+    assert "site" in cleaned_table.meta
+    assert "simulation_software" in cleaned_table.meta
+    assert "job_grid_summary" in cleaned_table.meta
+    assert "job_grid_format_version" in cleaned_table.meta
+    assert "unwanted_key" not in cleaned_table.meta
+    assert "another_unwanted" not in cleaned_table.meta
+
+
+def test_clean_scan_grid_metadata_preserves_only_specified_keys(tmp_test_directory):
+    from astropy.table import Table
+
+    output_file = Path(tmp_test_directory) / "scan_grid_empty.ecsv"
+
+    # Create a table with metadata containing none of the allowed keys
+    table = Table([[1, 2], [3, 4]], names=["col1", "col2"])
+    table.meta = {
+        "some_other_key": "value",
+        "random_key": 456,
+    }
+    table.write(output_file, format="ascii.ecsv", overwrite=True)
+
+    # Clean the metadata
+    parameter_scan_generator._clean_scan_grid_metadata(str(output_file))
+
+    # Reload and verify all metadata is removed
+    cleaned_table = Table.read(output_file, format="ascii.ecsv")
+    assert cleaned_table.meta == {}

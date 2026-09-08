@@ -389,3 +389,44 @@ def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_di
     assert "--sim_telarray_path" not in command
     assert "--corsika_path" not in command
     assert "--corsika_interaction_table_path" not in command
+
+
+def test_add_parameter_scan_overwrites_early_exit_copies_existing_overwrites():
+    args = {}
+    job_row = {"run_number": 1, "overwrite_model_parameters": {"param1": 10}}
+    job_grid_io._add_parameter_scan_overwrites(args, job_row, None)
+    assert args == {"overwrite_model_parameters": {"param1": 10}}
+
+
+def test_add_parameter_scan_overwrites_skips_missing_param_set():
+    args = {}
+    job_row = {"run_number": 1, "model_parameter_set": "missing_set"}
+    metadata = {"model_parameter_sets": {"set1": {"param": 1}}}
+    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
+    assert args == {}
+
+
+def test_add_parameter_scan_overwrites_merges_or_assigns():
+    args = {}
+    metadata = {"model_parameter_sets": {"set1": {"param": 1}}}
+
+    # Case 1: Assign fresh
+    job_row = {"run_number": 1, "model_parameter_set": "set1"}
+    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
+    assert args == {"overwrite_model_parameters": {"param": 1}}
+
+    # Case 2: Merge with existing dict
+    args.clear()
+    job_row = {
+        "run_number": 1,
+        "model_parameter_set": "set1",
+        "overwrite_model_parameters": {"existing": 100},
+    }
+    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
+    assert args == {"overwrite_model_parameters": {"existing": 100, "param": 1}}
+
+    # Case 3: Replace non-dict existing
+    args.clear()
+    job_row = {"run_number": 1, "model_parameter_set": "set1", "overwrite_model_parameters": "old"}
+    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
+    assert args == {"overwrite_model_parameters": {"param": 1}}
