@@ -1021,6 +1021,15 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
 def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
     model_parameter.model_reader = mocker.Mock()
+    model_parameter.parameters = {
+        "fadc_pulse_shape": {
+            "file": True,
+            "instrument": "LSTN-01",
+            "parameter": "fadc_pulse_shape",
+            "parameter_version": "1.0.0",
+            "value": "pulse.dat",
+        }
+    }
     expected = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -1037,9 +1046,9 @@ def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
     )
 
     assert result == expected
-    model_parameter.db.export_model_files.assert_called_once()
-    export_kwargs = model_parameter.db.export_model_files.call_args.kwargs
-    assert export_kwargs["file_names"] == ["pulse.dat"]
+    model_parameter.model_reader.export_model_files.assert_called_once()
+    export_kwargs = model_parameter.model_reader.export_model_files.call_args.kwargs
+    assert export_kwargs["parameters"]["fadc_pulse_shape"]["value"] == "pulse.dat"
     assert isinstance(export_kwargs["dest"], Path)
     resolve_mock.assert_called_once_with(
         "pulse.dat",

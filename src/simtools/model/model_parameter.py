@@ -437,14 +437,33 @@ class ModelParameter:
         to be normalized to the current in-memory ``{"columns", "rows"}``
         representation.
         """
+        parameter_data = self._get_parameter_data_for_asset(parameter_name, value)
         with TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            self.model_reader.export_model_files(file_names=[value], dest=temp_path)
+            self.model_reader.export_model_files(
+                parameters={parameter_name: parameter_data}, dest=temp_path
+            )
             return simtel_table_reader.resolve_dict_parameter_value(
                 value,
                 parameter_name,
                 data_path=temp_path,
             )
+
+    def _get_parameter_data_for_asset(self, parameter_name, value):
+        """Return parameter metadata needed to resolve a co-located model asset."""
+        parameter_stores = [
+            getattr(self, "parameters", {}),
+            *getattr(self, "_simulation_config_parameters", {}).values(),
+        ]
+        for parameter_store in parameter_stores:
+            parameter_data = parameter_store.get(parameter_name)
+            if parameter_data is not None:
+                parameter_data = deepcopy(parameter_data)
+                parameter_data["value"] = value
+                return parameter_data
+        raise ValueError(
+            f"No parameter metadata found for legacy table parameter {parameter_name}."
+        )
 
     @staticmethod
     def _check_model_parameter_versions(

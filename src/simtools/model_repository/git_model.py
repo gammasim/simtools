@@ -10,6 +10,8 @@ from time import perf_counter
 from astropy.table import Table
 from packaging.version import Version
 
+from simtools.data_model import schema
+from simtools.data_model.table_asset import validate_table_asset
 from simtools.io import ascii_handler
 from simtools.model_repository import files
 from simtools.model_repository.git_backend import Pygit2ObjectStore
@@ -242,20 +244,22 @@ class GitModelSource:
         """Stream referenced model files from Git into ``dest``."""
         if dest is None:
             raise ValueError("Destination path is required to export model files.")
-        names_to_export = file_names
-        if names_to_export is None:
-            names_to_export = [
-                parameter["value"]
-                for parameter in (parameters or {}).values()
-                if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
-            ]
-        if isinstance(names_to_export, str):
-            names_to_export = [names_to_export]
+        if file_names is not None:
+            raise ValueError(
+                "Git model file export requires parameter metadata because assets are "
+                "stored with their parameter document."
+            )
+        file_parameters = [
+            parameter
+            for parameter in (parameters or {}).values()
+            if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
+        ]
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
         exported = {}
-        for file_name in names_to_export:
-            source_path = self._safe_file_path(file_name)
+        for parameter in file_parameters:
+            file_name = parameter["value"]
+            source_path = self._parameter_asset_path(parameter)
             target = destination / file_name
             if target.exists():
                 exported[file_name] = "file exists"
@@ -274,22 +278,55 @@ class GitModelSource:
         return exported
 
     @staticmethod
-    def _safe_file_path(file_name):
-        """Resolve a model file path below the repository Files directory."""
-        path = PurePosixPath(str(file_name))
-        files_root = PurePosixPath("simulation-models/model_parameters/Files")
-        if path.is_absolute() or ".." in path.parts:
-            raise ValueError(f"Model file path escapes model Files directory: {file_name}")
-        return (files_root / path).as_posix()
+    def _parameter_asset_path(parameter_data):
+        """Resolve a file-valued parameter relative to its parameter document."""
+        value = parameter_data.get("value")
+        parameter = parameter_data.get("parameter")
+        version = parameter_data.get("parameter_version")
+        instrument = parameter_data.get("instrument") or "global"
+        if not all(isinstance(value_part, str) for value_part in (value, parameter, version)):
+            raise ValueError(
+                "Git model file export requires parameter, parameter_version, and value metadata."
+            )
+        value_path = PurePosixPath(value)
+        if value_path.is_absolute() or ".." in value_path.parts:
+            raise ValueError(f"Model asset path escapes parameter directory: {value}")
+        parameter_directory = (
+            PurePosixPath("simulation-models/model_parameters") / instrument / parameter
+        )
+        return (parameter_directory / value_path).as_posix()
 
-    def get_ecsv_file_as_astropy_table(self, file_name):
-        """Read an ECSV model file from a Git blob."""
-        source_path = self._safe_file_path(file_name)
+    def get_parameter_table(self, parameter_data):
+        """Read and validate an ECSV table referenced by a parameter record."""
+        value = parameter_data.get("value")
+        if not isinstance(value, str) or not value.lower().endswith(".ecsv"):
+            raise ValueError("Parameter does not reference an ECSV table")
+        source_path = self._parameter_asset_path(parameter_data)
+        schema_dict = schema.get_model_parameter_schema(
+            parameter_data.get("parameter"), parameter_data.get("model_parameter_schema_version")
+        )
+        entries = [entry for entry in schema_dict.get("data", []) if entry.get("type") == "file"]
         try:
-            return Table.read(
-                BytesIO(self._object_store.read_blob(self.commit, source_path)), format="ascii.ecsv"
+            table = Table.read(
+                BytesIO(self._object_store.read_blob(self.commit, source_path)),
+                format="ascii.ecsv",
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(
                 f"Model file not found at commit {self.commit}: {source_path}"
             ) from exc
+        return validate_table_asset(
+            table,
+            schema_entry=entries[0] if entries else None,
+            parameter_data=parameter_data,
+        )
+
+    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
+        """Read an ECSV model file from a Git blob."""
+        if parameter_data is None:
+            raise ValueError(
+                "Git model table access requires parameter metadata because assets are "
+                "stored with their parameter document."
+            )
+        del file_name
+        return self.get_parameter_table(parameter_data)
