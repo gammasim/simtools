@@ -835,6 +835,34 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
+    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
+        """Export the reference NSB atmosphere used for altitude correction.
+
+        The sim_telarray NSB correction uses a reference atmosphere in addition
+        to the site's ``atmospheric_transmission`` parameter.  The reference
+        file is a simulation-software parameter, so it is not included in the
+        ordinary model-parameter export.
+
+        Parameters
+        ----------
+        model_directory: Path
+            Directory to which the reference atmosphere is exported.
+        """
+        parameters = self.get_simulation_software_parameters("sim_telarray") or {}
+        correction = parameters.get("correct_nsb_spectrum_to_telescope_altitude")
+        if correction is None:
+            return
+
+        self.model_reader.export_model_files(
+            parameters={
+                "nsb_spectrum_at_2200m": {
+                    "value": correction["value"],
+                    "file": True,
+                }
+            },
+            dest=model_directory,
+        )
+
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
         Write the sim_telarray configuration file.
@@ -905,29 +933,3 @@ class ModelParameter:
                 model_version=self.model_version,
                 label=desired_label,
             )
-
-    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
-        """
-        Export the NSB spectrum to the telescope altitude correction file.
-
-        This method is needed because testeff corrects the NSB spectrum from the original altitude
-        used in the Benn & Ellison model to the telescope altitude.
-        This is done internally in testeff, but the NSB spectrum is not written out to the model
-        directory. This method allows to export it explicitly.
-
-        Parameters
-        ----------
-        model_directory: Path
-            Model directory to export the file to.
-        """
-        self.model_reader.export_model_files(
-            parameters={
-                "nsb_spectrum_at_2200m": {
-                    "value": self._simulation_config_parameters["sim_telarray"][
-                        "correct_nsb_spectrum_to_telescope_altitude"
-                    ]["value"],
-                    "file": True,
-                }
-            },
-            dest=model_directory,
-        )
