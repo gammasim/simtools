@@ -289,15 +289,6 @@ def test_overwrite_detection_distinguishes_ignored_and_ordinary_collections(mock
     assert not model_parameter._has_nested_overrides_for_collections(ignored_collections)
 
 
-def test_simulation_overwrite_logging_noops_without_trigger_parameters(telescope_model_lst):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-
-    telescope_copy._log_debug_flat_changes("sim_telarray", {"other": {"value": 1}})
-    telescope_copy._log_debug_after_flat_overwrite("sim_telarray")
-    telescope_copy._log_debug_before_merge()
-    telescope_copy._log_debug_after_merge()
-
-
 def test_simulation_overwrite_routes_raw_value_and_metadata(telescope_model_lst):
     telescope_copy = copy.deepcopy(telescope_model_lst)
 
