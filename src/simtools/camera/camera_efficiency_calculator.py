@@ -233,8 +233,8 @@ def _emission_altitude(profile, x_max, airmass):
     altitude = altitude[positive]
     if vertical_depth <= 0.0 or vertical_depth < thickness[0]:
         return top_altitude
-    if vertical_depth >= thickness[-1]:
-        return float(altitude[0])
+if vertical_depth >= thickness[-1]:
+    return float(altitude[-1])
     return float(np.interp(np.log(vertical_depth), np.log(thickness), altitude))
 
 
