@@ -12,9 +12,12 @@ from simtools.camera.camera_efficiency_calculator import (
     _atmospheric_transmission,
     _emission_altitude,
     _interpolate,
+    _nearest,
     _parameter_table,
     _same_table_source,
     _spectral_curve,
+    _table_from_file,
+    _weights,
 )
 
 
@@ -26,6 +29,11 @@ def test_interpolate_clips_and_sorts_support_points():
 def test_interpolate_can_clip_outside_support_points():
     result = _interpolate([0.0, 10.0], [1.0, 2.0], [-1.0, 5.0, 11.0], clip=True)
     np.testing.assert_allclose(result, [0.0, 1.5, 0.0])
+
+
+def test_interpolation_helpers_handle_empty_support_points():
+    np.testing.assert_array_equal(_interpolate([], [], [400.0]), [0.0])
+    np.testing.assert_array_equal(_nearest([], [], [10.0]), [0.0])
 
 
 def test_same_table_source_compares_loaded_table_metadata(tmp_test_directory):
@@ -83,6 +91,49 @@ def test_parameter_table_reads_nsb_correction_from_simtel_configuration(mocker, 
     )
 
 
+def test_parameter_table_keeps_absolute_model_file_path(mocker, tmp_test_directory):
+    file_path = tmp_test_directory / "quantum_efficiency.ecsv"
+
+    class Model:
+        config_file_directory = Path("unused")
+
+        @staticmethod
+        def get_parameter_value(_):
+            return file_path
+
+    read_table = mocker.patch(
+        "simtools.camera.camera_efficiency_calculator.read_simtel_table",
+        return_value=Table(),
+    )
+
+    _parameter_table(Model(), "quantum_efficiency")
+
+    read_table.assert_called_once_with("quantum_efficiency", file_path)
+
+
+def test_table_from_file_accepts_tables_and_reads_paths(mocker):
+    table = Table()
+    assert _table_from_file(table) is table
+
+    expected = Table()
+    read_table = mocker.patch(
+        "simtools.camera.camera_efficiency_calculator.read_simtel_table",
+        return_value=expected,
+    )
+    assert _table_from_file("nsb.dat") is expected
+    read_table.assert_called_once_with("nsb_reference_spectrum", "nsb.dat")
+
+
+def test_weights_rejects_invalid_distribution_table():
+    class Model:
+        @staticmethod
+        def get_parameter_table(_):
+            return Table({"angle": [0.0]})
+
+    with pytest.raises(ValueError, match="Invalid incidence-angle"):
+        _weights(Model(), "incidence")
+
+
 def test_spectral_curve_averages_angle_dependent_table():
     table = Table(
         {
@@ -109,6 +160,20 @@ def test_spectral_curve_averages_angle_dependent_table():
         weighting_parameter="incidence",
     )
     np.testing.assert_allclose(result, [0.5, 0.3])
+
+    unweighted = _spectral_curve(
+        table,
+        np.array([400.0, 500.0]),
+        candidates=("transmission", "efficiency"),
+    )
+    np.testing.assert_allclose(unweighted, [0.6, 0.4])
+
+
+def test_spectral_curve_rejects_tables_without_values():
+    table = Table({"wavelength": [400.0] * u.nm})
+
+    with pytest.raises(ValueError, match="efficiency"):
+        _spectral_curve(table, np.array([400.0]))
 
 
 def test_spectral_curve_averages_rpol_columns():
@@ -189,8 +254,9 @@ def test_atmospheric_transmission_uses_log_altitude():
             "extinction": [2.0, 0.0],
         }
     )
-    result = _atmospheric_transmission(table, np.array([400.0]), 10.0**0.5, 2.0)
-    np.testing.assert_allclose(result, [np.exp(-2.0)], rtol=1e-12)
+    result = _atmospheric_transmission(table, np.array([350.0, 400.0]), 10.0**0.5, 2.0)
+    np.testing.assert_allclose(result, [np.exp(-2.0), np.exp(-2.0)], rtol=1e-12)
+    np.testing.assert_allclose(_atmospheric_transmission(table, [400.0], 0.5, 1.0), [0.0])
 
 
 def test_emission_altitude_scales_xmax_by_airmass():
@@ -202,6 +268,18 @@ def test_emission_altitude_scales_xmax_by_airmass():
     )
     assert _emission_altitude(profile, 500.0, 2.0) == pytest.approx(6.0206, rel=1e-4)
     assert _emission_altitude(profile, 2000.0, 1.0) == pytest.approx(0.0)
+
+
+def test_emission_altitude_rejects_profile_without_positive_depth():
+    profile = Table(
+        {
+            "altitude": [0.0, 10.0] * u.km,
+            "thickness": [0.0, 0.0] * (u.g / u.cm**2),
+        }
+    )
+
+    with pytest.raises(ValueError, match="positive thickness"):
+        _emission_altitude(profile, 300.0, 1.0)
 
 
 def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
