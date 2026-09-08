@@ -63,13 +63,11 @@ def _parameter_table(model, parameter_name):
     file_path = Path(file_name)
     if not file_path.is_absolute():
         file_path = model.config_file_directory / file_path
-    reader_parameter_name = (
-        "mirror_list"
-        if parameter_name == "fake_mirror_list"
-        else "atmospheric_transmission"
-        if parameter_name == _NSB_CORRECTION_PARAMETER
-        else parameter_name
-    )
+    reader_parameter_name = parameter_name
+    if parameter_name == "fake_mirror_list":
+        reader_parameter_name = "mirror_list"
+    elif parameter_name == _NSB_CORRECTION_PARAMETER:
+        reader_parameter_name = "atmospheric_transmission"
     return read_simtel_table(reader_parameter_name, file_path)
 
 
