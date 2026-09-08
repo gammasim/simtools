@@ -52,6 +52,8 @@ class ModelParameter:
     ignore_software_version: bool
         If True, ignore software version checks for deprecated parameters.
         Useful for documentation generation.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     """
 
     def __init__(
@@ -64,6 +66,7 @@ class ModelParameter:
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -84,7 +87,7 @@ class ModelParameter:
         self.design_model = self.model_reader.get_design_model(
             self.model_version, self.name, collection="telescopes"
         )
-        self._config_file_directory = None
+        self._config_file_directory = Path(model_directory) if model_directory is not None else None
         self._config_file_path = None
         self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None

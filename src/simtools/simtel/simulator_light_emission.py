@@ -116,6 +116,8 @@ class SimulatorLightEmission(SimtelRunner):
             "model_version": light_emission_config.get("model_version"),
         }
         model_kwargs["model_reader"] = self.model_reader
+        if light_emission_config.get("model_directory") is not None:
+            model_kwargs["model_directory"] = light_emission_config["model_directory"]
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(**model_kwargs)
         )
@@ -521,9 +523,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
-        config_directory = self.io_handler.get_model_configuration_directory(
-            model_version=self.site_model.model_version
-        )
+        config_directory = self.telescope_model.config_file_directory
         obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
 
         app = self._get_light_emission_application_name()

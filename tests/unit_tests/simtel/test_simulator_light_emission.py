@@ -826,10 +826,7 @@ def test__make_light_emission_script(simulator_instance):
     simulator_instance.output_directory = "/output"
     simulator_instance.label = "test_label"
 
-    # Mock io_handler
-    mock_io_handler = Mock()
-    mock_io_handler.get_model_configuration_directory.return_value = "/config/dir"
-    simulator_instance.io_handler = mock_io_handler
+    simulator_instance.telescope_model.config_file_directory = Path("/config/dir")
 
     # Mock site model
     mock_obs_level = Mock()
@@ -867,7 +864,7 @@ def test__make_light_emission_script(simulator_instance):
 
         # Verify method calls
         mock_app_name.assert_called_once()
-        mock_site.assert_called_once_with("ff-1m", "/config/dir", mock_obs_level)
+        mock_site.assert_called_once_with("ff-1m", Path("/config/dir"), mock_obs_level)
         mock_light_source.assert_called_once()
 
     # Test illuminator (with atmospheric profile)
@@ -1293,6 +1290,28 @@ def test___init__(tmp_test_directory):
         mock_telescope_model.write_sim_telarray_config_file.assert_called_once_with(
             additional_models=mock_site_model
         )
+
+
+def test___init___passes_custom_model_directory(tmp_test_directory):
+    """A configured model directory is passed to the simulation models."""
+    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
+    models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+    model_directory = Path(tmp_test_directory) / "model" / "isolated"
+
+    with patch(io_handler_path), patch(models_path) as mock_init_models:
+        mock_init_models.return_value = (Mock(), Mock(), Mock())
+        SimulatorLightEmission(
+            {
+                "site": "North",
+                "telescope": "LSTN-01",
+                "light_source": "calibration_device",
+                "model_version": "6.0.0",
+                "model_directory": model_directory,
+            },
+            label="test_label",
+        )
+
+    assert mock_init_models.call_args.kwargs["model_directory"] == model_directory
 
 
 def test___init___with_wavelength(tmp_test_directory):

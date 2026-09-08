@@ -34,6 +34,8 @@ class TelescopeModel(ModelParameter):
         Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     """
 
     def __init__(
@@ -45,6 +47,7 @@ class TelescopeModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -55,6 +58,7 @@ class TelescopeModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            model_directory=model_directory,
         )
 
         self._logger = logging.getLogger(__name__)

@@ -1,5 +1,6 @@
 """Unit tests for multi_illuminator_simulator module."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import astropy.units as u
@@ -155,6 +156,34 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
     # Config gets modified with wavelength, so check base config keys are present
     assert all(all(js["config"].get(k) == v for k, v in base_config.items()) for js in job_specs)
     assert all("wavelength" in js["config"] for js in job_specs)
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
+def test_simulate_uses_an_isolated_model_directory_per_job(
+    mock_pool, simple_visibility_data, base_config
+):
+    """Each parallel job receives a distinct generated-model directory."""
+    base_config["output_path"] = "/simulation-output"
+    mock_pool.return_value = []
+    simulator = MultiIlluminatorSimulator(
+        visibility_data=simple_visibility_data, config=base_config
+    )
+
+    simulator.simulate(wavelengths=[355 * u.nm, 473 * u.nm])
+
+    job_specs = mock_pool.call_args[0][1]
+    model_directories = {job["config"]["model_directory"] for job in job_specs}
+    assert len(model_directories) == len(job_specs)
+    assert model_directories == {
+        Path("/simulation-output/model/6.0.0/ILLS-01_MSTS-01_355nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-01_MSTS-02_355nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-02_MSTS-02_355nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-02_MSTS-03_355nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-01_MSTS-01_473nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-01_MSTS-02_473nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-02_MSTS-02_473nm"),
+        Path("/simulation-output/model/6.0.0/ILLS-02_MSTS-03_473nm"),
+    }
 
 
 @patch(
