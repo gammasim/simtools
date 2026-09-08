@@ -342,7 +342,7 @@ jobs:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
-      SIMULATION_MODELS_GIT_PATH: ../simulation-models.git
+      SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
 
     services:
       mongodb:
@@ -428,7 +428,10 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: simulation-models-repo
-          path: ../simulation-models.git
+          path: ${{ github.workspace }}/simulation-models.git
+
+      - name: Verify simulation models repository
+        run: git --git-dir="$SIMULATION_MODELS_GIT_PATH" rev-parse --verify HEAD
 
       - name: Extend PATH (sim_telarray)
         run: |
@@ -451,11 +454,11 @@ jobs:
       - name: Upload data to MongoDB
         if: matrix.model_source == 'mongodb'
         run: |
-          git clone --local ../simulation-models.git ../simulation-models
+          git clone --local "$SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
           simtools-db-upload-model-repository \
             --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
             --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
-            --repository_dir ../simulation-models
+            --repository_dir "$GITHUB_WORKSPACE/simulation-models"
 
       - name: Integration tests
         shell: bash -l {0}
