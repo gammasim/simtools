@@ -20,6 +20,7 @@ from simtools.utils import names
 
 logger = logging.getLogger(__name__)
 _PRODUCTIONS_PATH = PurePosixPath("simulation-models/productions")
+_SOURCE_VALUE_KEY = "_simtools_export_source_value"
 
 
 class GitModelSource:
@@ -258,10 +259,10 @@ class GitModelSource:
         destination.mkdir(parents=True, exist_ok=True)
         exported = {}
         for parameter in file_parameters:
-            file_name = parameter["value"]
-            source_path = self._parameter_asset_path(parameter)
-            target = destination / file_name
-            if target.exists():
+            file_name, target, source_path, already_exists = self._resolve_export_target(
+                parameter, destination
+            )
+            if already_exists:
                 exported[file_name] = "file exists"
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -277,10 +278,57 @@ class GitModelSource:
             exported[file_name] = "copied from Git"
         return exported
 
+    def _resolve_export_target(self, parameter, destination):
+        """Resolve a safe destination for one Git-backed model file."""
+        file_name = parameter["value"]
+        source_path = self._parameter_asset_path(parameter)
+        target = destination / file_name
+        if not target.exists():
+            return file_name, target, source_path, False
+        if self._target_matches_blob(target, source_path):
+            return file_name, target, source_path, True
+        return self._resolve_collision_target(parameter, destination, source_path)
+
+    def _resolve_collision_target(self, parameter, destination, source_path):
+        """Resolve a scope-qualified destination for a colliding model file."""
+        original_name = parameter["value"]
+        file_name = self._get_collision_file_name(original_name, parameter)
+        target = destination / file_name
+        parameter[_SOURCE_VALUE_KEY] = parameter.get(_SOURCE_VALUE_KEY, original_name)
+        parameter["value"] = file_name
+        if not target.exists():
+            return file_name, target, source_path, False
+        if self._target_matches_blob(target, source_path):
+            return file_name, target, source_path, True
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
+
+    def _target_matches_blob(self, target, source_path):
+        """Return whether a destination file matches a Git blob."""
+        with (
+            target.open("rb") as target_file,
+            self._object_store.open_blob(self.commit, source_path) as source_file,
+        ):
+            while True:
+                target_chunk = target_file.read(1024 * 1024)
+                source_chunk = source_file.read(1024 * 1024)
+                if target_chunk != source_chunk:
+                    return False
+                if not target_chunk:
+                    return True
+
+    @staticmethod
+    def _get_collision_file_name(file_name, parameter):
+        """Return a deterministic basename qualified by the model scope."""
+        path = Path(file_name)
+        scope = parameter.get("instrument") or "global"
+        return f"{path.stem}-{scope}{path.suffix}"
+
     @staticmethod
     def _parameter_asset_path(parameter_data):
         """Resolve a file-valued parameter relative to its parameter document."""
-        value = parameter_data.get("value")
+        value = parameter_data.get(_SOURCE_VALUE_KEY, parameter_data.get("value"))
         parameter = parameter_data.get("parameter")
         version = parameter_data.get("parameter_version")
         instrument = parameter_data.get("instrument") or "global"

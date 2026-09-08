@@ -258,6 +258,97 @@ def test_git_source_exports_files_lazily_and_safely(tmp_test_directory, mocker):
     missing.assert_called_once()
 
 
+def test_git_source_qualifies_different_colliding_files(tmp_test_directory):
+    """Different model scopes do not overwrite files with the same basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/selected/model.dat": b"concrete",
+        "simulation-models/model_parameters/LSTN-design/selected/model.dat": b"design",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    concrete = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    design = {
+        **concrete,
+        "instrument": "LSTN-design",
+    }
+
+    assert source.export_model_files(parameters={"selected": concrete}, dest=destination) == {
+        "model.dat": "copied from Git"
+    }
+    assert source.export_model_files(parameters={"selected": design}, dest=destination) == {
+        "model-LSTN-design.dat": "copied from Git"
+    }
+    assert design["value"] == "model-LSTN-design.dat"
+    assert design["_simtools_export_source_value"] == "model.dat"
+    assert (destination / "model.dat").read_bytes() == b"concrete"
+    assert (destination / "model-LSTN-design.dat").read_bytes() == b"design"
+
+
+def test_git_source_reuses_identical_colliding_files(tmp_test_directory):
+    """Identical files with different scopes can share the original basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/selected/model.dat": b"same",
+        "simulation-models/model_parameters/LSTN-design/selected/model.dat": b"same",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    concrete = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    design = {**concrete, "instrument": "LSTN-design"}
+
+    source.export_model_files(parameters={"selected": concrete}, dest=destination)
+    assert source.export_model_files(parameters={"selected": design}, dest=destination) == {
+        "model.dat": "file exists"
+    }
+    assert design["value"] == "model.dat"
+
+
+def test_git_source_refuses_second_collision_with_same_scope(tmp_test_directory):
+    """A second different file cannot reuse an occupied qualified basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/first/model.dat": b"first",
+        "simulation-models/model_parameters/LSTN-design/second/model.dat": b"second",
+        "simulation-models/model_parameters/LSTN-design/third/model.dat": b"third",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    first = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "first",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    second = {
+        **first,
+        "instrument": "LSTN-design",
+        "parameter": "second",
+    }
+    third = {
+        **second,
+        "parameter": "third",
+    }
+
+    source.export_model_files(parameters={"first": first}, dest=destination)
+    source.export_model_files(parameters={"second": second}, dest=destination)
+    with pytest.raises(FileExistsError, match=r"colliding model asset 'model-LSTN-design\.dat'"):
+        source.export_model_files(parameters={"third": third}, dest=destination)
+
+
 def test_git_source_reads_ecsv_and_rejects_invalid_file_paths(tmp_test_directory, mocker):
     """ECSV blobs are read beside their parameter document."""
     buffer = io.StringIO()
