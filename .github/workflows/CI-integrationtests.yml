@@ -229,9 +229,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
           restore-keys: |
-            simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
+            simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}-
 
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
@@ -272,19 +272,22 @@ jobs:
             echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
           fi
 
+          git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
+
 
       - name: Save cached simulation models repository
         if: steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
 
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: simulation-models-repo
+          include-hidden-files: true
           path: simulation-models.git
           if-no-files-found: error
           retention-days: 30
