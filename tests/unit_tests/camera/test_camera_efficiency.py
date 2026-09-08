@@ -4,14 +4,13 @@ import logging
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
-from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
+from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
 
 logger = logging.getLogger()
 
@@ -76,17 +75,13 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
             "masts": np.full(wavelength.size, 1.25),
         }
     )
-    astropy.io.ascii.write(result_table, test_results_file, format="basic", overwrite=True)
+    result_table.write(test_results_file, format="ascii.ecsv", overwrite=True)
 
     # Mock _file["results"] to point to the generated local table.
     mocker.patch.object(
         camera_efficiency_lst,
         "_file",
-        {
-            "results": test_results_file,
-            "sim_telarray": camera_efficiency_lst._file["sim_telarray"],
-            "log": camera_efficiency_lst._file["log"],
-        },
+        {"results": test_results_file},
     )
     return test_results_file
 
@@ -96,11 +91,20 @@ def test_report(camera_efficiency_lst):
 
 
 def test_simulate(camera_efficiency_lst, caplog, mocker):
-    mock_run = mocker.patch.object(SimulatorCameraEfficiency, "run")
+    export_correction = mocker.patch.object(
+        camera_efficiency_lst.telescope_model,
+        "export_nsb_spectrum_to_telescope_altitude_correction_file",
+    )
+    mock_calculate = mocker.patch.object(
+        CameraEfficiencyCalculator, "calculate", return_value=Table()
+    )
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.simulate()
         assert "Simulating CameraEfficiency" in caplog.text
-    mock_run.assert_called_once()
+    export_correction.assert_called_once_with(
+        model_directory=camera_efficiency_lst.telescope_model.config_file_directory
+    )
+    mock_calculate.assert_called_once()
 
 
 def test_read_results(camera_efficiency_lst, prepare_results_file):
@@ -111,19 +115,16 @@ def test_read_results(camera_efficiency_lst, prepare_results_file):
 
 def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(0.32)
 
 
 def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(0.6127171314741036)
 
 
 def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tot_efficiency(
         camera_efficiency_lst.calc_tel_efficiency()
     ) == pytest.approx(0.958684357445742)
@@ -136,7 +137,6 @@ def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
 
 def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file, mocker):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     mocker.patch.object(
         camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=[1.0]
     )
@@ -163,21 +163,6 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.analyze()
     assert camera_efficiency_lst._has_results is True
-
-
-def test_analyze_from_file(camera_efficiency_lst, mocker, tmp_test_directory):
-    simtel_file = Path(tmp_test_directory) / "camera_efficiency.dat"
-    simtel_file.write_text(
-        "\n".join(" ".join(["400.0"] + ["1.0"] * 25) for _ in range(2)) + "\n",
-        encoding="utf-8",
-    )
-    camera_efficiency_lst._file["sim_telarray"] = simtel_file
-    mocker.patch.object(CameraEfficiency, "results_summary", return_value="summary")
-    camera_efficiency_lst.analyze(export=False, force=True)
-    assert camera_efficiency_lst._has_results is True
-    assert isinstance(camera_efficiency_lst._results, Table)
-    assert len(camera_efficiency_lst._results) > 1
-    assert "N4" in camera_efficiency_lst._results.colnames
 
 
 def test_results_summary(camera_efficiency_lst, prepare_results_file):

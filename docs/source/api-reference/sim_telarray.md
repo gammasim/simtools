@@ -123,15 +123,6 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simulator_camera_efficiency
-
-(simulate-camera-efficiency-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simulator_camera_efficiency
-   :members:
-```
-
 ## simulator_light_emission
 
 (simulate-light-1)=

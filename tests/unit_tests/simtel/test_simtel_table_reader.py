@@ -115,6 +115,34 @@ def test_read_simtel_table_for_mirror_list(simtel_mirror_list_test_file):
     assert table["mirror_panel_id"][0] == 198
 
 
+def test_read_simtel_table_preserves_camera_filter_angles(tmp_test_directory):
+    camera_filter = tmp_test_directory / "camera_filter.dat"
+    camera_filter.write_text(
+        "#@RPOL@[ANGLE=] 2\nANGLE= 0 10\n400 0.8 0.4\n",
+        encoding="utf-8",
+    )
+
+    table = simtel_table_reader.read_simtel_table("camera_filter", camera_filter)
+
+    assert table.colnames == ["wavelength", "transmission_0deg", "transmission_10deg"]
+    assert table["transmission_0deg"][0] == pytest.approx(0.8)
+    assert table["transmission_10deg"][0] == pytest.approx(0.4)
+
+
+def test_read_simtel_table_uses_third_nsb_column_as_photon_rate(tmp_test_directory):
+    nsb_spectrum = tmp_test_directory / "nsb.lis"
+    nsb_spectrum.write_text(
+        "300 2.0 6.0\n400 3.0 7.0\n",
+        encoding="utf-8",
+    )
+
+    table = simtel_table_reader.read_simtel_table("nsb_reference_spectrum", nsb_spectrum)
+
+    assert table.colnames == ["wavelength", "fnu", "differential photon rate"]
+    assert table["fnu"][0] == pytest.approx(2.0)
+    assert table["differential photon rate"][0] == pytest.approx(6.0)
+
+
 def test_read_simtel_table_as_row_data_for_mirror_list(simtel_mirror_list_test_file):
     row_data = simtel_table_reader.read_simtel_table_as_row_data(
         "mirror_list", simtel_mirror_list_test_file
@@ -316,6 +344,28 @@ def test_data_columns_nsb_reference_spectrum():
 
     assert columns == expected_columns
     assert description == expected_description
+
+
+def test_data_columns_camera_filter_rpol():
+    columns, description = simtel_table_reader._data_columns_camera_filter(["0", "10"])
+
+    assert [column["name"] for column in columns] == [
+        "wavelength",
+        "transmission_0deg",
+        "transmission_10deg",
+    ]
+    assert description == "Camera window transmission"
+
+
+def test_data_columns_nsb_spectrum_three_columns():
+    columns, description = simtel_table_reader._data_columns_nsb_spectrum(3)
+
+    assert [column["name"] for column in columns] == [
+        "wavelength",
+        "fnu",
+        "differential photon rate",
+    ]
+    assert description == "NSB spectrum"
 
 
 def test_data_columns_mirror_reflectivity():

@@ -38,6 +38,10 @@ def _data_columns(parameter_name, n_columns, n_dim):
     """
     if parameter_name == "mirror_reflectivity":
         return _data_columns_mirror_reflectivity(n_columns, n_dim)
+    if parameter_name == "camera_filter":
+        return _data_columns_camera_filter(n_dim)
+    if parameter_name in ("nsb_spectrum", "nsb_reference_spectrum"):
+        return _data_columns_nsb_spectrum(n_columns)
     if parameter_name in ("discriminator_pulse_shape", "fadc_pulse_shape"):
         return _data_columns_pulse_shape(n_columns)
     try:
@@ -120,8 +124,24 @@ def _data_columns_quantum_efficiency():
     )
 
 
-def _data_columns_camera_filter():
+def _data_columns_camera_filter(n_dim=None):
     """Column description for parameter camera_filter."""
+    if n_dim:
+        return (
+            [
+                {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+                *[
+                    {
+                        "name": f"transmission_{angle}deg",
+                        "description": f"Transmission at {angle} deg",
+                        "unit": None,
+                    }
+                    for angle in n_dim
+                ],
+            ],
+            "Camera window transmission",
+        )
+
     return (
         [
             {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
@@ -233,24 +253,35 @@ def _data_columns_pulse_shape(n_columns):
     return _columns, "Pulse shape"
 
 
-def _data_columns_nsb_spectrum():
+def _data_columns_nsb_spectrum(n_columns=2):
     """Column description for parameters describing the nsb spectrum."""
-    return (
-        [
-            {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+    columns = [
+        {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+    ]
+    if n_columns >= 3:
+        columns.append(
             {
-                "name": "differential photon rate",
-                "description": "Differential photon rate",
-                "unit": "1.e9 / (nm s m^2 sr)",
-            },
-        ],
+                "name": "fnu",
+                "description": "Original spectral flux density",
+                "unit": None,
+            }
+        )
+    columns.append(
+        {
+            "name": "differential photon rate",
+            "description": "Differential photon rate",
+            "unit": "1.e9 / (nm s m^2 sr)",
+        }
+    )
+    return (
+        columns,
         "NSB spectrum",
     )
 
 
-def _data_columns_nsb_reference_spectrum():
+def _data_columns_nsb_reference_spectrum(n_columns=2):
     """Column description for parameter nsb_reference_spectrum."""
-    return _data_columns_nsb_spectrum()
+    return _data_columns_nsb_spectrum(n_columns)
 
 
 def _data_columns_mirror_list():
