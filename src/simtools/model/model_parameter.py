@@ -926,14 +926,12 @@ class ModelParameter:
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
         """
-        Export the NSB correction table and its native sim_telarray source file.
+        Export the NSB correction table and its native source file.
 
-        This method is needed because testeff corrects the NSB spectrum from the original altitude
-        used in the Benn & Ellison model to the telescope altitude.
-        This is done internally in testeff, but the NSB spectrum is not written out to the model
-        directory. This method allows both files to be exported explicitly. The native source
-        file is required because testeff resolves the filename stored in the table metadata when
-        applying the correction.
+        Camera-efficiency calculations correct the NSB spectrum from the original altitude used in
+        the Benn & Ellison model to the telescope altitude. The correction table is a
+        simulation-software parameter and is not included in the ordinary model-parameter export.
+        This method exports both the source file and the native table used by the calculation.
 
         Parameters
         ----------

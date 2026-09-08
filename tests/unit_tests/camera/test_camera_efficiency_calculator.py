@@ -5,11 +5,12 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.table import Table
+from astropy.table import QTable, Table
 
 from simtools.camera.camera_efficiency_calculator import (
     CameraEfficiencyCalculator,
     _atmospheric_transmission,
+    _column_values,
     _emission_altitude,
     _interpolate,
     _nearest,
@@ -19,6 +20,12 @@ from simtools.camera.camera_efficiency_calculator import (
     _table_from_file,
     _weights,
 )
+
+
+def test_column_values_handles_quantity_table_columns():
+    table = QTable({"wavelength": [400.0, 500.0] * u.nm})
+
+    np.testing.assert_allclose(_column_values(table, "wavelength", u.nm), [400.0, 500.0])
 
 
 def test_interpolate_clips_and_sorts_support_points():
@@ -230,6 +237,36 @@ def test_spectral_curve_uses_nearest_incidence_weight():
         model=Model(),
         weighting_parameter="incidence",
     )
+    assert result[0] == pytest.approx(0.5)
+
+
+def test_camera_filter_uses_photon_incident_angle_distribution():
+    class Model:
+        def __init__(self):
+            self.tables = {
+                "camera_filter": Table(
+                    {
+                        "wavelength": [400.0, 400.0] * u.nm,
+                        "angle": [0.0, 10.0] * u.deg,
+                        "transmission": [0.8, 0.4],
+                    }
+                ),
+                "camera_filter_photon_incident_angle": Table(
+                    {
+                        "incidence_angle": [0.0, 10.0] * u.deg,
+                        "fraction": [0.25, 0.75],
+                    }
+                ),
+            }
+
+        def get_parameter_table(self, name):
+            return self.tables[name]
+
+    model = Model()
+    calculator = CameraEfficiencyCalculator(model, model)
+
+    result = calculator._camera_filter(np.array([400.0]))
+
     assert result[0] == pytest.approx(0.5)
 
 

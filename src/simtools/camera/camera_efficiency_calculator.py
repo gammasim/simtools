@@ -16,8 +16,11 @@ _NSB_CORRECTION_PARAMETER = "correct_nsb_spectrum_to_telescope_altitude"
 def _column_values(table, name, unit=None):
     """Return a table column as floating point values in the requested unit."""
     column = table[name]
+    if isinstance(column, u.Quantity):
+        values = column.to_value(unit) if unit is not None else column.value
+        return np.asarray(values, dtype=float)
     if unit is not None and getattr(column, "unit", None) is not None:
-        return np.asarray(column.quantity.to(unit).value, dtype=float)
+        return np.asarray(column.quantity.to_value(unit), dtype=float)
     return np.asarray(column, dtype=float)
 
 
@@ -125,7 +128,7 @@ def _spectral_curve(
     try:
         value_name = _value_column(table, candidates)
     except ValueError:
-        # The legacy RPOL reader exposes a matrix as ``value_10deg`` columns.
+        # RPOL tables expose angle-dependent values as ``value_10deg`` columns.
         value_columns = [
             name
             for name in table.colnames
@@ -338,7 +341,7 @@ class CameraEfficiencyCalculator:
             table,
             wavelengths,
             self.telescope_model,
-            "camera_filter_incidence_angle",
+            "camera_filter_photon_incident_angle",
             ("transmission", "efficiency"),
         )
 

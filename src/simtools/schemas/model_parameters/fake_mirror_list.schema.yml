@@ -6,10 +6,8 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: fake_mirror_list
-short_description: Fake mirror list to be used for camera efficiency calculations
-  ('testeff' program).
-description: 'Fake mirror list to be used for camera efficiency calculations (''testeff''
-  program).
+short_description: Fake mirror list to be used for camera efficiency calculations.
+description: 'Fake mirror list to be used for camera efficiency calculations.
   Allows to obtain realistic distributions of the photon incidence angles on the camera
   plan.
   Not to be used for actual simulations.'
@@ -68,7 +66,7 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: testeff
+  - name: simtools
 ---
 title: Schema for fake_mirror_list model parameter
 schema_version: 0.1.0
