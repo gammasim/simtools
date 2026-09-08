@@ -246,6 +246,39 @@ def test_export_model_files_requires_destination(db_handler_mock):
         )
 
 
+def test_export_model_files_qualifies_ecsv_with_instrument(
+    db_handler_mock, mocker, tmp_test_directory
+):
+    """Database-backed ECSV assets are copied to instrument-qualified names."""
+    file_instance = mocker.Mock(filename="values.ecsv", _id="file_id")
+    db_handler_mock.db_name = "test_db"
+    db_handler_mock.mongo_db_handler.get_file_from_db.return_value = file_instance
+    mocker.patch.object(parameter_exporter, "TemporaryDirectory")
+    temp_dir = parameter_exporter.TemporaryDirectory.return_value.__enter__.return_value
+    mocker.patch.object(parameter_exporter.shutil, "copy2")
+
+    parameter = {
+        "file": True,
+        "instrument": "MSTx-NectarCam",
+        "parameter": "values",
+        "value": "values.ecsv",
+    }
+    result = parameter_exporter.export_model_files(
+        db=db_handler_mock,
+        parameters={"values": parameter},
+        dest=tmp_test_directory,
+    )
+
+    assert result == {"values-MSTx-NectarCam.ecsv": "file_id"}
+    assert parameter["value"] == "values-MSTx-NectarCam.ecsv"
+    db_handler_mock.mongo_db_handler.get_file_from_db.assert_called_once_with(
+        "test_db", "values.ecsv"
+    )
+    db_handler_mock.write_file_from_db_to_disk.assert_called_once_with(
+        "test_db", temp_dir, file_instance
+    )
+
+
 def test_normalize_file_names_returns_empty_list_for_no_inputs():
     assert parameter_exporter._normalize_file_names() == []
 

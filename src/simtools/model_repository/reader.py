@@ -13,14 +13,16 @@ from simtools.data_model import row_table_utils, schema
 from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.asset_names import (
+    ECSV_SUFFIX,
+    SOURCE_VALUE_KEY,
+    qualify_parameter_file_name,
+)
 from simtools.model_repository.git_model import GitModelSource
 from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.simtel import simtel_table_reader
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
-
-ECSV_SUFFIX = ".ecsv"
-_SOURCE_VALUE_KEY = "_simtools_export_source_value"
 
 
 class FileSystemModelSource:
@@ -234,23 +236,9 @@ class FileSystemModelSource:
 
     def _copy_model_file(self, parameter, source, destination):
         """Copy one resolved model asset and return its export status."""
-        file_name = parameter.get("value", source.name)
-        target = destination / file_name
-        if target.exists():
-            if filecmp.cmp(source, target, shallow=False):
-                return "file exists"
-            file_name = self._get_collision_file_name(file_name, source)
-            target = destination / file_name
-            parameter[_SOURCE_VALUE_KEY] = parameter.get(
-                _SOURCE_VALUE_KEY, parameter.get("value", source.name)
-            )
-            parameter["value"] = file_name
-            if target.exists():
-                if filecmp.cmp(source, target, shallow=False):
-                    return "file exists"
-                raise FileExistsError(
-                    f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
-                )
+        target = self._prepare_copy_target(parameter, source, destination)
+        if target is None:
+            return "file exists"
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
         if source.suffix.lower() == ECSV_SUFFIX and parameter.get("parameter"):
@@ -258,6 +246,42 @@ class FileSystemModelSource:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         return "copied from filesystem"
+
+    def _prepare_copy_target(self, parameter, source, destination):
+        """Return a safe copy target, or None when the file already exists."""
+        original_name = parameter.get(SOURCE_VALUE_KEY, parameter.get("value", source.name))
+        file_name = self._get_export_file_name(parameter, source)
+        target = destination / file_name
+        if not target.exists():
+            return target
+        if filecmp.cmp(source, target, shallow=False):
+            return None
+        if source.suffix.lower() == ECSV_SUFFIX:
+            self._raise_collision(target, destination)
+
+        file_name = self._get_collision_file_name(original_name, source)
+        target = destination / file_name
+        parameter[SOURCE_VALUE_KEY] = original_name
+        parameter["value"] = file_name
+        if target.exists():
+            if filecmp.cmp(source, target, shallow=False):
+                return None
+            self._raise_collision(target, destination)
+        return target
+
+    @staticmethod
+    def _get_export_file_name(parameter, source):
+        """Return the destination basename for a model asset."""
+        if parameter.get("value") is None:
+            return source.name
+        return qualify_parameter_file_name(parameter, fallback_instrument=source.parent.parent.name)
+
+    @staticmethod
+    def _raise_collision(target, destination):
+        """Raise an error instead of overwriting a colliding model asset."""
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
 
     @staticmethod
     def _get_collision_file_name(file_name, source):
@@ -269,7 +293,7 @@ class FileSystemModelSource:
     def resolve_parameter_asset(self, parameter_data):
         """Resolve a parameter asset relative to its parameter document."""
         value = (
-            parameter_data.get(_SOURCE_VALUE_KEY, parameter_data.get("value"))
+            parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
             if isinstance(parameter_data, dict)
             else parameter_data
         )

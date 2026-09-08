@@ -284,6 +284,47 @@ def test_file_export(simulation_models_path, tmp_test_directory):
     }
 
 
+def test_file_export_qualifies_ecsv_with_instrument(
+    simulation_models_path, tmp_test_directory, mocker
+):
+    """ECSV model assets always use their instrument-qualified export name."""
+    source = (
+        Path(simulation_models_path)
+        / "simulation-models/model_parameters/LSTN-design/selected/values.ecsv"
+    )
+    source.parent.mkdir(parents=True, exist_ok=True)
+    table = Table({"value": [1.0]})
+    table.meta.update(
+        {
+            "parameter_name": "selected",
+            "parameter_version": "1.0.0",
+            "instrument": "LSTN-design",
+            "site": "North",
+        }
+    )
+    table.write(source, format="ascii.ecsv")
+
+    handler = FileSystemModelSource(simulation_models_path)
+    mocker.patch.object(handler, "get_parameter_table")
+    destination = Path(tmp_test_directory) / "export"
+    parameter = {
+        "file": True,
+        "instrument": "LSTN-design",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "site": "North",
+        "model_parameter_schema_version": "0.1.0",
+        "value": "values.ecsv",
+    }
+
+    result = handler.export_model_files(parameters={"selected": parameter}, dest=destination)
+
+    assert result == {"values-LSTN-design.ecsv": "copied from filesystem"}
+    assert parameter["value"] == "values-LSTN-design.ecsv"
+    assert parameter["_simtools_export_source_value"] == "values.ecsv"
+    assert (destination / "values-LSTN-design.ecsv").is_file()
+
+
 def test_invalid_model_path_fails_without_fallback(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="Expected simulation models directory"):
         FileSystemModelSource(Path(tmp_test_directory) / "model")

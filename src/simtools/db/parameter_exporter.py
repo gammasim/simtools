@@ -1,8 +1,11 @@
 """Utilities for exporting model parameter values / files from the database."""
 
+import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from simtools.data_model import row_table_utils
+from simtools.model_repository.asset_names import SOURCE_VALUE_KEY, qualify_parameter_file_name
 from simtools.simtel import simtel_table_reader
 
 ECSV_SUFFIX = ".ecsv"
@@ -45,6 +48,37 @@ def _normalize_file_names(file_names=None, parameters=None):
             if isinstance(info, dict) and info.get("file") and info.get("value") is not None
         ]
     return []
+
+
+def _get_file_parameters(parameters, file_names):
+    """Return parameter records selected for export."""
+    if parameters is not None and file_names is None:
+        return [
+            parameter
+            for parameter in parameters.values()
+            if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
+        ]
+    return [{"value": file_name} for file_name in _normalize_file_names(file_names)]
+
+
+def _export_file_parameter(db, db_name, destination, dest, parameter):
+    """Export one file parameter and return its name and database id."""
+    source_name = parameter.get(SOURCE_VALUE_KEY, parameter["value"])
+    file_name = (
+        qualify_parameter_file_name(parameter) if parameter.get("parameter") else source_name
+    )
+    target = destination / file_name
+    if target.exists():
+        return file_name, "file exists"
+
+    file_path_instance = db.mongo_db_handler.get_file_from_db(db_name, source_name)
+    if file_name == source_name:
+        db.write_file_from_db_to_disk(db_name, dest, file_path_instance)
+    else:
+        with TemporaryDirectory() as temp_dir:
+            db.write_file_from_db_to_disk(db_name, temp_dir, file_path_instance)
+            shutil.copy2(Path(temp_dir) / file_path_instance.filename, target)
+    return file_name, file_path_instance._id  # pylint: disable=protected-access
 
 
 def write_file_from_db_to_disk(db, db_name, path, file):
@@ -96,17 +130,13 @@ def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=
         raise ValueError("Destination path is required to export model files.")
 
     db_name = db_name or db.db_name
-    file_names = _normalize_file_names(file_names=file_names, parameters=parameters)
     destination = Path(dest)
+    destination.mkdir(parents=True, exist_ok=True)
 
     instance_ids = {}
-    for file_name in file_names:
-        if destination.joinpath(file_name).exists():
-            instance_ids[file_name] = "file exists"
-        else:
-            file_path_instance = db.mongo_db_handler.get_file_from_db(db_name, file_name)
-            db.write_file_from_db_to_disk(db_name, dest, file_path_instance)
-            instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
+    for parameter in _get_file_parameters(parameters, file_names):
+        file_name, instance_id = _export_file_parameter(db, db_name, destination, dest, parameter)
+        instance_ids[file_name] = instance_id
     return instance_ids
 
 

@@ -183,7 +183,10 @@ def _validate_identity(table, parameter_data):
         if metadata_key not in table.meta:
             raise ValueError(f"Missing required ECSV metadata: {metadata_key}")
         if table.meta[metadata_key] != expected:
-            raise ValueError(f"ECSV metadata '{metadata_key}' does not match model parameter")
+            raise ValueError(
+                f"ECSV metadata '{metadata_key}' does not match model parameter: "
+                f" expected: '{expected}', actual: '{table.meta[metadata_key]}'."
+            )
 
 
 def _validate_metadata(table, metadata_entries):

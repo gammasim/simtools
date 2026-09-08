@@ -14,6 +14,7 @@ from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.data_model import schema
 from simtools.data_model.table_asset import read_ecsv_asset
+from simtools.model_repository.asset_names import get_export_file_name
 from simtools.simtel import simtel_table_writer, simtel_validate_metadata
 from simtools.utils import names
 
@@ -236,7 +237,8 @@ class SimtelConfigWriter:
         if parameter_data is None:
             raise ValueError(f"Camera component parameter is missing: {parameter_name}")
         value = parameter_data.get("value")
-        source = Path(destination) / Path(value).name
+        exported_name = get_export_file_name(parameter_data)
+        source = Path(destination) / Path(exported_name or value).name
         if not source.is_file():
             raise FileNotFoundError(f"Camera component table was not exported: {source}")
         schema_data = schema.get_model_parameter_schema(
@@ -763,7 +765,7 @@ class SimtelConfigWriter:
         """
         if isinstance(value, str) and value.lower().endswith(".ecsv"):
             dest_dir = Path(model_path).parent
-            source = dest_dir / Path(value).name
+            source = dest_dir / self._get_exported_table_name(value, parameter_data)
             if not source.is_file():
                 raise FileNotFoundError(f"Co-located ECSV table was not exported: {source}")
             schema_entry = None
@@ -803,6 +805,15 @@ class SimtelConfigWriter:
         telescope_name = Path(model_path).stem
         return simtel_table_writer.write_simtel_table(
             parameter_name, value, dest_dir, telescope_name
+        )
+
+    def _get_exported_table_name(self, value, parameter_data):
+        """Return the qualified ECSV name used in the model directory."""
+        parameter_data = dict(parameter_data or {})
+        parameter_data["value"] = value
+        return get_export_file_name(
+            parameter_data,
+            fallback_instrument=self._telescope_design_model or self._telescope_model_name,
         )
 
     def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):

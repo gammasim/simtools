@@ -388,6 +388,30 @@ def test_git_source_reads_ecsv_and_rejects_invalid_file_paths(tmp_test_directory
     missing.assert_called_once()
 
 
+def test_git_source_qualifies_ecsv_exports(tmp_test_directory):
+    """Git-backed ECSV assets always use their instrument-qualified name."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-design/values/values.ecsv": b"table",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    parameter = {
+        "file": True,
+        "instrument": "LSTN-design",
+        "parameter": "values",
+        "parameter_version": "1.0.0",
+        "value": "values.ecsv",
+    }
+
+    result = source.export_model_files(parameters={"values": parameter}, dest=destination)
+
+    assert result == {"values-LSTN-design.ecsv": "copied from Git"}
+    assert parameter["value"] == "values-LSTN-design.ecsv"
+    assert parameter["_simtools_export_source_value"] == "values.ecsv"
+    assert (destination / "values-LSTN-design.ecsv").read_bytes() == b"table"
+
+
 def test_git_source_preloads_tables_and_parameters_once(tmp_test_directory):
     """A model version warm-up reads all production and referenced blobs once."""
     objects = {

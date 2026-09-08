@@ -16,6 +16,7 @@ from simtools.data_model.table_asset import read_ecsv_asset
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
+from simtools.model_repository.asset_names import get_export_file_name
 from simtools.simtel import simtel_table_reader, simtel_table_writer
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
@@ -983,7 +984,12 @@ class ModelParameter:
         if Path(parameter["value"]).suffix.lower() != ".ecsv":
             return None
 
-        source = Path(model_directory) / Path(parameter["value"]).name
+        source = (
+            Path(model_directory)
+            / Path(
+                get_export_file_name(parameter, fallback_instrument=self.design_model or self.name)
+            ).name
+        )
         schema_data = schema.get_model_parameter_schema(
             parameter_name, parameter.get("model_parameter_schema_version")
         )

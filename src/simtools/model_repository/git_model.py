@@ -14,13 +14,17 @@ from simtools.data_model import schema
 from simtools.data_model.table_asset import validate_table_asset
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.asset_names import (
+    SOURCE_VALUE_KEY,
+    get_export_file_name,
+    qualify_parameter_file_name,
+)
 from simtools.model_repository.git_backend import Pygit2ObjectStore
 from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
 _PRODUCTIONS_PATH = PurePosixPath("simulation-models/productions")
-_SOURCE_VALUE_KEY = "_simtools_export_source_value"
 
 
 class GitModelSource:
@@ -280,21 +284,26 @@ class GitModelSource:
 
     def _resolve_export_target(self, parameter, destination):
         """Resolve a safe destination for one Git-backed model file."""
-        file_name = parameter["value"]
+        file_name = get_export_file_name(parameter)
+        qualify_parameter_file_name(parameter)
         source_path = self._parameter_asset_path(parameter)
         target = destination / file_name
         if not target.exists():
             return file_name, target, source_path, False
         if self._target_matches_blob(target, source_path):
             return file_name, target, source_path, True
-        return self._resolve_collision_target(parameter, destination, source_path)
+        if not file_name.lower().endswith(".ecsv"):
+            return self._resolve_collision_target(parameter, destination, source_path)
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
 
     def _resolve_collision_target(self, parameter, destination, source_path):
-        """Resolve a scope-qualified destination for a colliding model file."""
-        original_name = parameter["value"]
+        """Resolve a scope-qualified destination for a non-ECSV collision."""
+        original_name = parameter.get(SOURCE_VALUE_KEY, parameter["value"])
         file_name = self._get_collision_file_name(original_name, parameter)
         target = destination / file_name
-        parameter[_SOURCE_VALUE_KEY] = parameter.get(_SOURCE_VALUE_KEY, original_name)
+        parameter[SOURCE_VALUE_KEY] = original_name
         parameter["value"] = file_name
         if not target.exists():
             return file_name, target, source_path, False
@@ -328,7 +337,7 @@ class GitModelSource:
     @staticmethod
     def _parameter_asset_path(parameter_data):
         """Resolve a file-valued parameter relative to its parameter document."""
-        value = parameter_data.get(_SOURCE_VALUE_KEY, parameter_data.get("value"))
+        value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
         parameter = parameter_data.get("parameter")
         version = parameter_data.get("parameter_version")
         instrument = parameter_data.get("instrument") or "global"
