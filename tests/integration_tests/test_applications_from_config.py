@@ -168,10 +168,6 @@ def test_applications_from_config(
 
     """
     tmp_config = copy.deepcopy(config)
-    skip_message = helpers.skip_camera_efficiency(tmp_config)
-    if skip_message:
-        pytest.skip(skip_message)
-
     model_version = request.config.getoption("--model_version", default=None)
     if model_version:
         model_version = model_version.split(",")

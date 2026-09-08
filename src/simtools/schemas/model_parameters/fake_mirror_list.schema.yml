@@ -7,9 +7,9 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 developer_note: To be replaced by a data table
 name: fake_mirror_list
-short_description: Fake mirror list to be used for camera efficiency calculations ('testeff' program).
+short_description: Fake mirror list to be used for camera efficiency calculations.
 description: |-
-  Fake mirror list to be used for camera efficiency calculations ('testeff' program).
+  Fake mirror list to be used for camera efficiency calculations.
   Allows to obtain realistic distributions of the photon incidence angles on the camera plan.
   Not to be used for actual simulations.
 data:
@@ -26,5 +26,3 @@ activity:
     - ValidateCameraEfficiency
 source:
   - Initial instrument setup
-simulation_software:
-  - name: testeff

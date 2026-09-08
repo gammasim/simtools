@@ -19,7 +19,7 @@ class SimtelRunner:
     """
     Base class for running simulations based on the sim_telarray software stack.
 
-    The sim_telarray software stack includes sim_telarray itself and e.g., testeff,
+    The sim_telarray software stack includes sim_telarray itself and auxiliary tools,
     LightEmission, and other software packages.
 
     Parameters
