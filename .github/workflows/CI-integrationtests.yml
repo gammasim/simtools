@@ -229,9 +229,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
           restore-keys: |
-            simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
+            simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}-
 
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
@@ -272,20 +272,29 @@ jobs:
             echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
           fi
 
+          git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
+
 
       - name: Save cached simulation models repository
         if: steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models.git
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
+          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
+
+      - name: Package simulation models repository
+        run: |
+          (
+            cd simulation-models.git
+            python -m zipfile -c ../simulation-models.git.zip .
+          )
 
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: simulation-models-repo
-          path: simulation-models.git
+          path: simulation-models.git.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -342,7 +351,7 @@ jobs:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
-      SIMULATION_MODELS_GIT_PATH: ../simulation-models.git
+      SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
 
     services:
       mongodb:
@@ -428,7 +437,15 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: simulation-models-repo
-          path: ../simulation-models.git
+          path: ${{ github.workspace }}
+
+      - name: Extract and verify simulation models repository
+        run: |
+          mkdir "$SIMULATION_MODELS_GIT_PATH"
+          python -m zipfile -t "$GITHUB_WORKSPACE/simulation-models.git.zip"
+          python -m zipfile -e "$GITHUB_WORKSPACE/simulation-models.git.zip" \
+            "$SIMULATION_MODELS_GIT_PATH"
+          git --git-dir="$SIMULATION_MODELS_GIT_PATH" rev-parse --verify HEAD
 
       - name: Extend PATH (sim_telarray)
         run: |
@@ -451,11 +468,11 @@ jobs:
       - name: Upload data to MongoDB
         if: matrix.model_source == 'mongodb'
         run: |
-          git clone --local ../simulation-models.git ../simulation-models
+          git clone --local "$SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
           simtools-db-upload-model-repository \
             --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
             --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
-            --repository_dir ../simulation-models
+            --repository_dir "$GITHUB_WORKSPACE/simulation-models"
 
       - name: Integration tests
         shell: bash -l {0}
@@ -474,7 +491,7 @@ jobs:
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
               "${MODEL_SOURCE_ARGS[@]}" \
-              -n 0 --no-cov \
+              -n 0 --maxfail=1 --no-cov \
               --resource-benchmark-output=resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }} \
               --resource-benchmark-mode=integration \
               --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
@@ -482,7 +499,7 @@ jobs:
           else
             pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
               "${MODEL_SOURCE_ARGS[@]}" \
-              -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
+              -n 4 --dist loadscope --retries 2 --retry-delay 5 --maxfail=1 --no-cov tests/integration_tests/
           fi
 
       - name: Upload integration resource benchmark
