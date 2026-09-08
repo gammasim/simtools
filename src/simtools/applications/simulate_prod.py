@@ -352,13 +352,7 @@ def main():
         # Fall back to single row processing
         logger.warning("Job grid file detected but _job_grid_rows not set")
 
-    # Construct label with scan_label if present
-    label = app_context.args.get("label")
-    scan_label = app_context.args.get("scan_label")
-    if scan_label:
-        label = f"{label}_{scan_label}" if label else f"simulate-prod_{scan_label}"
-
-    simulator = Simulator(label=label)
+    simulator = Simulator(label=app_context.args.get("label"))
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:

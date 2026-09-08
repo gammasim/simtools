@@ -10,7 +10,6 @@ from astropy import units as u
 from simtools import settings
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
@@ -161,14 +160,8 @@ class CorsikaConfig:
         model_version = model_versions[0]
 
         self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
-        # CORSIKA parameters are stored generically, so we fetch them directly from the DB
-        # without instantiating ModelParameter (which requires site/array_element_name)
-        db = db_handler.DatabaseHandler()
-        parameters_from_db = db.get_simulation_configuration_parameters(
-            simulation_software="corsika",
-            site=None,
-            array_element_name=None,
-            model_version=model_version,
+        parameters_from_db = self.array_model.site_model.get_simulation_software_parameters(
+            "corsika"
         )
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
@@ -425,24 +418,21 @@ class CorsikaConfig:
             parameters["FIXHEI"] = self._input_config_first_interaction_height(
                 first_interaction_height
             )
-        if "corsika_starting_grammage" in parameters_from_db:
-            parameters["FIXCHI"] = [
-                self._input_config_corsika_starting_grammage(
-                    parameters_from_db["corsika_starting_grammage"]
-                )
-            ]
+        parameters["FIXCHI"] = [
+            self._input_config_corsika_starting_grammage(
+                parameters_from_db["corsika_starting_grammage"]
+            )
+        ]
         if not self.use_curved_atmosphere:
             parameters["TSTART"] = ["T"]
-        if "corsika_particle_kinetic_energy_cutoff" in parameters_from_db:
-            parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
-                parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
-            )
+        parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
+            parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
+        )
         parameters["MUADDI"] = ["F"]
         parameters["MUMULT"] = ["T"]
-        if "corsika_longitudinal_shower_development" in parameters_from_db:
-            parameters["LONGI"] = self._input_config_corsika_longitudinal_parameters(
-                parameters_from_db["corsika_longitudinal_shower_development"]
-            )
+        parameters["LONGI"] = self._input_config_corsika_longitudinal_parameters(
+            parameters_from_db["corsika_longitudinal_shower_development"]
+        )
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
         transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")

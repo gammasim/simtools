@@ -823,26 +823,15 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
         "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
     }
 
-    with (
-        mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp,
-        mock.patch.object(
-            settings._Config,
-            "args",
-            new_callable=mock.PropertyMock,
-            return_value=corsika_config_data,
-        ),
-        mock.patch(
-            "simtools.corsika.corsika_config.db_handler.DatabaseHandler"
-        ) as mock_db_handler_cls,
+    with mock.patch.object(
+        settings._Config,
+        "args",
+        new_callable=mock.PropertyMock,
+        return_value=corsika_config_data,
     ):
-        mp_instance = mp.return_value
-        mp_instance.get_simulation_software_parameters.return_value = corsika_params_from_db
-
-        mock_db_instance = mock_db_handler_cls.return_value
-        mock_db_instance.get_simulation_configuration_parameters.return_value = (
+        array_model.site_model.get_simulation_software_parameters.return_value = (
             corsika_params_from_db
         )
-
         corsika_config = CorsikaConfig(
             array_model=array_model, run_number=1, label="test-corsika-config"
         )
