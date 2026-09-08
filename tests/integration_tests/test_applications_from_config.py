@@ -73,7 +73,9 @@ def _get_simulation_model_source(config, request, simtools_root_path):
     git_path = Path(git_path)
     if not git_path.is_absolute():
         git_path = Path(simtools_root_path) / git_path
-    return None, (git_path.resolve(), git_revision)
+    # An explicitly selected local repository represents the checkout used by
+    # the integration run. Use its tip unless a revision was requested.
+    return None, (git_path.resolve(), git_revision or "HEAD")
 
 
 def _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source):
@@ -287,6 +289,27 @@ def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mo
     assert git_source == (
         (Path(tmp_test_directory) / "../simulation-models.git").resolve(),
         "6.0.2",
+    )
+
+
+def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker):
+    """Use the selected checkout tip when no Git revision is configured."""
+    request = mocker.MagicMock()
+    options = {
+        "simulation_models_path": None,
+        "simulation_models_git_path": "../simulation-models.git",
+        "simulation_models_git_revision": None,
+    }
+    request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
+
+    path, git_source = _get_simulation_model_source(
+        {"application": "simtools-simulate-prod"}, request, tmp_test_directory
+    )
+
+    assert path is None
+    assert git_source == (
+        (Path(tmp_test_directory) / "../simulation-models.git").resolve(),
+        "HEAD",
     )
 
 
