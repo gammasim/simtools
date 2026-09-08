@@ -231,16 +231,24 @@ class TelescopeModel(ModelParameter):
             True if the file is a 2D map type.
         """
         try:
-            self.get_parameter_table(par)
+            table = self.get_parameter_table(par)
         except InvalidModelParameterError:
             logging.warning(f"Parameter {par} does not exist")
             return False
 
         parameter_schema = schema.get_model_parameter_schema(par)
-        return any(
+        schema_supports_angle_dependence = any(
             software.get("name") == "sim_telarray" and software.get("table_format") == "rpol_matrix"
             for software in parameter_schema.get("simulation_software", [])
         )
+        if not schema_supports_angle_dependence:
+            return False
+
+        # Some legacy parameters use the same schema for both averaged and
+        # angle-dependent tables. The actual table therefore decides whether
+        # the model needs an incidence-angle weighting distribution.
+        columns = set(table.colnames)
+        return not columns or bool(columns & {"angle", "incidence_angle"})
 
     def read_two_dim_wavelength_angle(self, parameter_name: str) -> dict:
         """

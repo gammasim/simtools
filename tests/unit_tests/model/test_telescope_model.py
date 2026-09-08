@@ -178,6 +178,12 @@ def test_is_file_2d_true(telescope_model_lst, monkeypatch):
     assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
 
 
+def test_is_file_2d_false_for_averaged_table(telescope_model_lst, monkeypatch):
+    table = astropy.table.QTable({"wavelength": [300.0], "transmission": [0.9]})
+    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
+    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is False
+
+
 def test_is_file_2d_keyerror(telescope_model_lst, caplog):
     result = telescope_model_lst.is_file_2d("missing_param")
     assert result is False

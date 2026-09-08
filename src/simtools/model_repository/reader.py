@@ -9,7 +9,7 @@ from astropy.table import Table
 from packaging.version import Version
 
 from simtools import settings
-from simtools.data_model import schema
+from simtools.data_model import row_table_utils, schema
 from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
@@ -445,6 +445,141 @@ class SimulationModelReader:
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Export model files through the selected source."""
         return self._source.export_model_files(parameters, file_names, dest)
+
+    def export_parameter_data(
+        self,
+        parameter,
+        site,
+        array_element_name,
+        model_version=None,
+        parameter_version=None,
+        output_file=None,
+        export_model_file=False,
+        export_model_file_as_table=False,
+        dest=None,
+    ):
+        """Export a parameter payload through the selected model source.
+
+        Parameters
+        ----------
+        parameter : str
+            Name of the model parameter.
+        site : str
+            Site name.
+        array_element_name : str
+            Array element name.
+        model_version : str, optional
+            Simulation-model version.
+        parameter_version : str, optional
+            Model-parameter version.
+        output_file : str, optional
+            Output filename, or filename override for a file-backed parameter.
+        export_model_file : bool, optional
+            Export the original parameter file when it is file-backed.
+        export_model_file_as_table : bool, optional
+            Also export the payload as an ECSV table.
+        dest : str or Path, optional
+            Destination directory for exported files.
+
+        Returns
+        -------
+        list[Path]
+            Files written to the destination.
+
+        Raises
+        ------
+        ValueError
+            If exporting is requested without a destination or without the
+            required output filename for an embedded table.
+        """
+        if not (export_model_file or export_model_file_as_table):
+            return []
+        if dest is None:
+            raise ValueError("Destination path is required to export parameter data.")
+
+        parameters = self.get_model_parameter(
+            parameter,
+            site,
+            array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+        )
+        parameter_data = parameters[parameter]
+        if parameter_data.get("type") == "dict" and row_table_utils.is_row_table_dict(
+            parameter_data.get("value")
+        ):
+            return self._export_dict_parameter_data(parameter_data, output_file, dest)
+        return self._export_file_parameter_data(
+            parameter,
+            parameter_data,
+            parameters,
+            output_file,
+            export_model_file,
+            export_model_file_as_table,
+            dest,
+        )
+
+    def _export_dict_parameter_data(self, parameter_data, output_file, dest):
+        """Export an embedded row table as ECSV."""
+        if output_file is None:
+            raise ValueError(
+                "Use --output_file when exporting dict-typed parameters with "
+                "--export_model_file or --export_model_file_as_table."
+            )
+        table = simtel_table_reader.row_data_to_astropy_table(parameter_data["value"])
+        table_file = Path(dest, output_file).with_suffix(ECSV_SUFFIX)
+        table_file.parent.mkdir(parents=True, exist_ok=True)
+        table.write(table_file, format="ascii.ecsv", overwrite=True)
+        return [table_file]
+
+    def _export_file_parameter_data(
+        self,
+        parameter,
+        parameter_data,
+        parameters,
+        output_file,
+        export_model_file,
+        export_model_file_as_table,
+        dest,
+    ):
+        """Export a file-backed parameter and optionally its ECSV table."""
+        exported = self.export_model_files(parameters=parameters, dest=dest)
+        if not exported:
+            raise ValueError(f"Parameter {parameter} does not reference an exportable model file.")
+
+        source_file = Path(dest) / next(iter(exported))
+        model_output_file = Path(dest) / output_file if output_file else source_file
+        output_files = []
+        table = (
+            self._read_exported_parameter_table(parameter, parameter_data, source_file)
+            if export_model_file_as_table
+            else None
+        )
+
+        if export_model_file:
+            model_output_file.parent.mkdir(parents=True, exist_ok=True)
+            if source_file != model_output_file:
+                source_file.rename(model_output_file)
+            output_files.append(model_output_file)
+
+        if export_model_file_as_table:
+            table_output_file = model_output_file.with_suffix(ECSV_SUFFIX)
+            table_output_file.parent.mkdir(parents=True, exist_ok=True)
+            table.write(table_output_file, format="ascii.ecsv", overwrite=True)
+            if table_output_file not in output_files:
+                output_files.append(table_output_file)
+            if not export_model_file and source_file != table_output_file and source_file.exists():
+                source_file.unlink()
+
+        return output_files
+
+    def _read_exported_parameter_table(self, parameter, parameter_data, source_file):
+        """Read an exported file-backed parameter as an Astropy table."""
+        value = parameter_data.get("value")
+        if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
+            if hasattr(self._source, "get_parameter_table"):
+                return self._source.get_parameter_table(parameter_data)
+        return simtel_table_reader.read_simtel_table(parameter, source_file)
 
     def get_parameter_table(self, parameter_data):
         """Return the validated Astropy table referenced by a model parameter."""

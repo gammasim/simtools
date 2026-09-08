@@ -614,6 +614,10 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     }
     telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
     mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
+    mock_table = mocker.patch("simtools.model.model_parameter.read_ecsv_asset")
+    mock_write_table = mocker.patch(
+        "simtools.model.model_parameter.simtel_table_writer.write_simtel_table"
+    )
 
     telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(
         model_directory=telescope_copy.config_file_directory
@@ -625,6 +629,12 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     assert exported["instrument"] == "LSTS-design"
     assert exported["site"] == "North"
     assert exported["file"] is True
+    mock_table.assert_called_once()
+    mock_write_table.assert_called_once_with(
+        mock_table.return_value,
+        telescope_copy.config_file_directory,
+        table_format="atmospheric_transmission",
+    )
 
 
 def test_add_additional_models(telescope_model_lst, mocker):

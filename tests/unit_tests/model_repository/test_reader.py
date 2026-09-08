@@ -588,6 +588,68 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     read_table.assert_called_once_with("p", Path("output") / "p.dat")
 
 
+def test_reader_exports_embedded_parameter_as_ecsv(tmp_test_directory):
+    """Embedded table parameters are exported without a database handler."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={
+            "pulse": {
+                "parameter": "pulse",
+                "type": "dict",
+                "value": {
+                    "columns": ["time", "amplitude"],
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": [[1.0, 2.0]],
+                },
+            }
+        }
+    )
+
+    output_files = reader.export_parameter_data(
+        parameter="pulse",
+        site="North",
+        array_element_name="LSTN-01",
+        output_file="pulse.json",
+        export_model_file_as_table=True,
+        dest=tmp_test_directory,
+    )
+
+    assert output_files == [Path(tmp_test_directory) / "pulse.ecsv"]
+    assert output_files[0].is_file()
+
+
+def test_reader_exports_file_parameter_and_table(tmp_test_directory, mocker):
+    """File-backed parameters support the original file and ECSV outputs."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.dat"}}
+    )
+    source.export_model_files.return_value = {"mirror.dat": "copied"}
+    source_file = Path(tmp_test_directory) / "mirror.dat"
+    source_file.write_text("model", encoding="utf-8")
+    table = mocker.Mock()
+    mocker.patch.object(reader_module.simtel_table_reader, "read_simtel_table", return_value=table)
+
+    output_files = reader.export_parameter_data(
+        parameter="mirror",
+        site="North",
+        array_element_name="LSTN-01",
+        output_file="mirror-copy.dat",
+        export_model_file=True,
+        export_model_file_as_table=True,
+        dest=tmp_test_directory,
+    )
+
+    assert output_files == [
+        Path(tmp_test_directory) / "mirror-copy.dat",
+        Path(tmp_test_directory) / "mirror-copy.ecsv",
+    ]
+    assert output_files[0].is_file()
+    table.write.assert_called_once_with(output_files[1], format="ascii.ecsv", overwrite=True)
+
+
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
     """Git construction and source metadata are exposed by the facade."""
     git_source = Mock(source_name="models@commit", source_config={"type": "git"})

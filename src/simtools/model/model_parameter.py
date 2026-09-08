@@ -12,10 +12,11 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.data_model import schema
+from simtools.data_model.table_asset import read_ecsv_asset
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
-from simtools.simtel import simtel_table_reader
+from simtools.simtel import simtel_table_reader, simtel_table_writer
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
 
@@ -925,12 +926,14 @@ class ModelParameter:
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
         """
-        Export the NSB spectrum to the telescope altitude correction file.
+        Export the NSB correction table and its native sim_telarray source file.
 
         This method is needed because testeff corrects the NSB spectrum from the original altitude
         used in the Benn & Ellison model to the telescope altitude.
         This is done internally in testeff, but the NSB spectrum is not written out to the model
-        directory. This method allows to export it explicitly.
+        directory. This method allows both files to be exported explicitly. The native source
+        file is required because testeff resolves the filename stored in the table metadata when
+        applying the correction.
 
         Parameters
         ----------
@@ -948,3 +951,19 @@ class ModelParameter:
             parameters={parameter_name: parameter},
             dest=model_directory,
         )
+
+        if Path(parameter["value"]).suffix.lower() == ".ecsv":
+            source = Path(model_directory) / Path(parameter["value"]).name
+            schema_data = schema.get_model_parameter_schema(
+                parameter_name, parameter.get("model_parameter_schema_version")
+            )
+            schema_entry = next(
+                (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
+                None,
+            )
+            table = read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter)
+            simtel_table_writer.write_simtel_table(
+                table,
+                model_directory,
+                table_format="atmospheric_transmission",
+            )
