@@ -97,6 +97,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
             camera_filter_file = self._get_one_dim_distribution(
                 "camera_filter", "camera_filter_photon_incident_angle"
             )
+        else:
+            camera_filter_file = self._get_native_model_file(
+                self._telescope_model, "camera_filter", "rpol_matrix"
+            )
 
         mirror_reflectivity = self._telescope_model.get_parameter_value("mirror_reflectivity")
         if mirror_class == 2:
@@ -125,6 +129,13 @@ class SimulatorCameraEfficiency(SimtelRunner):
         if self.nsb_spectrum is not None:
             cmd.extend(["-fnsb", str(self.nsb_spectrum)])
 
+        atmospheric_transmission = self._get_native_model_file(
+            self._site_model, "atmospheric_transmission", "atmospheric_transmission"
+        )
+        atmospheric_profile = self._get_native_model_file(
+            self._site_model, "atmospheric_profile", "plain"
+        )
+
         cmd.extend(
             [
                 "-nm",
@@ -132,7 +143,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "-alt",
                 str(self._site_model.get_parameter_value("corsika_observation_level")),
                 "-fatm",
-                str(self._site_model.get_parameter_value("atmospheric_transmission")),
+                atmospheric_transmission,
                 "-flen",
                 str(focal_length),
                 "-fcur",
@@ -142,10 +153,18 @@ class SimulatorCameraEfficiency(SimtelRunner):
             ]
         )
 
+        mirror_list = None
         if mirror_class == 0:
-            cmd.extend(["-fmir", self._telescope_model.get_parameter_value("mirror_list")])
+            mirror_list = self._get_native_model_file(
+                self._telescope_model, "mirror_list", "mirror_list"
+            )
         elif mirror_class == 2:
-            cmd.extend(["-fmir", self._telescope_model.get_parameter_value("fake_mirror_list")])
+            mirror_list = self._get_native_model_file(
+                self._telescope_model, "fake_mirror_list", "mirror_list"
+            )
+
+        if mirror_list is not None:
+            cmd.extend(["-fmir", mirror_list])
 
         cmd.extend(["-fref", mirror_reflectivity])
 
@@ -170,12 +189,27 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "200",  # lmin
                 "1000",  # lmax
                 f"{self.x_max:.1f}" if self.x_max is not None else "300",
-                str(self._site_model.get_parameter_value("atmospheric_profile")),
+                atmospheric_profile,
                 str(self.zenith_angle),
             ]
         )
 
         return cmd, self._file_simtel, self._file_log
+
+    def _get_native_model_file(self, model, parameter_name, table_format):
+        """Return a model file in the format required by testeff."""
+        file_name = model.get_parameter_value(parameter_name)
+        if not str(file_name).lower().endswith(".ecsv"):
+            return file_name
+
+        output_name = f"{parameter_name}-{Path(self._telescope_model.config_file_path).stem}.dat"
+        model.export_model_parameter_as_simtel_file(
+            parameter_name,
+            self._telescope_model.config_file_directory,
+            table_format=table_format,
+            output_name=output_name,
+        )
+        return output_name
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.

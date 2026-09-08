@@ -115,6 +115,137 @@ def test_make_run_command_without_altitude_correction(simulator_camera_efficienc
     assert "-nc" in command
 
 
+def test_make_run_command_exports_native_atmospheric_transmission(
+    simulator_camera_efficiency, mocker
+):
+    original_get_parameter_value = simulator_camera_efficiency._site_model.get_parameter_value
+
+    def get_parameter_value(parameter_name):
+        if parameter_name == "atmospheric_transmission":
+            return "atmospheric_transmission-2.0.0.ecsv"
+        return original_get_parameter_value(parameter_name)
+
+    mocker.patch.object(
+        simulator_camera_efficiency._site_model,
+        "get_parameter_value",
+        side_effect=get_parameter_value,
+    )
+    export_file = mocker.patch.object(
+        simulator_camera_efficiency._site_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    command, _, _ = simulator_camera_efficiency.make_run_command()
+
+    expected_file = (
+        f"atmospheric_transmission-"
+        f"{Path(simulator_camera_efficiency._telescope_model.config_file_path).stem}.dat"
+    )
+    export_file.assert_called_once_with(
+        "atmospheric_transmission",
+        simulator_camera_efficiency._telescope_model.config_file_directory,
+        table_format="atmospheric_transmission",
+        output_name=expected_file,
+    )
+    assert command[command.index("-fatm") + 1] == expected_file
+
+
+def test_make_run_command_exports_native_mirror_list(simulator_camera_efficiency, mocker):
+    original_get_parameter_value = simulator_camera_efficiency._telescope_model.get_parameter_value
+
+    def get_parameter_value(parameter_name):
+        if parameter_name == "mirror_list":
+            return "mirror_list-2.0.0.ecsv"
+        return original_get_parameter_value(parameter_name)
+
+    mocker.patch.object(
+        simulator_camera_efficiency._telescope_model,
+        "get_parameter_value",
+        side_effect=get_parameter_value,
+    )
+    export_file = mocker.patch.object(
+        simulator_camera_efficiency._telescope_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    command, _, _ = simulator_camera_efficiency.make_run_command()
+
+    expected_file = f"mirror_list-{Path(simulator_camera_efficiency._telescope_model.config_file_path).stem}.dat"
+    export_file.assert_called_once_with(
+        "mirror_list",
+        simulator_camera_efficiency._telescope_model.config_file_directory,
+        table_format="mirror_list",
+        output_name=expected_file,
+    )
+    assert command[command.index("-fmir") + 1] == expected_file
+
+
+def test_make_run_command_exports_native_atmospheric_profile(simulator_camera_efficiency, mocker):
+    original_get_parameter_value = simulator_camera_efficiency._site_model.get_parameter_value
+
+    def get_parameter_value(parameter_name):
+        if parameter_name == "atmospheric_profile":
+            return "atmospheric_profile-1.0.0.ecsv"
+        return original_get_parameter_value(parameter_name)
+
+    mocker.patch.object(
+        simulator_camera_efficiency._site_model,
+        "get_parameter_value",
+        side_effect=get_parameter_value,
+    )
+    export_file = mocker.patch.object(
+        simulator_camera_efficiency._site_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    command, _, _ = simulator_camera_efficiency.make_run_command()
+
+    expected_file = (
+        f"atmospheric_profile-"
+        f"{Path(simulator_camera_efficiency._telescope_model.config_file_path).stem}.dat"
+    )
+    export_file.assert_called_once_with(
+        "atmospheric_profile",
+        simulator_camera_efficiency._telescope_model.config_file_directory,
+        table_format="plain",
+        output_name=expected_file,
+    )
+    assert command[-2] == expected_file
+
+
+def test_make_run_command_exports_native_camera_filter(simulator_camera_efficiency, mocker):
+    mocker.patch.object(
+        simulator_camera_efficiency._telescope_model, "is_file_2d", return_value=False
+    )
+    original_get_parameter_value = simulator_camera_efficiency._telescope_model.get_parameter_value
+
+    def get_parameter_value(parameter_name):
+        if parameter_name == "camera_filter":
+            return "camera_filter-1.0.0.ecsv"
+        return original_get_parameter_value(parameter_name)
+
+    mocker.patch.object(
+        simulator_camera_efficiency._telescope_model,
+        "get_parameter_value",
+        side_effect=get_parameter_value,
+    )
+    export_file = mocker.patch.object(
+        simulator_camera_efficiency._telescope_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    command, _, _ = simulator_camera_efficiency.make_run_command()
+
+    expected_file = f"camera_filter-{Path(simulator_camera_efficiency._telescope_model.config_file_path).stem}.dat"
+    export_file.assert_called_once_with(
+        "camera_filter",
+        simulator_camera_efficiency._telescope_model.config_file_directory,
+        table_format="rpol_matrix",
+        output_name=expected_file,
+    )
+    assert command[command.index("-fflt") + 1] == expected_file
+
+
 def test_check_run_result(simulator_camera_efficiency):
 
     with pytest.raises(RuntimeError):

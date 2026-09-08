@@ -255,6 +255,44 @@ def test_get_x_max_for_efficiency_type_muon(camera_efficiency_lst, mocker, caplo
     assert "Using X-max for muon efficiency" in caplog.text
 
 
+def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficiency_lst, mocker):
+    camera_efficiency_lst.efficiency_type = "muon"
+    mock_atmo = mocker.MagicMock()
+    mock_atmo.interpolate.return_value = 850.5
+    mocker.patch(
+        "simtools.camera.camera_efficiency.AtmosphereProfile",
+        return_value=mock_atmo,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value_with_unit",
+        return_value=5 * u.km,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value",
+        return_value="atmospheric_profile-1.0.0.ecsv",
+    )
+    export_file = mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    x_max = camera_efficiency_lst._get_x_max_for_efficiency_type()
+
+    expected_file = (
+        f"atmospheric_profile-"
+        f"{Path(camera_efficiency_lst.telescope_model.config_file_path).stem}.dat"
+    )
+    export_file.assert_called_once_with(
+        "atmospheric_profile",
+        camera_efficiency_lst.telescope_model.config_file_directory,
+        table_format="plain",
+        output_name=expected_file,
+    )
+    assert x_max == pytest.approx(850.5)
+
+
 def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
     camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
     mocker.patch.object(

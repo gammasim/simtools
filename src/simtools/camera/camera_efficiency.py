@@ -606,10 +606,18 @@ class CameraEfficiency:
         x_max = 300.0
         obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
         if self.efficiency_type == "muon":
-            atmo = AtmosphereProfile(
-                self.site_model.config_file_directory
-                / self.site_model.get_parameter_value("atmospheric_profile")
-            )
+            atmospheric_profile = self.site_model.get_parameter_value("atmospheric_profile")
+            if str(atmospheric_profile).lower().endswith(".ecsv"):
+                atmospheric_profile = (
+                    f"atmospheric_profile-{Path(self.telescope_model.config_file_path).stem}.dat"
+                )
+                self.site_model.export_model_parameter_as_simtel_file(
+                    "atmospheric_profile",
+                    self.telescope_model.config_file_directory,
+                    table_format="plain",
+                    output_name=atmospheric_profile,
+                )
+            atmo = AtmosphereProfile(self.site_model.config_file_directory / atmospheric_profile)
             alt = obs_level.to(u.km) + 0.1 * u.km
             x_max = atmo.interpolate(altitude=alt, column="thick")
 

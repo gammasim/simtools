@@ -952,18 +952,43 @@ class ModelParameter:
             dest=model_directory,
         )
 
-        if Path(parameter["value"]).suffix.lower() == ".ecsv":
-            source = Path(model_directory) / Path(parameter["value"]).name
-            schema_data = schema.get_model_parameter_schema(
-                parameter_name, parameter.get("model_parameter_schema_version")
-            )
-            schema_entry = next(
-                (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
-                None,
-            )
-            table = read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter)
-            simtel_table_writer.write_simtel_table(
-                table,
-                model_directory,
-                table_format="atmospheric_transmission",
-            )
+        self._export_ecsv_as_simtel_table(
+            parameter_name,
+            parameter,
+            model_directory,
+            table_format="atmospheric_transmission",
+        )
+
+    def _export_ecsv_as_simtel_table(
+        self, parameter_name, parameter, model_directory, table_format, output_name=None
+    ):
+        """Export an ECSV model asset in the native sim_telarray table format."""
+        if Path(parameter["value"]).suffix.lower() != ".ecsv":
+            return None
+
+        source = Path(model_directory) / Path(parameter["value"]).name
+        schema_data = schema.get_model_parameter_schema(
+            parameter_name, parameter.get("model_parameter_schema_version")
+        )
+        schema_entry = next(
+            (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
+            None,
+        )
+        table = read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter)
+        write_kwargs = {"table_format": table_format}
+        if output_name is not None:
+            write_kwargs["output_name"] = output_name
+        return simtel_table_writer.write_simtel_table(table, model_directory, **write_kwargs)
+
+    def export_model_parameter_as_simtel_file(
+        self, parameter_name, model_directory, table_format, output_name
+    ):
+        """Export an ECSV model parameter in the native sim_telarray format."""
+        parameter = self.parameters[parameter_name].copy()
+        return self._export_ecsv_as_simtel_table(
+            parameter_name,
+            parameter,
+            model_directory,
+            table_format=table_format,
+            output_name=output_name,
+        )
