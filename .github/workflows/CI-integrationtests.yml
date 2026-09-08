@@ -282,13 +282,15 @@ jobs:
           path: simulation-models.git
           key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
 
+      - name: Package simulation models repository
+        run: tar -czf simulation-models.git.tar.gz -C simulation-models.git .
+
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: simulation-models-repo
-          include-hidden-files: true
-          path: simulation-models.git
+          path: simulation-models.git.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -431,10 +433,14 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: simulation-models-repo
-          path: ${{ github.workspace }}/simulation-models.git
+          path: ${{ github.workspace }}
 
-      - name: Verify simulation models repository
-        run: git --git-dir="$SIMULATION_MODELS_GIT_PATH" rev-parse --verify HEAD
+      - name: Extract and verify simulation models repository
+        run: |
+          mkdir "$SIMULATION_MODELS_GIT_PATH"
+          tar -xzf "$GITHUB_WORKSPACE/simulation-models.git.tar.gz" \
+            -C "$SIMULATION_MODELS_GIT_PATH"
+          git --git-dir="$SIMULATION_MODELS_GIT_PATH" rev-parse --verify HEAD
 
       - name: Extend PATH (sim_telarray)
         run: |
