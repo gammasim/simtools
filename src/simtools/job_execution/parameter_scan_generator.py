@@ -33,13 +33,10 @@ from astropy.table import Table
 
 from simtools.data_model import schema
 from simtools.io import ascii_handler
-from simtools.production_configuration.job_grid_io import (
-    _ECSV_FORMAT,
-    read_job_grid,
-    serialize_job_grid,
-)
+from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
 from simtools.utils import general
 
+_ECSV_FORMAT = "ascii.ecsv"
 _logger = logging.getLogger(__name__)
 
 
@@ -301,13 +298,9 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     metadata["model_parameter_sets"] = parameter_sets
 
     expanded_rows = []
-    _logger.info(
-        f"About to expand {len(base_rows)} base rows with {len(param_combinations)} combinations"
-    )
     for combo_spec in param_combinations:
         # Build the parameter set name for this combination
         param_set_name = _build_parameter_set_name(combo_spec["combo"], param_specs)
-        _logger.info(f"Processing combination: {param_set_name}")
 
         combo_rows = []
         for row in base_rows:
@@ -317,10 +310,7 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
             new_row.update(job_grid_updates)
             combo_rows.append(new_row)
 
-        _logger.info(f"Combination {param_set_name} generated {len(combo_rows)} rows")
         expanded_rows.extend(combo_rows)
-
-    _logger.info(f"Total expanded rows: {len(expanded_rows)}")
 
     serialize_job_grid(expanded_rows, output_file, metadata=metadata)
     try:

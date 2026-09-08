@@ -226,7 +226,7 @@ def _validate_array_layout_names(rows, parser):
 def _check_parameter_scan(rows):
     """Check if the job grid is a parameter scan grid."""
     has_model_parameter_set = any(row.get("model_parameter_set") for row in rows)
-    logger.info(f"has_model_parameter_set: {has_model_parameter_set}")
+    logger.debug("has_model_parameter_set: %s", has_model_parameter_set)
     return has_model_parameter_set
 
 

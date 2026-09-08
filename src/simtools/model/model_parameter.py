@@ -346,42 +346,11 @@ class ModelParameter:
         if not flat_configuration_changes:
             return
 
-        self._log_debug_flat_changes(simulation_software, flat_configuration_changes)
-
         self.overwrite_parameters(
             flat_configuration_changes,
             flat_dict=True,
             ignore_collection=None,
             parameter_store=self._simulation_config_parameters[simulation_software],
-        )
-
-        self._log_debug_after_flat_overwrite(simulation_software)
-
-    def _log_debug_flat_changes(self, simulation_software, flat_configuration_changes):
-        """Log debug info for flat configuration changes."""
-        if simulation_software != "sim_telarray":
-            return
-        if (
-            "min_photoelectrons" not in flat_configuration_changes
-            and "min_photons" not in flat_configuration_changes
-        ):
-            return
-        self._logger.info(
-            f"DEBUG: Flat config changes for {simulation_software}: "
-            f"{list(flat_configuration_changes.keys())}"
-        )
-
-    def _log_debug_after_flat_overwrite(self, simulation_software):
-        """Log debug info after applying flat overwrites."""
-        if simulation_software != "sim_telarray":
-            return
-        sim_params = self._simulation_config_parameters.get(simulation_software, {})
-        if "min_photoelectrons" not in sim_params and "min_photons" not in sim_params:
-            return
-        self._logger.info(
-            f"DEBUG: After flat overwrite - _simulation_config_parameters[{simulation_software}]: "
-            f"min_photoelectrons={sim_params.get('min_photoelectrons', {}).get('value')}, "
-            f"min_photons={sim_params.get('min_photons', {}).get('value')}"
         )
 
     def _collect_flat_simulation_overwrites(self, simulation_software, software_collection):
@@ -464,6 +433,8 @@ class ModelParameter:
 
         if self._has_overrides_for_collections(ignore_collections):
             return None
+        if self._has_overrides_for_collections(("configuration_sim_telarray",)):
+            return ("configuration_corsika",)
         return ignore_collections
 
     def _has_overrides_for_collections(self, ignore_collections):
@@ -923,9 +894,6 @@ class ModelParameter:
         else:
             parameter_entry = {"value": par_value}
         sim_telarray_params[par_name] = parameter_entry
-        self._logger.info(
-            f"DEBUG: Routed {par_name} to _simulation_config_parameters['sim_telarray']"
-        )
 
     def _extract_parameter_entry(self, par_value):
         """Extract parameter entry with metadata from par_value."""
@@ -1046,9 +1014,7 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        self._log_debug_before_merge()
         self._merge_sim_telarray_parameters()
-        self._log_debug_after_merge()
         self.export_model_files(update_if_necessary=True)
         self._add_additional_models(additional_models)
 
@@ -1059,44 +1025,11 @@ class ModelParameter:
             parameters=self.parameters,
         )
 
-    def _log_debug_before_merge(self):
-        """Log debug info before merging sim_telarray parameters."""
-        sim_telarray_params = self._simulation_config_parameters.get("sim_telarray", {})
-        if not sim_telarray_params:
-            return
-        self._logger.info(
-            f"DEBUG: Before merge - _simulation_config_parameters['sim_telarray']: "
-            f"{
-                [
-                    (k, v.get('value'))
-                    for k, v in sim_telarray_params.items()
-                    if k in ('min_photoelectrons', 'min_photons')
-                ]
-            }"
-        )
-        if "min_photoelectrons" not in self.parameters and "min_photons" not in self.parameters:
-            return
-        self._logger.info(
-            f"DEBUG: Before merge - self.parameters contains min_photoelectrons/min_photons: "
-            f"min_photoelectrons={self.parameters.get('min_photoelectrons', {}).get('value')}, "
-            f"min_photons={self.parameters.get('min_photons', {}).get('value')}"
-        )
-
     def _merge_sim_telarray_parameters(self):
         """Merge sim_telarray parameters into self.parameters."""
         sim_telarray_params = self._simulation_config_parameters.get("sim_telarray", {})
         for par_name, par_value in sim_telarray_params.items():
             self.parameters[par_name] = par_value
-
-    def _log_debug_after_merge(self):
-        """Log debug info after merging sim_telarray parameters."""
-        if "min_photoelectrons" not in self.parameters and "min_photons" not in self.parameters:
-            return
-        self._logger.info(
-            f"DEBUG: After merge - self.parameters['min_photoelectrons']: "
-            f"{self.parameters.get('min_photoelectrons', {}).get('value')}, "
-            f"self.parameters['min_photons']: {self.parameters.get('min_photons', {}).get('value')}"
-        )
 
     def _add_additional_models(self, additional_models):
         """Add additional models to the current model parameters."""
