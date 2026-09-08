@@ -474,7 +474,6 @@ definitions:
       - sim_telarray
       - corsika
       - simtools
-      - testeff
     title: Name
   Source:
     type: string

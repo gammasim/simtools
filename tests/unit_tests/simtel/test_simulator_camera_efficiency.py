@@ -49,12 +49,10 @@ def camera_efficiency_sst(model_version, mocker):
 
 @pytest.fixture
 def simulator_camera_efficiency(camera_efficiency_sst, site_model_south, mocker):
-    # Mock export_model_files to avoid file operations
-    mocker.patch.object(camera_efficiency_sst, "export_model_files")
     simulator = SimulatorCameraEfficiency(
         telescope_model=camera_efficiency_sst.telescope_model,
         site_model=site_model_south,
-        file_simtel=camera_efficiency_sst._file["sim_telarray"],
+        file_simtel=Path("camera_efficiency.dat"),
         label="test-simtel-runner-camera-efficiency",
     )
     # Mock is_file_2d to avoid file reads
@@ -284,14 +282,11 @@ def test_get_one_dim_distribution(model_version_prod5, site_model_south, mocker,
         return_value=mock_camera,
     )
 
-    # Mock export_model_files to avoid file operations
-    mocker.patch.object(camera_efficiency_sst_prod5, "export_model_files")
-
     # 2D transmission window not defined in prod6; required prod5 runner
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
         telescope_model=camera_efficiency_sst_prod5.telescope_model,
         site_model=site_model_south,
-        file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
+        file_simtel=Path("camera_efficiency.dat"),
         label="test-simtel-runner-camera-efficiency",
     )
 
@@ -323,8 +318,6 @@ def test_get_one_dim_distribution(model_version_prod5, site_model_south, mocker,
     )
 
     # Mock export_table_to_model_directory to return a Path
-    from pathlib import Path
-
     mock_export_path = Path(io_handler.get_output_directory()) / "test_1d_distribution.dat"
     mock_export_path.touch()  # Create empty file
     mocker.patch.object(

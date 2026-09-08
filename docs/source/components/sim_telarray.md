@@ -5,7 +5,8 @@ sim_telarray ([MPIK site](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray),
 The following executables from the `sim_telarray` package are used by `simtools`:
 
 - `sim_telarray`: Main ray-tracing and detector simulation executable.
-- `testeff`: Computes telescope and camera optical/electronic efficiency.
+- Camera efficiency is calculated by simtools from model tables; no separate sim_telarray executable
+  is used for this calculation.
 - `rx`: Calculates the optical point spread function (PSF) (optional use).
 - `xyzls`: Simulates a calibration light source at a specified position.
 - `ls-beam`: Simulates a laser beam calibration light source.

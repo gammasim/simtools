@@ -770,6 +770,26 @@ def test_export_model_files_removes_added_parameter_files_from_export(
     assert "num_gains" not in exported_parameters
 
 
+def test_export_nsb_spectrum_to_telescope_altitude_correction_file(
+    telescope_model_lst, mocker, tmp_test_directory
+):
+    export_spy = mocker.patch.object(telescope_model_lst.model_reader, "export_model_files")
+    parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+    parameter_value = telescope_model_lst.get_simulation_software_parameters("sim_telarray")[
+        parameter_name
+    ]["value"]
+
+    telescope_model_lst.export_nsb_spectrum_to_telescope_altitude_correction_file(
+        tmp_test_directory
+    )
+
+    export_spy.assert_called_once()
+    exported_parameter = export_spy.call_args.kwargs["parameters"][parameter_name]
+    assert exported_parameter["value"] == parameter_value
+    assert exported_parameter["file"] is True
+    assert export_spy.call_args.kwargs["dest"] == tmp_test_directory
+
+
 def test_check_model_parameter_with_overwrite(model_version):
 
     # Create a temporary telescope model to get the current value of num_gains of the telescope,
