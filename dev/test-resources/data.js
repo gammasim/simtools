@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788844681315,
+  "lastUpdate": 1788871932244,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -25780,6 +25780,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 421.0703125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cc25cc84a2d9e446690ca43c1a52d43fa9a827f0",
+          "message": "Add new model parameter `illuminator_tower_height` (#2514)\n\n* illuminator tower range\n\n* changelog\n\n* fix position\n\n* Test from feature branch\n\n* Keep git clone\n\n* correct path\n\n* CI tar packages\n\n* zip and tar\n\n* main simulation models branch\n\n* integration test fix",
+          "timestamp": "2026-09-08T14:34:36+02:00",
+          "tree_id": "7608e7d4a924e56d8fc7e8ee6c9b1ae21042a382",
+          "url": "https://github.com/gammasim/simtools/commit/cc25cc84a2d9e446690ca43c1a52d43fa9a827f0"
+        },
+        "date": 1788871916123,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 59.501915451000016,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 61.29,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 421.7890625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
           }
