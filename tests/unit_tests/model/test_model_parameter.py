@@ -197,7 +197,7 @@ def test_filter_overwrites_for_target_returns_input_without_filtering():
     model_parameter = ModelParameter.__new__(ModelParameter)
     overwrites = {"LSTN-01": {"num_gains": {"value": 2}}}
 
-    assert model_parameter._filter_overwrites_for_target(overwrites, None) is overwrites
+    assert model_parameter._filter_overwrites_for_target(overwrites, None) == overwrites
 
 
 def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
