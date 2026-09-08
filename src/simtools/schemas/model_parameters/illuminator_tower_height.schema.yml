@@ -1,0 +1,26 @@
+%YAML 1.2
+---
+title: Schema for illuminator_tower_height model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: illuminator_tower_height
+description: Height of the illuminator emission point above the ground position.
+short_description: Illuminator tower height.
+data:
+  - type: float64
+    unit: m
+    allowed_range:
+      min: 0.
+instrument:
+  class: Calibration
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: simtools

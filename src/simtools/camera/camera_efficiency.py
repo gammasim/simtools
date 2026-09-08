@@ -1,11 +1,9 @@
 """Camera efficiency simulations and analysis."""
 
 import logging
-import re
 from collections import defaultdict
 from pathlib import Path
 
-import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
@@ -13,9 +11,9 @@ from astropy.table import Table
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
 from simtools.atmosphere import AtmosphereProfile
+from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
 from simtools.io import ascii_handler, io_handler
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -50,6 +48,7 @@ class CameraEfficiency:
         self.output_dir = self.io_handler.get_output_directory()
 
         self._results = None
+        self._calculated_results = None
         self._has_results = False
         self.efficiency_type = efficiency_type.lower()
 
@@ -81,64 +80,51 @@ class CameraEfficiency:
             "zenith_angle": config_data["zenith_angle"].to("deg").value,
             "azimuth_angle": config_data["azimuth_angle"].to("deg").value,
             "nsb_spectrum": config_data.get("nsb_spectrum", None),
+            "skip_correction_to_nsb_spectrum": config_data.get(
+                "skip_correction_to_nsb_spectrum", False
+            ),
             "efficiency_type": self.efficiency_type,
         }
 
     def _load_files(self):
-        """Define variables used for file names, including results, sim_telarray and log files."""
-        _file = {}
-        for label, suffix in zip(
-            ["results", "sim_telarray", "log"],
-            [".ecsv", ".dat", ".log"],
-        ):
-            file_name = names.generate_file_name(
-                file_type="camera_efficiency",
-                suffix=suffix,
-                site=self.telescope_model.site,
-                telescope_model_name=self.telescope_model.name,
-                zenith_angle=self.config["zenith_angle"],
-                azimuth_angle=self.config["azimuth_angle"],
-                label=self.efficiency_type,
-            )
-
-            _file[label] = self.io_handler.get_output_directory().joinpath(file_name)
-        return _file
+        """Define the camera-efficiency result file name."""
+        file_name = names.generate_file_name(
+            file_type="camera_efficiency",
+            suffix=".ecsv",
+            site=self.telescope_model.site,
+            telescope_model_name=self.telescope_model.name,
+            zenith_angle=self.config["zenith_angle"],
+            azimuth_angle=self.config["azimuth_angle"],
+            label=self.efficiency_type,
+        )
+        return {"results": self.io_handler.get_output_directory().joinpath(file_name)}
 
     def simulate(self):
-        """Simulate camera efficiency using testeff."""
+        """Calculate camera efficiency using the in-process ECSV calculator."""
         self._logger.info("Simulating CameraEfficiency")
 
-        self.export_model_files()
+        if not self.config.get("skip_correction_to_nsb_spectrum", False):
+            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
+                model_directory=self.telescope_model.config_file_directory
+            )
 
-        simtel = SimulatorCameraEfficiency(
+        calculator = CameraEfficiencyCalculator(
             telescope_model=self.telescope_model,
             site_model=self.site_model,
             zenith_angle=self.config["zenith_angle"],
-            file_simtel=self._file["sim_telarray"],
-            file_log=self._file["log"],
-            label=self.label,
             x_max=self._get_x_max_for_efficiency_type(),
             nsb_spectrum=self.config["nsb_spectrum"],
             skip_correction_to_nsb_spectrum=self.config.get(
                 "skip_correction_to_nsb_spectrum", False
             ),
         )
-        simtel.run()
-
-    def export_model_files(self):
-        """Export model and config files to the output directory."""
-        self.telescope_model.write_sim_telarray_config_file()
-        if not self.config.get("skip_correction_to_nsb_spectrum", False):
-            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
-                model_directory=self.telescope_model.config_file_directory
-            )
+        self._calculated_results = calculator.calculate()
 
     def get_nsb_pixel_rate(self, reference_conditions=False):
         """
         Return the expected NSB pixel rate for each camera pixel.
 
-        This is an approximation, as testeff calculates the expected NSB pixel rate
-        for the on-axis pixel only.
+        This is an approximation because the calculator evaluates the on-axis pixel only.
 
         Returns
         -------
@@ -208,35 +194,30 @@ class CameraEfficiency:
 
         _results = defaultdict(list)
 
-        # Search for at least 5 consecutive numbers to see that we are in the table
-        re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._file["sim_telarray"], encoding="utf-8") as file:
-            for line in file:
-                if re_table.match(line):
-                    words = line.split()
-                    numbers = [float(w) for w in words]
-                    for i in range(len(eff_pars) - 10):
-                        _results[eff_pars[i]].append(numbers[i])
-                    C1 = numbers[8] * (400 / numbers[0]) ** 2  # noqa: N806
-                    C2 = C1 * numbers[4] * numbers[5]  # noqa: N806
-                    C3 = C2 * numbers[6] * numbers[7]  # noqa: N806
-                    C4 = C3 * numbers[3]  # noqa: N806
-                    c4x_value = C1 * numbers[3] * numbers[6] * numbers[7]
-                    _results["C1"].append(C1)
-                    _results["C2"].append(C2)
-                    _results["C3"].append(C3)
-                    _results["C4"].append(C4)
-                    _results["C4x"].append(c4x_value)
-                    N1 = numbers[14]  # noqa: N806
-                    N2 = N1 * numbers[4] * numbers[5]  # noqa: N806
-                    N3 = N2 * numbers[6] * numbers[7]  # noqa: N806
-                    N4 = N3 * numbers[3]  # noqa: N806
-                    n4x_value = N1 * numbers[3] * numbers[6] * numbers[7]
-                    _results["N1"].append(N1)
-                    _results["N2"].append(N2)
-                    _results["N3"].append(N3)
-                    _results["N4"].append(N4)
-                    _results["N4x"].append(n4x_value)
+        if self._calculated_results is None:
+            raise RuntimeError("Camera efficiency must be simulated before it can be analyzed.")
+        for row in self._calculated_results:
+            numbers = [row[name] for name in eff_pars[:16]]
+            for index, name in enumerate(eff_pars[:16]):
+                _results[name].append(numbers[index])
+            c1_value = numbers[8] * (400 / numbers[0]) ** 2
+            c2_value = c1_value * numbers[4] * numbers[5]
+            c3_value = c2_value * numbers[6] * numbers[7]
+            c4_value = c3_value * numbers[3]
+            _results["C1"].append(c1_value)
+            _results["C2"].append(c2_value)
+            _results["C3"].append(c3_value)
+            _results["C4"].append(c4_value)
+            _results["C4x"].append(c1_value * numbers[3] * numbers[6] * numbers[7])
+            n1_value = numbers[14]
+            n2_value = n1_value * numbers[4] * numbers[5]
+            n3_value = n2_value * numbers[6] * numbers[7]
+            n4_value = n3_value * numbers[3]
+            _results["N1"].append(n1_value)
+            _results["N2"].append(n2_value)
+            _results["N3"].append(n3_value)
+            _results["N4"].append(n4_value)
+            _results["N4x"].append(n1_value * numbers[3] * numbers[6] * numbers[7])
 
         self._results = Table(_results)
         self._has_results = True
@@ -330,18 +311,15 @@ class CameraEfficiency:
         if not self._has_results:
             self._logger.error("Cannot export results because they do not exist")
         else:
-            self._logger.info(f"Exporting testeff table to {self._file['results']}")
-            astropy.io.ascii.write(
-                self._results, self._file["results"], format="basic", overwrite=True
-            )
+            self._logger.info(f"Exporting camera efficiency table to {self._file['results']}")
+            self._results.write(self._file["results"], format="ascii.ecsv", overwrite=True)
             _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.yml")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             ascii_handler.write_data_to_file(self.results_summary(), Path(_results_summary_file))
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        table = astropy.io.ascii.read(self._file["results"], format="basic")
-        self._results = table
+        self._results = Table.read(self._file["results"], format="ascii.ecsv")
         self._has_results = True
 
     def calc_tel_efficiency(self):

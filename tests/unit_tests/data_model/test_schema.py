@@ -82,6 +82,15 @@ def test_get_parameter_type_and_unit_from_schema():
         schema.get_parameter_attribute_from_schema("mirror_focal_length", "0.1.0", "unit") == "cm"
     )
 
+    assert (
+        schema.get_parameter_attribute_from_schema("illuminator_tower_height", "0.1.0", "type")
+        == "float64"
+    )
+    assert (
+        schema.get_parameter_attribute_from_schema("illuminator_tower_height", "0.1.0", "unit")
+        == "m"
+    )
+
     assert schema.get_parameter_attribute_from_schema("flasher_pulse_shape", "0.2.0", "type") == [
         "string",
         "float64",

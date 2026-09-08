@@ -4,11 +4,19 @@
 
 ### camera_efficiency
 
-Main functionality for the `camera_efficiency` module is to provide an interface to the `testeff` program provided by sim_telarray.
-A {ref}`TelescopeModel <telescope-model>` and few more physical parameters (zenith angle, etc) are required inputs.
+The `camera_efficiency` module calculates optical throughput and NSB rates from validated model
+tables. A {ref}`TelescopeModel <telescope-model>` and a few physical parameters (zenith angle,
+etc.) are required inputs.
 
 ```{eval-rst}
 .. automodule:: camera.camera_efficiency
+   :members:
+```
+
+### camera_efficiency_calculator
+
+```{eval-rst}
+.. automodule:: simtools.camera.camera_efficiency_calculator
    :members:
 ```
 
