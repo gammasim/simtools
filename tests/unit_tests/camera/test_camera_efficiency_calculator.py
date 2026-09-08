@@ -200,8 +200,8 @@ def test_emission_altitude_scales_xmax_by_airmass():
             "thickness": [1000.0, 100.0] * (u.g / u.cm**2),
         }
     )
-assert _emission_altitude(profile, 500.0, 2.0) == pytest.approx(6.0206, rel=1e-4)
-assert _emission_altitude(profile, 2000.0, 1.0) == pytest.approx(0.0)
+    assert _emission_altitude(profile, 500.0, 2.0) == pytest.approx(6.0206, rel=1e-4)
+    assert _emission_altitude(profile, 2000.0, 1.0) == pytest.approx(0.0)
 
 
 def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
