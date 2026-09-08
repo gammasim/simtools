@@ -21,16 +21,32 @@ def _column_values(table, name, unit=None):
     return np.asarray(column, dtype=float)
 
 
-def _interpolate(x, y, points):
-    """Linearly interpolate with endpoint clipping."""
+def _interpolate(x, y, points, clip=False):
+    """Linearly interpolate, optionally returning zero outside the table."""
     order = np.argsort(np.asarray(x, dtype=float))
     x = np.asarray(x, dtype=float)[order]
     y = np.asarray(y, dtype=float)[order]
+    points = np.asarray(points, dtype=float)
     if len(x) == 0:
-        return np.zeros_like(np.asarray(points, dtype=float))
+        return np.zeros_like(points)
     if len(x) == 1:
-        return np.full_like(np.asarray(points, dtype=float), y[0])
-    return np.interp(points, x, y)
+        result = np.full_like(points, y[0])
+    else:
+        result = np.interp(points, x, y)
+    if clip:
+        result = np.where((points < x[0]) | (points > x[-1]), 0.0, result)
+    return result
+
+
+def _nearest(x, y, points):
+    """Return values at the nearest supporting points."""
+    order = np.argsort(np.asarray(x, dtype=float))
+    x = np.asarray(x, dtype=float)[order]
+    y = np.asarray(y, dtype=float)[order]
+    points = np.asarray(points, dtype=float)
+    if len(x) == 0:
+        return np.zeros_like(points)
+    return y[np.argmin(np.abs(points[..., np.newaxis] - x), axis=-1)]
 
 
 def _parameter_table(model, parameter_name):
@@ -64,6 +80,15 @@ def _table_from_file(file_name):
     return read_simtel_table("nsb_reference_spectrum", file_name)
 
 
+def _same_table_source(first, second):
+    """Return whether two loaded tables came from the same source file."""
+    first_source = first.meta.get("File")
+    second_source = second.meta.get("File")
+    if not first_source or not second_source:
+        return False
+    return Path(first_source).resolve() == Path(second_source).resolve()
+
+
 def _value_column(table, candidates):
     """Find the first available dependent column."""
     for name in candidates:
@@ -90,7 +115,12 @@ def _weights(model, parameter_name):
 
 
 def _spectral_curve(
-    table, wavelengths, model=None, weighting_parameter=None, candidates=("efficiency",)
+    table,
+    wavelengths,
+    model=None,
+    weighting_parameter=None,
+    candidates=("efficiency",),
+    clip=False,
 ):
     """Return a one-dimensional spectral curve, averaging angle-dependent ECSV data."""
     wavelength_name = _value_column(table, ("wavelength", "Wavelength"))
@@ -110,13 +140,14 @@ def _spectral_curve(
             weights = np.ones(len(angles))
         else:
             weight_angles, weight_values = _weights(model, weighting_parameter)
-            weights = _interpolate(weight_angles, weight_values, angles)
+            weights = _nearest(weight_angles, weight_values, angles)
         curves = np.array(
             [
                 _interpolate(
                     _column_values(table, wavelength_name, u.nm),
                     _column_values(table, name),
                     wavelengths,
+                    clip=clip,
                 )
                 for name in value_columns
             ]
@@ -130,6 +161,7 @@ def _spectral_curve(
             _column_values(table, wavelength_name, u.nm),
             _column_values(table, value_name),
             wavelengths,
+            clip=clip,
         )
 
     angles = _column_values(table, angle_name, u.deg)
@@ -153,9 +185,9 @@ def _spectral_curve(
         if weights is None:
             curve[index] = np.mean(values)
         else:
-            value_weights = _interpolate(weight_angles, weights, value_angles)
+            value_weights = _nearest(weight_angles, weights, value_angles)
             curve[index] = np.average(values, weights=value_weights)
-    return _interpolate(unique_wavelengths, curve, wavelengths)
+    return _interpolate(unique_wavelengths, curve, wavelengths, clip=clip)
 
 
 def _atmospheric_transmission(table, wavelengths, altitude_km, airmass):
@@ -190,9 +222,20 @@ def _emission_altitude(profile, x_max, airmass):
     altitude = _column_values(profile, "altitude", u.km)
     thickness = _column_values(profile, _value_column(profile, ("thickness", "thick")))
     vertical_depth = x_max / airmass
-    # The profile is normally ordered from the top of the atmosphere downwards.
     order = np.argsort(thickness)
-    return float(np.interp(vertical_depth, thickness[order], altitude[order]))
+    thickness = thickness[order]
+    altitude = altitude[order]
+    top_altitude = float(np.max(altitude))
+    positive = thickness > 0.0
+    if not np.any(positive):
+        raise ValueError("Atmospheric profile must contain positive thickness values.")
+    thickness = thickness[positive]
+    altitude = altitude[positive]
+    if vertical_depth <= 0.0 or vertical_depth < thickness[0]:
+        return top_altitude
+    if vertical_depth >= thickness[-1]:
+        return float(altitude[0])
+    return float(np.interp(np.log(vertical_depth), np.log(thickness), altitude))
 
 
 class CameraEfficiencyCalculator:
@@ -249,6 +292,7 @@ class CameraEfficiencyCalculator:
             _parameter_table(telescope, "quantum_efficiency"),
             wavelengths,
             candidates=("efficiency", "quantum_efficiency"),
+            clip=True,
         )
         mirror_class = telescope.get_parameter_value("mirror_class")
         reflection = self._mirror_reflection(wavelengths, mirror_class)
@@ -319,7 +363,11 @@ class CameraEfficiencyCalculator:
         )
         wavelength_table = self._optional_parameter_table("lightguide_efficiency_vs_wavelength")
         funnel = np.full_like(wavelengths, mean_funnel)
-        if wavelength_table is not None and len(wavelength_table) > 0:
+        if (
+            wavelength_table is not None
+            and len(wavelength_table) > 0
+            and not _same_table_source(angle_table, wavelength_table)
+        ):
             funnel *= _spectral_curve(
                 wavelength_table, wavelengths, candidates=("efficiency", "transmission")
             )

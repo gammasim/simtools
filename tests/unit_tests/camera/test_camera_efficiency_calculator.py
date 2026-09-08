@@ -13,6 +13,7 @@ from simtools.camera.camera_efficiency_calculator import (
     _emission_altitude,
     _interpolate,
     _parameter_table,
+    _same_table_source,
     _spectral_curve,
 )
 
@@ -20,6 +21,22 @@ from simtools.camera.camera_efficiency_calculator import (
 def test_interpolate_clips_and_sorts_support_points():
     result = _interpolate([10.0, 0.0], [2.0, 1.0], [-1.0, 5.0, 20.0])
     np.testing.assert_allclose(result, [1.0, 1.5, 2.0])
+
+
+def test_interpolate_can_clip_outside_support_points():
+    result = _interpolate([0.0, 10.0], [1.0, 2.0], [-1.0, 5.0, 11.0], clip=True)
+    np.testing.assert_allclose(result, [0.0, 1.5, 0.0])
+
+
+def test_same_table_source_compares_loaded_table_metadata(tmp_test_directory):
+    source = Path(tmp_test_directory) / "lightguide.dat"
+    first = Table(meta={"File": source})
+    second = Table(meta={"File": source})
+    different = Table(meta={"File": Path(tmp_test_directory) / "other.dat"})
+
+    assert _same_table_source(first, second)
+    assert not _same_table_source(first, different)
+    assert not _same_table_source(first, Table())
 
 
 @pytest.mark.parametrize("parameter_name", ["quantum_efficiency", "fake_mirror_list"])
@@ -123,6 +140,34 @@ def test_spectral_curve_averages_rpol_columns():
     np.testing.assert_allclose(result, [0.5, 0.3])
 
 
+def test_spectral_curve_uses_nearest_incidence_weight():
+    table = Table(
+        {
+            "wavelength": [400.0, 400.0] * u.nm,
+            "angle": [0.0, 10.0] * u.deg,
+            "efficiency": [0.8, 0.4],
+        }
+    )
+
+    class Model:
+        def get_parameter_table(self, name):
+            assert name == "incidence"
+            return Table(
+                {
+                    "incidence_angle": [0.0, 10.0] * u.deg,
+                    "fraction": [0.25, 0.75],
+                }
+            )
+
+    result = _spectral_curve(
+        table,
+        np.array([400.0]),
+        model=Model(),
+        weighting_parameter="incidence",
+    )
+    assert result[0] == pytest.approx(0.5)
+
+
 def test_spectral_curve_rejects_an_incomplete_angle_grid():
     table = Table(
         {
@@ -152,10 +197,10 @@ def test_emission_altitude_scales_xmax_by_airmass():
     profile = Table(
         {
             "altitude": [0.0, 10.0] * u.km,
-            "thickness": [1000.0, 0.0] * (u.g / u.cm**2),
+            "thickness": [1000.0, 100.0] * (u.g / u.cm**2),
         }
     )
-    assert _emission_altitude(profile, 500.0, 2.0) == pytest.approx(7.5)
+    assert _emission_altitude(profile, 500.0, 2.0) == pytest.approx(6.0206, rel=1e-4)
 
 
 def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
@@ -249,6 +294,54 @@ def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
 
     result = CameraEfficiencyCalculator(telescope, site).calculate()
     assert result["ref"][0] == pytest.approx(0.8 * 0.4)
+
+
+def test_funnel_does_not_apply_same_source_for_angle_and_wavelength():
+    class Model:
+        def __init__(self, tables):
+            self.tables = tables
+
+        def get_parameter_table(self, name):
+            return self.tables[name]
+
+        def get_parameter_value(self, name):
+            return {"mirror_class": 1, "parabolic_dish": False}[name]
+
+        def get_parameter_value_with_unit(self, name):
+            assert name == "dish_shape_length"
+            return 10.0 * u.m
+
+        def get_telescope_effective_focal_length(self, *_args):
+            return 10.0
+
+    source = Path("lightguide.dat")
+    angle = Table(
+        {"angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]},
+        meta={"File": source},
+    )
+    wavelength = Table(
+        {"wavelength": [200.0, 1000.0] * u.nm, "efficiency": [0.5, 0.5]},
+        meta={"File": source},
+    )
+    mirror = Table(
+        {
+            "mirror_x": [1.0] * u.cm,
+            "mirror_y": [0.0] * u.cm,
+            "mirror_diameter": [1.0] * u.cm,
+            "shape_type": [0.0],
+            "mirror_z": [0.0] * u.cm,
+        }
+    )
+    tables = {
+        "lightguide_efficiency_vs_incidence_angle": angle,
+        "lightguide_efficiency_vs_wavelength": wavelength,
+        "mirror_list": mirror,
+    }
+    calculator = CameraEfficiencyCalculator(Model(tables), Model(tables))
+
+    _, funnel, _ = calculator._funnel_efficiency(np.array([400.0]), 1)
+
+    assert funnel[0] == pytest.approx(0.8)
 
 
 def test_calculator_returns_camera_efficiency_table():
