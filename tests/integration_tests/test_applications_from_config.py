@@ -272,6 +272,7 @@ def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mo
     """Use the Git source configured in .env when no command-line option is given."""
     request = mocker.MagicMock()
     request.config.getoption.return_value = None
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", "../simulation-models.git")
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "6.0.2")
 
