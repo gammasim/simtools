@@ -78,13 +78,6 @@ applications:
         - left: job_grid_summary.simulation_rows
           equals: table.row_count
     - path_descriptor: output_path
-      output_sub_path: nsb
-      file: overwrite_nsb_asum220.yaml
-      validations:
-      - type: reference
-        file: tests/resources/generated/bias_curve_scan_grids/nsb/overwrite_nsb_asum220.yaml
-        tolerance: 1.0e-05
-    - path_descriptor: output_path
       output_sub_path: proton
       file: base_grid.ecsv
       validations:
@@ -138,13 +131,6 @@ applications:
         relations:
         - left: job_grid_summary.simulation_rows
           equals: table.row_count
-    - path_descriptor: output_path
-      output_sub_path: proton
-      file: overwrite_proton_asum220.yaml
-      validations:
-      - type: reference
-        file: tests/resources/generated/bias_curve_scan_grids/proton/overwrite_proton_asum220.yaml
-        tolerance: 1.0e-05
   model_version_use_current: true
   test_name: generate_bias_curve_submissions_lstn-01
 schema_name: application_workflow.metaschema

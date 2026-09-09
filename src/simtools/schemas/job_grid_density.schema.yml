@@ -107,6 +107,10 @@ data:
         description: Label identifying a parameter-scan grid point.
         required: false
         type: string
+      - name: model_parameter_set
+        description: Name of the model parameter set from metadata.model_parameter_sets.
+        required: false
+        type: string
 ---
 title: Schema for production_generate_grid density output
 schema_version: 0.3.0
@@ -213,6 +217,10 @@ data:
         type: string
       - name: scan_label
         description: Label identifying a parameter-scan grid point.
+        required: false
+        type: string
+      - name: model_parameter_set
+        description: Name of the model parameter set from metadata.model_parameter_sets.
         required: false
         type: string
       - name: telescope
