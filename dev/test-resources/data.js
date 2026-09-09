@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788955634073,
+  "lastUpdate": 1788968062321,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -25946,6 +25946,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 423.1484375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "94466479+EshitaJoshi@users.noreply.github.com",
+            "name": "Eshita Joshi",
+            "username": "EshitaJoshi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1bde6198279a8bb4dc8f768fc08b017499f2f88f",
+          "message": "Merge pull request #2494 from gammasim/remove-overwrite-files\n\nRemove overwrite files",
+          "timestamp": "2026-09-09T17:18:01+02:00",
+          "tree_id": "1e38216b253f4bf88fe054a39d1b5588379116d2",
+          "url": "https://github.com/gammasim/simtools/commit/1bde6198279a8bb4dc8f768fc08b017499f2f88f"
+        },
+        "date": 1788968048000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 52.508603072,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 52.31,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 424.64453125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260831.293.1 | container=None | sample_interval_s=0.2"
           }
