@@ -22,10 +22,11 @@ Follow `AGENTS.md` and
 
 ## Model Source and Environment
 
-Integration tests use filesystem or Git simulation models by default. Pass
-`--simulation_models_path`, or pass `--simulation_models_git_path` and
-`--simulation_models_git_revision`. These sources take precedence over MongoDB
-settings and cannot be combined with them.
+Integration tests can read simulation models from filesystem, Git, or MongoDB. To use
+filesystem or Git sources, pass `--simulation_models_path`, or pass
+`--simulation_models_git_path` and `--simulation_models_git_revision`. When set,
+these sources take precedence over MongoDB settings; filesystem and Git sources
+cannot be configured together.
 
 MongoDB is only needed for workflows marked `requires_mongodb: true` and
 `simtools-db-*` applications. Such workflows are skipped when no MongoDB
