@@ -17,9 +17,9 @@ Example metadata structure:
 #     lst_asum220:
 #       LSTN-01:
 #         asum_threshold: {value: 220}
-#     mst_asum150:
+#     mst_dsum150:
 #       MSTN-01:
-#         asum_threshold: {value: 150}
+#         dsum_threshold: {value: 150}
 #       OBS-North:
 #         nsb_scaling_factor: {value: 2.0}
 """
@@ -225,16 +225,9 @@ def _build_parameter_sets(param_combinations, overwrite_base, param_specs):
     parameter_sets = {}
 
     for combo_spec in param_combinations:
-        # Build the parameter set name
         param_set_name = _build_parameter_set_name(combo_spec["combo"], param_specs)
-
-        # Build the overwrite data for this combination
         overwrite_data = _build_overwrite_data(overwrite_base, combo_spec["combo"])
-
-        # Extract just the changes section for storage in metadata
         changes = _extract_changes_from_overwrite(overwrite_data)
-
-        # Store the changes dictionary indexed by the parameter set name
         parameter_sets[param_set_name] = changes
 
     return parameter_sets
@@ -289,17 +282,13 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         f"Expanding {len(base_rows)} base rows with {len(param_combinations)} scan combinations."
     )
 
-    # Build parameter sets for metadata
     parameter_sets = _build_parameter_sets(param_combinations, overwrite_base, param_specs)
-
-    # Add parameter sets to metadata
     if metadata is None:
         metadata = {}
     metadata["model_parameter_sets"] = parameter_sets
 
     expanded_rows = []
     for combo_spec in param_combinations:
-        # Build the parameter set name for this combination
         param_set_name = _build_parameter_set_name(combo_spec["combo"], param_specs)
 
         combo_rows = []
@@ -324,10 +313,7 @@ def _clean_scan_grid_metadata(output_file):
     """Remove unwanted metadata from scan grid file, keeping only essential fields."""
     output_path = Path(output_file)
 
-    # Read the file
     table = Table.read(output_path, format=_ECSV_FORMAT)
-
-    # Create clean metadata with only essential fields
     clean_meta = {}
     for key in [
         "model_parameter_sets",
@@ -339,8 +325,5 @@ def _clean_scan_grid_metadata(output_file):
         if key in table.meta:
             clean_meta[key] = table.meta[key]
 
-    # Update table metadata
     table.meta = clean_meta
-
-    # Write back to file
     table.write(output_path, format=_ECSV_FORMAT, overwrite=True)

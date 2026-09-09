@@ -15,10 +15,8 @@ from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
-    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
+    _resolve_job_grid_arguments,
     build_simulate_prod_job_specs,
-    job_grid_row_to_simulate_prod_args,
-    read_job_grid,
 )
 from simtools.production_configuration.job_metadata import build_production_job_manifest
 from simtools.production_configuration.production_file_selection import (
@@ -156,125 +154,6 @@ def _post_parse(args_dict, config_sources, parser):
     )
 
 
-def _resolve_job_grid_arguments(args_dict, config_sources, parser):
-    """Merge selected job-grid row values into args after rejecting ambiguous input."""
-    explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
-    job_grid_row_is_explicit = "job_grid_row" in explicit_keys
-
-    if not _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
-        return
-
-    _validate_no_conflicting_production_parameters(explicit_keys, parser)
-    rows, metadata = _load_and_validate_job_grid(args_dict, parser)
-    is_parameter_scan = _check_parameter_scan(rows)
-
-    selected_row = None
-    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
-        selected_row, rows = _select_rows(
-            args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser
-        )
-
-    if args_dict.get("backend", "local") != "local":
-        args_dict["_job_grid_rows"] = rows
-        args_dict["_job_grid_metadata"] = metadata
-        return
-
-    _finalize_args_dict(args_dict, rows, metadata, selected_row, parser)
-
-
-def _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
-    """Handle case where no job grid file is provided."""
-    if args_dict.get("job_grid_file"):
-        return True
-    if job_grid_row_is_explicit:
-        parser.error("'--job_grid_row' requires '--job_grid_file'.")
-    _validate_layout_selection(args_dict, parser)
-    _validate_simulation_arguments(args_dict, parser)
-    return False
-
-
-def _validate_no_conflicting_production_parameters(explicit_keys, parser):
-    """Reject explicit production parameters combined with '--job_grid_file'."""
-    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
-    if conflicting_keys:
-        parser.error(
-            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
-            + ", ".join(conflicting_keys)
-        )
-
-
-def _load_and_validate_job_grid(args_dict, parser):
-    """Load job grid and validate its contents."""
-    rows, metadata = read_job_grid(args_dict["job_grid_file"])
-    if not rows:
-        parser.error("Job grid contains no rows to process.")
-    _validate_array_layout_names(rows, parser)
-    return rows, metadata
-
-
-def _validate_array_layout_names(rows, parser):
-    """Validate that all rows have array_layout_name."""
-    missing_layout_rows = [
-        index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
-    ]
-    if missing_layout_rows:
-        parser.error(
-            "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
-        )
-
-
-def _check_parameter_scan(rows):
-    """Check if the job grid is a parameter scan grid."""
-    has_model_parameter_set = any(row.get("model_parameter_set") for row in rows)
-    logger.debug("has_model_parameter_set: %s", has_model_parameter_set)
-    return has_model_parameter_set
-
-
-def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser):
-    """Select rows based on job_grid_row and grid type."""
-    row_index = args_dict.get("job_grid_row")
-    if job_grid_row_is_explicit and row_index is not None:
-        selected_row = _select_explicit_row(rows, row_index, parser)
-        return selected_row, [selected_row]
-    if is_parameter_scan:
-        return None, rows
-    if row_index is not None:
-        return _select_implicit_row(rows, row_index, parser), rows
-    return rows[0], [rows[0]]
-
-
-def _select_explicit_row(rows, row_index, parser):
-    """Select a row by explicit index."""
-    if row_index < 1 or row_index > len(rows):
-        parser.error(f"Row index {row_index} is out of range for a grid with {len(rows)} row(s).")
-    return rows[row_index - 1]
-
-
-def _select_implicit_row(rows, row_index, parser):
-    """Select a row by implicit index."""
-    if row_index < 1 or row_index > len(rows):
-        parser.error(f"Row index {row_index} is out of range for a grid with {len(rows)} row(s).")
-    return rows[row_index - 1]
-
-
-def _finalize_args_dict(args_dict, rows, metadata, selected_row, parser):
-    """Finalize the args_dict based on selected rows."""
-    if selected_row is None:
-        logger.info(f"Setting _job_grid_rows to {len(rows)} rows for parameter scan")
-        args_dict["_job_grid_rows"] = rows
-        args_dict["_job_grid_metadata"] = metadata
-    else:
-        args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
-        _validate_simulation_arguments(args_dict, parser)
-
-
-def _validate_layout_selection(args_dict, parser):
-    """Require a direct array-layout selection when no job grid supplies one."""
-    if args_dict.get("array_layout_name"):
-        return
-    parser.error("the following argument is required: --array_layout_name")
-
-
 def _execute_job_grid(args_dict):
     """Execute all selected production-grid rows through the configured backend."""
     job_specs = build_simulate_prod_job_specs(
@@ -291,12 +170,6 @@ def _execute_job_grid(args_dict):
         execute_jobs(job_specs, options)
     else:
         submit_jobs(job_specs, options)
-
-
-def _validate_simulation_arguments(args_dict, parser):
-    """Validate requirements that depend on the selected simulation software."""
-    if "corsika" in args_dict["simulation_software"] and not args_dict.get("primary"):
-        parser.error("the following argument is required for CORSIKA: --primary")
 
 
 def _write_job_metadata(args_dict, simulator, output_directory):

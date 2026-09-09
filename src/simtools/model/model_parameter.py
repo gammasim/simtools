@@ -435,6 +435,8 @@ class ModelParameter:
             return None
         if self._has_overrides_for_collections(("configuration_sim_telarray",)):
             return ("configuration_corsika",)
+        if self._has_overrides_for_collections(("configuration_corsika",)):
+            return ("configuration_sim_telarray",)
         return ignore_collections
 
     def _has_overrides_for_collections(self, ignore_collections):
