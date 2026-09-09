@@ -305,8 +305,7 @@ def _apply_telescope_specific_pixel_transform(camera, camera_config_file, rotate
 
     rotate_angle = rotate_angle.to(u.deg)
 
-    array_element_type = names.get_array_element_type_from_name(camera.telescope_name)
-    if "SST" in array_element_type or "SCT" in array_element_type:
+    if is_two_mirror_telescope(camera.telescope_name):
         total_rotation = (90 * u.deg) - rotate_angle
     else:
         total_rotation = (-90 * u.deg) - rotate_angle
