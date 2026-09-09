@@ -46,11 +46,6 @@ data:
         type: int64
         unit: dimensionless
         required: true
-    table_metadata:
-      - name: simtelarray_original_file_name
-        description: Original simulator output basename
-        type: string
-        required: false
 instrument:
   class: Structure
 activity:
@@ -70,6 +65,11 @@ simulation_software:
   - name: sim_telarray
     table_format: mirror_list
     meta_parameter_mode: add
+    serialization:
+      columns: [mirror_x, mirror_y, mirror_diameter, focal_length, shape_type, mirror_z, mirror_panel_id]
+      row_sort_keys: [mirror_panel_id]
+      float_format: ".12g"
+      write_comments: false
 ---
 title: Schema for mirror_list model parameter
 schema_version: 0.1.0

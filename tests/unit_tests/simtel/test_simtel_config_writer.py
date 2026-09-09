@@ -525,7 +525,7 @@ def test_convert_segmentation_records_uses_parameter_schema_version(
 ):
     config_path = Path(tmp_test_directory) / "telescope.cfg"
     with mock.patch(
-        "simtools.simtel.simtel_config_writer.simtel_table_writer.write_mirror_segmentation",
+        "simtools.simtel.simtel_config_writer.segmentation.write_mirror_segmentation",
         return_value="primary_mirror_segmentation-telescope.dat",
     ) as write_mirror_segmentation:
         simtel_config_writer._convert_model_parameters_to_simtel_format(

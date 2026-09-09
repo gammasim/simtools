@@ -38,6 +38,12 @@ definitions:
       name:
         type: string
         description: "name of model parameter"
+      surface:
+        type: string
+        enum:
+          - primary
+          - secondary
+        description: "Optical surface represented by a mirror parameter"
       developer_note:
         type: string
         description: "notes for developers"
@@ -346,6 +352,9 @@ definitions:
         $ref: '#/definitions/SimulationSoftwareOutputValueSchema'
         description: |-
           "Optional emitted-value schema for software-specific serialized output"
+      serialization:
+        $ref: '#/definitions/SerializationContract'
+        description: "Declared serialization contract for table-valued parameters"
     required:
       - name
     title: SimulationSoftware
@@ -385,6 +394,51 @@ definitions:
     required:
       - kind
     title: SimulationSoftwareOutputValueSchema
+  SerializationContract:
+    type: object
+    additionalProperties: false
+    properties:
+      columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      optional_columns:
+        type: array
+        items:
+          type: string
+      allowed_columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      row_sort_keys:
+        type: array
+        items:
+          type: string
+      sort_keys:
+        type: array
+        items:
+          type: string
+      matrix_axes:
+        type: array
+        items:
+          type: string
+        minItems: 2
+        maxItems: 2
+      value_column:
+        type: string
+      float_format:
+        type: string
+      write_comments:
+        type: boolean
+      units:
+        type: object
+        additionalProperties:
+          type: string
+    required:
+      - columns
+    title: SerializationContract
   DataUnion:
     anyOf:
       - type: array

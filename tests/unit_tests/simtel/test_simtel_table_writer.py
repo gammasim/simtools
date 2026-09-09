@@ -7,6 +7,19 @@ from astropy.table import QTable
 import simtools.simtel.simtel_table_writer as simtel_table_writer
 
 
+def _contract(table_format, columns, **kwargs):
+    """Build a complete test serialization contract."""
+    return {
+        "table_format": table_format,
+        "columns": columns,
+        "row_sort_keys": kwargs.pop("row_sort_keys", []),
+        "float_format": kwargs.pop("float_format", ".12g"),
+        "write_comments": False,
+        "units": kwargs.pop("units", dict.fromkeys(columns, "dimensionless")),
+        **kwargs,
+    }
+
+
 def test_write_mirror_segmentation(tmp_test_directory):
     result = simtel_table_writer.write_mirror_segmentation(
         [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
@@ -18,11 +31,15 @@ def test_write_mirror_segmentation(tmp_test_directory):
     assert "RING 2 1 2 90 0 0" in (tmp_test_directory / result).read_text(encoding="utf-8")
 
 
-def test_write_ecsv_table_uses_original_filename(tmp_test_directory):
+def test_write_ecsv_table_uses_explicit_filename(tmp_test_directory):
     table = QTable({"time": [0.0, 1.0], "amplitude": [0.0, 1.0]})
-    table.meta["simtelarray_original_file_name"] = "pulse.dat"
 
-    result = simtel_table_writer.write_simtel_table(table, tmp_test_directory, table_format="pulse")
+    result = simtel_table_writer.write_simtel_table(
+        table,
+        tmp_test_directory,
+        output_name="pulse.dat",
+        contract=_contract("pulse", ["time", "amplitude"], float_format=".1f"),
+    )
 
     assert result == "pulse.dat"
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
@@ -31,25 +48,15 @@ def test_write_ecsv_table_uses_original_filename(tmp_test_directory):
     ]
 
 
-def test_write_ecsv_table_accepts_output_filename(tmp_test_directory):
-    table = QTable({"time": [0.0], "amplitude": [1.0]})
-    table.meta["simtelarray_original_file_name"] = "pulse.dat"
-
-    result = simtel_table_writer.write_simtel_table(
-        table,
-        tmp_test_directory,
-        table_format="pulse",
-        output_name="fadc_pulse_shape-CTAO-MSTS-03.dat",
-    )
-
-    assert result == "fadc_pulse_shape-CTAO-MSTS-03.dat"
-
-
 def test_write_ecsv_table_rejects_unsafe_filename(tmp_test_directory):
-    table = QTable({"x": [1.0]})
-    table.meta["simtelarray_original_file_name"] = "../pulse.dat"
+    table = QTable({"time": [0.0], "amplitude": [1.0]})
     with pytest.raises(ValueError, match="Unsafe"):
-        simtel_table_writer.write_simtel_table(table, tmp_test_directory)
+        simtel_table_writer.write_simtel_table(
+            table,
+            tmp_test_directory,
+            output_name="../pulse.dat",
+            contract=_contract("pulse", ["time", "amplitude"]),
+        )
 
 
 def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
@@ -61,14 +68,18 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
             "reflectivity_rms": [0.1, 0.1, 0.1, 0.1],
         }
     )
-    table.meta.update(
-        {
-            "simtelarray_original_file_name": "reflectivity.dat",
-        }
-    )
-
     result = simtel_table_writer.write_simtel_table(
-        table, tmp_test_directory, table_format="rpol_matrix"
+        table,
+        tmp_test_directory,
+        contract=_contract(
+            "rpol_matrix",
+            ["wavelength", "reflectivity"],
+            allowed_columns=["wavelength", "angle", "reflectivity", "reflectivity_rms"],
+            row_sort_keys=["wavelength", "angle"],
+            matrix_axes=["wavelength", "angle"],
+            value_column="reflectivity",
+            float_format=".1f",
+        ),
     )
 
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
@@ -81,10 +92,18 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
 
 def test_write_rpol_table_preserves_one_dimensional_table(tmp_test_directory):
     table = QTable({"wavelength": [300.0, 400.0], "reflectivity": [0.8, 0.9]})
-    table.meta["simtelarray_original_file_name"] = "reflectivity.dat"
-
     result = simtel_table_writer.write_simtel_table(
-        table, tmp_test_directory, table_format="rpol_matrix"
+        table,
+        tmp_test_directory,
+        contract=_contract(
+            "rpol_matrix",
+            ["wavelength", "reflectivity"],
+            allowed_columns=["wavelength", "angle", "reflectivity"],
+            row_sort_keys=["wavelength", "angle"],
+            matrix_axes=["wavelength", "angle"],
+            value_column="reflectivity",
+            float_format=".1f",
+        ),
     )
 
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
@@ -101,55 +120,109 @@ def test_write_atmospheric_transmission_groups_rows_by_wavelength(tmp_test_direc
             "extinction": [0.2, 0.1, 0.4, 0.3],
         }
     )
-    table.meta["simtelarray_original_file_name"] = "atmosphere.dat"
     table.meta["observatory_level"] = 1.5 * u.km
 
     result = simtel_table_writer.write_simtel_table(
         table,
         tmp_test_directory,
-        table_format="atmospheric_transmission",
+        contract=_contract(
+            "atmospheric_transmission",
+            ["wavelength", "altitude", "extinction"],
+            row_sort_keys=["wavelength", "altitude"],
+            matrix_axes=["wavelength", "altitude"],
+            value_column="extinction",
+            float_format=".1f",
+        ),
     )
 
     assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
-        "# H2= 1.5, H1= 2.0 1.0",
-        "300.0 0.2 0.1",
-        "400.0 0.4 0.3",
+        "# H2= 1.5, H1= 1.0 2.0",
+        "300.0 0.1 0.2",
+        "400.0 0.3 0.4",
     ]
 
 
-def test_write_simtel_table_two_columns(tmp_test_directory):
-    value = {
-        "columns": ["time", "amplitude"],
-        "rows": [[-1.0, 0.0], [0.0, 0.5], [1.0, 1.0]],
-    }
+def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
+    table = QTable(
+        {
+            "wavelength": [300.0, 400.0, 400.0],
+            "altitude": [1.0, 1.0, 2.0],
+            "extinction": [0.1, 0.3, 0.4],
+        }
+    )
     result = simtel_table_writer.write_simtel_table(
-        "fadc_pulse_shape", value, tmp_test_directory, "LSTN-01"
+        table,
+        tmp_test_directory,
+        contract=_contract(
+            "atmospheric_transmission",
+            ["wavelength", "altitude", "extinction"],
+            row_sort_keys=["wavelength", "altitude"],
+            matrix_axes=["wavelength", "altitude"],
+            value_column="extinction",
+            missing_value=99999,
+            float_format=".1f",
+        ),
     )
 
-    assert result == "fadc_pulse_shape-LSTN-01.dat"
-    out_file = tmp_test_directory / result
-    assert out_file.exists()
-    lines = out_file.read_text(encoding="utf-8").splitlines()
-    assert lines[0] == "# time amplitude"
-    assert lines[1] == "-1.0 0.0"
-    assert lines[2] == "0.0 0.5"
-    assert lines[3] == "1.0 1.0"
+    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+        "# H1= 1.0 2.0",
+        "300.0 0.1 99999",
+        "400.0 0.3 0.4",
+    ]
 
 
-def test_write_simtel_table_raises_on_non_dict(tmp_test_directory):
-    with pytest.raises(ValueError, match="'columns' and 'rows' keys"):
+def test_write_simtel_table_rejects_structured_table_payload(tmp_test_directory):
+    with pytest.raises(TypeError, match="Astropy table"):
         simtel_table_writer.write_simtel_table(
-            "fadc_pulse_shape", "some_file.dat", tmp_test_directory, "LSTN-01"
+            {"columns": ["time", "amplitude"], "rows": [[0.0, 1.0]]},
+            tmp_test_directory,
+            contract=_contract("pulse", ["time", "amplitude"]),
         )
 
 
-def test_write_simtel_table_raises_on_missing_rows_key(tmp_test_directory):
-    with pytest.raises(ValueError, match="'columns' and 'rows' keys"):
-        simtel_table_writer.write_simtel_table(
-            "fadc_pulse_shape",
-            {"columns": ["time", "amplitude"]},
-            tmp_test_directory,
-            "LSTN-01",
+def test_write_simtel_table_is_invariant_to_input_row_order(tmp_test_directory):
+    contract = _contract("plain", ["time", "amplitude"], row_sort_keys=["time"], float_format=".3f")
+    first = QTable({"time": [2.0, 0.0, 1.0], "amplitude": [0.2, 0.0, 0.1]})
+    second = QTable({"time": [1.0, 2.0, 0.0], "amplitude": [0.1, 0.2, 0.0]})
+
+    simtel_table_writer.write_simtel_table(
+        first, tmp_test_directory, contract=contract, output_name="first.dat"
+    )
+    simtel_table_writer.write_simtel_table(
+        second, tmp_test_directory, contract=contract, output_name="second.dat"
+    )
+
+    assert (tmp_test_directory / "first.dat").read_text(encoding="utf-8") == (
+        tmp_test_directory / "second.dat"
+    ).read_text(encoding="utf-8")
+
+
+def test_validate_simtel_serialization_rejects_incomplete_matrix():
+    table = QTable(
+        {
+            "wavelength": [300.0, 400.0, 400.0],
+            "incidence_angle": [0.0, 0.0, 10.0],
+            "reflectivity": [0.8, 0.9, 0.8],
+        }
+    )
+    contract = _contract(
+        "rpol_matrix",
+        ["wavelength", "reflectivity"],
+        allowed_columns=["wavelength", "incidence_angle", "reflectivity"],
+        matrix_axes=["wavelength", "incidence_angle"],
+        value_column="reflectivity",
+    )
+
+    with pytest.raises(ValueError, match="complete Cartesian grid"):
+        simtel_table_writer.validate_simtel_serialization(table, contract)
+
+
+def test_validate_simtel_serialization_rejects_undeclared_column():
+    table = QTable({"time": [0.0], "amplitude": [1.0], "unexpected": [2.0]})
+    with pytest.raises(ValueError, match="undeclared columns"):
+        simtel_table_writer.validate_simtel_serialization(
+            table,
+            _contract("plain", ["time", "amplitude"], row_sort_keys=["time"]),
         )
 
 

@@ -556,12 +556,8 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     }
 
     reader.get_model_parameter = Mock(return_value={"p": {"type": "dict", "value": {"x": [1]}}})
-    row_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.row_data_to_astropy_table",
-        return_value="table",
-    )
-    assert reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True) == "table"
-    row_table.assert_called_once_with({"x": [1]})
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True)
     assert reader.export_model_file("p", "North", "LSTN-01") is None
 
     reader.get_model_parameter.return_value = {"p": {"value": "p.ecsv"}}
@@ -576,20 +572,13 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     with pytest.raises(ValueError, match="Destination path is required"):
         reader.export_model_file("p", "North", "LSTN-01")
     assert reader.export_model_file("p", "North", "LSTN-01", dest="output") is None
-    read_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.read_simtel_table",
-        return_value="file-table",
-    )
-    assert (
+    with pytest.raises(ValueError, match="not an ECSV model table"):
         reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
-        == "file-table"
-    )
     assert reader.export_model_files.call_count == 3
-    read_table.assert_called_once_with("p", Path("output") / "p.dat")
 
 
-def test_reader_exports_embedded_parameter_as_ecsv(tmp_test_directory):
-    """Embedded table parameters are exported without a database handler."""
+def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
+    """Structured JSON parameters are not converted to ECSV tables."""
     source = Mock()
     reader = SimulationModelReader(source)
     reader.get_model_parameter = Mock(
@@ -606,48 +595,45 @@ def test_reader_exports_embedded_parameter_as_ecsv(tmp_test_directory):
         }
     )
 
-    output_files = reader.export_parameter_data(
-        parameter="pulse",
-        site="North",
-        array_element_name="LSTN-01",
-        output_file="pulse.json",
-        export_model_file_as_table=True,
-        dest=tmp_test_directory,
-    )
-
-    assert output_files == [Path(tmp_test_directory) / "pulse.ecsv"]
-    assert output_files[0].is_file()
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_parameter_data(
+            parameter="pulse",
+            site="North",
+            array_element_name="LSTN-01",
+            output_file="pulse.json",
+            export_model_file_as_table=True,
+            dest=tmp_test_directory,
+        )
 
 
 def test_reader_exports_file_parameter_and_table(tmp_test_directory, mocker):
-    """File-backed parameters support the original file and ECSV outputs."""
+    """File-backed ECSV parameters support the original file and ECSV outputs."""
     source = Mock()
     reader = SimulationModelReader(source)
     reader.get_model_parameter = Mock(
-        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.dat"}}
+        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.ecsv"}}
     )
-    source.export_model_files.return_value = {"mirror.dat": "copied"}
-    source_file = Path(tmp_test_directory) / "mirror.dat"
+    source.export_model_files.return_value = {"mirror.ecsv": "copied"}
+    source_file = Path(tmp_test_directory) / "mirror.ecsv"
     source_file.write_text("model", encoding="utf-8")
     table = mocker.Mock()
-    mocker.patch.object(reader_module.simtel_table_reader, "read_simtel_table", return_value=table)
+    source.get_parameter_table.return_value = table
 
     output_files = reader.export_parameter_data(
         parameter="mirror",
         site="North",
         array_element_name="LSTN-01",
-        output_file="mirror-copy.dat",
+        output_file="mirror-copy.ecsv",
         export_model_file=True,
         export_model_file_as_table=True,
         dest=tmp_test_directory,
     )
 
     assert output_files == [
-        Path(tmp_test_directory) / "mirror-copy.dat",
         Path(tmp_test_directory) / "mirror-copy.ecsv",
     ]
     assert output_files[0].is_file()
-    table.write.assert_called_once_with(output_files[1], format="ascii.ecsv", overwrite=True)
+    table.write.assert_called_once_with(output_files[0], format="ascii.ecsv", overwrite=True)
 
 
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):

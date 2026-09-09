@@ -61,10 +61,20 @@ Support modules for running sim_telarray.
 
 ## simtel_table_reader
 
+The reader is retained for explicit legacy-file migration and output validation;
+runtime model loading reads ECSV assets directly.
+
 (simtel-table-reader-1)=
 
 ```{eval-rst}
 .. automodule:: simtel.simtel_table_reader
+   :members:
+```
+
+## segmentation
+
+```{eval-rst}
+.. automodule:: simtel.segmentation
    :members:
 ```
 
@@ -74,6 +84,17 @@ Support modules for running sim_telarray.
 
 ```{eval-rst}
 .. automodule:: simtel.simtel_table_writer
+   :members:
+```
+
+## table_serializers
+
+Schema-declared contracts determine the column selection, units, ordering, and
+numeric representation of temporary sim_telarray tables. The serializers reject
+incomplete contracts and invalid matrix grids before creating a configuration.
+
+```{eval-rst}
+.. automodule:: simtel.table_serializers
    :members:
 ```
 

@@ -1,16 +1,19 @@
 """Writer for sim_telarray table data files."""
 
 import logging
+from itertools import product
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools.data_model import row_table_utils
-from simtools.data_model.mirror_segmentation import (
-    write_mirror_segmentation as _write_mirror_segmentation,
-)
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
+from simtools.simtel.segmentation import write_mirror_segmentation as _write_mirror_segmentation
+from simtools.simtel.table_serializers import (
+    validate_simtel_serialization as _validate_contract_table,
+)
+from simtools.simtel.table_serializers import write_simtel_table as _write_contract_table
 
 logger = logging.getLogger(__name__)
 
@@ -270,186 +273,256 @@ def _module_id(value):
 
 
 def write_simtel_table(
-    table_or_parameter,
-    value_or_dest,
-    dest_dir=None,
-    telescope_name=None,
+    table,
+    dest_dir,
     table_format=None,
     output_name=None,
+    contract=None,
 ):
-    """Write a table parameter to a space-separated ASCII file for sim_telarray.
+    """Write a validated ECSV table using its sim_telarray contract.
+
+    The contract controls positional column order, sorting, matrix axes, units,
+    and numeric formatting. Source metadata and ECSV column order are never
+    serialized.
 
     Parameters
     ----------
-    parameter_name : str
-        Parameter name, used as filename prefix.
-    value : dict
-        Table data with keys ``columns`` (list of str) and ``rows`` (list of lists).
-    dest_dir : str or Path
-        Directory to write the file into.
-    telescope_name : str
-        Telescope name, used as filename suffix.
+    table : astropy.table.Table
+        Validated model table.
+    dest_dir : str or pathlib.Path
+        Directory receiving the generated simulator file.
+    table_format : str, optional
+        Serialization format. Prefer passing ``contract`` from the parameter
+        schema; this argument is retained for direct adapter use.
     output_name : str, optional
-        Output basename for an ECSV table. If omitted, use the filename stored
-        in ``simtelarray_original_file_name`` metadata.
+        Deterministic output basename.
+    contract : dict, optional
+        Complete serialization contract.
 
     Returns
     -------
     str
-        Basename of the written file (``{parameter_name}-{telescope_name}.dat``).
+        Basename of the generated file.
 
     Raises
     ------
     ValueError
-        If ``value`` does not contain ``columns`` and ``rows`` keys.
+        If the table does not satisfy the serialization contract.
     """
-    if isinstance(table_or_parameter, Table):
-        return _write_ecsv_table(table_or_parameter, value_or_dest, table_format, output_name)
-
-    parameter_name = table_or_parameter
-    value = value_or_dest
-    if not isinstance(value, dict) or "columns" not in value or "rows" not in value:
-        raise ValueError(
-            f"Table value for '{parameter_name}' must be a dict with 'columns' and 'rows' keys, "
-            f"got {type(value).__name__}."
-        )
-
-    row_table_utils.validate_row_table_structure(parameter_name, value, require_column_units=False)
-
-    file_name = f"{parameter_name}-{telescope_name}.dat"
-    file_path = Path(dest_dir) / file_name
-    logger.debug(f"Writing sim_telarray table file {file_path}")
-
-    with open(file_path, "w", encoding="utf-8") as fh:
-        fh.write(f"# {' '.join(value['columns'])}\n")
-        for row in value["rows"]:
-            fh.write(" ".join(str(v) for v in row) + "\n")
-
-    return file_name
+    if not isinstance(table, Table):
+        raise TypeError(f"sim_telarray table writer requires an Astropy table, got {type(table)}")
+    if table_format is not None:
+        raise ValueError("table_format is schema-owned; pass the complete serialization contract")
+    return _write_contract_table(table, dest_dir, contract, output_name)
 
 
-def _write_ecsv_table(table, dest_dir, table_format=None, output_name=None):
-    """Write a validated ECSV table in its original sim_telarray representation."""
-    output_name = output_name or table.meta.get("simtelarray_original_file_name")
-    if not output_name:
-        raise ValueError("ECSV table metadata must define simtelarray_original_file_name")
-    output_path = Path(dest_dir) / Path(output_name).name
-    if Path(output_name).name != output_name:
-        raise ValueError(f"Unsafe sim_telarray output filename: {output_name}")
+def validate_simtel_serialization(table, contract):
+    """Validate the positional and matrix invariants declared by a contract.
 
-    format_name = table_format or "plain"
-    writers = {
-        "plain": _write_plain_table,
-        "pulse": _write_plain_table,
-        "mirror_list": _write_plain_table,
-        "rpol_matrix": _write_rpol_table,
-        "atmospheric_transmission": _write_atmospheric_transmission,
+    Parameters
+    ----------
+    table : astropy.table.Table
+        Table to validate.
+    contract : dict
+        Serialization contract from a model-parameter schema.
+
+    Raises
+    ------
+    ValueError
+        If columns, units, axes, or matrix cells violate the contract.
+    """
+    return _validate_contract_table(table, contract)
+
+
+def _validate_contract_definition(contract):
+    """Validate references between fields in a serialization contract."""
+    columns = contract.get("columns", [])
+    if not columns or len(columns) != len(set(columns)):
+        raise ValueError("sim_telarray serialization columns must be unique and non-empty")
+    optional = set(contract.get("optional_columns", []))
+    allowed = set(contract.get("allowed_columns", columns))
+    declared = allowed | optional
+    if not set(columns) <= declared:
+        raise ValueError("sim_telarray serialization allowed columns must include columns")
+    sort_keys = set(contract.get("row_sort_keys", contract.get("sort_keys", [])))
+    if not sort_keys <= declared:
+        raise ValueError("sim_telarray serialization sort keys must be declared columns")
+    matrix_axes = contract.get("matrix_axes", [])
+    if len(matrix_axes) not in (0, 2) or len(matrix_axes) != len(set(matrix_axes)):
+        raise ValueError("sim_telarray serialization matrix_axes must contain two unique axes")
+    if matrix_axes and not set(matrix_axes) <= declared:
+        raise ValueError("sim_telarray serialization matrix axes must be declared columns")
+    value_column = contract.get("value_column")
+    if value_column is not None and value_column not in declared:
+        raise ValueError("sim_telarray serialization value column must be declared")
+
+
+def _validate_contract_columns(table, columns, contract):
+    """Validate declared and present positional columns."""
+    if not columns or len(columns) != len(set(columns)):
+        raise ValueError("sim_telarray serialization columns must be unique and non-empty")
+    missing = sorted(set(columns) - set(table.colnames))
+    if missing:
+        raise ValueError(f"sim_telarray serialization is missing columns: {missing}")
+    format_name = contract.get("table_format", "plain")
+    if format_name in {"rpol_matrix", "atmospheric_transmission"}:
+        axes = contract.get("matrix_axes", [])
+        value_column = contract.get("value_column")
+        if len(axes) != 2 or value_column is None:
+            raise ValueError(f"{format_name} serialization requires two axes and a value column")
+        if value_column not in table.colnames:
+            raise ValueError(f"sim_telarray serialization is missing value column: {value_column}")
+    allowed = set(contract.get("allowed_columns", columns))
+    allowed.update(contract.get("optional_columns", []))
+    unexpected = sorted(set(table.colnames) - allowed)
+    if unexpected:
+        raise ValueError(f"sim_telarray serialization has undeclared columns: {unexpected}")
+
+
+def _validate_contract_units(table, contract):
+    """Validate physical units declared by a serialization contract."""
+    for name, unit in contract.get("units", {}).items():
+        if name not in table.colnames:
+            continue
+        actual = getattr(table[name], "unit", None)
+        if unit == "dimensionless" and actual is None:
+            continue
+        try:
+            matches = actual is not None and u.Unit(actual) == u.Unit(unit)
+        except (TypeError, ValueError, u.UnitsError) as exc:
+            raise ValueError(
+                f"sim_telarray column '{name}' has unit {actual}; expected {unit}"
+            ) from exc
+        if not matches:
+            raise ValueError(f"sim_telarray column '{name}' has unit {actual}; expected {unit}")
+
+
+def _validate_contract_matrix(table, contract):
+    """Validate matrix-axis presence, uniqueness, and Cartesian completeness."""
+    matrix_axes = contract.get("matrix_axes", [])
+    present_axes = [axis for axis in matrix_axes if axis in table.colnames]
+    if (
+        contract.get("table_format") == "rpol_matrix"
+        and len(matrix_axes) == 2
+        and present_axes == [matrix_axes[0]]
+    ):
+        present_axes = []
+    if present_axes and len(present_axes) != len(matrix_axes):
+        raise ValueError("sim_telarray matrix axes must be present together")
+    if present_axes:
+        keys = list(zip(*(list(_raw_values(table[axis])) for axis in matrix_axes), strict=True))
+        if len(keys) != len(set(keys)):
+            raise ValueError("sim_telarray matrix contains duplicate axis combinations")
+        expected = {
+            tuple(values)
+            for values in product(*[sorted(set(_raw_values(table[axis]))) for axis in matrix_axes])
+        }
+        if set(keys) != expected:
+            raise ValueError("sim_telarray matrix must contain a complete Cartesian grid")
+
+
+def _ordered_table(table, contract):
+    """Return a selected, sorted table view without mutating the source."""
+    columns = list(contract["columns"])
+    columns.extend(name for name in contract.get("optional_columns", []) if name in table.colnames)
+    result = table[columns].copy(copy_data=True)
+    sort_keys = [
+        name
+        for name in contract.get("row_sort_keys", contract.get("sort_keys", []))
+        if name in result.colnames
+    ]
+    if sort_keys:
+        result.sort(sort_keys)
+    return result
+
+
+def _format_value(value, contract):
+    """Format a scalar according to the contract."""
+    value = getattr(value, "value", value)
+    if isinstance(value, (float, np.floating)):
+        return format(float(value), contract.get("float_format", ".12g"))
+    return str(value)
+
+
+def _column_values(table, name, contract):
+    """Return formatted values for one declared output column."""
+    return [_format_value(value, contract) for value in table[name]]
+
+
+def _write_plain_table(table, output_path, contract):
+    """Write selected, sorted columns as whitespace-separated rows."""
+    ordered = _ordered_table(table, contract)
+    selected = list(contract["columns"])
+    selected.extend(
+        name for name in contract.get("optional_columns", []) if name in ordered.colnames
+    )
+    columns = [_column_values(ordered, name, contract) for name in selected]
+    with output_path.open("w", encoding="utf-8") as file:
+        for row in zip(*columns, strict=True):
+            file.write(" ".join(row) + "\n")
+
+
+def _write_rpol_table(table, output_path, contract):
+    """Write a tidy wavelength/angle table in sim_telarray RPOL format."""
+    axes = contract.get("matrix_axes", [])
+    if len(axes) != 2 or not all(axis in table.colnames for axis in axes):
+        _write_plain_table(table, output_path, contract)
+        return
+    value_column = contract["value_column"]
+    axis_0, axis_1 = axes
+    values = {
+        (
+            getattr(row[axis_0], "value", row[axis_0]),
+            getattr(row[axis_1], "value", row[axis_1]),
+        ): getattr(row[value_column], "value", row[value_column])
+        for row in table
     }
-    try:
-        writers[format_name](table, output_path)
-    except KeyError as exc:
-        raise ValueError(f"Unknown sim_telarray table format: {format_name}") from exc
-    return output_path.name
+    axis_1_values = sorted(set(_raw_values(table[axis_1])))
+    axis_0_values = sorted(set(_raw_values(table[axis_0])))
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write("#@RPOL@[ANGLE=] 2\n")
+        file.write(
+            "ANGLE= " + " ".join(_format_value(value, contract) for value in axis_1_values) + "\n"
+        )
+        for axis_0_value in axis_0_values:
+            row = [values[(axis_0_value, axis_1_value)] for axis_1_value in axis_1_values]
+            fields = [_format_value(axis_0_value, contract)]
+            fields.extend(_format_value(value, contract) for value in row)
+            file.write(" ".join(fields) + "\n")
 
 
-def _table_comments(table):
-    """Return source comments as lines suitable for an ASCII table."""
-    comments = table.meta.get("original_comments", [])
-    if isinstance(comments, str):
-        comments = comments.splitlines()
-    return [f"# {comment}" if comment else "#" for comment in comments]
+def _write_atmospheric_transmission(table, output_path, contract):
+    """Write atmospheric transmission in sim_telarray matrix format."""
+    axis_0, axis_1 = contract.get("matrix_axes", ["wavelength", "altitude"])
+    value_column = contract["value_column"]
+    axis_0_values = sorted(set(_raw_values(table[axis_0])))
+    axis_1_values = sorted(set(_raw_values(table[axis_1])))
+    values = {
+        (
+            getattr(row[axis_0], "value", row[axis_0]),
+            getattr(row[axis_1], "value", row[axis_1]),
+        ): getattr(row[value_column], "value", row[value_column])
+        for row in table
+    }
+    observatory_level = table.meta.get("observatory_level")
+    observatory_level = getattr(observatory_level, "value", observatory_level)
+    with output_path.open("w", encoding="utf-8") as file:
+        header = "# H1= " + " ".join(_format_value(value, contract) for value in axis_1_values)
+        if observatory_level is not None:
+            header = f"# H2= {_format_value(observatory_level, contract)}, {header[2:]}"
+        file.write(header + "\n")
+        for axis_0_value in axis_0_values:
+            fields = [_format_value(axis_0_value, contract)]
+            fields.extend(
+                _format_value(values[(axis_0_value, axis_1_value)], contract)
+                for axis_1_value in axis_1_values
+            )
+            file.write(" ".join(fields) + "\n")
 
 
 def _raw_values(values):
     """Return plain scalar values from an Astropy column or iterable."""
     return [getattr(value, "value", value) for value in values]
-
-
-def _write_plain_table(table, output_path):
-    """Write comments and one whitespace-separated row per table row."""
-    with output_path.open("w", encoding="utf-8") as file:
-        file.write("\n".join(_table_comments(table)))
-        if table.meta.get("original_comments"):
-            file.write("\n")
-        columns = [_raw_values(table[name]) for name in table.colnames]
-        for row in zip(*columns):
-            file.write(" ".join(str(value) for value in row) + "\n")
-
-
-def _write_rpol_table(table, output_path):
-    """Write a tidy wavelength/angle table in sim_telarray RPOL format."""
-    angle_name = "angle" if "angle" in table.colnames else "incidence_angle"
-    independent_name = "wavelength"
-    dependent = table.meta.get("simtelarray_value_column")
-    if dependent is None:
-        dependent = next(
-            (
-                name
-                for name in ("reflectivity", "transmission", "efficiency")
-                if name in table.colnames
-            ),
-            None,
-        )
-    if dependent is None:
-        raise ValueError("RPOL ECSV table must define simtelarray_value_column")
-    if independent_name not in table.colnames:
-        raise ValueError("RPOL ECSV table must contain a wavelength column")
-    if angle_name not in table.colnames:
-        _write_plain_table(table, output_path)
-        return
-    angles = list(dict.fromkeys(_raw_values(table[angle_name])))
-    values = {}
-    wavelengths = _raw_values(table[independent_name])
-    angle_values = _raw_values(table[angle_name])
-    dependent_values = _raw_values(table[dependent])
-    for wavelength, angle, value in zip(wavelengths, angle_values, dependent_values):
-        key = (wavelength, angle)
-        if key in values:
-            raise ValueError("RPOL ECSV table must contain one value per wavelength and angle")
-        values[key] = value
-    comments = [
-        line
-        for line in _table_comments(table)
-        if not any(token in line for token in ("@RPOL@", "ANGLE=", "H1=", "H2="))
-    ]
-    with output_path.open("w", encoding="utf-8") as file:
-        for line in comments:
-            file.write(f"{line}\n")
-        file.write("#@RPOL@[ANGLE=] 2\n")
-        file.write("ANGLE= " + " ".join(str(angle) for angle in angles) + "\n")
-        for wavelength in dict.fromkeys(wavelengths):
-            selection = []
-            for angle in angles:
-                try:
-                    selection.append(values[(wavelength, angle)])
-                except KeyError as exc:
-                    raise ValueError(
-                        "RPOL ECSV table must contain one value per wavelength and angle"
-                    ) from exc
-            file.write(" ".join([str(wavelength), *(str(value) for value in selection)]) + "\n")
-
-
-def _write_atmospheric_transmission(table, output_path):
-    """Write a tidy atmospheric transmission table in sim_telarray matrix format."""
-    altitude_name = "altitude"
-    dependent = "extinction"
-    wavelengths = _raw_values(table["wavelength"])
-    altitudes = list(dict.fromkeys(_raw_values(table[altitude_name])))
-    observatory_level = table.meta.get("observatory_level")
-    observatory_level = getattr(observatory_level, "value", observatory_level)
-    values_by_wavelength = {}
-    for wavelength, extinction in zip(wavelengths, _raw_values(table[dependent])):
-        values_by_wavelength.setdefault(wavelength, []).append(extinction)
-    with output_path.open("w", encoding="utf-8") as file:
-        for line in _table_comments(table):
-            file.write(f"{line}\n")
-        header = "# H1= " + " ".join(str(value) for value in altitudes)
-        if observatory_level is not None:
-            header = f"# H2= {observatory_level}, {header[2:]}"
-        file.write(header + "\n")
-        for wavelength in dict.fromkeys(wavelengths):
-            values = values_by_wavelength[wavelength]
-            file.write(" ".join([str(wavelength), *(str(value) for value in values)]) + "\n")
 
 
 def write_light_pulse_table_gauss_exp_conv(

@@ -191,13 +191,13 @@ def test_is_file_2d_keyerror(telescope_model_lst, caplog):
 
 
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis_angle": [0.0], "eff_area": [123.4]})
+    fake_table = astropy.table.Table({"off_axis_angle": [0.0], "eff_area": [123.4]})
     telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
     assert telescope_model_lst.get_on_axis_eff_optical_area() == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
-    fake_table = astropy.table.Table({"Off-axis_angle": [1.0], "eff_area": [123.4]})
+    fake_table = astropy.table.Table({"off_axis_angle": [1.0], "eff_area": [123.4]})
     telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
     with pytest.raises(ValueError, match=r"^No value for the on-axis"):
         telescope_model_lst.get_on_axis_eff_optical_area()
@@ -300,7 +300,7 @@ def test_read_two_dim_wavelength_angle(telescope_model_lst):
     table = astropy.table.QTable(
         {
             "wavelength": [300.0, 300.0, 400.0, 400.0],
-            "angle": [0.0, 10.0, 0.0, 10.0],
+            "incidence_angle": [0.0, 10.0, 0.0, 10.0],
             "reflectivity": [0.8, 0.75, 0.9, 0.85],
         }
     )
@@ -319,8 +319,8 @@ def test_read_two_dim_wavelength_angle(telescope_model_lst):
 def test_read_incidence_angle_distribution(telescope_model_lst):
     incidence_table = astropy.table.Table(
         {
-            "Incidence angle": [0.0, 10.0],
-            "Fraction": [0.5, 0.3],
+            "incidence_angle": [0.0, 10.0],
+            "fraction": [0.5, 0.3],
         }
     )
     telescope_model_lst.get_parameter_table = Mock(return_value=incidence_table)
@@ -328,8 +328,8 @@ def test_read_incidence_angle_distribution(telescope_model_lst):
 
     assert isinstance(result, astropy.table.Table)
     assert len(result) == 2
-    assert "Incidence angle" in result.colnames
-    assert "Fraction" in result.colnames
+    assert "incidence_angle" in result.colnames
+    assert "fraction" in result.colnames
 
 
 def test_calc_average_curve():
@@ -347,8 +347,8 @@ def test_calc_average_curve():
     # Mock incidence angle distribution
     incidence_angle_dist = astropy.table.Table(
         {
-            "Incidence angle": [0.0, 10.0, 20.0],
-            "Fraction": [0.5, 0.3, 0.2],
+            "incidence_angle": [0.0, 10.0, 20.0],
+            "fraction": [0.5, 0.3, 0.2],
         }
     )
 

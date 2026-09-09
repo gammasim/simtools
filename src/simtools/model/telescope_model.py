@@ -252,7 +252,7 @@ class TelescopeModel(ModelParameter):
         # angle-dependent tables. The actual table therefore decides whether
         # the model needs an incidence-angle weighting distribution.
         columns = set(table.colnames)
-        return not columns or bool(columns & {"angle", "incidence_angle"})
+        return not columns or "incidence_angle" in columns
 
     def read_two_dim_wavelength_angle(self, parameter_name: str) -> dict:
         """
@@ -272,7 +272,7 @@ class TelescopeModel(ModelParameter):
             dict of three arrays, wavelength, degrees, z.
         """
         table = self.get_parameter_table(parameter_name)
-        angle_name = "angle" if "angle" in table.colnames else "incidence_angle"
+        angle_name = "incidence_angle"
         value_columns = [name for name in table.colnames if name not in {"wavelength", angle_name}]
         if len(value_columns) != 1:
             raise ValueError(
@@ -298,10 +298,10 @@ class TelescopeModel(ModelParameter):
     def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""
         ray_tracing_data = self.get_parameter_table("optics_properties")
-        if not np.isclose(ray_tracing_data["Off-axis_angle"][0], 0):
+        if not np.isclose(ray_tracing_data["off_axis_angle"][0], 0):
             msg = (
                 f"No value for the on-axis effective optical area exists."
-                f" The minimum off-axis angle is {ray_tracing_data['Off-axis_angle'][0]}"
+                f" The minimum off-axis angle is {ray_tracing_data['off_axis_angle'][0]}"
             )
             raise ValueError(msg)
         return ray_tracing_data["eff_area"][0]
@@ -342,7 +342,7 @@ class TelescopeModel(ModelParameter):
             reflectivity, transmission, etc.
         incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution. The assumed \
-            columns are "Incidence angle" and "Fraction".
+            columns are "incidence_angle" and "fraction".
 
         Returns
         -------
@@ -350,8 +350,8 @@ class TelescopeModel(ModelParameter):
             Instance of astropy.table.Table with the averaged curve.
         """
         weights = [
-            incidence_angle_dist["Fraction"][
-                np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
+            incidence_angle_dist["fraction"][
+                np.nanargmin(np.abs(angle_now - incidence_angle_dist["incidence_angle"].value))
             ]
             for angle_now in curves["Angle"]
         ]

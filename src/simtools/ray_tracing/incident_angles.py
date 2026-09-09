@@ -707,8 +707,8 @@ class IncidentAnglesCalculator:
         bin_centers, hist = self._calculate_histogram(data, bins=1000)
 
         output_table = QTable()
-        output_table["Incidence angle"] = bin_centers * u.deg
-        output_table["Fraction"] = hist
+        output_table["incidence_angle"] = bin_centers * u.deg
+        output_table["fraction"] = hist
 
         output_table.write(output_file, format="ascii.ecsv", overwrite=True)
 
@@ -749,8 +749,8 @@ class IncidentAnglesCalculator:
             bin_centers, hist = self._calculate_histogram(data, bins=100)
 
             table = QTable()
-            table["Incidence angle"] = bin_centers * u.deg
-            table["Fraction"] = hist
+            table["incidence_angle"] = bin_centers * u.deg
+            table["fraction"] = hist
 
             ModelDataWriter.write_product_data(
                 output_file=self.output_dir / f"{param_name}.ecsv",

@@ -339,9 +339,8 @@ class DatabaseHandler:
         Export single model file from the DB identified by the parameter name.
 
         The parameter can be identified by model or parameter version.
-        File-backed parameters can be exported as astropy tables (ecsv format).
-        Embedded dict-typed parameters are converted to an astropy table directly
-        from the stored row data.
+        File-backed ECSV parameters can be exported as astropy tables. Structured
+        JSON parameters are returned through the ordinary parameter-value APIs.
 
         Parameters
         ----------
@@ -362,7 +361,7 @@ class DatabaseHandler:
         -------
         astropy.table.Table or None
             Astropy table when export_file_as_table is True and the parameter
-            value is a table (file-backed or embedded dict), otherwise None.
+            value is a file-backed ECSV table, otherwise None.
         """
         return parameter_exporter.export_single_model_file(
             db=self,

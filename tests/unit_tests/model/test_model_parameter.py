@@ -614,9 +614,11 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     }
     telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
     mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
-    mock_table = mocker.patch("simtools.model.model_parameter.read_ecsv_asset")
+    mock_table = mocker.patch.object(
+        telescope_copy.model_reader, "get_parameter_table", return_value=mocker.Mock()
+    )
     mock_write_table = mocker.patch(
-        "simtools.model.model_parameter.simtel_table_writer.write_simtel_table"
+        "simtools.model.model_parameter.table_serializers.write_simtel_table"
     )
 
     telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(
@@ -629,11 +631,14 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     assert exported["instrument"] == "LSTS-design"
     assert exported["site"] == "North"
     assert exported["file"] is True
-    mock_table.assert_called_once()
-    mock_write_table.assert_called_once_with(
+    mock_table.assert_called_once_with(exported)
+    mock_write_table.assert_called_once()
+    assert mock_write_table.call_args.args[:2] == (
         mock_table.return_value,
         telescope_copy.config_file_directory,
-        table_format="atmospheric_transmission",
+    )
+    assert mock_write_table.call_args.kwargs["contract"]["table_format"] == (
+        "atmospheric_transmission"
     )
 
 
@@ -969,10 +974,6 @@ def test_check_model_parameter_versions(mocker):
     mock_validate = mocker.patch(
         "simtools.model.model_parameter.schema.validate_deprecation_and_version"
     )
-    mock_apply = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
-    )
-
     _check_model_parameter_versions(parameters, ignore_software_version=False)
 
     # validate called only for "num_gains" (known in schema); "unknown_param" is skipped
@@ -981,15 +982,14 @@ def test_check_model_parameter_versions(mocker):
         software_name=None,
         ignore_software_version=False,
     )
-    # apply always called unconditionally at the end, with empty legacy updates
-    mock_apply.assert_called_once_with(parameters, {})
+    assert parameters["unknown_param"]["value"] == 42
 
 
-def test_check_model_parameter_versions_triggers_legacy_update(mocker):
+def test_check_model_parameter_versions_allows_older_scalar_schema(mocker):
     parameters = {
         "num_gains": {
             "value": 1,
-            "model_parameter_schema_version": "0.9.0",  # Outdated - does not match schema
+            "model_parameter_schema_version": "0.9.0",
         }
     }
 
@@ -998,60 +998,4 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
     mocker.patch("simtools.model.model_parameter.schema.validate_deprecation_and_version")
-    mock_update = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.update_parameter",
-        return_value={"num_gains": {"value": 99}},
-    )
-    mock_apply = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
-    )
-
     _check_model_parameter_versions(parameters, ignore_software_version=False)
-
-    # Legacy update triggered because schema version mismatch (0.9.0 != 1.0.0)
-    mock_update.assert_called_once_with(
-        "num_gains",
-        parameters,
-        "1.0.0",
-        value_resolver=None,
-    )
-    mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
-
-
-def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    model_parameter.model_reader = mocker.Mock()
-    model_parameter.parameters = {
-        "fadc_pulse_shape": {
-            "file": True,
-            "instrument": "LSTN-01",
-            "parameter": "fadc_pulse_shape",
-            "parameter_version": "1.0.0",
-            "value": "pulse.dat",
-        }
-    }
-    expected = {
-        "columns": ["time", "amplitude"],
-        "column_units": ["ns", "dimensionless"],
-        "rows": [[0.0, 0.0], [0.1, 0.2]],
-    }
-    resolve_mock = mocker.patch(
-        "simtools.model.model_parameter.simtel_table_reader.resolve_dict_parameter_value",
-        return_value=expected,
-    )
-
-    result = model_parameter._resolve_legacy_table_parameter_value(
-        "fadc_pulse_shape",
-        "pulse.dat",
-    )
-
-    assert result == expected
-    model_parameter.model_reader.export_model_files.assert_called_once()
-    export_kwargs = model_parameter.model_reader.export_model_files.call_args.kwargs
-    assert export_kwargs["parameters"]["fadc_pulse_shape"]["value"] == "pulse.dat"
-    assert isinstance(export_kwargs["dest"], Path)
-    resolve_mock.assert_called_once_with(
-        "pulse.dat",
-        "fadc_pulse_shape",
-        data_path=export_kwargs["dest"],
-    )

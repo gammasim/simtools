@@ -9,7 +9,7 @@ from astropy.table import Table
 from packaging.version import Version
 
 from simtools import settings
-from simtools.data_model import row_table_utils, schema
+from simtools.data_model import schema
 from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
@@ -20,7 +20,6 @@ from simtools.model_repository.asset_names import (
 )
 from simtools.model_repository.git_model import GitModelSource
 from simtools.model_repository.parsing import normalize_model_parameter
-from simtools.simtel import simtel_table_reader
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
@@ -132,12 +131,10 @@ class FileSystemModelSource:
             if not parameter_path.is_file():
                 continue
             parameter_data = self._read_parameter_file(parameter_path)
-            value = parameter_data.get("value")
             if (
                 parameter_data.get("file")
-                and isinstance(value, str)
-                and value.lower().endswith(ECSV_SUFFIX)
-                and parameter_data.get("model_parameter_schema_version") == "0.3.0"
+                and isinstance(parameter_data.get("value"), str)
+                and parameter_data["value"].lower().endswith(ECSV_SUFFIX)
             ):
                 self.get_parameter_table(parameter_data)
             if self._matches_filters(parameter_data, parameter_scope, site):
@@ -529,10 +526,10 @@ class SimulationModelReader:
             model_version=model_version,
         )
         parameter_data = parameters[parameter]
-        if parameter_data.get("type") == "dict" and row_table_utils.is_row_table_dict(
-            parameter_data.get("value")
-        ):
-            return self._export_dict_parameter_data(parameter_data, output_file, dest)
+        if parameter_data.get("type") == "dict":
+            if export_model_file_as_table:
+                raise ValueError("Structured JSON model parameters are not ECSV tables")
+            return []
         return self._export_file_parameter_data(
             parameter,
             parameter_data,
@@ -542,19 +539,6 @@ class SimulationModelReader:
             export_model_file_as_table,
             dest,
         )
-
-    def _export_dict_parameter_data(self, parameter_data, output_file, dest):
-        """Export an embedded row table as ECSV."""
-        if output_file is None:
-            raise ValueError(
-                "Use --output_file when exporting dict-typed parameters with "
-                "--export_model_file or --export_model_file_as_table."
-            )
-        table = simtel_table_reader.row_data_to_astropy_table(parameter_data["value"])
-        table_file = Path(dest, output_file).with_suffix(ECSV_SUFFIX)
-        table_file.parent.mkdir(parents=True, exist_ok=True)
-        table.write(table_file, format="ascii.ecsv", overwrite=True)
-        return [table_file]
 
     def _export_file_parameter_data(
         self,
@@ -597,13 +581,15 @@ class SimulationModelReader:
 
         return output_files
 
-    def _read_exported_parameter_table(self, parameter, parameter_data, source_file):
+    def _read_exported_parameter_table(self, parameter, parameter_data, _source_file):
         """Read an exported file-backed parameter as an Astropy table."""
         value = parameter_data.get("value")
         if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
             if hasattr(self._source, "get_parameter_table"):
                 return self._source.get_parameter_table(parameter_data)
-        return simtel_table_reader.read_simtel_table(parameter, source_file)
+        raise ValueError(
+            f"Parameter '{parameter}' is not an ECSV model table and cannot be exported as a table"
+        )
 
     def get_parameter_table(self, parameter_data):
         """Return the validated Astropy table referenced by a model parameter."""
@@ -629,11 +615,9 @@ class SimulationModelReader:
         )
         parameter_data = parameters[parameter]
         if parameter_data.get("type") == "dict" and isinstance(parameter_data.get("value"), dict):
-            return (
-                simtel_table_reader.row_data_to_astropy_table(parameter_data["value"])
-                if export_file_as_table
-                else None
-            )
+            if export_file_as_table:
+                raise ValueError("Structured JSON model parameters are not ECSV tables")
+            return None
         if dest is None:
             raise ValueError("Destination path is required to export a model file.")
         self.export_model_files(parameters=parameters, dest=dest)
@@ -645,8 +629,9 @@ class SimulationModelReader:
                 and hasattr(self._source, "get_parameter_table")
             ):
                 return self._source.get_parameter_table(parameter_data)
-            return simtel_table_reader.read_simtel_table(
-                parameter, Path(dest) / parameter_data["value"]
+            raise ValueError(
+                f"Parameter '{parameter}' is not an ECSV model table and cannot be "
+                "exported as a table"
             )
         return None
 

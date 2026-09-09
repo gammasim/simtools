@@ -51,14 +51,6 @@ def mock_get_collection_name(mocker):
 
 
 @pytest.fixture
-def mock_read_simtel_table(mocker):
-    return mocker.patch(
-        "simtools.db.parameter_exporter.simtel_table_reader.read_simtel_table",
-        return_value="test_table",
-    )
-
-
-@pytest.fixture
 def standard_test_params():
     """Common test parameters used across multiple tests."""
     return {
@@ -1077,15 +1069,6 @@ def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
             "expected_result": None,
         },
         {
-            "name": "with_table",
-            "params": {
-                "export_file_as_table": True,
-                "parameter_version": None,
-                "model_version": "1.0.0",
-            },
-            "expected_result": "test_table",
-        },
-        {
             "name": "with_parameter_version",
             "params": {
                 "export_file_as_table": False,
@@ -1097,7 +1080,7 @@ def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
     ],
 )
 def test_export_model_file_variants(
-    db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory, test_case
+    db, export_model_file_mocks, mocker, tmp_test_directory, test_case
 ):
     mocks = export_model_file_mocks
     params = test_case["params"]
@@ -1122,7 +1105,7 @@ def test_export_model_file_variants(
     assert result == test_case["expected_result"]
 
 
-def test_export_model_file_dict_type_returns_table(db, mocker):
+def test_export_model_file_dict_type_rejects_table_export(db, mocker):
     row_data = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -1132,17 +1115,15 @@ def test_export_model_file_dict_type_returns_table(db, mocker):
     mocker.patch.object(db, "get_model_parameter", return_value=mock_parameters)
     export_files_mock = mocker.patch.object(db, "export_model_files")
 
-    table = db.export_model_file(
-        parameter="fadc_pulse_shape",
-        site="North",
-        array_element_name="LSTN-01",
-        model_version="1.0.0",
-        export_file_as_table=True,
-    )
-
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        db.export_model_file(
+            parameter="fadc_pulse_shape",
+            site="North",
+            array_element_name="LSTN-01",
+            model_version="1.0.0",
+            export_file_as_table=True,
+        )
     export_files_mock.assert_not_called()
-    assert list(table.colnames) == ["time", "amplitude"]
-    assert len(table) == 2
 
 
 def test_export_model_file_dict_type_without_table_flag_returns_none(db, mocker):

@@ -127,11 +127,9 @@ class MultiIlluminatorSimulator:
         - model_version: str
         - number_of_events: int
         - other SimulatorLightEmission parameters
-    visibility_data : dict, optional
-        Dictionary with "columns" and "rows" keys containing the visibility table.
-        The expected structure is:
-        - columns: ["illuminator_id", "telescope_id", "visible"]
-        - rows: list of [illuminator_id, telescope_id, visible] lists
+    visibility_data : list of dict, optional
+        Structured visibility records with ``illuminator_id``, ``telescope_id``,
+        and ``visible`` keys.
         If not provided, the visibility table is retrieved from the site model
         using the site and model_version from config.
     label : str, optional
@@ -182,8 +180,8 @@ class MultiIlluminatorSimulator:
 
         Returns
         -------
-        dict
-            Visibility table dictionary with "columns" and "rows" keys.
+        list of dict
+            Structured visibility records.
         """
         # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel

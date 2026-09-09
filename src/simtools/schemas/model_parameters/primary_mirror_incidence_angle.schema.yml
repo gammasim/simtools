@@ -6,6 +6,7 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: primary_mirror_incidence_angle
+surface: primary
 description: Distribution of incidence angle on the SST primary mirror.
 data:
   - type: file
@@ -21,11 +22,6 @@ data:
         type: float64
         unit: dimensionless
         required: true
-    table_metadata:
-      - name: simtelarray_original_file_name
-        description: Original simulator output basename
-        type: string
-        required: false
 instrument:
   class: Structure
 activity:
@@ -45,8 +41,8 @@ plot_configuration:
     no_markers: true
     tables:
       - parameter: primary_mirror_incidence_angle
-        column_x: Incidence angle
-        column_y: Fraction
+        column_x: incidence_angle
+        column_y: fraction
 ---
 title: Schema for primary_mirror_incidence_angle model parameter
 schema_version: 0.1.0
@@ -80,5 +76,5 @@ plot_configuration:
     no_markers: true
     tables:
       - parameter: primary_mirror_incidence_angle
-        column_x: 'Incidence angle'
-        column_y: 'Fraction'
+        column_x: incidence_angle
+        column_y: fraction

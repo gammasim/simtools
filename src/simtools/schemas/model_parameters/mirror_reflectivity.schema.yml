@@ -6,6 +6,7 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: mirror_reflectivity
+surface: primary
 description: 'Mirror reflectivity measured directly on the facet as function of
   wavelength. For dual mirror telescopes without explicit reflectivity
   table given for the secondary, this reflectivity given here is
@@ -19,7 +20,7 @@ data:
         type: float64
         unit: nm
         required: true
-      - name: angle
+      - name: incidence_angle
         description: Incidence angle
         type: float64
         unit: deg
@@ -28,7 +29,7 @@ data:
         description: Mirror reflectivity
         type: float64
         unit: dimensionless
-        required: false
+        required: true
       - name: reflectivity_rms
         description: Mirror reflectivity standard deviation
         type: float64
@@ -43,11 +44,6 @@ data:
         description: Maximum mirror reflectivity
         type: float64
         unit: dimensionless
-        required: false
-    table_metadata:
-      - name: simtelarray_original_file_name
-        description: Original simulator output basename
-        type: string
         required: false
 instrument:
   class: Structure
@@ -65,6 +61,14 @@ source:
 simulation_software:
   - name: sim_telarray
     table_format: rpol_matrix
+    serialization:
+      columns: [wavelength, reflectivity]
+      allowed_columns: [wavelength, incidence_angle, reflectivity, reflectivity_rms, reflectivity_min, reflectivity_max]
+      row_sort_keys: [wavelength, incidence_angle]
+      matrix_axes: [wavelength, incidence_angle]
+      value_column: reflectivity
+      float_format: ".12g"
+      write_comments: false
 plot_configuration:
   - type: mirror_reflectivity
     title: Mirror reflectivity

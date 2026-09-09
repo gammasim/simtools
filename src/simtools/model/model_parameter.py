@@ -5,19 +5,17 @@ import logging
 import shutil
 from copy import copy, deepcopy
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.data_model import schema
-from simtools.data_model.table_asset import read_ecsv_asset
+from simtools.data_model.json_validation import validate_finite_json_values
+from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
-from simtools.model import legacy_model_parameter
-from simtools.model_repository.asset_names import get_export_file_name
-from simtools.simtel import simtel_table_reader, simtel_table_writer
+from simtools.simtel import table_serializers
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
 
@@ -226,7 +224,7 @@ class ModelParameter:
             return self.model_reader.get_parameter_table(parameter_data)
         except ValueError as exc:
             raise InvalidModelParameterError(
-                f"Parameter {par_name} does not reference an ECSV table."
+                f"Parameter {par_name} does not reference a valid ECSV table: {exc}"
             ) from exc
 
     def get_parameter_type(self, par_name):
@@ -417,11 +415,7 @@ class ModelParameter:
                 )
             )
             self.overwrite_parameters(self.overwrite_model_parameter_dict)
-            self._check_model_parameter_versions(
-                self.parameters,
-                self.ignore_software_version,
-                value_resolver=self._resolve_legacy_table_parameter_value,
-            )
+            self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
 
         self._load_simulation_software_parameter()
         for software_name, parameters in self._simulation_config_parameters.items():
@@ -429,61 +423,15 @@ class ModelParameter:
                 parameters,
                 ignore_software_version=self.ignore_software_version,
                 software_name=software_name,
-                value_resolver=self._resolve_legacy_table_parameter_value,
             )
-
-    def _resolve_legacy_table_parameter_value(self, parameter_name, value):
-        """Resolve a legacy stored table value to canonical row-oriented data.
-
-        This method is passed into ``legacy_model_parameter.update_parameter``
-        as ``value_resolver``. Legacy handlers use it when an old parameter
-        stores a table indirectly, e.g. as a GridFS-backed file name, and needs
-        to be normalized to the current in-memory ``{"columns", "rows"}``
-        representation.
-        """
-        parameter_data = self._get_parameter_data_for_asset(parameter_name, value)
-        with TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            self.model_reader.export_model_files(
-                parameters={parameter_name: parameter_data}, dest=temp_path
-            )
-            return simtel_table_reader.resolve_dict_parameter_value(
-                value,
-                parameter_name,
-                data_path=temp_path,
-            )
-
-    def _get_parameter_data_for_asset(self, parameter_name, value):
-        """Return parameter metadata needed to resolve a co-located model asset."""
-        parameter_stores = [
-            getattr(self, "parameters", {}),
-            *getattr(self, "_simulation_config_parameters", {}).values(),
-        ]
-        for parameter_store in parameter_stores:
-            parameter_data = parameter_store.get(parameter_name)
-            if parameter_data is not None:
-                parameter_data = deepcopy(parameter_data)
-                parameter_data["value"] = value
-                return parameter_data
-        raise ValueError(
-            f"No parameter metadata found for legacy table parameter {parameter_name}."
-        )
 
     @staticmethod
-    def _check_model_parameter_versions(
-        parameters,
-        ignore_software_version,
-        software_name=None,
-        value_resolver=None,
-    ):
+    def _check_model_parameter_versions(parameters, ignore_software_version, software_name=None):
         """
         Ensure parameters follow the latest schema and are compatible with installed software.
 
         Compares software versions listed in schema files with the installed software versions
         (e.g., sim_telarray, CORSIKA).
-
-        For outdated model parameter schemas, legacy update functions are called to update
-        the parameters to the latest schema version.
 
         Parameters
         ----------
@@ -493,32 +441,18 @@ class ModelParameter:
             If True, ignore software version checks for deprecated parameters.
         software_name: str
             Name of the software for which the parameters are checked.
-        value_resolver: callable
-            Optional callback used by legacy updates to normalize parameter
-            values from older storage formats to the latest in-memory format.
-            It must accept ``(parameter_name, value)`` and return the
-            normalized value.
         """
-        _legacy_updates = {}
         for par_name, par_data in parameters.items():
+            validate_finite_json_values(par_data.get("value"))
             if par_name in (parameter_schema := names.model_parameters()):
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,
                     ignore_software_version=ignore_software_version,
                 )
-                _latest_schema_version = parameter_schema[par_name]["schema_version"]
-                if par_data["model_parameter_schema_version"] != _latest_schema_version:
-                    _legacy_updates.update(
-                        legacy_model_parameter.update_parameter(
-                            par_name,
-                            parameters,
-                            _latest_schema_version,
-                            value_resolver=value_resolver,
-                        )
-                    )
-
-        legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
+                schema_version = par_data.get("model_parameter_schema_version")
+                if schema_version is None:
+                    raise ValueError(f"Parameter '{par_name}' has no schema version")
 
     def overwrite_model_parameter(
         self,
@@ -945,6 +879,7 @@ class ModelParameter:
                 telescope_design_model=self.design_model,
                 model_version=self.model_version,
                 label=desired_label,
+                model_reader=self.model_reader,
             )
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
@@ -987,24 +922,18 @@ class ModelParameter:
         if Path(parameter["value"]).suffix.lower() != ".ecsv":
             return None
 
-        source = (
-            Path(model_directory)
-            / Path(
-                get_export_file_name(parameter, fallback_instrument=self.design_model or self.name)
-            ).name
-        )
         schema_data = schema.get_model_parameter_schema(
             parameter_name, parameter.get("model_parameter_schema_version")
         )
-        schema_entry = next(
-            (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
-            None,
+        table = self.model_reader.get_parameter_table(parameter)
+        contract = get_simtel_serialization(schema_data)
+        contract["table_format"] = table_format
+        return table_serializers.write_simtel_table(
+            table,
+            model_directory,
+            contract=contract,
+            output_name=output_name or f"{parameter_name}-{self.name}.dat",
         )
-        table = read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter)
-        write_kwargs = {"table_format": table_format}
-        if output_name is not None:
-            write_kwargs["output_name"] = output_name
-        return simtel_table_writer.write_simtel_table(table, model_directory, **write_kwargs)
 
     def export_model_parameter_as_simtel_file(
         self, parameter_name, model_directory, table_format, output_name
