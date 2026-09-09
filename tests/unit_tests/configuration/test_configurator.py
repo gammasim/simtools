@@ -450,3 +450,19 @@ def test_initialize(configurator):
     configurator.configure()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"
+
+
+def test_normalize_scalar_config_value_serializes_dict():
+    import json
+
+    # Test that a dictionary value is serialized to a JSON string
+    value = {"key": "value", "nested": {"a": 1}}
+    result = Configurator._normalize_scalar_config_value("some_key", value)
+    assert result == [json.dumps(value)]
+
+
+def test_normalize_scalar_config_value_passes_through_non_dict():
+    # Test that non-dict values are converted to strings
+    assert Configurator._normalize_scalar_config_value("int_key", 42) == ["42"]
+    assert Configurator._normalize_scalar_config_value("str_key", "hello") == ["hello"]
+    assert Configurator._normalize_scalar_config_value("bool_key", True) == ["True"]

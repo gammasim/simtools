@@ -160,8 +160,9 @@ class CorsikaConfig:
         model_version = model_versions[0]
 
         self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
-        db_model_parameters = ModelParameter(model_version=model_version)
-        parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
+        parameters_from_db = self.array_model.site_model.get_simulation_software_parameters(
+            "corsika"
+        )
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
             parameters_from_db

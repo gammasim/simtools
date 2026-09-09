@@ -23,7 +23,7 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
-_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label")
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "model_parameter_set")
 _MISSING = object()
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     {
@@ -339,6 +339,31 @@ def read_job_grid_row(input_file, row_index):
     return rows[row_index - 1], metadata
 
 
+def _deep_merge_dicts(dict1, dict2):
+    """
+    Deep merge two dictionaries, with dict2 taking precedence.
+
+    Parameters
+    ----------
+    dict1 : dict
+        Base dictionary
+    dict2 : dict
+        Dictionary to merge into dict1 (takes precedence)
+
+    Returns
+    -------
+    dict
+        Merged dictionary
+    """
+    result = dict1.copy()
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     """
     Convert an in-memory job grid row to simulate_prod argument format.
@@ -361,7 +386,17 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     dict
         Argument dictionary compatible with ``simulate_prod`` ``args_dict`` keys.
     """
-    args = {
+    args = _build_base_args(job_row)
+    _add_optional_args(args, job_row)
+    _add_metadata_args(args, metadata)
+    _add_row_scan_label(args, job_row)
+    _add_parameter_scan_overwrites(args, job_row, metadata)
+    return args
+
+
+def _build_base_args(job_row):
+    """Build the base arguments dictionary from job_row."""
+    return {
         "primary": job_row["primary"],
         "azimuth_angle": job_row["azimuth_angle"],
         "zenith_angle": job_row["zenith_angle"],
@@ -374,22 +409,58 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         "corsika_le_interaction": job_row["corsika_le_interaction"],
         "corsika_he_interaction": job_row["corsika_he_interaction"],
         "run_number": int(job_row["run_number"]),
-        # Force the run number offset to zero,
-        # since the job grid row already specifies the run number.
         "run_number_offset": 0,
     }
+
+
+def _add_optional_args(args, job_row):
+    """Add optional arguments to the args dictionary."""
     if job_row.get("corsika_hadronic_transition_energy") is not None:
         args["corsika_hadronic_transition_energy"] = job_row["corsika_hadronic_transition_energy"]
     for coordinate in ("ha", "dec"):
         if job_row.get(coordinate) is not None:
             args[coordinate] = job_row[coordinate]
-    if metadata:
-        for key in ("site", "simulation_software"):
-            if metadata.get(key):
-                args[key] = metadata[key]
-    if job_row.get("overwrite_model_parameters"):
-        args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
-    return args
+
+
+def _add_metadata_args(args, metadata):
+    """Add metadata-based arguments to the args dictionary."""
+    if not metadata:
+        return
+    for key in ("site", "simulation_software"):
+        if metadata.get(key):
+            args[key] = metadata[key]
+
+
+def _add_row_scan_label(args, job_row):
+    """Add scan_label to args if present."""
+    if job_row.get("scan_label"):
+        args["scan_label"] = job_row["scan_label"]
+
+
+def _add_parameter_scan_overwrites(args, job_row, metadata):
+    """Handle parameter scan overwrites from metadata."""
+    if not (
+        job_row.get("model_parameter_set") and metadata and metadata.get("model_parameter_sets")
+    ):
+        if job_row.get("overwrite_model_parameters"):
+            args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
+        return
+
+    param_set_name = job_row["model_parameter_set"]
+    model_parameter_sets = metadata["model_parameter_sets"]
+    if param_set_name not in model_parameter_sets:
+        return
+
+    param_overwrites = model_parameter_sets[param_set_name]
+    existing_overwrites = job_row.get("overwrite_model_parameters")
+    if existing_overwrites:
+        if isinstance(existing_overwrites, dict):
+            merged_overwrites = _deep_merge_dicts(existing_overwrites, param_overwrites)
+        else:
+            merged_overwrites = param_overwrites
+    else:
+        merged_overwrites = param_overwrites
+    args["overwrite_model_parameters"] = merged_overwrites
 
 
 def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
@@ -483,11 +554,18 @@ def _add_scan_label(job_args, row):
     if row.get("scan_label"):
         label = job_args.get("label") or "simulate-prod"
         job_args["label"] = f"{label}_{row['scan_label']}"
+        # Already folded into "label"; drop it so the nested job doesn't append it again.
+        job_args.pop("scan_label", None)
 
 
 def _normalize_simulate_prod_paths(job_args, args_dict):
     """Normalize paths while allowing remote environments to provide them."""
     for key in _SIMULATE_PROD_PATH_FIELDS:
+        # Scan-derived overwrite_model_parameters is a dict of actual override values
+        # so it must always be forwarded to the job, regardless
+        # of whether it was explicitly given on the CLI/YAML/constructor.
+        if isinstance(job_args.get(key), dict):
+            continue
         if not _should_forward_path(args_dict, key):
             job_args.pop(key, None)
         elif job_args.get(key):
@@ -498,6 +576,9 @@ def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
     """Add forwarded input paths needed by containerized production jobs."""
     for key in _SIMULATE_PROD_PATH_FIELDS:
         if key == "grid_output_path" or not job_args.get(key):
+            continue
+        # Skip non-path values (e.g., overwrite_model_parameters can be a dict)
+        if isinstance(job_args[key], dict):
             continue
         path = Path(job_args[key])
         mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
@@ -511,3 +592,121 @@ def _should_forward_path(args_dict, key):
     sources = args_dict.get("_metadata_configuration_sources", {})
     explicit_sources = ("cli", "yaml", "constructor")
     return any(key in sources.get(source, ()) for source in explicit_sources)
+
+
+def _resolve_job_grid_arguments(args_dict, config_sources, parser):
+    """Merge selected job-grid row values into args after rejecting ambiguous input."""
+    explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
+    job_grid_row_is_explicit = "job_grid_row" in explicit_keys
+
+    if not _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
+        return
+
+    _validate_no_conflicting_production_parameters(explicit_keys, parser)
+    rows, metadata = _load_and_validate_job_grid(args_dict, parser)
+    is_parameter_scan = _check_parameter_scan(rows)
+
+    selected_row = None
+    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
+        selected_row, rows = _select_rows(
+            args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser
+        )
+
+    if args_dict.get("backend", "local") != "local":
+        args_dict["_job_grid_rows"] = rows
+        args_dict["_job_grid_metadata"] = metadata
+        return
+
+    _finalize_args_dict(args_dict, rows, metadata, selected_row, parser)
+
+
+def _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):
+    """Handle case where no job grid file is provided."""
+    if args_dict.get("job_grid_file"):
+        return True
+    if job_grid_row_is_explicit:
+        parser.error("'--job_grid_row' requires '--job_grid_file'.")
+    _validate_layout_selection(args_dict, parser)
+    _validate_simulation_arguments(args_dict, parser)
+    return False
+
+
+def _validate_no_conflicting_production_parameters(explicit_keys, parser):
+    """Reject explicit production parameters combined with '--job_grid_file'."""
+    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
+    if conflicting_keys:
+        parser.error(
+            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
+            + ", ".join(conflicting_keys)
+        )
+
+
+def _load_and_validate_job_grid(args_dict, parser):
+    """Load job grid and validate its contents."""
+    rows, metadata = read_job_grid(args_dict["job_grid_file"])
+    if not rows:
+        parser.error("Job grid contains no rows to process.")
+    _validate_array_layout_names(rows, parser)
+    return rows, metadata
+
+
+def _validate_array_layout_names(rows, parser):
+    """Validate that all rows have array_layout_name."""
+    missing_layout_rows = [
+        index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
+    ]
+    if missing_layout_rows:
+        parser.error(
+            "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
+        )
+
+
+def _check_parameter_scan(rows):
+    """Check if the job grid is a parameter scan grid."""
+    has_model_parameter_set = any(row.get("model_parameter_set") for row in rows)
+    logger.debug("has_model_parameter_set: %s", has_model_parameter_set)
+    return has_model_parameter_set
+
+
+def _select_rows(args_dict, rows, is_parameter_scan, job_grid_row_is_explicit, parser):
+    """Select rows based on job_grid_row and grid type."""
+    row_index = args_dict.get("job_grid_row")
+    if job_grid_row_is_explicit and row_index is not None:
+        selected_row = _select_row_by_index(rows, row_index, parser)
+        return selected_row, [selected_row]
+    if is_parameter_scan:
+        return None, rows
+    if row_index is not None:
+        return _select_row_by_index(rows, row_index, parser), rows
+    return rows[0], [rows[0]]
+
+
+def _select_row_by_index(rows, row_index, parser):
+    """Select a row by its 1-based index."""
+    if row_index < 1 or row_index > len(rows):
+        parser.error(f"Row index {row_index} is out of range for a grid with {len(rows)} row(s).")
+    return rows[row_index - 1]
+
+
+def _finalize_args_dict(args_dict, rows, metadata, selected_row, parser):
+    """Finalize the args_dict based on selected rows."""
+    if selected_row is None:
+        logger.info(f"Setting _job_grid_rows to {len(rows)} rows for parameter scan")
+        args_dict["_job_grid_rows"] = rows
+        args_dict["_job_grid_metadata"] = metadata
+    else:
+        args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
+        _validate_simulation_arguments(args_dict, parser)
+
+
+def _validate_layout_selection(args_dict, parser):
+    """Require a direct array-layout selection when no job grid supplies one."""
+    if args_dict.get("array_layout_name"):
+        return
+    parser.error("the following argument is required: --array_layout_name")
+
+
+def _validate_simulation_arguments(args_dict, parser):
+    """Validate requirements that depend on the selected simulation software."""
+    if "corsika" in args_dict["simulation_software"] and not args_dict.get("primary"):
+        parser.error("the following argument is required for CORSIKA: --primary")
