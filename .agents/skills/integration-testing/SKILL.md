@@ -2,8 +2,8 @@
 name: integration-testing
 description: >-
   Create, update, or debug simtools integration test YAML configs for
-  application workflows in tests/integration_tests/config, including MongoDB
-  prerequisites, model-version handling, test-resource macros, documentation
+  application workflows in tests/integration_tests/config, including model
+  sources, model-version handling, test-resource macros, documentation
   metadata, and output validation blocks.
 ---
 
@@ -20,11 +20,34 @@ Follow `AGENTS.md` and
 `src/simtools/testing/`, and
 `src/simtools/schemas/application_workflow.metaschema.yml`.
 
-## Prerequisite
+## Model Source and Environment
 
-Integration tests require a valid MongoDB connection via `.env` settings.
-For local container setup, use `docker/README.md`; when using a local database,
-run the dev container on `simtools-mongo-network`.
+Integration tests can read simulation models from filesystem, Git, or MongoDB. To use
+filesystem or Git sources, pass `--simulation_models_path`, or pass
+`--simulation_models_git_path` and `--simulation_models_git_revision`. When set,
+these sources take precedence over MongoDB settings; filesystem and Git sources
+cannot be configured together.
+
+MongoDB is only needed for workflows marked `requires_mongodb: true` and
+`simtools-db-*` applications. Such workflows are skipped when no MongoDB
+configuration is available.
+
+On DESY working-group servers, run integration tests in the published simtools
+Apptainer development environment. From the repository checkout, start the
+container and prepare the editable installation:
+
+```bash
+apptainer shell --writable-tmpfs \
+  --bind "$PWD:/workdir/external" \
+  docker://ghcr.io/gammasim/simtools-dev:latest
+source /workdir/env/bin/activate
+cd /workdir/external
+pip install --no-build-isolation -e .
+```
+
+Apptainer downloads and caches the OCI image locally, normally under
+`~/.apptainer/cache`. Set `APPTAINER_CACHEDIR` when that location is unsuitable.
+Pin a published image tag instead of `latest` for reproducible runs.
 
 ## Config Shape
 
@@ -40,7 +63,9 @@ applications:
     title: Optional short title for rendered examples
     summary: Optional short summary for rendered examples
   integration_tests:
-  - output_file: relative/file/from/output_path.ext
+  - test_outputs:
+    - file: relative/file/from/output_path.ext
+      path_descriptor: output_path
   test_name: short_descriptive_case
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
@@ -66,6 +91,7 @@ Optional keys beside `application`, `configuration`, `integration_tests`, and
 
 - `model_version_use_current: true`: run only when the CLI `--model_version`
   matches the config model version.
+- `requires_mongodb: true`: mark a workflow that requires MongoDB access.
 - `skip_for_production_db: true`: skip DB-writing tests on production DBs.
 - `skip_integration_test: <reason>`: temporary explicit skip with reason.
 - `test_use_case: UC-...`: add use-case pytest marker.
@@ -85,58 +111,49 @@ array_layout_name:
 
 ## Test Resources
 
-Use `${static:path/to/file}` for maintained resources and
-`${generated:path/to/file}` for generated resources. Pytest resolves these
-against `--test_resources_path` or the versioned `simtools-tests` resource
-bundle selected by `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_VERSION`.
+Use `${static:path/to/file}` for maintained resources,
+`${generated:path/to/file}` for generated resources, and
+`${downloaded:path/to/file}` for externally downloaded resources. Pytest
+resolves these against `--test_resources_path` or the versioned
+`simtools-tests` resource bundle selected by `SIMTOOLS_TESTS_PATH` and
+`SIMTOOLS_TESTS_TAG`. `SIMTOOLS_TESTS_VERSION` remains a compatibility alias.
 
 ## `integration_tests` Blocks
 
-Use the strongest cheap validation available:
+Declare artifacts with `test_outputs`; each item owns its location and an
+optional ordered list of explicit `validations`. Use the strongest cheap
+validation available:
 
 ```yaml
 integration_tests:
-- output_file: results/output.ecsv
-- file_type: json
-- test_output_files:
-  - file: run.log
-    path_descriptor: output_path
-    output_sub_path: sim_telarray/run000010
-  - file: run.simtel.zst
-    path_descriptor: pack_for_grid_register
-    expected_sim_telarray_output:
-      pe_sum: [20, 1000]
-      photons: [90, 1000]
-      trigger_time: [0, 50]
-      event_type: shower
-- reference_output_file: ${generated:reference.ecsv}
-  test_output_file: results/output.ecsv
-  tolerance: 1.e-2
-- model_parameter_validation:
-    parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
-    reference_parameter_name: nsb_pixel_rate
-    tolerance: 1.e-1
-    scaling: 10.0
-- test_simtel_cfg_files:
-    "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg}
+  - test_outputs:
+    - file: results/output.ecsv
+      path_descriptor: output_path
+      validations:
+      - type: table
+        minimum_rows: 1
+    - file: run.simtel.zst
+      path_descriptor: pack_for_grid_register
+      validations:
+      - type: simtel
+        event_type: shower
+        event:
+          pe_sum: {range: [20, 1000]}
+          trigger_time: {range: [0, 50]}
 ```
 
 Validation keys:
 
-- `output_file`: file under `configuration.output_path`.
-- `test_output_files`: list or single mapping with `file`, `path_descriptor`,
-  optional `output_sub_path`, and optional sim_telarray or log expectations.
-- `file_type`: checks JSON/YAML parsing of `configuration.output_file`;
-  other types check suffix only.
-- `reference_output_file`: compare ECSV, JSON, YAML, or YML; uses `test_output_file` or
-  falls back to `configuration.output_file`; optional `tolerance` and ECSV `test_columns`.
-- `model_parameter_validation`: compare generated parameter JSON to MongoDB.
-- `test_simtel_cfg_files`: compare generated sim_telarray cfg for matching
-  model version.
-
-For log files, use `expected_log_output.pattern` and `forbidden_pattern`.
-For sim_telarray files, use `expected_sim_telarray_output` and
-`expected_sim_telarray_metadata` directly on the `test_output_files` entry.
+- `test_outputs`: a list of generated artifacts. Each has `file`, an optional
+  `path_descriptor`, and optional `output_sub_path`.
+- `validations`: explicit validators. Available types are `format`,
+  `reference`, `data_schema`, `table`, `metadata`, `hdf5_datasets`,
+  `hdf5_product`, `log`, `simtel`, `simtel_config`, and `model_parameter`.
+- `reference`: compare JSON, YAML, or ECSV references. ECSV comparison can
+  select `columns`, specify `key_columns`, include `metadata`, and filter rows.
+- `simtel`: validate event type and event ranges. `simtel_config` compares
+  generated sim_telarray configuration files.
+- `log`: validate expected and forbidden log patterns.
 
 ## Commands
 
@@ -147,13 +164,14 @@ pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
-pytest -v --test-resources-path /full/path/to/resources \
+pytest -v --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
 ## Debug Checklist
 
-1. Confirm `.env` contains MongoDB credentials and model version settings.
+1. Confirm the selected filesystem or Git model source and model version are
+   available. For MongoDB-only workflows, confirm `.env` contains credentials.
 2. Confirm expected files use the post-rewrite temp paths via `output_path` or
    `pack_for_grid_register`.
 3. Prefer filename existence checks first, then add reference or physics-range
