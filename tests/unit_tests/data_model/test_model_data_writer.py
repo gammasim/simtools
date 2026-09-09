@@ -363,61 +363,6 @@ def test_get_parameter_type_for_schema_uses_selected_schema_version():
     assert writer_instance.get_parameter_type_for_schema("fadc_pulse_shape", "0.1.0") == "file"
 
 
-def test_parameter_uses_row_table_schema_true(mocker):
-    writer_instance = writer.ModelDataWriter()
-    mocker.patch.object(
-        writer_instance,
-        "_read_schema_dict",
-        return_value=(
-            {
-                "data": [
-                    {
-                        "type": "dict",
-                        "json_schema": {
-                            "required": ["columns", "column_units", "rows"],
-                            "properties": {
-                                "columns": {},
-                                "column_units": {},
-                                "rows": {},
-                            },
-                        },
-                    }
-                ]
-            },
-            "schema.yml",
-        ),
-    )
-
-    assert writer_instance.parameter_uses_row_table_schema("fadc_pulse_shape", "0.2.0")
-
-
-def test_parameter_uses_row_table_schema_false_for_generic_dict(mocker):
-    writer_instance = writer.ModelDataWriter()
-    mocker.patch.object(
-        writer_instance,
-        "_read_schema_dict",
-        return_value=(
-            {
-                "data": [
-                    {
-                        "type": "dict",
-                        "json_schema": {
-                            "required": ["name", "multiplicity"],
-                            "properties": {
-                                "name": {},
-                                "multiplicity": {},
-                            },
-                        },
-                    }
-                ]
-            },
-            "schema.yml",
-        ),
-    )
-
-    assert not writer_instance.parameter_uses_row_table_schema("array_triggers", "0.2.0")
-
-
 def test_get_validated_parameter_dict_fadc_pulse_shape_file_legacy():
     w1 = writer.ModelDataWriter()
 

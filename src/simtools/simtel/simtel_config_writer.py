@@ -13,9 +13,13 @@ import simtools.version
 from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.data_model import schema
-from simtools.data_model.table_asset import read_ecsv_asset
-from simtools.model_repository.asset_names import get_export_file_name
-from simtools.simtel import simtel_table_writer, simtel_validate_metadata
+from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.simtel import (
+    segmentation,
+    simtel_table_writer,
+    simtel_validate_metadata,
+    table_serializers,
+)
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -59,6 +63,7 @@ class SimtelConfigWriter:
         telescope_model_name=None,
         telescope_design_model=None,
         label=None,
+        model_reader=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -69,6 +74,7 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
+        self._model_reader = model_reader
 
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
@@ -230,24 +236,14 @@ class SimtelConfigWriter:
         ]
         return [dict(zip(table.colnames, row)) for row in zip(*columns)]
 
-    @staticmethod
-    def _read_camera_table(parameters, parameter_name, destination):
+    def _read_camera_table(self, parameters, parameter_name, _destination):
         """Read and validate an exported camera component table."""
         parameter_data = parameters.get(parameter_name)
         if parameter_data is None:
             raise ValueError(f"Camera component parameter is missing: {parameter_name}")
-        value = parameter_data.get("value")
-        exported_name = get_export_file_name(parameter_data)
-        source = Path(destination) / Path(exported_name or value).name
-        if not source.is_file():
-            raise FileNotFoundError(f"Camera component table was not exported: {source}")
-        schema_data = schema.get_model_parameter_schema(
-            parameter_name, parameter_data.get("model_parameter_schema_version")
-        )
-        schema_entry = next(
-            entry for entry in schema_data.get("data", []) if entry.get("type") == "file"
-        )
-        return read_ecsv_asset(source, schema_entry=schema_entry, parameter_data=parameter_data)
+        if self._model_reader is None:
+            raise RuntimeError("sim_telarray table serialization requires a model reader")
+        return self._model_reader.get_parameter_table(parameter_data)
 
     def _resolve_lightguide_file(
         self, pixel_type, parameter_key, output_key, parameters, destination, telescope_name
@@ -257,8 +253,16 @@ class SimtelConfigWriter:
         if parameter_name is None:
             return
         table = self._read_camera_table(parameters, parameter_name, destination)
-        table.meta["simtelarray_original_file_name"] = f"{parameter_name}-{telescope_name}.dat"
-        pixel_type[output_key] = simtel_table_writer.write_simtel_table(table, destination)
+        schema_data = schema.get_model_parameter_schema(
+            parameter_name, parameters[parameter_name].get("model_parameter_schema_version")
+        )
+        contract = get_simtel_serialization(schema_data)
+        pixel_type[output_key] = table_serializers.write_simtel_table(
+            table,
+            destination,
+            contract=contract,
+            output_name=f"{parameter_name}-{telescope_name}.dat",
+        )
         if len(table) == 0:
             raise ValueError(f"Selected lightguide parameter is empty: {parameter_name}")
 
@@ -707,6 +711,8 @@ class SimtelConfigWriter:
         str, any
             Converted parameter name and value.
         """
+        if simtel_name is None:
+            return None, None
         conversion_dict = {
             "array_triggers": self._write_array_triggers_file,
             "fadc_pulse_shape": lambda v, mp, tm: self._write_table_parameter_file(
@@ -717,7 +723,7 @@ class SimtelConfigWriter:
             value, list
         ):
             output = Path(model_path).parent / f"{parameter_name}-{Path(model_path).stem}.dat"
-            return simtel_name, simtel_table_writer.write_mirror_segmentation(
+            return simtel_name, segmentation.write_mirror_segmentation(
                 value,
                 output,
                 parameter_name=parameter_name,
@@ -745,14 +751,14 @@ class SimtelConfigWriter:
         parameter_data=None,
     ):
         """
-        Write a dict-valued table parameter to an ASCII file for sim_telarray.
+        Write an ECSV table parameter to an ASCII file for sim_telarray.
 
         Parameters
         ----------
         parameter_name : str
             Parameter name.
-        value : dict or str
-            Table data as ``{columns, rows}`` dict, or a filename string (passed through).
+        value : str
+            ECSV filename from the model parameter record.
         model_path : Path
             Path to the telescope config file being written.
         _telescope_model : ignored
@@ -765,56 +771,22 @@ class SimtelConfigWriter:
         """
         if isinstance(value, str) and value.lower().endswith(".ecsv"):
             dest_dir = Path(model_path).parent
-            source = dest_dir / self._get_exported_table_name(value, parameter_data)
-            if not source.is_file():
-                raise FileNotFoundError(f"Co-located ECSV table was not exported: {source}")
-            schema_entry = None
-            schema_data = {}
-            if parameter_data is not None:
-                schema_data = schema.get_model_parameter_schema(
-                    source_parameter, parameter_data.get("model_parameter_schema_version")
-                )
-                schema_entry = next(
-                    (entry for entry in schema_data.get("data", []) if entry.get("type") == "file"),
-                    None,
-                )
-            table = read_ecsv_asset(
-                source, schema_entry=schema_entry, parameter_data=parameter_data
+            if self._model_reader is None:
+                raise RuntimeError("sim_telarray table serialization requires a model reader")
+            schema_data = schema.get_model_parameter_schema(
+                source_parameter, parameter_data.get("model_parameter_schema_version")
             )
-            table_format = next(
-                (
-                    software.get("table_format")
-                    for software in schema_data.get("simulation_software", [])
-                    if software.get("name") == "sim_telarray"
-                ),
-                None,
-            )
-            return simtel_table_writer.write_simtel_table(
+            table = self._model_reader.get_parameter_table(parameter_data)
+            contract = get_simtel_serialization(schema_data)
+            return table_serializers.write_simtel_table(
                 table,
                 dest_dir,
-                table_format=table_format,
-                output_name=(
-                    f"{source_parameter}-{Path(model_path).stem}.dat"
-                    if _telescope_model is None and source_parameter
-                    else None
-                ),
+                contract=contract,
+                output_name=f"{source_parameter or parameter_name}-{Path(model_path).stem}.dat",
             )
         if not isinstance(value, dict):
             return value
-        dest_dir = Path(model_path).parent
-        telescope_name = Path(model_path).stem
-        return simtel_table_writer.write_simtel_table(
-            parameter_name, value, dest_dir, telescope_name
-        )
-
-    def _get_exported_table_name(self, value, parameter_data):
-        """Return the qualified ECSV name used in the model directory."""
-        parameter_data = dict(parameter_data or {})
-        parameter_data["value"] = value
-        return get_export_file_name(
-            parameter_data,
-            fallback_instrument=self._telescope_design_model or self._telescope_model_name,
-        )
+        raise TypeError("sim_telarray table writing requires a validated Astropy ECSV table")
 
     def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):
         """

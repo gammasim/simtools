@@ -14,21 +14,16 @@ data:
   - type: file
     unit: dimensionless
     table_columns:
-      - name: angle
+      - name: incidence_angle
         description: Incidence angle
         type: float64
         unit: deg
-        required: false
+        required: true
       - name: efficiency
         description: Light-guide efficiency
         type: float64
         unit: dimensionless
         required: true
-    table_metadata:
-      - name: simtelarray_original_file_name
-        description: Original simulator output basename
-        type: string
-        required: false
 instrument:
   class: Camera
 activity:
@@ -43,6 +38,12 @@ source:
   - Calibration
 simulation_software:
   - name: simtools
+    table_format: plain
+    serialization:
+      columns: [incidence_angle, efficiency]
+      row_sort_keys: [incidence_angle]
+      float_format: ".12g"
+      write_comments: false
 plot_configuration:
   - type: lightguide_efficiency_vs_incidence_angle
     title: Light guide efficiency
@@ -51,7 +52,7 @@ plot_configuration:
     no_markers: true
     tables:
       - parameter: lightguide_efficiency_vs_incidence_angle
-        column_x: angle
+        column_x: incidence_angle
         column_y: efficiency
 ---
 title: Schema for lightguide_efficiency_vs_incidence_angle model parameter
@@ -94,5 +95,5 @@ plot_configuration:
     no_markers: true
     tables:
       - parameter: lightguide_efficiency_vs_incidence_angle
-        column_x: 'angle'
+        column_x: incidence_angle
         column_y: 'efficiency'

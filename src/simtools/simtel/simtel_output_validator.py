@@ -9,7 +9,7 @@ from eventio.simtel.simtelfile import SimTelFile
 
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
-from simtools.simtel import simtel_table_reader, simtel_validate_metadata
+from simtools.simtel import simtel_validate_metadata
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
@@ -267,10 +267,6 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
         value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         if parameter_type == "file":
             model_value = _resolve_file_parameter_value(model_value, param, model)
-        value = _resolve_dict_parameter_metadata_value(
-            value, model_value, parameter_type, param, model
-        )
-
         error = _check_parameter_validity(
             param, value, model_value, parameter_type, allow_for_changes
         )
@@ -290,41 +286,7 @@ def _resolve_file_parameter_value(model_value, parameter_name, model):
     if isinstance(model_name, str) and isinstance(config_file_path, (str, Path)):
         return f"{parameter_name}-{Path(config_file_path).stem}.dat"
 
-    model_directory = getattr(model, "config_file_directory", None)
-    if model_directory is None:
-        return model_value
-
-    source = Path(model_directory) / Path(model_value).name
-    try:
-        table = simtel_table_reader.read_simtel_table(parameter_name, source)
-    except (FileNotFoundError, OSError, ValueError, TypeError) as exc:
-        _logger.debug(
-            "Unable to resolve file-valued sim_telarray metadata for %s: %s",
-            parameter_name,
-            exc,
-        )
-        return model_value
-
-    return table.meta.get("simtelarray_original_file_name", model_value)
-
-
-def _resolve_dict_parameter_metadata_value(value, model_value, parameter_type, param, model):
-    """Resolve table-file metadata for dict parameters before comparison."""
-    if parameter_type != "dict":
-        return value
-
-    if not isinstance(value, str) or not isinstance(model_value, dict):
-        return value
-
-    try:
-        return simtel_table_reader.resolve_dict_parameter_value(
-            value,
-            param,
-            data_path=model.config_file_directory,
-        )
-    except (FileNotFoundError, ValueError, TypeError) as exc:
-        _logger.debug(f"Unable to resolve dict-valued sim_telarray metadata for {param}: {exc}")
-        return value
+    return model_value
 
 
 def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):

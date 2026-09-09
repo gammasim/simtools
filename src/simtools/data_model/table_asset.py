@@ -67,6 +67,97 @@ def validate_table_asset(table, schema_entry=None, parameter_data=None):
     return table
 
 
+def get_simtel_serialization(schema_dict):
+    """Return the sim_telarray table serialization contract from a schema.
+
+    Parameters
+    ----------
+    schema_dict : dict
+        Complete model-parameter schema.
+
+    Returns
+    -------
+    dict
+        The declared serialization contract.
+
+    Raises
+    ------
+    ValueError
+        If the parameter has a sim_telarray table format without a contract.
+    """
+    software = next(
+        (
+            entry
+            for entry in schema_dict.get("simulation_software", [])
+            if entry.get("name") == "sim_telarray"
+        ),
+        None,
+    )
+    if software is None:
+        software = next(
+            (
+                entry
+                for entry in schema_dict.get("simulation_software", [])
+                if entry.get("serialization")
+            ),
+            None,
+        )
+    if software is None or software.get("table_format") is None:
+        raise ValueError(
+            f"Parameter '{schema_dict.get('name', '<unknown>')}' has no sim_telarray "
+            "table serialization"
+        )
+    contract = software.get("serialization")
+    if contract is None:
+        raise ValueError(
+            f"sim_telarray format '{software['table_format']}' has no serialization contract"
+        )
+    result = dict(contract)
+    result["table_format"] = software["table_format"]
+    result["units"] = {
+        column["name"]: column.get("unit", "dimensionless")
+        for entry in schema_dict.get("data", [])
+        for column in entry.get("table_columns", [])
+        if column["name"] in set(result.get("allowed_columns", result.get("columns", [])))
+    }
+    _validate_serialization_contract(result)
+    return result
+
+
+def _validate_serialization_contract(contract):
+    """Validate references and invariants in a simulator serialization contract."""
+    required = {
+        "table_format",
+        "columns",
+        "row_sort_keys",
+        "float_format",
+        "write_comments",
+        "units",
+    }
+    missing = sorted(required - set(contract))
+    if missing:
+        raise ValueError(f"Serialization contract is incomplete: {missing}")
+    columns = contract["columns"]
+    if not columns or len(columns) != len(set(columns)):
+        raise ValueError("Serialization contract columns must be unique and non-empty")
+    optional = set(contract.get("optional_columns", []))
+    allowed = set(contract.get("allowed_columns", columns))
+    if not set(columns) <= allowed | optional:
+        raise ValueError("Serialization contract allowed_columns must include columns")
+    declared = allowed | optional
+    sort_keys = set(contract.get("row_sort_keys", contract.get("sort_keys", [])))
+    if not sort_keys <= declared:
+        raise ValueError("Serialization contract sort keys must reference declared columns")
+    matrix_axes = contract.get("matrix_axes", [])
+    if len(matrix_axes) not in (0, 2) or len(matrix_axes) != len(set(matrix_axes)):
+        raise ValueError("Serialization contract matrix_axes must contain exactly two unique axes")
+    if matrix_axes and not set(matrix_axes) <= declared:
+        raise ValueError("Serialization contract matrix axes must reference declared columns")
+    value_column = contract.get("value_column")
+    if value_column is not None and value_column not in declared:
+        raise ValueError("Serialization contract value_column must reference a declared column")
+
+
 def _validate_table_columns(table, table_columns, allow_extra_columns=False):
     """Validate table columns against schema declarations."""
     descriptions = {entry["name"]: entry for entry in table_columns}

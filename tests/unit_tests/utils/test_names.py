@@ -401,9 +401,9 @@ def test_sim_telarray_configuration_parameters_have_explicit_mappings(parameter_
     assert names.get_simulation_software_name_from_parameter_name(parameter_name) == parameter_name
 
 
-def test_simtools_owned_sim_telarray_collection_parameter_has_no_sim_telarray_mapping():
+def test_nsb_correction_has_explicit_sim_telarray_mapping():
     parameter = "correct_nsb_spectrum_to_telescope_altitude"
-    assert names.get_simulation_software_name_from_parameter_name(parameter) is None
+    assert names.get_simulation_software_name_from_parameter_name(parameter) == parameter
     assert (
         names.get_simulation_software_name_from_parameter_name(parameter, "simtools") == parameter
     )

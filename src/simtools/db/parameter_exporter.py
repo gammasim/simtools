@@ -4,18 +4,13 @@ import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from simtools.data_model import row_table_utils
+from astropy.table import Table
+
+from simtools.data_model import schema
+from simtools.data_model.table_asset import validate_table_asset
 from simtools.model_repository.asset_names import SOURCE_VALUE_KEY, qualify_parameter_file_name
-from simtools.simtel import simtel_table_reader
 
 ECSV_SUFFIX = ".ecsv"
-
-
-def _is_dict_table_value(parameter_info):
-    """Return True if a parameter stores embedded row-oriented table data."""
-    return parameter_info.get("type") == "dict" and row_table_utils.is_row_table_dict(
-        parameter_info.get("value")
-    )
 
 
 def _get_parameter_info(
@@ -140,44 +135,6 @@ def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=
     return instance_ids
 
 
-def _export_dict_table_parameter(
-    db,
-    parameter,
-    site,
-    array_element_name,
-    output_file,
-    par_info,
-    parameters,
-    parameter_version=None,
-    model_version=None,
-):
-    """
-    Export dict-typed (embedded table) parameter to ECSV file.
-
-    Returns the output file path.
-    """
-    if output_file is None:
-        raise ValueError(
-            "Use --output_file when exporting dict-typed parameters with "
-            "--export_model_file or --export_model_file_as_table."
-        )
-
-    table = export_single_model_file(
-        db=db,
-        parameter=parameter,
-        site=site,
-        array_element_name=array_element_name,
-        parameter_version=parameter_version,
-        model_version=model_version,
-        export_file_as_table=True,
-        parameters=parameters,
-        par_info=par_info,
-    )
-    table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
-    table.write(table_file, format="ascii.ecsv", overwrite=True)
-    return [table_file]
-
-
 def _export_file_backed_parameter(
     db,
     parameter,
@@ -275,17 +232,29 @@ def export_single_model_file(
             model_version=model_version,
         )
 
-    if _is_dict_table_value(par_info):
+    if par_info.get("type") == "dict":
         if export_file_as_table:
-            return simtel_table_reader.row_data_to_astropy_table(par_info["value"])
+            raise ValueError("Structured JSON model parameters are not ECSV tables")
         return None
 
-    db.export_model_files(parameters=parameters, dest=db.io_handler.get_output_directory())
+    if not str(par_info.get("value", "")).lower().endswith(ECSV_SUFFIX):
+        if export_file_as_table:
+            raise ValueError(f"Parameter '{parameter}' does not reference an ECSV table")
+        db.export_model_files(parameters=parameters, dest=db.io_handler.get_output_directory())
+        return None
+    exported = db.export_model_files(
+        parameters=parameters, dest=db.io_handler.get_output_directory()
+    )
     if export_file_as_table:
-        return simtel_table_reader.read_simtel_table(
-            parameter,
-            db.io_handler.get_output_directory().joinpath(par_info["value"]),
+        source = db.io_handler.get_output_directory() / next(iter(exported))
+        table = Table.read(source, format="ascii.ecsv")
+        schema_dict = schema.get_model_parameter_schema(
+            parameter, par_info.get("model_parameter_schema_version")
         )
+        entry = next(
+            (item for item in schema_dict.get("data", []) if item.get("type") == "file"), None
+        )
+        return validate_table_asset(table, schema_entry=entry, parameter_data=par_info)
     return None
 
 
@@ -347,19 +316,8 @@ def export_parameter_data(
         model_version=model_version,
     )
 
-    # Dispatch to appropriate export handler based on parameter type
-    if _is_dict_table_value(par_info):
-        return _export_dict_table_parameter(
-            db=db,
-            parameter=parameter,
-            site=site,
-            array_element_name=array_element_name,
-            output_file=output_file,
-            par_info=par_info,
-            parameters=parameters,
-            parameter_version=parameter_version,
-            model_version=model_version,
-        )
+    if par_info.get("type") == "dict":
+        raise ValueError("Structured JSON model parameters are not ECSV tables")
 
     return _export_file_backed_parameter(
         db=db,

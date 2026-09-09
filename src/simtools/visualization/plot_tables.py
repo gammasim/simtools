@@ -6,12 +6,12 @@ from pathlib import Path
 
 import numpy as np
 import packaging.version
+from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
 from simtools.io import ascii_handler, io_handler, legacy_data_handler
-from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -72,7 +72,9 @@ def read_table_data(config, data_path=None, model_reader=None):
             if "legacy" in _config.get("type", ""):
                 table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
-                table = read_simtel_table(_config.get("parameter"), file_name)
+                if Path(file_name).suffix.lower() != ".ecsv":
+                    raise ValueError(f"Model table files must use ECSV format: {file_name}")
+                table = Table.read(file_name, format="ascii.ecsv")
         elif "parameter" in _config:
             table = _read_table_from_model_database(_config, model_reader)
         else:

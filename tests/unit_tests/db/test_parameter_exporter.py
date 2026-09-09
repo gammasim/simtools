@@ -17,7 +17,7 @@ def db_handler_mock(mocker):
     return db
 
 
-def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler_mock):
+def test_export_parameter_data_rejects_structured_parameter_as_table(db_handler_mock):
     db_handler_mock.get_model_parameter.return_value = {
         "fadc_pulse_shape": {
             "type": "dict",
@@ -28,41 +28,18 @@ def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler
             },
         }
     }
-    table = mocker.Mock()
-    mock_export_single = mocker.patch.object(
-        parameter_exporter, "export_single_model_file", return_value=table
-    )
-    db_handler_mock.io_handler.get_output_file.return_value.with_suffix.return_value = (
-        "fadc_pulse_shape.ecsv"
-    )
-
-    output_files = parameter_exporter.export_parameter_data(
-        db=db_handler_mock,
-        parameter="fadc_pulse_shape",
-        site="North",
-        array_element_name="LSTN-01",
-        parameter_version="2.0.0",
-        model_version=None,
-        output_file="fadc_pulse_shape.json",
-        export_model_file=False,
-        export_model_file_as_table=True,
-    )
-
-    mock_export_single.assert_called_once_with(
-        db=db_handler_mock,
-        parameter="fadc_pulse_shape",
-        site="North",
-        array_element_name="LSTN-01",
-        parameter_version="2.0.0",
-        model_version=None,
-        export_file_as_table=True,
-        parameters=db_handler_mock.get_model_parameter.return_value,
-        par_info=db_handler_mock.get_model_parameter.return_value["fadc_pulse_shape"],
-    )
-    table.write.assert_called_once_with(
-        "fadc_pulse_shape.ecsv", format="ascii.ecsv", overwrite=True
-    )
-    assert output_files == ["fadc_pulse_shape.ecsv"]
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        parameter_exporter.export_parameter_data(
+            db=db_handler_mock,
+            parameter="fadc_pulse_shape",
+            site="North",
+            array_element_name="LSTN-01",
+            parameter_version="2.0.0",
+            model_version=None,
+            output_file="fadc_pulse_shape.json",
+            export_model_file=False,
+            export_model_file_as_table=True,
+        )
 
 
 def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handler_mock):
@@ -77,7 +54,7 @@ def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handle
         }
     }
 
-    with pytest.raises(ValueError, match="--output_file"):
+    with pytest.raises(ValueError, match="not ECSV tables"):
         parameter_exporter.export_parameter_data(
             db=db_handler_mock,
             parameter="fadc_pulse_shape",

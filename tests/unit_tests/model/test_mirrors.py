@@ -40,18 +40,6 @@ def mirror_template_ecsv(tmp_test_directory):
 
 
 @pytest.fixture
-def mirror_template_simtel(tmp_test_directory):
-    mirror_list_file = tmp_test_directory / "mirrors.dat"
-    rows = [
-        f"1022.49 -462.0 151.0 2920.0 3 0 0 mirror_panel_{mirror_id}\n"
-        for mirror_id in range(MIRROR_COUNT)
-    ]
-    Path(mirror_list_file).write_text("".join(rows), encoding="utf-8")
-    logger.info(f"Using mirror list with simtel format {mirror_list_file}")
-    return Mirrors(mirror_list_file)
-
-
-@pytest.fixture
 def mirror_table_template(tmp_test_directory):
     mirror_list_file = _write_mirror_table(tmp_test_directory)
     logger.info(f"Using mirror list {mirror_list_file}")
@@ -65,22 +53,11 @@ def write_tmp_mirror_list(tmp_test_directory, incomplete_mirror_table):
     return mirror_list_file
 
 
-def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_directory):
-    mirrors = mirror_template_simtel
-    assert MIRROR_COUNT == mirrors.number_of_mirrors
-    assert mirrors.mirror_diameter.value == pytest.approx(151.0)
-    assert 3 == mirrors.shape_type
-
-    # reduced table with less columns
-    columns_to_write = ["mirror_x", "mirror_y", "mirror_diameter", "focal_length", "shape_type"]
-    tmp_mirror_list = tmp_test_directory / "mirror_list_5columns.txt"
-    mirrors.mirror_table[columns_to_write].write(tmp_mirror_list, format="ascii.no_header")
-
-    red_mirrors = Mirrors(mirror_list_file=tmp_mirror_list)
-    assert MIRROR_COUNT == red_mirrors.number_of_mirrors
-    assert red_mirrors.mirror_table["mirror_panel_id"][0] == 0
-    assert red_mirrors.mirror_table["mirror_panel_id"][MIRROR_PANEL_ID] == MIRROR_PANEL_ID
-    assert "mirror_z" not in red_mirrors.mirror_table.columns
+def test_rejects_sim_telarray_mirror_list(tmp_test_directory):
+    mirror_list_file = tmp_test_directory / "mirrors.dat"
+    Path(mirror_list_file).write_text("0 0 1 2 3\n", encoding="utf-8")
+    with pytest.raises(InvalidMirrorListFileError, match="canonical ECSV"):
+        Mirrors(mirror_list_file)
 
 
 def test_read_mirror_list_from_ecsv(mirror_template_ecsv):
@@ -153,20 +130,20 @@ def test_get_single_mirror_parameters_ecsv(mirror_template_ecsv):
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
-def test_get_single_mirror_parameters_simtel(mirror_template_simtel):
-    mirrors = mirror_template_simtel
+def test_get_single_mirror_parameters(mirror_template_ecsv):
+    mirrors = mirror_template_ecsv
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
-def test_get_single_mirror_parameters_simtel_wrong_id(mirror_template_simtel):
+def test_get_single_mirror_parameters_wrong_id(mirror_template_ecsv):
     logger.info("Wrong mirror id returns the first mirror table row")
-    mirrors = mirror_template_simtel
+    mirrors = mirror_template_ecsv
     assert_mirror_parameters(*mirrors.get_single_mirror_parameters(9999))
 
 
-def test_get_single_mirror_parameters_simtel_missing_column(mirror_template_simtel):
+def test_get_single_mirror_parameters_missing_column(mirror_template_ecsv):
     logger.info("Removing column mirror_x")
-    mirrors = mirror_template_simtel
+    mirrors = mirror_template_ecsv
     mirrors.mirror_table.rename_column("mirror_x", "mirror_xa")
     (
         mirror_x,

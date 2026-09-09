@@ -15,25 +15,15 @@ from simtools.simtel.multi_illuminator_simulator import (
 
 @pytest.fixture
 def simple_visibility_data():
-    """
-    Create a simple visibility dict with 2 illuminators and 3 telescopes.
-
-    Returns
-    -------
-    dict
-        Visibility data dictionary.
-    """
-    return {
-        "columns": ["illuminator_id", "telescope_id", "visible"],
-        "rows": [
-            ["ILLS-01", "MSTS-01", True],
-            ["ILLS-01", "MSTS-02", True],
-            ["ILLS-01", "MSTS-03", False],
-            ["ILLS-02", "MSTS-01", False],
-            ["ILLS-02", "MSTS-02", True],
-            ["ILLS-02", "MSTS-03", True],
-        ],
-    }
+    """Create structured records for 2 illuminators and 3 telescopes."""
+    return [
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-01", "visible": True},
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-02", "visible": True},
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-03", "visible": False},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-01", "visible": False},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-02", "visible": True},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-03", "visible": True},
+    ]
 
 
 @pytest.fixture
@@ -492,15 +482,12 @@ def test_worker_recreates_database_reader_from_source_config(mocker):
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_empty_visibility_table(mock_pool, base_config):
     """Test simulate() with visibility data having no valid pairs."""
-    visibility_data = {
-        "columns": ["illuminator_id", "telescope_id", "visible"],
-        "rows": [
-            ["ILLS-01", "MSTS-01", False],
-            ["ILLS-01", "MSTS-02", False],
-            ["ILLS-02", "MSTS-01", False],
-            ["ILLS-02", "MSTS-02", False],
-        ],
-    }
+    visibility_data = [
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-01", "visible": False},
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-02", "visible": False},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-01", "visible": False},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-02", "visible": False},
+    ]
 
     simulator = MultiIlluminatorSimulator(
         visibility_data=visibility_data,
@@ -516,13 +503,10 @@ def test_simulate_empty_visibility_table(mock_pool, base_config):
 @patch("simtools.model.site_model.SiteModel")
 def test_load_visibility_from_site_model(mock_site_model_class, base_config):
     mock_site_model = MagicMock()
-    mock_site_model.get_parameter_value.return_value = {
-        "columns": ["illuminator_id", "telescope_id", "visible"],
-        "rows": [
-            ["ILLS-01", "MSTS-01", True],
-            ["ILLS-02", "MSTS-01", True],
-        ],
-    }
+    mock_site_model.get_parameter_value.return_value = [
+        {"illuminator_id": "ILLS-01", "telescope_id": "MSTS-01", "visible": True},
+        {"illuminator_id": "ILLS-02", "telescope_id": "MSTS-01", "visible": True},
+    ]
     mock_site_model_class.return_value = mock_site_model
 
     simulator = MultiIlluminatorSimulator(config=base_config)

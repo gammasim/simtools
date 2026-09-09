@@ -125,6 +125,12 @@ class GitModelSource:
             if path not in self._parameters:
                 continue
             parameter_data = self._parameters[path]
+            if (
+                parameter_data.get("file")
+                and isinstance(parameter_data.get("value"), str)
+                and parameter_data["value"].lower().endswith(".ecsv")
+            ):
+                self.get_parameter_table(parameter_data)
             scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
             if self._matches_filters(parameter_data, scope, site):
                 parameters.append(deepcopy(parameter_data))

@@ -9,7 +9,8 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools import settings
 from simtools.application.model_reader import require_model_reader
-from simtools.data_model import row_table_utils, schema, validate_data
+from simtools.data_model import schema, validate_data
+from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
@@ -251,6 +252,7 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
+        validate_finite_json_values(value)
         self.schema_dict, schema_file = self._read_schema_dict(
             parameter_name, model_parameter_schema_version
         )
@@ -359,35 +361,6 @@ class ModelDataWriter:
             if all(data_type == parameter_types[0] for data_type in parameter_types)
             else parameter_types
         )
-
-    def parameter_uses_row_table_schema(self, parameter_name, model_parameter_schema_version=None):
-        """Return True if selected schema defines row-oriented table dict payload.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Name of the model parameter.
-        model_parameter_schema_version: str or None
-            Explicit model-parameter schema version to use. If None, the newest
-            available schema version is selected.
-
-        Returns
-        -------
-        bool
-            True when a dict-typed schema entry requires the row-table keys
-            ``columns``, ``rows`` and ``column_units``.
-        """
-        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
-
-        for data_entry in schema_dict.get("data", []):
-            if data_entry.get("type") != "dict":
-                continue
-
-            json_schema = data_entry.get("json_schema", {})
-            if row_table_utils.is_row_table_schema(json_schema):
-                return True
-
-        return False
 
     def _get_parameter_type(self):
         """

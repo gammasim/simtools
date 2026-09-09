@@ -13,24 +13,20 @@ class IlluminatorTelescopeVisibility:
     illuminator, accounting for shadowing, blocking, topography, and distance
     constraints.
 
-    The input is a dict with keys "columns" and "rows", as stored in the model
-    parameter JSON file. The expected structure is:
+    The input is a list of structured records stored in the model parameter JSON
+    file. The expected structure is:
 
     .. code-block:: python
 
-        {
-            "columns": ["illuminator_id", "telescope_id", "visible"],
-            "rows": [
-                ["ILLN-01", "LSTN-01", false],
-                ["ILLN-01", "MSTN-02", true],
-                ...
-            ]
-        }
+        [
+            {"illuminator_id": "ILLN-01", "telescope_id": "LSTN-01", "visible": false},
+            {"illuminator_id": "ILLN-01", "telescope_id": "MSTN-02", "visible": true},
+        ]
 
     Parameters
     ----------
-    visibility_data : dict
-        Dictionary with "columns" and "rows" keys containing the visibility table.
+    visibility_data : list of dict
+        One record per illuminator-telescope combination.
 
     Raises
     ------
@@ -51,46 +47,30 @@ class IlluminatorTelescopeVisibility:
 
     def _parse_visibility_data(self, visibility_data):
         """
-        Parse the visibility data dictionary into internal lookup structures.
+        Parse visibility records into internal lookup structures.
 
         Parameters
         ----------
-        visibility_data : dict
-            Dictionary with "columns" and "rows" keys.
+        visibility_data : list of dict
+            One structured record per illuminator-telescope pair.
         """
-        if not isinstance(visibility_data, dict):
-            raise ValueError(
-                f"Expected dict with 'columns' and 'rows', got {type(visibility_data)}"
-            )
-        if "columns" not in visibility_data or "rows" not in visibility_data:
-            raise ValueError(
-                "Visibility data must contain 'columns' and 'rows' keys. "
-                f"Found keys: {list(visibility_data.keys())}"
-            )
-
-        columns = visibility_data["columns"]
-        rows = visibility_data["rows"]
-
-        # Identify column indices
-        try:
-            ill_idx = columns.index("illuminator_id")
-            tel_idx = columns.index("telescope_id")
-            vis_idx = columns.index("visible")
-        except ValueError as exc:
-            raise ValueError(
-                "Visibility data must have columns 'illuminator_id', 'telescope_id', "
-                f"and 'visible'. Found: {columns}"
-            ) from exc
+        if not isinstance(visibility_data, list):
+            raise ValueError(f"Expected a list of visibility records, got {type(visibility_data)}")
 
         # Build internal data structures
         self._illuminators = []
         self._telescopes = []
         self._pairs = {}  # (illuminator, telescope) -> bool
 
-        for row in rows:
-            illuminator = row[ill_idx]
-            telescope = row[tel_idx]
-            visible = bool(row[vis_idx])
+        for row in visibility_data:
+            try:
+                illuminator = row["illuminator_id"]
+                telescope = row["telescope_id"]
+                visible = bool(row["visible"])
+            except (KeyError, TypeError) as exc:
+                raise ValueError(
+                    "Visibility records must contain illuminator_id, telescope_id, and visible"
+                ) from exc
 
             if illuminator not in self._illuminators:
                 self._illuminators.append(illuminator)

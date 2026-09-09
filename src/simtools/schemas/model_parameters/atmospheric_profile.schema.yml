@@ -46,11 +46,6 @@ data:
         type: float64
         unit: dimensionless
         required: false
-    table_metadata:
-      - name: simtelarray_original_file_name
-        description: Original simulator output basename
-        type: string
-        required: false
 instrument:
   class: Site
 activity:
@@ -64,6 +59,13 @@ source:
   - Calibration
 simulation_software:
   - name: corsika
+  - name: sim_telarray
+    table_format: plain
+    serialization:
+      columns: [altitude, density, thickness, refractive_index, temperature, pressure, water_vapor_partial_pressure]
+      row_sort_keys: [altitude]
+      float_format: ".12g"
+      write_comments: false
 plot_configuration:
   - type: density_vs_altitude
     title: Atmospheric density profile

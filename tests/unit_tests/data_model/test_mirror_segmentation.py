@@ -4,11 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from simtools.data_model.mirror_segmentation import (
-    parse_segmentation_file,
-    validate_segments,
-    write_mirror_segmentation,
-)
+from simtools.data_model.mirror_segmentation import validate_segments
+from simtools.simtel.segmentation import parse_segmentation_file, write_mirror_segmentation
 
 PARAMETER_NAME = "primary_mirror_segmentation"
 SCHEMA_VERSION = "0.2.0"
@@ -36,7 +33,7 @@ def test_parse_and_write_shape_and_polygon_segments(tmp_test_directory):
 
     write_mirror_segmentation(records, output, PARAMETER_NAME, SCHEMA_VERSION)
 
-    assert output.read_text(encoding="utf-8").splitlines()[1:] == [
+    assert output.read_text(encoding="utf-8").splitlines() == [
         "HEX 1 1.0 2.0 3.0 4.0",
         "POLYGON 1 5.0 0.0 0.0 1.0 0.0 0.0 1.0",
     ]

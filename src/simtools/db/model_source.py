@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from simtools.data_model import schema
+from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import validate_table_asset
 from simtools.model_repository.asset_names import SOURCE_VALUE_KEY
 
@@ -67,12 +68,11 @@ class MongoDBModelSource:
         parameters = self.database_handler.read_parameter_documents(query, collection_name)
         self._parameters[key] = deepcopy(list(parameters.values()))
         for parameter_data in self._parameters[key]:
-            value = parameter_data.get("value")
+            validate_finite_json_values(parameter_data.get("value"))
             if (
                 parameter_data.get("file")
-                and isinstance(value, str)
-                and value.endswith(".ecsv")
-                and parameter_data.get("model_parameter_schema_version") == "0.3.0"
+                and isinstance(parameter_data.get("value"), str)
+                and parameter_data["value"].lower().endswith(".ecsv")
             ):
                 self.get_parameter_table(parameter_data)
         return deepcopy(self._parameters[key])
