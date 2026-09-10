@@ -428,6 +428,8 @@ definitions:
         maxItems: 2
       value_column:
         type: string
+      missing_value:
+        type: number
       float_format:
         type: string
       write_comments:
