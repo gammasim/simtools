@@ -101,6 +101,13 @@ Unit-test rules:
 
 - Use plain pytest functions, not test classes.
 - Cover changed success paths, error paths, and branches.
+- Every Python module under `src/simtools/` must have a matching unit-test
+  file under `tests/unit_tests/`, preserving its package directory and using
+  the `test_<module>.py` name, except for the modules excluded by CI:
+  `__init__.py`, `_version.py`, and anything under `applications/`. This
+  includes small helper modules such as `simtel/pulse_shapes.py` and
+  `utils/value_conversion.py`; do not leave them uncovered or rely on tests of
+  a neighboring module.
 - Use local fixtures first; use `tests/unit_tests/conftest.py` for fixtures
   shared across unit-test modules.
 - Shared repo fixtures such as `test_resources_path` and `simtools_root_path`
@@ -193,6 +200,28 @@ make html
 make linkcheck
 ```
 
+Before handing off a change that adds, removes, or moves a library module, run
+the API coverage check as well. Every reported module must be added to the
+appropriate API reference page with an `automodule` entry for its complete
+`simtools.*` import path:
+
+```bash
+FULLY_DOCUMENTED="TRUE"
+MODULES=$(find src/simtools \
+  \( -path "src/simtools/applications" -o -path "src/simtools/_*" \) -prune \
+  -o -type f -name "*.py" ! -name "__init__.py" -print)
+for module_path in $MODULES; do
+    module=$(basename "$module_path" .py)
+    if ! grep -q "$module" docs/source/api-reference/*.md; then
+        echo "Undocumented module: $module"
+        FULLY_DOCUMENTED="FALSE"
+    fi
+done
+if [[ "$FULLY_DOCUMENTED" = "FALSE" ]]; then
+    exit 1
+fi
+```
+
 ## Adding Code
 
 New application checklist:
@@ -212,6 +241,27 @@ New library module checklist:
 2. Add API reference documentation.
 3. Add or update user documentation if behavior is user-facing.
 4. Add a changelog fragment when working in a PR flow.
+
+Before handing off a change that adds, removes, or moves a library module, run
+the same source-to-test check used by CI and resolve every reported path:
+
+```bash
+python - <<'PY'
+from pathlib import Path
+
+src_root = Path("src/simtools")
+test_root = Path("tests/unit_tests")
+missing = []
+for path in src_root.rglob("*.py"):
+    relative = path.relative_to(src_root)
+    if path.name in {"__init__.py", "_version.py"} or relative.parts[0] == "applications":
+        continue
+    if not (test_root / relative.parent / f"test_{path.stem}.py").exists():
+        missing.append(str(relative))
+if missing:
+    raise SystemExit("Modules without unit tests:\n" + "\n".join(sorted(missing)))
+PY
+```
 
 ## Linting And Formatting
 
@@ -261,3 +311,9 @@ These issues have appeared repeatedly in local Codex logs and CI snippets:
 - Pylint duplicate-code or complexity failures: extract a helper only when it
   improves readability and matches local patterns.
 - `Undocumented module` CI failures: add the missing API reference entry.
+- The API documentation check scans every non-application, non-private
+  `src/simtools/**/*.py` module by basename. When adding or moving a module,
+  ensure that its basename is present in the appropriate
+  `docs/source/api-reference/*.md` page, with an `automodule` directive for
+  the complete import path. Resolve every `Undocumented module: <name>` result;
+  do not silence the check or rely on a partial documentation build.
