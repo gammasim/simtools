@@ -6,6 +6,7 @@ from pathlib import Path
 
 from simtools.io import ascii_handler
 from simtools.job_execution.job_manager import retry_command
+from simtools.model_repository.asset_names import SOURCE_VALUE_KEY, qualify_parameter_file_name
 from simtools.model_repository.files import read_production_tables
 from simtools.utils import names
 
@@ -113,6 +114,9 @@ def add_values_from_json_to_db(file, collection, db, file_prefix):
         Path to location of all additional files to be uploaded.
     """
     par_dict = ascii_handler.collect_data_from_file(file_name=file)
+    source_file_name = par_dict.get("value")
+    qualify_parameter_file_name(par_dict)
+    par_dict.pop(SOURCE_VALUE_KEY, None)
     logger.debug(
         f"Adding the following parameter to the DB: {par_dict['parameter']} "
         f"version {par_dict['parameter_version']} "
@@ -123,6 +127,7 @@ def add_values_from_json_to_db(file, collection, db, file_prefix):
         par_dict=par_dict,
         collection_name=collection,
         file_prefix=file_prefix,
+        source_file_name=source_file_name,
     )
 
 

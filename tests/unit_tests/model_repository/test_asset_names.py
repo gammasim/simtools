@@ -47,6 +47,14 @@ def test_get_export_file_name_can_preserve_source_name():
     assert get_export_file_name(parameter_data) == "atmospheric_profile-1.0.0.ecsv"
 
 
+def test_get_export_file_name_is_idempotent_for_qualified_name():
+    parameter_data = {
+        "value": "table-1.0.0-SSTS-design.ecsv",
+        "instrument": "SSTS-design",
+    }
+    assert get_export_file_name(parameter_data) == parameter_data["value"]
+
+
 def test_qualify_parameter_file_name_updates_ecsv_metadata():
     """Store the source value and update the exported value for an ECSV asset."""
     parameter_data = {"value": "table.ecsv", "instrument": "North-LST"}

@@ -178,7 +178,10 @@ def test_run_configured_applications_uses_unique_tmp_directory(tmp_test_director
         config_dir=config_root,
         log_dir=integration_dir / "log_files",
         run_time=None,
-        replacements={"__INTEGRATION_TESTS_DIRECTORY__": str(integration_dir)},
+        replacements={
+            "__INTEGRATION_TESTS_DIRECTORY__": str(integration_dir),
+            "__INTEGRATION_TESTS_DIRECTORY__/tmp/": "stale/tmp/",
+        },
         unique_tmp_directories=True,
     )
 

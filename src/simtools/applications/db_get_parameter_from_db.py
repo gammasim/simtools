@@ -13,18 +13,14 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "output_file",
         help=(
-            "Output file name for writing the parameter entry, overriding file-backed export name, "
-            "or base name for ECSV export of dict-backed tables."
+            "Output file name for writing the parameter entry, overriding file-backed export name."
         ),
         type=str,
         required=False,
     ),
     cli.ArgumentDefinition(
         "export_model_file",
-        help=(
-            "Export parameter data (model files for file-backed parameters; ECSV for "
-            "dict-backed table parameters)."
-        ),
+        help=("Export parameter data as a model file for file-backed parameters."),
         action="store_true",
         required=False,
     ),

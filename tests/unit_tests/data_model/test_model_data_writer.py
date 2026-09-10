@@ -330,6 +330,16 @@ def test_get_validated_parameter_dict():
     assert global_parameter["site"] is None
 
 
+def test_get_validated_parameter_dict_rejects_nonfinite_string_value():
+    with pytest.raises(ValueError, match=r"Non-finite JSON number"):
+        writer.ModelDataWriter().get_validated_parameter_dict(
+            parameter_name="transit_time_error",
+            value="nan ns",
+            instrument="LSTN-01",
+            parameter_version="0.0.1",
+        )
+
+
 def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
     w1 = writer.ModelDataWriter()
     embedded_value = {

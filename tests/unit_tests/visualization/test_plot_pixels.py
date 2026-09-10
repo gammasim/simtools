@@ -88,6 +88,50 @@ def test_plot_camera_components(mock_save, mock_plot_layout):
     mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
+@mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_configuration")
+@mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
+def test_plot_camera_components_uses_requested_layout_version(mock_save, mock_plot_layout):
+    config = {
+        "parameter": "camera_pixel_layout",
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.0",
+        "parameter_version": "2.0.0",
+    }
+    model_reader = mock.MagicMock()
+    model_reader.get_model_parameters.return_value = {
+        "camera_rotate": {"value": 0.0},
+        "camera_pixel_types": {"value": [{"funnel_shape": 1, "funnel_diameter_cm": 1.0}]},
+        "camera_pixel_layout": {"value": "current.ecsv"},
+        "camera_trigger_groups": {"value": "groups.ecsv"},
+        "camera_trigger_members": {"value": "members.ecsv"},
+    }
+    model_reader.get_model_parameter.return_value = {
+        "camera_pixel_layout": {"value": "historical.ecsv"}
+    }
+    model_reader.get_parameter_table.side_effect = [
+        mock_table([{"pixel_id": 0, "x_cm": 0.0, "y_cm": 0.0, "enabled": 1}]),
+        mock_table([]),
+        mock_table([]),
+    ]
+    mock_plot_layout.return_value = mock.MagicMock()
+
+    with mock.patch("simtools.visualization.plot_pixels.io_handler.IOHandler") as mock_io:
+        mock_io.return_value.get_output_directory.return_value = Path("/test/path")
+        plot_pixels.plot(config, "test.png", model_reader=model_reader)
+
+    model_reader.get_model_parameter.assert_called_once_with(
+        parameter="camera_pixel_layout",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="2.0.0",
+    )
+    assert model_reader.get_parameter_table.call_args_list[0].args[0]["value"] == (
+        "historical.ecsv"
+    )
+    mock_save.assert_called_once()
+
+
 def mock_table(rows):
     """Return a minimal table-like object for component plotting tests."""
     table = mock.MagicMock()

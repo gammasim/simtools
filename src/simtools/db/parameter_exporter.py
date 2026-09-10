@@ -8,7 +8,7 @@ from astropy.table import Table
 
 from simtools.data_model import schema
 from simtools.data_model.table_asset import validate_table_asset
-from simtools.model_repository.asset_names import SOURCE_VALUE_KEY, qualify_parameter_file_name
+from simtools.model_repository.asset_names import qualify_parameter_file_name
 
 ECSV_SUFFIX = ".ecsv"
 
@@ -58,7 +58,7 @@ def _get_file_parameters(parameters, file_names):
 
 def _export_file_parameter(db, db_name, destination, dest, parameter):
     """Export one file parameter and return its name and database id."""
-    source_name = parameter.get(SOURCE_VALUE_KEY, parameter["value"])
+    source_name = parameter["value"]
     file_name = (
         qualify_parameter_file_name(parameter) if parameter.get("parameter") else source_name
     )

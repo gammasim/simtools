@@ -42,8 +42,10 @@ simulation_software:
   - name: simtools
     table_format: plain
     serialization:
-      columns: [incidence_angle, wavelength, efficiency]
-      row_sort_keys: [wavelength, incidence_angle]
+      columns: [wavelength, efficiency]
+      optional_columns: [incidence_angle]
+      allowed_columns: [wavelength, efficiency, incidence_angle]
+      row_sort_keys: [wavelength]
       float_format: ".12g"
       write_comments: false
 plot_configuration:

@@ -1302,6 +1302,8 @@ def test_add_parameter_with_file(db, mocker, tmp_test_directory):
 
     mock_insert_one.assert_called_once()
     mock_insert_file.assert_called_once()
+    assert mock_insert_file.call_args.args == (str(test_file), "test_db")
+    assert mock_insert_file.call_args.kwargs == {"filename": "test_file.dat"}
     mock_reset_cache.assert_called_once()
 
 

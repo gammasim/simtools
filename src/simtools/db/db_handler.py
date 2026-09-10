@@ -729,6 +729,7 @@ class DatabaseHandler:
         db_name=None,
         collection_name="telescopes",
         file_prefix=None,
+        source_file_name=None,
     ):
         """
         Add a new parameter dictionary to the DB.
@@ -746,6 +747,8 @@ class DatabaseHandler:
             The name of the collection to add a parameter to.
         file_prefix: str or Path
             where to find files to upload to the DB
+        source_file_name : str, optional
+            Repository filename to upload when the stored parameter value uses a qualified name.
         """
         mongo_db_handler = self.require_mongodb("Adding a model parameter")
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
@@ -764,7 +767,8 @@ class DatabaseHandler:
                     "The location of the file to upload, "
                     f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
-            file_path = Path(file_prefix).joinpath(par_dict["value"])
+            source_value = source_file_name or par_dict["value"]
+            file_path = Path(file_prefix).joinpath(source_value)
             files_to_add_to_db.add(f"{file_path}")
 
         self._logger.debug(
@@ -774,11 +778,15 @@ class DatabaseHandler:
 
         for file_to_insert_now in files_to_add_to_db:
             self._logger.debug(f"Will also add the file {file_to_insert_now} to the DB")
-            self.insert_file_to_db(file_to_insert_now, db_name)
+            self.insert_file_to_db(
+                file_to_insert_now,
+                db_name,
+                filename=Path(par_dict["value"]).name,
+            )
 
         self._reset_parameter_cache()
 
-    def insert_file_to_db(self, file_name, db_name=None):
+    def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
         Insert a file to the DB.
 
@@ -796,7 +804,7 @@ class DatabaseHandler:
             its newly created DB GridOut._id.
         """
         return self.require_mongodb("Inserting a model file").insert_file_to_db(
-            file_name, db_name or self.db_name
+            file_name, db_name or self.db_name, **kwargs
         )
 
     def _cache_key(self, site=None, array_element_name=None, model_version=None, collection=None):

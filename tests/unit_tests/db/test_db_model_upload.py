@@ -28,6 +28,38 @@ def test_add_values_from_json_to_db(mock_collect_data_from_file):
         par_dict={"parameter": "test_param", "parameter_version": "1.0"},
         collection_name=collection,
         file_prefix=file_prefix,
+        source_file_name=None,
+    )
+
+
+@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
+def test_add_values_from_json_to_db_qualifies_ecsv_asset(
+    mock_collect_data_from_file,
+):
+    mock_collect_data_from_file.return_value = {
+        "parameter": "mirror_list",
+        "parameter_version": "1.0.0",
+        "instrument": "SSTS-design",
+        "value": "mirror_list-1.0.0.ecsv",
+        "file": True,
+    }
+    mock_db = Mock()
+
+    db_model_upload.add_values_from_json_to_db(
+        "mirror_list.json", "telescopes", mock_db, "SSTS-design/mirror_list"
+    )
+
+    mock_db.add_new_parameter.assert_called_once_with(
+        par_dict={
+            "parameter": "mirror_list",
+            "parameter_version": "1.0.0",
+            "instrument": "SSTS-design",
+            "value": "mirror_list-1.0.0-SSTS-design.ecsv",
+            "file": True,
+        },
+        collection_name="telescopes",
+        file_prefix="SSTS-design/mirror_list",
+        source_file_name="mirror_list-1.0.0.ecsv",
     )
 
 

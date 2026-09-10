@@ -40,7 +40,7 @@ data:
         description: Pressure
         type: float64
         unit: mbar
-        required: true
+        required: false
       - name: water_vapor_partial_pressure
         description: Water vapor partial pressure
         type: float64
@@ -62,7 +62,16 @@ simulation_software:
   - name: simtools
     table_format: plain
     serialization:
-      columns: [altitude, density, thickness, refractive_index, temperature, pressure, water_vapor_partial_pressure]
+      columns: [altitude, density, thickness, refractive_index]
+      optional_columns: [temperature, pressure, water_vapor_partial_pressure]
+      allowed_columns:
+        - altitude
+        - density
+        - thickness
+        - refractive_index
+        - temperature
+        - pressure
+        - water_vapor_partial_pressure
       row_sort_keys: [altitude]
       float_format: ".12g"
       write_comments: false

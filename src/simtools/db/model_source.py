@@ -6,7 +6,6 @@ from pathlib import Path
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import validate_table_asset
-from simtools.model_repository.asset_names import SOURCE_VALUE_KEY
 
 
 class MongoDBModelSource:
@@ -85,7 +84,7 @@ class MongoDBModelSource:
 
     def get_parameter_table(self, parameter_data):
         """Read and validate an ECSV table referenced by a parameter record."""
-        value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
+        value = parameter_data.get("value")
         if not isinstance(value, str) or not value.lower().endswith(".ecsv"):
             raise ValueError("Parameter does not reference an ECSV table")
         table = self.get_ecsv_file_as_astropy_table(Path(value).name)

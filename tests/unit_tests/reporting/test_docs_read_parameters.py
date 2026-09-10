@@ -374,6 +374,35 @@ def test__format_parameter_value(tmp_path):
     assert result_6 == "[View Test](#test)"
 
 
+def test__format_parameter_value_links_to_parameter_asset(tmp_path):
+    read_parameters = ReadParameters(
+        args={
+            "model_version": "6.0.0",
+            "telescope": "LSTN-01",
+            "site": "North",
+        },
+        output_path=tmp_path,
+    )
+    read_parameters.model_reader.get_design_model = Mock(return_value="LSTN-design")
+
+    result = read_parameters._format_parameter_value(
+        "camera_pixel_layout",
+        "camera_pixel_layout-1.0.0.ecsv",
+        "",
+        True,
+        None,
+        "LSTN-01",
+        "North",
+    )
+
+    assert result == (
+        "[camera_pixel_layout-1.0.0.ecsv](https://gitlab.cta-observatory.org/cta-science/"
+        "simulations/simulation-model/simulation-models/-/blob/main/"
+        "simulation-models/model_parameters/LSTN-design/camera_pixel_layout/"
+        "camera_pixel_layout-1.0.0.ecsv)"
+    )
+
+
 def test__group_model_versions_by_parameter_version(tmp_path):
     read_parameters = ReadParameters(args={}, output_path=tmp_path)
 

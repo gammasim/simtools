@@ -36,6 +36,8 @@ def get_export_file_name(parameter_data, fallback_instrument=None):
 
     instrument = parameter_data.get("instrument") or fallback_instrument or "global"
     path = Path(value)
+    if path.stem.endswith(f"-{instrument}"):
+        return value
     return f"{path.stem}-{instrument}{path.suffix}"
 
 

@@ -64,6 +64,14 @@ def plot(config, output_file, model_reader=None):
             collection="telescopes",
             model_version=config.get("model_version"),
         )
+        if config.get("parameter_version"):
+            layout_parameter = model_reader.get_model_parameter(
+                parameter="camera_pixel_layout",
+                site=config["site"],
+                array_element_name=config.get("telescope"),
+                parameter_version=config["parameter_version"],
+            )
+            parameters["camera_pixel_layout"] = layout_parameter["camera_pixel_layout"]
         camera_components = _resolve_camera_components(model_reader, parameters)
         fig = plot_pixel_layout_from_configuration(
             camera_components, config["telescope"], **plot_kwargs

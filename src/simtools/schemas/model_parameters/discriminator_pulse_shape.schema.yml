@@ -65,7 +65,7 @@ plot_configuration:
     tables:
       - parameter: discriminator_pulse_shape
         column_x: time
-        column_y: amplitude (low gain)
+        column_y: amplitude_low_gain
   - type: discriminator_pulse_shape_high_and_low_gain
     title: Discriminator pulse shape (high and low gain)
     xtitle: Time [ns]
@@ -77,7 +77,7 @@ plot_configuration:
         column_y: amplitude
       - parameter: discriminator_pulse_shape
         column_x: time
-        column_y: amplitude (low gain)
+        column_y: amplitude_low_gain
 ---
 title: Schema for discriminator_pulse_shape model parameter
 schema_version: 0.1.0

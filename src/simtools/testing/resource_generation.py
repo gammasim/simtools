@@ -124,13 +124,13 @@ def run_configured_applications(
         workflow_replacements = replacements
         if unique_tmp_directories:
             workflow_tmp = (
-                Path(replacements["__INTEGRATION_TESTS_DIRECTORY__"])
+                Path((replacements or {})["__INTEGRATION_TESTS_DIRECTORY__"])
                 / "tmp"
                 / f"{workflow_config.stem}-{uuid.uuid4().hex}"
             )
             workflow_replacements = {
-                "__INTEGRATION_TESTS_DIRECTORY__/tmp/": f"{workflow_tmp}/",
                 **(replacements or {}),
+                "__INTEGRATION_TESTS_DIRECTORY__/tmp/": f"{workflow_tmp}/",
             }
         tmp_args_dict = {
             "config_file": str(workflow_config),

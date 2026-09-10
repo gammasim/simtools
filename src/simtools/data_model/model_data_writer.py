@@ -252,13 +252,13 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        validate_finite_json_values(value)
         self.schema_dict, schema_file = self._read_schema_dict(
             parameter_name, model_parameter_schema_version
         )
 
         if unit is None:
             value, unit = value_conversion.split_value_and_unit(value)
+        validate_finite_json_values(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
