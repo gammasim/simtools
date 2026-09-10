@@ -66,12 +66,12 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_table_writer
+## simtel_file_writer
 
-(simtel-table-writer-1)=
+(simtel-file-writer-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_table_writer
+.. automodule:: simtel.simtel_file_writer
    :members:
 ```
 

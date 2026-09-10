@@ -1,4 +1,4 @@
-"""Writer for sim_telarray table data files."""
+"""Writer for sim_telarray files."""
 
 import logging
 from pathlib import Path

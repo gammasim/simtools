@@ -19,7 +19,7 @@ from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import (
     segmentation,
-    simtel_table_writer,
+    simtel_file_writer,
     simtel_validate_metadata,
     table_serializers,
 )
@@ -239,7 +239,7 @@ class SimtelConfigWriter:
             "triggers": self._camera_table_records(parameters, "camera_trigger_groups"),
             "trigger_members": self._camera_table_records(parameters, "camera_trigger_members"),
         }
-        result = simtel_table_writer.write_camera_file(configuration, output)
+        result = simtel_file_writer.write_camera_file(configuration, output)
         self._camera_file_cache[output] = cache_key
         return result
 

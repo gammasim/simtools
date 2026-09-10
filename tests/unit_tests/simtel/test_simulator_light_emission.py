@@ -232,7 +232,7 @@ def test__get_pulse_shape_argument_for_sim_telarray_gauss_exp_dat_file(
 
     with patch(
         "simtools.simtel.simulator_light_emission."
-        "simtel_table_writer.write_light_pulse_table_gauss_exp_conv"
+        "simtel_file_writer.write_light_pulse_table_gauss_exp_conv"
     ) as mock_writer:
         result = simulator_instance._get_pulse_shape_argument_for_sim_telarray()
 
@@ -581,7 +581,7 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         ),
         patch(
             "simtools.simtel.simulator_light_emission."
-            "simtel_table_writer.write_light_pulse_table_gauss_exp_conv"
+            "simtel_file_writer.write_light_pulse_table_gauss_exp_conv"
         ) as mock_writer,
     ):
         mock_distance_value = Mock()

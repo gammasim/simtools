@@ -9,7 +9,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.simtel.simtel_table_writer as simtel_table_writer
+import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
@@ -211,7 +211,7 @@ def test_write_camera_file_resolves_explicit_lightguide(
         simtel_config_writer, "_resolve_lightguide_file", side_effect=resolve_lightguide
     )
     write_camera = mocker.patch(
-        "simtools.simtel.simtel_config_writer.simtel_table_writer.write_camera_file"
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file"
     )
 
     simtel_config_writer._write_camera_file(parameters, tmp_test_directory / "config.cfg")
@@ -957,7 +957,7 @@ def _read_pulse_table(path: Path):
 
 def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+    result = simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -987,7 +987,7 @@ def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test
 def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_directory):
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+        simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
@@ -1037,7 +1037,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     file_path = Path(tmp_test_directory) / "lambertian.dat"
 
     # Test default parameters
-    simtel_table_writer.write_angular_distribution_table_lambertian(
+    simtel_file_writer.write_angular_distribution_table_lambertian(
         file_path=file_path,
         max_angle_deg=90.0,
         n_samples=100,
@@ -1066,7 +1066,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
 
     # Test with max_angle > 90 (should be clipped to 0)
     file_path_large = Path(tmp_test_directory) / "lambertian_large.dat"
-    simtel_table_writer.write_angular_distribution_table_lambertian(
+    simtel_file_writer.write_angular_distribution_table_lambertian(
         file_path=file_path_large,
         max_angle_deg=180.0,
         n_samples=181,

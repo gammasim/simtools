@@ -7,7 +7,7 @@ import astropy.units as u
 import pytest
 from astropy.table import QTable
 
-import simtools.simtel.simtel_table_writer as simtel_table_writer
+import simtools.simtel.simtel_file_writer as simtel_file_writer
 import simtools.simtel.table_serializers as table_serializers
 
 
@@ -343,7 +343,7 @@ def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory
         ],
     }
 
-    result = simtel_table_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
+    result = simtel_file_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
 
     assert result == "camera.dat"
     lines = (tmp_test_directory / result).read_text(encoding="utf-8").splitlines()
@@ -407,18 +407,18 @@ def test_write_camera_file_rejects_invalid_trigger_and_module_id(tmp_test_direct
         "trigger_members": [],
     }
     with pytest.raises(ValueError, match="Invalid camera module ID"):
-        simtel_table_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
+        simtel_file_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
 
 
 def test_write_camera_file_supports_transparency_and_rejects_unsafe_path(tmp_test_directory):
     configuration = _camera_configuration()
-    result = simtel_table_writer.write_camera_file(
+    result = simtel_file_writer.write_camera_file(
         configuration, tmp_test_directory / "nested" / "camera.dat"
     )
     assert "0.9 0.8" in (tmp_test_directory / "nested" / result).read_text(encoding="utf-8")
 
     with pytest.raises(ValueError, match="Unsafe camera configuration path"):
-        simtel_table_writer.write_camera_file(
+        simtel_file_writer.write_camera_file(
             configuration, Path(tmp_test_directory).joinpath("..", "camera.dat")
         )
 
@@ -441,7 +441,7 @@ def test_camera_validation_rejects_invalid_components(mutation, message):
     mutation(configuration)
 
     with pytest.raises(ValueError, match=message):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_validation_requires_resolved_pixel_type_data():
@@ -450,7 +450,7 @@ def test_camera_validation_requires_resolved_pixel_type_data():
     configuration["pixel_types"][0].pop("funnel_wall_reflectivity")
 
     with pytest.raises(ValueError, match="no resolved lightguide"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 @pytest.mark.parametrize(
@@ -505,7 +505,7 @@ def test_camera_validation_rejects_invalid_triggers(mutation, message):
     mutation(configuration)
 
     with pytest.raises(ValueError, match=message):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_validation_rejects_trigger_member_references():
@@ -517,12 +517,12 @@ def test_camera_validation_rejects_trigger_member_references():
         {"group_id": 1, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
     ]
     with pytest.raises(ValueError, match="unknown group"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
     configuration["trigger_members"][0]["group_id"] = 0
     configuration["trigger_members"][0]["member_order"] = 1
     with pytest.raises(ValueError, match="member orders"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
@@ -534,19 +534,19 @@ def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
         {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0}
     ]
     with pytest.raises(ValueError, match="pixel orders"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
     configuration["trigger_members"] = [
         {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True},
         {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0, "required": True},
     ]
     with pytest.raises(ValueError, match="first pixel"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
     configuration["trigger_members"][1]["required"] = False
     configuration["trigger_members"][1]["pixel_id"] = 99
     with pytest.raises(ValueError, match="unknown pixel ID"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_validation_rejects_empty_trigger_group():
@@ -556,19 +556,19 @@ def test_camera_validation_rejects_empty_trigger_group():
     ]
 
     with pytest.raises(ValueError, match="has no members"):
-        simtel_table_writer._validate_camera_components(configuration)
+        simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_helpers_validate_names_and_module_ids():
     with pytest.raises(ValueError, match="Unsafe lightguide"):
-        simtel_table_writer._safe_basename("nested/angle.dat", "lightguide")
+        simtel_file_writer._safe_basename("nested/angle.dat", "lightguide")
     with pytest.raises(ValueError, match="Invalid camera module ID"):
-        simtel_table_writer._module_id(-1)
-    assert simtel_table_writer._module_id("0x0a") == "0xa"
+        simtel_file_writer._module_id(-1)
+    assert simtel_file_writer._module_id("0x0a") == "0xa"
 
 
 def test_write_light_pulse_table_gauss_exp_conv(tmp_test_directory):
-    output = simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+    output = simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
         tmp_test_directory / "pulse.dat",
         width_ns=1.0,
         exp_decay_ns=2.0,
@@ -589,13 +589,13 @@ def test_write_light_pulse_table_requires_shape_parameters(tmp_test_directory, m
     width = None if missing == "width" else 1.0
     decay = None if missing == "decay" else 2.0
     with pytest.raises(ValueError, match="required"):
-        simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+        simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
             tmp_test_directory / "pulse.dat", width, decay, fadc_sum_bins=1
         )
 
 
 def test_write_angular_distribution_table_lambertian(tmp_test_directory):
-    output = simtel_table_writer.write_angular_distribution_table_lambertian(
+    output = simtel_file_writer.write_angular_distribution_table_lambertian(
         tmp_test_directory / "angles.dat", max_angle_deg=120, n_samples=4
     )
 
@@ -607,8 +607,8 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
 
 def test_write_angular_distribution_handles_zero_intensity_maximum(tmp_test_directory, monkeypatch):
     simtools_table = tmp_test_directory / "angles.dat"
-    monkeypatch.setattr(simtel_table_writer.np, "linspace", lambda *_args, **_kwargs: [180.0])
-    simtel_table_writer.write_angular_distribution_table_lambertian(
+    monkeypatch.setattr(simtel_file_writer.np, "linspace", lambda *_args, **_kwargs: [180.0])
+    simtel_file_writer.write_angular_distribution_table_lambertian(
         simtools_table, max_angle_deg=180, n_samples=1
     )
 
@@ -616,10 +616,10 @@ def test_write_angular_distribution_handles_zero_intensity_maximum(tmp_test_dire
 
 
 def test_write_ascii_table_helpers(tmp_test_directory):
-    pulse_path = simtel_table_writer.write_ascii_pulse_table(
+    pulse_path = simtel_file_writer.write_ascii_pulse_table(
         tmp_test_directory / "pulse.dat", [0.0, 1.0], [0.5, 1.0]
     )
-    angle_path = simtel_table_writer.write_ascii_angle_distribution_table(
+    angle_path = simtel_file_writer.write_ascii_angle_distribution_table(
         tmp_test_directory / "angles.dat", [0.0, 10.0], [1.0, 0.5]
     )
 
