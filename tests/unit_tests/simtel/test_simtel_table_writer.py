@@ -1,10 +1,53 @@
 #!/usr/bin/python3
 
+from copy import deepcopy
+from pathlib import Path
+
 import astropy.units as u
 import pytest
 from astropy.table import QTable
 
 import simtools.simtel.simtel_table_writer as simtel_table_writer
+
+
+def _camera_configuration():
+    """Return a minimal complete camera configuration."""
+    return {
+        "pixel_types": [
+            {
+                "type_id": 1,
+                "pmt_type": 0,
+                "cathode_shape": 0,
+                "cathode_diameter_cm": 1,
+                "funnel_shape": 2,
+                "funnel_diameter_cm": 1,
+                "funnel_depth_cm": 0,
+                "funnel_transparency": 0.9,
+                "funnel_wall_reflectivity": 0.8,
+            }
+        ],
+        "pixels": [
+            {
+                "pixel_id": 0,
+                "type_id": 1,
+                "x_cm": 0,
+                "y_cm": 0,
+                "module": 0,
+                "board": 0,
+                "channel": 0,
+                "module_id": 10,
+                "enabled": 1,
+                "relative_qe": 1,
+                "relative_gain": 1,
+                "z_offset_cm": 0,
+                "rotation_deg": 0,
+                "normal_x": 0,
+                "normal_y": 0,
+            }
+        ],
+        "triggers": [],
+        "trigger_members": [],
+    }
 
 
 def _contract(table_format, columns, **kwargs):
@@ -375,3 +418,369 @@ def test_write_camera_file_rejects_invalid_trigger_and_module_id(tmp_test_direct
     }
     with pytest.raises(ValueError, match="Invalid camera module ID"):
         simtel_table_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
+
+
+def test_write_camera_file_supports_transparency_and_rejects_unsafe_path(tmp_test_directory):
+    configuration = _camera_configuration()
+    result = simtel_table_writer.write_camera_file(
+        configuration, tmp_test_directory / "nested" / "camera.dat"
+    )
+    assert "0.9 0.8" in (tmp_test_directory / "nested" / result).read_text(encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Unsafe camera configuration path"):
+        simtel_table_writer.write_camera_file(
+            configuration, Path(tmp_test_directory).joinpath("..", "camera.dat")
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (lambda config: config.clear(), "requires pixel types"),
+        (
+            lambda config: config["pixel_types"].append(deepcopy(config["pixel_types"][0])),
+            "type IDs",
+        ),
+        (lambda config: config["pixels"][0].update(pixel_id=1), "contiguous"),
+        (lambda config: config["pixels"][0].update(enabled=0), "enabled pixel"),
+        (lambda config: config["pixels"][0].update(type_id=99), "unknown pixel type"),
+    ],
+)
+def test_camera_validation_rejects_invalid_components(mutation, message):
+    configuration = _camera_configuration()
+    mutation(configuration)
+
+    with pytest.raises(ValueError, match=message):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+def test_camera_validation_requires_resolved_pixel_type_data():
+    configuration = _camera_configuration()
+    configuration["pixel_types"][0].pop("funnel_transparency")
+    configuration["pixel_types"][0].pop("funnel_wall_reflectivity")
+
+    with pytest.raises(ValueError, match="no resolved lightguide"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (lambda config: config.update(triggers=[{"group_id": 1, "kind": "majority"}]), "group IDs"),
+        (
+            lambda config: config.update(
+                triggers=[{"group_id": 0, "kind": "unknown", "use_default_multiplicity": True}],
+                trigger_members=[
+                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
+                ],
+            ),
+            "Unsupported",
+        ),
+        (
+            lambda config: config.update(
+                triggers=[
+                    {
+                        "group_id": 0,
+                        "kind": "majority",
+                        "use_default_multiplicity": True,
+                        "multiplicity": 1,
+                    }
+                ],
+                trigger_members=[
+                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
+                ],
+            ),
+            "must not be positive",
+        ),
+        (
+            lambda config: config.update(
+                triggers=[
+                    {
+                        "group_id": 0,
+                        "kind": "majority",
+                        "use_default_multiplicity": False,
+                        "multiplicity": 0,
+                    }
+                ],
+                trigger_members=[
+                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
+                ],
+            ),
+            "must be positive",
+        ),
+    ],
+)
+def test_camera_validation_rejects_invalid_triggers(mutation, message):
+    configuration = _camera_configuration()
+    mutation(configuration)
+
+    with pytest.raises(ValueError, match=message):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+def test_camera_validation_rejects_trigger_member_references():
+    configuration = _camera_configuration()
+    configuration["triggers"] = [
+        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
+    ]
+    configuration["trigger_members"] = [
+        {"group_id": 1, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
+    ]
+    with pytest.raises(ValueError, match="unknown group"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+    configuration["trigger_members"][0]["group_id"] = 0
+    configuration["trigger_members"][0]["member_order"] = 1
+    with pytest.raises(ValueError, match="member orders"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
+    configuration = _camera_configuration()
+    configuration["triggers"] = [
+        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
+    ]
+    configuration["trigger_members"] = [
+        {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0}
+    ]
+    with pytest.raises(ValueError, match="pixel orders"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+    configuration["trigger_members"] = [
+        {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True},
+        {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0, "required": True},
+    ]
+    with pytest.raises(ValueError, match="first pixel"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+    configuration["trigger_members"][1]["required"] = False
+    configuration["trigger_members"][1]["pixel_id"] = 99
+    with pytest.raises(ValueError, match="unknown pixel ID"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+def test_camera_validation_rejects_empty_trigger_group():
+    configuration = _camera_configuration()
+    configuration["triggers"] = [
+        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
+    ]
+
+    with pytest.raises(ValueError, match="has no members"):
+        simtel_table_writer._validate_camera_components(configuration)
+
+
+def test_camera_helpers_validate_names_and_module_ids():
+    with pytest.raises(ValueError, match="Unsafe lightguide"):
+        simtel_table_writer._safe_basename("nested/angle.dat", "lightguide")
+    with pytest.raises(ValueError, match="Invalid camera module ID"):
+        simtel_table_writer._module_id(-1)
+    assert simtel_table_writer._module_id("0x0a") == "0xa"
+
+
+def test_legacy_contract_helpers_validate_columns_units_and_matrices():
+    table = QTable({"x": [2.0, 1.0], "y": [0.2, 0.1]})
+    contract = _contract("plain", ["x", "y"], row_sort_keys=["x"])
+    simtel_table_writer._validate_contract_definition(contract)
+    simtel_table_writer._validate_contract_columns(table, contract["columns"], contract)
+    simtel_table_writer._validate_contract_units(table, contract)
+    simtel_table_writer._validate_contract_matrix(table, contract)
+
+    contract["optional_columns"] = ["optional"]
+    contract["row_sort_keys"] = ["optional"]
+    simtel_table_writer._validate_contract_definition(contract)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (lambda contract: contract.update(columns=[]), "unique and non-empty"),
+        (lambda contract: contract.update(allowed_columns=[]), "allowed columns"),
+        (lambda contract: contract.update(row_sort_keys=["missing"]), "sort keys"),
+        (lambda contract: contract.update(matrix_axes=["x"]), "matrix_axes"),
+        (lambda contract: contract.update(matrix_axes=["x", "missing"]), "matrix axes"),
+        (lambda contract: contract.update(value_column="missing"), "value column"),
+    ],
+)
+def test_legacy_contract_definition_rejects_invalid_references(mutation, message):
+    contract = _contract("plain", ["x", "y"])
+    mutation(contract)
+    with pytest.raises(ValueError, match=message):
+        simtel_table_writer._validate_contract_definition(contract)
+
+
+def test_legacy_contract_validation_rejects_missing_matrix_and_bad_units():
+    table = QTable({"x": [1.0], "y": [2.0], "value": [0.5]})
+    matrix_contract = _contract(
+        "plain",
+        ["x", "value"],
+        allowed_columns=["x", "y", "value"],
+        matrix_axes=["x", "y"],
+        value_column="value",
+    )
+    with pytest.raises(ValueError, match="missing columns"):
+        simtel_table_writer._validate_contract_columns(
+            QTable({"y": [2.0], "value": [0.5]}), matrix_contract["columns"], matrix_contract
+        )
+    with pytest.raises(ValueError, match="present together"):
+        simtel_table_writer._validate_contract_matrix(
+            QTable({"x": [1.0], "value": [0.5]}), matrix_contract
+        )
+
+    matrix_contract["units"]["missing"] = "dimensionless"
+    simtel_table_writer._validate_contract_units(table, matrix_contract)
+
+    matrix_contract["units"] = {"x": "nm"}
+    with pytest.raises(ValueError, match="expected nm"):
+        simtel_table_writer._validate_contract_units(table, matrix_contract)
+
+
+def test_legacy_contract_validation_rejects_duplicate_and_incomplete_matrix():
+    table = QTable({"x": [1.0, 1.0], "y": [2.0, 2.0], "value": [0.5, 0.6]})
+    contract = _contract(
+        "plain",
+        ["x", "y", "value"],
+        matrix_axes=["x", "y"],
+        value_column="value",
+    )
+    with pytest.raises(ValueError, match="duplicate axis"):
+        simtel_table_writer._validate_contract_matrix(table, contract)
+
+    table = QTable({"x": [1.0, 1.0, 2.0], "y": [1.0, 2.0, 1.0], "value": [0.5, 0.6, 0.7]})
+    with pytest.raises(ValueError, match="complete Cartesian"):
+        simtel_table_writer._validate_contract_matrix(table, contract)
+
+    rpol_contract = dict(contract, table_format="rpol_matrix")
+    simtel_table_writer._validate_contract_matrix(QTable({"x": [1.0]}), rpol_contract)
+
+    with pytest.raises(ValueError, match="present together"):
+        simtel_table_writer._validate_contract_matrix(QTable({"x": [1.0]}), contract)
+
+    with pytest.raises(ValueError, match="requires two axes"):
+        simtel_table_writer._validate_contract_columns(
+            QTable({"x": [1.0], "value": [0.5]}),
+            ["x", "value"],
+            _contract("rpol_matrix", ["x", "value"]),
+        )
+
+    with pytest.raises(ValueError, match="missing value column"):
+        simtel_table_writer._validate_contract_columns(
+            QTable({"x": [1.0], "y": [2.0]}),
+            ["x"],
+            _contract(
+                "rpol_matrix",
+                ["x"],
+                matrix_axes=["x", "y"],
+                value_column="value",
+                allowed_columns=["x", "y", "value"],
+            ),
+        )
+
+
+def test_legacy_serializers_write_plain_rpol_and_atmosphere(tmp_test_directory):
+    table = QTable({"x": [2.0, 1.0], "y": [0.2, 0.1], "extra": [3, 4]})
+    contract = _contract(
+        "plain", ["x", "y"], row_sort_keys=["x"], optional_columns=["extra"], float_format=".1f"
+    )
+    simtel_table_writer._write_plain_table(table, tmp_test_directory / "plain.dat", contract)
+    assert (tmp_test_directory / "plain.dat").read_text(encoding="utf-8").splitlines() == [
+        "1.0 0.1 4",
+        "2.0 0.2 3",
+    ]
+
+    simtel_table_writer._write_rpol_table(
+        QTable({"x": [2.0], "value": [0.2]}),
+        tmp_test_directory / "rpol-one.dat",
+        _contract("rpol_matrix", ["x", "value"]),
+    )
+    assert (tmp_test_directory / "rpol-one.dat").read_text(encoding="utf-8") == "2 0.2\n"
+
+    matrix = QTable(
+        {
+            "x": [1.0, 1.0, 2.0, 2.0],
+            "y": [2.0, 1.0, 2.0, 1.0],
+            "value": [0.2, 0.1, 0.4, 0.3],
+        }
+    )
+    matrix_contract = _contract(
+        "rpol_matrix", ["x", "value"], matrix_axes=["x", "y"], value_column="value"
+    )
+    simtel_table_writer._write_rpol_table(
+        matrix, tmp_test_directory / "rpol-two.dat", matrix_contract
+    )
+    assert "ANGLE= 1 2" in (tmp_test_directory / "rpol-two.dat").read_text(encoding="utf-8")
+
+    atmosphere = QTable({"x": [1.0], "y": [2.0], "value": [0.5]})
+    atmosphere_contract = _contract(
+        "atmospheric_transmission",
+        ["x", "y", "value"],
+        matrix_axes=["x", "y"],
+        value_column="value",
+    )
+    simtel_table_writer._write_atmospheric_transmission(
+        atmosphere, tmp_test_directory / "atmosphere.dat", atmosphere_contract
+    )
+    assert (tmp_test_directory / "atmosphere.dat").read_text(encoding="utf-8") == (
+        "# H1= 2\n1 0.5\n"
+    )
+
+
+def test_write_light_pulse_table_gauss_exp_conv(tmp_test_directory):
+    output = simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+        tmp_test_directory / "pulse.dat",
+        width_ns=1.0,
+        exp_decay_ns=2.0,
+        fadc_sum_bins=1,
+        dt_ns=1.0,
+    )
+
+    assert output == tmp_test_directory / "pulse.dat"
+    assert (
+        (tmp_test_directory / "pulse.dat")
+        .read_text(encoding="utf-8")
+        .startswith("# time[ns] amplitude\n")
+    )
+
+
+@pytest.mark.parametrize("missing", ["width", "decay"])
+def test_write_light_pulse_table_requires_shape_parameters(tmp_test_directory, missing):
+    width = None if missing == "width" else 1.0
+    decay = None if missing == "decay" else 2.0
+    with pytest.raises(ValueError, match="required"):
+        simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+            tmp_test_directory / "pulse.dat", width, decay, fadc_sum_bins=1
+        )
+
+
+def test_write_angular_distribution_table_lambertian(tmp_test_directory):
+    output = simtel_table_writer.write_angular_distribution_table_lambertian(
+        tmp_test_directory / "angles.dat", max_angle_deg=120, n_samples=4
+    )
+
+    assert output == tmp_test_directory / "angles.dat"
+    lines = (tmp_test_directory / "angles.dat").read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "# angle[deg] relative_intensity"
+    assert lines[-1].endswith("0.00000000")
+
+
+def test_write_angular_distribution_handles_zero_intensity_maximum(tmp_test_directory, monkeypatch):
+    simtools_table = tmp_test_directory / "angles.dat"
+    monkeypatch.setattr(simtel_table_writer.np, "linspace", lambda *_args, **_kwargs: [180.0])
+    simtel_table_writer.write_angular_distribution_table_lambertian(
+        simtools_table, max_angle_deg=180, n_samples=1
+    )
+
+    assert simtools_table.read_text(encoding="utf-8").splitlines()[-1].endswith("0.00000000")
+
+
+def test_write_ascii_table_helpers(tmp_test_directory):
+    pulse_path = simtel_table_writer.write_ascii_pulse_table(
+        tmp_test_directory / "pulse.dat", [0.0, 1.0], [0.5, 1.0]
+    )
+    angle_path = simtel_table_writer.write_ascii_angle_distribution_table(
+        tmp_test_directory / "angles.dat", [0.0, 10.0], [1.0, 0.5]
+    )
+
+    assert pulse_path.name == "pulse.dat"
+    assert angle_path.name == "angles.dat"
+    assert "0.000000 0.50000000" in pulse_path.read_text(encoding="utf-8")
+    assert "10.000000 0.50000000" in angle_path.read_text(encoding="utf-8")

@@ -18,6 +18,8 @@ from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 from simtools.visualization import visualize
 
+ECSV_SUFFIX = ".ecsv"
+
 
 class CameraEfficiency:
     """
@@ -91,7 +93,7 @@ class CameraEfficiency:
         """Define the camera-efficiency result file name."""
         file_name = names.generate_file_name(
             file_type="camera_efficiency",
-            suffix=".ecsv",
+            suffix=ECSV_SUFFIX,
             site=self.telescope_model.site,
             telescope_model_name=self.telescope_model.name,
             zenith_angle=self.config["zenith_angle"],
@@ -313,14 +315,14 @@ class CameraEfficiency:
             self._logger.error("Cannot export results because they do not exist")
         else:
             self._logger.info(f"Exporting camera efficiency table to {self._file['results']}")
-            self._results.write(self._file["results"], format="ascii.ecsv", overwrite=True)
-            _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.yml")
+            self._results.write(self._file["results"], format=f"ascii{ECSV_SUFFIX}", overwrite=True)
+            _results_summary_file = str(self._file["results"]).replace(ECSV_SUFFIX, "_summary.yml")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             ascii_handler.write_data_to_file(self.results_summary(), Path(_results_summary_file))
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
-        self._results = Table.read(self._file["results"], format="ascii.ecsv")
+        self._results = Table.read(self._file["results"], format=f"ascii{ECSV_SUFFIX}")
         self._has_results = True
 
     def calc_tel_efficiency(self):
@@ -586,7 +588,7 @@ class CameraEfficiency:
         obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
         if self.efficiency_type == "muon":
             atmospheric_profile = self.site_model.get_parameter_value("atmospheric_profile")
-            if str(atmospheric_profile).lower().endswith(".ecsv"):
+            if str(atmospheric_profile).lower().endswith(ECSV_SUFFIX):
                 parameter_data = self.site_model.parameters.get("atmospheric_profile", {})
                 atmospheric_profile = get_simtel_table_file_name(parameter_data) or (
                     f"atmospheric_profile-{Path(self.telescope_model.config_file_path).stem}.dat"

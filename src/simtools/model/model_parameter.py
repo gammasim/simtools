@@ -507,19 +507,26 @@ class ModelParameter:
 
         filtered = {}
         for target, parameters in overwrites.items():
-            if not isinstance(parameters, dict):
-                continue
-            filtered_parameters = {}
-            for parameter_name, value in parameters.items():
-                try:
-                    collection = names.get_collection_name_from_parameter_name(parameter_name)
-                except KeyError:
-                    filtered_parameters[parameter_name] = value
-                else:
-                    if collection not in ignored_collections:
-                        filtered_parameters[parameter_name] = value
+            filtered_parameters = self._filter_overwrite_parameters(parameters, ignored_collections)
             if filtered_parameters:
                 filtered[target] = filtered_parameters
+        return filtered
+
+    @staticmethod
+    def _filter_overwrite_parameters(parameters, ignored_collections):
+        """Return applicable parameters from one model-target override mapping."""
+        if not isinstance(parameters, dict):
+            return None
+
+        filtered = {}
+        for parameter_name, value in parameters.items():
+            try:
+                collection = names.get_collection_name_from_parameter_name(parameter_name)
+            except KeyError:
+                filtered[parameter_name] = value
+            else:
+                if collection not in ignored_collections:
+                    filtered[parameter_name] = value
         return filtered
 
     @staticmethod
