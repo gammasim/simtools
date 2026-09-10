@@ -315,9 +315,5 @@ These issues have appeared repeatedly in local Codex logs and CI snippets:
   `src/simtools/**/*.py` module by basename. When adding or moving a module,
   ensure that its basename is present in the appropriate
   `docs/source/api-reference/*.md` page, with an `automodule` directive for
-  the complete import path. `asset_names.py` is included in this scan; if the
-  check reports `Undocumented module: asset_names`, add its API reference entry
-  rather than assuming package discovery is sufficient.
-- Run the complete API scan after module changes and fix every
-  `Undocumented module: <name>` result. Do not silence the check or rely on a
-  partial documentation build to validate coverage.
+  the complete import path. Resolve every `Undocumented module: <name>` result;
+  do not silence the check or rely on a partial documentation build.
