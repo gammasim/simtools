@@ -13,8 +13,9 @@ class IlluminatorTelescopeVisibility:
     illuminator, accounting for shadowing, blocking, topography, and distance
     constraints.
 
-    The input is a list of structured records stored in the model parameter JSON
-    file. The expected structure is:
+    The input is a list of structured records. Schema version 0.1.0 model
+    records store the same data as a ``columns``/``rows`` mapping and are
+    normalized before parsing. The record structure is:
 
     .. code-block:: python
 
@@ -54,6 +55,7 @@ class IlluminatorTelescopeVisibility:
         visibility_data : list of dict
             One structured record per illuminator-telescope pair.
         """
+        visibility_data = _normalize_visibility_records(visibility_data)
         if not isinstance(visibility_data, list):
             raise ValueError(f"Expected a list of visibility records, got {type(visibility_data)}")
 
@@ -224,3 +226,17 @@ class IlluminatorTelescopeVisibility:
     def n_valid_pairs(self):
         """Get the total number of valid illuminator-telescope pairs."""
         return len(self._valid_pairs)
+
+
+def _normalize_visibility_records(visibility_data):
+    """Return structured records from a schema 0.1 row-table mapping."""
+    if not isinstance(visibility_data, dict):
+        return visibility_data
+
+    columns = visibility_data.get("columns")
+    rows = visibility_data.get("rows")
+    if not isinstance(columns, list) or not isinstance(rows, list):
+        raise ValueError("Visibility row table must contain list-valued 'columns' and 'rows'")
+    if any(not isinstance(row, list) or len(row) != len(columns) for row in rows):
+        raise ValueError("Visibility row table rows must match the declared columns")
+    return [dict(zip(columns, row, strict=True)) for row in rows]

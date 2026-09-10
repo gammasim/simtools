@@ -42,6 +42,17 @@ def test_init_valid_data(simple_visibility_data):
     assert visibility.n_telescopes == 3
 
 
+def test_init_normalizes_row_table_data():
+    visibility = IlluminatorTelescopeVisibility(
+        {
+            "columns": ["illuminator_id", "telescope_id", "visible"],
+            "rows": [["ILLN-01", "MSTN-02", True]],
+        }
+    )
+
+    assert visibility.get_valid_pairs() == [("ILLN-01", "MSTN-02")]
+
+
 def test_init_invalid_type():
     with pytest.raises(ValueError, match="Expected a list"):
         IlluminatorTelescopeVisibility("not a dict")

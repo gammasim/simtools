@@ -152,7 +152,7 @@ def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
     assert other_source._parameters == {}
 
 
-def test_filesystem_source_validates_ecsv_before_copying(
+def test_filesystem_source_does_not_parse_ecsv_before_copying(
     model_repository, mocker, tmp_test_directory
 ):
     source = FileSystemModelSource(model_repository)
@@ -165,7 +165,7 @@ def test_filesystem_source_validates_ecsv_before_copying(
     )
 
     assert result == "copied from filesystem"
-    validate_table.assert_called_once_with({"parameter": "example"})
+    validate_table.assert_not_called()
 
 
 def test_filesystem_source_qualifies_colliding_assets(model_repository, tmp_test_directory):

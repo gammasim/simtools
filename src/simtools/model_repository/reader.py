@@ -131,12 +131,6 @@ class FileSystemModelSource:
             if not parameter_path.is_file():
                 continue
             parameter_data = self._read_parameter_file(parameter_path)
-            if (
-                parameter_data.get("file")
-                and isinstance(parameter_data.get("value"), str)
-                and parameter_data["value"].lower().endswith(ECSV_SUFFIX)
-            ):
-                self.get_parameter_table(parameter_data)
             if self._matches_filters(parameter_data, parameter_scope, site):
                 parameters.append(parameter_data)
         if not parameters:
@@ -238,8 +232,6 @@ class FileSystemModelSource:
             return "file exists"
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
-        if source.suffix.lower() == ECSV_SUFFIX and parameter.get("parameter"):
-            self.get_parameter_table(parameter)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         return "copied from filesystem"
