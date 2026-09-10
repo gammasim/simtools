@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
 from simtools.simtel import simtel_validate_metadata
@@ -280,6 +281,11 @@ def _resolve_file_parameter_value(model_value, parameter_name, model):
     """Resolve the generated sim_telarray filename for an ECSV file parameter."""
     if not isinstance(model_value, str) or not model_value.lower().endswith(".ecsv"):
         return model_value
+
+    parameter_data = getattr(model, "parameters", {}).get(parameter_name, {})
+    shared_name = get_simtel_table_file_name(parameter_data)
+    if shared_name is not None:
+        return shared_name
 
     model_name = getattr(model, "name", None)
     config_file_path = getattr(model, "config_file_path", None)

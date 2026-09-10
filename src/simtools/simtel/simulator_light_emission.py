@@ -16,6 +16,7 @@ from simtools.model.model_utils import (
     initialize_simulation_models,
     read_overwrite_model_parameter_dict,
 )
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator, simtel_table_writer
@@ -668,7 +669,8 @@ class SimulatorLightEmission(SimtelRunner):
 
         atmospheric_transmission = self.site_model.get_parameter_value("atmospheric_transmission")
         if str(atmospheric_transmission).lower().endswith(".ecsv"):
-            atmospheric_transmission = (
+            parameter_data = self.site_model.parameters.get("atmospheric_transmission", {})
+            atmospheric_transmission = get_simtel_table_file_name(parameter_data) or (
                 f"atmospheric_transmission-{Path(self.telescope_model.config_file_path).stem}.dat"
             )
 

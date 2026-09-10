@@ -1652,4 +1652,6 @@ def test__plot_mirror_config(tmp_test_directory, mocker, parameter_version, pree
                 "model_version": "6.0.0",
             },
             output_file=Path(f"{tmp_test_directory}/{plot_name}"),
+            model_reader=read_parameters.model_reader,
+            data_file_path=input_file,
         )

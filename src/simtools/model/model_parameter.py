@@ -15,6 +15,7 @@ from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import table_serializers
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
@@ -90,6 +91,8 @@ class ModelParameter:
         self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None
         self._is_exported_model_files_up_to_date = False
+        self._simtel_config_writer_label = None
+        self._serialized_simtel_tables = {}
 
         self._load_parameters_from_db()
 
@@ -1020,7 +1023,7 @@ class ModelParameter:
     def _load_simtel_config_writer(self, label=None):
         """Load the SimtelConfigWriter object."""
         desired_label = self.label if label is None else label
-        if label is not None or self.simtel_config_writer is None:
+        if self.simtel_config_writer is None or desired_label != self._simtel_config_writer_label:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
@@ -1029,6 +1032,7 @@ class ModelParameter:
                 label=desired_label,
                 model_reader=self.model_reader,
             )
+            self._simtel_config_writer_label = desired_label
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
         """
@@ -1076,15 +1080,29 @@ class ModelParameter:
         schema_data = schema.get_model_parameter_schema(
             parameter_name, parameter.get("model_parameter_schema_version")
         )
-        table = self.model_reader.get_parameter_table(parameter)
         contract = get_simtel_serialization(schema_data)
         contract["table_format"] = table_format
-        return table_serializers.write_simtel_table(
+        generated_output_name = get_simtel_table_file_name(parameter)
+        shared_output = generated_output_name is not None and (
+            output_name is None or output_name == generated_output_name
+        )
+        output_name = output_name or generated_output_name
+        output_name = output_name or f"{parameter_name}-{self.name}.dat"
+        output_path = Path(model_directory) / output_name
+        cache_key = repr((parameter_name, parameter, table_format, output_name))
+        if output_path.is_file() and (
+            shared_output or self._serialized_simtel_tables.get(output_path) == cache_key
+        ):
+            return output_path.name
+        table = self.model_reader.get_parameter_table(parameter)
+        result = table_serializers.write_simtel_table(
             table,
             model_directory,
             contract=contract,
-            output_name=output_name or f"{parameter_name}-{self.name}.dat",
+            output_name=output_name,
         )
+        self._serialized_simtel_tables[output_path] = cache_key
+        return result
 
     def export_model_parameter_as_simtel_file(
         self, parameter_name, model_directory, table_format, output_name

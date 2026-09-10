@@ -228,6 +228,39 @@ def test_write_camera_file_resolves_explicit_lightguide(
     )
 
 
+def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    """Primary segmentation remains the sim_telarray mirror geometry."""
+    parameters = {
+        "mirror_class": {"value": 2},
+        "primary_mirror_segmentation": {"value": [{"kind": "hex"}]},
+        "mirror_list": {"value": "mirror_list-1.0.0.ecsv"},
+    }
+    mocker.patch.object(simtel_config_writer, "_write_camera_file", return_value=None)
+    mocker.patch.object(
+        simtel_config_writer,
+        "_get_sim_telarray_config_parameter_name",
+        side_effect=lambda parameter_name: parameter_name,
+    )
+    convert = mocker.patch.object(
+        simtel_config_writer,
+        "_convert_model_parameters_to_simtel_format",
+        side_effect=lambda simtel_name, value, *_args, **_kwargs: (simtel_name, value),
+    )
+
+    result = simtel_config_writer._get_parameters_for_sim_telarray(
+        parameters, tmp_test_directory / "config.cfg"
+    )
+
+    assert result["mirror_class"] == 2
+    assert result["mirror_list"] is None
+    assert [call.kwargs["parameter_name"] for call in convert.call_args_list] == [
+        "mirror_class",
+        "primary_mirror_segmentation",
+    ]
+
+
 # Common trigger line strings to reduce duplication
 LSTS_HARDSTEREO_LINE = "Trigger 2 of 1, 2 width 120.0 hardstereo"
 MSTS_HARDSTEREO_LINE = "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"
@@ -504,6 +537,49 @@ def test_write_table_parameter_file_passes_through_non_dict_value(
     )
 
     assert result == "already_a_file.dat"
+
+
+def test_write_table_parameter_file_caches_serialization(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    """Repeated config writes do not serialize an unchanged ECSV table again."""
+    parameter_data = {
+        "parameter": "fadc_pulse_shape",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "pulse.ecsv",
+        "model_parameter_schema_version": "0.3.0",
+    }
+    simtel_config_writer._model_reader = mocker.Mock()
+    simtel_config_writer._model_reader.get_parameter_table.return_value = mocker.Mock()
+    mock_write = mocker.patch(
+        "simtools.simtel.simtel_config_writer.table_serializers.write_simtel_table",
+        return_value="pulse-LSTN-design.dat",
+    )
+    config_path = Path(tmp_test_directory) / "test_telescope.cfg"
+
+    simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "pulse.ecsv",
+        config_path,
+        None,
+        source_parameter="fadc_pulse_shape",
+        parameter_data=parameter_data,
+    )
+    output_path = Path(tmp_test_directory) / "pulse-LSTN-design.dat"
+    output_path.touch()
+    simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "pulse.ecsv",
+        config_path,
+        None,
+        source_parameter="fadc_pulse_shape",
+        parameter_data=parameter_data,
+    )
+
+    mock_write.assert_called_once()
+    simtel_config_writer._model_reader.get_parameter_table.assert_called_once_with(parameter_data)
 
 
 def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_test_directory):

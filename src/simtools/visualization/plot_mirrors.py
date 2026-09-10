@@ -63,7 +63,7 @@ def _detect_segmentation_type(data_file_path):
     return "standard"
 
 
-def plot(config, output_file):
+def plot(config, output_file, model_reader=None, data_file_path=None):
     """
     Plot mirror panel layout based on configuration.
 
@@ -79,27 +79,35 @@ def plot(config, output_file):
         - title: str, optional, plot title
     output_file : str or Path
         Path where to save the plot (without extension)
+    model_reader : SimulationModelReader, optional
+        Model reader used to resolve the parameter when ``data_file_path`` is
+        not supplied.
+    data_file_path : str or Path, optional
+        Already exported mirror or segmentation file. When supplied, this
+        path is used directly instead of reconstructing the source filename.
 
     Returns
     -------
     None
         The function saves the plot to the specified output file.
     """
-    tel_model = TelescopeModel(
-        site=config["site"],
-        telescope_name=config["telescope"],
-        model_version=config.get("model_version"),
-        ignore_software_version=True,
-    )
-
     output_path = io_handler.IOHandler().get_output_directory()
-
-    parameter_name = config["parameter"]
-    parameter_value = tel_model.get_parameter_value(parameter_name)
-    tel_model.export_model_files(destination_path=output_path)
-
-    mirror_file = parameter_value
-    data_file_path = Path(output_path / mirror_file)
+    if data_file_path is None:
+        telescope_model_kwargs = {
+            "site": config["site"],
+            "telescope_name": config["telescope"],
+            "model_version": config.get("model_version"),
+            "ignore_software_version": True,
+        }
+        if model_reader is not None:
+            telescope_model_kwargs["model_reader"] = model_reader
+        tel_model = TelescopeModel(**telescope_model_kwargs)
+        parameter_name = config["parameter"]
+        parameter_value = tel_model.get_parameter_value(parameter_name)
+        tel_model.export_model_files(destination_path=output_path)
+        data_file_path = output_path / parameter_value
+    else:
+        data_file_path = Path(data_file_path)
 
     parameter_type = config["parameter"]
 

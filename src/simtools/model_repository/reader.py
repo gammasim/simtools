@@ -343,6 +343,8 @@ class SimulationModelReader:
     def __init__(self, source):
         """Initialize the reader with a source implementation."""
         self._source = source
+        self._parameter_tables = {}
+        self._parameter_table_records = {}
 
     @classmethod
     def from_files(cls, simulation_models_path):
@@ -593,7 +595,37 @@ class SimulationModelReader:
 
     def get_parameter_table(self, parameter_data):
         """Return the validated Astropy table referenced by a model parameter."""
-        return self._source.get_parameter_table(parameter_data)
+        cache_key = self._parameter_table_cache_key(parameter_data)
+        if cache_key not in self._parameter_tables:
+            self._parameter_tables[cache_key] = self._source.get_parameter_table(parameter_data)
+        return deepcopy(self._parameter_tables[cache_key])
+
+    @staticmethod
+    def _parameter_table_cache_key(parameter_data):
+        """Return a stable cache key for one model-parameter table."""
+        return repr(
+            (
+                parameter_data.get("parameter"),
+                parameter_data.get("parameter_version"),
+                parameter_data.get("instrument"),
+                parameter_data.get("site"),
+                parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value")),
+            )
+        )
+
+    def get_parameter_table_records(self, parameter_data):
+        """Return cached scalar records for a validated model-parameter table."""
+        cache_key = self._parameter_table_cache_key(parameter_data)
+        if cache_key not in self._parameter_table_records:
+            table = self.get_parameter_table(parameter_data)
+            column_values = [
+                [getattr(value, "value", value) for value in table[column]]
+                for column in table.colnames
+            ]
+            self._parameter_table_records[cache_key] = [
+                dict(zip(table.colnames, row)) for row in zip(*column_values)
+            ]
+        return self._parameter_table_records[cache_key]
 
     def export_model_file(
         self,
@@ -638,7 +670,7 @@ class SimulationModelReader:
     def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
         """Read an ECSV model file through the selected source."""
         if parameter_data is not None and hasattr(self._source, "get_parameter_table"):
-            return self._source.get_parameter_table(parameter_data)
+            return self.get_parameter_table(parameter_data)
         return self._source.get_ecsv_file_as_astropy_table(file_name)
 
     def _read_parameters(self, parameter_versions, collection, instrument=None, site=None):

@@ -584,6 +584,47 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     assert reader.export_model_files.call_count == 3
 
 
+def test_reader_caches_table_records(mocker):
+    """Repeated camera-table record access does not rebuild row dictionaries."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table_records(parameter)
+    second = reader.get_parameter_table_records(parameter)
+
+    assert first is second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_caches_parameter_tables():
+    """Repeated table access uses the parsed table from the reader cache."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table(parameter)
+    second = reader.get_parameter_table(parameter)
+
+    assert first["pixel_id"].tolist() == second["pixel_id"].tolist()
+    assert first is not second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
 def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
     """Structured JSON parameters are not converted to ECSV tables."""
     source = Mock()

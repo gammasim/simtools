@@ -11,6 +11,7 @@ from simtools.data_model import schema
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 
 
@@ -199,10 +200,18 @@ class TelescopeModel(ModelParameter):
         for pixel_type in pixel_types:
             angle_parameter = pixel_type.get("lightguide_angle_parameter")
             if angle_parameter:
-                pixel_type["lightguide_angle_file"] = f"{angle_parameter}-{self.name}.dat"
+                parameter_data = self.parameters.get(angle_parameter, {})
+                pixel_type["lightguide_angle_file"] = (
+                    get_simtel_table_file_name(parameter_data)
+                    or f"{angle_parameter}-{self.name}.dat"
+                )
             wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
             if wavelength_parameter:
-                pixel_type["lightguide_wavelength_file"] = f"{wavelength_parameter}-{self.name}.dat"
+                parameter_data = self.parameters.get(wavelength_parameter, {})
+                pixel_type["lightguide_wavelength_file"] = (
+                    get_simtel_table_file_name(parameter_data)
+                    or f"{wavelength_parameter}-{self.name}.dat"
+                )
 
         return {
             "rotate": self.get_parameter_value("camera_rotate"),
@@ -214,6 +223,9 @@ class TelescopeModel(ModelParameter):
 
     def _parameter_table_records(self, parameter_name):
         """Return scalar records from a validated model-parameter table."""
+        parameter_data = self._get_parameter_dict(parameter_name)
+        if hasattr(self.model_reader, "get_parameter_table_records"):
+            return self.model_reader.get_parameter_table_records(parameter_data)
         table = self.get_parameter_table(parameter_name)
         return [
             {column: getattr(row[column], "value", row[column]) for column in table.colnames}

@@ -410,6 +410,8 @@ class ReadParameters:
             plot_mirrors.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
+                model_reader=self.model_reader,
+                data_file_path=input_file,
             )
             plot_names.append(plot_name)
         else:

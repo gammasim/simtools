@@ -147,6 +147,34 @@ def test_resolve_camera_components_uses_explicit_lightguide(telescope_model_lst,
     )
 
 
+def test_resolve_camera_components_uses_shared_lightguide(telescope_model_lst, monkeypatch):
+    """Resolved light-guide files use the parameter identity when available."""
+    telescope_model_lst.parameters["camera_pixel_types"] = {
+        "value": [
+            {
+                "type_id": 1,
+                "pmt_type": 0,
+                "cathode_shape": 1,
+                "cathode_diameter_cm": 1.0,
+                "funnel_shape": 1,
+                "funnel_diameter_cm": 1.0,
+                "funnel_depth_cm": 0.0,
+                "lightguide_angle_parameter": "lightguide_efficiency_vs_incidence_angle",
+            }
+        ]
+    }
+    telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
+    telescope_model_lst.parameters["lightguide_efficiency_vs_incidence_angle"] = {
+        "value": "lightguide.ecsv",
+        "instrument": "LSTN-design",
+    }
+    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+
+    result = telescope_model_lst._resolve_camera_components()
+
+    assert result["pixel_types"][0]["lightguide_angle_file"] == "lightguide-LSTN-design.dat"
+
+
 def test_resolve_camera_components_does_not_infer_lightguide(telescope_model_lst, monkeypatch):
     telescope_model_lst.parameters["camera_pixel_types"] = {
         "value": [

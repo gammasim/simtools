@@ -14,6 +14,7 @@ from simtools.atmosphere import AtmosphereProfile
 from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
 from simtools.io import ascii_handler, io_handler
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -586,7 +587,8 @@ class CameraEfficiency:
         if self.efficiency_type == "muon":
             atmospheric_profile = self.site_model.get_parameter_value("atmospheric_profile")
             if str(atmospheric_profile).lower().endswith(".ecsv"):
-                atmospheric_profile = (
+                parameter_data = self.site_model.parameters.get("atmospheric_profile", {})
+                atmospheric_profile = get_simtel_table_file_name(parameter_data) or (
                     f"atmospheric_profile-{Path(self.telescope_model.config_file_path).stem}.dat"
                 )
                 self.site_model.export_model_parameter_as_simtel_file(

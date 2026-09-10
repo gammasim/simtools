@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Configuration file writer for sim_telarray."""
 
+import hashlib
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -14,6 +15,7 @@ from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import (
     segmentation,
     simtel_table_writer,
@@ -75,6 +77,8 @@ class SimtelConfigWriter:
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
         self._model_reader = model_reader
+        self._serialized_table_cache = {}
+        self._camera_file_cache = {}
 
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
@@ -152,6 +156,9 @@ class SimtelConfigWriter:
         for par, value in parameters.items():
             if par in _CAMERA_COMPONENT_PARAMETERS or par == "camera_config_file":
                 continue
+            if self._mirror_list_is_defined_by_segmentation(par, parameters):
+                simtel_par["mirror_list"] = None
+                continue
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 self._get_sim_telarray_config_parameter_name(par),
                 value["value"],
@@ -169,6 +176,21 @@ class SimtelConfigWriter:
             sorted(self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par).items())
         )
 
+    @staticmethod
+    def _mirror_list_is_defined_by_segmentation(parameter_name, parameters):
+        """Return whether sim_telarray derives the mirror list from segmentation.
+
+        Dual-mirror telescope models define their physical primary mirrors with
+        ``primary_mirror_segmentation``. Their ECSV ``mirror_list`` is used by
+        camera-efficiency calculations and must be written as ``none`` in the
+        simulator configuration rather than replace that geometry.
+        """
+        return (
+            parameter_name == "mirror_list"
+            and parameters.get("mirror_class", {}).get("value") == 2
+            and parameters.get("primary_mirror_segmentation", {}).get("value")
+        )
+
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):
         """Write a sim_telarray camera file from independent camera parameters."""
         component_names = set(_CAMERA_COMPONENT_PARAMETERS) & set(parameters)
@@ -180,6 +202,17 @@ class SimtelConfigWriter:
 
         destination = Path(config_file_path).parent
         telescope_name = telescope_name or Path(config_file_path).stem
+        output = destination / f"camera-{telescope_name}.dat"
+        cache_key = repr(
+            tuple((name, parameters.get(name)) for name in _CAMERA_COMPONENT_PARAMETERS)
+        )
+        shared_camera = self._telescope_design_model is not None
+        if shared_camera:
+            digest = hashlib.sha256(cache_key.encode()).hexdigest()[:12]
+            output = destination / f"camera-{self._telescope_design_model}-{digest}.dat"
+        if output.is_file() and (shared_camera or self._camera_file_cache.get(output) == cache_key):
+            return output.name
+
         pixel_types = deepcopy(self._parameter_value(parameters, "camera_pixel_types"))
         for pixel_type in pixel_types:
             angle_parameter = pixel_type.pop("lightguide_angle_parameter", None)
@@ -202,7 +235,7 @@ class SimtelConfigWriter:
                 telescope_name,
             )
 
-        pixels = self._camera_table_records(parameters, "camera_pixel_layout", destination)
+        pixels = self._camera_table_records(parameters, "camera_pixel_layout")
         expected_pixels = self._parameter_value(parameters, "camera_pixels")
         if expected_pixels is not None and int(expected_pixels) != len(pixels):
             raise ValueError(
@@ -212,15 +245,12 @@ class SimtelConfigWriter:
             "rotate": self._parameter_value(parameters, "camera_rotate"),
             "pixel_types": pixel_types,
             "pixels": pixels,
-            "triggers": self._camera_table_records(
-                parameters, "camera_trigger_groups", destination
-            ),
-            "trigger_members": self._camera_table_records(
-                parameters, "camera_trigger_members", destination
-            ),
+            "triggers": self._camera_table_records(parameters, "camera_trigger_groups"),
+            "trigger_members": self._camera_table_records(parameters, "camera_trigger_members"),
         }
-        output = destination / f"camera-{telescope_name}.dat"
-        return simtel_table_writer.write_camera_file(configuration, output)
+        result = simtel_table_writer.write_camera_file(configuration, output)
+        self._camera_file_cache[output] = cache_key
+        return result
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):
@@ -228,15 +258,15 @@ class SimtelConfigWriter:
         data = parameters.get(parameter_name)
         return None if data is None else data.get("value")
 
-    def _camera_table_records(self, parameters, parameter_name, destination):
+    def _camera_table_records(self, parameters, parameter_name):
         """Read one exported camera component table into scalar records."""
-        table = self._read_camera_table(parameters, parameter_name, destination)
+        table = self._read_camera_table(parameters, parameter_name)
         columns = [
             [getattr(value, "value", value) for value in table[column]] for column in table.colnames
         ]
         return [dict(zip(table.colnames, row)) for row in zip(*columns)]
 
-    def _read_camera_table(self, parameters, parameter_name, _destination):
+    def _read_camera_table(self, parameters, parameter_name):
         """Read and validate an exported camera component table."""
         parameter_data = parameters.get(parameter_name)
         if parameter_data is None:
@@ -252,19 +282,66 @@ class SimtelConfigWriter:
         parameter_name = pixel_type.pop(parameter_key, None)
         if parameter_name is None:
             return
-        table = self._read_camera_table(parameters, parameter_name, destination)
         schema_data = schema.get_model_parameter_schema(
             parameter_name, parameters[parameter_name].get("model_parameter_schema_version")
         )
         contract = get_simtel_serialization(schema_data)
-        pixel_type[output_key] = table_serializers.write_simtel_table(
+        output_name = get_simtel_table_file_name(parameters[parameter_name])
+        shared_output = output_name is not None
+        output_name = output_name or f"{parameter_name}-{telescope_name}.dat"
+        cache_key = (parameter_name, parameters[parameter_name])
+        if (
+            self._get_cached_table_output(
+                destination, contract, output_name, cache_key, allow_existing=shared_output
+            )
+            is None
+        ):
+            table = self._read_camera_table(parameters, parameter_name)
+            if len(table) == 0:
+                raise ValueError(f"Selected lightguide parameter is empty: {parameter_name}")
+            self._write_cached_table(
+                table,
+                destination,
+                contract=contract,
+                output_name=output_name,
+                cache_key=cache_key,
+                allow_existing=shared_output,
+            )
+        pixel_type[output_key] = output_name
+
+    def _get_cached_table_output(
+        self, destination, contract, output_name, cache_key, allow_existing=False
+    ):
+        """Return a cached table filename when its serialized output is available."""
+        output_path = Path(destination) / output_name
+        serialization_key = repr((cache_key, contract))
+        if output_path.is_file() and (
+            allow_existing or self._serialized_table_cache.get(output_path) == serialization_key
+        ):
+            return output_name
+        return None
+
+    def _write_cached_table(
+        self, table, destination, contract, output_name, cache_key, allow_existing=False
+    ):
+        """Write a table once while its model data and destination remain unchanged."""
+        output_path = Path(destination) / output_name
+        serialization_key = repr((cache_key, contract))
+        if (
+            self._get_cached_table_output(
+                destination, contract, output_name, cache_key, allow_existing=allow_existing
+            )
+            is not None
+        ):
+            return output_name
+        result = table_serializers.write_simtel_table(
             table,
             destination,
             contract=contract,
-            output_name=f"{parameter_name}-{telescope_name}.dat",
+            output_name=output_name,
         )
-        if len(table) == 0:
-            raise ValueError(f"Selected lightguide parameter is empty: {parameter_name}")
+        self._serialized_table_cache[output_path] = serialization_key
+        return result
 
     @staticmethod
     def _get_sim_telarray_config_parameter_name(parameter_name):
@@ -776,13 +853,28 @@ class SimtelConfigWriter:
             schema_data = schema.get_model_parameter_schema(
                 source_parameter, parameter_data.get("model_parameter_schema_version")
             )
-            table = self._model_reader.get_parameter_table(parameter_data)
             contract = get_simtel_serialization(schema_data)
-            return table_serializers.write_simtel_table(
+            output_name = get_simtel_table_file_name(parameter_data)
+            shared_output = output_name is not None
+            output_name = (
+                output_name or f"{source_parameter or parameter_name}-{Path(model_path).stem}.dat"
+            )
+            cache_key = (source_parameter or parameter_name, parameter_data)
+            if (
+                self._get_cached_table_output(
+                    dest_dir, contract, output_name, cache_key, allow_existing=shared_output
+                )
+                is not None
+            ):
+                return output_name
+            table = self._model_reader.get_parameter_table(parameter_data)
+            return self._write_cached_table(
                 table,
                 dest_dir,
                 contract=contract,
-                output_name=f"{source_parameter or parameter_name}-{Path(model_path).stem}.dat",
+                output_name=output_name,
+                cache_key=cache_key,
+                allow_existing=shared_output,
             )
         if not isinstance(value, dict):
             return value
