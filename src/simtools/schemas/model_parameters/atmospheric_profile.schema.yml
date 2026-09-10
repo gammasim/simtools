@@ -59,7 +59,7 @@ source:
   - Calibration
 simulation_software:
   - name: corsika
-  - name: sim_telarray
+  - name: simtools
     table_format: plain
     serialization:
       columns: [altitude, density, thickness, refractive_index, temperature, pressure, water_vapor_partial_pressure]

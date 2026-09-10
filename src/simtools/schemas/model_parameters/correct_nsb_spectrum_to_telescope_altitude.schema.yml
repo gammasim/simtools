@@ -41,7 +41,6 @@ source:
   - Calibration
 simulation_software:
   - name: simtools
-  - name: sim_telarray
     table_format: atmospheric_transmission
     serialization:
       columns: [wavelength, altitude, extinction]

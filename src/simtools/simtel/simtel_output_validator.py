@@ -265,9 +265,11 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
 
         parameter_type = model.parameters[param]["type"]
         model_value = model.parameters[param]["value"]
-        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
-        if parameter_type == "file":
+        if _mirror_list_is_defined_by_segmentation(param, model.parameters):
+            model_value = "none"
+        elif parameter_type == "file":
             model_value = _resolve_file_parameter_value(model_value, param, model)
+        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         error = _check_parameter_validity(
             param, value, model_value, parameter_type, allow_for_changes
         )
@@ -275,6 +277,15 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             invalid_parameter_list.append(error)
 
     return invalid_parameter_list
+
+
+def _mirror_list_is_defined_by_segmentation(parameter_name, parameters):
+    """Return whether primary segmentation supplies the simulator mirror geometry."""
+    return (
+        parameter_name == "mirror_list"
+        and parameters.get("mirror_class", {}).get("value") == 2
+        and parameters.get("primary_mirror_segmentation", {}).get("value")
+    )
 
 
 def _resolve_file_parameter_value(model_value, parameter_name, model):

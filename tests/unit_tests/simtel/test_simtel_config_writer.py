@@ -307,7 +307,7 @@ def test_write_array_config_file(
         assert lines[-1] == "\n"
 
 
-def test_write_array_config_file_uses_config_path_for_site_tables(
+def test_write_array_config_file_excludes_corsika_only_site_tables(
     simtel_config_writer, telescope_model_lst, io_handler, site_model_north, mocker
 ):
     config_file = io_handler.get_output_file(file_name="simtel-config-writer_array.cfg")
@@ -325,7 +325,8 @@ def test_write_array_config_file_uses_config_path_for_site_tables(
         site_model=site_model_north,
     )
 
-    assert write_table.call_args.args[2] == config_file
+    write_table.assert_not_called()
+    assert "atmospheric_profile =" not in config_file.read_text(encoding="utf-8")
 
 
 def test_write_array_config_file_raises_for_too_long_include_filename(

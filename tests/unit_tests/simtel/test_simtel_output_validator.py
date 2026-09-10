@@ -240,6 +240,17 @@ def test_file_parameter_for_telescope_uses_generated_filename():
         assert result == []
 
 
+def test_segmented_dual_mirror_telescope_expects_no_mirror_list_file():
+    model_mock = MagicMock()
+    model_mock.parameters = {
+        "mirror_class": {"value": 2, "type": "int"},
+        "primary_mirror_segmentation": {"value": [{"kind": "hex"}], "type": "dict"},
+        "mirror_list": {"value": "mirror_list-1.0.0-SSTS-design.ecsv", "type": "file"},
+    }
+
+    assert _assert_model_parameters({"mirror_list": "none"}, model_mock) == []
+
+
 def test_missing_parameter_in_metadata():
     metadata = {}
     model_mock = MagicMock()
