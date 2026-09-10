@@ -101,12 +101,13 @@ Unit-test rules:
 
 - Use plain pytest functions, not test classes.
 - Cover changed success paths, error paths, and branches.
-- Every non-application Python module under `src/simtools/` must have a
-  matching unit-test file under `tests/unit_tests/`, preserving its package
-  directory and using the `test_<module>.py` name. This includes small helper
-  modules such as `simtel/segmentation.py` and
-  `simtel/table_serializers.py`; do not leave them uncovered or rely on tests
-  of a neighboring module.
+- Every Python module under `src/simtools/` must have a matching unit-test
+  file under `tests/unit_tests/`, preserving its package directory and using
+  the `test_<module>.py` name, except for the modules excluded by CI:
+  `__init__.py`, `_version.py`, and anything under `applications/`. This
+  includes small helper modules such as `simtel/pulse_shapes.py` and
+  `utils/value_conversion.py`; do not leave them uncovered or rely on tests of
+  a neighboring module.
 - Use local fixtures first; use `tests/unit_tests/conftest.py` for fixtures
   shared across unit-test modules.
 - Shared repo fixtures such as `test_resources_path` and `simtools_root_path`
@@ -201,15 +202,14 @@ make linkcheck
 
 Before handing off a change that adds, removes, or moves a library module, run
 the API coverage check as well. Every reported module must be added to the
-appropriate API reference page; for example, `asset_names` needs an
-`automodule` entry for its complete `simtools.*` import path:
+appropriate API reference page with an `automodule` entry for its complete
+`simtools.*` import path:
 
 ```bash
 FULLY_DOCUMENTED="TRUE"
-MODULES=$(find src/simtools -type f -name "*.py" \
-  ! -path "src/simtools/applications/*" \
-  ! -name "__init__.py" \
-  ! -path "src/simtools/_*" -prune)
+MODULES=$(find src/simtools \
+  \( -path "src/simtools/applications" -o -path "src/simtools/_*" \) -prune \
+  -o -type f -name "*.py" ! -name "__init__.py" -print)
 for module_path in $MODULES; do
     module=$(basename "$module_path" .py)
     if ! grep -q "$module" docs/source/api-reference/*.md; then
