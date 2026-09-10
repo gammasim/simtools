@@ -550,6 +550,47 @@ def test_reader_facade_routes_source_operations_and_branches():
     assert reader.is_configured() is True
 
 
+def test_reader_caches_exported_ecsv_table_access():
+    """Repeated table exports reuse the source-neutral table cache."""
+    source = Mock(source_name="mock")
+    source.export_model_files.return_value = {"table-LSTN-design.ecsv": "copied"}
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    first = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+    second = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+
+    assert first == second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_returns_defensive_table_record_copies():
+    """Mutating table records does not corrupt the reader cache."""
+    source = Mock(source_name="mock")
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    records = reader.get_parameter_table_records(parameter)
+    records[0]["wavelength"] = 999.0
+
+    assert reader.get_parameter_table_records(parameter) == [{"wavelength": 300.0}]
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
 def test_reader_facade_covers_all_version_and_export_paths(mocker):
     """Cover the source-independent convenience methods."""
     source = Mock(source_name="mock")
@@ -600,7 +641,8 @@ def test_reader_caches_table_records(mocker):
     first = reader.get_parameter_table_records(parameter)
     second = reader.get_parameter_table_records(parameter)
 
-    assert first is second
+    assert first == second
+    assert first is not second
     source.get_parameter_table.assert_called_once_with(parameter)
 
 
@@ -654,7 +696,7 @@ def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
         )
 
 
-def test_reader_exports_file_parameter_and_table(tmp_test_directory, mocker):
+def test_reader_exports_file_parameter_and_table(tmp_test_directory):
     """File-backed ECSV parameters support the original file and ECSV outputs."""
     source = Mock()
     reader = SimulationModelReader(source)
@@ -664,7 +706,7 @@ def test_reader_exports_file_parameter_and_table(tmp_test_directory, mocker):
     source.export_model_files.return_value = {"mirror.ecsv": "copied"}
     source_file = Path(tmp_test_directory) / "mirror.ecsv"
     source_file.write_text("model", encoding="utf-8")
-    table = mocker.Mock()
+    table = Table({"wavelength": [300.0]})
     source.get_parameter_table.return_value = table
 
     output_files = reader.export_parameter_data(
@@ -681,7 +723,7 @@ def test_reader_exports_file_parameter_and_table(tmp_test_directory, mocker):
         Path(tmp_test_directory) / "mirror-copy.ecsv",
     ]
     assert output_files[0].is_file()
-    table.write.assert_called_once_with(output_files[0], format="ascii.ecsv", overwrite=True)
+    assert Table.read(output_files[0], format="ascii.ecsv")["wavelength"][0] == pytest.approx(300.0)
 
 
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):

@@ -6,12 +6,36 @@ from pathlib import Path
 import pytest
 from astropy.table import Table
 
-from simtools.model.mirrors import InvalidMirrorListFileError, Mirrors
+from simtools.model.mirrors import (
+    InvalidMirrorListFileError,
+    Mirrors,
+    uses_segmented_dual_mirror_geometry,
+)
 
 logger = logging.getLogger()
 
 MIRROR_COUNT = 6
 MIRROR_PANEL_ID = MIRROR_COUNT - 1
+
+
+@pytest.mark.parametrize(
+    ("parameters", "expected"),
+    [
+        ({}, False),
+        ({"mirror_class": {"value": 2}}, False),
+        ({"primary_mirror_segmentation": {"value": None}}, False),
+        (
+            {
+                "mirror_class": {"value": 2},
+                "primary_mirror_segmentation": {"value": {"segments": [1]}},
+            },
+            True,
+        ),
+    ],
+)
+def test_uses_segmented_dual_mirror_geometry(parameters, expected):
+    """Only populated dual-mirror segmentation replaces a sim_telarray mirror list."""
+    assert uses_segmented_dual_mirror_geometry(parameters) is expected
 
 
 def _write_mirror_table(tmp_test_directory):

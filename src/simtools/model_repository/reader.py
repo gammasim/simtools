@@ -579,8 +579,7 @@ class SimulationModelReader:
         """Read an exported file-backed parameter as an Astropy table."""
         value = parameter_data.get("value")
         if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
-            if hasattr(self._source, "get_parameter_table"):
-                return self._source.get_parameter_table(parameter_data)
+            return self.get_parameter_table(parameter_data)
         raise ValueError(
             f"Parameter '{parameter}' is not an ECSV model table and cannot be exported as a table"
         )
@@ -617,7 +616,7 @@ class SimulationModelReader:
             self._parameter_table_records[cache_key] = [
                 dict(zip(table.colnames, row)) for row in zip(*column_values)
             ]
-        return self._parameter_table_records[cache_key]
+        return deepcopy(self._parameter_table_records[cache_key])
 
     def export_model_file(
         self,
@@ -647,12 +646,8 @@ class SimulationModelReader:
         self.export_model_files(parameters=parameters, dest=dest)
         if export_file_as_table:
             value = parameter_data.get("value")
-            if (
-                isinstance(value, str)
-                and value.lower().endswith(ECSV_SUFFIX)
-                and hasattr(self._source, "get_parameter_table")
-            ):
-                return self._source.get_parameter_table(parameter_data)
+            if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
+                return self.get_parameter_table(parameter_data)
             raise ValueError(
                 f"Parameter '{parameter}' is not an ECSV model table and cannot be "
                 "exported as a table"

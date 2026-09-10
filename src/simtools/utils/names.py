@@ -755,7 +755,6 @@ def get_collection_name_from_array_element_name(array_element_name, array_elemen
     if array_element_name in {
         "configuration_sim_telarray",
         "configuration_corsika",
-        "Files",
         "Dummy-Telescope",
     }:
         return array_element_name

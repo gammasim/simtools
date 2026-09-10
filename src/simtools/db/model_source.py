@@ -69,12 +69,6 @@ class MongoDBModelSource:
         self._parameters[key] = deepcopy(list(parameters.values()))
         for parameter_data in self._parameters[key]:
             validate_finite_json_values(parameter_data.get("value"))
-            if (
-                parameter_data.get("file")
-                and isinstance(parameter_data.get("value"), str)
-                and parameter_data["value"].lower().endswith(".ecsv")
-            ):
-                self.get_parameter_table(parameter_data)
         return deepcopy(self._parameters[key])
 
     def export_model_files(self, parameters=None, file_names=None, dest=None):

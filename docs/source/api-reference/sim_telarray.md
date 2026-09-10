@@ -59,18 +59,6 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_table_reader
-
-The reader is retained for explicit legacy-file migration and output validation;
-runtime model loading reads ECSV assets directly.
-
-(simtel-table-reader-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simtel_table_reader
-   :members:
-```
-
 ## segmentation
 
 ```{eval-rst}

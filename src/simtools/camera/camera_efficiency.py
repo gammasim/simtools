@@ -246,17 +246,17 @@ class CameraEfficiency:
         dict
             Summary of the results.
         """
+        nsb_spectrum = self.config["nsb_spectrum"]
+        if nsb_spectrum:
+            nsb_spectrum = Path(nsb_spectrum).name
+
         meta = {
             "meta": {
                 "tel": self.telescope_model.name,
                 "model_version": self.telescope_model.model_version,
                 "zen": self.config["zenith_angle"],
                 "az": self.config["azimuth_angle"],
-                "nsb": (
-                    self.config["nsb_spectrum"]
-                    if self.config["nsb_spectrum"]
-                    else "default sim_telarray spectrum"
-                ),
+                "nsb": nsb_spectrum or "default sim_telarray spectrum",
             }
         }
 

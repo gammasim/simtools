@@ -15,6 +15,7 @@ from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
+from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import (
     segmentation,
@@ -161,7 +162,7 @@ class SimtelConfigWriter:
                 or par in _FLASHER_LEGACY_PARAMETERS
             ):
                 continue
-            if self._mirror_list_is_defined_by_segmentation(par, parameters):
+            if par == "mirror_list" and uses_segmented_dual_mirror_geometry(parameters):
                 simtel_par["mirror_list"] = None
                 continue
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
@@ -179,21 +180,6 @@ class SimtelConfigWriter:
 
         return dict(
             sorted(self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par).items())
-        )
-
-    @staticmethod
-    def _mirror_list_is_defined_by_segmentation(parameter_name, parameters):
-        """Return whether sim_telarray derives the mirror list from segmentation.
-
-        Dual-mirror telescope models define their physical primary mirrors with
-        ``primary_mirror_segmentation``. Their ECSV ``mirror_list`` is used by
-        camera-efficiency calculations and must be written as ``none`` in the
-        simulator configuration rather than replace that geometry.
-        """
-        return (
-            parameter_name == "mirror_list"
-            and parameters.get("mirror_class", {}).get("value") == 2
-            and parameters.get("primary_mirror_segmentation", {}).get("value")
         )
 
     def _write_camera_file(self, parameters, config_file_path, telescope_name=None):

@@ -339,6 +339,6 @@ def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
 
 def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.config["nsb_spectrum"] = "custom_spectrum.fits"
+    camera_efficiency_lst.config["nsb_spectrum"] = "/resource/path/custom_spectrum.fits"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["nsb"] == "custom_spectrum.fits"

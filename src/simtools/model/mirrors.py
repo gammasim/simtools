@@ -8,6 +8,14 @@ import numpy as np
 from astropy.table import Table
 
 
+def uses_segmented_dual_mirror_geometry(parameters):
+    """Return whether sim_telarray derives primary-mirror geometry from segmentation."""
+    return bool(
+        parameters.get("mirror_class", {}).get("value") == 2
+        and parameters.get("primary_mirror_segmentation", {}).get("value")
+    )
+
+
 class InvalidMirrorListFileError(Exception):
     """Exception for invalid mirror list file."""
 

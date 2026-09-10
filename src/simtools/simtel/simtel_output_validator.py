@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
@@ -265,7 +266,7 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
 
         parameter_type = model.parameters[param]["type"]
         model_value = model.parameters[param]["value"]
-        if _mirror_list_is_defined_by_segmentation(param, model.parameters):
+        if param == "mirror_list" and uses_segmented_dual_mirror_geometry(model.parameters):
             model_value = "none"
         elif parameter_type == "file":
             model_value = _resolve_file_parameter_value(model_value, param, model)
@@ -277,15 +278,6 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             invalid_parameter_list.append(error)
 
     return invalid_parameter_list
-
-
-def _mirror_list_is_defined_by_segmentation(parameter_name, parameters):
-    """Return whether primary segmentation supplies the simulator mirror geometry."""
-    return (
-        parameter_name == "mirror_list"
-        and parameters.get("mirror_class", {}).get("value") == 2
-        and parameters.get("primary_mirror_segmentation", {}).get("value")
-    )
 
 
 def _resolve_file_parameter_value(model_value, parameter_name, model):
