@@ -301,6 +301,8 @@ jobs:
   prepare_test_resources:
     name: download test resources
     runs-on: ubuntu-latest
+    env:
+      SIMTOOLS_TESTS_BRANCH: "model-parameter-tables"
     outputs:
       test_resources_tag: ${{ steps.test_resources.outputs.tag }}
 
@@ -328,6 +330,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
+          ref: ${{ env.SIMTOOLS_TESTS_BRANCH }}
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
 
