@@ -182,9 +182,13 @@ def test_run_configured_applications_uses_unique_tmp_directory(tmp_test_director
         unique_tmp_directories=True,
     )
 
-    replacement = called[0]["replacements"]["__INTEGRATION_TESTS_DIRECTORY__/tmp/"]
-    assert replacement.startswith(f"{integration_dir}/tmp/simulate_prod.config-")
-    assert called[0]["replacements"]["__INTEGRATION_TESTS_DIRECTORY__"] == str(integration_dir)
+    called_config = next(iter(called), None)
+    assert called_config is not None, "The workflow application was not called"
+    replacement = Path(called_config["replacements"]["__INTEGRATION_TESTS_DIRECTORY__/tmp/"])
+    assert replacement.parent == integration_dir / "tmp"
+    assert replacement.name.startswith("simulate_prod.config-")
+    assert replacement.is_relative_to(Path(tmp_test_directory))
+    assert called_config["replacements"]["__INTEGRATION_TESTS_DIRECTORY__"] == str(integration_dir)
 
 
 def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypatch):

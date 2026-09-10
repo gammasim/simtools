@@ -204,7 +204,6 @@ def test_string_parameter():
 
 
 def test_file_parameter():
-    metadata = {"atmospheric_transmission": "atm_trans.dat"}
     model_mock = MagicMock()
     model_mock.parameters = {
         "atmospheric_transmission": {

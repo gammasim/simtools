@@ -48,9 +48,10 @@ def test_resolve_asset_rejects_traversal(tmp_test_directory):
 
 def test_resolve_asset_rejects_absolute_path(tmp_test_directory):
     parameter_file = Path(tmp_test_directory) / "parameter.json"
+    absolute_asset_path = Path(tmp_test_directory) / "table.ecsv"
 
     with pytest.raises(ValueError, match="must be relative"):
-        resolve_asset_path("/tmp/table.ecsv", parameter_file)
+        resolve_asset_path(absolute_asset_path, parameter_file)
 
 
 def test_read_ecsv_asset_rejects_non_ecsv(tmp_test_directory):
