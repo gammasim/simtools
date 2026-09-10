@@ -36,6 +36,17 @@ def test_get_export_file_name_uses_original_source_value():
     assert get_export_file_name(parameter_data) == "table-North-LST.ecsv"
 
 
+def test_get_export_file_name_can_preserve_source_name():
+    """Allow simulator inputs that require the model-declared basename."""
+    parameter_data = {
+        "value": "atmospheric_profile-1.0.0.ecsv",
+        "instrument": "OBS-South",
+        "qualify_filename": False,
+    }
+
+    assert get_export_file_name(parameter_data) == "atmospheric_profile-1.0.0.ecsv"
+
+
 def test_qualify_parameter_file_name_updates_ecsv_metadata():
     """Store the source value and update the exported value for an ECSV asset."""
     parameter_data = {"value": "table.ecsv", "instrument": "North-LST"}

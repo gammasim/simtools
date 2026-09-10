@@ -27,7 +27,11 @@ def get_export_file_name(parameter_data, fallback_instrument=None):
         Exported filename.
     """
     value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
-    if not isinstance(value, str) or not value.lower().endswith(ECSV_SUFFIX):
+    if (
+        parameter_data.get("qualify_filename") is False
+        or not isinstance(value, str)
+        or not value.lower().endswith(ECSV_SUFFIX)
+    ):
         return value
 
     instrument = parameter_data.get("instrument") or fallback_instrument or "global"

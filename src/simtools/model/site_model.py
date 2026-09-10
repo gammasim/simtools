@@ -234,6 +234,7 @@ class SiteModel(ModelParameter):
             Model directory to export the file to.
         """
         atmospheric_profile = self.parameters["atmospheric_profile"].copy()
+        atmospheric_profile["qualify_filename"] = False
         self.model_reader.export_model_files(
             parameters={"atmospheric_profile": atmospheric_profile},
             dest=model_directory,

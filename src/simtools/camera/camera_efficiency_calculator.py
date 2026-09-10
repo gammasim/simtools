@@ -368,14 +368,7 @@ class CameraEfficiencyCalculator:
         return mirror_area, funnel, edge
 
     def _sampling_parameter_name(self):
-        """Select the geometry asset from the model's explicit optical design."""
-        optical_design = getattr(self.telescope_model, "optical_design", None)
-        if optical_design is None:
-            optical_design = getattr(self.telescope_model, "design_model", None)
-        if optical_design is None:
-            raise ValueError("Camera incidence sampling requires an optical_design capability")
-        if str(optical_design).startswith(("SST", "SCT")):
-            return "camera_incidence_sampling_mirrors"
+        """Return the model parameter containing the mirror geometry."""
         return "mirror_list"
 
     def _nsb_values(self, atmosphere, wavelengths, airmass):

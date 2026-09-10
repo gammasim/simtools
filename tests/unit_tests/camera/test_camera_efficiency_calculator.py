@@ -337,7 +337,7 @@ def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
             {"incidence_angle": [0.0, 20.0] * u.deg, "efficiency": [1.0, 1.0]}
         ),
         "lightguide_efficiency_vs_wavelength": spectrum,
-        "camera_incidence_sampling_mirrors": Table(
+        "mirror_list": Table(
             {
                 "mirror_x": [1.0] * u.cm,
                 "mirror_y": [0.0] * u.cm,
@@ -408,7 +408,7 @@ def test_funnel_does_not_apply_same_source_for_angle_and_wavelength():
     tables = {
         "lightguide_efficiency_vs_incidence_angle": angle,
         "lightguide_efficiency_vs_wavelength": wavelength,
-        "camera_incidence_sampling_mirrors": mirror,
+        "mirror_list": mirror,
     }
     calculator = CameraEfficiencyCalculator(Model(tables), Model(tables))
 
@@ -471,7 +471,7 @@ def test_calculator_returns_camera_efficiency_table():
             {"incidence_angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]}
         ),
         "lightguide_efficiency_vs_wavelength": spectrum.copy(),
-        "camera_incidence_sampling_mirrors": Table(
+        "mirror_list": Table(
             {
                 "mirror_x": [1.0] * u.cm,
                 "mirror_y": [0.0] * u.cm,

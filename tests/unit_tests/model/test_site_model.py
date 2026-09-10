@@ -110,7 +110,12 @@ def test_export_atmospheric_transmission_file(model_version, tmp_test_directory,
     _south.export_atmospheric_transmission_file(model_directory)
 
     _south.db.export_model_files.assert_called_once_with(
-        parameters={"atmospheric_profile": _south.parameters["atmospheric_profile"]},
+        parameters={
+            "atmospheric_profile": {
+                **_south.parameters["atmospheric_profile"],
+                "qualify_filename": False,
+            }
+        },
         dest=model_directory,
     )
 
