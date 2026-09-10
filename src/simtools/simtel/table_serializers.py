@@ -50,6 +50,8 @@ def write_simtel_table(table, destination, contract, output_name=None):
     """Write a table with its required schema serialization contract."""
     if contract is None:
         raise ValueError("sim_telarray table writing requires a serialization contract")
+    if not isinstance(table, Table):
+        raise TypeError(f"sim_telarray table writer requires an Astropy table, got {type(table)}")
     output_name = output_name or f"{table.meta.get('parameter_name', 'table')}.dat"
     return SimtelTableWriter.write(table, destination, dict(contract), output_name)
 

@@ -11,7 +11,7 @@ from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.reader import SimulationModelReader
-from simtools.simtel import simtel_table_writer
+from simtools.simtel import segmentation, table_serializers
 from simtools.utils import names
 
 
@@ -42,11 +42,11 @@ def _write_deterministic_table(table, contract, destination, output_name):
     """Write a table twice after permuting input layout and compare bytes."""
     first = destination / f"first-{output_name}"
     second = destination / f"second-{output_name}"
-    simtel_table_writer.write_simtel_table(
+    table_serializers.write_simtel_table(
         table, destination, contract=contract, output_name=first.name
     )
     permuted = Table(table[table.colnames[::-1]][::-1], copy=True)
-    simtel_table_writer.write_simtel_table(
+    table_serializers.write_simtel_table(
         permuted, destination, contract=contract, output_name=second.name
     )
     assert first.read_bytes() == second.read_bytes()
@@ -88,7 +88,7 @@ def _validate_parameter(parameter_data, reader, destination, output_stem):
         )
         if simtel is not None:
             generated_names.add(
-                simtel_table_writer.write_mirror_segmentation(
+                segmentation.write_mirror_segmentation(
                     value,
                     destination / f"{parameter_data['parameter']}-{output_stem}.dat",
                     parameter_data["parameter"],

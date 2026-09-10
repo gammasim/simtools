@@ -8,6 +8,7 @@ import pytest
 from astropy.table import QTable
 
 import simtools.simtel.simtel_table_writer as simtel_table_writer
+import simtools.simtel.table_serializers as table_serializers
 
 
 def _camera_configuration():
@@ -63,21 +64,10 @@ def _contract(table_format, columns, **kwargs):
     }
 
 
-def test_write_mirror_segmentation(tmp_test_directory):
-    result = simtel_table_writer.write_mirror_segmentation(
-        [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
-        tmp_test_directory / "segments.dat",
-        "primary_mirror_segmentation",
-        "0.2.0",
-    )
-    assert result == "segments.dat"
-    assert "RING 2 1 2 90 0 0" in (tmp_test_directory / result).read_text(encoding="utf-8")
-
-
 def test_write_ecsv_table_uses_explicit_filename(tmp_test_directory):
     table = QTable({"time": [0.0, 1.0], "amplitude": [0.0, 1.0]})
 
-    result = simtel_table_writer.write_simtel_table(
+    result = table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         output_name="pulse.dat",
@@ -94,7 +84,7 @@ def test_write_ecsv_table_uses_explicit_filename(tmp_test_directory):
 def test_write_ecsv_table_rejects_unsafe_filename(tmp_test_directory):
     table = QTable({"time": [0.0], "amplitude": [1.0]})
     with pytest.raises(ValueError, match="Unsafe"):
-        simtel_table_writer.write_simtel_table(
+        table_serializers.write_simtel_table(
             table,
             tmp_test_directory,
             output_name="../pulse.dat",
@@ -111,7 +101,7 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
             "reflectivity_rms": [0.1, 0.1, 0.1, 0.1],
         }
     )
-    result = simtel_table_writer.write_simtel_table(
+    result = table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         contract=_contract(
@@ -135,7 +125,7 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
 
 def test_write_rpol_table_preserves_one_dimensional_table(tmp_test_directory):
     table = QTable({"wavelength": [300.0, 400.0], "reflectivity": [0.8, 0.9]})
-    result = simtel_table_writer.write_simtel_table(
+    result = table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         contract=_contract(
@@ -165,7 +155,7 @@ def test_write_atmospheric_transmission_groups_rows_by_wavelength(tmp_test_direc
     )
     table.meta["observatory_level"] = 1.5 * u.km
 
-    result = simtel_table_writer.write_simtel_table(
+    result = table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         contract=_contract(
@@ -193,7 +183,7 @@ def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
             "extinction": [0.1, 0.3, 0.4],
         }
     )
-    result = simtel_table_writer.write_simtel_table(
+    result = table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         contract=_contract(
@@ -216,7 +206,7 @@ def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
 
 def test_write_simtel_table_rejects_structured_table_payload(tmp_test_directory):
     with pytest.raises(TypeError, match="Astropy table"):
-        simtel_table_writer.write_simtel_table(
+        table_serializers.write_simtel_table(
             {"columns": ["time", "amplitude"], "rows": [[0.0, 1.0]]},
             tmp_test_directory,
             contract=_contract("pulse", ["time", "amplitude"]),
@@ -228,10 +218,10 @@ def test_write_simtel_table_is_invariant_to_input_row_order(tmp_test_directory):
     first = QTable({"time": [2.0, 0.0, 1.0], "amplitude": [0.2, 0.0, 0.1]})
     second = QTable({"time": [1.0, 2.0, 0.0], "amplitude": [0.1, 0.2, 0.0]})
 
-    simtel_table_writer.write_simtel_table(
+    table_serializers.write_simtel_table(
         first, tmp_test_directory, contract=contract, output_name="first.dat"
     )
-    simtel_table_writer.write_simtel_table(
+    table_serializers.write_simtel_table(
         second, tmp_test_directory, contract=contract, output_name="second.dat"
     )
 
@@ -257,13 +247,13 @@ def test_validate_simtel_serialization_rejects_incomplete_matrix():
     )
 
     with pytest.raises(ValueError, match="complete Cartesian grid"):
-        simtel_table_writer.validate_simtel_serialization(table, contract)
+        table_serializers.validate_simtel_serialization(table, contract)
 
 
 def test_validate_simtel_serialization_rejects_undeclared_column():
     table = QTable({"time": [0.0], "amplitude": [1.0], "unexpected": [2.0]})
     with pytest.raises(ValueError, match="undeclared columns"):
-        simtel_table_writer.validate_simtel_serialization(
+        table_serializers.validate_simtel_serialization(
             table,
             _contract("plain", ["time", "amplitude"], row_sort_keys=["time"]),
         )
@@ -575,153 +565,6 @@ def test_camera_helpers_validate_names_and_module_ids():
     with pytest.raises(ValueError, match="Invalid camera module ID"):
         simtel_table_writer._module_id(-1)
     assert simtel_table_writer._module_id("0x0a") == "0xa"
-
-
-def test_legacy_contract_helpers_validate_columns_units_and_matrices():
-    table = QTable({"x": [2.0, 1.0], "y": [0.2, 0.1]})
-    contract = _contract("plain", ["x", "y"], row_sort_keys=["x"])
-    simtel_table_writer._validate_contract_definition(contract)
-    simtel_table_writer._validate_contract_columns(table, contract["columns"], contract)
-    simtel_table_writer._validate_contract_units(table, contract)
-    simtel_table_writer._validate_contract_matrix(table, contract)
-
-    contract["optional_columns"] = ["optional"]
-    contract["row_sort_keys"] = ["optional"]
-    simtel_table_writer._validate_contract_definition(contract)
-
-
-@pytest.mark.parametrize(
-    ("mutation", "message"),
-    [
-        (lambda contract: contract.update(columns=[]), "unique and non-empty"),
-        (lambda contract: contract.update(allowed_columns=[]), "allowed columns"),
-        (lambda contract: contract.update(row_sort_keys=["missing"]), "sort keys"),
-        (lambda contract: contract.update(matrix_axes=["x"]), "matrix_axes"),
-        (lambda contract: contract.update(matrix_axes=["x", "missing"]), "matrix axes"),
-        (lambda contract: contract.update(value_column="missing"), "value column"),
-    ],
-)
-def test_legacy_contract_definition_rejects_invalid_references(mutation, message):
-    contract = _contract("plain", ["x", "y"])
-    mutation(contract)
-    with pytest.raises(ValueError, match=message):
-        simtel_table_writer._validate_contract_definition(contract)
-
-
-def test_legacy_contract_validation_rejects_missing_matrix_and_bad_units():
-    table = QTable({"x": [1.0], "y": [2.0], "value": [0.5]})
-    matrix_contract = _contract(
-        "plain",
-        ["x", "value"],
-        allowed_columns=["x", "y", "value"],
-        matrix_axes=["x", "y"],
-        value_column="value",
-    )
-    with pytest.raises(ValueError, match="missing columns"):
-        simtel_table_writer._validate_contract_columns(
-            QTable({"y": [2.0], "value": [0.5]}), matrix_contract["columns"], matrix_contract
-        )
-    with pytest.raises(ValueError, match="present together"):
-        simtel_table_writer._validate_contract_matrix(
-            QTable({"x": [1.0], "value": [0.5]}), matrix_contract
-        )
-
-    matrix_contract["units"]["missing"] = "dimensionless"
-    simtel_table_writer._validate_contract_units(table, matrix_contract)
-
-    matrix_contract["units"] = {"x": "nm"}
-    with pytest.raises(ValueError, match="expected nm"):
-        simtel_table_writer._validate_contract_units(table, matrix_contract)
-
-
-def test_legacy_contract_validation_rejects_duplicate_and_incomplete_matrix():
-    table = QTable({"x": [1.0, 1.0], "y": [2.0, 2.0], "value": [0.5, 0.6]})
-    contract = _contract(
-        "plain",
-        ["x", "y", "value"],
-        matrix_axes=["x", "y"],
-        value_column="value",
-    )
-    with pytest.raises(ValueError, match="duplicate axis"):
-        simtel_table_writer._validate_contract_matrix(table, contract)
-
-    table = QTable({"x": [1.0, 1.0, 2.0], "y": [1.0, 2.0, 1.0], "value": [0.5, 0.6, 0.7]})
-    with pytest.raises(ValueError, match="complete Cartesian"):
-        simtel_table_writer._validate_contract_matrix(table, contract)
-
-    rpol_contract = dict(contract, table_format="rpol_matrix")
-    simtel_table_writer._validate_contract_matrix(QTable({"x": [1.0]}), rpol_contract)
-
-    with pytest.raises(ValueError, match="present together"):
-        simtel_table_writer._validate_contract_matrix(QTable({"x": [1.0]}), contract)
-
-    with pytest.raises(ValueError, match="requires two axes"):
-        simtel_table_writer._validate_contract_columns(
-            QTable({"x": [1.0], "value": [0.5]}),
-            ["x", "value"],
-            _contract("rpol_matrix", ["x", "value"]),
-        )
-
-    with pytest.raises(ValueError, match="missing value column"):
-        simtel_table_writer._validate_contract_columns(
-            QTable({"x": [1.0], "y": [2.0]}),
-            ["x"],
-            _contract(
-                "rpol_matrix",
-                ["x"],
-                matrix_axes=["x", "y"],
-                value_column="value",
-                allowed_columns=["x", "y", "value"],
-            ),
-        )
-
-
-def test_legacy_serializers_write_plain_rpol_and_atmosphere(tmp_test_directory):
-    table = QTable({"x": [2.0, 1.0], "y": [0.2, 0.1], "extra": [3, 4]})
-    contract = _contract(
-        "plain", ["x", "y"], row_sort_keys=["x"], optional_columns=["extra"], float_format=".1f"
-    )
-    simtel_table_writer._write_plain_table(table, tmp_test_directory / "plain.dat", contract)
-    assert (tmp_test_directory / "plain.dat").read_text(encoding="utf-8").splitlines() == [
-        "1.0 0.1 4",
-        "2.0 0.2 3",
-    ]
-
-    simtel_table_writer._write_rpol_table(
-        QTable({"x": [2.0], "value": [0.2]}),
-        tmp_test_directory / "rpol-one.dat",
-        _contract("rpol_matrix", ["x", "value"]),
-    )
-    assert (tmp_test_directory / "rpol-one.dat").read_text(encoding="utf-8") == "2 0.2\n"
-
-    matrix = QTable(
-        {
-            "x": [1.0, 1.0, 2.0, 2.0],
-            "y": [2.0, 1.0, 2.0, 1.0],
-            "value": [0.2, 0.1, 0.4, 0.3],
-        }
-    )
-    matrix_contract = _contract(
-        "rpol_matrix", ["x", "value"], matrix_axes=["x", "y"], value_column="value"
-    )
-    simtel_table_writer._write_rpol_table(
-        matrix, tmp_test_directory / "rpol-two.dat", matrix_contract
-    )
-    assert "ANGLE= 1 2" in (tmp_test_directory / "rpol-two.dat").read_text(encoding="utf-8")
-
-    atmosphere = QTable({"x": [1.0], "y": [2.0], "value": [0.5]})
-    atmosphere_contract = _contract(
-        "atmospheric_transmission",
-        ["x", "y", "value"],
-        matrix_axes=["x", "y"],
-        value_column="value",
-    )
-    simtel_table_writer._write_atmospheric_transmission(
-        atmosphere, tmp_test_directory / "atmosphere.dat", atmosphere_contract
-    )
-    assert (tmp_test_directory / "atmosphere.dat").read_text(encoding="utf-8") == (
-        "# H1= 2\n1 0.5\n"
-    )
 
 
 def test_write_light_pulse_table_gauss_exp_conv(tmp_test_directory):
