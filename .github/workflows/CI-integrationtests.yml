@@ -269,7 +269,8 @@ jobs:
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            echo "GitLab clone failed; refusing to use cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            exit 1
           fi
 
           git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
