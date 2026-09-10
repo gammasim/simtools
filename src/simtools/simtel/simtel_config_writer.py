@@ -33,6 +33,7 @@ _CAMERA_COMPONENT_PARAMETERS = (
     "camera_trigger_groups",
     "camera_trigger_members",
 )
+_FLASHER_LEGACY_PARAMETERS = ("flasher_pulse_width", "flasher_pulse_exp_decay")
 
 
 class SimtelConfigWriter:
@@ -154,7 +155,11 @@ class SimtelConfigWriter:
         elif "camera_config_file" in parameters:
             simtel_par["camera_config_file"] = parameters["camera_config_file"]["value"]
         for par, value in parameters.items():
-            if par in _CAMERA_COMPONENT_PARAMETERS or par == "camera_config_file":
+            if (
+                par in _CAMERA_COMPONENT_PARAMETERS
+                or par == "camera_config_file"
+                or par in _FLASHER_LEGACY_PARAMETERS
+            ):
                 continue
             if self._mirror_list_is_defined_by_segmentation(par, parameters):
                 simtel_par["mirror_list"] = None
@@ -387,17 +392,26 @@ class SimtelConfigWriter:
             "gauss-exponential": "laser_pulse_sigtime",
         }
 
-        shape_value = parameters.get("flasher_pulse_shape", {}).get("value")
-        shape = shape_value[0].lower()
-        width = shape_value[1]
-        exp_decay = shape_value[2]
+        shape_value = self._parameter_value(parameters, "flasher_pulse_shape")
+        if isinstance(shape_value, str):
+            shape = shape_value.lower()
+            width = self._parameter_value(parameters, "flasher_pulse_width")
+            width = 0.0 if width is None else width
+            exp_decay = self._parameter_value(parameters, "flasher_pulse_exp_decay")
+            exp_decay = 0.0 if exp_decay is None else exp_decay
+        else:
+            shape, width, exp_decay = shape_value
+            shape = shape.lower()
+
+        simtel_par.pop("flasher_pulse_width", None)
+        simtel_par.pop("flasher_pulse_exp_decay", None)
 
         simtel_par["laser_pulse_exptime"] = exp_decay if ("exponential" in shape) else 0.0
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
         if shape in mapping:
             simtel_par[mapping[shape]] = width
-        else:
+        elif shape != "exponential":
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
 
         return simtel_par

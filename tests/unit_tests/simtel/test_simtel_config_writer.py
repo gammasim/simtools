@@ -785,6 +785,26 @@ def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
     assert result["laser_pulse_exptime"] == pytest.approx(expected_exptime)
 
 
+@pytest.mark.parametrize(
+    ("shape", "expected_sigtime", "expected_twidth"),
+    [("gauss", 3.0, 0.0), ("tophat", 0.0, 3.0)],
+)
+def test_get_flasher_parameters_for_sim_telarray_legacy_shape(
+    simtel_config_writer, shape, expected_sigtime, expected_twidth
+):
+    parameters = {
+        "flasher_pulse_shape": {"value": shape},
+        "flasher_pulse_width": {"value": 3.0},
+    }
+    result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
+        parameters, {"flasher_pulse_width": 3.0}
+    )
+
+    assert result["laser_pulse_sigtime"] == pytest.approx(expected_sigtime)
+    assert result["laser_pulse_twidth"] == pytest.approx(expected_twidth)
+    assert "flasher_pulse_width" not in result
+
+
 @pytest.mark.parametrize("shape", ["unknown_shape", ""])
 def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
     simtel_config_writer, caplog, shape
