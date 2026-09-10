@@ -377,6 +377,10 @@ def test_discover_product_manifests_filters_invalid_and_other_products(tmp_test_
         "simtools.production_configuration.production_file_selection._get_registered_manifest_schema_versions",
         return_value={"1.0.0"},
     )
+    mocker.patch(
+        "simtools.production_configuration.production_file_selection._get_registered_manifest_schema_versions",
+        return_value={"1.0.0"},
+    )
 
     result = discover_product_manifests(tmp_test_directory, "custom_product")
 

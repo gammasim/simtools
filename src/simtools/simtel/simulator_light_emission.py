@@ -304,7 +304,8 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_emission_config.get("light_source_position") is not None:
             self._logger.info("Using fixed (vertical up) telescope pointing.")
             return 0.0, 0.0
-        _, angles = self._calibration_pointing_direction()
+        illuminator_position = self._get_illuminator_position()
+        _, angles = self._calibration_pointing_direction(*illuminator_position)
         return angles[0], angles[1]
 
     def _calibration_pointing_direction(self, x_cal=None, y_cal=None, z_cal=None):
@@ -449,13 +450,18 @@ class SimulatorLightEmission(SimtelRunner):
         return telescope_position_file
 
     def _get_illuminator_position(self):
-        """Return illuminator position (x, y, z) in ground coordinates."""
+        """Return the illuminator emission position in ground coordinates."""
         pos = self.light_emission_config.get("light_source_position")
-        if pos is None:
-            pos = self.calibration_model.get_parameter_value_with_unit(
-                "array_element_position_ground"
-            )
-        return pos
+        if pos is not None:
+            return pos
+
+        x_pos, y_pos, z_pos = self.calibration_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
+        )
+        tower_height = self.calibration_model.get_parameter_value_with_unit(
+            "illuminator_tower_height"
+        )
+        return x_pos, y_pos, z_pos + tower_height
 
     def _get_illuminator_pointing_vector(self, pos=None):
         """Return illuminator pointing vector; prefer explicit config if available."""

@@ -317,36 +317,54 @@ class ModelParameter:
     def _load_simulation_software_parameter(self):
         """Read simulation software parameters from DB."""
         for simulation_software in self._simulation_config_parameters:
-            try:
-                self._simulation_config_parameters[simulation_software] = (
-                    self.model_reader.get_simulation_configuration_parameters(
-                        site=self.site,
-                        array_element_name=self.name,
-                        model_version=self.model_version,
-                        simulation_software=simulation_software,
-                    )
-                )
-                software_collection = {
-                    "sim_telarray": "configuration_sim_telarray",
-                    "corsika": "configuration_corsika",
-                }.get(simulation_software)
+            self._load_simulation_software_parameter_for_software(simulation_software)
 
-                if not software_collection or not self.overwrite_model_parameter_dict:
-                    continue
+    def _load_simulation_software_parameter_for_software(self, simulation_software):
+        """Load simulation software parameters for a specific software."""
+        try:
+            existing_overrides = self._simulation_config_parameters.get(
+                simulation_software, {}
+            ).copy()
 
-                flat_configuration_changes = self._collect_flat_simulation_overwrites(
-                    simulation_software,
-                    software_collection,
+            self._simulation_config_parameters[simulation_software] = (
+                self.db.get_simulation_configuration_parameters(
+                    site=self.site,
+                    array_element_name=self.name,
+                    model_version=self.model_version,
+                    simulation_software=simulation_software,
                 )
-                if flat_configuration_changes:
-                    self.overwrite_parameters(
-                        flat_configuration_changes,
-                        flat_dict=True,
-                        ignore_collection=None,
-                        parameter_store=self._simulation_config_parameters[simulation_software],
-                    )
-            except ValueError:
-                pass
+            )
+
+            if existing_overrides:
+                self._simulation_config_parameters[simulation_software].update(existing_overrides)
+
+            self._apply_simulation_software_overwrites(simulation_software)
+        except ValueError:
+            pass
+
+    def _apply_simulation_software_overwrites(self, simulation_software):
+        """Apply overrides for simulation software parameters."""
+        software_collection = {
+            "sim_telarray": "configuration_sim_telarray",
+            "corsika": "configuration_corsika",
+        }.get(simulation_software)
+
+        if not software_collection or not self.overwrite_model_parameter_dict:
+            return
+
+        flat_configuration_changes = self._collect_flat_simulation_overwrites(
+            simulation_software,
+            software_collection,
+        )
+        if not flat_configuration_changes:
+            return
+
+        self.overwrite_parameters(
+            flat_configuration_changes,
+            flat_dict=True,
+            ignore_collection=None,
+            parameter_store=self._simulation_config_parameters[simulation_software],
+        )
 
     def _collect_flat_simulation_overwrites(self, simulation_software, software_collection):
         """Collect and flatten overwrite changes for a simulation software collection."""
@@ -407,23 +425,99 @@ class ModelParameter:
         if self.model_reader is None:
             return
 
-        if self.name or self.site:
-            # copy parameters dict, is it may be modified later on
-            self.parameters = deepcopy(
-                self.model_reader.get_model_parameters(
-                    self.site, self.name, self.collection, self.model_version
-                )
-            )
-            self.overwrite_parameters(self.overwrite_model_parameter_dict)
-            self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
+        if not (self.name or self.site):
+            return
 
-        self._load_simulation_software_parameter()
-        for software_name, parameters in self._simulation_config_parameters.items():
-            self._check_model_parameter_versions(
-                parameters,
-                ignore_software_version=self.ignore_software_version,
-                software_name=software_name,
+        self._load_parameters_from_db_core()
+        ignore_collections = self._determine_ignore_collections()
+        self._apply_overrides_with_ignore_collections(ignore_collections)
+
+    def _load_parameters_from_db_core(self):
+        """Load the model parameters from the selected reader."""
+        self.parameters = deepcopy(
+            self.model_reader.get_model_parameters(
+                self.site, self.name, self.collection, self.model_version
             )
+        )
+
+    def _determine_ignore_collections(self):
+        """Determine which simulation configuration collections to skip."""
+        ignored = ("configuration_sim_telarray", "configuration_corsika")
+        if not self.overwrite_model_parameter_dict:
+            return ignored
+        if self._has_overrides_for_collections(ignored):
+            return None
+        if self._has_overrides_for_collections(("configuration_sim_telarray",)):
+            return ("configuration_corsika",)
+        if self._has_overrides_for_collections(("configuration_corsika",)):
+            return ("configuration_sim_telarray",)
+        return ignored
+
+    def _has_overrides_for_collections(self, ignored_collections):
+        """Return whether overrides target any of the ignored collections."""
+        return self._has_flat_overrides_for_collections(
+            ignored_collections
+        ) or self._has_nested_overrides_for_collections(ignored_collections)
+
+    def _has_flat_overrides_for_collections(self, ignored_collections):
+        """Return whether flat overrides target an ignored collection."""
+        for parameter_name in self.overwrite_model_parameter_dict:
+            try:
+                if (
+                    names.get_collection_name_from_parameter_name(parameter_name)
+                    in ignored_collections
+                ):
+                    return True
+            except KeyError:
+                return True
+        return False
+
+    def _has_nested_overrides_for_collections(self, ignored_collections):
+        """Return whether nested overrides target an ignored collection."""
+        for parameters in self.overwrite_model_parameter_dict.values():
+            if not isinstance(parameters, dict):
+                continue
+            for parameter_name in parameters:
+                try:
+                    if (
+                        names.get_collection_name_from_parameter_name(parameter_name)
+                        in ignored_collections
+                    ):
+                        return True
+                except KeyError:
+                    return True
+        return False
+
+    def _apply_overrides_with_ignore_collections(self, ignored_collections):
+        """Apply model overrides and load simulation-software parameters."""
+        filtered_overwrites = self._filter_overwrites_for_target(
+            self.overwrite_model_parameter_dict, ignored_collections
+        )
+        self.overwrite_parameters(filtered_overwrites, ignore_collection=ignored_collections)
+        self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
+        self._load_simulation_software_parameter()
+
+    def _filter_overwrites_for_target(self, overwrites, ignored_collections):
+        """Filter overrides to parameters applicable to this model target."""
+        if not overwrites or ignored_collections is None:
+            return overwrites
+
+        filtered = {}
+        for target, parameters in overwrites.items():
+            if not isinstance(parameters, dict):
+                continue
+            filtered_parameters = {}
+            for parameter_name, value in parameters.items():
+                try:
+                    collection = names.get_collection_name_from_parameter_name(parameter_name)
+                except KeyError:
+                    filtered_parameters[parameter_name] = value
+                else:
+                    if collection not in ignored_collections:
+                        filtered_parameters[parameter_name] = value
+            if filtered_parameters:
+                filtered[target] = filtered_parameters
+        return filtered
 
     @staticmethod
     def _check_model_parameter_versions(parameters, ignore_software_version, software_name=None):
@@ -730,18 +824,61 @@ class ModelParameter:
         """Raise ValueError if parameter is missing in target store."""
         if par_name in target_parameters:
             return
+
+        # Skip validation for global configuration parameters (e.g., configuration_sim_telarray)
+        # These parameters are scoped under configuration classes and not telescope models
+        try:
+            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            if parameter_class == "configuration_sim_telarray":
+                self._logger.debug(
+                    f"Skipping validation for global parameter '{par_name}' "
+                    f"(class: {parameter_class}) in model {self.name}"
+                )
+                return
+        except KeyError:
+            # Parameter not found in registry, proceed with normal validation
+            pass
+
         raise ValueError(
             f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
         )
 
     def _apply_parameter_overwrite(self, par_name, par_value, target_parameters):
         """Apply one overwrite entry to the target parameter store."""
+        if self._should_route_to_sim_telarray(par_name):
+            self._route_to_sim_telarray(par_name, par_value)
+            return
+        self._apply_normal_overwrite(par_name, par_value, target_parameters)
+
+    def _should_route_to_sim_telarray(self, par_name):
+        """Check if parameter should be routed to sim_telarray config."""
+        try:
+            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            return parameter_class == "configuration_sim_telarray"
+        except KeyError:
+            return False
+
+    def _route_to_sim_telarray(self, par_name, par_value):
+        """Route parameter to sim_telarray configuration."""
+        sim_telarray_params = self._simulation_config_parameters.setdefault("sim_telarray", {})
         if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
-            metadata = {
-                key: value
-                for key, value in par_value.items()
-                if key in ("unit", "model_parameter_schema_version")
-            }
+            parameter_entry = self._extract_parameter_entry(par_value)
+        else:
+            parameter_entry = {"value": par_value}
+        sim_telarray_params[par_name] = parameter_entry
+
+    def _extract_parameter_entry(self, par_value):
+        """Extract parameter entry with metadata from par_value."""
+        parameter_entry = {"value": par_value.get("value")}
+        for key in ("unit", "model_parameter_schema_version"):
+            if key in par_value:
+                parameter_entry[key] = par_value[key]
+        return parameter_entry
+
+    def _apply_normal_overwrite(self, par_name, par_value, target_parameters):
+        """Apply normal overwrite to target parameters."""
+        if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+            metadata = self._extract_metadata(par_value)
             self.overwrite_model_parameter(
                 par_name,
                 par_value.get("value"),
@@ -750,12 +887,19 @@ class ModelParameter:
                 parameter_store=target_parameters,
             )
             return
-
         self.overwrite_model_parameter(
             par_name,
             par_value,
             parameter_store=target_parameters,
         )
+
+    def _extract_metadata(self, par_value):
+        """Extract metadata fields from par_value."""
+        return {
+            key: value
+            for key, value in par_value.items()
+            if key in ("unit", "model_parameter_schema_version")
+        }
 
     def overwrite_model_file(self, par_name, file_path):
         """
@@ -814,24 +958,28 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
+        self._merge_sim_telarray_parameters()
         self.export_model_files(update_if_necessary=True)
-
         if "correct_nsb_spectrum_to_telescope_altitude" in self._simulation_config_parameters.get(
             "sim_telarray", {}
         ):
             self.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.config_file_directory
             )
-
         self._add_additional_models(additional_models)
 
-        # Ensure the writer label matches the config file naming label.
-        self._load_simtel_config_writer(label=label)
+        # Ensure the writer label matches the config file naming label
+        self._load_simtel_config_writer(label=label if label is not None else self.label)
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
             parameters=self.parameters,
         )
+
+    def _merge_sim_telarray_parameters(self):
+        """Merge sim_telarray parameters into self.parameters."""
+        sim_telarray_params = self._simulation_config_parameters.get("sim_telarray", {})
+        for par_name, par_value in sim_telarray_params.items():
+            self.parameters[par_name] = par_value
 
     def _add_additional_models(self, additional_models):
         """Add additional models to the current model parameters."""
@@ -897,7 +1045,10 @@ class ModelParameter:
             Model directory to export the file to.
         """
         parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
-        parameter = deepcopy(self._simulation_config_parameters["sim_telarray"][parameter_name])
+        correction_parameters = self._simulation_config_parameters.get("sim_telarray", {})
+        if parameter_name not in correction_parameters:
+            return
+        parameter = deepcopy(correction_parameters[parameter_name])
         parameter["parameter"] = parameter_name
         parameter.setdefault("parameter_version", Path(parameter["value"]).stem.rsplit("-", 1)[-1])
         parameter.setdefault("instrument", self.design_model or self.name)

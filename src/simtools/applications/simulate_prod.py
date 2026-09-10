@@ -3,6 +3,7 @@
 """Generate simulation configuration and run simulations."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -14,10 +15,8 @@ from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
-    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
+    _resolve_job_grid_arguments,
     build_simulate_prod_job_specs,
-    job_grid_row_to_simulate_prod_args,
-    read_job_grid,
 )
 from simtools.production_configuration.job_metadata import build_production_job_manifest
 from simtools.production_configuration.production_file_selection import (
@@ -26,6 +25,8 @@ from simtools.production_configuration.production_file_selection import (
     validate_required_production_outputs,
 )
 from simtools.simulator import Simulator
+
+logger = logging.getLogger(__name__)
 
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
@@ -153,63 +154,6 @@ def _post_parse(args_dict, config_sources, parser):
     )
 
 
-def _resolve_job_grid_arguments(args_dict, config_sources, parser):
-    """Merge selected job-grid row values into args after rejecting ambiguous input."""
-    explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
-    job_grid_row_is_explicit = "job_grid_row" in explicit_keys
-
-    if not args_dict.get("job_grid_file"):
-        if job_grid_row_is_explicit:
-            parser.error("'--job_grid_row' requires '--job_grid_file'.")
-        _validate_layout_selection(args_dict, parser)
-        _validate_simulation_arguments(args_dict, parser)
-        return
-
-    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
-    if conflicting_keys:
-        parser.error(
-            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
-            + ", ".join(conflicting_keys)
-        )
-
-    rows, metadata = read_job_grid(args_dict["job_grid_file"])
-    if not rows:
-        parser.error("Job grid contains no rows to process.")
-
-    missing_layout_rows = [
-        index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
-    ]
-    if missing_layout_rows:
-        parser.error(
-            "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
-        )
-
-    selected_row = None
-    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
-        row_index = args_dict.get("job_grid_row") or 1
-        if row_index < 1 or row_index > len(rows):
-            parser.error(
-                f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
-            )
-        selected_row = rows[row_index - 1]
-        rows = [selected_row]
-
-    if args_dict.get("backend", "local") != "local":
-        args_dict["_job_grid_rows"] = rows
-        args_dict["_job_grid_metadata"] = metadata
-        return
-
-    args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
-    _validate_simulation_arguments(args_dict, parser)
-
-
-def _validate_layout_selection(args_dict, parser):
-    """Require a direct array-layout selection when no job grid supplies one."""
-    if args_dict.get("array_layout_name"):
-        return
-    parser.error("the following argument is required: --array_layout_name")
-
-
 def _execute_job_grid(args_dict):
     """Execute all selected production-grid rows through the configured backend."""
     job_specs = build_simulate_prod_job_specs(
@@ -226,12 +170,6 @@ def _execute_job_grid(args_dict):
         execute_jobs(job_specs, options)
     else:
         submit_jobs(job_specs, options)
-
-
-def _validate_simulation_arguments(args_dict, parser):
-    """Validate requirements that depend on the selected simulation software."""
-    if "corsika" in args_dict["simulation_software"] and not args_dict.get("primary"):
-        parser.error("the following argument is required for CORSIKA: --primary")
 
 
 def _write_job_metadata(args_dict, simulator, output_directory):
@@ -278,13 +216,16 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    if app_context.args.get("_job_grid_rows") is not None:
+    # Check if we have a job grid file with parameter scan
+    if app_context.args.get("job_grid_file") and app_context.args.get("_job_grid_rows") is not None:
         _execute_job_grid(app_context.args)
         return
+    if app_context.args.get("job_grid_file"):
+        # Job grid file but not parameter scan - this shouldn't happen with our logic
+        # Fall back to single row processing
+        logger.warning("Job grid file detected but _job_grid_rows not set")
 
-    simulator = Simulator(
-        label=app_context.args.get("label"), model_reader=app_context.model_reader
-    )
+    simulator = Simulator(label=app_context.args.get("label"))
 
     simulator.simulate()
     if app_context.args["reduced_event_lists"]:

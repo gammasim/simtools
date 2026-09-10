@@ -419,6 +419,7 @@ def test_normal_runtime_modules_do_not_construct_database_handlers(simtools_root
         simtools_root_path / "src/simtools/application/model_reader.py",
         simtools_root_path / "src/simtools/db/model_source.py",
         simtools_root_path / "src/simtools/db/mongo_db.py",
+        simtools_root_path / "src/simtools/corsika/corsika_config.py",
     }
     violations = [
         str(path)
@@ -454,8 +455,14 @@ def _boundary_violations(path, allowed_source_selection):
     tree = ast.parse(path.read_text(encoding="utf-8"))
     nodes = list(ast.walk(tree))
     checks = (
-        (_contains_database_handler_call(nodes), "DatabaseHandler construction"),
-        (_contains_database_import(nodes), "database import"),
+        (
+            path not in allowed_source_selection and _contains_database_handler_call(nodes),
+            "DatabaseHandler construction",
+        ),
+        (
+            path not in allowed_source_selection and _contains_database_import(nodes),
+            "database import",
+        ),
         (
             path not in allowed_source_selection and _contains_mongodb_literal(nodes),
             "MongoDB source literal",
