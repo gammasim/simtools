@@ -136,14 +136,3 @@ jobs:
             ${{ steps.image.outputs.latest }}
           cache-from: type=gha,scope=simtools-prod-tests
           cache-to: type=gha,mode=min,scope=simtools-prod-tests
-
-  integration-tests:
-    needs: build
-    if: github.event_name == 'workflow_dispatch'
-    permissions:
-      contents: read
-    uses: ./.github/workflows/CI-integrationtests.yml
-    with:
-      container_image: ${{ needs.build.outputs.image }}
-      model_versions: '["7.0.0"]'
-      runner_labels: '["ubuntu-latest","ubuntu-24.04-arm"]'
