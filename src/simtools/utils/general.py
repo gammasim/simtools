@@ -460,10 +460,12 @@ def pack_tar_file(tar_file_name, file_list, sub_dir=None, compression_level=None
             raise ValueError(f"Unsafe file path: {f}")
 
     open_kwargs = {} if compression_level is None else {"compresslevel": compression_level}
-    with tarfile.open(tar_file_name, "w:gz", **open_kwargs) as tar:
+    # This is archive creation, not expansion of untrusted archive input. The files are validated
+    # above and added non-recursively to bound the operation to the requested members.
+    with tarfile.open(tar_file_name, "w:gz", **open_kwargs) as tar:  # NOSONAR
         for file in file_list:
             arc_name = Path(sub_dir) / file.name if sub_dir else file.name
-            tar.add(file, arcname=str(arc_name))
+            tar.add(file, arcname=str(arc_name), recursive=False)
 
 
 def get_log_excerpt(log_file, n_last_lines=30):
