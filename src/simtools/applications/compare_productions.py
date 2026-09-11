@@ -96,6 +96,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     initialize_output=False,
+    initialize_model_reader=False,
     excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
     post_parse=_post_parse,
 )

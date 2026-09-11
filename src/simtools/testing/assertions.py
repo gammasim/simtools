@@ -156,28 +156,28 @@ def check_output_from_sim_telarray(file, file_test):
 
     assert_sim_telarray = []
 
-    expected_output_key_map = {
-        "expected_sim_telarray_output": (
-            "assert_expected_sim_telarray_output",
-            "expected_sim_telarray_output",
-        ),
-        "expected_sim_telarray_metadata": (
-            "assert_expected_sim_telarray_metadata",
-            "expected_sim_telarray_metadata",
-        ),
-    }
-
-    for file_key, (func_name, param_name) in expected_output_key_map.items():
-        if file_key in file_test:
-            func = getattr(simtel_output_validator, func_name)
-            assert_sim_telarray.append(func(file=file, **{param_name: file_test[file_key]}))
-
     event_type = file_test.get("expected_sim_telarray_output", {}).get("event_type", "shower")
+    if "expected_sim_telarray_output" in file_test:
+        assert_sim_telarray.append(
+            simtel_output_validator.assert_expected_sim_telarray_output_and_event_type(
+                file=file,
+                expected_sim_telarray_output=file_test["expected_sim_telarray_output"],
+                event_type=event_type,
+            )
+        )
+    if "expected_sim_telarray_metadata" in file_test:
+        assert_sim_telarray.append(
+            simtel_output_validator.assert_expected_sim_telarray_metadata(
+                file=file,
+                expected_sim_telarray_metadata=file_test["expected_sim_telarray_metadata"],
+            )
+        )
     if event_type == "shower":
         assert_sim_telarray.append(simtel_output_validator.assert_n_showers_and_energy_range(file))
-    assert_sim_telarray.append(
-        simtel_output_validator.assert_events_of_type(file, event_type=event_type)
-    )
+    if "expected_sim_telarray_output" not in file_test:
+        assert_sim_telarray.append(
+            simtel_output_validator.assert_events_of_type(file, event_type=event_type)
+        )
 
     return all(assert_sim_telarray)
 

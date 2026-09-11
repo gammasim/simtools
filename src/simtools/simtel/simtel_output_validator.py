@@ -528,6 +528,44 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
         return True
 
     item_to_check = _item_to_check_from_sim_telarray(file, expected_sim_telarray_output)
+    return _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
+
+
+def assert_expected_sim_telarray_output_and_event_type(
+    file, expected_sim_telarray_output, event_type="shower"
+):
+    """Validate expected event values and type during one file traversal.
+
+    Parameters
+    ----------
+    file : Path
+        Sim_telarray output file.
+    expected_sim_telarray_output : dict or None
+        Expected event values and optional event type.
+    event_type : str, optional
+        Expected event type, by default ``"shower"``.
+
+    Returns
+    -------
+    bool
+        ``True`` when all requested event checks pass.
+    """
+    event_types = set()
+    item_to_check = _item_to_check_from_sim_telarray(
+        file,
+        expected_sim_telarray_output or {},
+        event_types=event_types,
+    )
+    output_valid = _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
+    event_type_valid = _assert_event_type_in_set(event_types, event_type, file)
+    return output_valid and event_type_valid
+
+
+def _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output):
+    """Check extracted sim_telarray event values against configured ranges."""
+    if expected_sim_telarray_output is None:
+        return True
+
     _logger.debug(
         "Extracted event numbers from sim_telarray file: "
         f"telescope events: {item_to_check['n_telescope_events']}, "
@@ -577,7 +615,7 @@ def _process_telescope_events(event, item_to_check):
         item_to_check["n_telescope_events"] += 1
 
 
-def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
+def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output, event_types=None):
     """Read the relevant items from the sim_telarray file for checking against expected output."""
     item_to_check = defaultdict(list)
     for key in ("n_telescope_events", "n_calibration_events"):
@@ -585,6 +623,8 @@ def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
     with SimTelFile(file) as f:
         for event in f:
             _process_trigger_time(event, item_to_check, expected_sim_telarray_output)
+            if event_types is not None:
+                event_types.add(event["type"])
             if event["type"] == "calibration":
                 item_to_check["n_calibration_events"] += 1
             else:
@@ -636,13 +676,24 @@ def assert_events_of_type(file, event_type="shower"):
         Expected event type (e.g., "shower", "flasher", etc.).
 
     """
-    expected_event_type = "data"
-    if event_type in ("pedestal", "direct_injection"):
-        expected_event_type = "calibration"
+    expected_event_type = _simtel_event_type(event_type)
     with SimTelFile(file) as f:
         for event in f:
             if event["type"] == expected_event_type:
                 return True
+
+    return _assert_event_type_in_set(set(), event_type, file)
+
+
+def _simtel_event_type(event_type):
+    """Return the eventio type corresponding to a sim_telarray event type."""
+    return "calibration" if event_type in ("pedestal", "direct_injection") else "data"
+
+
+def _assert_event_type_in_set(event_types, event_type, file):
+    """Check whether an expected sim_telarray event type was observed."""
+    if _simtel_event_type(event_type) in event_types:
+        return True
 
     _logger.error(f"No events of type {event_type} found in sim_telarray file {file}")
     return False
