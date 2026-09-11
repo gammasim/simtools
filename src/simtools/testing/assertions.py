@@ -156,7 +156,8 @@ def check_output_from_sim_telarray(file, file_test):
 
     assert_sim_telarray = []
 
-    event_type = file_test.get("expected_sim_telarray_output", {}).get("event_type", "shower")
+    event_type = file_test.get("expected_sim_telarray_output") or {}
+    event_type = event_type.get("event_type", "shower")
     if "expected_sim_telarray_output" in file_test:
         assert_sim_telarray.append(
             simtel_output_validator.assert_expected_sim_telarray_output_and_event_type(

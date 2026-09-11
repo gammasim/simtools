@@ -252,7 +252,7 @@ def _average_angle_slices(
         return np.mean(grouped_values, axis=1)
 
     weight_angles, weight_values = weights
-    group_weights = _nearest(weight_angles, weight_values, grouped_angles[0])
+    group_weights = _nearest(weight_angles, weight_values, grouped_angles)
     return np.average(grouped_values, axis=1, weights=group_weights)
 
 

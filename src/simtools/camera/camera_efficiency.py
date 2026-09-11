@@ -47,12 +47,16 @@ class CameraEfficiency:
 
         self.io_handler = io_handler.IOHandler()
         if telescope_model is None or site_model is None:
-            self.telescope_model, self.site_model, _ = initialize_simulation_models(
+            initialized_telescope_model, initialized_site_model, _ = initialize_simulation_models(
                 label=self.label,
                 model_version=config_data["model_version"],
                 site=config_data["site"],
                 telescope_name=config_data["telescope"],
             )
+            self.telescope_model = (
+                initialized_telescope_model if telescope_model is None else telescope_model
+            )
+            self.site_model = initialized_site_model if site_model is None else site_model
         else:
             self.telescope_model = telescope_model
             self.site_model = site_model

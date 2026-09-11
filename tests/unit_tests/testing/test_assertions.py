@@ -161,6 +161,7 @@ def test_check_output_from_sim_telarray_no_expected_output(mocker):
         ({"expected_sim_telarray_metadata": {"version": "1.0"}}, True, True, "shower"),
         ({"expected_sim_telarray_output": {"event_type": "background"}}, True, False, "background"),
         ({"expected_sim_telarray_output": {"event_type": "shower"}}, False, True, "shower"),
+        ({"expected_sim_telarray_output": None}, True, True, "shower"),
     ],
 )
 def test_check_output_from_sim_telarray(
