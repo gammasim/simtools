@@ -24,7 +24,7 @@ RUN test -f \
     test "$model_revision" = "${SIMULATION_MODELS_GIT_REVISION}" && \
     . /workdir/env/bin/activate && \
     pip install --no-cache-dir \
-      pygit2 psutil pytest pytest-cov pytest-mock pytest-requirements pytest-retry pytest-xdist && \
+      psutil pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-retry pytest-xdist && \
     chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /opt/simtools/test-data
 
 ENV SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH="/opt/simtools/test-data/\
