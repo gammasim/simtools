@@ -3,28 +3,16 @@ name: CI-integrationtests
 
 permissions: {}
 
-env:
-  CLONE_ATTEMPTS: 2
-  GIT_HTTP_CONNECT_TIMEOUT: 20
-  GIT_HTTP_LOW_SPEED_LIMIT: 1000
-  GIT_HTTP_LOW_SPEED_TIME: 30
-  RETRY_SLEEP_SECONDS: 60
-
 on:
   workflow_dispatch:
-    inputs:
-      simulation_model_branch:
-        description: 'Simulation model branch'
-        required: false
-        type: string
-        default: 'main'
+    inputs: {}
   workflow_call:
     inputs:
       container_image:
         description: 'Container image to use for tests'
         required: false
         type: string
-        default: 'ghcr.io/gammasim/simtools-dev:latest'
+        default: 'ghcr.io/gammasim/simtools-prod-tests:latest'
       model_versions:
         description: 'Model versions to test'
         required: false
@@ -85,219 +73,6 @@ jobs:
           print(f"Verified packaged dependency catalog: {expected}")
           PY
 
-  prepare_interaction_tables:
-    name: download CORSIKA interaction tables
-    runs-on: ubuntu-latest
-    env:
-      IT_NAME: "corsika7-interaction-tables"
-      # For testing, overwrite CORSIKA_TABLES with branch name
-      # CORSIKA_TABLES: "main"
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-
-      - name: Install dependency exporter prerequisites
-        run: python -m pip install packaging pyyaml
-
-      - name: Read CORSIKA interaction tables version
-        id: interaction_table_version
-        run: |
-          CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
-            --format github-output | sed -n 's/^corsika_tables_tag=//p')
-          test -n "$CORSIKA_TABLES"
-          echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
-          echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"
-
-      - name: Restore cached CORSIKA interaction tables
-        id: restore_interaction_tables
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
-          restore-keys: |
-            corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}-
-
-      - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
-        run: |
-          REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
-          export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
-
-          CLONE_DIR="${IT_NAME}-clone"
-          CACHE_DIR="$IT_NAME"
-          rm -rf "$CLONE_DIR"
-          CLONE_SUCCESS=false
-
-          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
-            if git \
-              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
-              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
-              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"
-            then
-              git lfs install
-              if ! (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
-                echo "git lfs pull failed; will retry and/or fall back to the cache."
-                rm -rf "$CLONE_DIR"
-                continue
-              fi
-              rm -rf "$CACHE_DIR"
-              mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES."
-              CLONE_SUCCESS=true
-              break
-            fi
-
-            rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
-              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
-              sleep "$RETRY_SLEEP_SECONDS"
-            fi
-          done
-
-          if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES and no cache is available."
-            exit 1
-          fi
-
-          if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
-          fi
-
-      - name: Save cached CORSIKA interaction tables
-        if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
-
-      - name: Upload CORSIKA interaction tables
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
-        with:
-          name: corsika-interaction-tables
-          path: ${{ env.IT_NAME }}
-          if-no-files-found: error
-          retention-days: 30
-
-  prepare_simulation_models:
-    name: download simulation models
-    runs-on: ubuntu-latest
-    env:
-      SIM_MODELS_REPO: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
-
-    defaults:
-      run:
-        shell: bash -leo pipefail {0}
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-
-      - name: Export dependency environment
-        run: |
-          python -m pip install pyyaml
-          python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
-
-      - name: Determine simulation model branch
-        id: simulation_model_branch
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-          REF_NAME: ${{ github.ref_name }}
-          EVENT_NAME: ${{ github.event_name }}
-          INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
-        run: |
-          BRANCH="main"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
-            BRANCH="$INPUT_BRANCH"
-          fi
-          CURRENT_REF="$REF_NAME"
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            CURRENT_REF="$HEAD_REF"
-          fi
-          if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-            if [[ ! "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG must be a v-prefixed release tag."
-              exit 1
-            fi
-            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-          fi
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-
-      - name: Restore cached simulation models repository
-        # if: github.event_name != 'schedule'
-        id: restore_simulation_models
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: simulation-models.git
-          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
-          restore-keys: |
-            simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}-
-
-      - name: Clone simulation models repository
-        # if: github.event_name != 'schedule'
-        run: |
-          CLONE_DIR="simulation-models.git-clone"
-          CACHE_DIR="simulation-models.git"
-          rm -rf "$CLONE_DIR"
-          CLONE_SUCCESS=false
-
-          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
-            if git \
-              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
-              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
-              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --bare --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" \
-                "$SIM_MODELS_REPO" "$CLONE_DIR"
-            then
-              rm -rf "$CACHE_DIR"
-              mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-              CLONE_SUCCESS=true
-              break
-            fi
-
-            rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
-              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
-              sleep "$RETRY_SLEEP_SECONDS"
-            fi
-          done
-
-          if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "Failed to clone simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
-            exit 1
-          fi
-
-          if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-          fi
-
-          git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
-
-
-      - name: Save cached simulation models repository
-        if: steps.restore_simulation_models.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
-        with:
-          path: simulation-models.git
-          key: simulation-models-git-${{ steps.simulation_model_branch.outputs.branch }}
-
-      - name: Package simulation models repository
-        run: |
-          (
-            cd simulation-models.git
-            python -m zipfile -c ../simulation-models.git.zip .
-          )
-
-      - name: Upload simulation models repository
-        # if: github.event_name != 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
-        with:
-          name: simulation-models-repo
-          path: simulation-models.git.zip
-          if-no-files-found: error
-          retention-days: 30
-
   prepare_test_resources:
     name: download test resources
     runs-on: ubuntu-latest
@@ -340,18 +115,15 @@ jobs:
           retention-days: 30
 
   integration_tests:
-    needs: [prepare_interaction_tables, prepare_simulation_models, prepare_test_resources]
+    needs: [prepare_test_resources]
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     container:
-      image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
+      image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
       options: --user 0
     env:
-      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
-      IT_NAME: "corsika7-interaction-tables"
-      SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
-      SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
+      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
 
     services:
       mongodb:
@@ -401,8 +173,8 @@ jobs:
         run: |
           {
             if [ "${{ matrix.model_source }}" = "git" ]; then
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
+              echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
+              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
             else
               echo "SIMTOOLS_DB_SERVER=mongodb"
               echo "SIMTOOLS_DB_API_USER=api"
@@ -416,59 +188,23 @@ jobs:
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
           } | tee .env >> "$GITHUB_ENV"
 
-      - name: Download CORSIKA interaction tables
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
-        with:
-          name: corsika-interaction-tables
-          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
-
-      - name: Verify CORSIKA interaction tables
-        run: |
-          if ! test -f "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/manifest.yaml"; then
-            echo "Interaction-table directory:"
-            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH" || true
-            echo "Interaction-table parent directory:"
-            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/.." || true
-            exit 1
-          fi
-
-      - name: Download simulation models repository
-        # if: github.event_name != 'schedule'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
-        with:
-          name: simulation-models-repo
-          path: ${{ github.workspace }}
-
-      - name: Extract and verify simulation models repository
-        run: |
-          mkdir "$SIMULATION_MODELS_GIT_PATH"
-          python -m zipfile -t "$GITHUB_WORKSPACE/simulation-models.git.zip"
-          python -m zipfile -e "$GITHUB_WORKSPACE/simulation-models.git.zip" \
-            "$SIMULATION_MODELS_GIT_PATH"
-          git --git-dir="$SIMULATION_MODELS_GIT_PATH" rev-parse --verify HEAD
-
       - name: Extend PATH (sim_telarray)
         run: |
           [ -n "$SIMTOOLS_SIM_TELARRAY_PATH" ] && echo "$SIMTOOLS_SIM_TELARRAY_PATH" >> "$GITHUB_PATH"
 
-      - name: Install Python dependencies (prod container)
-        if: contains(inputs.container_image, 'simtools-prod')
-        run: |
-          pip install --no-cache-dir pygit2 pymongo pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
-
-      - name: Install resource benchmark dependency (prod container)
-        if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
-        run: pip install --no-cache-dir psutil
+      - name: Install current simtools checkout (production test image)
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
+        run: pip install --no-cache-dir --no-deps -e .
 
       - name: Install Python dependencies (dev container)
-        if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
+        if: ${{ !contains(env.CONTAINER_IMAGE, 'simtools-prod') }}
         run: |
           pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
 
       - name: Upload data to MongoDB
         if: matrix.model_source == 'mongodb'
         run: |
-          git clone --local "$SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
+          git clone --local "$SIMTOOLS_SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
           simtools-db-upload-model-repository \
             --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
             --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
@@ -484,7 +220,7 @@ jobs:
               unset "$variable"
             done
             MODEL_SOURCE_ARGS=(
-              --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
+              --simulation_models_git_path="$SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
               --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
             )
           fi

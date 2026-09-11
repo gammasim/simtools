@@ -1,0 +1,126 @@
+---
+name: build-simtools-prod-tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      prod_image:
+        description: "Published simtools-prod image used as the base"
+        required: false
+        default: "ghcr.io/gammasim/simtools-prod:latest"
+        type: string
+      simulation_model_ref:
+        description: "simulation-models branch or tag"
+        required: false
+        default: ""
+        type: string
+  schedule:
+    - cron: "0 2 * * 0"
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Install catalog reader
+        run: python -m pip install pyyaml
+
+      - name: Read test-data versions
+        id: catalog
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import yaml
+
+          catalog = yaml.safe_load(Path("dependency_versions.yml").read_text())
+          model = catalog["model-database"]
+          print(f"model_ref={model['default-tag']}")
+          print(f"model_repository={model['repository-url']}")
+          print(f"tables_tag={catalog['corsika-interaction-tables']['tag']}")
+          PY
+
+      - name: Prepare simulation models
+        id: models
+        env:
+          MODEL_REF: ${{ inputs.simulation_model_ref || steps.catalog.outputs.model_ref }}
+          MODEL_REPOSITORY: ${{ steps.catalog.outputs.model_repository }}
+        run: |
+          mkdir -p test-data
+          git clone --bare --depth 1 --branch "$MODEL_REF" "$MODEL_REPOSITORY" \
+            test-data/simulation-models.git
+          revision=$(git --git-dir=test-data/simulation-models.git rev-parse HEAD)
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare CORSIKA interaction tables
+        env:
+          TABLES_TAG: ${{ steps.catalog.outputs.tables_tag }}
+        run: |
+          export GIT_LFS_SKIP_SMUDGE=1
+          git clone --depth 1 --branch "$TABLES_TAG" \
+            https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables.git \
+            test-data/corsika7-interaction-tables
+          git -C test-data/corsika7-interaction-tables lfs install
+          git -C test-data/corsika7-interaction-tables lfs pull \
+            --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"
+          rm -rf test-data/corsika7-interaction-tables/.git
+
+      - name: Set image tag
+        id: image
+        env:
+          MODEL_REVISION: ${{ steps.models.outputs.revision }}
+          MODEL_REF_INPUT: ${{ inputs.simulation_model_ref }}
+        run: |
+          tag="models-${MODEL_REVISION:0:12}-${GITHUB_SHA:0:7}"
+          image="ghcr.io/gammasim/simtools-prod-tests:$tag"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ -z "$MODEL_REF_INPUT" ]; then
+            echo "latest=ghcr.io/gammasim/simtools-prod-tests:latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push test image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64/v8
+          build-args: |
+            PROD_IMAGE=${{ inputs.prod_image || 'ghcr.io/gammasim/simtools-prod:latest' }}
+            SIMULATION_MODELS_GIT_REVISION=${{ steps.models.outputs.revision }}
+            CORSIKA_TABLES_TAG=${{ steps.catalog.outputs.tables_tag }}
+          push: true
+          file: ./docker/Dockerfile-simtools-prod-tests
+          tags: |
+            ${{ steps.image.outputs.image }}
+            ${{ steps.image.outputs.latest }}
+          cache-from: type=gha,scope=simtools-prod-tests
+          cache-to: type=gha,mode=min,scope=simtools-prod-tests
+
+  integration-tests:
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/CI-integrationtests.yml
+    with:
+      container_image: ${{ needs.build.outputs.image }}
+      model_versions: '["7.0.0"]'
+      runner_labels: '["ubuntu-latest","ubuntu-24.04-arm"]'
