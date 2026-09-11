@@ -38,6 +38,12 @@ definitions:
       name:
         type: string
         description: "name of model parameter"
+      surface:
+        type: string
+        enum:
+          - primary
+          - secondary
+        description: "Optical surface represented by a mirror parameter"
       developer_note:
         type: string
         description: "notes for developers"
@@ -130,6 +136,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TableColumn'
+      table_metadata:
+        type: array
+        items:
+          $ref: '#/definitions/TableMetadata'
+      allow_extra_columns:
+        type: boolean
+        description: "allow format-dependent optional columns beyond table_columns"
       required:
         type: boolean
       condition:
@@ -247,6 +260,37 @@ definitions:
       - name
       - type
     title: TableColumn
+  TableMetadata:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: "table metadata key"
+      description:
+        type: string
+        description: "table metadata description"
+      required:
+        type: boolean
+        description: "whether the metadata key is required"
+      type:
+        type: string
+        enum:
+          - string
+          - number
+          - boolean
+          - array
+          - object
+          - "null"
+        description: "JSON-compatible metadata value type"
+      allowed_values:
+        type: array
+        description: "permitted metadata values"
+    required:
+      - description
+      - name
+      - type
+    title: TableMetadata
   Instrument:
     type: object
     additionalProperties: false
@@ -297,6 +341,9 @@ definitions:
           - set
         description: |-
           meta parameter serialization mode
+      table_format:
+        type: string
+        description: sim_telarray table serialization format
       set_meta_parameter:
         type: boolean
         description: |-
@@ -305,6 +352,9 @@ definitions:
         $ref: '#/definitions/SimulationSoftwareOutputValueSchema'
         description: |-
           "Optional emitted-value schema for software-specific serialized output"
+      serialization:
+        $ref: '#/definitions/SerializationContract'
+        description: "Declared serialization contract for table-valued parameters"
     required:
       - name
     title: SimulationSoftware
@@ -344,6 +394,53 @@ definitions:
     required:
       - kind
     title: SimulationSoftwareOutputValueSchema
+  SerializationContract:
+    type: object
+    additionalProperties: false
+    properties:
+      columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      optional_columns:
+        type: array
+        items:
+          type: string
+      allowed_columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      row_sort_keys:
+        type: array
+        items:
+          type: string
+      sort_keys:
+        type: array
+        items:
+          type: string
+      matrix_axes:
+        type: array
+        items:
+          type: string
+        minItems: 2
+        maxItems: 2
+      value_column:
+        type: string
+      missing_value:
+        type: number
+      float_format:
+        type: string
+      write_comments:
+        type: boolean
+      units:
+        type: object
+        additionalProperties:
+          type: string
+    required:
+      - columns
+    title: SerializationContract
   DataUnion:
     anyOf:
       - type: array

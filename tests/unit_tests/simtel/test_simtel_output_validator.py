@@ -12,7 +12,6 @@ from simtools.simtel.simtel_output_validator import (
     _assert_sim_telarray_seed,
     _is_equal_floats_or_ints,
     _item_to_check_from_sim_telarray,
-    _resolve_dict_parameter_metadata_value,
     _sim_telarray_name_from_parameter_name,
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
@@ -204,6 +203,53 @@ def test_string_parameter():
     assert len(result) == 0
 
 
+def test_file_parameter():
+    model_mock = MagicMock()
+    model_mock.parameters = {
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission-1.0.0.ecsv",
+            "type": "file",
+        },
+    }
+    model_mock.config_file_directory = Path("/model")
+
+    model_mock.name = "MSTS-01"
+    model_mock.config_file_path = Path("/model/CTAO-MSTS-01.cfg")
+    metadata = {"atmospheric_transmission": "atmospheric_transmission-CTAO-MSTS-01.dat"}
+
+    assert _assert_model_parameters(metadata, model_mock) == []
+
+
+def test_file_parameter_for_telescope_uses_generated_filename():
+    model_mock = MagicMock()
+    model_mock.name = "MSTS-01"
+    model_mock.config_file_path = Path("/model/CTAO-MSTS-01.cfg")
+
+    for parameter_name in ("discriminator_pulse_shape", "fadc_pulse_shape", "mirror_list"):
+        metadata = {parameter_name: f"{parameter_name}-CTAO-MSTS-01.dat"}
+        model_mock.parameters = {
+            parameter_name: {
+                "value": f"{parameter_name}-1.0.0.ecsv",
+                "type": "file",
+            },
+        }
+
+        result = _assert_model_parameters(metadata, model_mock)
+
+        assert result == []
+
+
+def test_segmented_dual_mirror_telescope_expects_no_mirror_list_file():
+    model_mock = MagicMock()
+    model_mock.parameters = {
+        "mirror_class": {"value": 2, "type": "int"},
+        "primary_mirror_segmentation": {"value": [{"kind": "hex"}], "type": "dict"},
+        "mirror_list": {"value": "mirror_list-1.0.0-SSTS-design.ecsv", "type": "file"},
+    }
+
+    assert _assert_model_parameters({"mirror_list": "none"}, model_mock) == []
+
+
 def test_missing_parameter_in_metadata():
     metadata = {}
     model_mock = MagicMock()
@@ -213,74 +259,6 @@ def test_missing_parameter_in_metadata():
 
     result = _assert_model_parameters(metadata, model_mock)
     assert len(result) == 0
-
-
-def test_assert_model_parameters_resolves_dict_metadata_file(tmp_test_directory):
-    metadata = {"fadc_pulse_shape": "fadc_pulse_shape-LSTN-01.dat"}
-    model_mock = MagicMock()
-    model_mock.parameters = {
-        "fadc_pulse_shape": {
-            "value": {
-                "columns": ["time", "amplitude"],
-                "column_units": ["ns", "dimensionless"],
-                "rows": [[0.0, 0.0], [0.1, 0.2]],
-            },
-            "type": "dict",
-        },
-    }
-    model_directory = Path(tmp_test_directory) / "model"
-    model_mock.config_file_directory = model_directory
-
-    with patch(
-        "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
-    ) as resolve_mock:
-        resolve_mock.return_value = model_mock.parameters["fadc_pulse_shape"]["value"]
-
-        result = _assert_model_parameters(metadata, model_mock)
-
-    resolve_mock.assert_called_once_with(
-        "fadc_pulse_shape-LSTN-01.dat",
-        "fadc_pulse_shape",
-        data_path=model_directory,
-    )
-    assert len(result) == 0
-
-
-def test_resolve_dict_parameter_metadata_value_returns_input_for_non_string_value():
-    model = MagicMock()
-    value = {"columns": ["time"], "rows": [[0.0]]}
-
-    result = _resolve_dict_parameter_metadata_value(
-        value=value,
-        model_value={"columns": ["time"], "rows": [[0.0]]},
-        parameter_type="dict",
-        param="fadc_pulse_shape",
-        model=model,
-    )
-
-    assert result == value
-
-
-def test_resolve_dict_parameter_metadata_value_returns_input_when_resolution_fails(
-    tmp_test_directory,
-):
-    model = MagicMock()
-    model.config_file_directory = Path(tmp_test_directory)
-    value = "missing_file.dat"
-
-    with patch(
-        "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
-    ) as resolve_mock:
-        resolve_mock.side_effect = FileNotFoundError("missing")
-        result = _resolve_dict_parameter_metadata_value(
-            value=value,
-            model_value={"columns": ["time"], "rows": [[0.0]]},
-            parameter_type="dict",
-            param="fadc_pulse_shape",
-            model=model,
-        )
-
-    assert result == value
 
 
 def test_telescope_count_mismatch(tmp_path):

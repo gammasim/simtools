@@ -35,6 +35,8 @@ class SiteModel(ModelParameter):
         Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     """
 
     def __init__(
@@ -45,6 +47,7 @@ class SiteModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
@@ -57,6 +60,7 @@ class SiteModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            model_directory=model_directory,
         )
 
     def get_reference_point(self):
@@ -229,13 +233,10 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
+        atmospheric_profile = self.parameters["atmospheric_profile"].copy()
+        atmospheric_profile["qualify_filename"] = False
         self.model_reader.export_model_files(
-            parameters={
-                "atmospheric_transmission_file": {
-                    "value": self.get_parameter_value("atmospheric_profile"),
-                    "file": True,
-                }
-            },
+            parameters={"atmospheric_profile": atmospheric_profile},
             dest=model_directory,
         )
 
@@ -248,15 +249,15 @@ class SiteModel(ModelParameter):
         float
             Integrated flux value.
         """
-        table = self.model_reader.get_ecsv_file_as_astropy_table(
-            file_name=self.get_parameter_value("nsb_spectrum")
-        )
+        table = self.get_parameter_table("nsb_spectrum")
         table.sort("wavelength")
-        wl = table["wavelength"].quantity.to(u.nm)
-        rate = table["differential photon rate"].quantity.to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
+        wavelength_column = table["wavelength"]
+        rate_column = table["differential_photon_rate"]
+        wl = getattr(wavelength_column, "quantity", wavelength_column).to(u.nm)
+        rate = getattr(rate_column, "quantity", rate_column).to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
         mask = (wl >= wavelength_min) & (wl <= wavelength_max)
         integral_cm2 = np.trapezoid(rate[mask], wl[mask])
         self._logger.debug(
             f"NSB integral between {wavelength_min} and {wavelength_max}: {integral_cm2}"
         )
-        return integral_cm2.value
+        return float(getattr(integral_cm2, "value", integral_cm2))

@@ -17,6 +17,11 @@ from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
 logger = logging.getLogger(__name__)
+_MODEL_SOURCE_OPTIONS = (
+    "simulation_models_path",
+    "simulation_models_git_path",
+    "simulation_models_git_revision",
+)
 
 
 def run_applications(args_dict, run_time=None, replacements=None):
@@ -57,6 +62,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
+    model_source_options = _model_source_options(args_dict)
 
     if args_dict["ignore_runtime_environment"]:
         run_time = []
@@ -76,6 +82,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
                     continue
 
                 app_configuration = config.get("configuration", {})
+                _apply_model_source_options(app_configuration, model_source_options)
                 if args_dict.get("ignore_existing_parameter_version"):
                     app_configuration["ignore_existing_parameter_version"] = True
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
@@ -281,6 +288,18 @@ def _append_metadata_file(model_parameter_metadata_files, metadata_file):
     """Append metadata file to list when available."""
     if metadata_file is not None:
         model_parameter_metadata_files.append(metadata_file)
+
+
+def _model_source_options(args_dict):
+    """Return configured model-source options for child applications."""
+    return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
+
+
+def _apply_model_source_options(configuration, source_options):
+    """Apply inherited model-source options without overriding app settings."""
+    for key, value in source_options.items():
+        if configuration.get(key) is None:
+            configuration[key] = value
 
 
 def _submit_application_and_collect_metadata(

@@ -5,6 +5,7 @@ import logging
 import shutil
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 from simtools.io import ascii_handler
@@ -95,7 +96,9 @@ def initialize_test_resources(test_directory, simtools_version, template_version
     return target_dir
 
 
-def run_configured_applications(args_dict, config_dir, log_dir, run_time, replacements):
+def run_configured_applications(
+    args_dict, config_dir, log_dir, run_time, replacements, unique_tmp_directories=False
+):
     """Run all resource-generation workflows using one prepared runtime.
 
     Parameters
@@ -111,11 +114,24 @@ def run_configured_applications(args_dict, config_dir, log_dir, run_time, replac
         the runtime environment from the workflow configuration.
     replacements : dict[str, str] or None
         Placeholders replaced recursively in each workflow configuration.
+    unique_tmp_directories : bool
+        Use a fresh temporary subtree for each workflow invocation.
     """
     config_dir = Path(config_dir)
     log_dir = Path(log_dir)
     for workflow_config in _get_selected_config_files(config_dir, args_dict.get("config_file")):
         logger.info("Executing applications configured in %s", workflow_config)
+        workflow_replacements = replacements
+        if unique_tmp_directories:
+            workflow_tmp = (
+                Path((replacements or {})["__INTEGRATION_TESTS_DIRECTORY__"])
+                / "tmp"
+                / f"{workflow_config.stem}-{uuid.uuid4().hex}"
+            )
+            workflow_replacements = {
+                **(replacements or {}),
+                "__INTEGRATION_TESTS_DIRECTORY__/tmp/": f"{workflow_tmp}/",
+            }
         tmp_args_dict = {
             "config_file": str(workflow_config),
             "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
@@ -123,10 +139,17 @@ def run_configured_applications(args_dict, config_dir, log_dir, run_time, replac
             "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
             "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
         }
+        for key in (
+            "simulation_models_path",
+            "simulation_models_git_path",
+            "simulation_models_git_revision",
+        ):
+            if args_dict.get(key) is not None:
+                tmp_args_dict[key] = args_dict[key]
         if "runtime_environment" in args_dict:
             tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
         simtools_runner.run_applications(
-            tmp_args_dict, run_time=run_time, replacements=replacements
+            tmp_args_dict, run_time=run_time, replacements=workflow_replacements
         )
 
 
@@ -402,6 +425,7 @@ def generate_test_resources(args_dict, run_time=None):
             log_dir=integration_test_dir / "log_files",
             run_time=run_time,
             replacements=replacements,
+            unique_tmp_directories=True,
         )
     finally:
         _remove_empty_download_directories(downloaded_files, integration_test_dir)

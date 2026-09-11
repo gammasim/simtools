@@ -124,6 +124,11 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
         if corsika_simtel_runner.base_corsika_config.is_calibration_run():
             assert "-C fadc_lg_noise=0.0" in script_content
 
+    run_script = corsika_simtel_runner.runner_service.get_file_name(
+        "multi_pipe_script", run_number=1
+    )
+    assert "|| echo 'Fan-out failed'" not in run_script.read_text(encoding="utf-8")
+
 
 def test_export_multipipe_script_saves_corsika_output(corsika_config_mock_array_model):
     runner = CorsikaSimtelRunner(

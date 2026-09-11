@@ -707,9 +707,11 @@ def test_updating_export_model_files(model_version):
     tel.write_sim_telarray_config_file()
 
     # Changing a parameter that is a file
-    logger.debug("Changing a parameter that IS a file - camera_config_file")
+    logger.debug("Changing a parameter that IS a file - mirror_list")
     tel.overwrite_model_parameter(
-        "camera_config_file", tel.get_parameter_value("camera_config_file")
+        "mirror_list",
+        tel.get_parameter_value("mirror_list"),
+        metadata={"model_parameter_schema_version": "0.1.0"},
     )
     logger.debug(
         "tel._is_exported_model_files should be False because a parameter that "
@@ -761,6 +763,69 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_writer.write_telescope_config_file.assert_called_once()
 
     mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
+
+
+def test_write_sim_telarray_config_file_exports_nsb_correction_file(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._simulation_config_parameters["sim_telarray"][
+        "correct_nsb_spectrum_to_telescope_altitude"
+    ] = {"value": "correction.ecsv"}
+
+    mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_export_nsb = mocker.patch.object(
+        TelescopeModel, "export_nsb_spectrum_to_telescope_altitude_correction_file"
+    )
+    mock_writer = mocker.Mock()
+    mocker.patch.object(
+        TelescopeModel,
+        "_load_simtel_config_writer",
+        side_effect=lambda *args, **kwargs: setattr(
+            telescope_copy, "simtel_config_writer", mock_writer
+        ),
+    )
+
+    telescope_copy.write_sim_telarray_config_file()
+
+    mock_export_nsb.assert_called_once_with(model_directory=telescope_copy.config_file_directory)
+
+
+def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+    parameter = {
+        "value": "correction-1.0.0.ecsv",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTS-design",
+        "site": "North",
+    }
+    telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
+    mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
+    mock_table = mocker.patch.object(
+        telescope_copy.model_reader, "get_parameter_table", return_value=mocker.Mock()
+    )
+    mock_write_table = mocker.patch(
+        "simtools.model.model_parameter.table_serializers.write_simtel_table"
+    )
+
+    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(
+        model_directory=telescope_copy.config_file_directory
+    )
+
+    exported = mock_export.call_args.kwargs["parameters"][parameter_name]
+    assert exported["parameter"] == parameter_name
+    assert exported["parameter_version"] == "1.0.0"
+    assert exported["instrument"] == "LSTS-design"
+    assert exported["site"] == "North"
+    assert exported["file"] is True
+    mock_table.assert_called_once_with(exported)
+    mock_write_table.assert_called_once()
+    assert mock_write_table.call_args.args[:2] == (
+        mock_table.return_value,
+        telescope_copy.config_file_directory,
+    )
+    assert mock_write_table.call_args.kwargs["contract"]["table_format"] == (
+        "atmospheric_transmission"
+    )
 
 
 def test_add_additional_models(telescope_model_lst, mocker):
@@ -900,22 +965,20 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(
     telescope_model_lst, mocker, tmp_test_directory
 ):
     export_spy = mocker.patch.object(telescope_model_lst.model_reader, "export_model_files")
+    parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+    parameter_value = telescope_model_lst.get_simulation_software_parameters("sim_telarray")[
+        parameter_name
+    ]["value"]
 
     telescope_model_lst.export_nsb_spectrum_to_telescope_altitude_correction_file(
         tmp_test_directory
     )
 
-    export_spy.assert_called_once_with(
-        parameters={
-            "nsb_spectrum_at_2200m": {
-                "value": telescope_model_lst.get_simulation_software_parameters("sim_telarray")[
-                    "correct_nsb_spectrum_to_telescope_altitude"
-                ]["value"],
-                "file": True,
-            }
-        },
-        dest=tmp_test_directory,
-    )
+    export_spy.assert_called_once()
+    exported_parameter = export_spy.call_args.kwargs["parameters"][parameter_name]
+    assert exported_parameter["value"] == parameter_value
+    assert exported_parameter["file"] is True
+    assert export_spy.call_args.kwargs["dest"] == tmp_test_directory
 
 
 def test_export_nsb_spectrum_skips_missing_correction(
@@ -1116,10 +1179,6 @@ def test_check_model_parameter_versions(mocker):
     mock_validate = mocker.patch(
         "simtools.model.model_parameter.schema.validate_deprecation_and_version"
     )
-    mock_apply = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
-    )
-
     _check_model_parameter_versions(parameters, ignore_software_version=False)
 
     # validate called only for "num_gains" (known in schema); "unknown_param" is skipped
@@ -1128,15 +1187,14 @@ def test_check_model_parameter_versions(mocker):
         software_name=None,
         ignore_software_version=False,
     )
-    # apply always called unconditionally at the end, with empty legacy updates
-    mock_apply.assert_called_once_with(parameters, {})
+    assert parameters["unknown_param"]["value"] == 42
 
 
-def test_check_model_parameter_versions_triggers_legacy_update(mocker):
+def test_check_model_parameter_versions_allows_older_scalar_schema(mocker):
     parameters = {
         "num_gains": {
             "value": 1,
-            "model_parameter_schema_version": "0.9.0",  # Outdated - does not match schema
+            "model_parameter_schema_version": "0.9.0",
         }
     }
 
@@ -1145,51 +1203,4 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
     mocker.patch("simtools.model.model_parameter.schema.validate_deprecation_and_version")
-    mock_update = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.update_parameter",
-        return_value={"num_gains": {"value": 99}},
-    )
-    mock_apply = mocker.patch(
-        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
-    )
-
     _check_model_parameter_versions(parameters, ignore_software_version=False)
-
-    # Legacy update triggered because schema version mismatch (0.9.0 != 1.0.0)
-    mock_update.assert_called_once_with(
-        "num_gains",
-        parameters,
-        "1.0.0",
-        value_resolver=None,
-    )
-    mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
-
-
-def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
-    model_parameter = ModelParameter.__new__(ModelParameter)
-    model_parameter.model_reader = mocker.Mock()
-    expected = {
-        "columns": ["time", "amplitude"],
-        "column_units": ["ns", "dimensionless"],
-        "rows": [[0.0, 0.0], [0.1, 0.2]],
-    }
-    resolve_mock = mocker.patch(
-        "simtools.model.model_parameter.simtel_table_reader.resolve_dict_parameter_value",
-        return_value=expected,
-    )
-
-    result = model_parameter._resolve_legacy_table_parameter_value(
-        "fadc_pulse_shape",
-        "pulse.dat",
-    )
-
-    assert result == expected
-    model_parameter.db.export_model_files.assert_called_once()
-    export_kwargs = model_parameter.db.export_model_files.call_args.kwargs
-    assert export_kwargs["file_names"] == ["pulse.dat"]
-    assert isinstance(export_kwargs["dest"], Path)
-    resolve_mock.assert_called_once_with(
-        "pulse.dat",
-        "fadc_pulse_shape",
-        data_path=export_kwargs["dest"],
-    )

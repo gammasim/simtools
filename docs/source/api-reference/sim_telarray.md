@@ -59,21 +59,30 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_table_reader
-
-(simtel-table-reader-1)=
+## segmentation
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_table_reader
+.. automodule:: simtel.segmentation
    :members:
 ```
 
-## simtel_table_writer
+## simtel_file_writer
 
-(simtel-table-writer-1)=
+(simtel-file-writer-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_table_writer
+.. automodule:: simtel.simtel_file_writer
+   :members:
+```
+
+## table_serializers
+
+Schema-declared contracts determine the column selection, units, ordering, and
+numeric representation of temporary sim_telarray tables. The serializers reject
+incomplete contracts and invalid matrix grids before creating a configuration.
+
+```{eval-rst}
+.. automodule:: simtel.table_serializers
    :members:
 ```
 

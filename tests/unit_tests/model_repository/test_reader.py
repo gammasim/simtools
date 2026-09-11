@@ -152,6 +152,58 @@ def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
     assert other_source._parameters == {}
 
 
+def test_filesystem_source_does_not_parse_ecsv_before_copying(
+    model_repository, mocker, tmp_test_directory
+):
+    source = FileSystemModelSource(model_repository)
+    source_file = model_repository / "simulation-models/model_parameters/example.ecsv"
+    source_file.write_text("# example\n", encoding="utf-8")
+    validate_table = mocker.patch.object(source, "get_parameter_table")
+
+    result = source._copy_model_file(
+        {"parameter": "example"}, source_file, Path(tmp_test_directory)
+    )
+
+    assert result == "copied from filesystem"
+    validate_table.assert_not_called()
+
+
+def test_filesystem_source_qualifies_colliding_assets(model_repository, tmp_test_directory):
+    source = FileSystemModelSource(model_repository)
+    first_source = (
+        model_repository / "simulation-models/model_parameters/first/camera_filter/shared.dat"
+    )
+    second_source = (
+        model_repository / "simulation-models/model_parameters/second/camera_filter/shared.dat"
+    )
+    first_source.parent.mkdir(parents=True)
+    second_source.parent.mkdir(parents=True)
+    first_source.write_text("first\n", encoding="utf-8")
+    second_source.write_text("second\n", encoding="utf-8")
+    destination = Path(tmp_test_directory) / "exported"
+    first_parameter = {
+        "file": True,
+        "instrument": "first",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+    second_parameter = {
+        "file": True,
+        "instrument": "second",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+
+    source._copy_model_file(first_parameter, first_source, destination)
+    source._copy_model_file(second_parameter, second_source, destination)
+
+    assert second_parameter["value"] == "shared-second.dat"
+    assert (destination / "shared-second.dat").read_text(encoding="utf-8") == "second\n"
+    assert source.resolve_parameter_asset(second_parameter) == second_source.resolve()
+
+
 def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
     """A missing repository fails with a useful path error."""
     with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):
@@ -254,10 +306,10 @@ def test_filesystem_source_matches_parameter_filters(data, instrument, site, mat
 def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     model_repository, tmp_test_directory
 ):
-    """Referenced files are copied once and cannot escape the Files directory."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    (files_path / "nested/model.dat").parent.mkdir(parents=True)
-    (files_path / "nested/model.dat").write_bytes(b"model")
+    """Referenced files are copied once and cannot escape the parameter directory."""
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "nested/model.dat").parent.mkdir(parents=True)
+    (parameters_path / "nested/model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -267,7 +319,7 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
         "nested/model.dat": "file exists"
     }
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.export_model_files(file_names="../model.dat", dest=destination)
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.export_model_files(file_names="missing.dat", dest=destination)
@@ -277,9 +329,8 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
 
 def test_filesystem_source_exports_parameter_file_values(model_repository, tmp_test_directory):
     """File-valued parameters are selected when file names are omitted."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    (files_path / "model.dat").write_bytes(b"model")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -293,15 +344,14 @@ def test_filesystem_source_reads_ecsv_and_rejects_missing_file(
     model_repository, tmp_test_directory
 ):
     """ECSV model files are exposed as Astropy tables."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    Table({"value": [1, 2]}).write(files_path / "values.ecsv", format="ascii.ecsv")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    Table({"value": [1, 2]}).write(parameters_path / "values.ecsv", format="ascii.ecsv")
     source = FileSystemModelSource(model_repository)
 
     assert source.get_ecsv_file_as_astropy_table("values.ecsv")["value"].tolist() == [1, 2]
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.get_ecsv_file_as_astropy_table("missing.ecsv")
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.get_ecsv_file_as_astropy_table("../values.ecsv")
 
 
@@ -500,6 +550,47 @@ def test_reader_facade_routes_source_operations_and_branches():
     assert reader.is_configured() is True
 
 
+def test_reader_caches_exported_ecsv_table_access():
+    """Repeated table exports reuse the source-neutral table cache."""
+    source = Mock(source_name="mock")
+    source.export_model_files.return_value = {"table-LSTN-design.ecsv": "copied"}
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    first = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+    second = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+
+    assert first == second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_returns_defensive_table_record_copies():
+    """Mutating table records does not corrupt the reader cache."""
+    source = Mock(source_name="mock")
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    records = reader.get_parameter_table_records(parameter)
+    records[0]["wavelength"] = 999.0
+
+    assert reader.get_parameter_table_records(parameter) == [{"wavelength": 300.0}]
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
 def test_reader_facade_covers_all_version_and_export_paths(mocker):
     """Cover the source-independent convenience methods."""
     source = Mock(source_name="mock")
@@ -513,29 +604,126 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     }
 
     reader.get_model_parameter = Mock(return_value={"p": {"type": "dict", "value": {"x": [1]}}})
-    row_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.row_data_to_astropy_table",
-        return_value="table",
-    )
-    assert reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True) == "table"
-    row_table.assert_called_once_with({"x": [1]})
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True)
     assert reader.export_model_file("p", "North", "LSTN-01") is None
+
+    reader.get_model_parameter.return_value = {"p": {"value": "p.ecsv"}}
+    reader.export_model_files = Mock()
+    source.get_parameter_table.return_value = "ecsv-table"
+    assert (
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
+        == "ecsv-table"
+    )
 
     reader.get_model_parameter.return_value = {"p": {"value": "p.dat"}}
     with pytest.raises(ValueError, match="Destination path is required"):
         reader.export_model_file("p", "North", "LSTN-01")
-    reader.export_model_files = Mock()
     assert reader.export_model_file("p", "North", "LSTN-01", dest="output") is None
-    read_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.read_simtel_table",
-        return_value="file-table",
-    )
-    assert (
+    with pytest.raises(ValueError, match="not an ECSV model table"):
         reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
-        == "file-table"
+    assert reader.export_model_files.call_count == 3
+
+
+def test_reader_caches_table_records(mocker):
+    """Repeated camera-table record access does not rebuild row dictionaries."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table_records(parameter)
+    second = reader.get_parameter_table_records(parameter)
+
+    assert first == second
+    assert first is not second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_caches_parameter_tables():
+    """Repeated table access uses the parsed table from the reader cache."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table(parameter)
+    second = reader.get_parameter_table(parameter)
+
+    assert first["pixel_id"].tolist() == second["pixel_id"].tolist()
+    assert first is not second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
+    """Structured JSON parameters are not converted to ECSV tables."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={
+            "pulse": {
+                "parameter": "pulse",
+                "type": "dict",
+                "value": {
+                    "columns": ["time", "amplitude"],
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": [[1.0, 2.0]],
+                },
+            }
+        }
     )
-    assert reader.export_model_files.call_count == 2
-    read_table.assert_called_once_with("p", Path("output") / "p.dat")
+
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_parameter_data(
+            parameter="pulse",
+            site="North",
+            array_element_name="LSTN-01",
+            output_file="pulse.json",
+            export_model_file_as_table=True,
+            dest=tmp_test_directory,
+        )
+
+
+def test_reader_exports_file_parameter_and_table(tmp_test_directory):
+    """File-backed ECSV parameters support the original file and ECSV outputs."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.ecsv"}}
+    )
+    source.export_model_files.return_value = {"mirror.ecsv": "copied"}
+    source_file = Path(tmp_test_directory) / "mirror.ecsv"
+    source_file.write_text("model", encoding="utf-8")
+    table = Table({"wavelength": [300.0]})
+    source.get_parameter_table.return_value = table
+
+    output_files = reader.export_parameter_data(
+        parameter="mirror",
+        site="North",
+        array_element_name="LSTN-01",
+        output_file="mirror-copy.ecsv",
+        export_model_file=True,
+        export_model_file_as_table=True,
+        dest=tmp_test_directory,
+    )
+
+    assert output_files == [
+        Path(tmp_test_directory) / "mirror-copy.ecsv",
+    ]
+    assert output_files[0].is_file()
+    assert Table.read(output_files[0], format="ascii.ecsv")["wavelength"][0] == pytest.approx(300.0)
 
 
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):

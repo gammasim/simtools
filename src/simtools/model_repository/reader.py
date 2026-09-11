@@ -1,5 +1,6 @@
 """Read simulation models through a source-neutral interface."""
 
+import filecmp
 import shutil
 from copy import deepcopy
 from pathlib import Path
@@ -8,11 +9,17 @@ from astropy.table import Table
 from packaging.version import Version
 
 from simtools import settings
+from simtools.data_model import schema
+from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.asset_names import (
+    ECSV_SUFFIX,
+    SOURCE_VALUE_KEY,
+    qualify_parameter_file_name,
+)
 from simtools.model_repository.git_model import GitModelSource
 from simtools.model_repository.parsing import normalize_model_parameter
-from simtools.simtel import simtel_table_reader
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
@@ -27,7 +34,6 @@ class FileSystemModelSource:
         self.model_parameters_path = (
             self.simulation_models_path / "simulation-models/model_parameters"
         )
-        self.files_path = self.model_parameters_path / "Files"
         self._production_tables = {}
         self._production_files = {}
         self._parameters = {}
@@ -198,45 +204,129 @@ class FileSystemModelSource:
         """Copy referenced model files to a destination directory."""
         if dest is None:
             raise ValueError("Destination path is required to export model files.")
-        names_to_export = file_names
-        if names_to_export is None:
-            names_to_export = [
-                parameter["value"]
-                for parameter in (parameters or {}).values()
-                if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
-            ]
-        if isinstance(names_to_export, str):
-            names_to_export = [names_to_export]
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
         exported = {}
-        for file_name in names_to_export:
-            source = self._safe_file_path(file_name)
-            target = destination / file_name
-            if target.exists():
-                exported[file_name] = "file exists"
-                continue
-            if not source.is_file():
-                raise FileNotFoundError(f"Model file not found: {source}")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-            exported[file_name] = "copied from filesystem"
+        for parameter in self._files_to_export(parameters, file_names):
+            source = self.resolve_parameter_asset(parameter)
+            status = self._copy_model_file(parameter, source, destination)
+            exported[parameter.get("value", source.name)] = status
         return exported
 
-    def _safe_file_path(self, file_name):
-        """Resolve a model file without allowing path traversal."""
-        files_path = self.files_path.resolve()
-        source = (files_path / file_name).resolve()
-        if not source.is_relative_to(files_path):
-            raise ValueError(f"Model file path escapes model Files directory: {file_name}")
-        return source
+    @staticmethod
+    def _files_to_export(parameters, file_names):
+        """Return parameter records selected for export."""
+        if parameters is not None and file_names is None:
+            return [
+                parameter
+                for parameter in parameters.values()
+                if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
+            ]
+        names_to_export = [file_names] if isinstance(file_names, str) else file_names or []
+        return [{"value": file_name} for file_name in names_to_export]
 
-    def get_ecsv_file_as_astropy_table(self, file_name):
-        """Read an ECSV model file."""
-        source = self._safe_file_path(file_name)
+    def _copy_model_file(self, parameter, source, destination):
+        """Copy one resolved model asset and return its export status."""
+        target = self._prepare_copy_target(parameter, source, destination)
+        if target is None:
+            return "file exists"
         if not source.is_file():
             raise FileNotFoundError(f"Model file not found: {source}")
-        return Table.read(source, format="ascii.ecsv")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        return "copied from filesystem"
+
+    def _prepare_copy_target(self, parameter, source, destination):
+        """Return a safe copy target, or None when the file already exists."""
+        original_name = parameter.get(SOURCE_VALUE_KEY, parameter.get("value", source.name))
+        file_name = self._get_export_file_name(parameter, source)
+        target = destination / file_name
+        if not target.exists():
+            return target
+        if filecmp.cmp(source, target, shallow=False):
+            return None
+        if source.suffix.lower() == ECSV_SUFFIX:
+            self._raise_collision(target, destination)
+
+        file_name = self._get_collision_file_name(original_name, source)
+        target = destination / file_name
+        parameter[SOURCE_VALUE_KEY] = original_name
+        parameter["value"] = file_name
+        if target.exists():
+            if filecmp.cmp(source, target, shallow=False):
+                return None
+            self._raise_collision(target, destination)
+        return target
+
+    @staticmethod
+    def _get_export_file_name(parameter, source):
+        """Return the destination basename for a model asset."""
+        if parameter.get("value") is None:
+            return source.name
+        return qualify_parameter_file_name(parameter, fallback_instrument=source.parent.parent.name)
+
+    @staticmethod
+    def _raise_collision(target, destination):
+        """Raise an error instead of overwriting a colliding model asset."""
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
+
+    @staticmethod
+    def _get_collision_file_name(file_name, source):
+        """Return a deterministic basename qualified by the model scope."""
+        path = Path(file_name)
+        scope = source.parent.parent.name
+        return f"{path.stem}-{scope}{path.suffix}"
+
+    def resolve_parameter_asset(self, parameter_data):
+        """Resolve a parameter asset relative to its parameter document."""
+        value = (
+            parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
+            if isinstance(parameter_data, dict)
+            else parameter_data
+        )
+        if not isinstance(value, str):
+            raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
+        parameter = parameter_data.get("parameter") if isinstance(parameter_data, dict) else None
+        version = (
+            parameter_data.get("parameter_version") if isinstance(parameter_data, dict) else None
+        )
+        instrument = parameter_data.get("instrument") if isinstance(parameter_data, dict) else None
+        if parameter and version:
+            scope = instrument or "global"
+            parameter_file = (
+                self.model_parameters_path / scope / parameter / f"{parameter}-{version}.json"
+            )
+        else:
+            parameter_file = self.model_parameters_path / "parameter.json"
+        return resolve_asset_path(value, parameter_file)
+
+    def get_parameter_table(self, parameter_data):
+        """Resolve and validate an ECSV table referenced by a parameter record."""
+        parameter = parameter_data.get("parameter")
+        schema_version = parameter_data.get("model_parameter_schema_version")
+        schema_dict = schema.get_model_parameter_schema(parameter, schema_version)
+        data_entries = [
+            entry for entry in schema_dict.get("data", []) if entry.get("type") == "file"
+        ]
+        schema_entry = data_entries[0] if data_entries else None
+        return read_ecsv_asset(
+            self.resolve_parameter_asset(parameter_data),
+            schema_entry=schema_entry,
+            parameter_data=parameter_data,
+        )
+
+    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
+        """Read an ECSV model file."""
+        source = self.resolve_parameter_asset(
+            parameter_data if parameter_data is not None else {"value": file_name}
+        )
+        if not source.is_file():
+            raise FileNotFoundError(f"Model file not found: {source}")
+        if parameter_data is None:
+            return Table.read(source, format="ascii.ecsv")
+        return read_ecsv_asset(source, parameter_data=parameter_data)
 
 
 class SimulationModelReader:
@@ -245,6 +335,8 @@ class SimulationModelReader:
     def __init__(self, source):
         """Initialize the reader with a source implementation."""
         self._source = source
+        self._parameter_tables = {}
+        self._parameter_table_records = {}
 
     @classmethod
     def from_files(cls, simulation_models_path):
@@ -369,6 +461,163 @@ class SimulationModelReader:
         """Export model files through the selected source."""
         return self._source.export_model_files(parameters, file_names, dest)
 
+    def export_parameter_data(
+        self,
+        parameter,
+        site,
+        array_element_name,
+        model_version=None,
+        parameter_version=None,
+        output_file=None,
+        export_model_file=False,
+        export_model_file_as_table=False,
+        dest=None,
+    ):
+        """Export a parameter payload through the selected model source.
+
+        Parameters
+        ----------
+        parameter : str
+            Name of the model parameter.
+        site : str
+            Site name.
+        array_element_name : str
+            Array element name.
+        model_version : str, optional
+            Simulation-model version.
+        parameter_version : str, optional
+            Model-parameter version.
+        output_file : str, optional
+            Output filename, or filename override for a file-backed parameter.
+        export_model_file : bool, optional
+            Export the original parameter file when it is file-backed.
+        export_model_file_as_table : bool, optional
+            Also export the payload as an ECSV table.
+        dest : str or Path, optional
+            Destination directory for exported files.
+
+        Returns
+        -------
+        list[Path]
+            Files written to the destination.
+
+        Raises
+        ------
+        ValueError
+            If exporting is requested without a destination or without the
+            required output filename for an embedded table.
+        """
+        if not (export_model_file or export_model_file_as_table):
+            return []
+        if dest is None:
+            raise ValueError("Destination path is required to export parameter data.")
+
+        parameters = self.get_model_parameter(
+            parameter,
+            site,
+            array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+        )
+        parameter_data = parameters[parameter]
+        if parameter_data.get("type") == "dict":
+            if export_model_file_as_table:
+                raise ValueError("Structured JSON model parameters are not ECSV tables")
+            return []
+        return self._export_file_parameter_data(
+            parameter,
+            parameter_data,
+            parameters,
+            output_file,
+            export_model_file,
+            export_model_file_as_table,
+            dest,
+        )
+
+    def _export_file_parameter_data(
+        self,
+        parameter,
+        parameter_data,
+        parameters,
+        output_file,
+        export_model_file,
+        export_model_file_as_table,
+        dest,
+    ):
+        """Export a file-backed parameter and optionally its ECSV table."""
+        exported = self.export_model_files(parameters=parameters, dest=dest)
+        if not exported:
+            raise ValueError(f"Parameter {parameter} does not reference an exportable model file.")
+
+        source_file = Path(dest) / next(iter(exported))
+        model_output_file = Path(dest) / output_file if output_file else source_file
+        output_files = []
+        table = (
+            self._read_exported_parameter_table(parameter, parameter_data, source_file)
+            if export_model_file_as_table
+            else None
+        )
+
+        if export_model_file:
+            model_output_file.parent.mkdir(parents=True, exist_ok=True)
+            if source_file != model_output_file:
+                source_file.rename(model_output_file)
+            output_files.append(model_output_file)
+
+        if export_model_file_as_table:
+            table_output_file = model_output_file.with_suffix(ECSV_SUFFIX)
+            table_output_file.parent.mkdir(parents=True, exist_ok=True)
+            table.write(table_output_file, format="ascii.ecsv", overwrite=True)
+            if table_output_file not in output_files:
+                output_files.append(table_output_file)
+            if not export_model_file and source_file != table_output_file and source_file.exists():
+                source_file.unlink()
+
+        return output_files
+
+    def _read_exported_parameter_table(self, parameter, parameter_data, _source_file):
+        """Read an exported file-backed parameter as an Astropy table."""
+        value = parameter_data.get("value")
+        if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
+            return self.get_parameter_table(parameter_data)
+        raise ValueError(
+            f"Parameter '{parameter}' is not an ECSV model table and cannot be exported as a table"
+        )
+
+    def get_parameter_table(self, parameter_data):
+        """Return the validated Astropy table referenced by a model parameter."""
+        cache_key = self._parameter_table_cache_key(parameter_data)
+        if cache_key not in self._parameter_tables:
+            self._parameter_tables[cache_key] = self._source.get_parameter_table(parameter_data)
+        return deepcopy(self._parameter_tables[cache_key])
+
+    @staticmethod
+    def _parameter_table_cache_key(parameter_data):
+        """Return a stable cache key for one model-parameter table."""
+        return repr(
+            (
+                parameter_data.get("parameter"),
+                parameter_data.get("parameter_version"),
+                parameter_data.get("instrument"),
+                parameter_data.get("site"),
+                parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value")),
+            )
+        )
+
+    def get_parameter_table_records(self, parameter_data):
+        """Return cached scalar records for a validated model-parameter table."""
+        cache_key = self._parameter_table_cache_key(parameter_data)
+        if cache_key not in self._parameter_table_records:
+            table = self.get_parameter_table(parameter_data)
+            column_values = [
+                [getattr(value, "value", value) for value in table[column]]
+                for column in table.colnames
+            ]
+            self._parameter_table_records[cache_key] = [
+                dict(zip(table.colnames, row)) for row in zip(*column_values)
+            ]
+        return deepcopy(self._parameter_table_records[cache_key])
+
     def export_model_file(
         self,
         parameter,
@@ -389,22 +638,26 @@ class SimulationModelReader:
         )
         parameter_data = parameters[parameter]
         if parameter_data.get("type") == "dict" and isinstance(parameter_data.get("value"), dict):
-            return (
-                simtel_table_reader.row_data_to_astropy_table(parameter_data["value"])
-                if export_file_as_table
-                else None
-            )
+            if export_file_as_table:
+                raise ValueError("Structured JSON model parameters are not ECSV tables")
+            return None
         if dest is None:
             raise ValueError("Destination path is required to export a model file.")
         self.export_model_files(parameters=parameters, dest=dest)
         if export_file_as_table:
-            return simtel_table_reader.read_simtel_table(
-                parameter, Path(dest) / parameter_data["value"]
+            value = parameter_data.get("value")
+            if isinstance(value, str) and value.lower().endswith(ECSV_SUFFIX):
+                return self.get_parameter_table(parameter_data)
+            raise ValueError(
+                f"Parameter '{parameter}' is not an ECSV model table and cannot be "
+                "exported as a table"
             )
         return None
 
-    def get_ecsv_file_as_astropy_table(self, file_name):
+    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
         """Read an ECSV model file through the selected source."""
+        if parameter_data is not None and hasattr(self._source, "get_parameter_table"):
+            return self.get_parameter_table(parameter_data)
         return self._source.get_ecsv_file_as_astropy_table(file_name)
 
     def _read_parameters(self, parameter_versions, collection, instrument=None, site=None):

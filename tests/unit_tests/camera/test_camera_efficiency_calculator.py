@@ -5,11 +5,12 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.table import Table
+from astropy.table import QTable, Table
 
 from simtools.camera.camera_efficiency_calculator import (
     CameraEfficiencyCalculator,
     _atmospheric_transmission,
+    _column_values,
     _emission_altitude,
     _interpolate,
     _nearest,
@@ -19,6 +20,12 @@ from simtools.camera.camera_efficiency_calculator import (
     _table_from_file,
     _weights,
 )
+
+
+def test_column_values_handles_quantity_table_columns():
+    table = QTable({"wavelength": [400.0, 500.0] * u.nm})
+
+    np.testing.assert_allclose(_column_values(table, "wavelength", u.nm), [400.0, 500.0])
 
 
 def test_interpolate_clips_and_sorts_support_points():
@@ -47,88 +54,43 @@ def test_same_table_source_compares_loaded_table_metadata(tmp_test_directory):
     assert not _same_table_source(first, Table())
 
 
-@pytest.mark.parametrize("parameter_name", ["quantum_efficiency", "fake_mirror_list"])
-def test_parameter_table_reads_exported_model_file(mocker, tmp_test_directory, parameter_name):
+def test_parameter_table_uses_validated_model_table():
     class Model:
-        config_file_directory = Path(tmp_test_directory)
+        table = Table()
 
-        @staticmethod
-        def get_parameter_value(_):
-            return f"{parameter_name}.ecsv"
+        def get_parameter_table(self, _):
+            return self.table
 
-    expected = Table()
-    read_table = mocker.patch(
-        "simtools.camera.camera_efficiency_calculator.read_simtel_table", return_value=expected
-    )
-
-    assert _parameter_table(Model(), parameter_name) is expected
-
-    read_table.assert_called_once_with(
-        "mirror_list" if parameter_name == "fake_mirror_list" else parameter_name,
-        tmp_test_directory / f"{parameter_name}.ecsv",
-    )
+    assert _parameter_table(Model(), "quantum_efficiency") is Model.table
 
 
-def test_parameter_table_reads_nsb_correction_from_simtel_configuration(mocker, tmp_test_directory):
+def test_parameter_table_reads_nsb_correction_from_model_table():
     class Model:
-        config_file_directory = Path(tmp_test_directory)
+        table = Table()
 
-        @staticmethod
-        def get_simulation_software_parameters(name):
-            assert name == "sim_telarray"
-            return {"correct_nsb_spectrum_to_telescope_altitude": {"value": "atm_trans_2200.dat"}}
-
-    expected = Table()
-    read_table = mocker.patch(
-        "simtools.camera.camera_efficiency_calculator.read_simtel_table", return_value=expected
-    )
+        def get_parameter_table(self, _):
+            return self.table
 
     result = _parameter_table(Model(), "correct_nsb_spectrum_to_telescope_altitude")
 
-    assert result is expected
-    read_table.assert_called_once_with(
-        "atmospheric_transmission", tmp_test_directory / "atm_trans_2200.dat"
-    )
+    assert result is Model.table
 
 
-def test_parameter_table_keeps_absolute_model_file_path(mocker, tmp_test_directory):
-    file_path = tmp_test_directory / "quantum_efficiency.ecsv"
-
-    class Model:
-        config_file_directory = Path("unused")
-
-        @staticmethod
-        def get_parameter_value(_):
-            return file_path
-
-    read_table = mocker.patch(
-        "simtools.camera.camera_efficiency_calculator.read_simtel_table",
-        return_value=Table(),
-    )
-
-    _parameter_table(Model(), "quantum_efficiency")
-
-    read_table.assert_called_once_with("quantum_efficiency", file_path)
-
-
-def test_table_from_file_accepts_tables_and_reads_paths(mocker):
+def test_table_from_file_accepts_tables_and_reads_paths(tmp_test_directory):
     table = Table()
     assert _table_from_file(table) is table
 
-    expected = Table()
-    read_table = mocker.patch(
-        "simtools.camera.camera_efficiency_calculator.read_simtel_table",
-        return_value=expected,
-    )
-    assert _table_from_file("nsb.dat") is expected
-    read_table.assert_called_once_with("nsb_reference_spectrum", "nsb.dat")
+    source = Path(tmp_test_directory) / "nsb.ecsv"
+    expected = Table({"wavelength": [400.0], "flux": [1.0]})
+    expected.write(source, format="ascii.ecsv")
+    assert len(_table_from_file(source)) == 1
 
 
 def test_weights_rejects_invalid_distribution_table():
     class Model:
         @staticmethod
         def get_parameter_table(_):
-            return Table({"angle": [0.0]})
+            return Table({"incidence_angle": [0.0]})
 
     with pytest.raises(ValueError, match="Invalid incidence-angle"):
         _weights(Model(), "incidence")
@@ -138,7 +100,7 @@ def test_spectral_curve_averages_angle_dependent_table():
     table = Table(
         {
             "wavelength": [400.0, 400.0, 500.0, 500.0] * u.nm,
-            "angle": [0.0, 10.0, 0.0, 10.0] * u.deg,
+            "incidence_angle": [0.0, 10.0, 0.0, 10.0] * u.deg,
             "efficiency": [0.8, 0.4, 0.6, 0.2],
         }
     )
@@ -209,7 +171,7 @@ def test_spectral_curve_uses_nearest_incidence_weight():
     table = Table(
         {
             "wavelength": [400.0, 400.0] * u.nm,
-            "angle": [0.0, 10.0] * u.deg,
+            "incidence_angle": [0.0, 10.0] * u.deg,
             "efficiency": [0.8, 0.4],
         }
     )
@@ -233,11 +195,41 @@ def test_spectral_curve_uses_nearest_incidence_weight():
     assert result[0] == pytest.approx(0.5)
 
 
+def test_camera_filter_uses_photon_incident_angle_distribution():
+    class Model:
+        def __init__(self):
+            self.tables = {
+                "camera_filter": Table(
+                    {
+                        "wavelength": [400.0, 400.0] * u.nm,
+                        "incidence_angle": [0.0, 10.0] * u.deg,
+                        "transmission": [0.8, 0.4],
+                    }
+                ),
+                "camera_filter_photon_incident_angle": Table(
+                    {
+                        "incidence_angle": [0.0, 10.0] * u.deg,
+                        "fraction": [0.25, 0.75],
+                    }
+                ),
+            }
+
+        def get_parameter_table(self, name):
+            return self.tables[name]
+
+    model = Model()
+    calculator = CameraEfficiencyCalculator(model, model)
+
+    result = calculator._camera_filter(np.array([400.0]))
+
+    assert result[0] == pytest.approx(0.5)
+
+
 def test_spectral_curve_rejects_an_incomplete_angle_grid():
     table = Table(
         {
             "wavelength": [400.0, 400.0, 500.0] * u.nm,
-            "angle": [0.0, 10.0, 0.0] * u.deg,
+            "incidence_angle": [0.0, 10.0, 0.0] * u.deg,
             "efficiency": [0.8, 0.4, 0.6],
         }
     )
@@ -296,6 +288,7 @@ def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
             self.values = values
             self.units = units or {}
             self.camera = Camera()
+            self.design_model = "SST"
 
         def get_parameter_table(self, name):
             return self.tables[name]
@@ -312,7 +305,7 @@ def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
     wavelength_angle_curve = Table(
         {
             "wavelength": [200.0, 200.0, 1000.0, 1000.0] * u.nm,
-            "angle": [0.0, 10.0, 0.0, 10.0] * u.deg,
+            "incidence_angle": [0.0, 10.0, 0.0, 10.0] * u.deg,
             "reflectivity": [0.8, 0.4, 0.8, 0.4],
         }
     )
@@ -341,10 +334,10 @@ def test_dual_mirror_reflectivity_uses_both_incidence_distributions():
         ),
         "camera_filter": Table({"wavelength": [200.0, 1000.0] * u.nm, "transmission": [1.0, 1.0]}),
         "lightguide_efficiency_vs_incidence_angle": Table(
-            {"angle": [0.0, 20.0] * u.deg, "efficiency": [1.0, 1.0]}
+            {"incidence_angle": [0.0, 20.0] * u.deg, "efficiency": [1.0, 1.0]}
         ),
         "lightguide_efficiency_vs_wavelength": spectrum,
-        "fake_mirror_list": Table(
+        "mirror_list": Table(
             {
                 "mirror_x": [1.0] * u.cm,
                 "mirror_y": [0.0] * u.cm,
@@ -379,6 +372,7 @@ def test_funnel_does_not_apply_same_source_for_angle_and_wavelength():
     class Model:
         def __init__(self, tables):
             self.tables = tables
+            self.design_model = "SST"
 
         def get_parameter_table(self, name):
             return self.tables[name]
@@ -395,7 +389,7 @@ def test_funnel_does_not_apply_same_source_for_angle_and_wavelength():
 
     source = Path("lightguide.dat")
     angle = Table(
-        {"angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]},
+        {"incidence_angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]},
         meta={"File": source},
     )
     wavelength = Table(
@@ -438,6 +432,7 @@ def test_calculator_returns_camera_efficiency_table():
             self.units = units or {}
             self.camera = Camera()
             self.config_file_directory = None
+            self.design_model = "SST"
 
         def get_parameter_table(self, name):
             return self.tables[name]
@@ -473,7 +468,7 @@ def test_calculator_returns_camera_efficiency_table():
         "mirror_reflectivity": spectrum.copy(),
         "camera_filter": Table({"wavelength": [200.0, 1000.0] * u.nm, "transmission": [1.0, 1.0]}),
         "lightguide_efficiency_vs_incidence_angle": Table(
-            {"angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]}
+            {"incidence_angle": [0.0, 20.0] * u.deg, "efficiency": [0.8, 0.8]}
         ),
         "lightguide_efficiency_vs_wavelength": spectrum.copy(),
         "mirror_list": Table(

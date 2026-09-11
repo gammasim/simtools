@@ -1,6 +1,73 @@
 %YAML 1.2
 ---
 title: Schema for camera_filter model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_filter
+description: 'Transmission of optical elements common to all camera pixel types.
+  The table contains wavelength and transmission; when incidence_angle is
+  present it is a complete wavelength-by-incidence-angle response grid.
+  Values are dimensionless fractions in [0, 1]. The response is multiplied
+  with global camera transmission and the pixel-type lightguide response.'
+short_description: 'Wavelength dependence of the camera transmission, possibly as
+  a function
+  of incidence angle.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: incidence_angle
+        description: Incidence angle
+        type: float64
+        unit: deg
+        required: false
+      - name: transmission
+        description: Transmission
+        type: float64
+        unit: dimensionless
+        required: true
+        allowed_range: {min: 0, max: 1}
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+    table_format: rpol_matrix
+    serialization:
+      columns: [wavelength, transmission]
+      allowed_columns: [wavelength, incidence_angle, transmission]
+      row_sort_keys: [wavelength, incidence_angle]
+      matrix_axes: [wavelength, incidence_angle]
+      value_column: transmission
+      float_format: ".12g"
+      write_comments: false
+plot_configuration:
+  - type: camera_filter
+    title: Camera filter
+    xtitle: Wavelength (nm)
+    ytitle: Transmission
+    no_markers: true
+    tables:
+      - parameter: camera_filter
+        column_x: wavelength
+        column_y: transmission
+---
+title: Schema for camera_filter model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml

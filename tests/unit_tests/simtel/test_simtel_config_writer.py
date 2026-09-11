@@ -9,7 +9,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.simtel.simtel_table_writer as simtel_table_writer
+import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
@@ -165,6 +165,102 @@ def create_all_non_hardstereo_same_params_scenario():
     ]
 
 
+def test_write_camera_file_skips_models_without_camera_components(
+    simtel_config_writer, tmp_test_directory
+):
+    assert simtel_config_writer._write_camera_file({}, tmp_test_directory / "config.cfg") is None
+
+
+def test_write_camera_file_requires_all_camera_components(simtel_config_writer, tmp_test_directory):
+    with pytest.raises(ValueError, match="Camera component parameters are missing"):
+        simtel_config_writer._write_camera_file(
+            {"camera_pixel_types": {"value": []}}, tmp_test_directory / "config.cfg"
+        )
+
+
+def test_write_camera_file_resolves_explicit_lightguide(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    parameters = {
+        "camera_rotate": {"value": 0.0},
+        "camera_pixel_types": {
+            "value": [
+                {
+                    "type_id": 1,
+                    "pmt_type": 0,
+                    "cathode_shape": 0,
+                    "cathode_diameter_cm": 1.0,
+                    "funnel_shape": 1,
+                    "funnel_diameter_cm": 1.0,
+                    "funnel_depth_cm": 0.0,
+                    "lightguide_angle_parameter": "lightguide_efficiency_vs_incidence_angle",
+                }
+            ]
+        },
+        "camera_pixel_layout": {"value": "layout.ecsv"},
+        "camera_trigger_groups": {"value": "groups.ecsv"},
+        "camera_trigger_members": {"value": "members.ecsv"},
+    }
+    mocker.patch.object(simtel_config_writer, "_camera_table_records", return_value=[])
+
+    def resolve_lightguide(pixel_type, parameter_key, output_key, *_args):
+        pixel_type.pop(parameter_key, None)
+        pixel_type[output_key] = "angle.dat"
+
+    mocker.patch.object(
+        simtel_config_writer, "_resolve_lightguide_file", side_effect=resolve_lightguide
+    )
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file"
+    )
+
+    simtel_config_writer._write_camera_file(parameters, tmp_test_directory / "config.cfg")
+
+    configuration = write_camera.call_args.args[0]
+    assert configuration["pixel_types"][0]["lightguide_angle_file"] == "angle.dat"
+    assert simtel_config_writer._resolve_lightguide_file.call_args_list[0] == mocker.call(
+        mocker.ANY,
+        "lightguide_angle_parameter",
+        "lightguide_angle_file",
+        parameters,
+        tmp_test_directory,
+        "config",
+    )
+
+
+def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    """Primary segmentation remains the sim_telarray mirror geometry."""
+    parameters = {
+        "mirror_class": {"value": 2},
+        "primary_mirror_segmentation": {"value": [{"kind": "hex"}]},
+        "mirror_list": {"value": "mirror_list-1.0.0.ecsv"},
+    }
+    mocker.patch.object(simtel_config_writer, "_write_camera_file", return_value=None)
+    mocker.patch.object(
+        simtel_config_writer,
+        "_get_sim_telarray_config_parameter_name",
+        side_effect=lambda parameter_name: parameter_name,
+    )
+    convert = mocker.patch.object(
+        simtel_config_writer,
+        "_convert_model_parameters_to_simtel_format",
+        side_effect=lambda simtel_name, value, *_args, **_kwargs: (simtel_name, value),
+    )
+
+    result = simtel_config_writer._get_parameters_for_sim_telarray(
+        parameters, tmp_test_directory / "config.cfg"
+    )
+
+    assert result["mirror_class"] == 2
+    assert result["mirror_list"] is None
+    assert [call.kwargs["parameter_name"] for call in convert.call_args_list] == [
+        "mirror_class",
+        "primary_mirror_segmentation",
+    ]
+
+
 # Common trigger line strings to reduce duplication
 LSTS_HARDSTEREO_LINE = "Trigger 2 of 1, 2 width 120.0 hardstereo"
 MSTS_HARDSTEREO_LINE = "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"
@@ -209,6 +305,28 @@ def test_write_array_config_file(
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
+
+
+def test_write_array_config_file_excludes_corsika_only_site_tables(
+    simtel_config_writer, telescope_model_lst, io_handler, site_model_north, mocker
+):
+    config_file = io_handler.get_output_file(file_name="simtel-config-writer_array.cfg")
+    site_model_north.parameters["atmospheric_profile"] = {
+        "parameter": "atmospheric_profile",
+        "value": "atmospheric_profile.ecsv",
+    }
+    write_table = mocker.patch.object(
+        simtel_config_writer, "_write_table_parameter_file", return_value="atmospheric.dat"
+    )
+
+    simtel_config_writer.write_array_config_file(
+        config_file_path=config_file,
+        telescope_model={"LSTN-01": telescope_model_lst},
+        site_model=site_model_north,
+    )
+
+    write_table.assert_not_called()
+    assert "atmospheric_profile =" not in config_file.read_text(encoding="utf-8")
 
 
 def test_write_array_config_file_raises_for_too_long_include_filename(
@@ -269,6 +387,47 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     )
     assert not file_has_text(_file, "longitude = -70.316345")
     assert file_has_text(_file, "metaparam telescope set longitude=-70.316345")
+
+
+def test_write_tel_config_file_orders_generated_parameters_and_metadata(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    mocker.patch.object(
+        simtel_config_writer,
+        "_write_camera_file",
+        return_value="camera-MSTS-03.dat",
+    )
+    config_file = Path(tmp_test_directory) / "CTAO-MSTS-03.cfg"
+
+    simtel_config_writer.write_telescope_config_file(
+        config_file,
+        {"fadc_pulse_shape": {"value": "pulse.dat"}},
+        telescope_name="MSTS-03",
+    )
+
+    lines = config_file.read_text(encoding="utf-8").splitlines()
+    parameter_lines = [line for line in lines if " = " in line and not line.startswith("%")]
+    assert parameter_lines[:3] == [
+        "camera_config_file = camera-MSTS-03.dat",
+        "fadc_pulse_shape = pulse.dat",
+        "stars = none",
+    ]
+    assert "metaparam telescope add camera_config_file" in lines
+    assert "metaparam telescope add fadc_pulse_shape" in lines
+
+
+def test_write_dummy_telescope_configuration_includes_camera_file(
+    simtel_config_writer, tmp_test_directory
+):
+    config_file = Path(tmp_test_directory) / "InvalidTelescope.cfg"
+
+    simtel_config_writer.write_dummy_telescope_configuration_file(
+        {"num_gains": {"value": 1}}, config_file, "InvalidTelescope"
+    )
+
+    lines = config_file.read_text(encoding="utf-8").splitlines()
+    assert "camera_config_file = InvalidTelescope_single_pixel_camera.dat" in lines
+    assert "metaparam telescope add camera_config_file" in lines
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
@@ -379,6 +538,86 @@ def test_write_table_parameter_file_passes_through_non_dict_value(
     )
 
     assert result == "already_a_file.dat"
+
+
+def test_write_table_parameter_file_caches_serialization(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    """Repeated config writes do not serialize an unchanged ECSV table again."""
+    parameter_data = {
+        "parameter": "fadc_pulse_shape",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "pulse.ecsv",
+        "model_parameter_schema_version": "0.3.0",
+    }
+    simtel_config_writer._model_reader = mocker.Mock()
+    simtel_config_writer._model_reader.get_parameter_table.return_value = mocker.Mock()
+    mock_write = mocker.patch(
+        "simtools.simtel.simtel_config_writer.table_serializers.write_simtel_table",
+        return_value="pulse-LSTN-design.dat",
+    )
+    config_path = Path(tmp_test_directory) / "test_telescope.cfg"
+
+    simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "pulse.ecsv",
+        config_path,
+        None,
+        source_parameter="fadc_pulse_shape",
+        parameter_data=parameter_data,
+    )
+    output_path = Path(tmp_test_directory) / "pulse-LSTN-design.dat"
+    output_path.touch()
+    simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "pulse.ecsv",
+        config_path,
+        None,
+        source_parameter="fadc_pulse_shape",
+        parameter_data=parameter_data,
+    )
+
+    mock_write.assert_called_once()
+    simtel_config_writer._model_reader.get_parameter_table.assert_called_once_with(parameter_data)
+
+
+def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_test_directory):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    result = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "primary_segmentation",
+        [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+        config_path,
+        None,
+        parameter_name="primary_mirror_segmentation",
+        parameter_data={"model_parameter_schema_version": "0.2.0"},
+    )
+    assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
+    assert (Path(tmp_test_directory) / result[1]).is_file()
+
+
+def test_convert_segmentation_records_uses_parameter_schema_version(
+    simtel_config_writer, tmp_test_directory
+):
+    config_path = Path(tmp_test_directory) / "telescope.cfg"
+    with mock.patch(
+        "simtools.simtel.simtel_config_writer.segmentation.write_mirror_segmentation",
+        return_value="primary_mirror_segmentation-telescope.dat",
+    ) as write_mirror_segmentation:
+        simtel_config_writer._convert_model_parameters_to_simtel_format(
+            "primary_segmentation",
+            [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+            config_path,
+            None,
+            parameter_name="primary_mirror_segmentation",
+            parameter_data={"model_parameter_schema_version": "0.2.0"},
+        )
+
+    assert write_mirror_segmentation.call_args.kwargs == {
+        "parameter_name": "primary_mirror_segmentation",
+        "schema_version": "0.2.0",
+    }
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
@@ -546,6 +785,26 @@ def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
     assert result["laser_pulse_exptime"] == pytest.approx(expected_exptime)
 
 
+@pytest.mark.parametrize(
+    ("shape", "expected_sigtime", "expected_twidth"),
+    [("gauss", 3.0, 0.0), ("tophat", 0.0, 3.0)],
+)
+def test_get_flasher_parameters_for_sim_telarray_legacy_shape(
+    simtel_config_writer, shape, expected_sigtime, expected_twidth
+):
+    parameters = {
+        "flasher_pulse_shape": {"value": shape},
+        "flasher_pulse_width": {"value": 3.0},
+    }
+    result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
+        parameters, {"flasher_pulse_width": 3.0}
+    )
+
+    assert result["laser_pulse_sigtime"] == pytest.approx(expected_sigtime)
+    assert result["laser_pulse_twidth"] == pytest.approx(expected_twidth)
+    assert "flasher_pulse_width" not in result
+
+
 @pytest.mark.parametrize("shape", ["unknown_shape", ""])
 def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
     simtel_config_writer, caplog, shape
@@ -698,7 +957,7 @@ def _read_pulse_table(path: Path):
 
 def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+    result = simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -728,7 +987,7 @@ def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test
 def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_directory):
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+        simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
@@ -778,7 +1037,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     file_path = Path(tmp_test_directory) / "lambertian.dat"
 
     # Test default parameters
-    simtel_table_writer.write_angular_distribution_table_lambertian(
+    simtel_file_writer.write_angular_distribution_table_lambertian(
         file_path=file_path,
         max_angle_deg=90.0,
         n_samples=100,
@@ -807,7 +1066,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
 
     # Test with max_angle > 90 (should be clipped to 0)
     file_path_large = Path(tmp_test_directory) / "lambertian_large.dat"
-    simtel_table_writer.write_angular_distribution_table_lambertian(
+    simtel_file_writer.write_angular_distribution_table_lambertian(
         file_path=file_path_large,
         max_angle_deg=180.0,
         n_samples=181,

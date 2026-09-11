@@ -297,6 +297,9 @@ class SimtelConfigReader:
             Values extracted from column. Of object is a list of array, return length of array.
 
         """
+        if dtype == "file":
+            dtype = "str"
+
         # string represents a lists of values (space or comma separated)
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")

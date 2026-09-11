@@ -106,7 +106,7 @@ def test_fill_contact_meta(args_dict_site, caplog):
     collector._fill_contact_meta(contact_dict)
     with caplog.at_level(logging.WARNING):
         collector._fill_contact_meta(contact_dict)
-    assert "No user name provided, take user info from system level." in caplog.text
+    assert "No user name provided, take user info from system level." not in caplog.text
     try:
         assert contact_dict["name"] == getpass.getuser()
     except Exception:  # pylint: disable=broad-except

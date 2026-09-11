@@ -441,7 +441,7 @@ def _mock_get_ecsv_file_as_astropy_table(*args, **kwargs):
 
     table = Table()
     table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
-    table["differential photon rate"] = Column(
+    table["differential_photon_rate"] = Column(
         [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
     )
     return table

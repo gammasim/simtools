@@ -6,12 +6,12 @@ from pathlib import Path
 
 import numpy as np
 import packaging.version
+from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
 from simtools.io import ascii_handler, io_handler, legacy_data_handler
-from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -61,26 +61,37 @@ def read_table_data(config, data_path=None, model_reader=None):
     data = {}
 
     for _config in config["tables"]:
-        if "file_name" in _config:
-            file_name = (
-                _config["file_name"]
-                if data_path is None or _config.get("ignore_table_data_path", False)
-                else Path(data_path) / _config["file_name"]
-            )
-            _logger.info(f"Reading tabular data from {file_name}")
-
-            if "legacy" in _config.get("type", ""):
-                table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
-            else:
-                table = read_simtel_table(_config.get("parameter"), file_name)
-        elif "parameter" in _config:
-            table = _read_table_from_model_database(_config, model_reader)
-        else:
-            raise ValueError("No table data defined in configuration.")
-
+        table = _read_configured_table(_config, data_path, model_reader)
         data[_get_plotting_label(_config, data)] = _process_table_data(table, _config)
 
     return data
+
+
+def _read_configured_table(table_config, data_path, model_reader):
+    """Read one table from a configured file or model parameter."""
+    if "file_name" in table_config:
+        return _read_table_file(table_config, data_path)
+    if "parameter" in table_config:
+        return _read_table_from_model_database(table_config, model_reader)
+    raise ValueError("No table data defined in configuration.")
+
+
+def _read_table_file(table_config, data_path):
+    """Read one configured legacy or ECSV table file."""
+    file_name = _resolve_table_file_name(table_config, data_path)
+    _logger.info(f"Reading tabular data from {file_name}")
+    if "legacy" in table_config.get("type", ""):
+        return legacy_data_handler.read_legacy_data_as_table(file_name, table_config["type"])
+    if Path(file_name).suffix.lower() != ".ecsv":
+        raise ValueError(f"Model table files must use ECSV format: {file_name}")
+    return Table.read(file_name, format="ascii.ecsv")
+
+
+def _resolve_table_file_name(table_config, data_path):
+    """Resolve a configured table filename against the optional data directory."""
+    if data_path is None or table_config.get("ignore_table_data_path", False):
+        return table_config["file_name"]
+    return Path(data_path) / table_config["file_name"]
 
 
 def _get_plotting_label(config, data):

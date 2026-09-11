@@ -7,7 +7,6 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.model.model_parameter import InvalidModelParameterError
-from simtools.simtel.simtel_table_reader import read_simtel_table
 
 _WAVELENGTHS = np.arange(200.0, 1001.0)
 _NSB_CORRECTION_PARAMETER = "correct_nsb_spectrum_to_telescope_altitude"
@@ -16,8 +15,11 @@ _NSB_CORRECTION_PARAMETER = "correct_nsb_spectrum_to_telescope_altitude"
 def _column_values(table, name, unit=None):
     """Return a table column as floating point values in the requested unit."""
     column = table[name]
+    if isinstance(column, u.Quantity):
+        values = column.to_value(unit) if unit is not None else column.value
+        return np.asarray(values, dtype=float)
     if unit is not None and getattr(column, "unit", None) is not None:
-        return np.asarray(column.quantity.to(unit).value, dtype=float)
+        return np.asarray(column.quantity.to_value(unit), dtype=float)
     return np.asarray(column, dtype=float)
 
 
@@ -55,27 +57,14 @@ def _parameter_table(model, parameter_name):
     if get_table is not None:
         return get_table(parameter_name)
 
-    if parameter_name == _NSB_CORRECTION_PARAMETER:
-        simulation_parameters = model.get_simulation_software_parameters("sim_telarray") or {}
-        file_name = simulation_parameters[parameter_name]["value"]
-    else:
-        file_name = model.get_parameter_value(parameter_name)
-    file_path = Path(file_name)
-    if not file_path.is_absolute():
-        file_path = model.config_file_directory / file_path
-    reader_parameter_name = parameter_name
-    if parameter_name == "fake_mirror_list":
-        reader_parameter_name = "mirror_list"
-    elif parameter_name == _NSB_CORRECTION_PARAMETER:
-        reader_parameter_name = "atmospheric_transmission"
-    return read_simtel_table(reader_parameter_name, file_path)
+    raise TypeError("Camera efficiency requires a model with validated ECSV table access")
 
 
 def _table_from_file(file_name):
-    """Read an explicitly supplied NSB spectrum in ECSV or sim_telarray format."""
+    """Read an explicitly supplied ECSV NSB spectrum."""
     if isinstance(file_name, Table):
         return file_name
-    return read_simtel_table("nsb_reference_spectrum", file_name)
+    return Table.read(file_name, format="ascii.ecsv")
 
 
 def _same_table_source(first, second):
@@ -98,18 +87,9 @@ def _value_column(table, candidates):
 def _weights(model, parameter_name):
     """Read an incidence-angle distribution and return angle/fraction arrays."""
     table = _parameter_table(model, parameter_name)
-    angle = next(
-        (
-            name
-            for name in ("incidence_angle", "Incidence angle", "angle")
-            if name in table.colnames
-        ),
-        None,
-    )
-    fraction = next((name for name in ("fraction", "Fraction") if name in table.colnames), None)
-    if angle is None or fraction is None:
+    if "incidence_angle" not in table.colnames or "fraction" not in table.colnames:
         raise ValueError(f"Invalid incidence-angle distribution table: {table.colnames}")
-    return _column_values(table, angle, u.deg), _column_values(table, fraction)
+    return _column_values(table, "incidence_angle", u.deg), _column_values(table, "fraction")
 
 
 def _spectral_curve(
@@ -125,67 +105,87 @@ def _spectral_curve(
     try:
         value_name = _value_column(table, candidates)
     except ValueError:
-        # The legacy RPOL reader exposes a matrix as ``value_10deg`` columns.
-        value_columns = [
-            name
-            for name in table.colnames
-            if any(name.startswith(f"{candidate}_") for candidate in candidates)
-        ]
-        if not value_columns:
-            raise
-        angles = np.array([float(name.rsplit("_", 1)[1][:-3]) for name in value_columns])
-        if weighting_parameter is None:
-            weights = np.ones(len(angles))
-        else:
-            weight_angles, weight_values = _weights(model, weighting_parameter)
-            weights = _nearest(weight_angles, weight_values, angles)
-        curves = np.array(
-            [
-                _interpolate(
-                    _column_values(table, wavelength_name, u.nm),
-                    _column_values(table, name),
-                    wavelengths,
-                    clip=clip,
-                )
-                for name in value_columns
-            ]
+        return _spectral_curve_columns(
+            table, wavelength_name, wavelengths, model, weighting_parameter, candidates, clip
         )
-        return np.average(curves, axis=0, weights=weights)
-    angle_name = next(
-        (name for name in ("angle", "incidence_angle") if name in table.colnames), None
-    )
-    if angle_name is None:
+    if "incidence_angle" not in table.colnames:
         return _interpolate(
             _column_values(table, wavelength_name, u.nm),
             _column_values(table, value_name),
             wavelengths,
             clip=clip,
         )
+    return _angle_averaged_curve(
+        table, wavelength_name, value_name, wavelengths, model, weighting_parameter, clip
+    )
 
-    angles = _column_values(table, angle_name, u.deg)
-    expected_angles = np.unique(angles)
-    weights = None
-    if weighting_parameter is not None:
-        weight_angles, weights = _weights(model, weighting_parameter)
-    unique_wavelengths = np.unique(_column_values(table, wavelength_name, u.nm))
-    curve = np.zeros_like(unique_wavelengths)
-    for index, wavelength in enumerate(unique_wavelengths):
-        selection = np.isclose(_column_values(table, wavelength_name, u.nm), wavelength)
-        values = _column_values(table, value_name)[selection]
-        value_angles = angles[selection]
-        if len(value_angles) != len(expected_angles) or not np.all(
-            np.isin(expected_angles, value_angles)
-        ):
-            raise ValueError(
-                "Angle-dependent efficiency tables must contain every incidence angle "
-                f"at wavelength {wavelength}."
+
+def _spectral_curve_columns(
+    table, wavelength_name, wavelengths, model, weighting_parameter, candidates, clip
+):
+    """Average RPOL value columns over their encoded angles."""
+    value_columns = [
+        name
+        for name in table.colnames
+        if any(name.startswith(f"{candidate}_") for candidate in candidates)
+    ]
+    if not value_columns:
+        raise ValueError(f"Table does not contain any of {candidates}: {table.colnames}")
+    angles = np.array([float(name.rsplit("_", 1)[1][:-3]) for name in value_columns])
+    if weighting_parameter is None:
+        weights = np.ones(len(angles))
+    else:
+        weight_angles, weight_values = _weights(model, weighting_parameter)
+        weights = _nearest(weight_angles, weight_values, angles)
+    curves = np.array(
+        [
+            _interpolate(
+                _column_values(table, wavelength_name, u.nm),
+                _column_values(table, name),
+                wavelengths,
+                clip=clip,
             )
-        if weights is None:
-            curve[index] = np.mean(values)
-        else:
-            value_weights = _nearest(weight_angles, weights, value_angles)
-            curve[index] = np.average(values, weights=value_weights)
+            for name in value_columns
+        ]
+    )
+    return np.average(curves, axis=0, weights=weights)
+
+
+def _angle_averaged_curve(
+    table, wavelength_name, value_name, wavelengths, model, weighting_parameter, clip
+):
+    """Average a tidy angle-dependent table at every wavelength."""
+    angles = _column_values(table, "incidence_angle", u.deg)
+    expected_angles = np.unique(angles)
+    weights = _weights(model, weighting_parameter) if weighting_parameter else None
+    unique_wavelengths = np.unique(_column_values(table, wavelength_name, u.nm))
+    curve = np.array(
+        [
+            _average_angle_slice(
+                table, wavelength_name, value_name, wavelength, expected_angles, weights
+            )
+            for wavelength in unique_wavelengths
+        ]
+    )
     return _interpolate(unique_wavelengths, curve, wavelengths, clip=clip)
+
+
+def _average_angle_slice(table, wavelength_name, value_name, wavelength, expected_angles, weights):
+    """Average one complete wavelength slice."""
+    selection = np.isclose(_column_values(table, wavelength_name, u.nm), wavelength)
+    values = _column_values(table, value_name)[selection]
+    value_angles = _column_values(table, "incidence_angle", u.deg)[selection]
+    if len(value_angles) != len(expected_angles) or not np.all(
+        np.isin(expected_angles, value_angles)
+    ):
+        raise ValueError(
+            "Angle-dependent efficiency tables must contain every incidence angle "
+            f"at wavelength {wavelength}."
+        )
+    if weights is None:
+        return np.mean(values)
+    weight_angles, weight_values = weights
+    return np.average(values, weights=_nearest(weight_angles, weight_values, value_angles))
 
 
 def _atmospheric_transmission(table, wavelengths, altitude_km, airmass):
@@ -338,25 +338,20 @@ class CameraEfficiencyCalculator:
             table,
             wavelengths,
             self.telescope_model,
-            "camera_filter_incidence_angle",
+            "camera_filter_photon_incident_angle",
             ("transmission", "efficiency"),
         )
 
-    def _funnel_efficiency(self, wavelengths, mirror_class):
+    def _funnel_efficiency(self, wavelengths, _mirror_class):
         """Return mirror geometry and the applicable light-guide efficiency."""
         angle_table = _parameter_table(
             self.telescope_model, "lightguide_efficiency_vs_incidence_angle"
         )
-        angle = _column_values(
-            angle_table, _value_column(angle_table, ("angle", "incidence_angle")), u.deg
-        )
+        angle = _column_values(angle_table, "incidence_angle", u.deg)
         angle_efficiency = _column_values(
             angle_table, _value_column(angle_table, ("efficiency", "transmission"))
         )
-        mirror_table = _parameter_table(
-            self.telescope_model,
-            "fake_mirror_list" if mirror_class == 2 else "mirror_list",
-        )
+        mirror_table = _parameter_table(self.telescope_model, self._sampling_parameter_name())
         mirror_area, mean_funnel, edge = self._mirror_geometry(
             mirror_table, angle, angle_efficiency
         )
@@ -371,6 +366,10 @@ class CameraEfficiencyCalculator:
                 wavelength_table, wavelengths, candidates=("efficiency", "transmission")
             )
         return mirror_area, funnel, edge
+
+    def _sampling_parameter_name(self):
+        """Return the model parameter containing the mirror geometry."""
+        return "mirror_list"
 
     def _nsb_values(self, atmosphere, wavelengths, airmass):
         """Return NSB flux before and after site corrections."""

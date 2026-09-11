@@ -1,0 +1,78 @@
+"""Naming helpers for exported simulation-model assets."""
+
+from pathlib import Path
+
+ECSV_SUFFIX = ".ecsv"
+SOURCE_VALUE_KEY = "_simtools_export_source_value"
+
+
+def get_export_file_name(parameter_data, fallback_instrument=None):
+    """Return the deterministic exported name for a model asset.
+
+    ECSV assets are qualified with the instrument scope so that assets from
+    different telescope designs can share one model directory safely. The
+    original source value is kept separately when a parameter has already
+    been qualified.
+
+    Parameters
+    ----------
+    parameter_data : dict
+        Model parameter metadata.
+    fallback_instrument : str, optional
+        Instrument scope to use when the metadata does not contain one.
+
+    Returns
+    -------
+    str
+        Exported filename.
+    """
+    value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
+    if (
+        parameter_data.get("qualify_filename") is False
+        or not isinstance(value, str)
+        or not value.lower().endswith(ECSV_SUFFIX)
+    ):
+        return value
+
+    instrument = parameter_data.get("instrument") or fallback_instrument or "global"
+    path = Path(value)
+    if path.stem.endswith(f"-{instrument}"):
+        return value
+    return f"{path.stem}-{instrument}{path.suffix}"
+
+
+def qualify_parameter_file_name(parameter_data, fallback_instrument=None):
+    """Update ECSV parameter metadata with its deterministic exported name."""
+    value = parameter_data.get("value")
+    qualified_value = get_export_file_name(parameter_data, fallback_instrument)
+    if qualified_value != value and isinstance(value, str):
+        parameter_data.setdefault(SOURCE_VALUE_KEY, value)
+        parameter_data["value"] = qualified_value
+    return qualified_value
+
+
+def get_simtel_table_file_name(parameter_data):
+    """Return the shared native sim_telarray filename for an ECSV parameter.
+
+    The model parameter identity is used instead of a telescope configuration
+    filename. This allows identical tables used by several telescope models to
+    share one generated native file.
+
+    Parameters
+    ----------
+    parameter_data : dict
+        Model parameter metadata.
+
+    Returns
+    -------
+    str or None
+        Shared native filename, or ``None`` when the parameter does not carry
+        enough model identity metadata for safe sharing.
+    """
+    value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
+    if not isinstance(value, str) or not value.lower().endswith(ECSV_SUFFIX):
+        return None
+    if not parameter_data.get("instrument") and not parameter_data.get(SOURCE_VALUE_KEY):
+        return None
+    exported_name = get_export_file_name(parameter_data)
+    return f"{Path(exported_name).with_suffix('').name}.dat"

@@ -2,13 +2,16 @@
 
 import logging
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
-from simtools.simtel import simtel_table_reader, simtel_validate_metadata
+from simtools.simtel import simtel_validate_metadata
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
@@ -186,7 +189,7 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     any
         Extracted parameter value.
     """
-    if parameter_type not in ("string", "dict", "boolean"):
+    if parameter_type not in ("string", "file", "dict", "boolean"):
         config_reader = SimtelConfigReader()
         value, _ = config_reader.extract_value_from_sim_telarray_column(
             [metadata[sim_telarray_name]], parameter_type
@@ -262,12 +265,12 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             continue
 
         parameter_type = model.parameters[param]["type"]
-        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         model_value = model.parameters[param]["value"]
-        value = _resolve_dict_parameter_metadata_value(
-            value, model_value, parameter_type, param, model
-        )
-
+        if param == "mirror_list" and uses_segmented_dual_mirror_geometry(model.parameters):
+            model_value = "none"
+        elif parameter_type == "file":
+            model_value = _resolve_file_parameter_value(model_value, param, model)
+        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         error = _check_parameter_validity(
             param, value, model_value, parameter_type, allow_for_changes
         )
@@ -277,23 +280,22 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
     return invalid_parameter_list
 
 
-def _resolve_dict_parameter_metadata_value(value, model_value, parameter_type, param, model):
-    """Resolve table-file metadata for dict parameters before comparison."""
-    if parameter_type != "dict":
-        return value
+def _resolve_file_parameter_value(model_value, parameter_name, model):
+    """Resolve the generated sim_telarray filename for an ECSV file parameter."""
+    if not isinstance(model_value, str) or not model_value.lower().endswith(".ecsv"):
+        return model_value
 
-    if not isinstance(value, str) or not isinstance(model_value, dict):
-        return value
+    parameter_data = getattr(model, "parameters", {}).get(parameter_name, {})
+    shared_name = get_simtel_table_file_name(parameter_data)
+    if shared_name is not None:
+        return shared_name
 
-    try:
-        return simtel_table_reader.resolve_dict_parameter_value(
-            value,
-            param,
-            data_path=model.config_file_directory,
-        )
-    except (FileNotFoundError, ValueError, TypeError) as exc:
-        _logger.debug(f"Unable to resolve dict-valued sim_telarray metadata for {param}: {exc}")
-        return value
+    model_name = getattr(model, "name", None)
+    config_file_path = getattr(model, "config_file_path", None)
+    if isinstance(model_name, str) and isinstance(config_file_path, (str, Path)):
+        return f"{parameter_name}-{Path(config_file_path).stem}.dat"
+
+    return model_value
 
 
 def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
@@ -387,7 +389,7 @@ def is_equal(value1, value2, value_type):
     if value1 is None or value2 is None:
         if value1 in ("none", None) and value2 in ("none", None):
             return True
-    if value_type == "string":
+    if value_type in ("string", "file"):
         return str(value1).strip() == str(value2).strip()
     if value_type == "dict":
         return value1 == value2
