@@ -11,16 +11,26 @@ ARG CONTAINER_UID="1000"
 ARG CONTAINER_GID="1000"
 
 USER 0:0
-COPY test-data/corsika7-interaction-tables /opt/simtools/test-data/corsika7-interaction-tables
-COPY test-data/simulation-models.git /opt/simtools/test-data/simulation-models.git
+COPY test-data/corsika7-interaction-tables \
+     /opt/simtools/test-data/corsika7-interaction-tables
+COPY test-data/simulation-models.git \
+     /opt/simtools/test-data/simulation-models.git
 
-RUN test -f /opt/simtools/test-data/corsika7-interaction-tables/interaction-tables/manifest.yaml && \
-    test "$(git --git-dir=/opt/simtools/test-data/simulation-models.git rev-parse HEAD)" = "${SIMULATION_MODELS_GIT_REVISION}" && \
+RUN test -f \
+      /opt/simtools/test-data/corsika7-interaction-tables/interaction-tables/manifest.yaml && \
+    model_revision="$(git \
+      --git-dir=/opt/simtools/test-data/simulation-models.git \
+      rev-parse HEAD)" && \
+    test "$model_revision" = "${SIMULATION_MODELS_GIT_REVISION}" && \
     . /workdir/env/bin/activate && \
-    pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry psutil && \
+    pip install --no-cache-dir \
+      pygit2 psutil pytest pytest-cov pytest-mock pytest-requirements pytest-retry pytest-xdist && \
     chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /opt/simtools/test-data
 
-ENV SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH="/opt/simtools/test-data/corsika7-interaction-tables/interaction-tables"
+ENV SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH="/opt/simtools/test-data/\
+corsika7-interaction-tables/interaction-tables"
+ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
 ENV SIMTOOLS_SIMULATION_MODELS_GIT_PATH="/opt/simtools/test-data/simulation-models.git"
 ENV SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=${SIMULATION_MODELS_GIT_REVISION}
 
