@@ -666,7 +666,10 @@ def _finalize_figure(fig, output_file):
     """Save, show, and return a completed figure."""
     if output_file:
         _logger.info(f"Saving plot to {output_file}")
-        fig.savefig(output_file, dpi=300, bbox_inches="tight")
+        save_kwargs = {"dpi": 300, "bbox_inches": "tight"}
+        if Path(output_file).suffix.lower() == ".png":
+            save_kwargs["pil_kwargs"] = {"compress_level": 1}
+        fig.savefig(output_file, **save_kwargs)
         plt.close(fig)
     else:
         plt.tight_layout()

@@ -172,7 +172,7 @@ def _format(value, contract):
 
 def _raw_values(values):
     """Return scalar values from an Astropy column."""
-    return [getattr(value, "value", value) for value in values]
+    return getattr(values, "value", values)
 
 
 @SimtelTableWriter.register("plain")
@@ -185,11 +185,10 @@ class PlainTableWriter:
     def write(table, output_path, contract):
         """Write the selected sorted rows."""
         ordered = _ordered_table(table, contract)
+        columns = [_raw_values(ordered[name]) for name in ordered.colnames]
         with output_path.open("w", encoding="utf-8") as file:
-            for row in ordered:
-                file.write(
-                    " ".join(_format(row[name], contract) for name in ordered.colnames) + "\n"
-                )
+            for row in zip(*columns, strict=True):
+                file.write(" ".join(_format(value, contract) for value in row) + "\n")
 
 
 @SimtelTableWriter.register("rpol_matrix")
@@ -204,9 +203,17 @@ class RpolMatrixWriter:
             PlainTableWriter.write(table, output_path, contract)
             return
         value_column = contract["value_column"]
-        values = {(_scalar(row[axis_0]), _scalar(row[axis_1])): row[value_column] for row in table}
-        axis_0_values = sorted(set(_raw_values(table[axis_0])))
-        axis_1_values = sorted(set(_raw_values(table[axis_1])))
+        axis_0_values = _raw_values(table[axis_0])
+        axis_1_values = _raw_values(table[axis_1])
+        values = dict(
+            zip(
+                zip(axis_0_values, axis_1_values, strict=True),
+                _raw_values(table[value_column]),
+                strict=True,
+            )
+        )
+        axis_0_values = sorted(set(axis_0_values))
+        axis_1_values = sorted(set(axis_1_values))
         with output_path.open("w", encoding="utf-8") as file:
             file.write("#@RPOL@[ANGLE=] 2\n")
             file.write(
@@ -230,9 +237,17 @@ class AtmosphericTransmissionWriter:
         """Write altitude header and wavelength rows by explicit matrix lookup."""
         axis_0, axis_1 = contract["matrix_axes"]
         value_column = contract["value_column"]
-        values = {(_scalar(row[axis_0]), _scalar(row[axis_1])): row[value_column] for row in table}
-        axis_0_values = sorted(set(_raw_values(table[axis_0])))
-        axis_1_values = sorted(set(_raw_values(table[axis_1])))
+        axis_0_values = _raw_values(table[axis_0])
+        axis_1_values = _raw_values(table[axis_1])
+        values = dict(
+            zip(
+                zip(axis_0_values, axis_1_values, strict=True),
+                _raw_values(table[value_column]),
+                strict=True,
+            )
+        )
+        axis_0_values = sorted(set(axis_0_values))
+        axis_1_values = sorted(set(axis_1_values))
         level = _scalar(table.meta.get("observatory_level"))
         with output_path.open("w", encoding="utf-8") as file:
             header = "# H1= " + " ".join(_format(value, contract) for value in axis_1_values)

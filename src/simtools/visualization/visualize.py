@@ -654,7 +654,9 @@ def plot_histogram(data, ax=None, **kwargs):
     return ax.figure
 
 
-def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure", close=False):
+def save_figure(
+    fig, output_file, figure_format=None, log_title="", dpi="figure", close=False, pil_kwargs=None
+):
     """
     Save figure to output file(s).
 
@@ -674,6 +676,8 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
         configured. Defaults to ``"figure"``.
     close : bool, optional
         Close the figure after saving. Defaults to False.
+    pil_kwargs : dict, optional
+        Keyword arguments passed to Pillow when saving PNG files.
     """
     configured_formats = config.args.get("figure_format")
     configured_dpi = config.args.get("figure_dpi")
@@ -683,7 +687,10 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     for fmt in gen.ensure_list(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
         save_dpi = configured_dpi if fmt == "png" and configured_dpi is not None else dpi
-        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=save_dpi)
+        save_kwargs = {"format": fmt, "bbox_inches": "tight", "dpi": save_dpi}
+        if fmt == "png" and pil_kwargs is not None:
+            save_kwargs["pil_kwargs"] = pil_kwargs
+        fig.savefig(_file, **save_kwargs)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()

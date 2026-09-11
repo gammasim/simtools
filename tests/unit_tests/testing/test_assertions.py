@@ -161,6 +161,7 @@ def test_check_output_from_sim_telarray_no_expected_output(mocker):
         ({"expected_sim_telarray_metadata": {"version": "1.0"}}, True, True, "shower"),
         ({"expected_sim_telarray_output": {"event_type": "background"}}, True, False, "background"),
         ({"expected_sim_telarray_output": {"event_type": "shower"}}, False, True, "shower"),
+        ({"expected_sim_telarray_output": None}, True, True, "shower"),
     ],
 )
 def test_check_output_from_sim_telarray(
@@ -169,7 +170,7 @@ def test_check_output_from_sim_telarray(
     mock_file = Path("test_file.zst")
 
     mock_assert_output = mocker.patch(
-        "simtools.simtel.simtel_output_validator.assert_expected_sim_telarray_output",
+        "simtools.simtel.simtel_output_validator.assert_expected_sim_telarray_output_and_event_type",
         return_value=expected_result,
     )
     mock_assert_metadata = mocker.patch(
@@ -192,12 +193,16 @@ def test_check_output_from_sim_telarray(
         mock_assert_output.assert_called_once_with(
             file=mock_file,
             expected_sim_telarray_output=file_test_config["expected_sim_telarray_output"],
+            event_type=event_type,
         )
-        mock_assert_events.assert_called_once_with(mock_file, event_type=event_type)
+        mock_assert_events.assert_not_called()
         if check_showers:
             mock_assert_showers.assert_called_once_with(mock_file)
         else:
             mock_assert_showers.assert_not_called()
+    else:
+        mock_assert_output.assert_not_called()
+        mock_assert_events.assert_called_once_with(mock_file, event_type=event_type)
 
     if "expected_sim_telarray_metadata" in file_test_config:
         mock_assert_metadata.assert_called_once_with(

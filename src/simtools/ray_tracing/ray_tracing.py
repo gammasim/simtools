@@ -9,6 +9,7 @@ effective mirror area, and effective focal length as functions of off-axis angle
 import gzip
 import logging
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from math import pi, tan
 from pathlib import Path
@@ -373,6 +374,8 @@ class RayTracing:
         Generates photon lists for each off-axis angle and mirror configuration,
         simulating light propagation through telescope optics.
         Output files are compressed with gzip if compress_photons is True.
+        Independent full-telescope simulations are executed concurrently. Single-mirror
+        simulations remain serial because their temporary camera files are shared.
 
         Parameters
         ----------
@@ -382,54 +385,89 @@ class RayTracing:
             Force flag will remove existing files and simulate again.
         compress_photons: bool
             If True, compress photon list files to ``.gz`` after simulation.
+
         """
-        for off_x, off_y in self.off_axis_angle:
-            for mirror_number, mirror_data in self.mirrors.items():
-                self._logger.info(
-                    f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), "
-                    f"mirror={mirror_number}"
-                )
+        if not self.single_mirror_mode:
+            self.telescope_model.write_sim_telarray_config_file(
+                additional_models=self.site_model,
+                label=self.label,
+            )
 
-                # Calculate theta (radial distance) and phi (azimuth)
-                theta_offset = np.sqrt(off_x**2 + off_y**2)
+        simulations = [
+            (
+                self._create_simulator(off_x, off_y, mirror_number, mirror_data, test, force),
+                off_x,
+                off_y,
+                mirror_number,
+            )
+            for off_x, off_y in self.off_axis_angle
+            for mirror_number, mirror_data in self.mirrors.items()
+        ]
 
-                simtel = SimulatorRayTracing(
-                    telescope_model=self.telescope_model,
-                    site_model=self.site_model,
-                    label=self.label,
-                    test=test,
-                    config_data={
-                        "zenith_angle": self.zenith_angle,
-                        "off_axis_x": off_x,
-                        "off_axis_y": off_y,
-                        "off_axis_theta": theta_offset,
-                        "source_distance": mirror_data["source_distance"],
-                        "single_mirror_mode": self.single_mirror_mode,
-                        "use_random_focal_length": self.use_random_focal_length,
-                        "mirror_numbers": mirror_number,
-                    },
-                    force_simulate=force,
-                )
-                simtel.run(test=test)
-
-                photons_file = self.output_directory.joinpath(
-                    self._generate_file_name(
-                        file_type="photons",
-                        suffix=".lis",
-                        off_axis_x=off_x,
-                        off_axis_y=off_y,
-                        mirror_number=mirror_number if self.single_mirror_mode else None,
+        if not self.single_mirror_mode and len(simulations) > 1:
+            workers = min(8, len(simulations))
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                list(
+                    executor.map(
+                        self._run_simulator,
+                        simulations,
+                        [test] * len(simulations),
+                        [compress_photons] * len(simulations),
                     )
                 )
-                if compress_photons:
-                    self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
+            return
 
-                    with open(photons_file, "rb") as f_in:
-                        with gzip.open(
-                            photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
-                        ) as f_out:
-                            shutil.copyfileobj(f_in, f_out)
-                    photons_file.unlink()
+        for simulator in simulations:
+            self._run_simulator(simulator, test, compress_photons)
+
+    def _create_simulator(self, off_x, off_y, mirror_number, mirror_data, test, force):
+        """Create one ray-tracing simulator with unique input and output files."""
+        self._logger.info(
+            f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), mirror={mirror_number}"
+        )
+        theta_offset = np.sqrt(off_x**2 + off_y**2)
+        simulator = SimulatorRayTracing(
+            telescope_model=self.telescope_model,
+            site_model=self.site_model,
+            label=self.label,
+            test=test,
+            config_data={
+                "zenith_angle": self.zenith_angle,
+                "off_axis_x": off_x,
+                "off_axis_y": off_y,
+                "off_axis_theta": theta_offset,
+                "source_distance": mirror_data["source_distance"],
+                "single_mirror_mode": self.single_mirror_mode,
+                "use_random_focal_length": self.use_random_focal_length,
+                "mirror_numbers": mirror_number,
+            },
+            force_simulate=force,
+        )
+        if not self.single_mirror_mode:
+            simulator._write_config = False  # pylint: disable=protected-access
+        return simulator
+
+    def _run_simulator(self, simulation, test, compress_photons):
+        """Run one prepared simulator and optionally compress its photon list."""
+        simulator, off_x, off_y, mirror_number = simulation
+        simulator.run(test=test)
+        photons_file = self.output_directory.joinpath(
+            self._generate_file_name(
+                file_type="photons",
+                suffix=".lis",
+                off_axis_x=off_x,
+                off_axis_y=off_y,
+                mirror_number=mirror_number if self.single_mirror_mode else None,
+            )
+        )
+        if not compress_photons:
+            return
+
+        self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
+        with open(photons_file, "rb") as f_in:
+            with gzip.open(photons_file.with_suffix(photons_file.suffix + ".gz"), "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        photons_file.unlink()
 
     def analyze(
         self,

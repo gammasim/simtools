@@ -176,16 +176,6 @@ Plot layout with some telescopes grayed out and others highlighted:
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: plot_array_layout_from_list_north.yml
-```
-
-```{eval-rst}
-.. simtools-integration-example::
-    :file: plot_array_layout_from_list_south.yml
-```
-
-```{eval-rst}
-.. simtools-integration-example::
     :file: plot_array_layout_from_list_utm_south.yml
 ```
 

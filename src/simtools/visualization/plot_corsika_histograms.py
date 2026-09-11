@@ -44,7 +44,11 @@ def _plot_2d(hist_list, labels=None):
             else:
                 norm = None
             mesh = ax.pcolormesh(
-                x_bin_edges[i_hist], y_bin_edges[i_hist], hist_values[i_hist], norm=norm
+                x_bin_edges[i_hist],
+                y_bin_edges[i_hist],
+                hist_values[i_hist],
+                norm=norm,
+                rasterized=True,
             )
             ax.set_xlabel(_get_axis_label(hist_dict["x_axis_title"], hist_dict["x_axis_unit"]))
             ax.set_ylabel(_get_axis_label(hist_dict["y_axis_title"], hist_dict["y_axis_unit"]))

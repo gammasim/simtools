@@ -5,6 +5,7 @@ import logging
 
 import matplotlib.colors as mcolors
 import numpy as np
+from matplotlib.collections import PatchCollection
 
 from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.model.telescope_model import TelescopeModel
@@ -173,6 +174,10 @@ def plot_pixel_layout_with_image(
 
     colors, cmap, norm_obj = _color_normalization(image, colormap, norm, vmin, vmax)
 
+    patches = []
+    facecolors = []
+    edgecolors = []
+    linewidths = []
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
         shape = pixel_shape(camera, x, y)
 
@@ -189,10 +194,19 @@ def plot_pixel_layout_with_image(
             edgecolor = "black"
             linewidth = 0.2
 
-        ax.add_patch(shape)
-        shape.set_facecolor(facecolor)
-        shape.set_edgecolor(edgecolor)
-        shape.set_linewidth(linewidth)
+        patches.append(shape)
+        facecolors.append(facecolor)
+        edgecolors.append(edgecolor)
+        linewidths.append(linewidth)
+
+    ax.add_collection(
+        PatchCollection(
+            patches,
+            facecolor=facecolors,
+            edgecolor=edgecolors,
+            linewidth=linewidths,
+        )
+    )
 
     # Add colorbar if image provided
     if colors is not None and image is not None and add_color_bar:

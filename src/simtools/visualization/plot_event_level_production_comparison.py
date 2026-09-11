@@ -162,6 +162,7 @@ def _save_figure(fig, output_path, filename, figure_format=None):
         figure_format=figure_format,
         dpi=300,
         close=True,
+        pil_kwargs={"compress_level": 1},
     )
 
 

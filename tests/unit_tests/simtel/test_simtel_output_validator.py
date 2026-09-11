@@ -16,6 +16,7 @@ from simtools.simtel.simtel_output_validator import (
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
     assert_expected_sim_telarray_output,
+    assert_expected_sim_telarray_output_and_event_type,
     assert_n_showers_and_energy_range,
     assert_sim_telarray_metadata,
     is_equal,
@@ -462,6 +463,37 @@ def test_extract_telescope_events(tmp_path):
 
         assert "n_telescope_events" in result
         assert result["n_telescope_events"] == 1
+
+
+def test_expected_output_and_event_type_uses_one_traversal(tmp_path):
+    sim_file = tmp_path / "test.simtel.zst"
+    sim_file.write_bytes(b"dummy")
+    mock_event = {
+        "type": "data",
+        "trigger_information": {"trigger_times": [1.0]},
+        "photoelectron_sums": {
+            "n_pe": np.array([10]),
+            "photons": np.array([100]),
+            "photons_atm_qe": np.array([50]),
+        },
+        "telescope_events": [{"data": "test"}],
+    }
+
+    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+        mock_instance = MagicMock()
+        mock_instance.__enter__.return_value = mock_instance
+        mock_instance.__exit__.return_value = None
+        mock_instance.__iter__.return_value = [mock_event]
+        mock_file.return_value = mock_instance
+
+        result = assert_expected_sim_telarray_output_and_event_type(
+            sim_file,
+            {"event_type": "shower", "pe_sum": [0.0, 100.0]},
+            event_type="shower",
+        )
+
+    assert result is True
+    mock_file.assert_called_once_with(sim_file)
 
 
 def test_none_expected_output():

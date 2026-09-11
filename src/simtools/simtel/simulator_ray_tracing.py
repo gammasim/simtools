@@ -68,6 +68,7 @@ class SimulatorRayTracing(SimtelRunner):
         self.photons_per_run = 100000 if not test else 5000
         self._single_pixel_camera_file = None
         self._funnel_file = None
+        self._write_config = True
 
         self._load_required_files(force_simulate)
 
@@ -142,10 +143,11 @@ class SimulatorRayTracing(SimtelRunner):
 
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
-        self.telescope_model.write_sim_telarray_config_file(
-            additional_models=self.site_model,
-            label=self.label,
-        )
+        if self._write_config:
+            self.telescope_model.write_sim_telarray_config_file(
+                additional_models=self.site_model,
+                label=self.label,
+            )
 
         config_file_path = self.telescope_model.config_file_path
 

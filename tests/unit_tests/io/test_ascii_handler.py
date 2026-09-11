@@ -69,6 +69,20 @@ def test_collect_data_from_file_resolves_configured_test_resource_paths(
     }
 
 
+def test_collect_data_from_file_skips_test_resource_resolution_without_references(
+    tmp_test_directory, monkeypatch
+):
+    config_file = tmp_test_directory / "config.yml"
+    config_file.write_text("model: ordinary-value\n", encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "resources"))
+
+    with patch("simtools.io.ascii_handler.io_handler.resolve_test_resource_paths") as resolver:
+        loaded = ascii_handler.collect_data_from_file(config_file)
+
+    assert loaded == {"model": "ordinary-value"}
+    resolver.assert_not_called()
+
+
 def test_collect_data_from_file_exceptions(io_handler) -> None:
     # Create an invalid YAML file
     test_file = io_handler.get_output_file(file_name="invalid.yml")
