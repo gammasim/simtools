@@ -437,7 +437,7 @@ def is_safe_tar_member(member_name):
     return True
 
 
-def pack_tar_file(tar_file_name, file_list, sub_dir=None):
+def pack_tar_file(tar_file_name, file_list, sub_dir=None, compression_level=None):
     """
     Pack files into a tar.gz archive.
 
@@ -449,6 +449,8 @@ def pack_tar_file(tar_file_name, file_list, sub_dir=None):
         List of files to include in the archive.
     sub_dir: str, optional
         Subdirectory within the archive to place the files.
+    compression_level: int, optional
+        Gzip compression level. If omitted, use the tarfile module default.
     """
     file_list = [Path(f) for f in file_list]
     base = Path(os.path.commonpath([f.resolve() for f in file_list]))
@@ -457,7 +459,8 @@ def pack_tar_file(tar_file_name, file_list, sub_dir=None):
         if not f.is_file() or not f.resolve().is_relative_to(base_resolved):
             raise ValueError(f"Unsafe file path: {f}")
 
-    with tarfile.open(tar_file_name, "w:gz") as tar:
+    open_kwargs = {} if compression_level is None else {"compresslevel": compression_level}
+    with tarfile.open(tar_file_name, "w:gz", **open_kwargs) as tar:
         for file in file_list:
             arc_name = Path(sub_dir) / file.name if sub_dir else file.name
             tar.add(file, arcname=str(arc_name))
