@@ -75,6 +75,15 @@ def test_instrument_class_key_to_db_collection():
         names.instrument_class_key_to_db_collection("Not_a_class")
 
 
+def test_get_collection_name_from_parameter_name_uses_parameter_schema():
+    assert names.get_collection_name_from_parameter_name("atmospheric_profile") == "sites"
+
+
+def test_get_collection_name_from_parameter_name_rejects_unknown_parameter():
+    with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
+        names.get_collection_name_from_parameter_name("Not_a_parameter")
+
+
 def test_validate_array_element_id_name(caplog):
     _test_ids = {
         "1": "01",
