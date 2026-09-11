@@ -160,10 +160,20 @@ jobs:
   test-simtools-prod:
     permissions:
       contents: read
-    needs: build-simtools-prod
+    needs: [build-simtools-prod, build-simtools-prod-tests]
     if: ${{ (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) && (github.event_name != 'workflow_dispatch' || contains(fromJSON('["all","generic"]'), github.event.inputs.avx_flag || 'all')) }}
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
-      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
+      container_image: ${{ needs.build-simtools-prod-tests.outputs.image }}
       model_versions: '["7.0.0"]'
       runner_labels: '["ubuntu-latest","ubuntu-24.04-arm"]'
+
+  build-simtools-prod-tests:
+    needs: build-simtools-prod
+    if: ${{ (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) && (github.event_name != 'workflow_dispatch' || contains(fromJSON('["all","generic"]'), github.event.inputs.avx_flag || 'all')) }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-simtools-prod-tests.yml
+    with:
+      prod_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}

@@ -1,0 +1,40 @@
+# Test-data overlay for a published simtools production image.
+# hadolint global ignore=DL3013
+# Test tooling is installed from the current package indexes, as in the CI
+# workflow; the production image remains pinned independently.
+ARG PROD_IMAGE
+FROM ${PROD_IMAGE}
+
+ARG SIMULATION_MODELS_GIT_REVISION
+ARG CORSIKA_TABLES_TAG
+ARG CONTAINER_UID="1000"
+ARG CONTAINER_GID="1000"
+
+USER 0:0
+COPY test-data/corsika7-interaction-tables \
+     /opt/simtools/test-data/corsika7-interaction-tables
+COPY test-data/simulation-models.git \
+     /opt/simtools/test-data/simulation-models.git
+
+RUN test -f \
+      /opt/simtools/test-data/corsika7-interaction-tables/interaction-tables/manifest.yaml && \
+    model_revision="$(git \
+      --git-dir=/opt/simtools/test-data/simulation-models.git \
+      rev-parse HEAD)" && \
+    test "$model_revision" = "${SIMULATION_MODELS_GIT_REVISION}" && \
+    . /workdir/env/bin/activate && \
+    pip install --no-cache-dir \
+      pygit2 psutil pytest pytest-cov pytest-mock pytest-requirements pytest-retry pytest-xdist && \
+    chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /opt/simtools/test-data
+
+ENV SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH="/opt/simtools/test-data/\
+corsika7-interaction-tables/interaction-tables"
+ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
+ENV SIMTOOLS_SIMULATION_MODELS_GIT_PATH="/opt/simtools/test-data/simulation-models.git"
+ENV SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=${SIMULATION_MODELS_GIT_REVISION}
+
+LABEL org.gammasim.simtools.simulation-model-revision="${SIMULATION_MODELS_GIT_REVISION}" \
+      org.gammasim.simtools.corsika-interaction-tables-tag="${CORSIKA_TABLES_TAG}"
+
+USER ${CONTAINER_UID}:${CONTAINER_GID}
