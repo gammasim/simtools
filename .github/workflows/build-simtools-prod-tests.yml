@@ -16,6 +16,21 @@ on:
         type: string
   schedule:
     - cron: "0 2 * * 0"
+  workflow_call:
+    inputs:
+      prod_image:
+        description: "Published simtools-prod image used as the base"
+        required: true
+        type: string
+      simulation_model_ref:
+        description: "simulation-models branch or tag"
+        required: false
+        default: ""
+        type: string
+    outputs:
+      image:
+        description: "Immutable test image reference"
+        value: ${{ jobs.build.outputs.image }}
   pull_request:
     paths:
       - ".github/workflows/build-simtools-prod-tests.yml"
