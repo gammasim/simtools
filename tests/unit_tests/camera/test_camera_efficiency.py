@@ -90,6 +90,26 @@ def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
+def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
+    telescope_model = MagicMock(site="North", name="LSTN-01")
+    site_model = MagicMock()
+    initialize_models = mocker.patch(
+        "simtools.camera.camera_efficiency.initialize_simulation_models"
+    )
+
+    camera_efficiency = CameraEfficiency(
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
+        telescope_model=telescope_model,
+        site_model=site_model,
+    )
+
+    assert camera_efficiency.telescope_model is telescope_model
+    assert camera_efficiency.site_model is site_model
+    initialize_models.assert_not_called()
+
+
 def test_simulate(camera_efficiency_lst, caplog, mocker):
     export_correction = mocker.patch.object(
         camera_efficiency_lst.telescope_model,

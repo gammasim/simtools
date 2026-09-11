@@ -155,26 +155,50 @@ def _angle_averaged_curve(
     table, wavelength_name, value_name, wavelengths, model, weighting_parameter, clip
 ):
     """Average a tidy angle-dependent table at every wavelength."""
+    table_wavelengths = _column_values(table, wavelength_name, u.nm)
+    values = _column_values(table, value_name)
     angles = _column_values(table, "incidence_angle", u.deg)
     expected_angles = np.unique(angles)
     weights = _weights(model, weighting_parameter) if weighting_parameter else None
-    unique_wavelengths = np.unique(_column_values(table, wavelength_name, u.nm))
-    curve = np.array(
-        [
-            _average_angle_slice(
-                table, wavelength_name, value_name, wavelength, expected_angles, weights
-            )
-            for wavelength in unique_wavelengths
-        ]
-    )
+    unique_wavelengths = np.unique(table_wavelengths)
+    if _wavelengths_are_separated(unique_wavelengths):
+        curve = _average_angle_slices(
+            table_wavelengths, values, angles, unique_wavelengths, expected_angles, weights
+        )
+    else:
+        curve = np.array(
+            [
+                _average_angle_slice_values(
+                    table_wavelengths,
+                    values,
+                    angles,
+                    wavelength,
+                    expected_angles,
+                    weights,
+                )
+                for wavelength in unique_wavelengths
+            ]
+        )
     return _interpolate(unique_wavelengths, curve, wavelengths, clip=clip)
 
 
 def _average_angle_slice(table, wavelength_name, value_name, wavelength, expected_angles, weights):
     """Average one complete wavelength slice."""
-    selection = np.isclose(_column_values(table, wavelength_name, u.nm), wavelength)
-    values = _column_values(table, value_name)[selection]
-    value_angles = _column_values(table, "incidence_angle", u.deg)[selection]
+    return _average_angle_slice_values(
+        _column_values(table, wavelength_name, u.nm),
+        _column_values(table, value_name),
+        _column_values(table, "incidence_angle", u.deg),
+        wavelength,
+        expected_angles,
+        weights,
+    )
+
+
+def _average_angle_slice_values(wavelengths, values, angles, wavelength, expected_angles, weights):
+    """Average one complete wavelength slice from already converted columns."""
+    selection = np.isclose(wavelengths, wavelength)
+    values = values[selection]
+    value_angles = angles[selection]
     if len(value_angles) != len(expected_angles) or not np.all(
         np.isin(expected_angles, value_angles)
     ):
@@ -186,6 +210,50 @@ def _average_angle_slice(table, wavelength_name, value_name, wavelength, expecte
         return np.mean(values)
     weight_angles, weight_values = weights
     return np.average(values, weights=_nearest(weight_angles, weight_values, value_angles))
+
+
+def _wavelengths_are_separated(wavelengths):
+    """Return whether adjacent wavelength values cannot overlap under ``isclose``."""
+    return len(wavelengths) < 2 or not np.any(np.isclose(wavelengths[:-1], wavelengths[1:]))
+
+
+def _average_angle_slices(
+    wavelengths, values, angles, unique_wavelengths, expected_angles, weights
+):
+    """Average valid wavelength groups using array operations."""
+    order = np.argsort(wavelengths, kind="stable")
+    grouped_values = values[order]
+    grouped_angles = angles[order]
+    _, counts = np.unique(wavelengths[order], return_counts=True)
+    angle_count = len(expected_angles)
+    if np.any(counts != angle_count):
+        return np.array(
+            [
+                _average_angle_slice_values(
+                    wavelengths, values, angles, wavelength, expected_angles, weights
+                )
+                for wavelength in unique_wavelengths
+            ]
+        )
+
+    grouped_angles = grouped_angles.reshape(-1, angle_count)
+    if not np.all(np.sort(grouped_angles, axis=1) == expected_angles):
+        return np.array(
+            [
+                _average_angle_slice_values(
+                    wavelengths, values, angles, wavelength, expected_angles, weights
+                )
+                for wavelength in unique_wavelengths
+            ]
+        )
+
+    grouped_values = grouped_values.reshape(-1, angle_count)
+    if weights is None:
+        return np.mean(grouped_values, axis=1)
+
+    weight_angles, weight_values = weights
+    group_weights = _nearest(weight_angles, weight_values, grouped_angles[0])
+    return np.average(grouped_values, axis=1, weights=group_weights)
 
 
 def _atmospheric_transmission(table, wavelengths, altitude_km, airmass):

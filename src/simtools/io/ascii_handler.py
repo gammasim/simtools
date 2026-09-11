@@ -79,11 +79,29 @@ def collect_data_from_bytes(data, file_name, yaml_document=None):
 
 def _resolve_configured_test_resource_paths(data, test_resources_path=None):
     """Resolve test-resource paths when a test-resource environment is active."""
-    if test_resources_path is not None:
+    if (
+        test_resources_path is not None
+        or os.environ.get("SIMTOOLS_TEST_RESOURCES")
+        or os.environ.get("SIMTOOLS_TESTS_PATH")
+    ) and _contains_test_resource_reference(data):
         return io_handler.resolve_test_resource_paths(data, test_resources_path=test_resources_path)
-    if os.environ.get("SIMTOOLS_TEST_RESOURCES") or os.environ.get("SIMTOOLS_TESTS_PATH"):
-        return io_handler.resolve_test_resource_paths(data)
     return data
+
+
+def _contains_test_resource_reference(data):
+    """Return whether structured data contains a path handled by the test-resource resolver."""
+    if isinstance(data, dict):
+        return any(_contains_test_resource_reference(value) for value in data.values())
+    if isinstance(data, list):
+        return any(_contains_test_resource_reference(value) for value in data)
+    if isinstance(data, str):
+        return (
+            "${static:" in data
+            or "${generated:" in data
+            or "${downloaded:" in data
+            or "tests/resources" in data
+        )
+    return False
 
 
 def _collect_data_from_different_file_types(file, file_name, suffix, yaml_document):

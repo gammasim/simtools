@@ -33,21 +33,29 @@ class CameraEfficiency:
         Dict containing the configurable parameters.
     efficiency_type: str
         The type of efficiency to simulate (e.g., 'Shower', 'Muon', or 'NSB').
+    telescope_model: TelescopeModel, optional
+        Reuse an initialized telescope model.
+    site_model: SiteModel, optional
+        Reuse an initialized site model.
     """
 
-    def __init__(self, label, config_data, efficiency_type):
+    def __init__(self, label, config_data, efficiency_type, telescope_model=None, site_model=None):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
 
         self.io_handler = io_handler.IOHandler()
-        self.telescope_model, self.site_model, _ = initialize_simulation_models(
-            label=self.label,
-            model_version=config_data["model_version"],
-            site=config_data["site"],
-            telescope_name=config_data["telescope"],
-        )
+        if telescope_model is None or site_model is None:
+            self.telescope_model, self.site_model, _ = initialize_simulation_models(
+                label=self.label,
+                model_version=config_data["model_version"],
+                site=config_data["site"],
+                telescope_name=config_data["telescope"],
+            )
+        else:
+            self.telescope_model = telescope_model
+            self.site_model = site_model
         self.output_dir = self.io_handler.get_output_directory()
 
         self._results = None
