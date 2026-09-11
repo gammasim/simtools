@@ -16,12 +16,18 @@ on:
         type: string
   schedule:
     - cron: "0 2 * * 0"
+  pull_request:
+    paths:
+      - ".github/workflows/build-simtools-prod-tests.yml"
+      - "docker/Dockerfile-simtools-prod-tests"
+      - "dependency_versions.yml"
 
 permissions: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     permissions:
       contents: read
       packages: write

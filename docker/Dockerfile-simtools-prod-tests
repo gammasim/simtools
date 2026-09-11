@@ -1,4 +1,7 @@
 # Test-data overlay for a published simtools production image.
+# hadolint global ignore=DL3013
+# Test tooling is installed from the current package indexes, as in the CI
+# workflow; the production image remains pinned independently.
 ARG PROD_IMAGE
 FROM ${PROD_IMAGE}
 
