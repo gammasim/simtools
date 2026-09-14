@@ -141,7 +141,7 @@ jobs:
             PYTHON_VERSION=${{ steps.catalog.outputs.python_version }}
             SIMULATION_MODELS_GIT_REVISION=${{ steps.models.outputs.revision }}
             CORSIKA_TABLES_TAG=${{ steps.catalog.outputs.tables_tag }}
-          push: ${{ github.event_name == 'workflow_dispatch' || inputs.push_image }}
+          push: ${{ github.event_name == 'workflow_dispatch' || inputs.push_image == true }}
           file: ./docker/Dockerfile-simtools-prod-tests
           tags: |
             ${{ steps.image.outputs.image }}
