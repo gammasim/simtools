@@ -734,14 +734,27 @@ class IncidentAnglesCalculator:
 
         combined_table = vstack(tables)
 
-        parameter_mapping = {
+        # Always export camera_filter_incidence_angle (mapped to angle_incidence_focal)
+        # Optionally export primary/secondary mirror angles if available
+        mandatory_params = {
             "camera_filter_incidence_angle": "angle_incidence_focal",
+        }
+        optional_params = {
             "primary_mirror_incidence_angle": "angle_incidence_primary",
             "secondary_mirror_incidence_angle": "angle_incidence_secondary",
         }
 
-        for param_name, col_name in parameter_mapping.items():
+        params_to_export = {**mandatory_params, **optional_params}
+
+        for param_name, col_name in params_to_export.items():
             if col_name not in combined_table.colnames:
+                if param_name in mandatory_params:
+                    self.logger.error(
+                        "Mandatory column '%s' (for parameter '%s') not found in results. "
+                        "Skipping export.",
+                        col_name,
+                        param_name,
+                    )
                 continue
 
             data = combined_table[col_name].to(u.deg).value
@@ -762,7 +775,7 @@ class IncidentAnglesCalculator:
                 parameter_name=param_name,
                 value=f"{param_name}.ecsv",
                 instrument=self.config_data["telescope"],
-                parameter_version=self.config_data["model_version"],
+                parameter_version=self.config_data.get("parameter_version"),
                 output_file=f"{param_name}.json",
                 output_path=self.output_dir,
                 metadata_input_dict=self.config_data,
