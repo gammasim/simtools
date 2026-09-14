@@ -125,24 +125,11 @@ jobs:
     env:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
 
-    services:
-      mongodb:
-        image: mongo:latest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: api
-          MONGO_INITDB_ROOT_PASSWORD: password
-        options: >-
-          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     strategy:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-latest"]') }}
         model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
-        model_source: [git]  # add mongodb to add mongodb integration tests.
 
     defaults:
       run:
@@ -154,7 +141,9 @@ jobs:
           fetch-depth: 0
 
       - name: Export dependency environment
-        run: python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+        run: |
+          python src/simtools/applications/dependency_versions.py --format env \
+            | grep -v '^SIMTOOLS_DB_' >> "$GITHUB_ENV"
 
       - name: Configure test resources
         run: |
@@ -172,17 +161,8 @@ jobs:
       - name: Create runtime environment (.env)
         run: |
           {
-            if [ "${{ matrix.model_source }}" = "git" ]; then
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-            else
-              echo "SIMTOOLS_DB_SERVER=mongodb"
-              echo "SIMTOOLS_DB_API_USER=api"
-              echo "SIMTOOLS_DB_API_PW=password"
-              echo "SIMTOOLS_DB_API_PORT=27017"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG=$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-            fi
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
@@ -201,42 +181,25 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(env.CONTAINER_IMAGE, 'simtools-prod') }}
         run: |
-          pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
-
-      - name: Upload data to MongoDB
-        if: matrix.model_source == 'mongodb'
-        run: |
-          git clone --local "$SIMTOOLS_SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
-          simtools-db-upload-model-repository \
-            --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
-            --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
-            --repository_dir "$GITHUB_WORKSPACE/simulation-models"
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Integration tests
         shell: bash -l {0}
         run: |
           cat .env
-          MODEL_SOURCE_ARGS=()
-          if [ "${{ matrix.model_source }}" = "git" ]; then
-            for variable in ${!SIMTOOLS_DB_@}; do
-              unset "$variable"
-            done
-            MODEL_SOURCE_ARGS=(
-              --simulation_models_git_path="$SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
-              --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-            )
-          fi
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
-              "${MODEL_SOURCE_ARGS[@]}" \
+              --simulation_models_git_path="$SIMTOOLS_SIMULATION_MODELS_GIT_PATH" \
+              --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" \
               -n 0 --maxfail=1 --no-cov \
-              --resource-benchmark-output=resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }} \
+              --resource-benchmark-output=resource-benchmark-${{ matrix.model_version }} \
               --resource-benchmark-mode=integration \
               --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
               tests/integration_tests/
           else
             pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
-              "${MODEL_SOURCE_ARGS[@]}" \
+              --simulation_models_git_path="$SIMTOOLS_SIMULATION_MODELS_GIT_PATH" \
+              --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" \
               -n 4 --dist loadscope --retries 2 --retry-delay 5 --maxfail=1 --no-cov tests/integration_tests/
           fi
 
@@ -244,7 +207,7 @@ jobs:
         if: ${{ always() && inputs.benchmark }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
-          name: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}
-          path: resource-benchmark-${{ matrix.model_source }}-${{ matrix.model_version }}
+          name: resource-benchmark-${{ matrix.model_version }}
+          path: resource-benchmark-${{ matrix.model_version }}
           if-no-files-found: error
           retention-days: 30

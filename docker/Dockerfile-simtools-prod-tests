@@ -5,6 +5,7 @@
 ARG PROD_IMAGE
 FROM ${PROD_IMAGE}
 
+ARG PYTHON_VERSION
 ARG SIMULATION_MODELS_GIT_REVISION
 ARG CORSIKA_TABLES_TAG
 ARG CONTAINER_UID="1000"
@@ -13,13 +14,14 @@ ARG CONTAINER_GID="1000"
 USER 0:0
 COPY test-data/corsika7-interaction-tables \
      /opt/simtools/test-data/corsika7-interaction-tables
-COPY test-data/simulation-models.git \
-     /opt/simtools/test-data/simulation-models.git
+COPY test-data/simulation-models \
+     /opt/simtools/test-data/simulation-models
 
-RUN test -f \
+RUN python --version | grep -Eq "^Python ${PYTHON_VERSION}\." && \
+    test -f \
       /opt/simtools/test-data/corsika7-interaction-tables/interaction-tables/manifest.yaml && \
     model_revision="$(git \
-      --git-dir=/opt/simtools/test-data/simulation-models.git \
+      -C /opt/simtools/test-data/simulation-models \
       rev-parse HEAD)" && \
     test "$model_revision" = "${SIMULATION_MODELS_GIT_REVISION}" && \
     . /workdir/env/bin/activate && \
@@ -31,8 +33,8 @@ ENV SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH="/opt/simtools/test-data/\
 corsika7-interaction-tables/interaction-tables"
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
-ENV SIMTOOLS_SIMULATION_MODELS_GIT_PATH="/opt/simtools/test-data/simulation-models.git"
-ENV SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=${SIMULATION_MODELS_GIT_REVISION}
+ENV SIMTOOLS_SIMULATION_MODELS_GIT_PATH="/opt/simtools/test-data/simulation-models"
+ENV SIMTOOLS_SIMULATION_MODELS_GIT_REVISION="${SIMULATION_MODELS_GIT_REVISION}"
 
 LABEL org.gammasim.simtools.simulation-model-revision="${SIMULATION_MODELS_GIT_REVISION}" \
       org.gammasim.simtools.corsika-interaction-tables-tag="${CORSIKA_TABLES_TAG}"

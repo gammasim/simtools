@@ -14,6 +14,11 @@ on:
         required: false
         default: ""
         type: string
+      push_image:
+        description: "Push the test image for a downstream job"
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "0 2 * * 0"
   workflow_call:
@@ -27,6 +32,11 @@ on:
         required: false
         default: ""
         type: string
+      push_image:
+        description: "Push the test image for a downstream job"
+        required: false
+        default: false
+        type: boolean
     outputs:
       image:
         description: "Immutable test image reference"
@@ -66,6 +76,7 @@ jobs:
 
           catalog = yaml.safe_load(Path("dependency_versions.yml").read_text())
           model = catalog["model-database"]
+          print(f"python_version={catalog['python']}")
           print(f"model_ref={model['default-tag']}")
           print(f"model_repository={model['repository-url']}")
           print(f"tables_tag={catalog['corsika-interaction-tables']['tag']}")
@@ -78,9 +89,9 @@ jobs:
           MODEL_REPOSITORY: ${{ steps.catalog.outputs.model_repository }}
         run: |
           mkdir -p test-data
-          git clone --bare --depth 1 --branch "$MODEL_REF" "$MODEL_REPOSITORY" \
-            test-data/simulation-models.git
-          revision=$(git --git-dir=test-data/simulation-models.git rev-parse HEAD)
+          git clone --depth 1 --branch "$MODEL_REF" "$MODEL_REPOSITORY" \
+            test-data/simulation-models
+          revision=$(git -C test-data/simulation-models rev-parse HEAD)
           echo "revision=$revision" >> "$GITHUB_OUTPUT"
 
       - name: Prepare CORSIKA interaction tables
@@ -120,16 +131,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push test image
+      - name: Build test image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           build-args: |
             PROD_IMAGE=${{ inputs.prod_image || 'ghcr.io/gammasim/simtools-prod:latest' }}
+            PYTHON_VERSION=${{ steps.catalog.outputs.python_version }}
             SIMULATION_MODELS_GIT_REVISION=${{ steps.models.outputs.revision }}
             CORSIKA_TABLES_TAG=${{ steps.catalog.outputs.tables_tag }}
-          push: true
+          push: ${{ github.event_name == 'workflow_dispatch' || inputs.push_image }}
           file: ./docker/Dockerfile-simtools-prod-tests
           tags: |
             ${{ steps.image.outputs.image }}

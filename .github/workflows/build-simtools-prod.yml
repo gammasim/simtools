@@ -177,3 +177,4 @@ jobs:
     uses: ./.github/workflows/build-simtools-prod-tests.yml
     with:
       prod_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
+      push_image: true
