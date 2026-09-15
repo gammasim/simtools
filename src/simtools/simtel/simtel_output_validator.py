@@ -196,6 +196,7 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
 def _extract_sim_telarray_value(value, parameter_type):
     """Convert a numeric value from sim_telarray metadata to its model type."""
     if isinstance(value, str):
+        value = value.removeprefix("all:").strip()
         column = value.split(",") if "," in value else value.split()
     else:
         column = [value]
