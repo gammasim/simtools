@@ -21,6 +21,7 @@ def test_parser_accepts_repository_source_and_file_export():
 
     assert args.simulation_models_path.name == "models"
     assert args.export_model_file is True
+    assert args.output_file is None
 
 
 def test_export_file_backed_parameter_uses_reader_and_override(tmp_test_directory):

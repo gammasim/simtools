@@ -38,7 +38,7 @@ List pre-defined array layouts.
 
 .. code-block:: console
 
-    simtools-get-array-layout --site North --model_version "6.0.0"
+    simtools-get-array-layout --site North --model_version "6.0.0" --list_available_layouts
 
 Retrieve telescope positions for array layout 'test_layout' from database.
 

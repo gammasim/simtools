@@ -55,7 +55,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
-    initialize_output=True,
+    initialize_output=False,
 )
 
 
