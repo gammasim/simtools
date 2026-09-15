@@ -9,7 +9,6 @@ from eventio.simtel.simtelfile import SimTelFile
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
 from simtools.simtel import simtel_table_reader, simtel_validate_metadata
-from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
@@ -187,14 +186,29 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
         Extracted parameter value.
     """
     if parameter_type not in ("string", "dict", "boolean"):
-        config_reader = SimtelConfigReader()
-        value, _ = config_reader.extract_value_from_sim_telarray_column(
-            [metadata[sim_telarray_name]], parameter_type
-        )
+        value, _ = _extract_sim_telarray_value(metadata[sim_telarray_name], parameter_type)
         return value
 
     value = metadata[sim_telarray_name]
-    return (int)(value) if value.isnumeric() else value
+    return (int)(value) if isinstance(value, str) and value.isnumeric() else value
+
+
+def _extract_sim_telarray_value(value, parameter_type):
+    """Convert a numeric value from sim_telarray metadata to its model type."""
+    if isinstance(value, str):
+        column = value.split(",") if "," in value else value.split()
+    else:
+        column = [value]
+    column = [None if item is None or str(item).lower() == "none" else item for item in column]
+
+    if parameter_type == "bool":
+        column = [bool(int(item)) for item in column]
+
+    if len(column) == 1:
+        if column[0] is None:
+            return None, 1
+        return np.array(column, dtype=np.dtype(parameter_type))[0], 1
+    return np.array(column, dtype=np.dtype(parameter_type)), len(column)
 
 
 def _check_parameter_validity(param, value, model_value, parameter_type, allow_for_changes):
