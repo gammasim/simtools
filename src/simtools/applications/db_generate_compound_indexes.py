@@ -21,6 +21,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    app_context.logger.warning(
+        "simtools-db-generate-compound-indexes will be removed in the near future."
+    )
 
     db = db_handler.DatabaseHandler()
 
