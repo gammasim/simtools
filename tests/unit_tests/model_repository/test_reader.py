@@ -91,6 +91,11 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
     parameters = reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
     assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
 
+    selected = reader.get_model_parameters(
+        "North", "LSTN-01", "telescopes", "1.0.0", parameter_names={"camera_body_diameter"}
+    )
+    assert list(selected) == ["camera_body_diameter"]
+
 
 def test_reader_reads_global_parameter_by_version(model_repository):
     """A versioned global parameter does not require a global caller scope."""
