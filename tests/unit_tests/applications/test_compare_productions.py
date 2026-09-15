@@ -267,6 +267,34 @@ def test_signal_comparison_requires_production_inputs(mocker):
     )
 
 
+def test_compute_comparison_requires_baseline_path(mocker):
+    parser = mocker.Mock()
+
+    compare_productions._post_parse({"comparison_level": "compute"}, None, parser)
+
+    parser.error.assert_called_once_with(
+        "Compute-level comparison requires '--baseline_path' and does not use '--production'."
+    )
+
+
+def test_main_runs_compute_comparison(mocker, tmp_test_directory):
+    app_context = mocker.MagicMock()
+    app_context.args = {"comparison_level": "compute", "baseline_path": "production"}
+    app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    mocker.patch(
+        "simtools.applications.compare_productions.APPLICATION"
+    ).start.return_value = app_context
+    write = mocker.patch("simtools.applications.compare_productions.write_resource_requirements")
+
+    compare_productions.main()
+
+    write.assert_called_once_with(
+        app_context.args,
+        Path(tmp_test_directory),
+        compare_productions.plot_resource_requirements.plot,
+    )
+
+
 def test_main_rejects_unimplemented_comparison_level(mocker):
     app_context = mocker.MagicMock()
     app_context.args = {"comparison_level": "signals"}

@@ -8,9 +8,10 @@
 
 ## Overview
 
-This application compares trigger-histogram HDF5 products from two or more simulation
-productions at the event level. Each production is identified by a label and one or more
-comma-separated input file patterns. Multiple files belonging to one label are aggregated.
+This application compares simulation products from two or more productions at the event or signal
+level, or summarizes CORSIKA and sim_telarray resource requirements for a production. For event
+and signal comparisons, each production is identified by a label and one or more comma-separated
+input file patterns. Multiple files belonging to one label are aggregated.
 
 The first production is the baseline. Every following production is compared with that baseline,
 so at least two production descriptors are required and production order matters. Production
@@ -19,6 +20,27 @@ labels must be unique.
 The application supports event-level and signal-level comparisons. Trigger-histogram files should
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
+
+For production resource requirements, use `--comparison_level compute` with a production root in
+`--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
+resource records. It writes `resource_requirements.ecsv` (one normalized process row per job), a
+grouped `resource_requirements.md` report, and time, memory, and storage plots. Storage plots
+include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
+event output, reduced event data, and sim_telarray histograms when those files are available.
+Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
+per-process maximum. Sim_telarray storage includes simtel event files, reduced event data, and
+histogram files.
+Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing. An optional
+`--candidate_path` overlays a second production. Repeated `--select` expressions filter both
+production manifests.
+
+```console
+simtools-compare-productions \
+    --comparison_level compute \
+    --baseline_path /data/production \
+    --select configuration.primary=gamma \
+    --output_path resource-requirements
+```
 
 For signal-level comparisons, use `--comparison_level signal` with sim_telarray files. By default,
 all telescopes shared by the input files are processed. Use `--array_layout_name` with one or more

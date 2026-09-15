@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Compare trigger-histogram products from simulation productions."""
+"""Compare simulation productions or summarize their resource requirements."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -8,33 +8,38 @@ from simtools.configuration.argument_helpers import telescope
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.production_comparison import write_production_comparison
+from simtools.production_configuration.resource_requirements import write_resource_requirements
 from simtools.sim_events.production_comparison import (
     collect_signal_metrics,
     parse_production_arguments,
 )
-from simtools.visualization import plot_signal_level_production_comparison
+from simtools.visualization import (
+    plot_resource_requirements,
+    plot_signal_level_production_comparison,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "TRIGGER_HISTOGRAM_PATTERNS"),
+        metavar=("LABEL", "INPUT_FILE_PATTERNS"),
         required=False,
         help=(
-            "Production descriptor: --production <label> <comma-separated file patterns>. "
-            "Repeat for each production; the first production is the baseline."
+            "Production descriptor for event or signal comparison: --production <label> "
+            "<comma-separated input file patterns>. Repeat for each production; the first "
+            "production is the baseline."
         ),
     ),
     cli.ArgumentDefinition(
         "baseline_path",
-        help="Directory containing baseline trigger-histogram metadata YAML files.",
+        help="Production directory containing baseline metadata manifests.",
         type=str,
         required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_path",
-        help="Directory containing candidate trigger-histogram metadata YAML files.",
+        help="Optional candidate production directory containing metadata manifests.",
         type=str,
         required=False,
     ),
@@ -77,8 +82,16 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, _config_sources, parser):
     """Validate legacy and metadata-based production input modes."""
+    comparison_level = args_dict.get("comparison_level")
     has_legacy_input = bool(args_dict.get("production"))
     has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
+    if comparison_level == "compute":
+        if has_legacy_input or not args_dict.get("baseline_path"):
+            parser.error(
+                "Compute-level comparison requires '--baseline_path' "
+                "and does not use '--production'."
+            )
+        return
     if has_legacy_input == has_metadata_input:
         parser.error("Use either '--production' or '--baseline_path' with '--candidate_path'.")
     if has_metadata_input and not (
@@ -113,6 +126,13 @@ def main():
         return
     if comparison_level == "signal":
         output_files = _run_signal_comparison(app_context)
+    elif comparison_level == "compute":
+        write_resource_requirements(
+            app_context.args,
+            app_context.io_handler.get_output_directory(),
+            plot_resource_requirements.plot,
+        )
+        return
     else:
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
