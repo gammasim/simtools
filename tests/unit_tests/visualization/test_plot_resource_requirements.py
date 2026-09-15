@@ -40,6 +40,44 @@ def test_plot_writes_available_resource_figures(tmp_test_directory):
     assert all(output_file.with_suffix(".png").is_file() for output_file in output_files)
 
 
+def test_plot_writes_individual_output_size_figures(tmp_test_directory):
+    common = {
+        "zenith_angle_deg": 20.0,
+        "energy_midpoint_gev": 100.0,
+        "wall_time_seconds_per_event": None,
+        "cpu_time_seconds_per_event": None,
+        "peak_rss_bytes": None,
+        "sim_telarray_storage_bytes_per_event": None,
+    }
+    rows = [
+        {
+            **common,
+            "role": "corsika",
+            "corsika_output_bytes_per_event": 1.0,
+            "sim_telarray_output_bytes_per_event": None,
+            "reduced_event_data_bytes_per_event": None,
+            "sim_telarray_histogram_bytes_per_event": None,
+        },
+        {
+            **common,
+            "role": "sim_telarray",
+            "corsika_output_bytes_per_event": None,
+            "sim_telarray_output_bytes_per_event": 2.0,
+            "reduced_event_data_bytes_per_event": 3.0,
+            "sim_telarray_histogram_bytes_per_event": 4.0,
+        },
+    ]
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert {output_file.name for output_file in output_files} == {
+        "resource_corsika_output_corsika",
+        "resource_sim_telarray_output_sim_telarray",
+        "resource_reduced_event_data_sim_telarray",
+        "resource_sim_telarray_histogram_sim_telarray",
+    }
+
+
 def test_plot_separates_roles_and_only_draws_averages(mocker, tmp_test_directory):
     rows = [
         {

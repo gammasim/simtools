@@ -47,7 +47,7 @@ def collect_resource_requirements(production_path, selections=None, label="basel
         for role in _ROLES:
             try:
                 rows.append(_resource_row(manifest, role, label))
-            except (OSError, ValueError, json.JSONDecodeError) as exc:
+            except (OSError, ValueError) as exc:
                 diagnostics.append(
                     {
                         "production_label": label,
@@ -193,9 +193,16 @@ def write_markdown_report(summary, diagnostics, output_file):
             (
                 "| Production | Role | Energy (GeV) | Zenith (deg) | Jobs | "
                 "Wall time (s/event, median) | CPU time (s/event, median) | "
-                "Peak RSS (bytes, median) | Storage (bytes/event, median) |"
+                "Peak RSS (bytes, median) | CORSIKA output (bytes/event, median) | "
+                "sim_telarray output (bytes/event, median) | "
+                "reduced event data (bytes/event, median) | "
+                "sim_telarray histogram (bytes/event, median) | "
+                "Storage (bytes/event, median) |"
             ),
-            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            (
+                "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | "
+                "---: | ---: | ---: | ---: | ---: |"
+            ),
         ]
     )
     for item in summary:
@@ -205,6 +212,10 @@ def write_markdown_report(summary, diagnostics, output_file):
             f"{item['job_count']} | {_format_value(item['wall_time_seconds_per_event_median'])} | "
             f"{_format_value(item['cpu_time_seconds_per_event_median'])} | "
             f"{_format_value(item['peak_rss_bytes_median'])} | "
+            f"{_format_value(item['corsika_output_bytes_per_event_median'])} | "
+            f"{_format_value(item['sim_telarray_output_bytes_per_event_median'])} | "
+            f"{_format_value(item['reduced_event_data_bytes_per_event_median'])} | "
+            f"{_format_value(item['sim_telarray_histogram_bytes_per_event_median'])} | "
             f"{_format_value(item['sim_telarray_storage_bytes_per_event_median'])} |"
         )
     if diagnostics:

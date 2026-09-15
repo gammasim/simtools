@@ -26,13 +26,33 @@ def plot(rows, output_path, figure_format=None):
             "sim_telarray storage (bytes/event)",
             "resource_storage",
         ),
+        (
+            "corsika_output_bytes_per_event",
+            "CORSIKA output (bytes/event)",
+            "resource_corsika_output",
+        ),
+        (
+            "sim_telarray_output_bytes_per_event",
+            "sim_telarray output (bytes/event)",
+            "resource_sim_telarray_output",
+        ),
+        (
+            "reduced_event_data_bytes_per_event",
+            "reduced event data (bytes/event)",
+            "resource_reduced_event_data",
+        ),
+        (
+            "sim_telarray_histogram_bytes_per_event",
+            "sim_telarray histogram (bytes/event)",
+            "resource_sim_telarray_histogram",
+        ),
     )
     output_files = []
     for column, label, filename in plots:
         available = [
             row
             for row in rows
-            if row[column] is not None
+            if row.get(column) is not None
             and (not column.startswith("sim_telarray_storage") or row["role"] == "sim_telarray")
         ]
         if not available:
