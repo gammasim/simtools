@@ -20,6 +20,24 @@ The application supports event-level and signal-level comparisons. Trigger-histo
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
+For production resource requirements, use `--comparison_level compute` with a production root in
+`--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
+resource records. It writes `resource_requirements.ecsv` (one normalized process row per job), a
+grouped `resource_requirements.md` report, and time, memory, and storage plots. Time, CPU, and
+output sizes are normalized by `showers_per_run`; peak resident memory remains a per-process
+maximum. Sim_telarray storage includes simtel event files, reduced event data, and histogram files.
+Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing. An optional
+`--candidate_path` overlays a second production. Repeated `--select` expressions filter both
+production manifests.
+
+```console
+simtools-compare-productions \
+    --comparison_level compute \
+    --baseline_path /data/production \
+    --select configuration.primary=gamma \
+    --output_path resource-requirements
+```
+
 For signal-level comparisons, use `--comparison_level signal` with sim_telarray files. By default,
 all telescopes shared by the input files are processed. Use `--array_layout_name` with one or more
 telescope names to restrict the comparison, for example:
