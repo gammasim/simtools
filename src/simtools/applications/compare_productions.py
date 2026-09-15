@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Compare trigger-histogram products from simulation productions."""
+"""Compare simulation productions or summarize their resource requirements."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -23,22 +23,23 @@ _ARGUMENTS = (
         "production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "TRIGGER_HISTOGRAM_PATTERNS"),
+        metavar=("LABEL", "INPUT_FILE_PATTERNS"),
         required=False,
         help=(
-            "Production descriptor: --production <label> <comma-separated file patterns>. "
-            "Repeat for each production; the first production is the baseline."
+            "Production descriptor for event or signal comparison: --production <label> "
+            "<comma-separated input file patterns>. Repeat for each production; the first "
+            "production is the baseline."
         ),
     ),
     cli.ArgumentDefinition(
         "baseline_path",
-        help="Directory containing baseline trigger-histogram metadata YAML files.",
+        help="Production directory containing baseline metadata manifests.",
         type=str,
         required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_path",
-        help="Directory containing candidate trigger-histogram metadata YAML files.",
+        help="Optional candidate production directory containing metadata manifests.",
         type=str,
         required=False,
     ),

@@ -8,9 +8,10 @@
 
 ## Overview
 
-This application compares trigger-histogram HDF5 products from two or more simulation
-productions at the event level. Each production is identified by a label and one or more
-comma-separated input file patterns. Multiple files belonging to one label are aggregated.
+This application compares simulation products from two or more productions at the event or signal
+level, or summarizes CORSIKA and sim_telarray resource requirements for a production. For event
+and signal comparisons, each production is identified by a label and one or more comma-separated
+input file patterns. Multiple files belonging to one label are aggregated.
 
 The first production is the baseline. Every following production is compared with that baseline,
 so at least two production descriptors are required and production order matters. Production
