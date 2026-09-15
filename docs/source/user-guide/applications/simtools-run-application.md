@@ -45,6 +45,10 @@ shows how to define a runtime environment:
 If the ``ignore_runtime_environment`` flag is set, the application will run in the current
 environment, ignoring any definitions in the configuration file.
 
+When ``--env_file`` is supplied to ``simtools-run-application``, that file is passed to each
+child application and is used instead of the child's default ``.env`` file. Environment variables
+already present in the process environment remain available.
+
 If the ``overwrite_collection_files`` flag is set, files collected in the optional
 ``collection`` block of the workflow configuration are allowed to overwrite existing
 destination files with the same basename.
