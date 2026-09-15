@@ -57,6 +57,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
+    explicit_env_file = _get_explicit_env_file(args_dict)
 
     if args_dict["ignore_runtime_environment"]:
         run_time = []
@@ -78,6 +79,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
                 app_configuration = config.get("configuration", {})
                 if args_dict.get("ignore_existing_parameter_version"):
                     app_configuration["ignore_existing_parameter_version"] = True
+                if explicit_env_file is not None:
+                    app_configuration["env_file"] = explicit_env_file
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
@@ -112,6 +115,14 @@ def run_applications(args_dict, run_time=None, replacements=None):
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
             )
+
+
+def _get_explicit_env_file(args_dict):
+    """Return the runner env file when it was explicitly supplied on the CLI."""
+    configuration_sources = args_dict.get("_metadata_configuration_sources", {})
+    if "env_file" not in configuration_sources.get("cli", []):
+        return None
+    return args_dict.get("env_file")
 
 
 def _copy_collection_files(configurations, collection_config, overwrite_files=False):
