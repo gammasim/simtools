@@ -8,6 +8,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import QTable
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
@@ -318,6 +319,28 @@ def test_altitude_from_corsika_z(
 
     test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2187.0, 45.0)
     test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
+
+    converted = array_layout_north_four_lst_instance._altitude_from_corsika_z(
+        altitude=2271.2 * u.m, telescope_axis_height=0.0 * u.m
+    )
+    assert repr(float(converted.value)) == "113.2"
+
+
+def test_calibration_device_uses_zero_axis_height_for_corsika_coordinates(
+    model_version, tmp_test_directory
+):
+    utm_file = _write_utm_position_table(tmp_test_directory, "illuminator.ecsv", ["ILLN-01"])
+
+    layout = ArrayLayout(
+        site="North",
+        model_version=model_version,
+        telescope_list_file=utm_file,
+    )
+
+    assert_quantity_allclose(layout[0].get_axis_height(), 0.0 * u.m)
+    converted = layout.export_telescope_list_table(crs_name="ground")
+    expected_position_z = layout[0].get_coordinates("utm")[2] - layout._corsika_observation_level
+    assert converted["position_z"][0].value == pytest.approx(expected_position_z.value)
 
 
 def test_try_set_coordinate(
