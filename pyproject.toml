@@ -93,9 +93,7 @@ scripts.simtools-db-add-simulation-model-from-repository-to-db = """\
   """
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
 scripts.simtools-db-generate-compound-indexes = "simtools.applications.db_generate_compound_indexes:main"
-scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
-scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-db-upload-model-repository = "simtools.applications.db_upload_model_repository:main"
 scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
@@ -123,6 +121,8 @@ scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_c
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
+scripts.simtools-get-array-layout = "simtools.applications.get_array_layout:main"
+scripts.simtools-get-model-parameter = "simtools.applications.get_model_parameter:main"
 scripts.simtools-inspect-file = "simtools.applications.inspect_file:main"
 scripts.simtools-maintain-simulation-model-add-production = """\
   simtools.applications.maintain_simulation_model_add_production:main\
