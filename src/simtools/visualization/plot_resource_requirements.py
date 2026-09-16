@@ -40,7 +40,7 @@ def plot(rows, output_path, figure_format=None):
     output_path : str or pathlib.Path
         Destination directory for the figures.
     figure_format : iterable[str], optional
-        File formats passed to :func:`save_figure`.
+        File formats passed to :func:`visualization.visualize.save_figure`.
 
     Returns
     -------
@@ -154,7 +154,7 @@ def plot(rows, output_path, figure_format=None):
                 value_scale=value_scale,
             )
             axis.set_xscale("log")
-            axis.set_yscale("log")
+            axis.set_yscale(_resource_y_scale(role_rows, column))
             axis.set_xlabel("Energy midpoint (GeV)")
             axis.set_ylabel(plot_label)
             axis.set_title(f"{plot_label}: {role}")
@@ -189,6 +189,11 @@ def plot(rows, output_path, figure_format=None):
                     )
                     output_files.append(ratio_output_file)
     return output_files
+
+
+def _resource_y_scale(rows, column):
+    """Return a y-axis scale that can represent all selected resource values."""
+    return "linear" if any(float(row[column]) <= 0 for row in rows) else "log"
 
 
 def _byte_plot_label(column, label, rows):

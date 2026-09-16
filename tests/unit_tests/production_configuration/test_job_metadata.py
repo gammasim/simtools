@@ -185,6 +185,21 @@ def test_get_sim_telarray_event_counts_falls_back_to_log(tmp_test_directory):
     ) == {"simulated_events": 100, "triggered_events": 17}
 
 
+def test_get_sim_telarray_event_counts_rejects_paths_outside_job_directory(
+    tmp_test_directory,
+):
+    assert (
+        get_sim_telarray_event_counts(
+            Path(tmp_test_directory),
+            {
+                "reduced_event_data": ["../outside.hdf5"],
+                "sim_telarray_log": ["../outside.simtel.log"],
+            },
+        )
+        is None
+    )
+
+
 def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "job-000012"
     output_directory.mkdir()

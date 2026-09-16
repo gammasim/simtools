@@ -299,6 +299,25 @@ def test_computing_comparison_requires_baseline_path(mocker):
     )
 
 
+def test_computing_comparison_rejects_duplicate_effective_labels(mocker):
+    parser = mocker.Mock()
+
+    compare_productions._post_parse(
+        {
+            "comparison_level": "computing",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": "candidate",
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--baseline_label' and '--candidate_label' must be different."
+    )
+
+
 def test_main_runs_computing_comparison(mocker, tmp_test_directory):
     app_context = mocker.MagicMock()
     app_context.args = {"comparison_level": "computing", "baseline_path": "production"}

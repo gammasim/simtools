@@ -9,6 +9,7 @@ import h5py
 from astropy import units as u
 
 from simtools.production_configuration.production_file_selection import (
+    _resolve_relative_manifest_path,
     get_manifest_schema_metadata,
     inventory_production_files,
 )
@@ -30,8 +31,10 @@ REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
     "simulation_software",
 )
 
+# Possessive quantifiers keep malformed log lines from triggering backtracking.
 _SIMTEL_EVENT_COUNT_PATTERN = re.compile(
-    r"(?:\d+/){3}\d+\s+tel\.,\s*(?P<simulated>\d+)/(?P<triggered>\d+)\s+events\s*$"
+    r"\d++/\d++/\d++/\d++\s++tel\.,\s*+"
+    r"(?P<simulated>\d++)/(?P<triggered>\d++)\s++events\s*+$"
 )
 
 
@@ -164,7 +167,8 @@ def _reduced_event_counts(output_directory, file_inventory):
     triggered_events = 0
     try:
         for relative_path in paths:
-            with h5py.File(output_directory / relative_path, "r") as data_file:
+            file_path = _resolve_relative_manifest_path(output_directory, relative_path)
+            with h5py.File(file_path, "r") as data_file:
                 simulated_events += len(data_file["SHOWERS"])
                 trigger_table = data_file.get("TRIGGERS")
                 if trigger_table is not None:
@@ -183,8 +187,9 @@ def _sim_telarray_log_event_counts(output_directory, file_inventory):
     counts = []
     for relative_path in paths:
         try:
-            count = _read_log_event_count(output_directory / relative_path)
-        except EOFError, OSError, UnicodeError:
+            file_path = _resolve_relative_manifest_path(output_directory, relative_path)
+            count = _read_log_event_count(file_path)
+        except EOFError, OSError, UnicodeError, ValueError:
             continue
         if count is not None:
             counts.append(count)

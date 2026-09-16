@@ -42,6 +42,27 @@ def test_plot_writes_available_resource_figures(tmp_test_directory):
     assert all(output_file.with_suffix(".png").is_file() for output_file in output_files)
 
 
+def test_plot_uses_linear_y_axis_for_nonpositive_values(mocker, tmp_test_directory):
+    rows = [
+        {
+            "role": "corsika",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_event": 0.0,
+            "cpu_time_seconds_per_event": 1.0,
+            "peak_rss_bytes": 1_000_000.0,
+        }
+    ]
+    axis = mocker.Mock()
+    figure = mocker.Mock()
+    mocker.patch.object(plot_resource_requirements.plt, "subplots", return_value=(figure, axis))
+    mocker.patch.object(plot_resource_requirements, "save_figure")
+
+    plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert axis.set_yscale.call_args_list[0].args == ("linear",)
+
+
 def test_plot_writes_individual_output_size_figures(tmp_test_directory):
     common = {
         "zenith_angle_deg": 20.0,

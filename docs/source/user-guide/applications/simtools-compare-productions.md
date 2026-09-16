@@ -47,6 +47,7 @@ default display labels. Repeated `--select` expressions filter both production m
 simtools-compare-productions \
     --comparison_level computing \
     --baseline_path /data/production \
+    --candidate_path /data/optimized \
     --baseline_label reference \
     --candidate_label optimized \
     --select configuration.primary=gamma \

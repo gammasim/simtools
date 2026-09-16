@@ -251,10 +251,7 @@ def write_markdown_report(summary, diagnostics, output_file):
         f"Valid process records: {sum(item['job_count'] for item in summary)}",
         f"Skipped process records: {len(diagnostics)}",
         "",
-        (
-            "Values are reported as median +/- RMS; minimum and maximum are retained "
-            "in the ECSV table."
-        ),
+        "Each metric contains mean, median, standard deviation, minimum, and maximum.",
         "",
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join("---:" for _ in headers) + " |",
@@ -495,9 +492,10 @@ def _format_value(value):
 
 
 def _format_statistic(summary, metric):
-    """Format a metric median and RMS for the Markdown report."""
-    median = summary[f"{metric}_median"]
-    standard_deviation = summary[f"{metric}_std"]
-    if median is None:
+    """Format all aggregate statistics for one metric in the Markdown report."""
+    statistics = {
+        name: summary[f"{metric}_{name}"] for name in ("mean", "median", "std", "min", "max")
+    }
+    if statistics["median"] is None:
         return "-"
-    return f"{median:.6g} +/- {standard_deviation:.6g}"
+    return "; ".join(f"{name}={value:.6g}" for name, value in statistics.items())

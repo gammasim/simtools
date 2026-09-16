@@ -155,7 +155,9 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
 
     assert result["table_file"].is_file()
     assert result["report_file"].is_file()
-    assert "Storage" in result["report_file"].read_text(encoding="utf-8")
+    report = result["report_file"].read_text(encoding="utf-8")
+    assert "Storage" in report
+    assert all(f"{statistic}=" in report for statistic in ("mean", "median", "std", "min", "max"))
     plotter.assert_called_once()
 
 

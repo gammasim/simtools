@@ -107,9 +107,12 @@ def _validate_computing_arguments(args_dict, parser):
             "Computing-resource comparison requires '--baseline_path' "
             "and does not use '--production'."
         )
-    baseline_label = args_dict.get("baseline_label")
-    candidate_label = args_dict.get("candidate_label")
-    if baseline_label and candidate_label and baseline_label == candidate_label:
+    baseline_label = args_dict.get("baseline_label") or "baseline"
+    candidate_label = args_dict.get("candidate_label") or "candidate"
+    labels_are_explicit = args_dict.get("baseline_label") and args_dict.get("candidate_label")
+    if (
+        args_dict.get("candidate_path") or labels_are_explicit
+    ) and baseline_label == candidate_label:
         parser.error("'--baseline_label' and '--candidate_label' must be different.")
 
 
