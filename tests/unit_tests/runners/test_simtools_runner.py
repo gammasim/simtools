@@ -402,6 +402,42 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     workflow_update_mock.assert_not_called()
 
 
+def test_run_applications_propagates_explicit_env_file(monkeypatch, tmp_test_directory):
+    env_file = tmp_test_directory / "production.env"
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {"env_file": ".env"},
+        }
+    ]
+    log_file_path = tmp_test_directory / "simtools.log"
+    submit_mock = mock.Mock(return_value=mock.Mock(stdout="", stderr=""))
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id", None)),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value=""),
+    )
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "workflow.config.yml",
+            "env_file": str(env_file),
+            "_metadata_configuration_sources": {"cli": ["env_file"]},
+            "steps": None,
+            "ignore_runtime_environment": True,
+        }
+    )
+
+    submitted_configuration = submit_mock.call_args.kwargs["configuration"]
+    assert submitted_configuration["env_file"] == str(env_file)
+
+
 def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory):
     tmp_test_directory = Path(tmp_test_directory)
     default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"

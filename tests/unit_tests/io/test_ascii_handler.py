@@ -50,18 +50,14 @@ def test_collect_dict_data(io_handler, simple_test_file):
         ascii_handler.collect_data_from_file(unsupported_file)
 
 
-def test_collect_data_from_file_resolves_configured_test_resource_paths(
-    tmp_test_directory, monkeypatch
-):
+def test_collect_data_from_file_resolves_explicit_test_resource_paths(tmp_test_directory):
     resources_path = tmp_test_directory / "resources"
     config_file = tmp_test_directory / "config.yml"
     config_file.write_text(
         "input: ${generated:input.ecsv}\nlegacy: tests/resources/static/layout.ecsv\n",
         encoding="utf-8",
     )
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(resources_path))
-
-    loaded = ascii_handler.collect_data_from_file(config_file)
+    loaded = ascii_handler.collect_data_from_file(config_file, test_resources_path=resources_path)
 
     assert loaded == {
         "input": str(resources_path / "generated/input.ecsv"),
@@ -69,18 +65,12 @@ def test_collect_data_from_file_resolves_configured_test_resource_paths(
     }
 
 
-def test_collect_data_from_file_skips_test_resource_resolution_without_references(
-    tmp_test_directory, monkeypatch
-):
+def test_collect_data_from_file_ignores_test_resource_environment(tmp_test_directory, monkeypatch):
     config_file = tmp_test_directory / "config.yml"
-    config_file.write_text("model: ordinary-value\n", encoding="utf-8")
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "resources"))
+    config_file.write_text("input: ${generated:input.ecsv}\n", encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
 
-    with patch("simtools.io.ascii_handler.io_handler.resolve_test_resource_paths") as resolver:
-        loaded = ascii_handler.collect_data_from_file(config_file)
-
-    assert loaded == {"model": "ordinary-value"}
-    resolver.assert_not_called()
+    assert ascii_handler.collect_data_from_file(config_file) == {"input": "${generated:input.ecsv}"}
 
 
 def test_collect_data_from_file_exceptions(io_handler) -> None:
