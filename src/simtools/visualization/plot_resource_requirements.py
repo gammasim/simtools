@@ -17,6 +17,7 @@ _BYTES_PER_MEGABYTE = 1_000_000
 _BYTES_PER_GIGABYTE = 1_000_000_000
 _RESOURCE_CHANGE_WARNING_FACTOR = 1.25
 _RESOURCE_CHANGE_MAJOR_FACTOR = 1.5
+_RATIO_CONFIGURATION_COLUMNS = ("primary", "site", "array_layout_name", "model_version")
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
@@ -56,7 +57,8 @@ def plot(rows, output_path, figure_format=None):
     Byte-based quantities are plotted in MB or GB, selected from the largest
     value in each plot, using decimal units. The input rows and resource table
     retain byte values. When both baseline and candidate rows are present,
-    additional plots show candidate-to-baseline ratios.
+    additional plots show candidate-to-baseline ratios for matching primary,
+    site, layout, and model-version configurations.
     """
     rows = list(rows)
     output_path = Path(output_path)
@@ -220,7 +222,7 @@ def _byte_plot_label(column, label, rows):
 
 
 def _ratio_series(rows, column):
-    """Return candidate-to-baseline ratios grouped by zenith and energy."""
+    """Return candidate-to-baseline ratios grouped by configuration, zenith, and energy."""
     values = {}
     for row in rows:
         production = _comparison_role(row)
@@ -228,16 +230,17 @@ def _ratio_series(rows, column):
             continue
         key = (
             production,
+            _ratio_configuration_key(row),
             float(row.get("zenith_angle_deg", 0.0)),
             row["energy_midpoint_gev"],
         )
         values.setdefault(key, []).append(float(row[column]))
 
     series = {}
-    zenith_values = {key[1] for key in values}
-    for zenith in zenith_values:
-        baseline = _statistics_by_energy(values, "baseline", zenith)
-        candidate = _statistics_by_energy(values, "candidate", zenith)
+    configuration_zenith_values = {(key[1], key[2]) for key in values}
+    for configuration, zenith in configuration_zenith_values:
+        baseline = _statistics_by_energy(values, "baseline", configuration, zenith)
+        candidate = _statistics_by_energy(values, "candidate", configuration, zenith)
         points = []
         for energy in sorted(set(baseline) & set(candidate)):
             baseline_mean, baseline_rms, baseline_count = baseline[energy]
@@ -252,8 +255,16 @@ def _ratio_series(rows, column):
             )
             points.append((energy, ratio, ratio_error))
         if points:
-            series[zenith] = points
+            series[(configuration, zenith)] = points
     return series
+
+
+def _ratio_configuration_key(row):
+    """Return configuration dimensions used to match ratio series."""
+    return tuple(
+        "unknown" if row.get(column) is None else str(row[column])
+        for column in _RATIO_CONFIGURATION_COLUMNS
+    )
 
 
 def _comparison_role(row):
@@ -273,9 +284,10 @@ def _comparison_display_labels(rows):
 
 def _warn_on_large_changes(series, plot_label, role, ratio_label):
     """Warn once for the largest substantial candidate-to-baseline change."""
+    varying_dimensions = _ratio_varying_dimensions(series)
     changes = [
-        (zenith, energy, ratio)
-        for zenith, points in series.items()
+        (configuration, zenith, energy, ratio)
+        for (configuration, zenith), points in series.items()
         for energy, ratio, _ in points
         if np.isfinite(ratio)
         and ratio > 0
@@ -283,17 +295,17 @@ def _warn_on_large_changes(series, plot_label, role, ratio_label):
     ]
     if not changes:
         return
-    zenith, energy, ratio = max(changes, key=lambda item: max(item[2], 1 / item[2]))
+    configuration, zenith, energy, ratio = max(changes, key=lambda item: max(item[3], 1 / item[3]))
     factor = max(ratio, 1 / ratio)
     severity = "Major" if factor >= _RESOURCE_CHANGE_MAJOR_FACTOR else "Large"
     direction = "increase" if ratio >= 1 else "decrease"
+    location = _ratio_series_label(configuration, zenith, varying_dimensions)
     _logger.warning(
-        "%s resource change in %s for %s at za=%g deg and energy %.6g GeV: "
-        "%s shows a %.3g-fold %s.",
+        "%s resource change in %s for %s at %s and energy %.6g GeV: %s shows a %.3g-fold %s.",
         severity,
         plot_label,
         role,
-        zenith,
+        location,
         energy,
         ratio_label,
         factor,
@@ -301,12 +313,16 @@ def _warn_on_large_changes(series, plot_label, role, ratio_label):
     )
 
 
-def _statistics_by_energy(values, production, zenith):
+def _statistics_by_energy(values, production, configuration, zenith):
     """Return means, RMS spreads, and sample counts keyed by energy."""
     grouped = {
         energy: samples
-        for (label, sample_zenith, energy), samples in values.items()
-        if label == production and sample_zenith == zenith
+        for (label, sample_configuration, sample_zenith, energy), samples in values.items()
+        if (
+            label == production
+            and sample_configuration == configuration
+            and sample_zenith == zenith
+        )
     }
     return {
         energy: (
@@ -320,7 +336,8 @@ def _statistics_by_energy(values, production, zenith):
 
 def _plot_ratio(axis, series, role, zenith_colors):
     """Plot candidate-to-baseline ratios with propagated mean errors."""
-    for series_index, (zenith, points) in enumerate(sorted(series.items())):
+    varying_dimensions = _ratio_varying_dimensions(series)
+    for series_index, ((configuration, zenith), points) in enumerate(sorted(series.items())):
         energies, ratios, errors = zip(*points, strict=True)
         style = _ROLE_STYLE.get(role, {})
         axis.errorbar(
@@ -328,7 +345,7 @@ def _plot_ratio(axis, series, role, zenith_colors):
             ratios,
             yerr=errors,
             fmt=style.get("marker", "o"),
-            label=f"za={zenith:g} deg",
+            label=_ratio_series_label(configuration, zenith, varying_dimensions),
             color=zenith_colors[zenith],
             markerfacecolor=zenith_colors[zenith],
             markeredgecolor="black",
@@ -350,6 +367,27 @@ def _plot_ratio(axis, series, role, zenith_colors):
     margin = max((upper - lower) * 0.1, 0.1)
     axis.set_ylim(max(0.0, lower - margin), upper + margin)
     axis.set_yscale("linear")
+
+
+def _ratio_varying_dimensions(series):
+    """Return configuration dimensions that differ between ratio series."""
+    configurations = {configuration for configuration, _ in series}
+    return tuple(
+        index
+        for index in range(len(_RATIO_CONFIGURATION_COLUMNS))
+        if len({configuration[index] for configuration in configurations}) > 1
+    )
+
+
+def _ratio_series_label(configuration, zenith, varying_dimensions):
+    """Return a compact label for a configuration-matched ratio series."""
+    if not varying_dimensions:
+        return f"za={zenith:g} deg"
+    configuration_label = ", ".join(
+        f"{_RATIO_CONFIGURATION_COLUMNS[index]}={configuration[index]}"
+        for index in varying_dimensions
+    )
+    return f"{configuration_label}; za={zenith:g} deg"
 
 
 def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):

@@ -334,11 +334,57 @@ def test_ratio_series_propagates_independent_rms_errors():
 
     series = plot_resource_requirements._ratio_series(rows, "wall_time_seconds_per_event")
 
-    _, ratio, ratio_error = series[20.0][0]
+    _, ratio, ratio_error = series[("unknown", "unknown", "unknown", "unknown"), 20.0][0]
     expected_ratio = 4.0 / 3.0
     expected_error = expected_ratio * ((1 / 4 / 2**0.5) ** 2 + (1 / 3 / 2**0.5) ** 2) ** 0.5
     assert ratio == pytest.approx(expected_ratio)
     assert ratio_error == pytest.approx(expected_error)
+
+
+def test_ratio_series_preserves_configuration_dimensions(mocker):
+    rows = []
+    for primary, baseline, candidate in (
+        ("gamma", 1.0, 2.0),
+        ("proton", 100.0, 100.0),
+    ):
+        rows.extend(
+            [
+                {
+                    "production_label": "baseline",
+                    "primary": primary,
+                    "site": "North",
+                    "array_layout_name": "layout",
+                    "model_version": "7.0.0",
+                    "zenith_angle_deg": 20.0,
+                    "energy_midpoint_gev": 100.0,
+                    "wall_time_seconds_per_event": baseline,
+                },
+                {
+                    "production_label": "candidate",
+                    "primary": primary,
+                    "site": "North",
+                    "array_layout_name": "layout",
+                    "model_version": "7.0.0",
+                    "zenith_angle_deg": 20.0,
+                    "energy_midpoint_gev": 100.0,
+                    "wall_time_seconds_per_event": candidate,
+                },
+            ]
+        )
+
+    series = plot_resource_requirements._ratio_series(rows, "wall_time_seconds_per_event")
+
+    assert len(series) == 2
+    ratios = {configuration[0]: points[0][1] for (configuration, _), points in series.items()}
+    assert ratios == {"gamma": 2.0, "proton": 1.0}
+
+    axis = mocker.Mock()
+    plot_resource_requirements._plot_ratio(axis, series, "sim_telarray", {20.0: "black"})
+
+    assert [call.kwargs["label"] for call in axis.errorbar.call_args_list] == [
+        "primary=gamma; za=20 deg",
+        "primary=proton; za=20 deg",
+    ]
 
 
 def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):

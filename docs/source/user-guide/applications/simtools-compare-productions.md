@@ -42,8 +42,9 @@ available resource plot also has a `candidate / baseline` ratio plot with propag
 horizontal reference line at one. The ratio errors propagate the uncertainty of each production
 mean from its run-to-run RMS. A warning is logged when the ratio differs by a factor of 1.25 or
 more; changes by a factor of 1.5 or more are marked as major. Use `--baseline_label` and
-`--candidate_label` to replace the default display labels. Repeated `--select` expressions filter
-both production manifests.
+`--candidate_label` to replace the default display labels. Ratio points are matched by primary,
+site, layout, and model version; separate series are shown when these dimensions vary. Repeated
+`--select` expressions filter both production manifests.
 
 ```console
 simtools-compare-productions \
