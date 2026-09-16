@@ -116,9 +116,7 @@ def test_plot_separates_roles_and_only_draws_averages(mocker, tmp_test_directory
 
     assert not axis.scatter.called
     errorbar_calls = axis.errorbar.call_args_list
-    assert [call.kwargs["label"] for call in errorbar_calls] == ["baseline: za=20 deg"] * 3 + [
-        "baseline: za=20 deg"
-    ] * 3
+    assert [call.kwargs["label"] for call in errorbar_calls] == ["za=20 deg"] * 6
     assert [call.kwargs["fmt"] for call in errorbar_calls] == ["o", "s"] * 3
     assert subplots.call_count == 6
     titles = [call.args[0] for call in axis.set_title.call_args_list]
@@ -250,6 +248,11 @@ def test_plot_writes_ratio_figures_for_baseline_and_candidate(mocker, tmp_test_d
         "resource_storage_ratio_sim_telarray",
     }
     assert axis.axhline.call_count == 4
+    assert [call.kwargs["label"] for call in axis.errorbar.call_args_list] == [
+        "_nolegend_",
+        "za=20 deg",
+        "za=20 deg",
+    ] * 4
     assert all(
         call.args[0] == "optimized / reference" for call in axis.set_ylabel.call_args_list[1::2]
     )

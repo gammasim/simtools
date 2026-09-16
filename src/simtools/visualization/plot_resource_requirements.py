@@ -327,6 +327,7 @@ def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
     )
     role = rows[0]["role"]
     show_production_labels = any(row.get("production_label") for row in rows)
+    has_baseline = "baseline" in {_comparison_role(row) for row in rows}
     seen_series = set()
     for series_index, (production, version, production_id, zenith) in enumerate(labels):
         series_rows = [
@@ -342,8 +343,11 @@ def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
         ]
         color = zenith_colors[zenith]
         series_key = (production, zenith)
-        if series_key in seen_series:
+        comparison_role = _comparison_role(series_rows[0])
+        if series_key in seen_series or (has_baseline and comparison_role != "baseline"):
             legend_label = "_nolegend_"
+        elif has_baseline:
+            legend_label = f"za={zenith:g} deg"
         elif show_production_labels:
             legend_label = f"{production}: za={zenith:g} deg"
         else:
