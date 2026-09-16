@@ -66,13 +66,6 @@ the visualization module.
    :members:
 ```
 
-## plot_trigger_patches
-
-```{eval-rst}
-.. automodule:: visualization.plot_trigger_patches
-   :members:
-```
-
 (visualization-plot-simtel_events)=
 
 ## plot_simtel_events

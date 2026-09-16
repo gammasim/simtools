@@ -141,7 +141,6 @@ scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:ma
 scripts.simtools-plot-tabular-data-for-model-parameter = """\
   simtools.applications.plot_tabular_data_for_model_parameter:main\
   """
-scripts.simtools-plot-trigger-patches = "simtools.applications.plot_trigger_patches:main"
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
 scripts.simtools-production-derive-monte-carlo-statistics = """\
   simtools.applications.production_derive_monte_carlo_statistics:main\

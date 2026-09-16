@@ -68,13 +68,6 @@ configuration files is not supported.
    :members:
 ```
 
-## trigger_patches
-
-```{eval-rst}
-.. automodule:: simtel.trigger_patches
-   :members:
-```
-
 ## table_serializers
 
 Schema-declared contracts determine the column selection, units, ordering, and
