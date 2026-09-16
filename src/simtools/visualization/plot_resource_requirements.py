@@ -1,5 +1,6 @@
 """Plot normalized CORSIKA and sim_telarray resource requirements."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,8 @@ _ROLE_STYLE = {
 }
 _BYTES_PER_MEGABYTE = 1_000_000
 _BYTES_PER_GIGABYTE = 1_000_000_000
+_RESOURCE_CHANGE_WARNING_FACTOR = 1.25
+_RESOURCE_CHANGE_MAJOR_FACTOR = 1.5
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
@@ -28,6 +31,7 @@ _BYTE_PLOT_COLUMNS = frozenset(
         "sim_telarray_histogram_bytes_per_triggered_event",
     }
 )
+_logger = logging.getLogger(__name__)
 
 
 def plot(rows, output_path, figure_format=None):
@@ -174,6 +178,7 @@ def plot(rows, output_path, figure_format=None):
                     baseline_label = comparison_labels["baseline"]
                     candidate_label = comparison_labels["candidate"]
                     ratio_label = f"{candidate_label} / {baseline_label}"
+                    _warn_on_large_changes(ratio_series, plot_label, role, ratio_label)
                     ratio_axis.set_ylabel(ratio_label)
                     ratio_axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
                     ratio_axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
@@ -264,6 +269,36 @@ def _comparison_display_labels(rows):
         if comparison_role in {"baseline", "candidate"}:
             labels.setdefault(comparison_role, row.get("production_label", comparison_role))
     return labels
+
+
+def _warn_on_large_changes(series, plot_label, role, ratio_label):
+    """Warn once for the largest substantial candidate-to-baseline change."""
+    changes = [
+        (zenith, energy, ratio)
+        for zenith, points in series.items()
+        for energy, ratio, _ in points
+        if np.isfinite(ratio)
+        and ratio > 0
+        and max(ratio, 1 / ratio) >= _RESOURCE_CHANGE_WARNING_FACTOR
+    ]
+    if not changes:
+        return
+    zenith, energy, ratio = max(changes, key=lambda item: max(item[2], 1 / item[2]))
+    factor = max(ratio, 1 / ratio)
+    severity = "Major" if factor >= _RESOURCE_CHANGE_MAJOR_FACTOR else "Large"
+    direction = "increase" if ratio >= 1 else "decrease"
+    _logger.warning(
+        "%s resource change in %s for %s at za=%g deg and energy %.6g GeV: "
+        "%s shows a %.3g-fold %s.",
+        severity,
+        plot_label,
+        role,
+        zenith,
+        energy,
+        ratio_label,
+        factor,
+        direction,
+    )
 
 
 def _statistics_by_energy(values, production, zenith):

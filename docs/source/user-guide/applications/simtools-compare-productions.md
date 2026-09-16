@@ -40,8 +40,10 @@ Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing
 `--candidate_path` overlays a second production. When both productions are provided, each
 available resource plot also has a `candidate / baseline` ratio plot with propagated errors and a
 horizontal reference line at one. The ratio errors propagate the uncertainty of each production
-mean from its run-to-run RMS. Use `--baseline_label` and `--candidate_label` to replace the
-default display labels. Repeated `--select` expressions filter both production manifests.
+mean from its run-to-run RMS. A warning is logged when the ratio differs by a factor of 1.25 or
+more; changes by a factor of 1.5 or more are marked as major. Use `--baseline_label` and
+`--candidate_label` to replace the default display labels. Repeated `--select` expressions filter
+both production manifests.
 
 ```console
 simtools-compare-productions \

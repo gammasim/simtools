@@ -189,7 +189,7 @@ def _sim_telarray_log_event_counts(output_directory, file_inventory):
         try:
             file_path = _resolve_relative_manifest_path(output_directory, relative_path)
             count = _read_log_event_count(file_path)
-        except EOFError, OSError, UnicodeError, ValueError:
+        except EOFError, OSError, ValueError:
             continue
         if count is not None:
             counts.append(count)

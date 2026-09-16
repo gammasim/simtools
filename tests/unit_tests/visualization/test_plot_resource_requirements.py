@@ -1,5 +1,7 @@
 """Tests for resource requirement plots."""
 
+import logging
+
 import pytest
 
 from simtools.visualization import plot_resource_requirements
@@ -278,6 +280,37 @@ def test_plot_writes_ratio_figures_for_baseline_and_candidate(mocker, tmp_test_d
         call.args[0] == "optimized / reference" for call in axis.set_ylabel.call_args_list[1::2]
     )
     assert all("ratio:" in call.args[0] for call in axis.set_title.call_args_list[1::2])
+
+
+def test_plot_warns_for_major_baseline_candidate_change(caplog, tmp_test_directory):
+    common = {
+        "role": "sim_telarray",
+        "zenith_angle_deg": 70.0,
+        "energy_midpoint_gev": 100.0,
+        "wall_time_seconds_per_event": 1.0,
+        "cpu_time_seconds_per_event": 1.0,
+        "peak_rss_bytes": 1_000_000.0,
+        "sim_telarray_storage_bytes_per_event": 1_000_000.0,
+    }
+    rows = [
+        {**common, "production_label": "baseline", "comparison_role": "baseline"},
+        {
+            **common,
+            "production_label": "candidate",
+            "comparison_role": "candidate",
+            "wall_time_seconds_per_event": 10.0,
+        },
+    ]
+
+    with caplog.at_level(logging.WARNING, logger=plot_resource_requirements.__name__):
+        plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert any(
+        "Major resource change in Wall time (s/event)" in message
+        and "za=70 deg" in message
+        and "10-fold increase" in message
+        for message in caplog.messages
+    )
 
 
 def test_ratio_series_propagates_independent_rms_errors():
