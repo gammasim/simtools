@@ -1200,10 +1200,10 @@ def test_write_file_flag_section(parameter, latest_value, expected_plot_text, tm
             "ILLN-01",
             [
                 ["Calibration", "***laser_events***", "1.0.0", "10", "Desc", None],
-                ["Calibration", "pedestal_events", "1.0.0", "100", "Desc2", "Short2"],
+                ["Calibration", "dark_events", "1.0.0", "100", "Desc2", "Short2"],
             ],
             None,
-            ["***laser events***", "pedestal events"],
+            ["***laser events***", "dark events"],
         ),
         (
             "ILLN-02",

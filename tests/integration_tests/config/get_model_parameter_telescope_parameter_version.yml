@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-db-get-parameter-from-db
+- application: simtools-get-model-parameter
   docs:
     title: Retrieve a versioned LST mirror list
     summary: >-

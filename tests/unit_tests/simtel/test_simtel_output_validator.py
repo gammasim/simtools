@@ -10,6 +10,8 @@ import pytest
 from simtools.simtel.simtel_output_validator import (
     _assert_model_parameters,
     _assert_sim_telarray_seed,
+    _extract_parameter_value,
+    _extract_sim_telarray_value,
     _is_equal_floats_or_ints,
     _item_to_check_from_sim_telarray,
     _sim_telarray_name_from_parameter_name,
@@ -144,7 +146,6 @@ def test_rng_select_seed_mismatch():
     (
         "metadata",
         "parameters",
-        "mock_value",
         "expected_len",
         "expected_in_result",
         "allow_changes",
@@ -153,7 +154,6 @@ def test_rng_select_seed_mismatch():
         (
             {"mirror_area": "386.0"},
             {"mirror_area": {"value": 386.0, "type": "float"}},
-            (386.0, None),
             0,
             None,
             None,
@@ -161,7 +161,6 @@ def test_rng_select_seed_mismatch():
         (
             {"mirror_area": "400.0"},
             {"mirror_area": {"value": 386.0, "type": "float"}},
-            (400.0, None),
             1,
             "mirror_area",
             None,
@@ -169,7 +168,6 @@ def test_rng_select_seed_mismatch():
         (
             {"mirror_area": "400.0"},
             {"mirror_area": {"value": 386.0, "type": "float"}},
-            (400.0, None),
             0,
             None,
             ["mirror_area"],
@@ -177,19 +175,37 @@ def test_rng_select_seed_mismatch():
     ],
 )
 def test_assert_model_parameters(
-    metadata, parameters, mock_value, expected_len, expected_in_result, allow_changes
+    metadata, parameters, expected_len, expected_in_result, allow_changes
 ):
     model_mock = MagicMock()
     model_mock.parameters = parameters
 
-    with patch("simtools.simtel.simtel_config_reader.SimtelConfigReader") as reader_mock:
-        reader_instance = reader_mock.return_value
-        reader_instance.extract_value_from_sim_telarray_column.return_value = mock_value
+    result = _assert_model_parameters(metadata, model_mock, allow_for_changes=allow_changes)
+    assert len(result) == expected_len
+    if expected_in_result:
+        assert expected_in_result in result[0]
 
-        result = _assert_model_parameters(metadata, model_mock, allow_for_changes=allow_changes)
-        assert len(result) == expected_len
-        if expected_in_result:
-            assert expected_in_result in result[0]
+
+@pytest.mark.parametrize(
+    ("value", "parameter_type", "expected"),
+    [
+        ("1.5", "float", 1.5),
+        ("1 2 3", "int", np.array([1, 2, 3])),
+        ("1,0", "bool", np.array([True, False])),
+        ("None", "float", None),
+    ],
+)
+def test_extract_sim_telarray_value(value, parameter_type, expected):
+    result, _ = _extract_sim_telarray_value(value, parameter_type)
+    if isinstance(expected, np.ndarray):
+        assert np.array_equal(result, expected)
+    else:
+        assert result == expected
+
+
+def test_extract_parameter_value_keeps_non_numeric_special_values():
+    assert _extract_parameter_value({"name": "LSTN-01"}, "name", "string") == "LSTN-01"
+    assert _extract_parameter_value({"enabled": True}, "enabled", "boolean") is True
 
 
 def test_string_parameter():
