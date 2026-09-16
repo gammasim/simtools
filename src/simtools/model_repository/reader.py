@@ -306,8 +306,19 @@ class SimulationModelReader:
             {parameter: parameter_version}, collection, array_element_name, site
         )
 
-    def get_model_parameters(self, site, array_element_name, collection, model_version):
-        """Read resolved parameters for an array element and model version."""
+    def get_model_parameters(
+        self, site, array_element_name, collection, model_version, parameter_names=None
+    ):
+        """Read resolved parameters for an array element and model version.
+
+        Parameters
+        ----------
+        parameter_names : iterable of str, optional
+            If supplied, read only these parameters. This is useful for callers
+            that need a small subset of a model, such as coordinate transforms.
+        """
+        if parameter_names is not None:
+            parameter_names = frozenset(parameter_names)
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
@@ -317,6 +328,12 @@ class SimulationModelReader:
             array_element_name, site, production, collection
         ):
             versions = production["parameters"].get(element, {})
+            if parameter_names is not None:
+                versions = {
+                    parameter: version
+                    for parameter, version in versions.items()
+                    if parameter in parameter_names
+                }
             if versions:
                 parameters.update(self._read_parameters(versions, collection, element, site))
         return {key: parameters[key] for key in sorted(parameters)}

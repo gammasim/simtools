@@ -32,8 +32,10 @@ def _load_integration_environment(config):
         load_dotenv(SIMTOOLS_ROOT_PATH / ".env")
 
 
-def _versioned_test_resources_path(version):
-    """Return the selected local version of the integration test resources."""
+def _versioned_test_resources_path(version, integration_test_run=False):
+    """Return the selected local version for an integration-test run."""
+    if not integration_test_run:
+        return None
     test_path = os.environ.get("SIMTOOLS_TESTS_PATH")
     if not test_path or not version:
         return None
@@ -50,6 +52,7 @@ def _catalog_test_resources_version():
 
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
+    integration_test_run = any(_is_integration_test_argument(argument) for argument in config.args)
     configured_path = config.getoption("test_resources_path", default=None)
     path = configured_path or os.environ.get("SIMTOOLS_TEST_RESOURCES")
     canonical_tag = config.getoption("simtools_tests_tag", default=None) or os.environ.get(
@@ -65,7 +68,7 @@ def _configured_test_resources_path(config):
     tag = canonical_tag or legacy_tag or _catalog_test_resources_version()
     if tag:
         versioning.validate_release_tag(tag)
-    path = path or _versioned_test_resources_path(tag)
+    path = path or _versioned_test_resources_path(tag, integration_test_run)
     path = path or SIMTOOLS_ROOT_PATH / "tests" / "unit_tests" / "resources"
     return Path(path).expanduser().resolve()
 

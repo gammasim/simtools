@@ -97,12 +97,16 @@ class ArrayLayout:
 
         try:
             self.site_model = SiteModel(
-                site=self.site, model_version=self.model_version, model_reader=self.model_reader
+                site=self.site,
+                model_version=self.model_version,
+                model_reader=self.model_reader,
+                parameter_names=self.geo_coordinates.coordinate_parameter_names(),
+                load_simulation_software_parameters=False,
             )
         except RuntimeError as e:
             raise ValueError("No simulation model source configured") from e
-        self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
-            "corsika_observation_level", None
+        self._corsika_observation_level = self.site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
         )
         self._reference_position_dict = self.site_model.get_reference_point()
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
