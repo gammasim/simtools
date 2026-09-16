@@ -3,7 +3,6 @@
 import copy
 import logging
 
-import matplotlib.colors as mcolors
 import numpy as np
 
 from simtools.model.model_utils import is_two_mirror_telescope
@@ -16,10 +15,12 @@ from simtools.visualization.camera_plot_utils import (
     pixel_shape,
     setup_camera_axis_properties,
 )
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure
 
 logger = logging.getLogger(__name__)
+mcolors = lazy_module("matplotlib.colors")
 
 
 def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):

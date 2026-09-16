@@ -35,6 +35,10 @@ class SiteModel(ModelParameter):
         Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
+    parameter_names: iterable of str, optional
+        If supplied, load only these site parameters.
+    load_simulation_software_parameters: bool
+        If False, do not load CORSIKA and sim_telarray configuration parameters.
     """
 
     def __init__(
@@ -45,6 +49,8 @@ class SiteModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        parameter_names=None,
+        load_simulation_software_parameters=True,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
@@ -57,6 +63,8 @@ class SiteModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            parameter_names=parameter_names,
+            load_simulation_software_parameters=load_simulation_software_parameters,
         )
 
     def get_reference_point(self):
