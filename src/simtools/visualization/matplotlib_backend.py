@@ -2,10 +2,34 @@
 
 from importlib import import_module
 
-import matplotlib as mpl
 
-# The backend must be selected before pyplot is imported. Using import_module
-# here keeps that ordering explicit without placing an import after executable
-# code in every plotting module.
-mpl.use("Agg")
-pyplot = import_module("matplotlib.pyplot")
+class _MatplotlibModuleProxy:
+    """Load a plotting dependency only when a visualization uses it."""
+
+    def __init__(self, module_name):
+        self._module_name = module_name
+        self._module = None
+
+    def _load(self):
+        """Configure and return the requested Matplotlib module."""
+        if self._module is None:
+            matplotlib = import_module("matplotlib")
+            matplotlib.use("Agg")
+            self._module = import_module(self._module_name)
+        return self._module
+
+    def __getattr__(self, name):
+        """Resolve module attributes after loading the plotting backend."""
+        return getattr(self._load(), name)
+
+    def __getitem__(self, key):
+        """Resolve indexed module objects after loading the plotting backend."""
+        return self._load()[key]
+
+
+def lazy_module(module_name):
+    """Return a proxy that imports a plotting dependency on first use."""
+    return _MatplotlibModuleProxy(module_name)
+
+
+pyplot = lazy_module("matplotlib.pyplot")

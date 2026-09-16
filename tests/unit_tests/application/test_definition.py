@@ -103,7 +103,7 @@ def test_db_upload_model_repository_has_no_output_options():
 
 def test_start_delegates_to_common_startup(mocker):
     startup = mocker.patch(
-        "simtools.application.definition._initialize_runtime", return_value="context"
+        "simtools.application.control._initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
@@ -125,7 +125,7 @@ def test_start_delegates_to_common_startup(mocker):
 def test_start_can_skip_model_reader_initialization(mocker):
     """Write-only applications can start without an existing model repository."""
     startup = mocker.patch(
-        "simtools.application.definition._initialize_runtime", return_value="context"
+        "simtools.application.control._initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
@@ -136,6 +136,24 @@ def test_start_can_skip_model_reader_initialization(mocker):
 
     assert application.start() == "context"
     assert startup.call_args.kwargs["initialize_model_reader"] is False
+
+
+@pytest.mark.parametrize("arguments", [["--help"], ["-h"]])
+def test_help_does_not_initialize_configuration(arguments, monkeypatch, mocker):
+    """Help only requires parser construction, not configuration or runtime setup."""
+    configure = mocker.patch("simtools.application.definition.configurator.Configurator.configure")
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        arguments=(ArgumentDefinition("required_value", required=True),),
+    )
+    monkeypatch.setattr(sys, "argv", ["application", *arguments])
+
+    with pytest.raises(SystemExit) as exc:
+        application._parse()
+
+    assert exc.value.code == 0
+    configure.assert_not_called()
 
 
 def test_array_position_writer_does_not_require_model_reader():
