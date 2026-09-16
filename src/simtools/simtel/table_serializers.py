@@ -91,6 +91,8 @@ def _validate_contract_definition(contract):
         raise ValueError("sim_telarray serialization matrix_axes must contain two declared axes")
     if axes and contract.get("value_column") not in allowed:
         raise ValueError("sim_telarray serialization matrix requires a declared value_column")
+    if contract.get("incomplete_grid_policy") == "opaque" and "missing_value" not in contract:
+        raise ValueError("Opaque incomplete-grid policy requires a missing_value")
 
 
 def _validate_contract_columns(table, contract):
@@ -198,7 +200,13 @@ class RpolMatrixWriter:
 
     @staticmethod
     def write(table, output_path, contract):
-        """Write either a one-dimensional response or a rectangular RPOL matrix."""
+        """Write a one-dimensional response or sim_telarray's RPOL matrix dialect.
+
+        Two-dimensional output starts with ``#@RPOL@[ANGLE=] 2`` and an
+        ``ANGLE=`` row. sim_telarray reads these mirror/filter tables with
+        degree-valued angle coordinates and its ``yscale=deg2rad`` option;
+        one-dimensional input remains a normal wavelength-response table.
+        """
         axis_0, axis_1 = contract["matrix_axes"]
         if axis_1 not in table.colnames:
             PlainTableWriter.write(table, output_path, contract)
@@ -227,7 +235,13 @@ class AtmosphericTransmissionWriter:
 
     @staticmethod
     def write(table, output_path, contract):
-        """Write altitude header and wavelength rows by explicit matrix lookup."""
+        """Write an altitude header and wavelength matrix.
+
+        Missing wavelength-altitude cells are written with the contract's
+        explicit opaque optical-depth sentinel. sim_telarray interprets every
+        matrix entry as an optical depth, so this policy is deterministic but
+        must only be used for cells known to represent zero transmission.
+        """
         axis_0, axis_1 = contract["matrix_axes"]
         value_column = contract["value_column"]
         values = {(_scalar(row[axis_0]), _scalar(row[axis_1])): row[value_column] for row in table}

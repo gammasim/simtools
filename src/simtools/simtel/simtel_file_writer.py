@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
+from simtools.simtel.trigger_patches import validate_trigger_patches
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +152,7 @@ def _validate_camera_components(configuration):
         raise ValueError("Camera configuration requires pixel types and pixels")
     type_ids = _validate_pixel_types(pixel_types)
     _validate_pixels(pixels, type_ids)
-    _validate_triggers(triggers, members, pixels)
+    _validate_triggers(triggers, members, pixels, pixel_types)
 
 
 def _validate_pixel_types(pixel_types):
@@ -180,64 +181,14 @@ def _validate_pixels(pixels, type_ids):
         raise ValueError("Camera pixel references an unknown pixel type")
 
 
-def _validate_triggers(triggers, members, pixels):
+def _validate_triggers(triggers, members, pixels, pixel_types):
     """Validate trigger groups and their foreign keys."""
-    pixel_ids = [item.get("pixel_id") for item in pixels]
-    group_ids = [item.get("group_id") for item in triggers]
-    if group_ids != list(range(len(triggers))):
-        raise ValueError("Camera trigger group IDs must be contiguous and ordered")
-    members_by_group = {}
-    for member in members:
-        members_by_group.setdefault(member.get("group_id"), []).append(member)
-    if set(members_by_group) - set(group_ids):
-        raise ValueError("Camera trigger member references an unknown group")
-    for trigger in triggers:
-        _validate_trigger(trigger, members_by_group.get(trigger["group_id"], []), pixel_ids)
-
-
-def _validate_trigger(trigger, members, pixel_ids):
-    """Validate one trigger group and its normalized member rows."""
-    _validate_trigger_kind(trigger)
-    use_default = bool(trigger.get("use_default_multiplicity"))
-    multiplicity = trigger.get("multiplicity")
-    _validate_trigger_multiplicity(use_default, multiplicity)
-    if not members:
-        raise ValueError(f"Camera trigger group has no members: {trigger['group_id']}")
-    _validate_trigger_members(members, pixel_ids)
-
-
-def _validate_trigger_kind(trigger):
-    """Validate the trigger kind."""
-    if trigger.get("kind", "").lower() not in {"majority", "analogsum", "digitalsum"}:
-        raise ValueError(f"Unsupported camera trigger kind: {trigger.get('kind')}")
-
-
-def _validate_trigger_multiplicity(use_default, multiplicity):
-    """Validate default or explicit trigger multiplicity."""
-    if use_default:
-        if multiplicity not in (None, 0):
-            raise ValueError("Default trigger multiplicity must not be positive")
-        return
-    if multiplicity is None or int(multiplicity) < 1:
-        raise ValueError("Explicit trigger multiplicity must be positive")
-
-
-def _validate_trigger_members(members, pixel_ids):
-    """Validate normalized trigger member rows."""
-    member_orders = sorted({member["member_order"] for member in members})
-    if member_orders != list(range(len(member_orders))):
-        raise ValueError("Camera trigger member orders must be contiguous")
-    for member_order in member_orders:
-        rows = sorted(
-            (row for row in members if row["member_order"] == member_order),
-            key=lambda row: row["pixel_order"],
-        )
-        if [row["pixel_order"] for row in rows] != list(range(len(rows))):
-            raise ValueError("Camera trigger pixel orders must be contiguous")
-        if rows[0]["required"] and any(row["required"] for row in rows[1:]):
-            raise ValueError("Only the first pixel of a trigger member may be required")
-        if any(row["pixel_id"] not in pixel_ids for row in rows):
-            raise ValueError("Camera trigger contains an unknown pixel ID")
+    validate_trigger_patches(
+        pixels,
+        pixel_types,
+        triggers,
+        members,
+    )
 
 
 def _safe_basename(value, label):

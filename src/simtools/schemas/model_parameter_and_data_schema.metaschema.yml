@@ -430,6 +430,10 @@ definitions:
         type: string
       missing_value:
         type: number
+      incomplete_grid_policy:
+        type: string
+        enum: [opaque]
+        description: Policy for incomplete matrix exports.
       float_format:
         type: string
       write_comments:

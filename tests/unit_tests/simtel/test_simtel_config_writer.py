@@ -687,11 +687,19 @@ def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_t
     config_path = Path(tmp_test_directory) / "telescope.cfg"
     result = simtel_config_writer._convert_model_parameters_to_simtel_format(
         "primary_segmentation",
-        [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+        [
+            {
+                "kind": "ring",
+                "count": 2,
+                "r_min": {"value": 1, "unit": "cm"},
+                "r_max": {"value": 2, "unit": "cm"},
+                "dphi": {"value": 90, "unit": "deg"},
+            }
+        ],
         config_path,
         None,
         parameter_name="primary_mirror_segmentation",
-        parameter_data={"model_parameter_schema_version": "0.2.0"},
+        parameter_data={"model_parameter_schema_version": "0.3.0"},
     )
     assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
     assert (Path(tmp_test_directory) / result[1]).is_file()
@@ -707,16 +715,24 @@ def test_convert_segmentation_records_uses_parameter_schema_version(
     ) as write_mirror_segmentation:
         simtel_config_writer._convert_model_parameters_to_simtel_format(
             "primary_segmentation",
-            [{"kind": "ring", "count": 2, "r_min_cm": 1, "r_max_cm": 2, "dphi_deg": 90}],
+            [
+                {
+                    "kind": "ring",
+                    "count": 2,
+                    "r_min": {"value": 1, "unit": "cm"},
+                    "r_max": {"value": 2, "unit": "cm"},
+                    "dphi": {"value": 90, "unit": "deg"},
+                }
+            ],
             config_path,
             None,
             parameter_name="primary_mirror_segmentation",
-            parameter_data={"model_parameter_schema_version": "0.2.0"},
+            parameter_data={"model_parameter_schema_version": "0.3.0"},
         )
 
     assert write_mirror_segmentation.call_args.kwargs == {
         "parameter_name": "primary_mirror_segmentation",
-        "schema_version": "0.2.0",
+        "schema_version": "0.3.0",
     }
 
 
