@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 import textwrap
+from operator import itemgetter
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -161,7 +162,7 @@ def test_production_file_index_includes_patch_history(model_repository):
 
     production_files = repository_files.get_production_table_files(patch_path)
 
-    assert {version for version, _ in production_files} == {"1.0.0", "1.1.0"}
+    assert set(map(itemgetter(0), production_files)) == {"1.0.0", "1.1.0"}
 
 
 def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
