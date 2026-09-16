@@ -53,6 +53,10 @@ class ModelParameter:
         Useful for documentation generation.
     model_directory: pathlib.Path or str, optional
         Directory for generated model assets and sim_telarray configuration files.
+    parameter_names: iterable of str, optional
+        If supplied, load only these model parameters.
+    load_simulation_software_parameters: bool
+        If False, do not load CORSIKA and sim_telarray configuration parameters.
     """
 
     def __init__(
@@ -66,6 +70,8 @@ class ModelParameter:
         ignore_software_version=False,
         model_reader=None,
         model_directory=None,
+        parameter_names=None,
+        load_simulation_software_parameters=True,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -77,21 +83,28 @@ class ModelParameter:
         self.label = label
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
+        self._model_loading_options = {
+            "parameter_names": None if parameter_names is None else frozenset(parameter_names),
+            "load_simulation_software_parameters": load_simulation_software_parameters,
+        }
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
             if array_element_name is not None
             else None
         )
-        self.design_model = self.model_reader.get_design_model(
-            self.model_version, self.name, collection="telescopes"
+        self.design_model = (
+            self.model_reader.get_design_model(
+                self.model_version, self.name, collection="telescopes"
+            )
+            if self.name is not None
+            else None
         )
         self._config_file_directory = Path(model_directory) if model_directory is not None else None
         self._config_file_path = None
         self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None
         self._is_exported_model_files_up_to_date = False
-        self._simtel_config_writer_label = None
         self._serialized_simtel_tables = {}
 
         self._load_parameters_from_db()
@@ -132,10 +145,10 @@ class ModelParameter:
         """
         try:
             return self.parameters[par_name]
-        except (KeyError, ValueError) as e:
+        except (KeyError, ValueError) as exc:
             raise InvalidModelParameterError(
                 f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
-            ) from e
+            ) from exc
 
     def get_parameter_value(self, par_name):
         """
@@ -439,7 +452,11 @@ class ModelParameter:
         """Load the model parameters from the selected reader."""
         self.parameters = deepcopy(
             self.model_reader.get_model_parameters(
-                self.site, self.name, self.collection, self.model_version
+                self.site,
+                self.name,
+                self.collection,
+                self.model_version,
+                parameter_names=self._model_loading_options["parameter_names"],
             )
         )
 
@@ -498,7 +515,8 @@ class ModelParameter:
         )
         self.overwrite_parameters(filtered_overwrites, ignore_collection=ignored_collections)
         self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
-        self._load_simulation_software_parameter()
+        if self._model_loading_options["load_simulation_software_parameters"]:
+            self._load_simulation_software_parameter()
 
     def _filter_overwrites_for_target(self, overwrites, ignored_collections):
         """Filter overrides to parameters applicable to this model target."""
@@ -1030,7 +1048,7 @@ class ModelParameter:
     def _load_simtel_config_writer(self, label=None):
         """Load the SimtelConfigWriter object."""
         desired_label = self.label if label is None else label
-        if self.simtel_config_writer is None or desired_label != self._simtel_config_writer_label:
+        if self.simtel_config_writer is None or desired_label != self.simtel_config_writer.label:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
@@ -1039,7 +1057,6 @@ class ModelParameter:
                 label=desired_label,
                 model_reader=self.model_reader,
             )
-            self._simtel_config_writer_label = desired_label
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
         """

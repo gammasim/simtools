@@ -82,6 +82,11 @@ class SimtelConfigWriter:
         self._serialized_table_cache = {}
         self._camera_file_cache = {}
 
+    @property
+    def label(self):
+        """Return the label used for generated configuration files."""
+        return self._label
+
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
     ):

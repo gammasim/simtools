@@ -3,7 +3,6 @@
 import io
 import json
 import logging
-import os
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -78,11 +77,9 @@ def collect_data_from_bytes(data, file_name, yaml_document=None):
 
 
 def _resolve_configured_test_resource_paths(data, test_resources_path=None):
-    """Resolve test-resource paths when a test-resource environment is active."""
+    """Resolve test-resource paths when an explicit base directory is supplied."""
     if test_resources_path is not None:
         return io_handler.resolve_test_resource_paths(data, test_resources_path=test_resources_path)
-    if os.environ.get("SIMTOOLS_TEST_RESOURCES") or os.environ.get("SIMTOOLS_TESTS_PATH"):
-        return io_handler.resolve_test_resource_paths(data)
     return data
 
 
