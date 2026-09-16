@@ -72,7 +72,7 @@ def plot(config, output_file, model_reader=None):
                 parameter_version=config["parameter_version"],
             )
             parameters["camera_pixel_layout"] = layout_parameter["camera_pixel_layout"]
-        camera_components = _resolve_camera_components(model_reader, parameters)
+        camera_components = resolve_camera_components(model_reader, parameters)
         fig = plot_pixel_layout_from_configuration(
             camera_components, config["telescope"], **plot_kwargs
         )
@@ -92,7 +92,7 @@ def plot(config, output_file, model_reader=None):
     plt.close(fig)
 
 
-def _resolve_camera_components(model_reader, parameters):
+def resolve_camera_components(model_reader, parameters):
     """Resolve camera component model parameters for plotting."""
     pixel_types = deepcopy(parameters["camera_pixel_types"]["value"])
     return {
