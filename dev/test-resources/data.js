@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789482238768,
+  "lastUpdate": 1789536656558,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -26522,6 +26522,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 423.484375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260907.300.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Gernot Maier",
+            "username": "GernotMaier",
+            "email": "gernot.maier@desy.de"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "c03fcae39f4838d997f11f6e0bf92bcfd0d1441f",
+          "message": "Rename `simtools-db-get-parameter-from-db` to `simtools-get-model-parameter` and `simtools-db-get-array-layouts-from-db` to `simtools-get-array-layout`. (#2532)\n\n* Generalize relevant DB applications; prepare for depreciation\n\n* changelog\n\n* removed dummy applications\n\n* copilot comments",
+          "timestamp": "2026-09-15T14:05:28Z",
+          "url": "https://github.com/gammasim/simtools/commit/c03fcae39f4838d997f11f6e0bf92bcfd0d1441f"
+        },
+        "date": 1789536640752,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 66.06182198900001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260907.300.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 69.09,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260907.300.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 423.4453125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260907.300.1 | container=None | sample_interval_s=0.2"
           }
