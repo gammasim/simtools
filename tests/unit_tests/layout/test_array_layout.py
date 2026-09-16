@@ -12,6 +12,7 @@ from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
+from simtools.layout.geo_coordinates import GeoCoordinates
 
 logger = logging.getLogger()
 
@@ -155,6 +156,19 @@ def test_initialize_coordinate_systems(
     test_one_site(
         south_layout_center_data_dict, array_layout_south_instance, 366822.017, 7269466.999
     )
+
+
+def test_initialize_site_parameters_loads_only_coordinate_parameters(
+    model_version, mock_model_reader
+):
+    """Array layouts avoid loading unrelated simulation-configuration parameters."""
+    ArrayLayout(site="North", model_version=model_version, model_reader=mock_model_reader)
+
+    model_reader_call = mock_model_reader.get_model_parameters.call_args
+    assert model_reader_call.kwargs["parameter_names"] == frozenset(
+        GeoCoordinates.coordinate_parameter_names()
+    )
+    mock_model_reader.get_simulation_configuration_parameters.assert_not_called()
 
 
 def test_select_assets(model_version, tmp_test_directory):
