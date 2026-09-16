@@ -171,6 +171,106 @@ def test_write_camera_file_skips_models_without_camera_components(
     assert simtel_config_writer._write_camera_file({}, tmp_test_directory / "config.cfg") is None
 
 
+def test_write_camera_file_uses_telescope_name_for_telescope_specific_camera(
+    tmp_test_directory, model_version, mocker
+):
+    writer = SimtelConfigWriter(
+        site="North",
+        model_version=model_version,
+        telescope_model_name="LSTN-01",
+        telescope_design_model="LSTN-design",
+    )
+    parameters = {
+        name: {"value": [], "instrument": "LSTN-01"}
+        for name in (
+            "camera_rotate",
+            "camera_pixel_types",
+            "camera_pixel_layout",
+            "camera_trigger_groups",
+            "camera_trigger_members",
+        )
+    }
+    mocker.patch.object(writer, "_camera_table_records", return_value=[])
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file",
+        return_value="camera-LSTN-01.dat",
+    )
+
+    result = writer._write_camera_file(
+        parameters, tmp_test_directory / "config.cfg", telescope_name="LSTN-01"
+    )
+
+    assert result == "camera-LSTN-01.dat"
+    assert write_camera.call_args.args[1] == tmp_test_directory / "camera-LSTN-01.dat"
+
+
+def test_write_camera_file_uses_design_name_for_shared_camera(
+    tmp_test_directory, model_version, mocker
+):
+    writer = SimtelConfigWriter(
+        site="North",
+        model_version=model_version,
+        telescope_model_name="LSTN-02",
+        telescope_design_model="LSTN-design",
+    )
+    parameters = {
+        name: {"value": [], "instrument": "LSTN-design"}
+        for name in (
+            "camera_rotate",
+            "camera_pixel_types",
+            "camera_pixel_layout",
+            "camera_trigger_groups",
+            "camera_trigger_members",
+        )
+    }
+    mocker.patch.object(writer, "_camera_table_records", return_value=[])
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file",
+        return_value="camera-LSTN-design.dat",
+    )
+
+    result = writer._write_camera_file(
+        parameters, tmp_test_directory / "config.cfg", telescope_name="LSTN-02"
+    )
+
+    assert result == "camera-LSTN-design.dat"
+    assert write_camera.call_args.args[1] == tmp_test_directory / "camera-LSTN-design.dat"
+
+
+def test_write_camera_file_uses_telescope_name_for_mixed_camera(
+    tmp_test_directory, model_version, mocker
+):
+    writer = SimtelConfigWriter(
+        site="North",
+        model_version=model_version,
+        telescope_model_name="LSTN-02",
+        telescope_design_model="LSTN-design",
+    )
+    parameters = {
+        name: {"value": [], "instrument": "LSTN-design"}
+        for name in (
+            "camera_rotate",
+            "camera_pixel_types",
+            "camera_pixel_layout",
+            "camera_trigger_groups",
+            "camera_trigger_members",
+        )
+    }
+    parameters["camera_pixel_types"]["instrument"] = "LSTN-02"
+    mocker.patch.object(writer, "_camera_table_records", return_value=[])
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file",
+        return_value="camera-LSTN-02.dat",
+    )
+
+    result = writer._write_camera_file(
+        parameters, tmp_test_directory / "config.cfg", telescope_name="LSTN-02"
+    )
+
+    assert result == "camera-LSTN-02.dat"
+    assert write_camera.call_args.args[1] == tmp_test_directory / "camera-LSTN-02.dat"
+
+
 def test_write_camera_file_requires_all_camera_components(simtel_config_writer, tmp_test_directory):
     with pytest.raises(ValueError, match="Camera component parameters are missing"):
         simtel_config_writer._write_camera_file(

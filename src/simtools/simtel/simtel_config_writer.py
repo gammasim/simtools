@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """Configuration file writer for sim_telarray."""
 
-import hashlib
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -198,14 +197,12 @@ class SimtelConfigWriter:
 
         destination = Path(config_file_path).parent
         telescope_name = telescope_name or Path(config_file_path).stem
-        output = destination / f"camera-{telescope_name}.dat"
         cache_key = repr(
             tuple((name, parameters.get(name)) for name in _CAMERA_COMPONENT_PARAMETERS)
         )
-        shared_camera = self._telescope_design_model is not None
-        if shared_camera:
-            digest = hashlib.sha256(cache_key.encode()).hexdigest()[:12]
-            output = destination / f"camera-{self._telescope_design_model}-{digest}.dat"
+        shared_camera = self._camera_uses_design_parameters(parameters)
+        camera_name = self._telescope_design_model if shared_camera else telescope_name
+        output = destination / f"camera-{camera_name}.dat"
         if output.is_file() and (shared_camera or self._camera_file_cache.get(output) == cache_key):
             return output.name
 
@@ -247,6 +244,15 @@ class SimtelConfigWriter:
         result = simtel_file_writer.write_camera_file(configuration, output)
         self._camera_file_cache[output] = cache_key
         return result
+
+    def _camera_uses_design_parameters(self, parameters):
+        """Return whether all camera components come from the design model."""
+        if self._telescope_design_model is None:
+            return False
+        return all(
+            parameters[name].get("instrument") == self._telescope_design_model
+            for name in _CAMERA_COMPONENT_PARAMETERS
+        )
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):
