@@ -2,7 +2,9 @@
 
 # sim_telarray
 
-Support modules for running sim_telarray.
+Support modules for running sim_telarray. Model parameters are exported to
+sim_telarray configuration files; importing model parameters from sim_telarray
+configuration files is not supported.
 
 ## bias-curve-generator
 
@@ -19,15 +21,6 @@ Support modules for running sim_telarray.
 
 ```{eval-rst}
 .. automodule:: simtel.nsb_trigger_calculator
-   :members:
-```
-
-## simtel_config_reader
-
-(simtel-config-reader-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simtel_config_reader
    :members:
 ```
 
