@@ -423,6 +423,82 @@ def test_write_camera_file_supports_transparency_and_rejects_unsafe_path(tmp_tes
         )
 
 
+def test_trigger_member_tokens_follow_member_order():
+    members = [
+        {"member_order": 1, "pixel_order": 0, "pixel_id": 3},
+        {"member_order": 0, "pixel_order": 1, "pixel_id": 2},
+        {"member_order": 0, "pixel_order": 0, "pixel_id": 1},
+    ]
+
+    assert simtel_file_writer._trigger_member_tokens(members, "majority") == ["1[2]", "3"]
+
+
+@pytest.mark.parametrize(
+    ("kind", "members", "message"),
+    [
+        (
+            "analogsum",
+            [
+                {"member_order": 0, "pixel_order": 0, "pixel_id": 0},
+                {"member_order": 0, "pixel_order": 1, "pixel_id": 1},
+            ],
+            "bracketed",
+        ),
+        (
+            "digitalsum",
+            [{"member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True}],
+            "only valid",
+        ),
+    ],
+)
+def test_camera_validation_rejects_invalid_trigger_token_syntax(kind, members, message):
+    configuration = _camera_configuration()
+    extra_pixel = deepcopy(configuration["pixels"][0])
+    extra_pixel["pixel_id"] = 1
+    configuration["pixels"].append(extra_pixel)
+    configuration["triggers"] = [
+        {
+            "group_id": 0,
+            "kind": kind,
+            "use_default_multiplicity": True,
+            "multiplicity": 0,
+        }
+    ]
+    configuration["trigger_members"] = [{"group_id": 0, **member} for member in members]
+
+    with pytest.raises(ValueError, match=message):
+        simtel_file_writer._validate_camera_components(configuration)
+
+
+def test_camera_validation_applies_trigger_patch_policy(caplog):
+    configuration = _camera_configuration()
+    extra_pixel = deepcopy(configuration["pixels"][0])
+    extra_pixel.update(pixel_id=1, x_cm=3)
+    configuration["pixels"].append(extra_pixel)
+    configuration["triggers"] = [
+        {
+            "group_id": 0,
+            "kind": "majority",
+            "use_default_multiplicity": True,
+            "multiplicity": 0,
+        }
+    ]
+    configuration["trigger_members"] = [
+        {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0},
+        {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 1},
+    ]
+
+    with caplog.at_level("WARNING"):
+        simtel_file_writer._validate_camera_components(configuration)
+    assert "disconnected" in caplog.text
+
+    with pytest.raises(ValueError, match="disconnected"):
+        simtel_file_writer._validate_camera_components(configuration, "strict")
+    simtel_file_writer._validate_camera_components(configuration, "off")
+    with pytest.raises(ValueError, match="one of"):
+        simtel_file_writer._validate_camera_components(configuration, "invalid")
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
