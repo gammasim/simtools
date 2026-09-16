@@ -810,7 +810,11 @@ class SimtelConfigWriter:
         if simtel_name in {"primary_segmentation", "secondary_segmentation"} and isinstance(
             value, list
         ):
-            output = Path(model_path).parent / f"{parameter_name}-{Path(model_path).stem}.dat"
+            output, shared_output = self._get_segmentation_output_path(
+                parameter_name, model_path, parameter_data
+            )
+            if shared_output and output.is_file():
+                return simtel_name, output.name
             return simtel_name, segmentation.write_mirror_segmentation(
                 value,
                 output,
@@ -828,6 +832,18 @@ class SimtelConfigWriter:
         except AttributeError:  # covers cases where telescope_model is None
             return None, None
         return simtel_name, value
+
+    def _get_segmentation_output_path(self, parameter_name, model_path, parameter_data):
+        """Return the output path and sharing flag for mirror segmentation."""
+        instrument = parameter_data.get("instrument")
+        if instrument is not None and instrument == self._telescope_design_model:
+            suffix = instrument
+            shared_output = True
+        else:
+            suffix = Path(model_path).stem
+            shared_output = False
+        output = Path(model_path).parent / f"{parameter_name}-{suffix}.dat"
+        return output, shared_output
 
     def _write_table_parameter_file(
         self,
