@@ -25,7 +25,9 @@ _OUTPUT_TYPES = (
 )
 
 
-def collect_resource_requirements(production_path, selections=None, label="baseline"):
+def collect_resource_requirements(
+    production_path, selections=None, label="baseline", comparison_role=None
+):
     """Collect one resource row per recorded simulation process.
 
     Parameters
@@ -36,6 +38,8 @@ def collect_resource_requirements(production_path, selections=None, label="basel
         Manifest selection expressions accepted by ``filter_manifests``.
     label : str, optional
         Label identifying this production in combined results.
+    comparison_role : str, optional
+        Stable comparison role, either ``"baseline"`` or ``"candidate"``.
 
     Returns
     -------
@@ -51,7 +55,7 @@ def collect_resource_requirements(production_path, selections=None, label="basel
     for manifest in manifests:
         for role in _ROLES:
             try:
-                rows.append(_resource_row(manifest, role, label))
+                rows.append(_resource_row(manifest, role, label, comparison_role))
             except (AttributeError, OSError, TypeError, ValueError) as exc:
                 diagnostics.append(
                     {
@@ -87,12 +91,20 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         Paths of the ECSV, Markdown, and plot outputs plus diagnostics.
     """
     output_directory = Path(output_directory)
+    baseline_label = args_dict.get("baseline_label") or "baseline"
+    candidate_label = args_dict.get("candidate_label") or "candidate"
     rows, diagnostics = collect_resource_requirements(
-        args_dict["baseline_path"], args_dict.get("select"), label="baseline"
+        args_dict["baseline_path"],
+        args_dict.get("select"),
+        label=baseline_label,
+        comparison_role="baseline",
     )
     if args_dict.get("candidate_path"):
         candidate_rows, candidate_diagnostics = collect_resource_requirements(
-            args_dict["candidate_path"], args_dict.get("select"), label="candidate"
+            args_dict["candidate_path"],
+            args_dict.get("select"),
+            label=candidate_label,
+            comparison_role="candidate",
         )
         rows.extend(candidate_rows)
         diagnostics.extend(candidate_diagnostics)
@@ -266,7 +278,7 @@ def write_markdown_report(summary, diagnostics, output_file):
     output_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _resource_row(manifest, role, label):
+def _resource_row(manifest, role, label, comparison_role=None):
     """Build one validated normalized resource row."""
     record_paths = _resource_record_paths(manifest, role)
     records = [json.loads(path.read_text(encoding="utf-8")) for path in record_paths]
@@ -297,6 +309,7 @@ def _resource_row(manifest, role, label):
     storage_size = sum(storage_components) if storage_components else None
     return {
         "production_label": label,
+        "comparison_role": comparison_role or label,
         "job_id": manifest.data["job_id"],
         "run_number": manifest.run_number,
         "role": role,

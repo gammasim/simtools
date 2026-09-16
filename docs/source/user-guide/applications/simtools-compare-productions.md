@@ -21,7 +21,7 @@ The application supports event-level and signal-level comparisons. Trigger-histo
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
-For production resource requirements, use `--comparison_level compute` with a production root in
+For production resource requirements, use `--comparison_level computing` with a production root in
 `--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
 resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
 process role), a
@@ -29,19 +29,26 @@ grouped `resource_requirements.md` report, and time, memory, and storage plots. 
 include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
 event output, reduced event data, and sim_telarray histograms when those files are available.
 Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
-per-process maximum. For sim_telarray, additional plots normalize time and output sizes by the
+per-process maximum. Byte-based quantities in plots use decimal MB or GB, selected according to
+the values shown; the ECSV resource table retains raw byte values. For sim_telarray, additional
+plots normalize time and output sizes by the
 number of triggered events recorded in the job metadata. Sim_telarray storage includes simtel event
 files, reduced event data, and histogram files. New job manifests record these counts under
-`statistics`; when processing older manifests, the compute comparison can recover the count from
+`statistics`; when processing older manifests, the computing comparison can recover the count from
 the reduced-event HDF5 table or the sim_telarray log without opening the `.simtel.zst` file.
 Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing. An optional
-`--candidate_path` overlays a second production. Repeated `--select` expressions filter both
-production manifests.
+`--candidate_path` overlays a second production. When both productions are provided, each
+available resource plot also has a `candidate / baseline` ratio plot with propagated errors and a
+horizontal reference line at one. The ratio errors propagate the uncertainty of each production
+mean from its run-to-run RMS. Use `--baseline_label` and `--candidate_label` to replace the
+default display labels. Repeated `--select` expressions filter both production manifests.
 
 ```console
 simtools-compare-productions \
-    --comparison_level compute \
+    --comparison_level computing \
     --baseline_path /data/production \
+    --baseline_label reference \
+    --candidate_label optimized \
     --select configuration.primary=gamma \
     --output_path resource-requirements
 ```

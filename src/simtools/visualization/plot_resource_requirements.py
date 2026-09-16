@@ -12,6 +12,22 @@ _ROLE_STYLE = {
     "sim_telarray": {"marker": "s", "zorder": 3},
     "corsika": {"marker": "o", "zorder": 4},
 }
+_BYTES_PER_MEGABYTE = 1_000_000
+_BYTES_PER_GIGABYTE = 1_000_000_000
+_BYTE_PLOT_COLUMNS = frozenset(
+    {
+        "peak_rss_bytes",
+        "sim_telarray_storage_bytes_per_event",
+        "corsika_output_bytes_per_event",
+        "sim_telarray_output_bytes_per_event",
+        "reduced_event_data_bytes_per_event",
+        "sim_telarray_histogram_bytes_per_event",
+        "sim_telarray_storage_bytes_per_triggered_event",
+        "sim_telarray_output_bytes_per_triggered_event",
+        "reduced_event_data_bytes_per_triggered_event",
+        "sim_telarray_histogram_bytes_per_triggered_event",
+    }
+)
 
 
 def plot(rows, output_path, figure_format=None):
@@ -30,39 +46,47 @@ def plot(rows, output_path, figure_format=None):
     -------
     list[pathlib.Path]
         Base paths of the written figures.
+
+    Notes
+    -----
+    Byte-based quantities are plotted in MB or GB, selected from the largest
+    value in each plot, using decimal units. The input rows and resource table
+    retain byte values. When both baseline and candidate rows are present,
+    additional plots show candidate-to-baseline ratios.
     """
+    rows = list(rows)
     output_path = Path(output_path)
     plots = (
         ("wall_time_seconds_per_event", "Wall time (s/event)", "resource_wall_time", None),
         ("cpu_time_seconds_per_event", "CPU time (s/event)", "resource_cpu_time", None),
-        ("peak_rss_bytes", "Peak RSS (bytes)", "resource_peak_rss", None),
+        ("peak_rss_bytes", "Peak RSS", "resource_peak_rss", None),
         (
             "sim_telarray_storage_bytes_per_event",
-            "sim_telarray storage (bytes/event)",
+            "sim_telarray storage",
             "resource_storage",
             None,
         ),
         (
             "corsika_output_bytes_per_event",
-            "CORSIKA output (bytes/event)",
+            "CORSIKA output",
             "resource_corsika_output",
             "corsika",
         ),
         (
             "sim_telarray_output_bytes_per_event",
-            "sim_telarray output (bytes/event)",
+            "sim_telarray output",
             "resource_sim_telarray_output",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes_per_event",
-            "reduced event data (bytes/event)",
+            "reduced event data",
             "resource_reduced_event_data",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes_per_event",
-            "sim_telarray histogram (bytes/event)",
+            "sim_telarray histogram",
             "resource_sim_telarray_histogram",
             "sim_telarray",
         ),
@@ -80,25 +104,25 @@ def plot(rows, output_path, figure_format=None):
         ),
         (
             "sim_telarray_storage_bytes_per_triggered_event",
-            "sim_telarray storage (bytes/triggered event)",
+            "sim_telarray storage",
             "resource_storage_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_output_bytes_per_triggered_event",
-            "sim_telarray output (bytes/triggered event)",
+            "sim_telarray output",
             "resource_sim_telarray_output_triggered",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes_per_triggered_event",
-            "reduced event data (bytes/triggered event)",
+            "reduced event data",
             "resource_reduced_event_data_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes_per_triggered_event",
-            "sim_telarray histogram (bytes/triggered event)",
+            "sim_telarray histogram",
             "resource_sim_telarray_histogram_triggered",
             "sim_telarray",
         ),
@@ -116,50 +140,179 @@ def plot(rows, output_path, figure_format=None):
         ]
         if not available:
             continue
+        plot_label, value_scale = _byte_plot_label(column, label, available)
         zenith_values = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in available})
         zenith_colors = _zenith_colors(zenith_values)
         for role in sorted({row["role"] for row in available}):
             role_rows = [row for row in available if row["role"] == role]
             fig, axis = plt.subplots(figsize=(8, 5))
-            contexts = sorted(
-                {
-                    (
-                        row.get("production_label", "production"),
-                        row.get("model_version", row.get("simtools_version", "unknown")),
-                        row.get("production_id", "unknown"),
-                        row.get("simtools_version", "unknown"),
-                    )
-                    for row in role_rows
-                }
-            )
             _plot_role(
                 axis,
                 role_rows,
                 column,
                 zenith_colors,
+                value_scale=value_scale,
             )
             axis.set_xscale("log")
             axis.set_yscale("log")
             axis.set_xlabel("Energy midpoint (GeV)")
-            axis.set_ylabel(label)
-            context_title = "; ".join(
-                (
-                    f"{production}: {production_id} (model {version}, simtools {simtools})"
-                    if production_id != "unknown"
-                    else f"{production}: {version}"
-                )
-                for production, version, production_id, simtools in contexts
-            )
-            axis.set_title(f"{label}: {role} ({context_title})")
+            axis.set_ylabel(plot_label)
+            axis.set_title(f"{plot_label}: {role}")
             axis.grid(alpha=0.25)
             axis.legend()
             output_file = output_path / f"{filename}_{role}"
             save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
             output_files.append(output_file)
+            comparison_labels = _comparison_display_labels(role_rows)
+            if set(comparison_labels) >= {"baseline", "candidate"}:
+                ratio_series = _ratio_series(role_rows, column)
+                if ratio_series:
+                    ratio_fig, ratio_axis = plt.subplots(figsize=(8, 5))
+                    _plot_ratio(ratio_axis, ratio_series, role, zenith_colors)
+                    ratio_axis.set_xscale("log")
+                    ratio_axis.set_xlabel("Energy midpoint (GeV)")
+                    baseline_label = comparison_labels["baseline"]
+                    candidate_label = comparison_labels["candidate"]
+                    ratio_label = f"{candidate_label} / {baseline_label}"
+                    ratio_axis.set_ylabel(ratio_label)
+                    ratio_axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
+                    ratio_axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
+                    ratio_axis.grid(alpha=0.25)
+                    ratio_axis.legend()
+                    ratio_output_file = output_path / f"{filename}_ratio_{role}"
+                    save_figure(
+                        ratio_fig,
+                        ratio_output_file,
+                        figure_format=figure_format,
+                        dpi=300,
+                        close=True,
+                    )
+                    output_files.append(ratio_output_file)
     return output_files
 
 
-def _plot_role(axis, rows, column, zenith_colors):
+def _byte_plot_label(column, label, rows):
+    """Return a human-readable byte label and its scale factor."""
+    if column not in _BYTE_PLOT_COLUMNS:
+        return label, 1.0
+    maximum = max(float(row[column]) for row in rows)
+    if maximum >= _BYTES_PER_GIGABYTE:
+        unit, scale = "GB", 1 / _BYTES_PER_GIGABYTE
+    else:
+        unit, scale = "MB", 1 / _BYTES_PER_MEGABYTE
+    if column == "peak_rss_bytes":
+        suffix = ""
+    elif column.endswith("_per_triggered_event"):
+        suffix = "/triggered event"
+    else:
+        suffix = "/event"
+    return f"{label} ({unit}{suffix})", scale
+
+
+def _ratio_series(rows, column):
+    """Return candidate-to-baseline ratios grouped by zenith and energy."""
+    values = {}
+    for row in rows:
+        production = _comparison_role(row)
+        if production not in {"baseline", "candidate"}:
+            continue
+        key = (
+            production,
+            float(row.get("zenith_angle_deg", 0.0)),
+            row["energy_midpoint_gev"],
+        )
+        values.setdefault(key, []).append(float(row[column]))
+
+    series = {}
+    zenith_values = {key[1] for key in values}
+    for zenith in zenith_values:
+        baseline = _statistics_by_energy(values, "baseline", zenith)
+        candidate = _statistics_by_energy(values, "candidate", zenith)
+        points = []
+        for energy in sorted(set(baseline) & set(candidate)):
+            baseline_mean, baseline_rms, baseline_count = baseline[energy]
+            candidate_mean, candidate_rms, candidate_count = candidate[energy]
+            if baseline_mean <= 0 or candidate_mean <= 0:
+                continue
+            ratio = candidate_mean / baseline_mean
+            baseline_error = baseline_rms / np.sqrt(baseline_count)
+            candidate_error = candidate_rms / np.sqrt(candidate_count)
+            ratio_error = ratio * np.sqrt(
+                (candidate_error / candidate_mean) ** 2 + (baseline_error / baseline_mean) ** 2
+            )
+            points.append((energy, ratio, ratio_error))
+        if points:
+            series[zenith] = points
+    return series
+
+
+def _comparison_role(row):
+    """Return the stable baseline/candidate role for a resource row."""
+    return row.get("comparison_role") or row.get("production_label")
+
+
+def _comparison_display_labels(rows):
+    """Return display labels for baseline and candidate rows."""
+    labels = {}
+    for row in rows:
+        comparison_role = _comparison_role(row)
+        if comparison_role in {"baseline", "candidate"}:
+            labels.setdefault(comparison_role, row.get("production_label", comparison_role))
+    return labels
+
+
+def _statistics_by_energy(values, production, zenith):
+    """Return means, RMS spreads, and sample counts keyed by energy."""
+    grouped = {
+        energy: samples
+        for (label, sample_zenith, energy), samples in values.items()
+        if label == production and sample_zenith == zenith
+    }
+    return {
+        energy: (
+            float(np.mean(samples)),
+            float(np.sqrt(np.mean((np.asarray(samples) - np.mean(samples)) ** 2))),
+            len(samples),
+        )
+        for energy, samples in grouped.items()
+    }
+
+
+def _plot_ratio(axis, series, role, zenith_colors):
+    """Plot candidate-to-baseline ratios with propagated mean errors."""
+    for series_index, (zenith, points) in enumerate(sorted(series.items())):
+        energies, ratios, errors = zip(*points, strict=True)
+        style = _ROLE_STYLE.get(role, {})
+        axis.errorbar(
+            energies,
+            ratios,
+            yerr=errors,
+            fmt=style.get("marker", "o"),
+            label=f"za={zenith:g} deg",
+            color=zenith_colors[zenith],
+            markerfacecolor=zenith_colors[zenith],
+            markeredgecolor="black",
+            linestyle=("-", "--", ":", "-.")[series_index % 4],
+            markersize=8,
+            capsize=3,
+            linewidth=1.0,
+            zorder=style.get("zorder", 3) + 1,
+        )
+    bounds = [
+        bound
+        for points in series.values()
+        for _, ratio, error in points
+        for bound in (ratio - error, ratio + error)
+    ]
+    bounds.append(1.0)
+    lower = min(bounds)
+    upper = max(bounds)
+    margin = max((upper - lower) * 0.1, 0.1)
+    axis.set_ylim(max(0.0, lower - margin), upper + margin)
+    axis.set_yscale("linear")
+
+
+def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
     """Plot individual samples and averages for one process role."""
     labels = sorted(
         {
@@ -173,7 +326,8 @@ def _plot_role(axis, rows, column, zenith_colors):
         }
     )
     role = rows[0]["role"]
-    seen_zenith = set()
+    show_production_labels = any(row.get("production_label") for row in rows)
+    seen_series = set()
     for series_index, (production, version, production_id, zenith) in enumerate(labels):
         series_rows = [
             row
@@ -187,16 +341,40 @@ def _plot_role(axis, rows, column, zenith_colors):
             == (production, version, production_id, zenith)
         ]
         color = zenith_colors[zenith]
-        legend_label = f"za={zenith:g} deg" if zenith not in seen_zenith else "_nolegend_"
-        seen_zenith.add(zenith)
-        _plot_averages(axis, series_rows, column, role, color, legend_label, series_index)
+        series_key = (production, zenith)
+        if series_key in seen_series:
+            legend_label = "_nolegend_"
+        elif show_production_labels:
+            legend_label = f"{production}: za={zenith:g} deg"
+        else:
+            legend_label = f"za={zenith:g} deg"
+        seen_series.add(series_key)
+        _plot_averages(
+            axis,
+            series_rows,
+            column,
+            role,
+            color,
+            legend_label,
+            series_index,
+            value_scale,
+        )
 
 
-def _plot_averages(axis, rows, column, role, color, legend_label, series_index=0):
+def _plot_averages(
+    axis,
+    rows,
+    column,
+    role,
+    color,
+    legend_label,
+    series_index=0,
+    value_scale=1.0,
+):
     """Overlay one mean and RMS error bar for each energy in a series."""
     grouped = {}
     for row in rows:
-        grouped.setdefault(row["energy_midpoint_gev"], []).append(row[column])
+        grouped.setdefault(row["energy_midpoint_gev"], []).append(row[column] * value_scale)
     style = _ROLE_STYLE.get(role, {})
     energies = sorted(grouped)
     means = [float(np.mean(grouped[energy])) for energy in energies]

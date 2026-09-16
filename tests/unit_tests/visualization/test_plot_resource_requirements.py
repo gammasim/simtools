@@ -1,5 +1,7 @@
 """Tests for resource requirement plots."""
 
+import pytest
+
 from simtools.visualization import plot_resource_requirements
 
 
@@ -11,7 +13,7 @@ def test_plot_writes_available_resource_figures(tmp_test_directory):
             "energy_midpoint_gev": 100.0,
             "wall_time_seconds_per_event": 1.0,
             "cpu_time_seconds_per_event": 0.5,
-            "peak_rss_bytes": 1000.0,
+            "peak_rss_bytes": 1_000_000.0,
             "sim_telarray_storage_bytes_per_event": None,
         },
         {
@@ -20,8 +22,8 @@ def test_plot_writes_available_resource_figures(tmp_test_directory):
             "energy_midpoint_gev": 1000.0,
             "wall_time_seconds_per_event": 2.0,
             "cpu_time_seconds_per_event": 1.5,
-            "peak_rss_bytes": 2000.0,
-            "sim_telarray_storage_bytes_per_event": 10.0,
+            "peak_rss_bytes": 2_000_000.0,
+            "sim_telarray_storage_bytes_per_event": 1_000_000.0,
         },
     ]
 
@@ -114,12 +116,15 @@ def test_plot_separates_roles_and_only_draws_averages(mocker, tmp_test_directory
 
     assert not axis.scatter.called
     errorbar_calls = axis.errorbar.call_args_list
-    assert [call.kwargs["label"] for call in errorbar_calls] == ["za=20 deg"] * 3 + [
-        "za=20 deg"
+    assert [call.kwargs["label"] for call in errorbar_calls] == ["baseline: za=20 deg"] * 3 + [
+        "baseline: za=20 deg"
     ] * 3
     assert [call.kwargs["fmt"] for call in errorbar_calls] == ["o", "s"] * 3
     assert subplots.call_count == 6
-    assert all("baseline: 0.37.1" in call.args[0] for call in axis.set_title.call_args_list)
+    titles = [call.args[0] for call in axis.set_title.call_args_list]
+    assert all("baseline" not in title for title in titles)
+    assert all("model" not in title for title in titles)
+    assert all("simtools" not in title for title in titles)
 
 
 def test_plot_adds_energy_group_means_with_rms_error_bars(mocker, tmp_test_directory):
@@ -159,6 +164,126 @@ def test_plot_adds_energy_group_means_with_rms_error_bars(mocker, tmp_test_direc
     assert first_average.kwargs["yerr"] == [1.0]
 
 
+def test_plot_converts_peak_rss_to_megabytes(mocker, tmp_test_directory):
+    rows = [
+        {
+            "role": "sim_telarray",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_event": None,
+            "cpu_time_seconds_per_event": None,
+            "peak_rss_bytes": 2_000_000.0,
+            "sim_telarray_storage_bytes_per_event": None,
+        }
+    ]
+    axis = mocker.Mock()
+    figure = mocker.Mock()
+    mocker.patch.object(plot_resource_requirements.plt, "subplots", return_value=(figure, axis))
+    mocker.patch.object(plot_resource_requirements, "save_figure")
+
+    plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    memory_call = axis.errorbar.call_args_list[0]
+    assert memory_call.args[:2] == ([100.0], [2.0])
+    assert axis.set_ylabel.call_args.args[0] == "Peak RSS (MB)"
+
+
+def test_byte_plot_label_uses_gigabytes_for_large_values():
+    label, scale = plot_resource_requirements._byte_plot_label(
+        "sim_telarray_output_bytes_per_event",
+        "sim_telarray output",
+        [{"sim_telarray_output_bytes_per_event": 2_000_000_000.0}],
+    )
+
+    assert label == "sim_telarray output (GB/event)"
+    assert scale == pytest.approx(1e-9)
+
+
+def test_byte_plot_label_adds_triggered_event_unit():
+    label, scale = plot_resource_requirements._byte_plot_label(
+        "sim_telarray_storage_bytes_per_triggered_event",
+        "sim_telarray storage",
+        [{"sim_telarray_storage_bytes_per_triggered_event": 2_000_000.0}],
+    )
+
+    assert label == "sim_telarray storage (MB/triggered event)"
+    assert scale == pytest.approx(1e-6)
+
+
+def test_plot_writes_ratio_figures_for_baseline_and_candidate(mocker, tmp_test_directory):
+    common = {
+        "role": "sim_telarray",
+        "zenith_angle_deg": 20.0,
+        "energy_midpoint_gev": 100.0,
+        "wall_time_seconds_per_event": 2.0,
+        "cpu_time_seconds_per_event": 1.0,
+        "peak_rss_bytes": 2_000_000.0,
+        "sim_telarray_storage_bytes_per_event": 1_000_000.0,
+    }
+    rows = [
+        {**common, "production_label": "reference", "comparison_role": "baseline"},
+        {
+            **common,
+            "production_label": "optimized",
+            "comparison_role": "candidate",
+            "wall_time_seconds_per_event": 3.0,
+            "cpu_time_seconds_per_event": 1.5,
+            "peak_rss_bytes": 3_000_000.0,
+            "sim_telarray_storage_bytes_per_event": 1_500_000.0,
+        },
+    ]
+    axis = mocker.Mock()
+    figure = mocker.Mock()
+    mocker.patch.object(plot_resource_requirements.plt, "subplots", return_value=(figure, axis))
+    mocker.patch.object(plot_resource_requirements, "save_figure")
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert {path.name for path in output_files} == {
+        "resource_wall_time_sim_telarray",
+        "resource_wall_time_ratio_sim_telarray",
+        "resource_cpu_time_sim_telarray",
+        "resource_cpu_time_ratio_sim_telarray",
+        "resource_peak_rss_sim_telarray",
+        "resource_peak_rss_ratio_sim_telarray",
+        "resource_storage_sim_telarray",
+        "resource_storage_ratio_sim_telarray",
+    }
+    assert axis.axhline.call_count == 4
+    assert all(
+        call.args[0] == "optimized / reference" for call in axis.set_ylabel.call_args_list[1::2]
+    )
+    assert all("ratio:" in call.args[0] for call in axis.set_title.call_args_list[1::2])
+
+
+def test_ratio_series_propagates_independent_rms_errors():
+    rows = [
+        {
+            "production_label": "baseline",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_event": value,
+        }
+        for value in (2.0, 4.0)
+    ] + [
+        {
+            "production_label": "candidate",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_event": value,
+        }
+        for value in (3.0, 5.0)
+    ]
+
+    series = plot_resource_requirements._ratio_series(rows, "wall_time_seconds_per_event")
+
+    _, ratio, ratio_error = series[20.0][0]
+    expected_ratio = 4.0 / 3.0
+    expected_error = expected_ratio * ((1 / 4 / 2**0.5) ** 2 + (1 / 3 / 2**0.5) ** 2) ** 0.5
+    assert ratio == pytest.approx(expected_ratio)
+    assert ratio_error == pytest.approx(expected_error)
+
+
 def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):
     rows = [
         {
@@ -167,10 +292,10 @@ def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):
             "energy_midpoint_gev": 100.0,
             "wall_time_seconds_per_triggered_event": 2.0,
             "cpu_time_seconds_per_triggered_event": 1.0,
-            "sim_telarray_storage_bytes_per_triggered_event": 10.0,
-            "sim_telarray_output_bytes_per_triggered_event": 5.0,
-            "reduced_event_data_bytes_per_triggered_event": 3.0,
-            "sim_telarray_histogram_bytes_per_triggered_event": 2.0,
+            "sim_telarray_storage_bytes_per_triggered_event": 1_000_000.0,
+            "sim_telarray_output_bytes_per_triggered_event": 1_000_000.0,
+            "reduced_event_data_bytes_per_triggered_event": 1_000_000.0,
+            "sim_telarray_histogram_bytes_per_triggered_event": 1_000_000.0,
         }
     ]
 

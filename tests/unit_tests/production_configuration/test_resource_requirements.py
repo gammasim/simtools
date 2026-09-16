@@ -182,11 +182,21 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
     )
     plotter = mocker.Mock(return_value=[])
     result = resource_requirements.write_resource_requirements(
-        {"baseline_path": "baseline", "candidate_path": "candidate", "select": []},
+        {
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": "reference",
+            "candidate_label": "optimized",
+            "select": [],
+        },
         tmp_test_directory,
         plotter,
     )
     assert {row["production_label"] for row in plotter.call_args.args[0]} == {
+        "reference",
+        "optimized",
+    }
+    assert {row["comparison_role"] for row in plotter.call_args.args[0]} == {
         "baseline",
         "candidate",
     }

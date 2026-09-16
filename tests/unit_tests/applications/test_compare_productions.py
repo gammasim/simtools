@@ -227,6 +227,28 @@ def test_comparison_level_argument_accepts_events():
     assert args.telescope_name == ["LSTN-01", "MSTN-01"]
 
 
+def test_comparison_level_argument_accepts_computing():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(compare_productions.APPLICATION.all_arguments)
+
+    args = parser.parse_args(
+        [
+            "--comparison_level",
+            "computing",
+            "--baseline_path",
+            "production",
+            "--baseline_label",
+            "reference",
+            "--candidate_label",
+            "optimized",
+        ]
+    )
+
+    assert args.comparison_level == "computing"
+    assert args.baseline_label == "reference"
+    assert args.candidate_label == "optimized"
+
+
 def test_application_parses_productions_without_select(monkeypatch):
     monkeypatch.setattr(
         sys,
@@ -267,19 +289,19 @@ def test_signal_comparison_requires_production_inputs(mocker):
     )
 
 
-def test_compute_comparison_requires_baseline_path(mocker):
+def test_computing_comparison_requires_baseline_path(mocker):
     parser = mocker.Mock()
 
-    compare_productions._post_parse({"comparison_level": "compute"}, None, parser)
+    compare_productions._post_parse({"comparison_level": "computing"}, None, parser)
 
     parser.error.assert_called_once_with(
-        "Compute-level comparison requires '--baseline_path' and does not use '--production'."
+        "Computing-resource comparison requires '--baseline_path' and does not use '--production'."
     )
 
 
-def test_main_runs_compute_comparison(mocker, tmp_test_directory):
+def test_main_runs_computing_comparison(mocker, tmp_test_directory):
     app_context = mocker.MagicMock()
-    app_context.args = {"comparison_level": "compute", "baseline_path": "production"}
+    app_context.args = {"comparison_level": "computing", "baseline_path": "production"}
     app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
     mocker.patch(
         "simtools.applications.compare_productions.APPLICATION"

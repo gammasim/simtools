@@ -44,6 +44,18 @@ _ARGUMENTS = (
         required=False,
     ),
     cli.ArgumentDefinition(
+        "baseline_label",
+        help="Display label for the baseline production in computing comparisons.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "candidate_label",
+        help="Display label for the candidate production in computing comparisons.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
         "select",
         help="Selection expression as dotted.path=value. Can be repeated.",
         action="append",
@@ -57,7 +69,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "comparison_level",
-        choices=["events", "signal", "compute"],
+        choices=["events", "signal", "computing"],
         default="events",
         help="Comparison level to execute.",
     ),
@@ -82,16 +94,31 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, _config_sources, parser):
     """Validate legacy and metadata-based production input modes."""
-    comparison_level = args_dict.get("comparison_level")
+    if args_dict.get("comparison_level") == "computing":
+        _validate_computing_arguments(args_dict, parser)
+        return
+    _validate_non_computing_arguments(args_dict, parser)
+
+
+def _validate_computing_arguments(args_dict, parser):
+    """Validate arguments specific to computing-resource comparisons."""
+    if args_dict.get("production") or not args_dict.get("baseline_path"):
+        parser.error(
+            "Computing-resource comparison requires '--baseline_path' "
+            "and does not use '--production'."
+        )
+    baseline_label = args_dict.get("baseline_label")
+    candidate_label = args_dict.get("candidate_label")
+    if baseline_label and candidate_label and baseline_label == candidate_label:
+        parser.error("'--baseline_label' and '--candidate_label' must be different.")
+
+
+def _validate_non_computing_arguments(args_dict, parser):
+    """Validate arguments specific to event and signal comparisons."""
+    if args_dict.get("baseline_label") or args_dict.get("candidate_label"):
+        parser.error("Production labels can only be used with '--comparison_level computing'.")
     has_legacy_input = bool(args_dict.get("production"))
     has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
-    if comparison_level == "compute":
-        if has_legacy_input or not args_dict.get("baseline_path"):
-            parser.error(
-                "Compute-level comparison requires '--baseline_path' "
-                "and does not use '--production'."
-            )
-        return
     if has_legacy_input == has_metadata_input:
         parser.error("Use either '--production' or '--baseline_path' with '--candidate_path'.")
     if has_metadata_input and not (
@@ -126,7 +153,7 @@ def main():
         return
     if comparison_level == "signal":
         output_files = _run_signal_comparison(app_context)
-    elif comparison_level == "compute":
+    elif comparison_level == "computing":
         write_resource_requirements(
             app_context.args,
             app_context.io_handler.get_output_directory(),
