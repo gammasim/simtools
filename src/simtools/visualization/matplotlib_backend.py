@@ -28,7 +28,18 @@ class _MatplotlibModuleProxy:
 
 
 def lazy_module(module_name):
-    """Return a proxy that imports a plotting dependency on first use."""
+    """Return a proxy that imports a plotting dependency on first use.
+
+    Parameters
+    ----------
+    module_name : str
+        Fully qualified name of the plotting module to import lazily.
+
+    Returns
+    -------
+    _MatplotlibModuleProxy
+        Proxy that loads ``module_name`` when an attribute or item is accessed.
+    """
     return _MatplotlibModuleProxy(module_name)
 
 

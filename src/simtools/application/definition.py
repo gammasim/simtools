@@ -144,7 +144,8 @@ class ApplicationDefinition:
     @staticmethod
     def _help_requested():
         """Return whether the command line explicitly requests help."""
-        return any(argument in {"--help", "-h"} for argument in sys.argv[1:])
+        arguments = sys.argv[1:]
+        return not arguments or any(argument in {"--help", "-h"} for argument in arguments)
 
     @staticmethod
     def _show_options_requested():
@@ -177,11 +178,12 @@ class ApplicationDefinition:
 
     def start(self):
         """Read configuration and run the standard application startup sequence."""
+        args_dict, db_config = self._parse()
+
         from simtools.application.control import (  # pylint: disable=import-outside-toplevel
             _initialize_runtime,
         )
 
-        args_dict, db_config = self._parse()
         return _initialize_runtime(
             args_dict,
             db_config,

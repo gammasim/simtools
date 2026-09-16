@@ -138,7 +138,7 @@ def test_start_can_skip_model_reader_initialization(mocker):
     assert startup.call_args.kwargs["initialize_model_reader"] is False
 
 
-@pytest.mark.parametrize("arguments", [["--help"], ["-h"]])
+@pytest.mark.parametrize("arguments", [[], ["--help"], ["-h"]])
 def test_help_does_not_initialize_configuration(arguments, monkeypatch, mocker):
     """Help only requires parser construction, not configuration or runtime setup."""
     configure = mocker.patch("simtools.application.definition.configurator.Configurator.configure")
