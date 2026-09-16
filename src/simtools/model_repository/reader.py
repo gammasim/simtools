@@ -317,6 +317,8 @@ class SimulationModelReader:
             If supplied, read only these parameters. This is useful for callers
             that need a small subset of a model, such as coordinate transforms.
         """
+        if parameter_names is not None:
+            parameter_names = frozenset(parameter_names)
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )

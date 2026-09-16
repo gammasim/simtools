@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 import textwrap
+from operator import itemgetter
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -97,6 +98,29 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
     assert list(selected) == ["camera_body_diameter"]
 
 
+def test_reader_preserves_generator_parameter_names(model_repository):
+    """Filtering accepts one-shot iterables without dropping later names."""
+    production_file = model_repository / "simulation-models/productions/1.0.0/LSTN-design.json"
+    production = json.loads(production_file.read_text(encoding="utf-8"))
+    production["parameters"]["LSTN-design"]["camera_body_diameter_2"] = "1.0.0"
+    production_file.write_text(json.dumps(production), encoding="utf-8")
+    _write_json(
+        model_repository
+        / "simulation-models/model_parameters/LSTN-design/camera_body_diameter_2/"
+        / "camera_body_diameter_2-1.0.0.json",
+        _parameter("LSTN-design", "camera_body_diameter_2", "1.0.0", 349.0),
+    )
+
+    reader = SimulationModelReader.from_files(model_repository)
+    parameter_names = (name for name in ("camera_body_diameter_2", "camera_body_diameter"))
+
+    selected = reader.get_model_parameters(
+        "North", "LSTN-design", "telescopes", "1.0.0", parameter_names=parameter_names
+    )
+
+    assert list(selected) == ["camera_body_diameter", "camera_body_diameter_2"]
+
+
 def test_reader_reads_global_parameter_by_version(model_repository):
     """A versioned global parameter does not require a global caller scope."""
     reader = SimulationModelReader.from_files(model_repository)
@@ -138,7 +162,7 @@ def test_production_file_index_includes_patch_history(model_repository):
 
     production_files = repository_files.get_production_table_files(patch_path)
 
-    assert {version for version, _ in production_files} == {"1.0.0", "1.1.0"}
+    assert set(map(itemgetter(0), production_files)) == {"1.0.0", "1.1.0"}
 
 
 def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
