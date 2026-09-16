@@ -177,7 +177,7 @@ def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch, 
     assert application.label == "example_app"
 
 
-def test_post_parse_hook_receives_configuration_sources(mocker):
+def test_post_parse_hook_receives_configuration_sources(mocker, monkeypatch):
     initialize = mocker.patch(
         "simtools.application.definition.configurator.Configurator.configure",
         return_value=({"value": 3}, {}),
@@ -189,6 +189,7 @@ def test_post_parse_hook_receives_configuration_sources(mocker):
         arguments=(ArgumentDefinition("value", type=int),),
         post_parse=hook,
     )
+    monkeypatch.setattr(sys, "argv", ["application", "--value", "3"])
 
     args, database = application._parse()
 
