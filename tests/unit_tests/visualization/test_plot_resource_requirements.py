@@ -159,6 +159,33 @@ def test_plot_adds_energy_group_means_with_rms_error_bars(mocker, tmp_test_direc
     assert first_average.kwargs["yerr"] == [1.0]
 
 
+def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):
+    rows = [
+        {
+            "role": "sim_telarray",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_triggered_event": 2.0,
+            "cpu_time_seconds_per_triggered_event": 1.0,
+            "sim_telarray_storage_bytes_per_triggered_event": 10.0,
+            "sim_telarray_output_bytes_per_triggered_event": 5.0,
+            "reduced_event_data_bytes_per_triggered_event": 3.0,
+            "sim_telarray_histogram_bytes_per_triggered_event": 2.0,
+        }
+    ]
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert {output_file.name for output_file in output_files} == {
+        "resource_wall_time_triggered_sim_telarray",
+        "resource_cpu_time_triggered_sim_telarray",
+        "resource_storage_triggered_sim_telarray",
+        "resource_sim_telarray_output_triggered_sim_telarray",
+        "resource_reduced_event_data_triggered_sim_telarray",
+        "resource_sim_telarray_histogram_triggered_sim_telarray",
+    }
+
+
 def test_plot_uses_zenith_colors_and_separate_averages(mocker, tmp_test_directory):
     rows = []
     for zenith, value in ((20.0, 1.0), (70.0, 3.0)):

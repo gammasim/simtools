@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+import h5py
 import pytest
 
 from simtools.production_configuration import resource_requirements
@@ -32,6 +33,10 @@ def _manifest(tmp_test_directory):
                     "user_cpu_seconds": 10.0,
                     "system_cpu_seconds": 2.0,
                     "peak_rss_bytes": 1000,
+                    "start_time": "2026-01-01T00:00:00+00:00",
+                    "end_time": "2026-01-01T00:00:20+00:00",
+                    "measurement_method": "linux_procfs_direct_pid",
+                    "platform": "Linux",
                 }
             ),
             encoding="utf-8",
@@ -101,6 +106,42 @@ def test_collect_resource_requirements_reports_invalid_record_and_keeps_other_ro
     assert "return code 1" in diagnostics[0]["message"]
 
 
+def test_collect_resource_requirements_normalizes_simtel_by_triggered_events(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    manifest.data["statistics"] = {"simulated_events": 10, "triggered_events": 5}
+    mocker.patch.object(resource_requirements, "discover_manifests", return_value=[manifest])
+
+    rows, diagnostics = resource_requirements.collect_resource_requirements("production")
+
+    assert diagnostics == []
+    simtel_row = next(row for row in rows if row["role"] == "sim_telarray")
+    assert simtel_row["triggered_events"] == 5
+    assert simtel_row["wall_time_seconds_per_triggered_event"] == pytest.approx(4.0)
+    assert simtel_row["sim_telarray_storage_bytes_per_triggered_event"] == pytest.approx(6.0)
+    corsika_row = next(row for row in rows if row["role"] == "corsika")
+    assert corsika_row["triggered_events"] is None
+    assert corsika_row["wall_time_seconds_per_triggered_event"] is None
+
+
+def test_collect_resource_requirements_recovers_trigger_count_from_reduced_data(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    reduced_file = manifest.directory / manifest.data["files"]["reduced_event_data"][0]
+    with h5py.File(reduced_file, "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(10,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(4,), dtype="i8")
+    mocker.patch.object(resource_requirements, "discover_manifests", return_value=[manifest])
+
+    rows, diagnostics = resource_requirements.collect_resource_requirements("production")
+
+    assert diagnostics == []
+    simtel_row = next(row for row in rows if row["role"] == "sim_telarray")
+    assert simtel_row["triggered_events"] == 4
+
+
 def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_test_directory):
     manifest = _manifest(tmp_test_directory)
     mocker.patch.object(resource_requirements, "discover_manifests", return_value=[manifest])
@@ -116,3 +157,37 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
     assert result["report_file"].is_file()
     assert "Storage" in result["report_file"].read_text(encoding="utf-8")
     plotter.assert_called_once()
+
+
+def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test_directory):
+    baseline = _manifest(tmp_test_directory / "baseline")
+    candidate = _manifest(tmp_test_directory / "candidate")
+    baseline.data["configuration"]["primary"] = "gamma"
+    candidate.data["configuration"]["primary"] = "proton"
+    mocker.patch.object(resource_requirements, "discover_manifests", return_value=[baseline])
+
+    rows, _ = resource_requirements.collect_resource_requirements(
+        "production", selections=["configuration.primary=gamma"]
+    )
+    assert len(rows) == 2
+    with pytest.raises(ValueError, match="No production jobs matched"):
+        resource_requirements.collect_resource_requirements(
+            "production", selections=["configuration.primary=proton"]
+        )
+
+    mocker.patch.object(
+        resource_requirements,
+        "discover_manifests",
+        side_effect=[[baseline], [candidate]],
+    )
+    plotter = mocker.Mock(return_value=[])
+    result = resource_requirements.write_resource_requirements(
+        {"baseline_path": "baseline", "candidate_path": "candidate", "select": []},
+        tmp_test_directory,
+        plotter,
+    )
+    assert {row["production_label"] for row in plotter.call_args.args[0]} == {
+        "baseline",
+        "candidate",
+    }
+    assert result["table_file"].is_file()

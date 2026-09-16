@@ -1,8 +1,11 @@
 """Build metadata for completed simulation-production jobs."""
 
+import gzip
+import re
 from copy import deepcopy
 from pathlib import Path
 
+import h5py
 from astropy import units as u
 
 from simtools.production_configuration.production_file_selection import (
@@ -25,6 +28,10 @@ REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
     "array_layout_name",
     "site",
     "simulation_software",
+)
+
+_SIMTEL_EVENT_COUNT_PATTERN = re.compile(
+    r"(?:\d+/){3}\d+\s+tel\.,\s*(?P<simulated>\d+)/(?P<triggered>\d+)\s+events\s*$"
 )
 
 
@@ -98,7 +105,7 @@ def build_production_job_manifest(
     if catalog_metadata is None:
         catalog_metadata = build_simulation_job_metadata(args_dict, simulator)
     manifest_schema = get_manifest_schema_metadata("simulate_prod_job")
-    return {
+    manifest = {
         **manifest_schema,
         "product_type": "simulate_prod_job",
         "production_id": args_dict.get("production_id") or args_dict.get("label"),
@@ -116,6 +123,96 @@ def build_production_job_manifest(
             else inventory_production_files(output_directory)
         ),
     }
+    event_counts = get_sim_telarray_event_counts(
+        output_directory,
+        manifest["files"],
+    )
+    if event_counts is not None:
+        manifest["statistics"] = event_counts
+    return manifest
+
+
+def get_sim_telarray_event_counts(output_directory, file_inventory):
+    """Return sim_telarray event counts without reading simtel output files.
+
+    Parameters
+    ----------
+    output_directory : str or pathlib.Path
+        Directory containing the production outputs.
+    file_inventory : dict
+        Manifest file inventory with relative paths grouped by file type.
+
+    Returns
+    -------
+    dict or None
+        Mapping with ``simulated_events`` and ``triggered_events`` when counts
+        can be recovered from reduced-event HDF5 files or sim_telarray logs.
+    """
+    output_directory = Path(output_directory)
+    reduced_event_counts = _reduced_event_counts(output_directory, file_inventory)
+    if reduced_event_counts is not None:
+        return reduced_event_counts
+    return _sim_telarray_log_event_counts(output_directory, file_inventory)
+
+
+def _reduced_event_counts(output_directory, file_inventory):
+    """Read event counts from reduced-event HDF5 tables when available."""
+    paths = file_inventory.get("reduced_event_data", [])
+    if not paths:
+        return None
+    simulated_events = 0
+    triggered_events = 0
+    try:
+        for relative_path in paths:
+            with h5py.File(output_directory / relative_path, "r") as data_file:
+                simulated_events += len(data_file["SHOWERS"])
+                trigger_table = data_file.get("TRIGGERS")
+                if trigger_table is not None:
+                    triggered_events += len(trigger_table)
+    except KeyError, OSError, TypeError, ValueError:
+        return None
+    return {
+        "simulated_events": simulated_events,
+        "triggered_events": triggered_events,
+    }
+
+
+def _sim_telarray_log_event_counts(output_directory, file_inventory):
+    """Extract event counts from sim_telarray log footers as a fallback."""
+    paths = file_inventory.get("sim_telarray_log", [])
+    counts = []
+    for relative_path in paths:
+        try:
+            count = _read_log_event_count(output_directory / relative_path)
+        except EOFError, OSError, UnicodeError:
+            continue
+        if count is not None:
+            counts.append(count)
+    if not counts:
+        return None
+    return {
+        "simulated_events": sum(simulated for simulated, _ in counts),
+        "triggered_events": sum(triggered for _, triggered in counts),
+    }
+
+
+def _read_log_event_count(path):
+    """Return the last event-count footer in a plain or gzip-compressed log."""
+    if path.name.endswith(".gz"):
+        with gzip.open(path, "rt", encoding="utf-8", errors="replace") as log_file:
+            return _find_event_count(log_file)
+    with path.open(encoding="utf-8", errors="replace") as log_file:
+        return _find_event_count(log_file)
+
+
+def _find_event_count(lines):
+    """Return the last sim_telarray event count found in an iterable of log lines."""
+    count = None
+    for line in lines:
+        match = _SIMTEL_EVENT_COUNT_PATTERN.search(line.rstrip())
+        if match:
+            count = (int(match["simulated"]), int(match["triggered"]))
+    return count
 
 
 def _build_selection_configuration(args_dict, simulator, atmosphere_configuration=None):

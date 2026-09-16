@@ -4,14 +4,21 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import astropy.units as u
+import h5py
 import pytest
 
+from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_metadata import (
     REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS,
     _add_optional_configuration_value,
     _resolved_model_parameter_overrides,
     build_production_job_manifest,
     build_simulation_job_metadata,
+    get_sim_telarray_event_counts,
+)
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+    check_manifest,
 )
 
 
@@ -136,6 +143,46 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         "reduced_event_data": ["gamma_run000012.reduced_event_data.hdf5"],
         "sim_telarray": ["gamma_run000012.simtel.zst"],
     }
+
+
+def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000012"
+    output_directory.mkdir()
+    (output_directory / "gamma_run000012.simtel.zst").touch()
+    reduced_file = output_directory / "gamma_run000012.reduced_event_data.hdf5"
+    with h5py.File(reduced_file, "w") as data_file:
+        data_file.create_dataset("SHOWERS", shape=(12,), dtype="i8")
+        data_file.create_dataset("TRIGGERS", shape=(5,), dtype="i8")
+
+    manifest = build_production_job_manifest(
+        _args(
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        _simulator("MSTS-01", run_number=12),
+        output_directory,
+    )
+
+    assert manifest["statistics"] == {"simulated_events": 12, "triggered_events": 5}
+    manifest_path = output_directory / "simulate_prod_job_metadata.yml"
+    write_data_to_file(manifest, manifest_path)
+    assert check_manifest(ProductionManifest(path=manifest_path, data=manifest))["valid"]
+
+
+def test_get_sim_telarray_event_counts_falls_back_to_log(tmp_test_directory):
+    output_directory = Path(tmp_test_directory)
+    log_file = output_directory / "run.simtel.log"
+    log_file.write_text(
+        "Sim_telarray finished at time after 1/2/3/4 tel., 100/17 events\n",
+        encoding="utf-8",
+    )
+
+    assert get_sim_telarray_event_counts(
+        output_directory,
+        {"sim_telarray_log": [log_file.name]},
+    ) == {"simulated_events": 100, "triggered_events": 17}
 
 
 def test_build_production_job_manifest_discovers_all_packaged_outputs(tmp_test_directory):
