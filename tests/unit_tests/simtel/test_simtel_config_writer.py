@@ -736,6 +736,37 @@ def test_convert_segmentation_records_uses_parameter_schema_version(
     }
 
 
+def test_convert_shared_segmentation_records_uses_design_name(tmp_test_directory):
+    writer = SimtelConfigWriter(
+        site="South",
+        model_version="7.0.0",
+        telescope_model_name="CTAO-SSTS-01",
+        telescope_design_model="SSTS-design",
+    )
+    config_path = Path(tmp_test_directory) / "CTAO-SSTS-01.cfg"
+    result = writer._convert_model_parameters_to_simtel_format(
+        "primary_segmentation",
+        [
+            {
+                "kind": "hex",
+                "x": {"value": 0, "unit": "cm"},
+                "y": {"value": 0, "unit": "cm"},
+                "diameter": {"value": 1, "unit": "cm"},
+            }
+        ],
+        config_path,
+        None,
+        parameter_name="primary_mirror_segmentation",
+        parameter_data={
+            "instrument": "SSTS-design",
+            "model_parameter_schema_version": "0.3.0",
+        },
+    )
+
+    assert result == ("primary_segmentation", "primary_mirror_segmentation-SSTS-design.dat")
+    assert (Path(tmp_test_directory) / "primary_mirror_segmentation-SSTS-design.dat").is_file()
+
+
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
     model_parameters = {"test_param": {"value": 42}}
 
