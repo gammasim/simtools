@@ -9,12 +9,14 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 from cycler import cycler
-from matplotlib import gridspec
-from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
 from simtools.settings import config
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+
+gridspec = lazy_module("matplotlib.gridspec")
+pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 COLORS = {}
 COLORS["classic"] = [
@@ -705,7 +707,7 @@ def save_figures_to_single_document(figs, output_file_name, close=False):
         Close each figure after saving. Defaults to False.
     """
     _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
-    pdf_pages = PdfPages(Path(output_file_name).absolute().as_posix())
+    pdf_pages = pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix())
     for fig in figs:
         fig.tight_layout()
         pdf_pages.savefig(fig)
