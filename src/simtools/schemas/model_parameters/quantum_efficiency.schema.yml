@@ -31,6 +31,44 @@ data:
         type: float64
         unit: dimensionless
         required: false
+      - name: efficiency_rms400
+        description: Quantum efficiency uncertainty after normalization to the 350-450 nm mean
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: efficiency_min
+        description: Minimum quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: efficiency_max
+        description: Maximum quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: efficiency_n
+        description: Number of quantum efficiency measurements
+        type: int64
+        unit: dimensionless
+        required: false
+      - name: efficiency_low
+        description: Quantum efficiency of the low-efficiency group
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: efficiency_low_rms
+        description: Quantum efficiency uncertainty of the low-efficiency group
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: wavelength_rms
+        description: Wavelength uncertainty
+        type: float64
+        unit: nm
+        required: false
 instrument:
   class: Camera
 activity:
@@ -50,7 +88,7 @@ simulation_software:
     serialization:
       columns: [wavelength, efficiency]
       optional_columns: [efficiency_rms]
-      allowed_columns: [wavelength, efficiency, efficiency_rms]
+      allowed_columns: [wavelength, efficiency, efficiency_rms, efficiency_rms400, efficiency_min, efficiency_max, efficiency_n, efficiency_low, efficiency_low_rms, wavelength_rms]
       row_sort_keys: [wavelength]
       float_format: ".12g"
       write_comments: false

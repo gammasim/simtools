@@ -6,7 +6,7 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: lightguide_efficiency_vs_wavelength
-description: Lightguide efficiency for on-axis photons vs wavelength.
+description: Lightguide efficiency versus incidence angle and wavelength.
 data:
   - type: file
     unit: dimensionless
@@ -45,7 +45,7 @@ simulation_software:
       columns: [wavelength, efficiency]
       optional_columns: [incidence_angle]
       allowed_columns: [wavelength, efficiency, incidence_angle]
-      row_sort_keys: [wavelength]
+      row_sort_keys: [wavelength, incidence_angle]
       float_format: ".12g"
       write_comments: false
 plot_configuration:
