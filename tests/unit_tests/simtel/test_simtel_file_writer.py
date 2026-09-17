@@ -175,7 +175,7 @@ def test_write_atmospheric_transmission_groups_rows_by_wavelength(tmp_test_direc
     ]
 
 
-def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
+def test_write_atmospheric_transmission_writes_opaque_sparse_cells(tmp_test_directory):
     table = QTable(
         {
             "wavelength": [300.0, 400.0, 400.0],
@@ -183,7 +183,7 @@ def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
             "extinction": [0.1, 0.3, 0.4],
         }
     )
-    result = table_serializers.write_simtel_table(
+    table_serializers.write_simtel_table(
         table,
         tmp_test_directory,
         contract=_contract(
@@ -192,14 +192,13 @@ def test_write_atmospheric_transmission_fills_sparse_cells(tmp_test_directory):
             row_sort_keys=["wavelength", "altitude"],
             matrix_axes=["wavelength", "altitude"],
             value_column="extinction",
-            missing_value=99999,
+            missing_value=99999.0,
             float_format=".1f",
         ),
     )
-
-    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / "table.dat").read_text(encoding="utf-8").splitlines() == [
         "# H1= 1.0 2.0",
-        "300.0 0.1 99999",
+        "300.0 0.1 99999.0",
         "400.0 0.3 0.4",
     ]
 

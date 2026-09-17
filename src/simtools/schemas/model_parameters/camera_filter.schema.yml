@@ -49,6 +49,10 @@ simulation_software:
   - name: sim_telarray
     table_format: rpol_matrix
     serialization:
+      description: |-
+        One-dimensional output is wavelength and transmission. For an
+        incidence_angle column, output uses sim_telarray RPOL syntax with
+        '#@RPOL@[ANGLE=] 2' and degree-valued ANGLE coordinates.
       columns: [wavelength, transmission]
       allowed_columns: [wavelength, incidence_angle, transmission]
       row_sort_keys: [wavelength, incidence_angle]
