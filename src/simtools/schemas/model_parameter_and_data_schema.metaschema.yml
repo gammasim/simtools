@@ -442,6 +442,8 @@ definitions:
         type: object
         additionalProperties:
           type: string
+      description:
+        type: string
     required:
       - columns
     title: SerializationContract
