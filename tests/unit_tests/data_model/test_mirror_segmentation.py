@@ -8,7 +8,7 @@ from simtools.data_model.mirror_segmentation import validate_segments
 from simtools.simtel.segmentation import parse_segmentation_file, write_mirror_segmentation
 
 PARAMETER_NAME = "primary_mirror_segmentation"
-SCHEMA_VERSION = "0.3.0"
+SCHEMA_VERSION = "0.2.0"
 
 
 def _q(value, unit="cm"):
@@ -103,6 +103,16 @@ def test_validate_accepts_compatible_units():
     record = _shape()
     record["diameter"] = _q(0.1, "m")
     validate_segments([record], PARAMETER_NAME, SCHEMA_VERSION)
+
+
+def test_write_converts_compatible_units_to_simtel_centimeters(tmp_test_directory):
+    record = _shape()
+    record["diameter"] = _q(0.1, "m")
+    output = Path(tmp_test_directory) / "segments.dat"
+
+    write_mirror_segmentation([record], output, PARAMETER_NAME, SCHEMA_VERSION)
+
+    assert output.read_text(encoding="utf-8").splitlines() == ["HEX 1 0.0 0.0 10.0 0.0"]
 
 
 def test_validate_rejects_invalid_ring_and_polygon():

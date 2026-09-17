@@ -7,7 +7,7 @@ import pytest
 from simtools.simtel.segmentation import parse_segmentation_file, write_mirror_segmentation
 
 PARAMETER_NAME = "primary_mirror_segmentation"
-SCHEMA_VERSION = "0.3.0"
+SCHEMA_VERSION = "0.2.0"
 
 
 def test_parse_segmentation_file_ignores_comments_and_commas(tmp_test_directory):

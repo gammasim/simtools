@@ -237,6 +237,37 @@ def test_write_camera_file_uses_design_name_for_shared_camera(
     assert write_camera.call_args.args[1] == tmp_test_directory / "camera-LSTN-design.dat"
 
 
+def test_write_camera_file_reuses_existing_shared_camera(tmp_test_directory, model_version, mocker):
+    writer = SimtelConfigWriter(
+        site="North",
+        model_version=model_version,
+        telescope_model_name="LSTN-02",
+        telescope_design_model="LSTN-design",
+    )
+    parameters = {
+        name: {"value": [], "instrument": "LSTN-design"}
+        for name in (
+            "camera_rotate",
+            "camera_pixel_types",
+            "camera_pixel_layout",
+            "camera_trigger_groups",
+            "camera_trigger_members",
+        )
+    }
+    output = tmp_test_directory / "camera-LSTN-design.dat"
+    output.write_text("existing\n", encoding="utf-8")
+    write_camera = mocker.patch(
+        "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file"
+    )
+
+    result = writer._write_camera_file(
+        parameters, tmp_test_directory / "config.cfg", telescope_name="LSTN-02"
+    )
+
+    assert result == "camera-LSTN-design.dat"
+    write_camera.assert_not_called()
+
+
 def test_write_camera_file_uses_telescope_name_for_mixed_camera(
     tmp_test_directory, model_version, mocker
 ):
@@ -699,7 +730,7 @@ def test_convert_segmentation_records_to_simtel_file(simtel_config_writer, tmp_t
         config_path,
         None,
         parameter_name="primary_mirror_segmentation",
-        parameter_data={"model_parameter_schema_version": "0.3.0"},
+        parameter_data={"model_parameter_schema_version": "0.2.0"},
     )
     assert result == ("primary_segmentation", "primary_mirror_segmentation-telescope.dat")
     assert (Path(tmp_test_directory) / result[1]).is_file()
@@ -727,12 +758,12 @@ def test_convert_segmentation_records_uses_parameter_schema_version(
             config_path,
             None,
             parameter_name="primary_mirror_segmentation",
-            parameter_data={"model_parameter_schema_version": "0.3.0"},
+            parameter_data={"model_parameter_schema_version": "0.2.0"},
         )
 
     assert write_mirror_segmentation.call_args.kwargs == {
         "parameter_name": "primary_mirror_segmentation",
-        "schema_version": "0.3.0",
+        "schema_version": "0.2.0",
     }
 
 
@@ -759,12 +790,42 @@ def test_convert_shared_segmentation_records_uses_design_name(tmp_test_directory
         parameter_name="primary_mirror_segmentation",
         parameter_data={
             "instrument": "SSTS-design",
-            "model_parameter_schema_version": "0.3.0",
+            "model_parameter_schema_version": "0.2.0",
         },
     )
 
     assert result == ("primary_segmentation", "primary_mirror_segmentation-SSTS-design.dat")
     assert (Path(tmp_test_directory) / "primary_mirror_segmentation-SSTS-design.dat").is_file()
+
+
+def test_convert_shared_segmentation_reuses_existing_design_file(tmp_test_directory, mocker):
+    writer = SimtelConfigWriter(
+        site="South",
+        model_version="7.0.0",
+        telescope_model_name="CTAO-SSTS-01",
+        telescope_design_model="SSTS-design",
+    )
+    config_path = Path(tmp_test_directory) / "CTAO-SSTS-01.cfg"
+    output = Path(tmp_test_directory) / "primary_mirror_segmentation-SSTS-design.dat"
+    output.write_text("existing\n", encoding="utf-8")
+    write_mirror_segmentation = mocker.patch(
+        "simtools.simtel.simtel_config_writer.segmentation.write_mirror_segmentation"
+    )
+
+    result = writer._convert_model_parameters_to_simtel_format(
+        "primary_segmentation",
+        [{"kind": "hex"}],
+        config_path,
+        None,
+        parameter_name="primary_mirror_segmentation",
+        parameter_data={
+            "instrument": "SSTS-design",
+            "model_parameter_schema_version": "0.2.0",
+        },
+    )
+
+    assert result == ("primary_segmentation", output.name)
+    write_mirror_segmentation.assert_not_called()
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):

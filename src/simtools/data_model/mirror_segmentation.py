@@ -102,7 +102,20 @@ def quantity_value(record, field, unit, default=None):
 
 
 def make_quantity(value, unit):
-    """Return a JSON-compatible explicit quantity object."""
+    """Return a JSON-compatible explicit quantity object.
+
+    Parameters
+    ----------
+    value : float
+        Numeric quantity value.
+    unit : str
+        Unit associated with ``value``.
+
+    Returns
+    -------
+    dict
+        Quantity represented by ``value`` and ``unit`` keys.
+    """
     return {"value": value, "unit": unit}
 
 
