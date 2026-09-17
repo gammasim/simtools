@@ -26,6 +26,11 @@ data:
         type: float64
         unit: 1.e9/(nm s m2 sr)
         required: true
+      - name: spectral_flux_density
+        description: Original spectral flux density
+        type: float64
+        unit: uJy / arcsec2
+        required: false
 instrument:
   class: Site
 activity:
