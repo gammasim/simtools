@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - '.github/workflows/CI-schema-validation.yml'
       - 'src/simtools/schemas/model_parameters/**'
       - 'src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml'
       - 'src/simtools/schemas/application_workflow.metaschema.yml'
