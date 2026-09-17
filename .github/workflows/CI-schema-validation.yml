@@ -46,8 +46,8 @@ jobs:
 
       - name: Check for files without the suffix *.schema.yml
         run: |
-          shopt -s nullglob
-          files=(src/simtools/schemas/model_parameters/*.yml)
+          shopt -s nullglob globstar
+          files=(src/simtools/schemas/model_parameters/**/*.yml)
           if (( ${#files[@]} == 0 )); then
             echo "No model parameter YAML files found"
             exit 1
