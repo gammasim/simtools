@@ -17,6 +17,9 @@ directly to sim_telarray using the sim_telarray multipipe mechanism.
 After a successful job, the application writes `simulate_prod_job_metadata.yml` to the job output
 directory. The manifest records the resolved configuration and the generated production files,
 including files in the standard `sim_telarray/runNNNNNN` and `corsika/runNNNNNN` subdirectories.
+For sim_telarray jobs, it also records simulated and triggered event counts under `statistics`;
+these counts are derived from reduced-event data or the sim_telarray log without reading the
+simtel event output.
 When `--grid_output_path` is used, the manifest is written alongside the files packed for grid
 registration.
 

@@ -8,9 +8,10 @@
 
 ## Overview
 
-This application compares trigger-histogram HDF5 products from two or more simulation
-productions at the event level. Each production is identified by a label and one or more
-comma-separated input file patterns. Multiple files belonging to one label are aggregated.
+This application compares simulation products from two or more productions at the event or signal
+level, or summarizes CORSIKA and sim_telarray resource requirements for a production. For event
+and signal comparisons, each production is identified by a label and one or more comma-separated
+input file patterns. Multiple files belonging to one label are aggregated.
 
 The first production is the baseline. Every following production is compared with that baseline,
 so at least two production descriptors are required and production order matters. Production
@@ -19,6 +20,42 @@ labels must be unique.
 The application supports event-level and signal-level comparisons. Trigger-histogram files should
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
+
+For production resource requirements, use `--comparison_level computing` with a production root in
+`--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
+resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
+process role), a
+grouped `resource_requirements.md` report, and time, memory, and storage plots. Storage plots
+include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
+event output, reduced event data, and sim_telarray histograms when those files are available.
+Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
+per-process maximum. Byte-based quantities in plots use decimal MB or GB, selected according to
+the values shown; the ECSV resource table retains raw byte values. For sim_telarray, additional
+plots normalize time and output sizes by the
+number of triggered events recorded in the job metadata. Sim_telarray storage includes simtel event
+files, reduced event data, and histogram files. New job manifests record these counts under
+`statistics`; when processing older manifests, the computing comparison can recover the count from
+the reduced-event HDF5 table or the sim_telarray log without opening the `.simtel.zst` file.
+Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing. An optional
+`--candidate_path` overlays a second production. When both productions are provided, each
+available resource plot also has a `candidate / baseline` ratio plot with propagated errors and a
+horizontal reference line at one. The ratio errors propagate the uncertainty of each production
+mean from its run-to-run RMS. A warning is logged when the ratio differs by a factor of 1.25 or
+more; changes by a factor of 1.5 or more are marked as major. Use `--baseline_label` and
+`--candidate_label` to replace the default display labels. Ratio points are matched by primary,
+site, layout, and model version; separate series are shown when these dimensions vary. Repeated
+`--select` expressions filter both production manifests.
+
+```console
+simtools-compare-productions \
+    --comparison_level computing \
+    --baseline_path /data/production \
+    --candidate_path /data/optimized \
+    --baseline_label reference \
+    --candidate_label optimized \
+    --select configuration.primary=gamma \
+    --output_path resource-requirements
+```
 
 For signal-level comparisons, use `--comparison_level signal` with sim_telarray files. By default,
 all telescopes shared by the input files are processed. Use `--array_layout_name` with one or more
