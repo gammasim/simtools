@@ -691,7 +691,7 @@ class IncidentAnglesCalculator:
 
         Only exports parameters that are defined for the telescope type:
         - Single-mirror telescopes (LST): only lightguide_efficiency_vs_incidence_angle
-        - Dual-mirror telescopes (MST/SST): all incidence-angle parameters
+        - Dual-mirror telescopes (SST): all incidence-angle parameters
           plus lightguide efficiency
 
         Files are placed under a telescope-named subdirectory to match repository convention.

@@ -2,9 +2,10 @@
 applications:
 - application: simtools-derive-incident-angle
   docs:
-    title: Inspect dual-mirror photon incidence angles
+    title: Inspect dual-mirror photon incidence angles with debug plots
     summary: >-
-      Ray-trace an SST and plot photon incidence on its primary, secondary, and camera surfaces.
+      Ray-trace an SST and plot photon incidence on its primary, secondary, and camera surfaces
+      with additional debug plots enabled.
   configuration:
     site: South
     telescope: SSTS-01
@@ -14,6 +15,7 @@ applications:
     output_path: simtools-output
     debug_plots: true
     calculate_primary_secondary_angles: true
+    parameter_version: 1.0.0
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
@@ -24,6 +26,9 @@ applications:
       output_sub_path: plots
     - path_descriptor: output_path
       file: incident_angles_primary_multi_derive_incident_angle_SSTS-01.png
+      output_sub_path: plots
+    - path_descriptor: output_path
+      file: incident_angles_secondary_multi_derive_incident_angle_SSTS-01.png
       output_sub_path: plots
     - path_descriptor: output_path
       file: incident_secondary_xy_heatmap_off1_derive_incident_angle_SSTS-01.png
