@@ -24,6 +24,11 @@ data:
         type: float64
         unit: dimensionless
         required: true
+      - name: inverse_cosine
+        description: Inverse cosine of the incidence angle
+        type: float64
+        unit: dimensionless
+        required: false
 instrument:
   class: Camera
 activity:
@@ -41,6 +46,7 @@ simulation_software:
     table_format: plain
     serialization:
       columns: [incidence_angle, efficiency]
+      allowed_columns: [incidence_angle, efficiency, inverse_cosine]
       row_sort_keys: [incidence_angle]
       float_format: ".12g"
       write_comments: false

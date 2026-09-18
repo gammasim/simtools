@@ -120,6 +120,16 @@ def test_contract_definition_rejects_invalid_references(change, message):
         _validate_contract_definition(contract)
 
 
+def test_contract_definition_requires_missing_value_for_opaque_policy():
+    contract = _contract("plain", ["value"], incomplete_grid_policy="opaque")
+
+    with pytest.raises(ValueError, match="Opaque incomplete-grid policy"):
+        _validate_contract_definition(contract)
+
+    contract["missing_value"] = -1.0
+    _validate_contract_definition(contract)
+
+
 def test_validate_simtel_serialization_rejects_missing_and_unexpected_columns():
     table = QTable({"value": [1.0], "extra": [2.0]})
     with pytest.raises(ValueError, match="undeclared columns"):

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Compare trigger-histogram products from simulation productions."""
+"""Compare simulation productions or summarize their resource requirements."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -8,33 +8,50 @@ from simtools.configuration.argument_helpers import telescope
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.production_comparison import write_production_comparison
+from simtools.production_configuration.resource_requirements import write_resource_requirements
 from simtools.sim_events.production_comparison import (
     collect_signal_metrics,
     parse_production_arguments,
 )
-from simtools.visualization import plot_signal_level_production_comparison
+from simtools.visualization import (
+    plot_resource_requirements,
+    plot_signal_level_production_comparison,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "TRIGGER_HISTOGRAM_PATTERNS"),
+        metavar=("LABEL", "INPUT_FILE_PATTERNS"),
         required=False,
         help=(
-            "Production descriptor: --production <label> <comma-separated file patterns>. "
-            "Repeat for each production; the first production is the baseline."
+            "Production descriptor for event or signal comparison: --production <label> "
+            "<comma-separated input file patterns>. Repeat for each production; the first "
+            "production is the baseline."
         ),
     ),
     cli.ArgumentDefinition(
         "baseline_path",
-        help="Directory containing baseline trigger-histogram metadata YAML files.",
+        help="Production directory containing baseline metadata manifests.",
         type=str,
         required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_path",
-        help="Directory containing candidate trigger-histogram metadata YAML files.",
+        help="Optional candidate production directory containing metadata manifests.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "baseline_label",
+        help="Display label for the baseline production in computing comparisons.",
+        type=str,
+        required=False,
+    ),
+    cli.ArgumentDefinition(
+        "candidate_label",
+        help="Display label for the candidate production in computing comparisons.",
         type=str,
         required=False,
     ),
@@ -52,7 +69,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "comparison_level",
-        choices=["events", "signal", "compute"],
+        choices=["events", "signal", "computing"],
         default="events",
         help="Comparison level to execute.",
     ),
@@ -77,6 +94,32 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, _config_sources, parser):
     """Validate legacy and metadata-based production input modes."""
+    if args_dict.get("comparison_level") == "computing":
+        _validate_computing_arguments(args_dict, parser)
+        return
+    _validate_non_computing_arguments(args_dict, parser)
+
+
+def _validate_computing_arguments(args_dict, parser):
+    """Validate arguments specific to computing-resource comparisons."""
+    if args_dict.get("production") or not args_dict.get("baseline_path"):
+        parser.error(
+            "Computing-resource comparison requires '--baseline_path' "
+            "and does not use '--production'."
+        )
+    baseline_label = args_dict.get("baseline_label") or "baseline"
+    candidate_label = args_dict.get("candidate_label") or "candidate"
+    labels_are_explicit = args_dict.get("baseline_label") and args_dict.get("candidate_label")
+    if (
+        args_dict.get("candidate_path") or labels_are_explicit
+    ) and baseline_label == candidate_label:
+        parser.error("'--baseline_label' and '--candidate_label' must be different.")
+
+
+def _validate_non_computing_arguments(args_dict, parser):
+    """Validate arguments specific to event and signal comparisons."""
+    if args_dict.get("baseline_label") or args_dict.get("candidate_label"):
+        parser.error("Production labels can only be used with '--comparison_level computing'.")
     has_legacy_input = bool(args_dict.get("production"))
     has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
     if has_legacy_input == has_metadata_input:
@@ -114,6 +157,13 @@ def main():
         return
     if comparison_level == "signal":
         output_files = _run_signal_comparison(app_context)
+    elif comparison_level == "computing":
+        write_resource_requirements(
+            app_context.args,
+            app_context.io_handler.get_output_directory(),
+            plot_resource_requirements.plot,
+        )
+        return
     else:
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
