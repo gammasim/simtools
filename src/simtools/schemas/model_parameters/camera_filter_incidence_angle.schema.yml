@@ -24,8 +24,6 @@ source:
   - SimPipe Derived
 simulation_software:
   - name: simtools
-  - name: sim_telarray
-    internal_parameter_name: angle_incidence_focal
 plot_configuration:
   - type: camera_filter_incidence_angle
     title: 'Photon incident angles'
