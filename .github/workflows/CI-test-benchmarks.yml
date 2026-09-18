@@ -61,6 +61,7 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     permissions:
       contents: read
+      packages: write
     with:
       benchmark: true
       benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
