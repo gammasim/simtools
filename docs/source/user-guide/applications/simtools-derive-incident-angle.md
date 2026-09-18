@@ -27,14 +27,14 @@ Example of a primary mirror incident angle plot for a SST:
 .. _plot_derive_incident_angle_plot_primary:
 .. image:: images/incident_angles_primary_multi_derive_incident_angle_SSTS-04.png
     :width: 49 %
-```
 
 Note also the relation between radius and primary mirror incident angles, and how this relates to
-the peak seen in the primary mirror incident angle distribution:
+ the peak seen in the primary mirror incident angle distribution:
 
 .. _plot_derive_incident_angle_plot_angle_vs_radius:
 .. image:: images/primary_angle_vs_radius.png
     :width: 49 %
+```
 
 Example of a secondary mirror incident angle plot for a SST:
 

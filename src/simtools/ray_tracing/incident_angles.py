@@ -690,8 +690,8 @@ class IncidentAnglesCalculator:
         """Write incident-angle model-parameter tables and their JSON metadata.
 
         Only exports parameters that are defined for the telescope type:
-        - Single-mirror telescopes (LST): only lightguide_efficiency_vs_incidence_angle
-        - Dual-mirror telescopes (SST): all incidence-angle parameters plus lightguide efficiency
+        - mirror_class == 1 (single-mirror): only lightguide_efficiency_vs_incidence_angle
+        - mirror_class == 2 (dual-mirror): all incidence-angle parameters plus lightguide efficiency
 
         Files are placed under a telescope-named subdirectory to match repository convention.
 
@@ -730,9 +730,10 @@ class IncidentAnglesCalculator:
                     continue
 
                 data = combined_table[col_name].to(u.deg).value
-                if np.all(np.isnan(data)):
+                data = data[np.isfinite(data)]
+                if len(data) == 0:
                     self.logger.debug(
-                        "Parameter '%s' contains only NaN values; skipping export.", param_name
+                        "Parameter '%s' contains no finite values; skipping export.", param_name
                     )
                     continue
 
