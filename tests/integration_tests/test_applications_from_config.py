@@ -319,26 +319,6 @@ def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
         _get_simulation_model_source(config, request, tmp_test_directory)
 
 
-def test_database_application_is_skipped_without_metadata(tmp_test_directory, mocker):
-    """Recognize database applications even when old configs lack metadata."""
-    request = mocker.MagicMock()
-    options = {
-        "simulation_models_path": None,
-        "simulation_models_git_path": "models.git",
-        "simulation_models_git_revision": "HEAD",
-    }
-    request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
-
-    with pytest.raises(
-        pytest.skip.Exception, match="simtools-db-get-array-layouts-from-db requires MongoDB"
-    ):
-        _get_simulation_model_source(
-            {"application": "simtools-db-get-array-layouts-from-db"},
-            request,
-            tmp_test_directory,
-        )
-
-
 def test_database_application_is_skipped_without_database_configuration(
     tmp_test_directory, mocker, monkeypatch
 ):

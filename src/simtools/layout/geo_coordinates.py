@@ -19,6 +19,17 @@ class GeoCoordinates:
         """Initialize GeoCoordinates."""
         self._logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def coordinate_parameter_names():
+        """Return site parameters required for coordinate transformations."""
+        return (
+            "corsika_observation_level",
+            "epsg_code",
+            "reference_point_altitude",
+            "reference_point_utm_east",
+            "reference_point_utm_north",
+        )
+
     def crs_utm(self, epsg):
         """
         UTM coordinate system definition.

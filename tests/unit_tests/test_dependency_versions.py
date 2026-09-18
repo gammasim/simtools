@@ -322,6 +322,20 @@ def test_load_dependency_catalog_rejects_non_mapping(tmp_test_directory):
         dependency_versions.load_dependency_catalog(project_file)
 
 
+def test_load_dependency_catalog_caches_file_parsing(tmp_test_directory, mocker):
+    """Repeated catalog reads reuse the parsed catalog without sharing mutations."""
+    catalog_file = tmp_test_directory / "dependency_versions.yml"
+    catalog_file.write_text(yaml.safe_dump(_legacy_catalog()), encoding="utf-8")
+    safe_load = mocker.spy(dependency_versions.yaml, "safe_load")
+
+    first = dependency_versions.load_dependency_catalog(catalog_file)
+    first["python"] = "changed"
+    second = dependency_versions.load_dependency_catalog(catalog_file)
+
+    assert second["python"] == "3.14"
+    assert safe_load.call_count == 1
+
+
 def test_find_pyproject_from_environment(monkeypatch, simtools_root_path):
     project_file = simtools_root_path / "pyproject.toml"
     monkeypatch.setenv("SIMTOOLS_PYPROJECT", str(project_file))

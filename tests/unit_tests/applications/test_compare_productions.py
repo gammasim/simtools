@@ -227,6 +227,28 @@ def test_comparison_level_argument_accepts_events():
     assert args.telescope_name == ["LSTN-01", "MSTN-01"]
 
 
+def test_comparison_level_argument_accepts_computing():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(compare_productions.APPLICATION.all_arguments)
+
+    args = parser.parse_args(
+        [
+            "--comparison_level",
+            "computing",
+            "--baseline_path",
+            "production",
+            "--baseline_label",
+            "reference",
+            "--candidate_label",
+            "optimized",
+        ]
+    )
+
+    assert args.comparison_level == "computing"
+    assert args.baseline_label == "reference"
+    assert args.candidate_label == "optimized"
+
+
 def test_application_parses_productions_without_select(monkeypatch):
     monkeypatch.setattr(
         sys,
@@ -264,6 +286,53 @@ def test_signal_comparison_requires_production_inputs(mocker):
 
     parser.error.assert_called_once_with(
         "Signal-level comparison requires '--production' sim_telarray inputs."
+    )
+
+
+def test_computing_comparison_requires_baseline_path(mocker):
+    parser = mocker.Mock()
+
+    compare_productions._post_parse({"comparison_level": "computing"}, None, parser)
+
+    parser.error.assert_called_once_with(
+        "Computing-resource comparison requires '--baseline_path' and does not use '--production'."
+    )
+
+
+def test_computing_comparison_rejects_duplicate_effective_labels(mocker):
+    parser = mocker.Mock()
+
+    compare_productions._post_parse(
+        {
+            "comparison_level": "computing",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": "candidate",
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--baseline_label' and '--candidate_label' must be different."
+    )
+
+
+def test_main_runs_computing_comparison(mocker, tmp_test_directory):
+    app_context = mocker.MagicMock()
+    app_context.args = {"comparison_level": "computing", "baseline_path": "production"}
+    app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    mocker.patch(
+        "simtools.applications.compare_productions.APPLICATION"
+    ).start.return_value = app_context
+    write = mocker.patch("simtools.applications.compare_productions.write_resource_requirements")
+
+    compare_productions.main()
+
+    write.assert_called_once_with(
+        app_context.args,
+        Path(tmp_test_directory),
+        compare_productions.plot_resource_requirements.plot,
     )
 
 

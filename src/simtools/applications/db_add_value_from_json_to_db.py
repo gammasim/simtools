@@ -47,6 +47,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    app_context.logger.warning(
+        "simtools-db-add-value-from-json-to-db will be removed in the near future."
+    )
 
     if app_context.args.get("test_db", False):
         app_context.db_config["db_simulation_model_tag"] = gen.get_uuid()

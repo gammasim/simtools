@@ -2,9 +2,12 @@
 
 # pylint: disable=too-few-public-methods
 
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import numpy as np
+
+from simtools.visualization.matplotlib_backend import lazy_module
+
+mcolors = lazy_module("matplotlib.colors")
+mpatches = lazy_module("matplotlib.patches")
 
 # Define properties of different telescope types for visualization purposes.
 # Radii are relative to a reference radius (REFERENCE_RADIUS).

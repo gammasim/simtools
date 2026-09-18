@@ -9,7 +9,7 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools import constants, dependency_versions
+from simtools import dependency_versions
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     DB_SIMULATION_MODEL_TAG,
@@ -125,11 +125,9 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_resolves_test_resource_paths(tmp_test_directory, monkeypatch):
-    monkeypatch.delenv("SIMTOOLS_TEST_RESOURCES", raising=False)
-    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
-    monkeypatch.delenv("SIMTOOLS_TESTS_TAG", raising=False)
-    monkeypatch.delenv("SIMTOOLS_TESTS_VERSION", raising=False)
+def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
+    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
     config_dict = {
         "applications": [
             {
@@ -152,12 +150,11 @@ def test_config_from_file_resolves_test_resource_paths(tmp_test_directory, monke
     config_builder = Configurator()
     loaded_config = config_builder._config_from_file(config_file)
 
-    resources_path = constants.TEST_RESOURCES_ROOT.resolve()
-    assert loaded_config["trigger_histogram_file"] == str(
-        resources_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
+    assert loaded_config["trigger_histogram_file"] == (
+        "${generated:gamma_diffuse_run000010.trigger_histograms.hdf5}"
     )
-    assert loaded_config["plot_config"] == str(resources_path / "static/plot_config.yml")
-    assert loaded_config["table_data_path"] == str(resources_path / "downloaded/table_data")
+    assert loaded_config["plot_config"] == "${static:plot_config.yml}"
+    assert loaded_config["table_data_path"] == "${downloaded:table_data}"
 
 
 def test_arglist_from_config():

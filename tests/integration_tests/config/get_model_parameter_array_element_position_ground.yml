@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-db-get-parameter-from-db
+- application: simtools-get-model-parameter
   docs:
     title: Export an MST ground position
     summary: Retrieve the North-site ground position of MSTN-09 as a versioned model parameter.
