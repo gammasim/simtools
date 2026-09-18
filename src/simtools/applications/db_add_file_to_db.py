@@ -130,6 +130,7 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    app_context.logger.warning("simtools-db-add-file-to-db will be removed in the near future.")
 
     db = db_handler.DatabaseHandler()
     db.require_mongodb("Adding files to a database")

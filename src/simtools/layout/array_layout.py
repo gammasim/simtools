@@ -97,12 +97,16 @@ class ArrayLayout:
 
         try:
             self.site_model = SiteModel(
-                site=self.site, model_version=self.model_version, model_reader=self.model_reader
+                site=self.site,
+                model_version=self.model_version,
+                model_reader=self.model_reader,
+                parameter_names=self.geo_coordinates.coordinate_parameter_names(),
+                load_simulation_software_parameters=False,
             )
         except RuntimeError as e:
             raise ValueError("No simulation model source configured") from e
-        self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
-            "corsika_observation_level", None
+        self._corsika_observation_level = self.site_model.get_parameter_value_with_unit(
+            "corsika_observation_level"
         )
         self._reference_position_dict = self.site_model.get_reference_point()
         self._logger.debug(f"Reference point: {self._reference_position_dict}")
@@ -190,19 +194,22 @@ class ArrayLayout:
         )
 
         if pos_z is not None and altitude is None:
-            return TelescopePosition.convert_telescope_altitude_from_corsika_system(
+            converted_altitude = TelescopePosition.convert_telescope_altitude_from_corsika_system(
                 pos_z,
                 self._corsika_observation_level,
                 telescope_axis_height,
             )
-
-        if altitude is not None and pos_z is None:
-            return TelescopePosition.convert_telescope_altitude_to_corsika_system(
+        elif altitude is not None and pos_z is None:
+            converted_altitude = TelescopePosition.convert_telescope_altitude_to_corsika_system(
                 altitude,
                 self._corsika_observation_level,
                 telescope_axis_height,
             )
-        return np.nan
+        else:
+            return np.nan
+
+        # Remove binary floating-point noise while retaining coordinate precision.
+        return np.round(converted_altitude, decimals=10)
 
     def _load_telescope_names(self, row):
         """
@@ -354,8 +361,11 @@ class ArrayLayout:
 
         for row in table:
             tel = self._load_telescope_names(row)
-            if names.get_collection_name_from_array_element_name(tel.name) == "telescopes":
+            collection = names.get_collection_name_from_array_element_name(tel.name)
+            if collection == "telescopes":
                 self._set_telescope_auxiliary_parameters(tel)
+            elif collection == "calibration_devices":
+                tel.set_auxiliary_parameter("telescope_axis_height", 0.0 * u.m)
             self._try_set_coordinate(row, tel, table, "ground", "position_x", "position_y")
             self._try_set_coordinate(row, tel, table, "utm", "utm_east", "utm_north")
             self._try_set_coordinate(row, tel, table, "mercator", "latitude", "longitude")

@@ -19,6 +19,14 @@ _check_model_parameter_versions = ModelParameter.__dict__[
 logger = logging.getLogger()
 
 
+def test_model_parameter_without_array_element_does_not_load_design_model(mocker):
+    model_reader = mocker.Mock()
+
+    ModelParameter(model_version="1.0.0", model_reader=model_reader)
+
+    model_reader.get_design_model.assert_not_called()
+
+
 @pytest.fixture
 def num_gains_dict():
     """Fixture for num_gains parameter dictionary."""

@@ -50,6 +50,10 @@ class ModelParameter:
     ignore_software_version: bool
         If True, ignore software version checks for deprecated parameters.
         Useful for documentation generation.
+    parameter_names: iterable of str, optional
+        If supplied, load only these model parameters.
+    load_simulation_software_parameters: bool
+        If False, do not load CORSIKA and sim_telarray configuration parameters.
     """
 
     def __init__(
@@ -62,6 +66,8 @@ class ModelParameter:
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        parameter_names=None,
+        load_simulation_software_parameters=True,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -73,14 +79,20 @@ class ModelParameter:
         self.label = label
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
+        self._parameter_names = None if parameter_names is None else frozenset(parameter_names)
+        self._load_simulation_software_parameters = load_simulation_software_parameters
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
             if array_element_name is not None
             else None
         )
-        self.design_model = self.model_reader.get_design_model(
-            self.model_version, self.name, collection="telescopes"
+        self.design_model = (
+            self.model_reader.get_design_model(
+                self.model_version, self.name, collection="telescopes"
+            )
+            if self.name is not None
+            else None
         )
         self._config_file_directory = None
         self._config_file_path = None
@@ -126,10 +138,10 @@ class ModelParameter:
         """
         try:
             return self.parameters[par_name]
-        except (KeyError, ValueError) as e:
+        except (KeyError, ValueError) as exc:
             raise InvalidModelParameterError(
                 f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
-            ) from e
+            ) from exc
 
     def get_parameter_value(self, par_name):
         """
@@ -422,7 +434,13 @@ class ModelParameter:
     def _load_parameters_from_db_core(self):
         """Core logic to load parameters from the database."""
         self.parameters = deepcopy(
-            self.db.get_model_parameters(self.site, self.name, self.collection, self.model_version)
+            self.db.get_model_parameters(
+                self.site,
+                self.name,
+                self.collection,
+                self.model_version,
+                parameter_names=self._parameter_names,
+            )
         )
 
     def _determine_ignore_collections(self):
@@ -479,10 +497,12 @@ class ModelParameter:
         self._check_model_parameter_versions(
             self.parameters,
             self.ignore_software_version,
+            parameter_names=self._parameter_names,
             value_resolver=self._resolve_legacy_table_parameter_value,
         )
 
-        self._load_simulation_software_parameter()
+        if self._load_simulation_software_parameters:
+            self._load_simulation_software_parameter()
 
     def _filter_overwrites_for_target(self, overwrites, ignore_collections):
         """Filter overwrite dictionary to only include parameters that exist in the target model."""
@@ -533,6 +553,7 @@ class ModelParameter:
         ignore_software_version,
         software_name=None,
         value_resolver=None,
+        parameter_names=None,
     ):
         """
         Ensure parameters follow the latest schema and are compatible with installed software.
@@ -551,15 +572,27 @@ class ModelParameter:
             If True, ignore software version checks for deprecated parameters.
         software_name: str
             Name of the software for which the parameters are checked.
+        parameter_names: iterable of str, optional
+            If supplied, load only the schemas for these parameters.
         value_resolver: callable
             Optional callback used by legacy updates to normalize parameter
             values from older storage formats to the latest in-memory format.
             It must accept ``(parameter_name, value)`` and return the
             normalized value.
         """
+        parameter_schema = names.model_parameters() if parameter_names is None else {}
+        if parameter_names is not None:
+            for parameter_name in parameter_names:
+                try:
+                    parameter_schema[parameter_name] = schema.get_model_parameter_schema(
+                        parameter_name
+                    )
+                except FileNotFoundError:
+                    continue
+
         _legacy_updates = {}
         for par_name, par_data in parameters.items():
-            if par_name in (parameter_schema := names.model_parameters()):
+            if par_name in parameter_schema:
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,

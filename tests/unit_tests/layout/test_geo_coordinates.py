@@ -10,6 +10,16 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 
 
+def test_coordinate_parameter_names():
+    assert GeoCoordinates.coordinate_parameter_names() == (
+        "corsika_observation_level",
+        "epsg_code",
+        "reference_point_altitude",
+        "reference_point_utm_east",
+        "reference_point_utm_north",
+    )
+
+
 def test_crs_utm():
     geo = GeoCoordinates()
     utm_crs = geo.crs_utm(32719)

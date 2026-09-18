@@ -4,18 +4,19 @@
 import logging
 from pathlib import Path
 
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import numpy as np
-from matplotlib.collections import PatchCollection
 
 from simtools.io import io_handler
 from simtools.model.mirrors import Mirrors
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
+mcolors = lazy_module("matplotlib.colors")
+mpatches = lazy_module("matplotlib.patches")
+collections = lazy_module("matplotlib.collections")
 
 PATCH_STYLE = {"alpha": 0.8, "edgecolor": "black", "facecolor": "dodgerblue"}
 LABEL_STYLE = {"ha": "center", "va": "center", "fontsize": 10, "color": "white", "weight": "bold"}
@@ -179,7 +180,7 @@ def plot_mirror_layout(mirrors, mirror_file_path, telescope_model_name):
 
     patches, colors = _create_mirror_patches(x_pos, y_pos, diameter, shape_type, focal_lengths)
 
-    collection = PatchCollection(
+    collection = collections.PatchCollection(
         patches,
         cmap="viridis",
         edgecolor="black",
@@ -235,7 +236,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
 
     patches, colors = _create_mirror_patches(x_pos, y_pos, diameter, shape_type, segment_ids)
 
-    collection = PatchCollection(
+    collection = collections.PatchCollection(
         patches,
         cmap="tab20",
         edgecolor="black",
@@ -788,7 +789,7 @@ def plot_mirror_shape_segmentation(data_file_path, telescope_model_name, paramet
     # Create patches for shape segments
     all_patches, maximum_radius = _create_shape_patches(ax, shape_segments, segment_ids)
 
-    collection = PatchCollection(all_patches, match_original=True)
+    collection = collections.PatchCollection(all_patches, match_original=True)
     ax.add_collection(collection)
 
     ax.set_aspect("equal")

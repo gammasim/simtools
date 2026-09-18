@@ -829,6 +829,28 @@ def test_resolve_shower_params_accepts_power_law_as_compact_string():
     assert total_showers_scaling == "fixed"
 
 
+def test_resolve_shower_params_accepts_power_law_as_single_cli_token():
+    (
+        showers_per_run,
+        power_law,
+        showers_per_run_scaling,
+        total_showers,
+        total_showers_scaling,
+    ) = _resolve_shower_params(
+        {
+            "showers_per_run": 5,
+            "showers_per_run_power_law": ["-1.0 100 TeV"],
+        }
+    )
+
+    assert showers_per_run == 5
+    assert power_law[0] == pytest.approx(-1.0)
+    assert power_law[1] == 100 * u.TeV
+    assert showers_per_run_scaling == "fixed"
+    assert total_showers is None
+    assert total_showers_scaling == "fixed"
+
+
 def test_resolve_shower_params_raises_for_invalid_power_law_shape():
     with pytest.raises(ValueError, match="must be provided as"):
         _resolve_shower_params(

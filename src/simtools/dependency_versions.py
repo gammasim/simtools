@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import tomllib
+from copy import deepcopy
+from functools import cache
 from pathlib import Path
 
 import yaml
@@ -137,6 +139,15 @@ def find_pyproject(start_path=None):
     raise FileNotFoundError(f"Could not find {PYPROJECT_FILENAME}.")
 
 
+@cache
+def _load_dependency_catalog_from_file(catalog_file, validate):
+    """Load and optionally validate one catalog file for the process lifetime."""
+    catalog = yaml.safe_load(Path(catalog_file).read_text(encoding="utf-8"))
+    if not isinstance(catalog, dict):
+        raise ValueError(f"Dependency catalog must contain a mapping: {catalog_file}")
+    return validate_dependency_catalog(catalog) if validate else catalog
+
+
 def load_dependency_catalog(catalog_path=None, validate=True):
     """Load the dependency version catalog from YAML.
 
@@ -152,11 +163,8 @@ def load_dependency_catalog(catalog_path=None, validate=True):
     dict
         Dependency version catalog.
     """
-    catalog_file = Path(catalog_path) if catalog_path else find_dependency_versions()
-    catalog = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
-    if not isinstance(catalog, dict):
-        raise ValueError(f"Dependency catalog must contain a mapping: {catalog_file}")
-    return validate_dependency_catalog(catalog) if validate else catalog
+    catalog_file = (Path(catalog_path) if catalog_path else find_dependency_versions()).resolve()
+    return deepcopy(_load_dependency_catalog_from_file(str(catalog_file), validate))
 
 
 def validate_dependency_catalog(catalog):

@@ -5,8 +5,14 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'src/simtools/schemas/model_parameters/*'
-      - 'tests/integration_tests/config/*'
+      - '.github/workflows/CI-schema-validation.yml'
+      - 'src/simtools/schemas/model_parameters/**'
+      - 'src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml'
+      - 'src/simtools/schemas/application_workflow.metaschema.yml'
+      - 'src/simtools/data_model/schema.py'
+      - 'src/simtools/data_model/schema_loader.py'
+      - 'src/simtools/applications/validate_file_using_schema.py'
+      - 'tests/integration_tests/config/**'
 
 permissions: {}
 
@@ -31,6 +37,8 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
+          cache: pip
+          cache-dependency-path: pyproject.toml
 
       - name: Installation
         run: |
@@ -38,8 +46,14 @@ jobs:
 
       - name: Check for files without the suffix *.schema.yml
         run: |
-          for file in src/simtools/schemas/model_parameters/*.yml; do
-            if [[ ! $file =~ .*schema.yml$ ]]; then
+          shopt -s nullglob globstar
+          files=(src/simtools/schemas/model_parameters/**/*.yml)
+          if (( ${#files[@]} == 0 )); then
+            echo "No model parameter YAML files found"
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            if [[ $file != *.schema.yml ]]; then
               echo "File $file does not have the suffix *.schema.yml"
               exit 1
             fi
@@ -47,23 +61,19 @@ jobs:
 
       - name: Model parameter schema validation
         run: |
-          for file in src/simtools/schemas/model_parameters/*.yml; do
-            echo "Testing schema $file"
-            python src/simtools/applications/validate_file_using_schema.py \
-            --file_name "$file" \
+          simtools-validate-file-using-schema \
+            --file_directory src/simtools/schemas/model_parameters \
+            --file_name '*.yml' \
             --schema_file model_parameter_and_data_schema.metaschema.yml \
-            --data_type "schema" \
+            --data_type schema \
             --ignore_software_version \
-            --log_level DEBUG
-          done
+            --log_level INFO
 
       - name: Integration test config file validation
         run: |
-          for file in tests/integration_tests/config/*.yml; do
-            echo "Testing config file $file"
-            python src/simtools/applications/validate_file_using_schema.py \
-            --file_name "$file" \
+          simtools-validate-file-using-schema \
+            --file_directory tests/integration_tests/config \
+            --file_name '*.yml' \
             --schema_file application_workflow.metaschema.yml \
-            --data_type "schema" \
-            --log_level DEBUG
-          done
+            --data_type schema \
+            --log_level INFO

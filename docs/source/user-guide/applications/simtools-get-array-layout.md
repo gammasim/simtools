@@ -1,7 +1,7 @@
-# simtools-db-get-array-layouts-from-db
+# simtools-get-array-layout
 
 ```{eval-rst}
-.. automodule:: simtools.applications.db_get_array_layouts_from_db
+.. automodule:: simtools.applications.get_array_layout
    :members:
    :exclude-members: main
 ```
@@ -38,20 +38,20 @@ List pre-defined array layouts.
 
 .. code-block:: console
 
-    simtools-db-get-array-layouts-from-db --site North --model_version "6.0.0"
+    simtools-get-array-layout --site North --model_version "6.0.0" --list_available_layouts
 
 Retrieve telescope positions for array layout 'test_layout' from database.
 
 .. code-block:: console
 
-    simtools-db-get-array-layouts-from-db --site North --model_version "6.0.0"
+    simtools-get-array-layout --site North --model_version "6.0.0"
         --array_layout_name test_layout
 
 Retrieve telescope positions from database (utm coordinate system) and write to an ecsv files
 
 .. code-block:: console
 
-    simtools-db-get-array-layouts-from-db --site North --model_version "6.0.0"
+    simtools-get-array-layout --site North --model_version "6.0.0"
       --array_element_list LSTN-01 LSTN-02 MSTN
       --coordinate_system utm
       --output_file telescope_positions-test_layout.ecsv
@@ -60,7 +60,7 @@ Retrieve array-element positions including calibration elements.
 
 .. code-block:: console
 
-        simtools-db-get-array-layouts-from-db --site South --model_version "6.0.2"
+        simtools-get-array-layout --site South --model_version "6.0.2"
             --array_element_list LSTS ILLS
             --include_calibration_array_elements
             --output_file array_layout_south_ground_with_calibration.ecsv
@@ -70,7 +70,7 @@ Retrieve array-element positions including calibration elements.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :application: db_get_array_layouts_from_db
+   :application: get_array_layout
    :no-heading:
 ```
 
@@ -78,20 +78,20 @@ Retrieve array-element positions including calibration elements.
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_array_layouts_from_db_layout_list.yml
+    :file: get_array_layout_layout_list.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_array_layouts_from_db_layout_name.yml
+    :file: get_array_layout_layout_name.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_array_layouts_from_db_layout_with_calibration_flag.yml
+    :file: get_array_layout_layout_with_calibration_flag.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_array_layouts_from_db_list_arrays.yml
+    :file: get_array_layout_list_arrays.yml
 ```
