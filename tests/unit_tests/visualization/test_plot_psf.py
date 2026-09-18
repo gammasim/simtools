@@ -365,7 +365,7 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
     # Test with save_plots=True - should create plots
     args_dict_with_plots = {"save_plots": True, "fraction": 0.8}
     with (
-        patch("simtools.visualization.plot_psf.PdfPages") as mock_pdf,
+        patch("simtools.visualization.plot_psf.pdf_backend.PdfPages") as mock_pdf,
         patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
     ):
         mock_pdf_instance = MagicMock()

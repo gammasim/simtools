@@ -1088,7 +1088,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
         "model_update": "patch_update",
         "model_version_history": ["6.0.1", "6.0.0"],
         "changes": {
-            "LSTN-design": {"pedestal_events": {"deprecated": True}},
+            "LSTN-design": {"photons_per_run": {"deprecated": True}},
             "MSTx-FlashCam": {
                 "calibration_devices": {
                     "version": "1.0.0",
@@ -1144,8 +1144,8 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     assert changes["MSTx-FlashCam"]["transit_time_random"]["value"] == pytest.approx(0.0)
 
     # Verify changes from 6.0.2 are merged
-    assert "pedestal_events" in changes["LSTN-design"]
-    assert changes["LSTN-design"]["pedestal_events"]["deprecated"] is True
+    assert "photons_per_run" in changes["LSTN-design"]
+    assert changes["LSTN-design"]["photons_per_run"]["deprecated"] is True
     assert "calibration_devices" in changes["MSTx-FlashCam"]
 
     # Verify that 6.0.1 changes are NOT included because the loop breaks at 6.0.0 (full_update)
