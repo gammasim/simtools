@@ -92,3 +92,24 @@ def test_mongodb_source_caches_and_copies_reads():
     handler.get_model_versions.assert_called_once_with("telescopes")
     handler.read_production_table_from_db.assert_called_once_with("telescopes", "1.0.0")
     assert handler.read_parameter_documents.call_count == 1
+
+
+def test_mongodb_source_defers_ecsv_reads_until_table_access():
+    """Parameter lookup does not download or validate unused ECSV assets."""
+    handler = Mock(model_source_name="db")
+    handler.read_parameter_documents.return_value = {
+        "camera_filter": {
+            "parameter": "camera_filter",
+            "parameter_version": "1.0.0",
+            "model_parameter_schema_version": "0.3.0",
+            "instrument": "LSTN-design",
+            "site": "North",
+            "file": True,
+            "value": "camera_filter-1.0.0.ecsv",
+        }
+    }
+    source = MongoDBModelSource(handler)
+
+    source.read_parameters({"camera_filter": "1.0.0"}, "telescopes", instrument="LSTN-design")
+
+    handler.get_ecsv_file_as_astropy_table.assert_not_called()

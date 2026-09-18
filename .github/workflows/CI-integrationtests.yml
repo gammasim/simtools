@@ -204,7 +204,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
         run: |
-          BRANCH="main"
+          BRANCH="model-parameter-tables"
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
           fi
@@ -269,7 +269,8 @@ jobs:
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            echo "GitLab clone failed; refusing to use cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            exit 1
           fi
 
           git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
@@ -301,6 +302,8 @@ jobs:
   prepare_test_resources:
     name: download test resources
     runs-on: ubuntu-latest
+    env:
+      SIMTOOLS_TESTS_BRANCH: "model-parameter-tables"
     outputs:
       test_resources_tag: ${{ steps.test_resources.outputs.tag }}
 
@@ -328,6 +331,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
+          ref: ${{ env.SIMTOOLS_TESTS_BRANCH }}
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
 

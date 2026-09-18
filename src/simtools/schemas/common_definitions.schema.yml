@@ -9,6 +9,22 @@ schema_name: common_definitions
 type: object
 
 $defs:
+  length_quantity:
+    type: object
+    additionalProperties: false
+    required: [value, unit]
+    properties:
+      value: {type: number}
+      unit: {type: string, enum: [mm, cm, m]}
+
+  angle_quantity:
+    type: object
+    additionalProperties: false
+    required: [value, unit]
+    properties:
+      value: {type: number}
+      unit: {type: string, enum: [deg, rad]}
+
   schema_url_field:
     type: string
     format: uri

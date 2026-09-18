@@ -10,8 +10,15 @@ from time import perf_counter
 from astropy.table import Table
 from packaging.version import Version
 
+from simtools.data_model import schema
+from simtools.data_model.table_asset import validate_table_asset
 from simtools.io import ascii_handler
 from simtools.model_repository import files
+from simtools.model_repository.asset_names import (
+    SOURCE_VALUE_KEY,
+    get_export_file_name,
+    qualify_parameter_file_name,
+)
 from simtools.model_repository.git_backend import Pygit2ObjectStore
 from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.utils import names
@@ -242,22 +249,24 @@ class GitModelSource:
         """Stream referenced model files from Git into ``dest``."""
         if dest is None:
             raise ValueError("Destination path is required to export model files.")
-        names_to_export = file_names
-        if names_to_export is None:
-            names_to_export = [
-                parameter["value"]
-                for parameter in (parameters or {}).values()
-                if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
-            ]
-        if isinstance(names_to_export, str):
-            names_to_export = [names_to_export]
+        if file_names is not None:
+            raise ValueError(
+                "Git model file export requires parameter metadata because assets are "
+                "stored with their parameter document."
+            )
+        file_parameters = [
+            parameter
+            for parameter in (parameters or {}).values()
+            if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
+        ]
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
         exported = {}
-        for file_name in names_to_export:
-            source_path = self._safe_file_path(file_name)
-            target = destination / file_name
-            if target.exists():
+        for parameter in file_parameters:
+            file_name, target, source_path, already_exists = self._resolve_export_target(
+                parameter, destination
+            )
+            if already_exists:
                 exported[file_name] = "file exists"
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -273,23 +282,108 @@ class GitModelSource:
             exported[file_name] = "copied from Git"
         return exported
 
-    @staticmethod
-    def _safe_file_path(file_name):
-        """Resolve a model file path below the repository Files directory."""
-        path = PurePosixPath(str(file_name))
-        files_root = PurePosixPath("simulation-models/model_parameters/Files")
-        if path.is_absolute() or ".." in path.parts:
-            raise ValueError(f"Model file path escapes model Files directory: {file_name}")
-        return (files_root / path).as_posix()
+    def _resolve_export_target(self, parameter, destination):
+        """Resolve a safe destination for one Git-backed model file."""
+        file_name = get_export_file_name(parameter)
+        qualify_parameter_file_name(parameter)
+        source_path = self._parameter_asset_path(parameter)
+        target = destination / file_name
+        if not target.exists():
+            return file_name, target, source_path, False
+        if self._target_matches_blob(target, source_path):
+            return file_name, target, source_path, True
+        if not file_name.lower().endswith(".ecsv"):
+            return self._resolve_collision_target(parameter, destination, source_path)
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
 
-    def get_ecsv_file_as_astropy_table(self, file_name):
-        """Read an ECSV model file from a Git blob."""
-        source_path = self._safe_file_path(file_name)
+    def _resolve_collision_target(self, parameter, destination, source_path):
+        """Resolve a scope-qualified destination for a non-ECSV collision."""
+        original_name = parameter.get(SOURCE_VALUE_KEY, parameter["value"])
+        file_name = self._get_collision_file_name(original_name, parameter)
+        target = destination / file_name
+        parameter[SOURCE_VALUE_KEY] = original_name
+        parameter["value"] = file_name
+        if not target.exists():
+            return file_name, target, source_path, False
+        if self._target_matches_blob(target, source_path):
+            return file_name, target, source_path, True
+        raise FileExistsError(
+            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
+        )
+
+    def _target_matches_blob(self, target, source_path):
+        """Return whether a destination file matches a Git blob."""
+        with (
+            target.open("rb") as target_file,
+            self._object_store.open_blob(self.commit, source_path) as source_file,
+        ):
+            while True:
+                target_chunk = target_file.read(1024 * 1024)
+                source_chunk = source_file.read(1024 * 1024)
+                if target_chunk != source_chunk:
+                    return False
+                if not target_chunk:
+                    return True
+
+    @staticmethod
+    def _get_collision_file_name(file_name, parameter):
+        """Return a deterministic basename qualified by the model scope."""
+        path = Path(file_name)
+        scope = parameter.get("instrument") or "global"
+        return f"{path.stem}-{scope}{path.suffix}"
+
+    @staticmethod
+    def _parameter_asset_path(parameter_data):
+        """Resolve a file-valued parameter relative to its parameter document."""
+        value = parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
+        parameter = parameter_data.get("parameter")
+        version = parameter_data.get("parameter_version")
+        instrument = parameter_data.get("instrument") or "global"
+        if not all(isinstance(value_part, str) for value_part in (value, parameter, version)):
+            raise ValueError(
+                "Git model file export requires parameter, parameter_version, and value metadata."
+            )
+        value_path = PurePosixPath(value)
+        if value_path.is_absolute() or ".." in value_path.parts:
+            raise ValueError(f"Model asset path escapes parameter directory: {value}")
+        parameter_directory = (
+            PurePosixPath("simulation-models/model_parameters") / instrument / parameter
+        )
+        return (parameter_directory / value_path).as_posix()
+
+    def get_parameter_table(self, parameter_data):
+        """Read and validate an ECSV table referenced by a parameter record."""
+        value = parameter_data.get("value")
+        if not isinstance(value, str) or not value.lower().endswith(".ecsv"):
+            raise ValueError("Parameter does not reference an ECSV table")
+        source_path = self._parameter_asset_path(parameter_data)
+        schema_dict = schema.get_model_parameter_schema(
+            parameter_data.get("parameter"), parameter_data.get("model_parameter_schema_version")
+        )
+        entries = [entry for entry in schema_dict.get("data", []) if entry.get("type") == "file"]
         try:
-            return Table.read(
-                BytesIO(self._object_store.read_blob(self.commit, source_path)), format="ascii.ecsv"
+            table = Table.read(
+                BytesIO(self._object_store.read_blob(self.commit, source_path)),
+                format="ascii.ecsv",
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(
                 f"Model file not found at commit {self.commit}: {source_path}"
             ) from exc
+        return validate_table_asset(
+            table,
+            schema_entry=entries[0] if entries else None,
+            parameter_data=parameter_data,
+        )
+
+    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
+        """Read an ECSV model file from a Git blob."""
+        if parameter_data is None:
+            raise ValueError(
+                "Git model table access requires parameter metadata because assets are "
+                "stored with their parameter document."
+            )
+        del file_name
+        return self.get_parameter_table(parameter_data)
