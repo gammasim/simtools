@@ -82,8 +82,8 @@ def main():
         results_by_offset,
         output_dir,
         label_with_telescope,
-        debug_plots=app_context.args.get("debug_plots", False),
-        model_version=app_context.args.get("model_version", None),
+        debug_plots=app_context.args["debug_plots"],
+        model_version=app_context.args["model_version"],
     )
     calculator.save_model_parameters(results_by_offset)
     total = sum(len(t) for t in results_by_offset.values())
