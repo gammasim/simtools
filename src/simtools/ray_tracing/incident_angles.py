@@ -718,70 +718,165 @@ class IncidentAnglesCalculator:
         )
 
     def save_model_parameters(self, results_by_offset):
-        """
-        Write model parameters dictionary (json) + astropy table with incident angles.
+        """Write incident-angle model-parameter tables and their JSON metadata.
+
+        Only exports parameters that are defined for the telescope's mirror class:
+        - mirror_class == 1 (single-mirror telescopes like LST): only lightguide_efficiency
+        - mirror_class == 2 (dual-mirror telescopes like MST/SST): all incidence-angle parameters
+
+        Files are placed under a telescope-named subdirectory to match repository convention.
 
         Parameters
         ----------
         results_by_offset : dict
             Dictionary with results for each offset.
         """
-        # Combine results from all offsets
         tables = [res for res in results_by_offset.values() if res is not None and len(res) > 0]
         if not tables:
             self.logger.warning("No results to write model parameters.")
             return
 
         combined_table = vstack(tables)
+        telescope = self.config_data["telescope"]
+        param_version = (
+            self.config_data.get("parameter_version") or self.config_data["model_version"]
+        )
+        param_dir = self.output_dir / telescope
+        param_dir.mkdir(parents=True, exist_ok=True)
 
-        # Always export camera_filter_incidence_angle (mapped to angle_incidence_focal)
-        # Optionally export primary/secondary mirror angles if available
-        mandatory_params = {
+        # Determine which parameters are applicable based on telescope mirror class
+        mirror_class = self.telescope_model.get_parameter_value("mirror_class")
+
+        # Define parameter mappings grouped by applicability
+        dual_mirror_params = {
             "camera_filter_incidence_angle": "angle_incidence_focal",
-        }
-        optional_params = {
             "primary_mirror_incidence_angle": "angle_incidence_primary",
             "secondary_mirror_incidence_angle": "angle_incidence_secondary",
         }
 
-        params_to_export = {**mandatory_params, **optional_params}
-
-        for param_name, col_name in params_to_export.items():
-            if col_name not in combined_table.colnames:
-                if param_name in mandatory_params:
-                    self.logger.error(
-                        "Mandatory column '%s' (for parameter '%s') not found in results. "
-                        "Skipping export.",
+        # Export dual-mirror incidence angle distributions
+        if mirror_class == 2:
+            for param_name, col_name in dual_mirror_params.items():
+                if col_name not in combined_table.colnames:
+                    self.logger.debug(
+                        "Column '%s' (for parameter '%s') not found in results; skipping export.",
                         col_name,
                         param_name,
                     )
-                continue
+                    continue
 
-            data = combined_table[col_name].to(u.deg).value
-            # Create histogram
-            bin_centers, hist = self._calculate_histogram(data, bins=100)
+                data = combined_table[col_name].to(u.deg).value
+                if np.all(np.isnan(data)):
+                    self.logger.debug(
+                        "Parameter '%s' contains only NaN values; skipping export.", param_name
+                    )
+                    continue
 
-            table = QTable()
-            table["Incidence angle"] = bin_centers * u.deg
-            table["Fraction"] = hist
+                table = self._build_incidence_distribution_table(data)
+                ecsv_file = f"{param_name}.ecsv"
+                ModelDataWriter.write_product_data(
+                    output_file=param_dir / ecsv_file,
+                    product_data=table,
+                    metadata=MetadataCollector(args_dict=self.config_data),
+                )
+                ModelDataWriter.write_model_parameter(
+                    parameter_name=param_name,
+                    value=ecsv_file,
+                    instrument=telescope,
+                    parameter_version=param_version,
+                    output_file=f"{param_name}.json",
+                    output_path=param_dir,
+                    metadata_input_dict=self.config_data,
+                )
 
-            ModelDataWriter.write_product_data(
-                output_file=self.output_dir / f"{param_name}.ecsv",
-                product_data=table,
-                metadata=MetadataCollector(args_dict=self.config_data),
+        # Export lightguide efficiency for all telescope types
+        efficiency_table = self._compute_lightguide_efficiency(results_by_offset)
+        if efficiency_table is not None and len(efficiency_table) > 0:
+            self._export_lightguide_efficiency_table(
+                efficiency_table, param_dir, telescope, param_version
             )
 
-            ModelDataWriter.write_model_parameter(
-                parameter_name=param_name,
-                value=f"{param_name}.ecsv",
-                instrument=self.config_data["telescope"],
-                parameter_version=self.config_data.get("parameter_version"),
-                output_file=f"{param_name}.json",
-                output_path=self.output_dir,
-                metadata_input_dict=self.config_data,
-            )
+    @staticmethod
+    def _build_incidence_distribution_table(data):
+        """Build a normalized angle distribution table for model-parameter export."""
+        bin_centers, hist = IncidentAnglesCalculator._calculate_histogram(data, bins=100)
+        table = QTable()
+        table["Incidence angle"] = bin_centers * u.deg
+        table["Fraction"] = hist
+        return table
 
-    def _calculate_histogram(self, data, bins=100):
+    def _compute_lightguide_efficiency(self, results_by_offset):
+        """Compute a relative light-guide efficiency curve versus incidence angle.
+
+        The curve is normalized to unity at its maximum efficiency and follows the
+        same model-parameter conventions used elsewhere in the project: the table
+        columns are named ``angle`` and ``efficiency``.
+        """
+        tables = [res for res in results_by_offset.values() if res is not None and len(res) > 0]
+        if not tables:
+            self.logger.warning("No results to compute lightguide efficiency.")
+            return None
+
+        combined_table = vstack(tables)
+        if "angle_incidence_focal" not in combined_table.colnames:
+            self.logger.warning("angle_incidence_focal column not found in results.")
+            return None
+
+        angles_deg = combined_table["angle_incidence_focal"].to(u.deg).value
+        angles_deg = angles_deg[~np.isnan(angles_deg)]
+        angles_deg = angles_deg[(angles_deg >= 0) & (angles_deg <= 90.0)]
+        if len(angles_deg) == 0:
+            self.logger.warning("No valid incidence angle data found.")
+            return None
+
+        num_bins = 100
+        bin_edges = np.linspace(0.0, 90.0, num_bins + 1)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+        detected_counts, _ = np.histogram(angles_deg, bins=bin_edges)
+
+        bin_widths = np.diff(bin_edges)
+        bin_areas = 2.0 * np.pi * np.sin(np.radians(bin_centers)) * np.radians(bin_widths)
+        efficiency = np.divide(
+            detected_counts,
+            bin_areas,
+            out=np.zeros_like(detected_counts, dtype=float),
+            where=bin_areas > 0,
+        )
+        max_efficiency = np.max(efficiency)
+        if max_efficiency <= 0:
+            self.logger.warning("No positive efficiency values found; skipping lightguide export.")
+            return None
+        efficiency = efficiency / max_efficiency
+
+        table = QTable()
+        table["angle"] = bin_centers * u.deg
+        table["efficiency"] = efficiency
+        return table
+
+    def _export_lightguide_efficiency_table(
+        self, efficiency_table, param_dir, telescope, param_version
+    ):
+        """Export the light-guide efficiency curve using the model-parameter schema names."""
+        ecsv_file = "lightguide_efficiency_vs_incidence_angle.ecsv"
+        ModelDataWriter.write_product_data(
+            output_file=param_dir / ecsv_file,
+            product_data=efficiency_table,
+            metadata=MetadataCollector(args_dict=self.config_data),
+        )
+        self.logger.info("Saved lightguide efficiency table to %s", param_dir / ecsv_file)
+
+        ModelDataWriter.write_model_parameter(
+            parameter_name="lightguide_efficiency_vs_incidence_angle",
+            value=ecsv_file,
+            instrument=telescope,
+            parameter_version=param_version,
+            output_file="lightguide_efficiency_vs_incidence_angle.json",
+            output_path=param_dir,
+            metadata_input_dict=self.config_data,
+        )
+
+    @staticmethod
+    def _calculate_histogram(data, bins=100):
         """
         Calculate normalized histogram (density).
 
@@ -797,6 +892,10 @@ class IncidentAnglesCalculator:
         tuple
             Bin centers and histogram values (density).
         """
+        data = np.asarray(data)
+        data = data[np.isfinite(data)]
+        if len(data) == 0:
+            return np.array([]), np.array([])
         hist, bin_edges = np.histogram(data, bins=bins, density=True)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         return bin_centers, hist
