@@ -665,37 +665,6 @@ class IncidentAnglesCalculator:
         if secondary_hit_y_m is not None:
             secondary_hit_y_m.append(y_m)
 
-    @staticmethod
-    def _match_header_column(col_pat, raw):
-        """Parse a header line for a known angle column.
-
-        Parameters
-        ----------
-        col_pat : Pattern[str]
-            Compiled regular expression matching ``# Column N`` prefix.
-        raw : str
-            Raw header line.
-
-        Returns
-        -------
-        tuple[str, int] | None
-            ``(kind, column_number)`` when recognized, otherwise ``None``.
-        """
-        s = raw.strip()
-        if s and ":" in s:
-            prefix, desc = s.split(":", 1)
-            m = col_pat.match(prefix)
-            if m:
-                num = int(m.group(1))
-                desc = desc.strip().lower()
-                if "angle of incidence at focal surface" in desc and "optical axis" in desc:
-                    return "focal", num
-                if re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
-                    return "primary", num
-                if re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
-                    return "secondary", num
-        return None
-
     def _save_results(self):
         """Save the results to an ECSV file with metadata."""
         if self.results is None or len(self.results) == 0:
