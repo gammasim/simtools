@@ -3,7 +3,6 @@
 
 import logging
 import math
-import re
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -266,29 +265,6 @@ def test_header_driven_column_detection(calculator, tmp_test_directory):
     assert out["angle_incidence_secondary_deg"] == pytest.approx([33.3])
 
 
-def test_match_header_column_variants():
-    col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*$", re.IGNORECASE)
-    # Focal surface with optical axis mention
-    raw = "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("focal", 30)
-
-    # Primary mirror with onto
-    raw = "# Column 34: Angle of incidence onto primary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 34)
-
-    # Primary mirror with on
-    raw = "# Column 35: Angle of incidence on primary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 35)
-
-    # Secondary mirror
-    raw = "# Column 40: Angle of incidence onto secondary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("secondary", 40)
-
-    # No match
-    raw = "# Column 99: Some other description"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
-
-
 def test_find_column_indices_reflection_headers(calculator, tmp_test_directory):
     # Build a file that declares reflection point columns for primary and secondary
     pfile = tmp_test_directory / "refl_headers.lis"
@@ -430,3 +406,242 @@ def test_save_model_parameters_no_results_logs_warning(
 
     assert not list(Path(tmp_test_directory).glob("*.ecsv"))
     assert not list(Path(tmp_test_directory).glob("*.json"))
+
+
+def test_lightguide_efficiency_uses_model_parameter_names(calculator):
+    table = calculator._compute_lightguide_efficiency(
+        {0.0: QTable({"angle_incidence_focal": [0.0, 10.0, 20.0] * u.deg})}
+    )
+
+    assert table is not None
+    assert set(table.colnames) == {"angle", "efficiency"}
+    assert table["angle"].unit == u.deg
+
+
+# --- Tests for 100% coverage ---
+
+
+def test_source_distance_km_with_plain_float(calculator):
+    """Cover _source_distance_km when source_distance is a plain float."""
+    calculator.config_data["source_distance"] = 15.0
+    assert calculator._source_distance_km() == pytest.approx(15.0)
+
+
+def test_append_primary_secondary_angles_with_none_arrays():
+    """Cover _append_primary_secondary_angles when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"primary": 31, "secondary": 35}
+    calc._append_primary_secondary_angles(parts, col_idx, None, None)
+
+
+def test_append_primary_hit_geometry_with_none_arrays():
+    """Cover _append_primary_hit_geometry when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"prim_x": 28, "prim_y": 29}
+    calc._append_primary_hit_geometry(parts, col_idx, None, None, None)
+
+
+def test_append_secondary_hit_geometry_with_none_arrays():
+    """Cover _append_secondary_hit_geometry when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"sec_x": 32, "sec_y": 33}
+    calc._append_secondary_hit_geometry(parts, col_idx, None, None, None)
+
+
+def test_update_indices_from_header_desc_primary_secondary():
+    """Cover _update_indices_from_header_desc with primary/secondary mirror headers."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {"focal": 25}
+
+    calc._update_indices_from_header_desc(
+        "angle of incidence onto primary mirror [deg]", 32, indices
+    )
+    assert indices["primary"] == 31
+
+    calc._update_indices_from_header_desc(
+        "angle of incidence on secondary mirror [deg]", 36, indices
+    )
+    assert indices["secondary"] == 35
+
+
+def test_calculate_histogram_empty_after_filtering():
+    """Cover _calculate_histogram when all data is filtered out as non-finite."""
+    bin_centers, hist = IncidentAnglesCalculator._calculate_histogram(
+        [float("nan"), float("inf"), float("-inf")], bins=10
+    )
+    assert len(bin_centers) == 0
+    assert len(hist) == 0
+
+
+def test_compute_lightguide_efficiency_edge_cases():
+    """Cover edge cases in _compute_lightguide_efficiency."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.logger = logging.getLogger(__name__)
+
+    # Empty results
+    result = calc._compute_lightguide_efficiency({})
+    assert result is None
+
+    # Results with empty tables
+    result = calc._compute_lightguide_efficiency({0.0: QTable()})
+    assert result is None
+
+    # Missing angle_incidence_focal column
+    result = calc._compute_lightguide_efficiency({0.0: QTable({"other_col": [1, 2, 3]})})
+    assert result is None
+
+    # All NaN angles
+    result = calc._compute_lightguide_efficiency(
+        {0.0: QTable({"angle_incidence_focal": [float("nan")] * 10 * u.deg})}
+    )
+    assert result is None
+
+    # All negative angles (filtered out)
+    result = calc._compute_lightguide_efficiency(
+        {0.0: QTable({"angle_incidence_focal": [-1.0, -2.0] * u.deg})}
+    )
+    assert result is None
+
+    # All angles > 90 (filtered out)
+    result = calc._compute_lightguide_efficiency(
+        {0.0: QTable({"angle_incidence_focal": [91.0, 92.0] * u.deg})}
+    )
+    assert result is None
+
+
+def test_save_model_parameters_mirror_class_2(tmp_test_directory, monkeypatch):
+    """Cover save_model_parameters with mirror_class == 2 (dual-mirror telescope)."""
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    config_data = {
+        "telescope": "SSTS-01",
+        "site": "South",
+        "model_version": "7.0.0",
+        "parameter_version": "1.0.0",
+    }
+
+    calculator = IncidentAnglesCalculator(
+        config_data=config_data,
+        output_dir=tmp_test_directory,
+        label="test",
+    )
+
+    calculator.telescope_model = MagicMock()
+    calculator.telescope_model.get_parameter_value.return_value = 2
+
+    t1 = QTable()
+    t1["angle_incidence_focal"] = [1.0, 2.0, 3.0] * u.deg
+    t1["angle_incidence_primary"] = [10.0, 20.0, 30.0] * u.deg
+    t1["angle_incidence_secondary"] = [5.0, 10.0, 15.0] * u.deg
+
+    results_by_offset = {0.0: t1}
+    calculator.save_model_parameters(results_by_offset)
+
+    assert mock_writer.write_product_data.call_count >= 3
+    assert mock_writer.write_model_parameter.call_count >= 3
+
+
+def test_save_model_parameters_no_results(tmp_test_directory, monkeypatch, caplog):
+    """Cover early return in save_model_parameters when no results."""
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    config_data = {
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "7.0.0",
+    }
+
+    calculator = IncidentAnglesCalculator(
+        config_data=config_data,
+        output_dir=tmp_test_directory,
+        label="test",
+    )
+    calculator.telescope_model = MagicMock()
+    calculator.telescope_model.get_parameter_value.return_value = 1
+
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator.save_model_parameters({})
+
+    assert any("No results to write model parameters." in rec.message for rec in caplog.records)
+    assert mock_writer.write_product_data.call_count == 0
+
+
+def test_run_with_all_columns(monkeypatch, calculator, tmp_test_directory):
+    """Cover run() with all columns including primary/secondary angles and geometry."""
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
+
+    suffix = f"{calculator.label}_{calculator.config_data['telescope']}_off0"
+    photons_file = calculator.photons_dir / f"incident_angles_photons_{suffix}.lis"
+    stars_file = calculator.photons_dir / f"incident_angles_stars_{suffix}.lis"
+    log_file = calculator.logs_dir / f"incident_angles_{suffix}.log"
+
+    def _prep_files(self):
+        photons_file.parent.mkdir(parents=True, exist_ok=True)
+        rows = ["# header\n"]
+        triplets = [(10.0, 1.0, 2.0, 100.0, 200.0, 300.0, 400.0)]
+        for foc, pri, sec, px, py, sx, sy in triplets:
+            parts = ["0"] * 25 + [str(foc)]
+            parts += ["0", "0", str(px), str(py), "0"]
+            parts += [str(pri)]
+            parts += [str(sx), str(sy), "0", "0"]
+            parts += [str(sec)]
+            rows.append(" ".join(parts) + "\n")
+        photons_file.write_text("".join(rows), encoding="utf-8")
+        stars_file.write_text("0 0 1 10\n", encoding="utf-8")
+        return photons_file, stars_file, log_file
+
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_prepare_psf_io_files", _prep_files)
+
+    res = calculator.run()
+
+    assert isinstance(res, QTable)
+    assert len(res) == 1
+    assert "angle_incidence_focal" in res.colnames
+    assert "angle_incidence_primary" in res.colnames
+    assert "angle_incidence_secondary" in res.colnames
+    assert "primary_hit_radius" in res.colnames
+    assert "secondary_hit_radius" in res.colnames
+
+
+def test_build_incidence_distribution_table():
+    """Cover _build_incidence_distribution_table static method."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    data = [1.0, 2.0, 3.0, 4.0, 5.0]
+    table = calc._build_incidence_distribution_table(data)
+
+    assert isinstance(table, QTable)
+    assert "Incidence angle" in table.colnames
+    assert "Fraction" in table.colnames
+    assert table["Incidence angle"].unit == u.deg
+    assert len(table) == 100
+
+
+def test_export_lightguide_efficiency_table(tmp_test_directory, monkeypatch):
+    """Cover _export_lightguide_efficiency_table method."""
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.config_data = {"telescope": "LSTN-01", "model_version": "7.0.0"}
+    calc.logger = logging.getLogger(__name__)
+
+    efficiency_table = QTable()
+    efficiency_table["angle"] = [0.0, 10.0, 20.0] * u.deg
+    efficiency_table["efficiency"] = [1.0, 0.9, 0.8]
+
+    param_dir = Path(tmp_test_directory) / "LSTN-01"
+    param_dir.mkdir(parents=True, exist_ok=True)
+
+    calc._export_lightguide_efficiency_table(efficiency_table, param_dir, "LSTN-01", "1.0.0")
+
+    assert mock_writer.write_product_data.call_count == 1
+    assert mock_writer.write_model_parameter.call_count == 1
