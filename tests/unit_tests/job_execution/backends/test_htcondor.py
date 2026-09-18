@@ -110,7 +110,7 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
 
     assert submit_values["executable"] == "/usr/bin/env"
     assert submit_values["arguments"].startswith(
-        "/opt/conda/bin/python -m simtools.job_execution.worker"
+        "/opt/conda/bin/python -P -m simtools.job_execution.worker"
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
@@ -119,8 +119,8 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     assert Path.cwd().resolve().as_posix() in bind_paths
 
 
-def test_htcondor_exposes_source_checkout_to_container_python(tmp_test_directory):
-    """Container workers can import the source checkout used for submission."""
+def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_directory):
+    """Container workers do not import simtools from the submitter checkout."""
     job = JobSpec("job-000000", 0, command=("echo", "ok"))
     submit_values, _, _ = HTCondorBackend()._build_submit_values(
         {"container_image": "/shared/simtools.sif"},
@@ -135,9 +135,8 @@ def test_htcondor_exposes_source_checkout_to_container_python(tmp_test_directory
         for key, separator, value in (item.partition("="),)
         if separator
     }
-    source_path = Path(__file__).resolve().parents[4] / "src"
-    assert source_path.as_posix() in entries["PYTHONPATH"].split(":")
-    assert source_path.parent.as_posix() in entries["APPTAINER_BINDPATH"].split(",")
+    assert "PYTHONPATH" not in entries
+    assert submit_values["arguments"].startswith("python -P -m simtools.job_execution.worker")
 
 
 def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
