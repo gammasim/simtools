@@ -689,9 +689,10 @@ class IncidentAnglesCalculator:
     def save_model_parameters(self, results_by_offset):
         """Write incident-angle model-parameter tables and their JSON metadata.
 
-        Only exports parameters that are defined for the telescope's mirror class:
-        - mirror_class == 1 (single-mirror telescopes like LST): only lightguide_efficiency
-        - mirror_class == 2 (dual-mirror telescopes like MST/SST): all incidence-angle parameters
+        Only exports parameters that are defined for the telescope type:
+        - Single-mirror telescopes (LST): only lightguide_efficiency_vs_incidence_angle
+        - Dual-mirror telescopes (MST/SST): all incidence-angle parameters
+          plus lightguide efficiency
 
         Files are placed under a telescope-named subdirectory to match repository convention.
 
@@ -713,18 +714,15 @@ class IncidentAnglesCalculator:
         param_dir = self.output_dir / telescope
         param_dir.mkdir(parents=True, exist_ok=True)
 
-        # Determine which parameters are applicable based on telescope mirror class
-        mirror_class = self.telescope_model.get_parameter_value("mirror_class")
-
-        # Define parameter mappings grouped by applicability
+        # Define parameter mappings for dual-mirror telescopes
         dual_mirror_params = {
             "camera_filter_incidence_angle": "angle_incidence_focal",
             "primary_mirror_incidence_angle": "angle_incidence_primary",
             "secondary_mirror_incidence_angle": "angle_incidence_secondary",
         }
 
-        # Export dual-mirror incidence angle distributions
-        if mirror_class == 2:
+        # Export dual-mirror incidence angle distributions only for dual-mirror telescopes
+        if self.telescope_model.get_parameter_value("mirror_class") == 2:
             for param_name, col_name in dual_mirror_params.items():
                 if col_name not in combined_table.colnames:
                     self.logger.debug(
