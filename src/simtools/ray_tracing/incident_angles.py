@@ -713,14 +713,12 @@ class IncidentAnglesCalculator:
         param_dir = self.output_dir / telescope
         param_dir.mkdir(parents=True, exist_ok=True)
 
-        # Define parameter mappings for dual-mirror telescopes
         dual_mirror_params = {
             "camera_filter_incidence_angle": "angle_incidence_focal",
             "primary_mirror_incidence_angle": "angle_incidence_primary",
             "secondary_mirror_incidence_angle": "angle_incidence_secondary",
         }
 
-        # Export dual-mirror incidence angle distributions only for dual-mirror telescopes
         if self.telescope_model.get_parameter_value("mirror_class") == 2:
             for param_name, col_name in dual_mirror_params.items():
                 if col_name not in combined_table.colnames:
@@ -755,7 +753,6 @@ class IncidentAnglesCalculator:
                     metadata_input_dict=self.config_data,
                 )
 
-        # Export lightguide efficiency for all telescope types
         efficiency_table = self._compute_lightguide_efficiency(results_by_offset)
         if efficiency_table is not None and len(efficiency_table) > 0:
             self._export_lightguide_efficiency_table(
