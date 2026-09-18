@@ -20,15 +20,16 @@ def resolve_test_resource_paths(value, test_resources_path=None):
         Configuration value, mapping, or sequence to resolve.
     test_resources_path : str or pathlib.Path, optional
         Base directory containing the ``static``, ``generated``, and ``downloaded``
-        resource directories. Defaults to ``SIMTOOLS_TEST_RESOURCES`` or the versioned
-        ``simtools-tests`` integration-test resources selected by ``SIMTOOLS_TESTS_PATH`` and
-        ``SIMTOOLS_TESTS_TAG``.
+        resource directories. The integration-test harness passes this argument explicitly.
 
     Returns
     -------
     object
         Configuration with absolute test-resource paths.
     """
+    if not _contains_test_resource_reference(value):
+        return value
+
     base_path = (
         Path(test_resources_path or constants.get_test_resources_root()).expanduser().resolve()
     )
@@ -45,6 +46,18 @@ def resolve_test_resource_paths(value, test_resources_path=None):
         )
         return _TEST_RESOURCE_PATH_PATTERN.sub(str(base_path), value)
     return value
+
+
+def _contains_test_resource_reference(value):
+    """Return whether a value contains a test-resource macro or legacy path."""
+    if isinstance(value, dict):
+        return any(_contains_test_resource_reference(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_contains_test_resource_reference(item) for item in value)
+    return isinstance(value, str) and (
+        _TEST_RESOURCE_PATTERN.search(value) is not None
+        or _TEST_RESOURCE_PATH_PATTERN.search(value) is not None
+    )
 
 
 class IOHandlerSingleton(type):

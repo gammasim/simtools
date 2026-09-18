@@ -94,12 +94,12 @@ _GRID_ARGUMENTS = (
         "showers_per_run_power_law",
         help=(
             "Scale showers per run by (E_mid / E_ref)^INDEX (mostly used for fixed energy grid). "
-            "Provide INDEX VALUE UNIT; "
+            "Provide three values: INDEX VALUE UNIT; "
             "E_mid is the logarithmic energy-interval midpoint."
         ),
-        nargs=3,
+        nargs="+",
         type=str,
-        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        metavar="POWER_LAW_PARAMETER",
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -113,11 +113,12 @@ _GRID_ARGUMENTS = (
         "energy_max_scaling",
         help=(
             "Set the zenith-dependent maximum energy to VALUE * cos(zenith)^INDEX. "
-            "Provide INDEX VALUE UNIT; the configured energy-range maximum remains an upper bound."
+            "Provide three values: INDEX VALUE UNIT; the configured energy-range maximum remains "
+            "an upper bound."
         ),
-        nargs=3,
+        nargs="+",
         type=str,
-        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        metavar="POWER_LAW_PARAMETER",
         default=None,
     ),
 )

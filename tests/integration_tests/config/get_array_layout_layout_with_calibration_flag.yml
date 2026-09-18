@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-db-get-array-layouts-from-db
+- application: simtools-get-array-layout
   docs:
     title: Export a layout with calibration devices
     summary: >-
