@@ -4,9 +4,8 @@ name: Changelog
 # from: https://github.com/cta-observatory/ctapipe/blob/main/.github/workflows/changelog.yml
 
 on:
-  workflow_dispatch:
   pull_request:
-    types: [opened, labeled, unlabeled, ready_for_review]
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
     branches:
       - 'main'
 
@@ -19,15 +18,15 @@ permissions:
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: >-
+      github.event.pull_request.draft == false &&
+      !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') &&
+      !contains(github.event.pull_request.labels.*.name, 'dependencies')
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-        with:
-          fetch-depth: 0
 
       - name: Check for at least one changelog fragment
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') && !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
         run: |
           find docs/changes -type f | \
-          grep -P "${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md"
+          grep -E "^${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md$"

@@ -27,6 +27,8 @@ applications:
       output_sub_path: sim_telarray/run000007
       validations:
       - type: simtel
+        metadata:
+          site_config_name: South
         event:
           pe_sum:
             range:

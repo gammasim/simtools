@@ -5,14 +5,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from simtools.application.control import ApplicationContext, _initialize_runtime
 from simtools.configuration import configurator
 from simtools.configuration.arguments import (
     DATABASE_ARGUMENTS,
     STANDARD_ARGUMENTS,
     ArgumentDefinition,
 )
-from simtools.configuration.show_options import handle_show_options
 from simtools.settings import config
 
 PostParseHook = Callable[[dict, Mapping[str, set], object], None]
@@ -104,6 +102,11 @@ class ApplicationDefinition:
 
     def _parse(self):
         """Read configuration using this definition's preconfigured parser."""
+        if self._help_requested():
+            parser = self.build_parser()
+            parser.print_help()
+            parser.exit()
+
         show_options_requested = self._show_options_requested()
         defer_required_validation = self.defer_required_validation or show_options_requested
         runtime_arguments = (
@@ -114,6 +117,10 @@ class ApplicationDefinition:
         config_builder = self._configurator(runtime_arguments)
         args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
         if args_dict.get("show_options"):
+            from simtools.configuration.show_options import (  # pylint: disable=import-outside-toplevel
+                handle_show_options,
+            )
+
             try:
                 config.load(
                     args_dict,
@@ -133,6 +140,12 @@ class ApplicationDefinition:
             source: sorted(keys) for source, keys in config_builder.config_sources.items()
         }
         return args_dict, db_config
+
+    @staticmethod
+    def _help_requested():
+        """Return whether the command line explicitly requests help."""
+        arguments = sys.argv[1:]
+        return not arguments or any(argument in {"--help", "-h"} for argument in arguments)
 
     @staticmethod
     def _show_options_requested():
@@ -163,9 +176,14 @@ class ApplicationDefinition:
                 + ", ".join(f"--{name}" for name in missing)
             )
 
-    def start(self) -> ApplicationContext:
+    def start(self):
         """Read configuration and run the standard application startup sequence."""
         args_dict, db_config = self._parse()
+
+        from simtools.application.control import (  # pylint: disable=import-outside-toplevel
+            _initialize_runtime,
+        )
+
         return _initialize_runtime(
             args_dict,
             db_config,
