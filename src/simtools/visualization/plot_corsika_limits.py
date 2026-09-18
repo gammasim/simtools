@@ -5,10 +5,12 @@ from itertools import product
 from pathlib import Path
 
 import numpy as np
-from matplotlib.colors import ListedColormap
-from matplotlib.lines import Line2D
 
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+
+colors = lazy_module("matplotlib.colors")
+lines = lazy_module("matplotlib.lines")
 
 _logger = logging.getLogger(__name__)
 
@@ -73,7 +75,9 @@ def _plot_single_grid_coverage(
         min(zen_vals) - 0.5,
     ]
 
-    im = ax.imshow(z_grid, cmap=ListedColormap(["red", "green"]), vmin=0, vmax=1, extent=extent)
+    im = ax.imshow(
+        z_grid, cmap=colors.ListedColormap(["red", "green"]), vmin=0, vmax=1, extent=extent
+    )
     cbar = plt.colorbar(im, ax=ax, ticks=[0, 1], label="Coverage", shrink=0.25, pad=0.02)
     cbar.set_ticklabels(["Missing", "Present"])
 
@@ -186,7 +190,7 @@ def _plot_limit_group(axes, group, broad_range_columns):
     """Plot all NSB and azimuth limit series for one layout and particle."""
     legend_handles, legend_labels = [], []
     grouped_by_nsb = group.group_by("nsb_level")
-    colors = plt.get_cmap("Set1").colors  # don't expect more than 9 NSB levels
+    palette = plt.get_cmap("Set1").colors  # don't expect more than 9 NSB levels
     azimuth_values = [
         _value_in_degrees(azimuth_group["azimuth"][0])
         for azimuth_group in group.group_by("azimuth").groups
@@ -194,8 +198,8 @@ def _plot_limit_group(axes, group, broad_range_columns):
 
     for index, nsb_group in enumerate(grouped_by_nsb.groups):
         nsb_level = nsb_group["nsb_level"][0]
-        color = colors[index]
-        legend_handles.append(Line2D([0], [0], color=color))
+        color = palette[index]
+        legend_handles.append(lines.Line2D([0], [0], color=color))
         legend_labels.append(f"NSB={nsb_level} GHz")
 
         for azimuth_group in nsb_group.group_by("azimuth").groups:
@@ -286,11 +290,11 @@ def plot_limits(limits_table, output_dir):
 
         if broad_range_columns:
             legend_handles += [
-                Line2D([0], [0], linestyle="--", color="gray"),
+                lines.Line2D([0], [0], linestyle="--", color="gray"),
             ]
             legend_labels += ["broad-range limits"]
         legend_handles += [
-            Line2D(
+            lines.Line2D(
                 [0],
                 [0],
                 marker="o",

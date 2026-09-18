@@ -429,7 +429,10 @@ def test_plot_array_layout_calls_adjust_text(monkeypatch, telescopes):
 
     # Mock adjust_text
     adjust_text_mock = Mock()
-    monkeypatch.setattr("simtools.visualization.plot_array_layout.adjust_text", adjust_text_mock)
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.adjust_text_module.adjust_text",
+        adjust_text_mock,
+    )
 
     plot_array_layout(telescopes, show_tel_label=True)
 

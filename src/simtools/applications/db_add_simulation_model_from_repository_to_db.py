@@ -41,6 +41,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    app_context.logger.warning(
+        "simtools-db-add-simulation-model-from-repository-to-db will be removed in the near future."
+    )
 
     if app_context.args.get("db_simulation_model") and app_context.args.get(
         "db_simulation_model_tag"

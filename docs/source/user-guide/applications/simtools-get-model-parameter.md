@@ -1,7 +1,7 @@
-# simtools-db-get-parameter-from-db
+# simtools-get-model-parameter
 
 ```{eval-rst}
-.. automodule:: simtools.applications.db_get_parameter_from_db
+.. automodule:: simtools.applications.get_model_parameter
    :members:
    :exclude-members: main
 ```
@@ -62,7 +62,7 @@ Print the mirror_list parameter entry used for a given model_version.
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter mirror_list \\
+    simtools-get-model-parameter --parameter mirror_list \\
             --site North --telescope LSTN-01 \\
             --model_version 5.0.0
 
@@ -70,7 +70,7 @@ Write the database entry for a parameter to a JSON file.
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter array_element_position_ground \\
+    simtools-get-model-parameter --parameter array_element_position_ground \\
             --site North --telescope LSTN-01 \\
             --parameter_version 6.0.0 \\
             --output_file array_element_position_ground.json
@@ -79,7 +79,7 @@ Export a file-backed parameter using the original file name stored in the databa
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter mirror_list \\
+    simtools-get-model-parameter --parameter mirror_list \\
             --site North --telescope LSTN-01 \\
             --parameter_version 1.0.0 \\
             --export_model_file
@@ -88,7 +88,7 @@ Export a file-backed parameter and override the output file name.
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter mirror_list \
+    simtools-get-model-parameter --parameter mirror_list \
             --site North --telescope LSTN-01 \
             --parameter_version 1.0.0 \
             --export_model_file --output_file my_mirror_list.dat
@@ -97,7 +97,7 @@ Export a file-backed parameter and also write an ECSV table representation.
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter mirror_reflectivity \\
+    simtools-get-model-parameter --parameter mirror_reflectivity \\
             --site North --telescope LSTN-01 \\
             --model_version 6.0.2 \\
             --export_model_file --export_model_file_as_table
@@ -106,7 +106,7 @@ Export a dict-backed table parameter as ECSV. The .ecsv suffix is added automati
 
 .. code-block:: console
 
-    simtools-db-get-parameter-from-db --parameter fadc_pulse_shape \\
+    simtools-get-model-parameter --parameter fadc_pulse_shape \\
             --site North --telescope LSTN-01 \\
             --parameter_version 2.0.0 \\
             --export_model_file --output_file fadc_pulse_shape
@@ -116,7 +116,7 @@ Export a dict-backed table parameter as ECSV. The .ecsv suffix is added automati
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :application: db_get_parameter_from_db
+   :application: get_model_parameter
    :no-heading:
 ```
 
@@ -124,20 +124,20 @@ Export a dict-backed table parameter as ECSV. The .ecsv suffix is added automati
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_parameter_from_db_array_element_position_ground.yml
+    :file: get_model_parameter_array_element_position_ground.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_parameter_from_db_site_parameter.yml
+    :file: get_model_parameter_site_parameter.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_parameter_from_db_telescope_model_version.yml
+    :file: get_model_parameter_telescope_model_version.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: db_get_parameter_from_db_telescope_parameter_version.yml
+    :file: get_model_parameter_telescope_parameter_version.yml
 ```

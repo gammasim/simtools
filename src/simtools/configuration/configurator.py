@@ -247,9 +247,6 @@ class Configurator:
             if "configuration" in _config_dict.get("applications", [{}])[0]:
                 _config_dict = _config_dict["applications"][0]["configuration"]
 
-            if _config_dict:
-                _config_dict = io_handler.resolve_test_resource_paths(_config_dict)
-
             _config_dict = simtools_version.resolve_by_version(
                 _config_dict,
                 _config_dict.get("model_version"),
