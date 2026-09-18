@@ -58,15 +58,11 @@ finite choices declared by argparse.
 :maxdepth: 1
 
 simtools-compare-productions <applications/simtools-compare-productions>
-simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
-simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
 simtools-db-add-file-to-db <applications/simtools-db-add-file-to-db>
 simtools-db-add-simulation-model-from-repository-to-db <applications/simtools-db-add-simulation-model-from-repository-to-db>
 simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-json-to-db>
-simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layouts-from-db>
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
-simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
 simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
@@ -91,6 +87,8 @@ simtools-generate-corsika-histograms <applications/simtools-generate-corsika-his
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
+simtools-get-array-layout <applications/simtools-get-array-layout>
+simtools-get-model-parameter <applications/simtools-get-model-parameter>
 simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>

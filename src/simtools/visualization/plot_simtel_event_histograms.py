@@ -4,12 +4,13 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from matplotlib.colors import LogNorm
 
 from simtools.production_configuration.trigger_histograms import load_event_data_histograms
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
+colors = lazy_module("matplotlib.colors")
 
 # Maps histogram dictionary keys to output plot filenames where the key alone
 # is ambiguous (e.g. the triggered 2-D vs-energy histograms share a prefix
@@ -914,7 +915,7 @@ def _create_2d_histogram_plot(data, bins, plot_params, ax=None):
             vmin = max(1, data[data > 0].min()) if np.any(data > 0) else 1
             vmax = max(vmin + 1, data_max)
             pcm = plotter.pcolormesh(
-                bins[0], bins[1], masked_data, norm=LogNorm(vmin=vmin, vmax=vmax), cmap=cmap
+                bins[0], bins[1], masked_data, norm=colors.LogNorm(vmin=vmin, vmax=vmax), cmap=cmap
             )
 
     return pcm

@@ -27,13 +27,14 @@ APPLICATION = ApplicationDefinition.for_module(
     database=True,
     initialize_model_reader=False,
     initialize_output=True,
-    usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
+    usage="simtools-db-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    app_context.logger.warning("simtools-db-get-file-from-db will be removed in the near future.")
 
     db = db_handler.DatabaseHandler()
     try:

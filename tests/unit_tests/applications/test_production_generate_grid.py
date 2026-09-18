@@ -101,6 +101,28 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.output_file == "job_grid.ecsv"
 
 
+@pytest.mark.parametrize("option", ["showers_per_run_power_law", "energy_max_scaling"])
+def test_full_parser_accepts_compact_power_law_configuration_value(option):
+    args = _full_parser().parse_args(
+        [
+            "--model_version",
+            "7.0.0",
+            "--site",
+            "North",
+            "--array_layout_name",
+            "LSTN-01",
+            "--showers_per_run",
+            "5",
+            "--primary",
+            "gamma",
+            f"--{option}",
+            "-1.0 100 TeV",
+        ]
+    )
+
+    assert getattr(args, option) == ["-1.0 100 TeV"]
+
+
 def test_application_parse_allows_show_options_without_required_runtime_arguments(
     monkeypatch, capsys
 ):
