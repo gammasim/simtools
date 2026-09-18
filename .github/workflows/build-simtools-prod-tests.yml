@@ -19,8 +19,19 @@ on:
         required: false
         default: false
         type: boolean
+      publish_latest:
+        description: "Also publish the image as the latest test image"
+        required: false
+        default: true
+        type: boolean
   schedule:
     - cron: "0 2 * * 0"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-simtools-prod-tests.yml"
+      - "docker/Dockerfile-simtools-prod-tests"
+      - "dependency_versions.yml"
   workflow_call:
     inputs:
       prod_image:
@@ -34,6 +45,11 @@ on:
         type: string
       push_image:
         description: "Push the test image for a downstream job"
+        required: false
+        default: false
+        type: boolean
+      publish_latest:
+        description: "Also publish the image as the latest test image"
         required: false
         default: false
         type: boolean
@@ -89,9 +105,9 @@ jobs:
           MODEL_REPOSITORY: ${{ steps.catalog.outputs.model_repository }}
         run: |
           mkdir -p test-data
-          git clone --depth 1 --branch "$MODEL_REF" "$MODEL_REPOSITORY" \
-            test-data/simulation-models
-          revision=$(git -C test-data/simulation-models rev-parse HEAD)
+          git clone --bare --depth 1 --branch "$MODEL_REF" "$MODEL_REPOSITORY" \
+            test-data/simulation-models-repository
+          revision=$(git --git-dir=test-data/simulation-models-repository rev-parse HEAD)
           echo "revision=$revision" >> "$GITHUB_OUTPUT"
 
       - name: Prepare CORSIKA interaction tables
@@ -111,13 +127,13 @@ jobs:
         id: image
         env:
           MODEL_REVISION: ${{ steps.models.outputs.revision }}
-          MODEL_REF_INPUT: ${{ inputs.simulation_model_ref }}
+          PUBLISH_LATEST: ${{ github.event_name == 'schedule' || github.event_name == 'push' || inputs.publish_latest }}
         run: |
           tag="models-${MODEL_REVISION:0:12}-${GITHUB_SHA:0:7}"
           image="ghcr.io/gammasim/simtools-prod-tests:$tag"
           echo "image=$image" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          if [ -z "$MODEL_REF_INPUT" ]; then
+          if [ "$PUBLISH_LATEST" = true ]; then
             echo "latest=ghcr.io/gammasim/simtools-prod-tests:latest" >> "$GITHUB_OUTPUT"
           fi
 
@@ -141,7 +157,7 @@ jobs:
             PYTHON_VERSION=${{ steps.catalog.outputs.python_version }}
             SIMULATION_MODELS_GIT_REVISION=${{ steps.models.outputs.revision }}
             CORSIKA_TABLES_TAG=${{ steps.catalog.outputs.tables_tag }}
-          push: ${{ github.event_name == 'workflow_dispatch' || inputs.push_image == true }}
+          push: ${{ github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || inputs.push_image == true }}
           file: ./docker/Dockerfile-simtools-prod-tests
           tags: |
             ${{ steps.image.outputs.image }}

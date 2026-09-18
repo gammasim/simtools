@@ -45,6 +45,16 @@ on:
 
 jobs:
 
+  prepare_test_image:
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-simtools-prod-tests.yml
+    with:
+      prod_image: ghcr.io/gammasim/simtools-prod:latest
+      push_image: true
+
   test_building:
     if: ${{ github.event_name != 'workflow_call' }}
     runs-on: ubuntu-latest
@@ -115,15 +125,21 @@ jobs:
           retention-days: 30
 
   integration_tests:
-    needs: [prepare_test_resources]
+    if: >-
+      ${{
+        always() &&
+        needs.prepare_test_resources.result == 'success' &&
+        (needs.prepare_test_image.result == 'success' || needs.prepare_test_image.result == 'skipped')
+      }}
+    needs: [prepare_test_image, prepare_test_resources]
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     container:
-      image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
+      image: ${{ needs.prepare_test_image.outputs.image || inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
       options: --user 0
     env:
-      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
+      CONTAINER_IMAGE: ${{ needs.prepare_test_image.outputs.image || inputs.container_image || 'ghcr.io/gammasim/simtools-prod-tests:latest' }}
 
     strategy:
       fail-fast: false
