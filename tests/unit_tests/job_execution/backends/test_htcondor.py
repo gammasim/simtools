@@ -110,7 +110,7 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
 
     assert submit_values["executable"] == "/usr/bin/env"
     assert submit_values["arguments"].startswith(
-        "/opt/conda/bin/python -m simtools.job_execution.worker"
+        "/opt/conda/bin/python -P -m simtools.job_execution.worker"
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
@@ -136,6 +136,7 @@ def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_
         if separator
     }
     assert "PYTHONPATH" not in entries
+    assert submit_values["arguments"].startswith("python -P -m simtools.job_execution.worker")
 
 
 def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
