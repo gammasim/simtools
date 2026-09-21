@@ -1,0 +1,50 @@
+---
+applications:
+- application: simtools-derive-bias-curves
+  docs:
+    title: Derive an LSTN-01 trigger-rate bias curve
+    summary: >-
+      Combine NSB and proton reduced event-data files to derive the analogue-sum trigger threshold
+      for the North LST.
+  configuration:
+    data_dir: ${generated:bias_curves_input}
+    scaling_factor: 1.35
+    figure_file: simtools-output/derive_bias_curves_lstn-01
+    nsb_table_file: simtools-output/derive_bias_curves_lstn-01/nsb_table.ecsv
+    proton_table_file: simtools-output/derive_bias_curves_lstn-01/proton_table.ecsv
+    title: LSTN-01 Trigger Rate Bias Curves
+    site: North
+    telescope: LSTN-01
+    model_version: 7.0.0
+    parameter_version: 1.0.0
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: figure_file
+      file: bias_curve.png
+    - path_descriptor: figure_file
+      file: bias_curve.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+        columns:
+          threshold:
+            range:
+              minimum: 0
+    - path_descriptor: figure_file
+      file: nsb_table.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+    - path_descriptor: figure_file
+      file: proton_table.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+    - path_descriptor: output_path
+      output_sub_path: LSTN-01/asum_threshold
+      file: asum_threshold-1.0.0.json
+  model_version_use_current: true
+  test_name: derive_bias_curves_lstn-01
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0
