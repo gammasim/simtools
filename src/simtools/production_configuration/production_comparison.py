@@ -1,5 +1,6 @@
 """Compare trigger-histogram products from simulation productions."""
 
+from collections import Counter
 from pathlib import Path
 
 from simtools.constants import SCHEMA_PATH
@@ -32,10 +33,17 @@ def write_production_comparison(args_dict, output_directory):
     array_layout_names = args_dict.get("array_layout_name") or [None]
     if args_dict.get("baseline_path"):
         descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
-        for pairing_key, production_descriptors in descriptor_pairs:
-            pair_output_directory = (
-                output_directory / f"comparison-{stable_configuration_hash(pairing_key)}"
-            )
+        output_stems = [
+            _comparison_pair_output_stem(production_descriptors)
+            for _, production_descriptors in descriptor_pairs
+        ]
+        stem_counts = Counter(output_stems)
+        for (pairing_key, production_descriptors), output_stem in zip(
+            descriptor_pairs, output_stems
+        ):
+            if stem_counts[output_stem] > 1:
+                output_stem = f"{output_stem}-{stable_configuration_hash(pairing_key)}"
+            pair_output_directory = output_directory / output_stem
             _write_array_layout_comparisons(
                 production_descriptors,
                 args_dict,
@@ -128,6 +136,14 @@ def _production_descriptor_pairs_from_metadata(args_dict):
         )
         for key in sorted(baseline_by_key, key=str)
     ]
+
+
+def _comparison_pair_output_stem(production_descriptors):
+    """Return a readable directory stem from the paired histogram filenames."""
+    input_stems = [Path(descriptor.input_files[0]).stem for descriptor in production_descriptors]
+    if len(set(input_stems)) == 1:
+        return input_stems[0]
+    return "-vs-".join(input_stems)
 
 
 def _selected_trigger_histogram_manifests(path, selections):
