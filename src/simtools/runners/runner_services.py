@@ -310,19 +310,24 @@ class RunnerServices:
         else:
             dir_path = self.directory
         output_file_name = f"{file_name}{desc['suffix']}"
-        self._warn_if_file_name_exceeds_dirac_limit(output_file_name, file_type)
+        output_name_for_limit_check = output_file_name
+        if desc["sub_dir_type"] == "run_number":
+            run_directory_name = self._get_run_number_string(run_number)
+            if run_directory_name:
+                output_name_for_limit_check = f"{run_directory_name}/{output_file_name}"
+        self._warn_if_file_name_exceeds_dirac_limit(output_name_for_limit_check, file_type)
         return dir_path / output_file_name
 
-    def _warn_if_file_name_exceeds_dirac_limit(self, output_file_name, file_type):
+    def _warn_if_file_name_exceeds_dirac_limit(self, output_name_for_limit_check, file_type):
         """Warn when generated file names exceed the current DIRAC file-name limit."""
-        if len(output_file_name) <= _DIRAC_MAX_FILENAME_LENGTH:
+        if len(output_name_for_limit_check) <= _DIRAC_MAX_FILENAME_LENGTH:
             return
         self._logger.warning(
             "Generated %s file name exceeds DIRAC filename limit (%s > %s): %s",
             file_type,
-            len(output_file_name),
+            len(output_name_for_limit_check),
             _DIRAC_MAX_FILENAME_LENGTH,
-            output_file_name,
+            output_name_for_limit_check,
         )
 
     @staticmethod

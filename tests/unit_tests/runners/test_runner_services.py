@@ -137,6 +137,15 @@ def test_get_file_name_warns_for_dirac_filename_limit(runner_service, caplog):
     assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
 
 
+def test_get_file_name_warns_for_dirac_filename_limit_with_run_directory(runner_service, caplog):
+    with caplog.at_level(logging.WARNING):
+        runner_service.label = "x" * 35
+        runner_service.get_file_name("sim_telarray_event_data", run_number=1)
+
+    assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
+    assert "run000001/" in caplog.text
+
+
 def test_get_file_name_no_dirac_filename_limit_warning(runner_service, caplog):
     with caplog.at_level(logging.WARNING):
         runner_service.get_file_name("sim_telarray_event_data", run_number=1)
