@@ -540,6 +540,18 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     assert "metadata_documents" in call.kwargs
 
 
+def test_write_reduced_event_lists_warns_for_long_output_filename(
+    mocker, tmp_test_directory, caplog
+):
+    input_file = Path(tmp_test_directory) / ("x" * 120 + ".simtel.zst")
+    mocker.patch("simtools.simulator.execute_jobs")
+
+    with caplog.at_level(logging.WARNING):
+        Simulator.write_reduced_event_lists(input_files=[input_file])
+
+    assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
+
+
 def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
     input_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     output_files = ["output_file1.reduced_event_data.hdf5"]
