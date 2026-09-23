@@ -91,6 +91,27 @@ FILES_AND_PATHS = {
 }
 
 
+def warn_if_file_name_exceeds_dirac_limit(file_name, file_type):
+    """Warn when a generated file name exceeds the current DIRAC limit.
+
+    Parameters
+    ----------
+    file_name : str
+        Final file name without its directory path.
+    file_type : str
+        Internal simtools file type used to generate the file name.
+    """
+    if len(file_name) <= _DIRAC_MAX_FILENAME_LENGTH:
+        return
+    _logger.warning(
+        "Generated %s file name exceeds DIRAC filename limit (%s > %s): %s",
+        file_type,
+        len(file_name),
+        _DIRAC_MAX_FILENAME_LENGTH,
+        file_name,
+    )
+
+
 def validate_corsika_run_number(run_number):
     """
     Validate run number and return it.
@@ -310,25 +331,8 @@ class RunnerServices:
         else:
             dir_path = self.directory
         output_file_name = f"{file_name}{desc['suffix']}"
-        output_name_for_limit_check = output_file_name
-        if desc["sub_dir_type"] == "run_number":
-            run_directory_name = self._get_run_number_string(run_number)
-            if run_directory_name:
-                output_name_for_limit_check = f"{run_directory_name}/{output_file_name}"
-        self._warn_if_file_name_exceeds_dirac_limit(output_name_for_limit_check, file_type)
+        warn_if_file_name_exceeds_dirac_limit(output_file_name, file_type)
         return dir_path / output_file_name
-
-    def _warn_if_file_name_exceeds_dirac_limit(self, output_name_for_limit_check, file_type):
-        """Warn when generated file names exceed the current DIRAC file-name limit."""
-        if len(output_name_for_limit_check) <= _DIRAC_MAX_FILENAME_LENGTH:
-            return
-        self._logger.warning(
-            "Generated %s file name exceeds DIRAC filename limit (%s > %s): %s",
-            file_type,
-            len(output_name_for_limit_check),
-            _DIRAC_MAX_FILENAME_LENGTH,
-            output_name_for_limit_check,
-        )
 
     @staticmethod
     def _get_run_number_string(run_number):

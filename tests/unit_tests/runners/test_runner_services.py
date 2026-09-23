@@ -137,13 +137,16 @@ def test_get_file_name_warns_for_dirac_filename_limit(runner_service, caplog):
     assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
 
 
-def test_get_file_name_warns_for_dirac_filename_limit_with_run_directory(runner_service, caplog):
+def test_get_file_name_does_not_count_run_directory_for_dirac_filename_limit(
+    runner_service, caplog
+):
     with caplog.at_level(logging.WARNING):
-        runner_service.label = "x" * 35
-        runner_service.get_file_name("sim_telarray_event_data", run_number=1)
+        runner_service.label = "x" * 36
+        output_file = runner_service.get_file_name("sim_telarray_event_data", run_number=1)
 
-    assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
-    assert "run000001/" in caplog.text
+    assert len(output_file.name) <= 128
+    assert len(f"{output_file.parent.name}/{output_file.name}") > 128
+    assert "exceeds DIRAC filename limit" not in caplog.text
 
 
 def test_get_file_name_no_dirac_filename_limit_warning(runner_service, caplog):
@@ -153,16 +156,16 @@ def test_get_file_name_no_dirac_filename_limit_warning(runner_service, caplog):
     assert "exceeds DIRAC filename limit" not in caplog.text
 
 
-def test_warn_if_file_name_exceeds_dirac_limit_no_warning(runner_service, caplog):
+def test_warn_if_file_name_exceeds_dirac_limit_no_warning(caplog):
     with caplog.at_level(logging.WARNING):
-        runner_service._warn_if_file_name_exceeds_dirac_limit("x" * 128, "sim_telarray_event_data")
+        runner_services.warn_if_file_name_exceeds_dirac_limit("x" * 128, "sim_telarray_event_data")
 
     assert "exceeds DIRAC filename limit" not in caplog.text
 
 
-def test_warn_if_file_name_exceeds_dirac_limit_warning(runner_service, caplog):
+def test_warn_if_file_name_exceeds_dirac_limit_warning(caplog):
     with caplog.at_level(logging.WARNING):
-        runner_service._warn_if_file_name_exceeds_dirac_limit("x" * 129, "sim_telarray_event_data")
+        runner_services.warn_if_file_name_exceeds_dirac_limit("x" * 129, "sim_telarray_event_data")
 
     assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
 
