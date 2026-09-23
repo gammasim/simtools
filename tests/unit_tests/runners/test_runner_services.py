@@ -129,6 +129,21 @@ def test_get_file_name(runner_service):
         runner_service.get_file_name("foobar", run_number=1)
 
 
+def test_get_file_name_warns_for_dirac_filename_limit(runner_service, caplog):
+    with caplog.at_level(logging.WARNING):
+        runner_service.label = "x" * 120
+        runner_service.get_file_name("sim_telarray_event_data", run_number=1)
+
+    assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
+
+
+def test_get_file_name_no_dirac_filename_limit_warning(runner_service, caplog):
+    with caplog.at_level(logging.WARNING):
+        runner_service.get_file_name("sim_telarray_event_data", run_number=1)
+
+    assert "exceeds DIRAC filename limit" not in caplog.text
+
+
 def test_get_run_number_string(runner_service_config_only):
     run_directory = runner_service_config_only._get_run_number_string(1)
     assert run_directory == "run000001"
