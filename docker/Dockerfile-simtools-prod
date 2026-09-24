@@ -7,9 +7,9 @@
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE
-ARG SIMTEL_IMAGE
-ARG BASE_IMAGE
+ARG CORSIKA_IMAGE=ghcr.io/gammasim/corsika7:v78010-generic
+ARG SIMTEL_IMAGE=ghcr.io/gammasim/sim_telarray:v2025-11-30-rc
+ARG BASE_IMAGE=docker.io/library/almalinux:9.8-minimal
 
 FROM ${CORSIKA_IMAGE} AS corsika_img
 FROM ${SIMTEL_IMAGE} AS simtel_img

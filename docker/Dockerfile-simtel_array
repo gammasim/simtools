@@ -4,8 +4,8 @@
 # Image with sim_telarray and tools.
 #
 
-ARG BASE_IMAGE
-ARG BUILD_BASE_IMAGE
+ARG BASE_IMAGE=docker.io/library/almalinux:9.8-minimal
+ARG BUILD_BASE_IMAGE=docker.io/library/almalinux:9.8
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)

@@ -31,7 +31,7 @@ permissions: {}
 
 jobs:
   dependency-config:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -47,7 +47,7 @@ jobs:
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: dependency-config
     permissions:
       contents: read

@@ -10,8 +10,8 @@
 #
 # CORSIKA can be build with or without optimization flags (AVX2/AVX512).
 
-ARG BASE_IMAGE
-ARG BUILD_BASE_IMAGE
+ARG BASE_IMAGE=docker.io/library/almalinux:9.8-minimal
+ARG BUILD_BASE_IMAGE=docker.io/library/almalinux:9.8
 
 # hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)

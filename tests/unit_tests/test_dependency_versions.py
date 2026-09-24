@@ -142,6 +142,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
     )
     assert {item["avx_flag"] for item in matrices["corsika_build_matrix"]} == set(variants)
     assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
+    for matrix_name in ("corsika_build_matrix", "simtel_build_matrix"):
+        matrix = matrices[matrix_name]
+        assert {item["runner"] for item in matrix if item["arch"] == "amd64"} == {"ubuntu-24.04"}
+        assert {item["runner"] for item in matrix if item["arch"] == "arm64"} == {
+            "ubuntu-24.04-arm"
+        }
     assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v0.1.0"
     assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
     assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == (
