@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Get array layouts from a simulation-model repository or model repository."""
+"""Get array layouts from a simulation-model repository."""
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition

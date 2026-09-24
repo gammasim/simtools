@@ -180,7 +180,7 @@ class ModelDataWriter:
 
     def check_for_existing_parameter(self, parameter_name, instrument, parameter_version):
         """
-        Check if a parameter with the same version exists in the simulation model model repository.
+        Check if a parameter with the same version exists in the model repository.
 
         Parameters
         ----------

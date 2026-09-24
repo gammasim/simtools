@@ -28,7 +28,7 @@ class ApplicationDefinition:
     defer_required_validation: bool = False
     usage: str | None = None
     validate_simulation_dependencies: bool = False
-    initialize_model_reader: bool = True
+    initialize_model_reader: bool | None = None
     use_dependency_defaults: bool = True
     excluded_standard_arguments: tuple[str, ...] = ()
 
@@ -50,6 +50,8 @@ class ApplicationDefinition:
             "excluded_standard_arguments",
             tuple(self.excluded_standard_arguments),
         )
+        if self.initialize_model_reader is None:
+            object.__setattr__(self, "initialize_model_reader", self.model_repository)
         self._validate_arguments(self.all_arguments)
 
     @property

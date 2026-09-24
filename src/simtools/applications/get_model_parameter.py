@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Get a model parameter from a simulation-model repository or model repository."""
+"""Get a model parameter from a simulation-model repository."""
 
 from pprint import pprint
 

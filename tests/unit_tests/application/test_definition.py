@@ -86,8 +86,19 @@ def test_start_delegates_to_common_startup(mocker):
         "setup_io_handler": False,
         "resolve_sim_software_executables": True,
         "validate_simulation_dependencies": False,
-        "initialize_model_reader": True,
+        "initialize_model_reader": False,
     }
+
+
+def test_model_repository_definitions_initialize_the_reader_by_default():
+    """Model-backed applications initialize the configured reader by default."""
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        model_repository=True,
+    )
+
+    assert application.initialize_model_reader is True
 
 
 def test_start_can_skip_model_reader_initialization(mocker):
