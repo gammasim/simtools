@@ -424,7 +424,7 @@ def build_workflow_matrices(catalog):
     """Build GitHub Actions matrices from the dependency catalog."""
     variants = catalog["cpu-variants"]
     platform_matrix = [
-        {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-latest"},
+        {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-24.04"},
         {"platform": "linux/arm64/v8", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
     ]
     corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
