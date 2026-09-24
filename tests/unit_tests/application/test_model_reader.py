@@ -1,7 +1,7 @@
 """Tests for the model-reader factory."""
 
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -11,7 +11,6 @@ from simtools.application.model_reader import (
     create_model_reader_from_source_config,
     require_model_reader,
 )
-from simtools.db.mongo_db import MongoDBDependencyError
 from simtools.model_repository.reader import SimulationModelReader
 from simtools.settings import config
 
@@ -25,26 +24,13 @@ def _model_repository_root(tmp_test_directory):
     return root
 
 
-def test_create_model_reader_uses_filesystem_path(tmp_test_directory, mocker):
-    """A repository path selects the filesystem source without constructing a DB handler."""
+def test_create_model_reader_uses_filesystem_path(tmp_test_directory):
+    """A repository path selects the filesystem source."""
     root = _model_repository_root(tmp_test_directory)
-    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
 
     reader = create_model_reader(simulation_models_path=root)
 
     assert reader.source_name == str(root.resolve())
-    database_handler.assert_not_called()
-
-
-def test_create_model_reader_constructs_database_handler_when_needed(mocker):
-    """Without a path, the factory constructs and adapts the database handler."""
-    handler = Mock(model_source_name="simulation-model-db")
-    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler", return_value=handler)
-
-    reader = create_model_reader()
-
-    assert reader.source_name == "simulation-model-db"
-    database_handler.assert_called_once_with()
 
 
 def test_create_model_reader_uses_environment_path(monkeypatch, tmp_test_directory):
@@ -67,17 +53,15 @@ def test_create_model_reader_rejects_conflicting_environment_sources(monkeypatch
 
 
 def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_directory):
-    """A Git path and revision select the Git source without MongoDB."""
+    """A Git path and revision select the Git source without an external model source."""
     git_path = Path(tmp_test_directory) / "models.git"
     git_reader = Mock()
     from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=git_reader)
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", str(git_path))
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "v1")
-    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
 
     assert create_model_reader() is git_reader
     from_git.assert_called_once_with(str(git_path), "v1")
-    database_handler.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -92,7 +76,7 @@ def test_create_model_reader_uses_catalog_git_revision(catalog_model, mocker):
     """A missing Git revision falls back through the dependency catalog."""
     mocker.patch(
         "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
-        return_value={"model-database": catalog_model},
+        return_value={"model-repository": catalog_model},
     )
     from_git = mocker.patch.object(SimulationModelReader, "from_git", return_value=Mock())
 
@@ -122,7 +106,7 @@ def test_create_model_reader_rejects_catalog_without_git_revision(mocker):
     """A Git source cannot start when the catalog has no usable revision."""
     mocker.patch(
         "simtools.application.model_reader.dependency_versions.load_dependency_catalog",
-        return_value={"model-database": {}},
+        return_value={"model-repository": {}},
     )
 
     with pytest.raises(ValueError, match="Git simulation-model revision is required"):
@@ -137,18 +121,6 @@ def test_create_model_reader_rejects_two_repository_sources(tmp_test_directory):
             simulation_models_git_path=tmp_test_directory,
             simulation_models_git_revision="v1",
         )
-
-
-def test_create_model_reader_from_source_config_preserves_mongodb_name(mocker):
-    """Worker source reconstruction keeps the selected MongoDB name."""
-    handler = Mock()
-    type(handler).model_source_name = PropertyMock(side_effect=lambda: handler.db_name)
-    mocker.patch("simtools.application.model_reader._create_database_handler", return_value=handler)
-
-    reader = create_model_reader_from_source_config({"type": "mongodb", "name": "worker-db"})
-
-    assert handler.db_name == "worker-db"
-    assert reader.source_name == "worker-db"
 
 
 def test_create_model_reader_from_source_config_reopens_git_revision(mocker):
@@ -197,29 +169,6 @@ def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
     )
 
     create_reader.assert_called_once_with(simulation_models_path="models")
-
-
-def test_create_model_reader_from_source_config_allows_unnamed_mongodb(mocker):
-    """A MongoDB source configuration may use the handler's default database name."""
-    handler = Mock(model_source_name="default-db")
-    mocker.patch("simtools.application.model_reader._create_database_handler", return_value=handler)
-
-    reader = create_model_reader_from_source_config({"type": "mongodb"})
-
-    assert reader.source_name == "default-db"
-
-
-def test_create_model_reader_reports_missing_mongodb_dependency(mocker):
-    """The MongoDB fallback reports how to install its optional dependency."""
-    mocker.patch(
-        "simtools.db.db_handler.DatabaseHandler",
-        side_effect=MongoDBDependencyError("MongoDB unavailable"),
-    )
-
-    with pytest.raises(RuntimeError, match="install with the `mongodb` extra") as error:
-        create_model_reader()
-
-    assert isinstance(error.value.__cause__, MongoDBDependencyError)
 
 
 def test_require_model_reader_prefers_explicit_reader():

@@ -216,7 +216,7 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None):
         List of associated data entries to include in the metadata.
     """
     site = args_dict.get("site") or array_layouts.get("site")
-    _logger.info(f"Writing updated array layouts to the database for site {site}.")
+    _logger.info(f"Writing updated array layouts to the model repository for site {site}.")
 
     io_handler_instance = io_handler.IOHandler()
     io_handler_instance.set_paths(output_path=args_dict["output_path"])
@@ -239,9 +239,9 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None):
     )
 
 
-def validate_array_layouts_with_db(production_table, array_layouts):
+def validate_array_layouts_with_model_repository(production_table, array_layouts):
     """
-    Validate array layouts against the production table in the database.
+    Validate array layouts against the production table in the model repository.
 
     Confirm that every telescope defined in the array layouts exist in the
     production table.
@@ -249,7 +249,7 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     Parameters
     ----------
     production_table : dict
-        Production table from the database.
+        Production table from the model repository.
     array_layouts : dict
         Array layouts to be validated.
 
@@ -258,13 +258,13 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     dict
         Validated array layouts.
     """
-    db_elements = set(production_table.get("parameters", {}).keys())
+    model_elements = set(production_table.get("parameters", {}).keys())
 
     invalid_array_elements = [
         e
         for layout in array_layouts.get("value", [])
         for e in layout.get("elements", [])
-        if e not in db_elements
+        if e not in model_elements
     ]
 
     if invalid_array_elements:
@@ -488,7 +488,7 @@ def get_array_layouts_from_parameter_file(
     ]
 
 
-def get_array_layouts_from_db(
+def get_array_layouts_from_model_repository(
     layout_name,
     site,
     model_version,
@@ -497,7 +497,7 @@ def get_array_layouts_from_db(
     model_reader=None,
 ):
     """
-    Retrieve all array layouts from the database and return as list of astropy tables.
+    Retrieve all array layouts from the model repository and return as list of astropy tables.
 
     Parameters
     ----------
@@ -546,7 +546,7 @@ def get_array_layouts_from_db(
     return layouts
 
 
-def get_array_layouts_using_telescope_lists_from_db(
+def get_array_layouts_using_telescope_lists_from_model_repository(
     telescope_lists,
     site,
     model_version,
@@ -555,7 +555,7 @@ def get_array_layouts_using_telescope_lists_from_db(
     model_reader=None,
 ):
     """
-    Retrieve array layouts from the database using telescope lists.
+    Retrieve array layouts from the model repository using telescope lists.
 
     Parameters
     ----------
@@ -655,9 +655,9 @@ def _get_array_layout_dict(
     }
 
 
-def get_array_elements_from_db_for_layouts(layouts, site, model_version, model_reader=None):
+def get_array_elements_from_model_repository(layouts, site, model_version, model_reader=None):
     """
-    Get list of array elements from the database for given list of layout names.
+    Get list of array elements from the model repository for given list of layout names.
 
     Structure of the returned dictionary::
 
@@ -705,7 +705,7 @@ def _validate_layout_file_args(args_dict):
 
 def read_layouts(args_dict, model_reader=None):
     """
-    Read array layouts from the database or parameter file.
+    Read array layouts from the model repository or parameter file.
 
     Parameters
     ----------
@@ -724,7 +724,7 @@ def read_layouts(args_dict, model_reader=None):
     background_layout = None
     ignore_software_version = args_dict.get("ignore_software_version", False)
     if args_dict.get("array_layout_name_background"):
-        background_layout = get_array_layouts_from_db(
+        background_layout = get_array_layouts_from_model_repository(
             args_dict["array_layout_name_background"],
             args_dict["site"],
             args_dict["model_version"],
@@ -743,8 +743,8 @@ def read_layouts(args_dict, model_reader=None):
         ), background_layout
 
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
-        _logger.info("Plotting array from DB using layout array name(s).")
-        layouts = get_array_layouts_from_db(
+        _logger.info("Plotting array from the model repository using layout array name(s).")
+        layouts = get_array_layouts_from_model_repository(
             args_dict["array_layout_name"],
             args_dict["site"],
             args_dict["model_version"],
@@ -761,7 +761,7 @@ def read_layouts(args_dict, model_reader=None):
         return get_array_layouts_from_file(args_dict["array_layout_file"]), background_layout
     if args_dict["array_element_list"] is not None:
         _logger.info("Plotting array from list of array elements.")
-        return get_array_layouts_using_telescope_lists_from_db(
+        return get_array_layouts_using_telescope_lists_from_model_repository(
             [args_dict["array_element_list"]],
             args_dict["site"],
             args_dict["model_version"],
@@ -905,7 +905,7 @@ def write_array_elements_from_file_to_repository(
 
     Notes
     -----
-    Repository generation writes files directly and does not query a database
+    Repository generation writes files directly and does not query a model repository
     for an existing parameter version.
     """
     repository_path = Path(repository_path)
@@ -945,7 +945,7 @@ def write_array_elements_from_file_to_repository(
             parameter_version=parameter_version,
             output_path=repository_path / instrument,
             output_file=f"{parameter_name}.json",
-            check_db_for_existing_parameter=False,
+            check_for_existing_parameter=False,
         )
 
 

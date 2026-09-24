@@ -6,7 +6,7 @@ Model parameter data structures are defined in schema files.
 To ensure consistency and correctness of the model parameters, these schema files are used to validate the model parameter files with `simtools-validate-file-using-schema`.
 Strict versioning of schemas and metaschema is introduced to ensure that the model parameters are always compatible with the schema files.
 
-The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) and database.
+The model parameters are stored in JSON-style files in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
 A typical model parameter file looks like:
 
 ```json

@@ -32,7 +32,7 @@ class SiteModel(ModelParameter):
     label: str, optional
         Instance label.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters from the model repository with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
     model_directory: pathlib.Path or str, optional
@@ -139,7 +139,8 @@ class SiteModel(ModelParameter):
         """
         Return list of array elements for a given array layout.
 
-        If ``layout_name`` is not found in the database but is a valid, concrete telescope name
+        If ``layout_name`` is not found in the model repository but is a valid,
+        concrete telescope name
         (e.g., ``MSTN-05``) belonging to this site, a single-telescope layout is returned
         automatically.
 
@@ -160,7 +161,7 @@ class SiteModel(ModelParameter):
         validated_name = self._validate_as_single_telescope(layout_name)
         if validated_name is not None:
             self._logger.debug(
-                f"Array layout '{layout_name}' not found in DB; "
+                f"Array layout '{layout_name}' not found in the model repository; "
                 "treating as single-telescope layout."
             )
             return [validated_name]
@@ -234,7 +235,7 @@ class SiteModel(ModelParameter):
 
     def export_atmospheric_transmission_file(self, model_directory):
         """
-        Export atmospheric transmission file from database to the given directory.
+        Export atmospheric transmission file from the model repository to the given directory.
 
         Parameters
         ----------

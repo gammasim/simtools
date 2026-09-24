@@ -20,7 +20,7 @@ base-image:
   build-version: "9.8"
 corsika-interaction-tables:
   tag: v1.0.0
-model-database:
+model-repository:
   name: CTAO-Simulation-Model
   default-tag: v0.17.2
   repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git

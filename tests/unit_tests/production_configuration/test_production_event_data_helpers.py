@@ -14,7 +14,7 @@ def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elemen
     )
     mock_get = mocker.patch(
         "simtools.production_configuration.production_event_data_helpers."
-        "get_array_elements_from_db_for_layouts",
+        "get_array_elements_from_model_repository",
         return_value={"alpha": ["LSTN-01"]},
     )
 

@@ -60,19 +60,19 @@ def test_get_list_of_array_element_types():
     )
 
 
-def test_instrument_class_key_to_db_collection():
-    assert "telescopes" == names.instrument_class_key_to_db_collection("Telescope")
-    assert "calibration_devices" == names.instrument_class_key_to_db_collection("Calibration")
-    assert "sites" == names.instrument_class_key_to_db_collection("Site")
-    assert "configuration_sim_telarray" == names.instrument_class_key_to_db_collection(
+def test_instrument_class_key_to_collection():
+    assert "telescopes" == names.instrument_class_key_to_collection("Telescope")
+    assert "calibration_devices" == names.instrument_class_key_to_collection("Calibration")
+    assert "sites" == names.instrument_class_key_to_collection("Site")
+    assert "configuration_sim_telarray" == names.instrument_class_key_to_collection(
         "configuration_sim_telarray"
     )
-    assert "configuration_corsika" == names.instrument_class_key_to_db_collection(
+    assert "configuration_corsika" == names.instrument_class_key_to_collection(
         "configuration_corsika"
     )
 
     with pytest.raises(ValueError, match=r"^Class Not_a_class not found"):
-        names.instrument_class_key_to_db_collection("Not_a_class")
+        names.instrument_class_key_to_collection("Not_a_class")
 
 
 def test_get_collection_name_from_parameter_name_uses_parameter_schema():
@@ -436,11 +436,11 @@ def test_file_name_with_version():
     assert names.file_name_with_version("file-5.0.0.json", ".yml") == Path("file-5.0.0.yml")
 
 
-def test_db_collection_to_instrument_class_key():
-    assert names.db_collection_to_instrument_class_key() == ["Structure", "Camera", "Telescope"]
+def test_collection_to_instrument_class_key():
+    assert names.collection_to_instrument_class_key() == ["Structure", "Camera", "Telescope"]
 
     with pytest.raises(KeyError, match="Invalid collection name no_collection"):
-        names.db_collection_to_instrument_class_key("no_collection")
+        names.collection_to_instrument_class_key("no_collection")
 
 
 def test_array_element_common_identifiers():

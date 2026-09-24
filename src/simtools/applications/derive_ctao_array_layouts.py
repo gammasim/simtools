@@ -30,6 +30,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -40,7 +41,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    database=True,
     initialize_output=True,
 )
 
@@ -55,19 +55,19 @@ def main():
         branch_name=app_context.args["repository_branch"],
     )
 
-    db_array_layouts = app_context.model_reader.get_model_parameter(
+    model_layouts = app_context.model_reader.get_model_parameter(
         parameter="array_layouts",
         site=app_context.args["site"],
         array_element_name=None,
         parameter_version=app_context.args.get("parameter_version"),
         model_version=app_context.args.get("model_version"),
     )
-    db_array_layouts["array_layouts"].pop("_id", None)
-    db_array_layouts["array_layouts"].pop("entry_date", None)
-    app_context.logger.info(f"Layouts from model parameter database: {db_array_layouts}")
+    model_layouts["array_layouts"].pop("_id", None)
+    model_layouts["array_layouts"].pop("entry_date", None)
+    app_context.logger.info(f"Layouts from model parameter repository: {model_layouts}")
 
     write_array_layouts(
-        array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
+        array_layouts=merge_array_layouts(model_layouts["array_layouts"], ctao_array_layouts),
         args_dict=app_context.args,
         associated_data=associated_data,
     )

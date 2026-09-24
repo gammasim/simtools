@@ -179,12 +179,12 @@ def test_get_simulation_software_parameters(telescope_model_lst):
     assert isinstance(telescope_model_lst.get_simulation_software_parameters("corsika"), dict)
 
 
-def test_load_simulation_software_parameter_ignores_database_value_error(
+def test_load_simulation_software_parameter_ignores_repository_value_error(
     telescope_model_lst, mocker
 ):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mocker.patch.object(
-        telescope_copy.db,
+        telescope_copy.model_source,
         "get_simulation_configuration_parameters",
         side_effect=ValueError("missing configuration"),
     )
@@ -200,7 +200,7 @@ def test_load_simulation_software_parameter_preserves_preloaded_overrides(
         "min_photoelectrons": {"value": 7}
     }
     mocker.patch.object(
-        telescope_copy.db,
+        telescope_copy.model_source,
         "get_simulation_configuration_parameters",
         return_value={"min_photons": {"value": 3}},
     )
@@ -710,8 +710,8 @@ def test_updating_export_model_files(model_version):
     )
     assert tel._is_exported_model_files_up_to_date
 
-    # Testing the DB connection
-    logger.info("DB should NOT be read next.")
+    # Testing the model repository connection
+    logger.info("model repository should NOT be read next.")
     tel.write_sim_telarray_config_file()
 
     # Changing a parameter that is a file
@@ -1071,12 +1071,14 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
     assert tel_model.get_simulation_software_parameters("sim_telarray")["min_photons"]["value"] == 0
 
 
-def test_check_corsika_simulation_software_parameter_with_overwrite(model_version, mock_db_handler):
+def test_check_corsika_simulation_software_parameter_with_overwrite(
+    model_version, mock_model_reader
+):
 
     site = "North"
     telescope_name = "LSTN-01"
     corsika_parameter = "corsika_particle_kinetic_energy_cutoff"
-    mock_db_handler.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
+    mock_model_reader.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
         {corsika_parameter: {"value": 1.0, "type": "float64", "file": False}}
         if kwargs.get("simulation_software") == "corsika"
         else {
@@ -1109,12 +1111,12 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(model_versio
     ] == pytest.approx(2.5)
 
 
-def test_check_corsika_overwrite_with_configuration_key(model_version, mock_db_handler):
+def test_check_corsika_overwrite_with_configuration_key(model_version, mock_model_reader):
 
     site = "North"
     telescope_name = "LSTN-01"
     corsika_parameter = "corsika_cherenkov_photon_bunch_size"
-    mock_db_handler.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
+    mock_model_reader.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
         {corsika_parameter: {"value": 5.0, "type": "float64", "file": False}}
         if kwargs.get("simulation_software") == "corsika"
         else {

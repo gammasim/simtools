@@ -75,12 +75,6 @@ definitions:
         test_name:
           type: string
           description: "Test name. Should be unique for this application."
-        skip_for_production_db:
-          type: boolean
-          description: "Skip test if production DB is used."
-        requires_mongodb:
-          type: boolean
-          description: "Application test requires MongoDB access."
         skip_integration_test:
           type: string
           description: "Skip test with the given skip message."
@@ -92,7 +86,7 @@ definitions:
           type: boolean
           description: |
             "Skip test if model version is changed via command line.
-            Important e.g., for cases where DB model is incomplete for some
+            Important e.g., for cases where the model repository is incomplete for some
             model versions."
         docs:
           type: object
@@ -524,12 +518,6 @@ definitions:
         test_name:
           type: string
           description: "Test name. Should be unique for this application."
-        skip_for_production_db:
-          type: boolean
-          description: "Skip test if production DB is used."
-        requires_mongodb:
-          type: boolean
-          description: "Application test requires MongoDB access."
         skip_integration_test:
           type: string
           description: "Skip test with the given skip message."
@@ -541,7 +529,7 @@ definitions:
           type: boolean
           description: |
             "Skip test if model version is changed via command line.
-            Important e.g., for cases where DB model is incomplete for some
+            Important e.g., for cases where the model repository is incomplete for some
             model versions."
         docs:
           type: object

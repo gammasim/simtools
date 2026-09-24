@@ -59,12 +59,6 @@ finite choices declared by argparse.
 
 simtools-compare-productions <applications/simtools-compare-productions>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
-simtools-db-add-file-to-db <applications/simtools-db-add-file-to-db>
-simtools-db-add-simulation-model-from-repository-to-db <applications/simtools-db-add-simulation-model-from-repository-to-db>
-simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-json-to-db>
-simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
-simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
-simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
 simtools-derive-bias-curves <applications/simtools-derive-bias-curves>

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Get array layouts from a simulation-model repository or database."""
+"""Get array layouts from a simulation-model repository or model repository."""
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition
@@ -36,6 +36,7 @@ ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *ARGUMENTS,
         cli.MODEL_VERSION,
@@ -45,7 +46,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    database=True,
     initialize_output=True,
 )
 

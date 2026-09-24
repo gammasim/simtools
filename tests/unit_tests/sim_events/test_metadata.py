@@ -109,16 +109,16 @@ def test_array_model_export_keeps_telescope_context_and_parameter_records():
     }
 
 
-def test_array_model_export_excludes_database_bookkeeping_fields():
+def test_array_model_export_excludes_model_repository_bookkeeping_fields():
     array_model = ArrayModel.__new__(ArrayModel)
     array_model.model_version = "7.0.0"
     array_model.layout_name = "layout"
     array_model.array_elements = {}
-    database_parameter = {
+    model_repository_parameter = {
         "value": [],
         "unit": None,
-        "_id": "database id",
-        "entry_date": "database timestamp",
+        "_id": "model record id",
+        "entry_date": "model record timestamp",
     }
     array_model.site_model = type(
         "Site",
@@ -126,7 +126,7 @@ def test_array_model_export_excludes_database_bookkeeping_fields():
         {
             "site": "North",
             "model_version": "7.0.0",
-            "parameters": {"array_layouts": database_parameter},
+            "parameters": {"array_layouts": model_repository_parameter},
         },
     )()
     array_model.telescope_models = {}

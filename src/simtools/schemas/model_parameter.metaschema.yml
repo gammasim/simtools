@@ -1,10 +1,10 @@
 ---
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsModelParameters'
-title: SimPipe DB Model Parameter Metaschema
+title: SimPipe Model Parameter Metaschema
 description: |
-  YAML representation of db model parameter metaschema
-  (based on simulation model DB).
+  YAML representation of model parameter metaschema
+  (based on simulation model repository records).
 schema_version: 0.4.0
 schema_name: modelparameter.metaschema
 type: object
@@ -18,7 +18,7 @@ definitions:
     properties:
       _id:
         type: string
-        description: "DB unique identifier."
+        description: "Model record identifier."
       entry_date:
         type: string
         description: "Value entry date."
@@ -116,10 +116,10 @@ definitions:
 ---
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsModelParameters'
-title: SimPipe DB Model Parameter Metaschema
+title: SimPipe Model Parameter Metaschema
 description: |
-  YAML representation of db model parameter metaschema
-  (based on simulation model DB).
+  YAML representation of model parameter metaschema
+  (based on simulation model repository records).
 schema_version: 0.3.0
 schema_name: modelparameter.metaschema
 type: object
@@ -133,7 +133,7 @@ definitions:
     properties:
       _id:
         type: string
-        description: "DB unique identifier."
+        description: "Model record identifier."
       entry_date:
         type: string
         description: "Value entry date."
@@ -234,10 +234,10 @@ definitions:
 ---
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsModelParameters'
-title: SimPipe DB Model Parameter Metaschema
+title: SimPipe Model Parameter Metaschema
 description: |
-  YAML representation of db model parameter metaschema
-  (based on simulation model DB).
+  YAML representation of model parameter metaschema
+  (based on simulation model repository records).
 schema_version: 0.2.0
 schema_name: modelparameter.metaschema
 type: object
@@ -250,7 +250,7 @@ definitions:
     properties:
       _id:
         type: string
-        description: "DB unique identifier."
+        description: "Model record identifier."
       entry_date:
         type: string
         description: "Value entry date."
@@ -326,10 +326,10 @@ definitions:
 ---
 $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsModelParameters'
-title: SimPipe DB Model Parameter Metaschema
+title: SimPipe Model Parameter Metaschema
 description: |
-  YAML representation of db model parameter metaschema
-  (based on model_parameters DB).
+  YAML representation of model parameter metaschema
+  (based on model parameter records).
 schema_version: 0.1.0
 schema_name: modelparameter.metaschema
 type: object
@@ -342,7 +342,7 @@ definitions:
     properties:
       _id:
         type: string
-        description: "DB unique identifier"
+        description: "Model record identifier"
       entry_date:
         type: string
         description: "Value entry data"

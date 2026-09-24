@@ -213,14 +213,14 @@ jobs:
             CURRENT_REF="$HEAD_REF"
           fi
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-            if [[ ! "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG must be a v-prefixed release tag."
+            echo "Detected RC version branch: $CURRENT_REF - using the catalog model revision"
+            if [[ ! "$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION must be a commit revision."
               exit 1
             fi
-            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
+            BRANCH="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
           fi
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+          echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached simulation models repository
@@ -246,12 +246,12 @@ jobs:
               -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
               -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
               -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --bare --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" \
+              clone --bare --depth 1 --branch "$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" \
                 "$SIM_MODELS_REPO" "$CLONE_DIR"
             then
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+              echo "Successfully cloned simulation models revision $SIMTOOLS_SIMULATION_MODELS_GIT_REVISION."
               CLONE_SUCCESS=true
               break
             fi
@@ -264,12 +264,12 @@ jobs:
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "Failed to clone simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
+            echo "Failed to clone simulation models revision $SIMTOOLS_SIMULATION_MODELS_GIT_REVISION and no cache is available."
             exit 1
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; refusing to use cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            echo "GitLab clone failed; refusing to use cached simulation models revision $SIMTOOLS_SIMULATION_MODELS_GIT_REVISION."
             exit 1
           fi
 
@@ -357,24 +357,12 @@ jobs:
       SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
       SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
 
-    services:
-      mongodb:
-        image: mongo:latest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: api
-          MONGO_INITDB_ROOT_PASSWORD: password
-        options: >-
-          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     strategy:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-latest"]') }}
         model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
-        model_source: [git]  # add mongodb to add mongodb integration tests.
+        model_source: [git]
 
     defaults:
       run:
@@ -404,17 +392,8 @@ jobs:
       - name: Create runtime environment (.env)
         run: |
           {
-            if [ "${{ matrix.model_source }}" = "git" ]; then
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
-            else
-              echo "SIMTOOLS_DB_SERVER=mongodb"
-              echo "SIMTOOLS_DB_API_USER=api"
-              echo "SIMTOOLS_DB_API_PW=password"
-              echo "SIMTOOLS_DB_API_PORT=27017"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
-              echo "SIMTOOLS_DB_SIMULATION_MODEL_TAG=$SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-            fi
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=HEAD"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
@@ -458,7 +437,7 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pygit2 pymongo pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+          pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
 
       - name: Install resource benchmark dependency (prod container)
         if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
@@ -467,31 +446,17 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
-          pip install --no-cache-dir -e '.[tests,dev,doc,mongodb]'
-
-      - name: Upload data to MongoDB
-        if: matrix.model_source == 'mongodb'
-        run: |
-          git clone --local "$SIMULATION_MODELS_GIT_PATH" "$GITHUB_WORKSPACE/simulation-models"
-          simtools-db-upload-model-repository \
-            --db_simulation_model "$SIMTOOLS_DB_SIMULATION_MODEL" \
-            --db_simulation_model_tag "$SIMTOOLS_DB_SIMULATION_MODEL_TAG" \
-            --repository_dir "$GITHUB_WORKSPACE/simulation-models"
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Integration tests
         shell: bash -l {0}
         run: |
           cat .env
           MODEL_SOURCE_ARGS=()
-          if [ "${{ matrix.model_source }}" = "git" ]; then
-            for variable in ${!SIMTOOLS_DB_@}; do
-              unset "$variable"
-            done
-            MODEL_SOURCE_ARGS=(
-              --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
-              --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-            )
-          fi
+          MODEL_SOURCE_ARGS=(
+            --simulation_models_git_path="$SIMULATION_MODELS_GIT_PATH"
+            --simulation_models_git_revision="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
+          )
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \
               "${MODEL_SOURCE_ARGS[@]}" \

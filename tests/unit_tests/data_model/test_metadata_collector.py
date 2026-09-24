@@ -123,10 +123,10 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
             "output_file_format": "ecsv",
             "input_path": Path("input/events.simtel.zst"),
             "off_axis_angle": 1.5 * u.deg,
-            "db_api_pw": "do-not-store-this",
+            "model_repository_password": "do-not-store-this",
             "nested": {"api_token": "do-not-store-this-either"},
-            "runtime_environment": {"options": ["--env SIMTOOLS_DB_API_PW=runtime-secret"]},
-            "run_time": ["podman", "run", "--env", "SIMTOOLS_DB_API_PW=runtime-secret"],
+            "runtime_environment": {"options": ["--env SIMTOOLS_SECRET=runtime-secret"]},
+            "run_time": ["podman", "run", "--env", "SIMTOOLS_SECRET=runtime-secret"],
             "_metadata_configuration_sources": {
                 "cli": {"input_path"},
                 "defaults": {"off_axis_angle"},
@@ -143,16 +143,16 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
     assert configuration["application"] == "test_application"
     assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
     assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
-    assert configuration["arguments"]["db_api_pw"] == "***REDACTED***"
+    assert configuration["arguments"]["model_repository_password"] == "***REDACTED***"
     assert configuration["arguments"]["nested"]["api_token"] == "***REDACTED***"
     assert configuration["arguments"]["runtime_environment"]["options"] == [
-        "--env SIMTOOLS_DB_API_PW=***REDACTED***"
+        "--env SIMTOOLS_SECRET=***REDACTED***"
     ]
     assert configuration["arguments"]["run_time"] == [
         "podman",
         "run",
         "--env",
-        "SIMTOOLS_DB_API_PW=***REDACTED***",
+        "SIMTOOLS_SECRET=***REDACTED***",
     ]
     assert configuration["sources"] == {
         "cli": ["input_path"],

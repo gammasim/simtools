@@ -425,7 +425,7 @@ def _export_effective_focal_length_model_parameter(
         output_path=output_path,
         metadata_input_dict=metadata_input_dict,
         unit=["cm", "cm", "cm", "cm", "cm"],
-        check_db_for_existing_parameter=False,
+        check_for_existing_parameter=False,
     )
     logger.info(
         "Exported effective_focal_length model parameter (%s) to %s",

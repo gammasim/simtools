@@ -63,7 +63,7 @@ def _initialize_runtime(job_spec):
     """Restore the submitting application's runtime for function jobs."""
     if job_spec.runtime_args is None:
         return
-    config.load(job_spec.runtime_args, job_spec.runtime_db_config)
+    config.load(job_spec.runtime_args)
     if job_spec.model_source_config is not None:
         model_reader = create_model_reader_from_source_config(job_spec.model_source_config)
     else:

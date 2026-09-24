@@ -20,8 +20,6 @@ from simtools.dependencies import (
     canonical_manifest_bytes,
     export_build_info,
     get_corsika_version,
-    get_database_tag_or_name,
-    get_database_version_or_name,
     get_dependency_manifest,
     get_dependency_manifest_digest,
     get_sim_telarray_version,
@@ -263,52 +261,31 @@ def test_get_version_string(mocker):
         "simtools.dependencies.get_build_options",
         return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {
-        "db_simulation_model": "test_db",
-        "db_simulation_model_tag": "1.2.3",
-    }
+    mocker.patch("simtools.dependencies.settings.config")
     result = get_version_string(run_time=["docker"])
-    assert "Database name: test_db" in result
-    assert "Database release tag: 1.2.3" in result
     assert "sim_telarray version: 2024.271.0" in result
     assert "CORSIKA version: 7.7550" in result
     assert "Build options: {'simtel_tag': 'master', 'corsika_build_id': '78010'}" in result
     assert "Runtime environment: ['docker']" in result
 
 
-def test_database_tag_accessors_keep_the_legacy_interface(mocker):
-    """Expose canonical tag terminology while retaining the old accessor."""
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {
-        "db_simulation_model": "test_db",
-        "db_simulation_model_tag": "v1.2.3",
-    }
-
-    assert get_database_tag_or_name() == "v1.2.3"
-    assert get_database_tag_or_name(tag=False) == "test_db"
-    assert get_database_version_or_name() == "v1.2.3"
-    assert get_database_version_or_name(version=False) == "test_db"
-
-
-def test_direct_dependency_manifest_includes_mongodb_only_when_installed(mocker):
-    """Optional MongoDB is reported when its extra has installed the distribution."""
+def test_direct_dependency_manifest_includes_installed_distributions(mocker):
+    """Installed direct dependencies are included in the manifest."""
     import simtools.dependencies as dependencies
 
     mocker.patch.object(
         dependencies.metadata,
         "requires",
-        return_value=["astropy", 'pymongo; extra == "mongodb"', 'pytest; extra == "tests"'],
+        return_value=["astropy", 'pytest; extra == "tests"'],
     )
     mocker.patch.object(
         dependencies,
         "_distribution_version",
-        side_effect=lambda name: {"astropy": "8.0.0", "pymongo": "4.15.0"}.get(name),
+        side_effect=lambda name: {"astropy": "8.0.0"}.get(name),
     )
 
     assert dependencies.get_direct_python_dependency_versions() == {
         "astropy": "8.0.0",
-        "pymongo": "4.15.0",
     }
 
 
@@ -320,10 +297,6 @@ def test_get_version_string_without_software_versions(mocker):
         return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
     mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {
-        "db_simulation_model": "test_db",
-        "db_simulation_model_tag": "1.2.3",
-    }
     mock_config.sim_telarray_exe = None
     mock_config.corsika_exe = None
 
@@ -503,9 +476,6 @@ def test_export_build_info(mocker, tmp_test_directory):
         "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
     )
     mocker.patch(
-        "simtools.dependencies.get_database_tag_or_name", side_effect=["test_db", "v1.2.3"]
-    )
-    mocker.patch(
         "simtools.dependencies.get_dependency_manifest",
         return_value={"schema_version": "0.1.0"},
     )
@@ -517,8 +487,6 @@ def test_export_build_info(mocker, tmp_test_directory):
     call_args = mock_write.call_args
     assert call_args[1]["data"]["corsika_build_id"] == "78010"
     assert call_args[1]["data"]["simtools"] == __version__
-    assert call_args[1]["data"]["database_name"] == "test_db"
-    assert call_args[1]["data"]["database_tag"] == "v1.2.3"
 
 
 def test_get_package_path_from_environment(mocker):

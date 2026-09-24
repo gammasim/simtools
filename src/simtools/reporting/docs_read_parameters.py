@@ -82,12 +82,12 @@ class ReadParameters:
         self._telescope_identifiers = {}
 
     @property
-    def db(self):
+    def model_source(self):
         """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
-    @db.setter
-    def db(self, reader):
+    @model_source.setter
+    def model_source(self, reader):
         self.model_reader = reader
 
     @property
@@ -721,7 +721,7 @@ class ReadParameters:
         """
         parameter_dict = {}
 
-        for instrument_class in names.db_collection_to_instrument_class_key(collection):
+        for instrument_class in names.collection_to_instrument_class_key(collection):
             for parameter, details in names.model_parameters(instrument_class).items():
                 parameter_dict[parameter] = {
                     "description": details.get("description"),
@@ -1480,7 +1480,7 @@ class ReadParameters:
         """Create model-parameter comparison reports for calibration devices."""
         for calibration_device in array_elements:
             device_sites = names.get_site_from_array_element_name(calibration_device)
-            # parameters are site independent so just take the first site to read from db
+            # Parameters are site independent, so read the first site's value.
             site = device_sites[0] if isinstance(device_sites, list) else device_sites
             self.site = site
             self.array_element = calibration_device

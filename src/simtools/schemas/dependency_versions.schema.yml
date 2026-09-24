@@ -14,7 +14,7 @@ required:
 - base-image
 - corsika-interaction-tables
 - archives
-- model-database
+- model-repository
 - production-combinations
 - corsika
 - sim-telarray
@@ -70,7 +70,7 @@ properties:
     required:
     - autoconf
     - gsl
-  model-database:
+  model-repository:
     type: object
     additionalProperties: false
     required:
@@ -229,7 +229,7 @@ required:
 - base-image
 - corsika-interaction-tables
 - archives
-- model-database
+- model-repository
 - simtools-tests
 - production-combinations
 - corsika
@@ -269,7 +269,7 @@ properties:
     additionalProperties:
       "$ref": "#/definitions/archive"
     required: [autoconf, gsl]
-  model-database:
+  model-repository:
     type: object
     additionalProperties: false
     required: [name, default-tag]
@@ -366,7 +366,7 @@ schema_version: 0.4.0
 schema_name: dependency_versions.schema
 type: object
 additionalProperties: false
-required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-database, simtools-tests, production-combinations, corsika, sim-telarray]
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
 properties:
   schema_version: {const: 0.4.0}
   python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
@@ -397,7 +397,7 @@ properties:
     additionalProperties:
       "$ref": "#/definitions/archive"
     required: [autoconf, gsl]
-  model-database:
+  model-repository:
     type: object
     additionalProperties: false
     required: [name, default-tag]
@@ -504,7 +504,7 @@ required:
 - base-image
 - corsika-interaction-tables
 - archives
-- model-database
+- model-repository
 - simtools-tests
 - production-combinations
 - corsika
@@ -561,7 +561,7 @@ properties:
     required:
     - autoconf
     - gsl
-  model-database:
+  model-repository:
     type: object
     additionalProperties: false
     required:

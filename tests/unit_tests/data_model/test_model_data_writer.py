@@ -210,8 +210,8 @@ def test_write_model_parameter(tmp_test_directory):
     assert position_dict["value"][3] == pytest.approx(0.0)
 
     with patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
-    ) as mock_db_check:
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
+    ) as mock_repository_check:
         writer.ModelDataWriter.write_model_parameter(
             parameter_name=num_gains_name,
             value=2,
@@ -220,7 +220,7 @@ def test_write_model_parameter(tmp_test_directory):
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
         )
-        mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
+        mock_repository_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
 def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, tmp_test_directory):
@@ -230,8 +230,8 @@ def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, t
     monkeypatch.setattr(settings.config, "_args", {"ignore_existing_parameter_version": True})
 
     with patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
-    ) as mock_db_check:
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
+    ) as mock_repository_check:
         writer.ModelDataWriter.write_model_parameter(
             parameter_name=num_gains_name,
             value=2,
@@ -241,7 +241,7 @@ def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, t
             output_path=tmp_test_directory,
         )
 
-    mock_db_check.assert_not_called()
+    mock_repository_check.assert_not_called()
 
 
 def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
@@ -256,7 +256,7 @@ def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp
             output_file=output_file,
             output_path=tmp_test_directory,
             metadata_input_dict={"name": "test_metadata"},
-            check_db_for_existing_parameter=False,
+            check_for_existing_parameter=False,
         )
 
     assert not (Path(tmp_test_directory) / output_file).exists()
@@ -484,7 +484,7 @@ def test_check_model_reader_for_existing_parameter():
     w1 = writer.ModelDataWriter(model_reader=model_reader)
 
     # Test case where parameter does not exist
-    w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+    w1.check_for_existing_parameter(parameter_name, instrument, parameter_version)
     model_reader.get_model_parameter.assert_called_once_with(
         parameter=parameter_name,
         parameter_version=parameter_version,
@@ -501,7 +501,7 @@ def test_check_model_reader_for_existing_parameter():
         ValueError,
         match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
     ):
-        w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+        w1.check_for_existing_parameter(parameter_name, instrument, parameter_version)
     model_reader.get_model_parameter.assert_called_once_with(
         parameter=parameter_name,
         parameter_version=parameter_version,

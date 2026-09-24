@@ -668,7 +668,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     Validate data type of value or type object against a reference data type.
 
     Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).
-    Take into account 'file' type as used in the model parameter database.
+    Take into account 'file' type as used in the model parameter repository.
 
     Parameters
     ----------

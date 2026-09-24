@@ -9,8 +9,8 @@
 ```{eval-rst}
 The application supports three output modes:
 
-1. Print the database entry to stdout.
-2. Write the database entry to a JSON or YAML file using output_file.
+1. Print the model parameter to stdout.
+2. Write the model parameter to a JSON or YAML file using output_file.
 3. Export table-type model parameters using export_model_file.
 
 The export_model_file mode is type-dependent:
@@ -40,7 +40,7 @@ telescope (str, optional)
     Telescope model name (e.g. LST-1, SST-D, ...)
 
 output_file (str, optional)
-    Output file name for writing the database entry, overriding the exported
+    Output file name for writing the model parameter, overriding the exported
     file name for file-backed parameters, or base file name for exporting
     dict-backed tables as ECSV.
 
@@ -66,7 +66,7 @@ Print the mirror_list parameter entry used for a given model_version.
             --site North --telescope LSTN-01 \\
             --model_version 5.0.0
 
-Write the database entry for a parameter to a JSON file.
+Write the model parameter for a parameter to a JSON file.
 
 .. code-block:: console
 
@@ -75,7 +75,7 @@ Write the database entry for a parameter to a JSON file.
             --parameter_version 6.0.0 \\
             --output_file array_element_position_ground.json
 
-Export a file-backed parameter using the original file name stored in the database.
+Export a file-backed parameter using the original file name stored in the model repository.
 
 .. code-block:: console
 

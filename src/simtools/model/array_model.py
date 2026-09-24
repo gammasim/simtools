@@ -19,16 +19,16 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel import simtel_config_writer, simtel_seeds
 from simtools.utils import general, names
 
-_DATABASE_METADATA_FIELDS = {"_id", "entry_date"}
+_MODEL_METADATA_FIELDS = {"_id", "entry_date"}
 
 
 def _export_parameter_records(parameters):
-    """Remove database bookkeeping fields from exported parameter records."""
+    """Remove model repository bookkeeping fields from exported parameter records."""
     return {
         parameter_name: {
             key: value
             for key, value in parameter_record.items()
-            if key not in _DATABASE_METADATA_FIELDS
+            if key not in _MODEL_METADATA_FIELDS
         }
         for parameter_name, parameter_record in parameters.items()
     }
@@ -126,7 +126,7 @@ class ArrayModel:
         dict
             Dict with telescope models.
         """
-        self._logger.debug(f"Getting site parameters from DB ({site})")
+        self._logger.debug(f"Getting site parameters from the model repository ({site})")
         site_model = SiteModel(
             site=names.validate_site_name(site),
             model_version=self.model_version,
@@ -144,7 +144,7 @@ class ArrayModel:
         # Case 2: array elements is a list of elements
         elif isinstance(array_elements_config, list) and len(array_elements_config) > 0:
             array_elements = self._get_array_elements_from_list(array_elements_config, site_model)
-        # Case 3: array elements defined in DB by array layout name
+        # Case 3: array elements defined in the model repository by array layout name
         elif self.layout_name is not None:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
@@ -255,9 +255,9 @@ class ArrayModel:
         Calibration device models are stored in a dictionary with the telescope name as key (to
         identify the calibration device model on a given telescope).
 
-        Includes reading of telescope model parameters from the database.
+        Includes reading of telescope model parameters from the model repository.
         The array is defined in the array_elements dictionary. Array element positions
-        are read from the database if no values are given in this dictionary.
+        are read from the model repository if no values are given in this dictionary.
 
         Parameters
         ----------
@@ -446,7 +446,7 @@ class ArrayModel:
         self, telescope_name, site, x, y, z, parameter_version=None
     ):
         """
-        Return dictionary with telescope position parameters (following DB model database format).
+        Return telescope position parameters in model-repository format.
 
         Parameters
         ----------
@@ -556,7 +556,7 @@ class ArrayModel:
             pos_y.append(xyz[1])
             pos_z.append(xyz[2])
             try:
-                # add tests of KeyError after positions calibration_elements are added to DB
+                # Add tests of KeyError after calibration elements gain positions.
                 tel_r.append(data.get_parameter_value_with_unit("telescope_sphere_radius"))
             except (
                 KeyError,

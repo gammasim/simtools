@@ -7,7 +7,6 @@ from simtools.configuration import arguments as cli
 from simtools.model import model_repository
 
 _ARGUMENTS = (
-    cli.SIMULATION_MODELS_PATH(required=True),
     cli.ArgumentDefinition(
         "setting_workflows_git_tag",
         help=(
@@ -24,6 +23,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        cli.SIMULATION_MODELS_PATH(required=True),
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
     ),

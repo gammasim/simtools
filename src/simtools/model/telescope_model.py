@@ -32,7 +32,7 @@ class TelescopeModel(ModelParameter):
     label: str, optional
         Instance label.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters from the model repository with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
     model_directory: pathlib.Path or str, optional
