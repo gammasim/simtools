@@ -520,6 +520,10 @@ class Simulator:
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
         )
+        for output_file in resolved_output_files:
+            runner_services.warn_if_file_name_exceeds_dirac_limit(
+                Path(output_file).name, "sim_telarray_event_data"
+            )
 
         return Simulator._run_reduced_event_list_jobs(
             input_file_batches=input_file_batches,
