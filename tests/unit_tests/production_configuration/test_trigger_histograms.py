@@ -466,18 +466,21 @@ def test_group_output_stem_includes_selections_without_hash():
         configuration={
             "array_layout_name": ["CTAO-South-Beta"],
             "primary": "gamma",
+            "energy_min": {"value": 30.0, "unit": "GeV"},
+            "energy_max": {"value": 30.0, "unit": "GeV"},
             "zenith_angle": {"value": 20.0, "unit": "deg"},
+            "azimuth_angle": {"value": 31.0, "unit": "deg"},
             "corsika_he_interaction": "qgs3",
         }
     )
 
     stem = _group_output_stem(
         group,
-        selections=["configuration.primary=gamma", "configuration.energy_min=30 GeV"],
+        selections=["configuration.primary=gamma", "configuration.eslope=-2"],
         include_hash=False,
     )
 
-    assert stem == "gamma-za20-qgs3-energy-min-30-gev-ctao-south-beta"
+    assert stem == "gamma-e30gev-za20deg-azm31deg-qgs3-eslope-2-ctao-south-beta"
 
 
 @pytest.mark.parametrize(

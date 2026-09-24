@@ -1,5 +1,6 @@
 """Compare trigger-histogram products from simulation productions."""
 
+import logging
 from collections import Counter
 from pathlib import Path
 
@@ -19,6 +20,16 @@ from simtools.sim_events.production_comparison import (
 )
 from simtools.visualization import plot_event_level_production_comparison
 
+_logger = logging.getLogger(__name__)
+
+
+class _ProductionPairingError(ValueError):
+    """Report unmatched metadata while retaining the pairs that can be compared."""
+
+    def __init__(self, message, descriptor_pairs):
+        super().__init__(message)
+        self.descriptor_pairs = descriptor_pairs
+
 
 def write_production_comparison(args_dict, output_directory):
     """Compare selected trigger-histogram productions and write their statistics.
@@ -32,7 +43,12 @@ def write_production_comparison(args_dict, output_directory):
     """
     array_layout_names = args_dict.get("array_layout_name") or [None]
     if args_dict.get("baseline_path"):
-        descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
+        pairing_error = None
+        try:
+            descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
+        except _ProductionPairingError as exc:
+            descriptor_pairs = exc.descriptor_pairs
+            pairing_error = exc
         output_stems = [
             _comparison_pair_output_stem(production_descriptors)
             for _, production_descriptors in descriptor_pairs
@@ -50,6 +66,8 @@ def write_production_comparison(args_dict, output_directory):
                 pair_output_directory,
                 array_layout_names,
             )
+        if pairing_error is not None:
+            _logger.warning(str(pairing_error))
         return
 
     production_descriptors = parse_production_arguments(args_dict["production"])
@@ -113,13 +131,20 @@ def _production_descriptor_pairs_from_metadata(args_dict):
 
     missing_candidates = sorted(set(baseline_by_key) - set(candidate_by_key))
     missing_baselines = sorted(set(candidate_by_key) - set(baseline_by_key))
+    descriptor_pairs = _matched_descriptor_pairs(baseline_by_key, candidate_by_key)
     if missing_candidates or missing_baselines:
-        raise ValueError(
+        raise _ProductionPairingError(
             "Trigger-histogram metadata pairing failed: "
             f"missing candidates={len(missing_candidates)}, "
-            f"missing baselines={len(missing_baselines)}."
+            f"missing baselines={len(missing_baselines)}.",
+            descriptor_pairs,
         )
 
+    return descriptor_pairs
+
+
+def _matched_descriptor_pairs(baseline_by_key, candidate_by_key):
+    """Build descriptor pairs for configurations present in both productions."""
     return [
         (
             key,
@@ -134,7 +159,7 @@ def _production_descriptor_pairs_from_metadata(args_dict):
                 ),
             ],
         )
-        for key in sorted(baseline_by_key, key=str)
+        for key in sorted(set(baseline_by_key) & set(candidate_by_key), key=str)
     ]
 
 

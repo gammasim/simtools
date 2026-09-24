@@ -827,7 +827,9 @@ def _group_output_stem(group, product_identity=None, selections=None, include_ha
     configuration = group.configuration
     parts = [
         _safe_stem_part(configuration.get("primary", "production")),
+        *_energy_stem_parts(configuration),
         _angle_stem_part("za", configuration.get("zenith_angle")),
+        _angle_stem_part("azm", configuration.get("azimuth_angle")),
         _safe_stem_part(configuration.get("corsika_he_interaction")),
     ]
     parts = [part for part in parts if part]
@@ -855,7 +857,14 @@ def _selection_stem_parts(selections):
             continue
         key, value = selection.split("=", maxsplit=1)
         key = key.rsplit(".", maxsplit=1)[-1]
-        if key in {"array_layout_name", "primary", "zenith_angle"}:
+        if key in {
+            "array_layout_name",
+            "primary",
+            "zenith_angle",
+            "azimuth_angle",
+            "energy_min",
+            "energy_max",
+        }:
             continue
         value = value.strip().strip("\"'")
         key_part = _safe_stem_part(key)
@@ -869,8 +878,38 @@ def _angle_stem_part(prefix, value):
     """Return an angle value formatted for an output file stem."""
     if isinstance(value, dict) and set(value) == {"value", "unit"}:
         quantity = float(value["value"]) * u.Unit(value["unit"])
-        return f"{prefix}{quantity.to_value(u.deg):g}"
+        return f"{prefix}{quantity.to_value(u.deg):g}deg"
     return None
+
+
+def _energy_stem_parts(configuration):
+    """Return compact energy components for an output file stem."""
+    minimum = _stem_quantity(configuration.get("energy_min"))
+    maximum = _stem_quantity(configuration.get("energy_max"))
+    if minimum is None or maximum is None:
+        return []
+    minimum = minimum.to(u.GeV)
+    maximum = maximum.to(u.GeV)
+    if np.isclose(minimum.value, maximum.value):
+        return [_compact_energy_stem_part("e", minimum)]
+    return [
+        _compact_energy_stem_part("emin", minimum),
+        _compact_energy_stem_part("emax", maximum),
+    ]
+
+
+def _compact_energy_stem_part(prefix, quantity):
+    """Return an energy using GeV below 1 TeV and TeV otherwise."""
+    if abs(quantity.to_value(u.TeV)) >= 1:
+        quantity = quantity.to(u.TeV)
+    return f"{prefix}{quantity.value:g}{str(quantity.unit).lower()}"
+
+
+def _stem_quantity(value):
+    """Return a quantity from a manifest value or an existing quantity."""
+    if isinstance(value, dict) and set(value) == {"value", "unit"}:
+        return float(value["value"]) * u.Unit(value["unit"])
+    return value if hasattr(value, "to") else None
 
 
 def _safe_stem_part(value):
