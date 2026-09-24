@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 
 
@@ -117,7 +118,7 @@ class SiteModel(ModelParameter):
                 # We always use a custom profile by filename, so this has to be set to 99
                 "ATMOSPHERE": [99, "Y"],
                 "IACT ATMOFILE": [
-                    model_directory / self.get_parameter_value("atmospheric_profile")
+                    model_directory / self._get_atmospheric_profile_simtel_file_name()
                 ],
                 "MAGNET": [
                     self.get_parameter_value("geomag_horizontal"),
@@ -234,7 +235,7 @@ class SiteModel(ModelParameter):
 
     def export_atmospheric_transmission_file(self, model_directory):
         """
-        Export atmospheric transmission file from database to the given directory.
+        Export the atmospheric profile source and sim_telarray table files.
 
         Parameters
         ----------
@@ -247,6 +248,22 @@ class SiteModel(ModelParameter):
             parameters={"atmospheric_profile": atmospheric_profile},
             dest=model_directory,
         )
+        self._export_ecsv_as_simtel_table(
+            parameter_name="atmospheric_profile",
+            parameter=atmospheric_profile,
+            model_directory=model_directory,
+            table_format="plain",
+            output_name=self._get_atmospheric_profile_simtel_file_name(atmospheric_profile),
+        )
+
+    def _get_atmospheric_profile_simtel_file_name(self, parameter=None):
+        """Return the native filename used for the CORSIKA atmospheric profile."""
+        parameter = (parameter or self.parameters["atmospheric_profile"]).copy()
+        parameter["qualify_filename"] = False
+        file_name = get_simtel_table_file_name(parameter)
+        if file_name is not None:
+            return file_name
+        return Path(parameter["value"]).with_suffix(".dat").name
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """
