@@ -16,12 +16,6 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      _id:
-        type: string
-        description: "Model record identifier."
-      entry_date:
-        type: string
-        description: "Value entry date."
       file:
         type: boolean
         description: "This parameter is a file."
@@ -131,12 +125,6 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      _id:
-        type: string
-        description: "Model record identifier."
-      entry_date:
-        type: string
-        description: "Value entry date."
       file:
         type: boolean
         description: "This parameter is a file."
@@ -248,12 +236,6 @@ definitions:
     description: ""
     type: object
     properties:
-      _id:
-        type: string
-        description: "Model record identifier."
-      entry_date:
-        type: string
-        description: "Value entry date."
       file:
         type: boolean
         description: "This parameter is a file."
@@ -340,12 +322,6 @@ definitions:
     description: ""
     type: object
     properties:
-      _id:
-        type: string
-        description: "Model record identifier"
-      entry_date:
-        type: string
-        description: "Value entry data"
       file:
         type: boolean
         description: "This parameter is a file."

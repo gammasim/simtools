@@ -138,8 +138,6 @@ def run(app_context):
     parameter_data = parameters[app_context.args["parameter"]]
     if app_context.args["output_file"] is not None:
         data = dict(parameter_data)
-        data.pop("_id", None)
-        data.pop("entry_date", None)
         ascii_handler.write_data_to_file(
             data=data,
             output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),

@@ -62,8 +62,6 @@ def main():
         parameter_version=app_context.args.get("parameter_version"),
         model_version=app_context.args.get("model_version"),
     )
-    model_layouts["array_layouts"].pop("_id", None)
-    model_layouts["array_layouts"].pop("entry_date", None)
     app_context.logger.info(f"Layouts from model parameter repository: {model_layouts}")
 
     write_array_layouts(

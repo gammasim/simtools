@@ -408,8 +408,6 @@ def prepare_array_layouts_for_submission(model_reader, args_dict):
         parameter_version=args_dict["parameter_version"],
     )
     base_layouts = parameter_data["array_layouts"]
-    base_layouts.pop("_id", None)
-    base_layouts.pop("entry_date", None)
     parameter_site = base_layouts.get("site")
     if parameter_site and parameter_site != args_dict["site"]:
         raise ValueError(
