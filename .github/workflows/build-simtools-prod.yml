@@ -44,7 +44,7 @@ permissions: {}
 
 jobs:
   dependency-config:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -69,7 +69,7 @@ jobs:
           cat dependency-output >> "$GITHUB_OUTPUT"
 
   build-simtools-prod:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: dependency-config
     permissions:
       contents: read
@@ -166,4 +166,4 @@ jobs:
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
       model_versions: '["7.0.0"]'
-      runner_labels: '["ubuntu-latest","ubuntu-24.04-arm"]'
+      runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'
