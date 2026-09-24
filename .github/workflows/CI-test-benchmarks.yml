@@ -27,7 +27,7 @@ on:
 jobs:
   benchmark_unit:
     name: Benchmark unit-test suite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -65,7 +65,7 @@ jobs:
       benchmark: true
       benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
       model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}
-      runner_labels: '["ubuntu-latest"]'
+      runner_labels: '["ubuntu-24.04"]'
 
   publish:
     name: Publish test resource history
@@ -75,7 +75,7 @@ jobs:
         (github.event_name != 'workflow_dispatch' || inputs.publish_results) &&
         (github.ref == 'refs/heads/main')
       }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     concurrency:
       group: gh-pages-publisher
       cancel-in-progress: false
