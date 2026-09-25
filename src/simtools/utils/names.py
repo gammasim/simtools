@@ -341,6 +341,22 @@ def instrument_class_key_to_db_collection(class_name):
     raise ValueError(f"Class {class_name} not found")
 
 
+@cache
+def _model_parameter_for_collection(parameter_name):
+    """Return one parameter schema without loading unrelated parameter schemas."""
+    schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
+    try:
+        parameter = schema_loader.load_schema(schema_file, "latest")
+    except FileNotFoundError:
+        parameter = None
+
+    if parameter is None or parameter.get("name") != parameter_name:
+        parameter = model_parameters().get(parameter_name)
+    if parameter is None:
+        raise KeyError(f"Parameter {parameter_name} without schema definition")
+    return parameter
+
+
 def db_collection_to_instrument_class_key(collection_name="telescopes"):
     """Return list of instrument classes for a given collection."""
     try:
@@ -780,11 +796,8 @@ def get_collection_name_from_parameter_name(parameter_name):
     KeyError
         If the parameter name is not found in the list of model parameters
     """
-    _parameter_names = model_parameters()
-    try:
-        class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
-    except KeyError as exc:
-        raise KeyError(f"Parameter {parameter_name} without schema definition") from exc
+    parameter = _model_parameter_for_collection(parameter_name)
+    class_key = parameter.get("instrument", {}).get("class")
     return instrument_class_key_to_db_collection(class_key)
 
 

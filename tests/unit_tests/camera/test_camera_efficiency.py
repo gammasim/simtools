@@ -90,6 +90,47 @@ def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
+def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
+    telescope_model = MagicMock(site="North", name="LSTN-01")
+    site_model = MagicMock()
+    initialize_models = mocker.patch(
+        "simtools.camera.camera_efficiency.initialize_simulation_models"
+    )
+
+    camera_efficiency = CameraEfficiency(
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
+        telescope_model=telescope_model,
+        site_model=site_model,
+    )
+
+    assert camera_efficiency.telescope_model is telescope_model
+    assert camera_efficiency.site_model is site_model
+    initialize_models.assert_not_called()
+
+
+@pytest.mark.parametrize("provided_model", ["telescope_model", "site_model"])
+def test_init_reuses_each_supplied_simulation_model(config_data_lst, mocker, provided_model):
+    initialized_telescope_model = MagicMock(site="North", name="LSTN-01")
+    initialized_site_model = MagicMock()
+    initialize_models = mocker.patch(
+        "simtools.camera.camera_efficiency.initialize_simulation_models",
+        return_value=(initialized_telescope_model, initialized_site_model, None),
+    )
+    supplied_model = MagicMock()
+
+    camera_efficiency = CameraEfficiency(
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
+        **{provided_model: supplied_model},
+    )
+
+    assert getattr(camera_efficiency, provided_model) is supplied_model
+    initialize_models.assert_called_once()
+
+
 def test_simulate(camera_efficiency_lst, caplog, mocker):
     export_correction = mocker.patch.object(
         camera_efficiency_lst.telescope_model,

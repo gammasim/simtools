@@ -81,6 +81,26 @@ def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_test_directory
     assert remote_url not in calls
 
 
+def test_load_schema_resolves_remote_model_parameter_url_locally(monkeypatch, tmp_test_directory):
+    """Resolve a packaged model-parameter schema referenced by its remote URL."""
+    model_schema_path = tmp_test_directory / "model_parameters"
+    model_schema_path.mkdir()
+    schema_file = model_schema_path / "array_coordinates_UTM.schema.yml"
+    schema_file.write_text(
+        yaml.safe_dump({"schema_version": "1.0.0", "name": "array_coordinates_utm"}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory / "schemas")
+    monkeypatch.setattr(schema_loader, "MODEL_PARAMETER_SCHEMA_PATH", model_schema_path)
+
+    remote_url = (
+        "https://raw.githubusercontent.com/gammasim/simtools/main/"
+        "src/simtools/schemas/model_parameters/array_coordinates_UTM.schema.yml"
+    )
+
+    assert schema_loader.load_schema(remote_url, "1.0.0")["name"] == "array_coordinates_utm"
+
+
 def test_load_schema_falls_back_to_remote(monkeypatch, tmp_test_directory):
     monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory)
     remote_url = "https://example.com/schemas/example.schema.yml"
