@@ -31,6 +31,26 @@ def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elemen
         helpers.resolve_telescope_configs({})
 
 
+def test_resolve_telescope_configs_passes_scalar_model_version_to_database(mocker):
+    mock_resolve = mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name",
+        return_value="alpha",
+    )
+    mock_get = mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers."
+        "get_array_elements_from_db_for_layouts",
+        return_value={"alpha": ["LSTN-01"]},
+    )
+
+    result = helpers.resolve_telescope_configs(
+        {"array_layout_name": ["alpha"], "model_version": ["1.0.0"], "site": "North"}
+    )
+
+    assert result == {"alpha": ["LSTN-01"]}
+    mock_resolve.assert_called_once_with(["alpha"], ["1.0.0"])
+    mock_get.assert_called_once_with(["alpha"], "North", "1.0.0")
+
+
 def test_normalize_telescope_configs_normalizes_dict_and_list_inputs(mocker):
     mocker.patch(
         "simtools.production_configuration.production_event_data_helpers."

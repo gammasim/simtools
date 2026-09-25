@@ -1,0 +1,24 @@
+%YAML 1.2
+---
+title: Schema for camera_trigger_groups model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_trigger_groups
+description: Trigger group definitions used to generate a sim_telarray camera file.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - {name: group_id, description: Trigger group identifier, type: int64, required: true}
+      - {name: group_order, description: Trigger group order, type: int64, required: true}
+      - {name: kind, description: Trigger kind, type: string, required: true}
+      - {name: use_default_multiplicity, description: Use simulator default multiplicity, type: int64, required: true}
+      - {name: multiplicity, description: Trigger multiplicity, type: int64, required: false}
+instrument: {class: Camera}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert]
+source: [Initial instrument setup]
+simulation_software: [{name: sim_telarray}]
