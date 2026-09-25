@@ -168,9 +168,16 @@ def group_by_threshold_and_run(data):
     for entry in data:
         threshold = entry["threshold"]
         run = entry["run"]
+        if run in grouped[threshold]:
+            previous = grouped[threshold][run]["file_path"]
+            raise ValueError(
+                f"Duplicate NSB input for threshold {threshold}, run {run}: "
+                f"{previous} and {entry.get('file_path', '<unknown>')}"
+            )
         grouped[threshold][run] = {
             "triggers": entry["triggers"],
             "events": entry["events"],
+            "file_path": entry.get("file_path"),
         }
 
     return dict(grouped)
