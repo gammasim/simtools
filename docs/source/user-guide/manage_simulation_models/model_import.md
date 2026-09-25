@@ -3,9 +3,9 @@
 ## Import simulation model parameters from sim_telarray
 
 The general use case for simtools is to generate sim_telarray configurations using
-the simulation models databases. This page describes the reverse process, i.e. generating
+the simulation model repository. This page describes the reverse process, i.e. generating
 model parameters in the simtools data format from sim_telarray configuration files.
-This is useful for e.g., for the initial generation of the simulation models database or
+This is useful for e.g., for the initial generation of the simulation model repository or
 for verification.
 
 ```{warning}

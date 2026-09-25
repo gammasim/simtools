@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.layout.array_layout_utils import (
-    get_array_elements_from_db_for_layouts,
+    get_array_elements_from_model_repository,
     resolve_array_layout_name,
 )
 from simtools.sim_events.histograms import EventDataHistograms
@@ -109,7 +109,7 @@ def resolve_telescope_configs(args_dict):
         )
         if not isinstance(layouts, list):
             layouts = [layouts]
-        return get_array_elements_from_db_for_layouts(
+        return get_array_elements_from_model_repository(
             layouts,
             args_dict.get("site"),
             model_version,

@@ -1,7 +1,6 @@
 """Unit tests for application runtime control."""
 
 import logging
-import os
 from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -34,8 +33,7 @@ def _read_stream(handler):
 def redact_test_setup():
     """Set up logging handler and application context for redaction testing."""
     mock_args_dict = {"log_level": "debug"}
-    mock_db_config = {}
-    app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
+    app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
 
     handler = app_context.logger.handlers[0] if app_context.logger.handlers else None
 
@@ -47,51 +45,6 @@ def redact_test_setup():
     if handler:
         handler.close()
         app_context.logger.removeHandler(handler)
-
-
-@pytest.mark.parametrize(
-    ("log_message", "secret_value", "env_var", "non_secret_values"),
-    [
-        (
-            "Database password is: {secret}",
-            "my_secret_password_123",
-            "SIMTOOLS_DB_API_PW",
-            [],
-        ),
-        (
-            (
-                "Setting environment variables: {{"
-                "'SIMTOOLS_DB_API_PW': '{secret}', "
-                "'SIMTOOLS_DB_API_USER': 'api', "
-                "'SIMTOOLS_DB_SERVER': 'simtools-mongodb', "
-                "'USER': 'test_user'}}"
-            ),
-            "my_secret_db_password",
-            "SIMTOOLS_DB_API_PW",
-            ["api", "simtools-mongodb"],
-        ),
-        (
-            "Environment: {{'SIMTOOLS_DB_API_PW': '{secret}', 'USER': 'test'}}",
-            "child_logger_secret_789",
-            "SIMTOOLS_DB_API_PW",
-            ["test"],
-        ),
-    ],
-)
-def test_redact_filter_env_var(
-    redact_test_setup, log_message, secret_value, env_var, non_secret_values
-):
-    app_context, handler = redact_test_setup
-
-    with patch.dict(os.environ, {env_var: secret_value}, clear=False):
-        _reset_stream(handler)
-        app_context.logger.info(log_message.format(secret=secret_value))
-        output = _read_stream(handler)
-
-        assert "***REDACTED***" in output
-        assert secret_value not in output
-        for non_secret in non_secret_values:
-            assert non_secret in output
 
 
 @pytest.mark.parametrize(
@@ -137,11 +90,9 @@ def test_redact_filter_pattern_matching(
 
 def test_initialize_runtime_basic():
     mock_args_dict = {"log_level": "info", "test": True}
-    mock_db_config = {"host": "localhost"}
-    app_context = _initialize_runtime(mock_args_dict, mock_db_config)
+    app_context = _initialize_runtime(mock_args_dict)
 
     assert app_context.args == mock_args_dict
-    assert app_context.db_config == mock_db_config
     assert isinstance(app_context.logger, logging.Logger)
     assert app_context.io_handler is not None
 
@@ -151,12 +102,10 @@ def test_initialize_runtime_basic():
 def test_initialize_runtime_without_io_handler():
     """Test application runtime startup without IOHandler."""
     mock_args_dict = {"log_level": "debug"}
-    mock_db_config = {}
-    app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
+    app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
 
     # Verify returned values
     assert app_context.args == mock_args_dict
-    assert app_context.db_config == mock_db_config
     assert isinstance(app_context.logger, logging.Logger)
     assert app_context.io_handler is None
 
@@ -170,7 +119,7 @@ def test_initialize_runtime_without_model_reader(mocker):
         "simtools.application.control.create_model_reader_from_configuration"
     )
     app_context = _initialize_runtime(
-        {"log_level": "info"}, {}, setup_io_handler=False, initialize_model_reader=False
+        {"log_level": "info"}, setup_io_handler=False, initialize_model_reader=False
     )
 
     model_reader.assert_not_called()
@@ -180,18 +129,15 @@ def test_initialize_runtime_without_model_reader(mocker):
 def test_initialize_runtime_without_resolving_sim_software_executables():
     """Test runtime startup forwards executable-resolution flag to settings load."""
     mock_args_dict = {"log_level": "info"}
-    mock_db_config = {}
     with patch("simtools.application.control.config.load") as mock_load:
         _initialize_runtime(
             mock_args_dict,
-            mock_db_config,
             setup_io_handler=False,
             resolve_sim_software_executables=False,
         )
 
     mock_load.assert_called_once_with(
         mock_args_dict,
-        mock_db_config,
         resolve_sim_software_executables=False,
     )
 
@@ -199,7 +145,6 @@ def test_initialize_runtime_without_resolving_sim_software_executables():
 def test_initialize_runtime_validates_simulation_dependencies_after_loading():
     """Dependency validation runs after settings load and before logging."""
     mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
-    mock_db_config = {}
     with (
         patch("simtools.application.control.config.load") as mock_load,
         patch(
@@ -209,7 +154,6 @@ def test_initialize_runtime_validates_simulation_dependencies_after_loading():
     ):
         _initialize_runtime(
             mock_args_dict,
-            mock_db_config,
             setup_io_handler=False,
             validate_simulation_dependencies=True,
         )
@@ -226,7 +170,6 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
         "simulation_software": "corsika",
         "_defer_simulation_dependency_validation": True,
     }
-    mock_db_config = {}
     with (
         patch("simtools.application.control.config.load"),
         patch(
@@ -235,7 +178,6 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
     ):
         _initialize_runtime(
             mock_args_dict,
-            mock_db_config,
             setup_io_handler=False,
             validate_simulation_dependencies=True,
         )
@@ -246,7 +188,6 @@ def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
 def test_initialize_runtime_stops_when_dependencies_are_unavailable():
     """Dependency failures prevent the rest of application startup."""
     mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
-    mock_db_config = {}
     with (
         patch("simtools.application.control.config.load"),
         patch(
@@ -258,7 +199,6 @@ def test_initialize_runtime_stops_when_dependencies_are_unavailable():
         with pytest.raises(ValueError, match="missing dependency"):
             _initialize_runtime(
                 mock_args_dict,
-                mock_db_config,
                 setup_io_handler=False,
                 validate_simulation_dependencies=True,
             )
@@ -272,12 +212,11 @@ def test_initialize_runtime_prepares_runtime_environment_from_cli():
         "runtime_environment_file": Path("runtime.yml"),
         "ignore_runtime_environment": False,
     }
-    mock_db_config = {}
     with patch(
         "simtools.application.control.prepare_runtime_environment",
         return_value=({"image": "test-image"}, ["podman", "run"]),
     ) as mock_prepare:
-        app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
+        app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
 
     mock_prepare.assert_called_once_with(Path("runtime.yml"))
     assert app_context.run_time == ["podman", "run"]
@@ -291,9 +230,8 @@ def test_initialize_runtime_runtime_environment_ignored_from_cli():
         "runtime_environment_file": Path("runtime.yml"),
         "ignore_runtime_environment": True,
     }
-    mock_db_config = {}
     with patch("simtools.application.control.prepare_runtime_environment") as mock_prepare:
-        app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
+        app_context = _initialize_runtime(mock_args_dict, setup_io_handler=False)
 
     mock_prepare.assert_not_called()
     assert app_context.run_time is None
@@ -320,15 +258,15 @@ def test_resolve_model_version_to_latest_patch_resolves_to_latest():
     args_dict = {"model_version": "6.0"}
     logger = logging.getLogger("test")
 
-    mock_db = MagicMock()
-    mock_db.get_model_versions.return_value = ["6.0.0", "6.0.1", "6.0.2"]
+    mock_reader = MagicMock()
+    mock_reader.get_model_versions.return_value = ["6.0.0", "6.0.1", "6.0.2"]
 
     with patch("simtools.application.control.version.version_kind", return_value="MAJOR_MINOR"):
         with patch(
             "simtools.application.control.version.resolve_version_to_latest_patch",
             return_value="6.0.2",
         ) as mock_resolve:
-            _resolve_model_version_to_latest_patch(args_dict, logger, mock_db)
+            _resolve_model_version_to_latest_patch(args_dict, logger, mock_reader)
 
             mock_resolve.assert_called_once_with("6.0", ["6.0.0", "6.0.1", "6.0.2"])
             assert args_dict["model_version"] == "6.0.2"
@@ -339,15 +277,15 @@ def test_resolve_model_version_to_latest_patch_list_of_versions():
     args_dict = {"model_version": ["6.0", "6.1"]}
     logger = logging.getLogger("test")
 
-    mock_db = MagicMock()
-    mock_db.get_model_versions.return_value = ["6.0.0", "6.0.1", "6.0.2", "6.1.0", "6.1.1"]
+    mock_reader = MagicMock()
+    mock_reader.get_model_versions.return_value = ["6.0.0", "6.0.1", "6.0.2", "6.1.0", "6.1.1"]
 
     with patch("simtools.application.control.version.version_kind", return_value="MAJOR_MINOR"):
         with patch(
             "simtools.application.control.version.resolve_version_to_latest_patch",
             side_effect=["6.0.2", "6.1.1"],
         ) as mock_resolve:
-            _resolve_model_version_to_latest_patch(args_dict, logger, mock_db)
+            _resolve_model_version_to_latest_patch(args_dict, logger, mock_reader)
 
             assert mock_resolve.call_count == 2
             assert args_dict["model_version"] == ["6.0.2", "6.1.1"]
@@ -358,8 +296,8 @@ def test_resolve_model_version_to_latest_patch_list_with_full_versions():
     args_dict = {"model_version": ["6.0.2", "6.1"]}
     logger = logging.getLogger("test")
 
-    mock_db = MagicMock()
-    mock_db.get_model_versions.return_value = ["6.0.2", "6.1.0", "6.1.1"]
+    mock_reader = MagicMock()
+    mock_reader.get_model_versions.return_value = ["6.0.2", "6.1.0", "6.1.1"]
 
     with patch(
         "simtools.application.control.version.version_kind",
@@ -370,19 +308,19 @@ def test_resolve_model_version_to_latest_patch_list_with_full_versions():
                 "simtools.application.control.version.resolve_version_to_latest_patch",
                 return_value="6.1.1",
             ) as mock_resolve:
-                _resolve_model_version_to_latest_patch(args_dict, logger, mock_db)
+                _resolve_model_version_to_latest_patch(args_dict, logger, mock_reader)
 
                 mock_resolve.assert_called_once_with("6.1", ["6.0.2", "6.1.0", "6.1.1"])
                 assert args_dict["model_version"] == ["6.0.2", "6.1.1"]
 
 
-def test_resolve_model_version_to_latest_patch_db_exception():
+def test_resolve_model_version_to_latest_patch_exception():
 
     args_dict = {"model_version": "6.0"}
     logger = logging.getLogger("test")
 
     model_reader = MagicMock()
-    model_reader.get_model_versions.side_effect = OSError("Database connection failed")
+    model_reader.get_model_versions.side_effect = OSError("Model repository unavailable")
     with patch("simtools.application.control.version.version_kind", return_value="MAJOR_MINOR"):
         _resolve_model_version_to_latest_patch(args_dict, logger, model_reader)
 
@@ -394,15 +332,15 @@ def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
     args_dict = {"model_version": ["6.0", "6.1"]}
     logger = logging.getLogger("test")
 
-    mock_db = MagicMock()
-    mock_db.get_model_versions.return_value = ["6.0.0", "6.0.1"]
+    mock_reader = MagicMock()
+    mock_reader.get_model_versions.return_value = ["6.0.0", "6.0.1"]
 
     with patch("simtools.application.control.version.version_kind", return_value="MAJOR_MINOR"):
         with patch(
             "simtools.application.control.version.resolve_version_to_latest_patch",
             side_effect=["6.0.1", ValueError("Version not found")],
         ):
-            _resolve_model_version_to_latest_patch(args_dict, logger, mock_db)
+            _resolve_model_version_to_latest_patch(args_dict, logger, mock_reader)
 
             assert args_dict["model_version"] == ["6.0.1", "6.1"]
 
@@ -414,17 +352,14 @@ def test_version_info_export_build_info_with_io_handler():
     mock_io_handler.get_output_file.return_value = "/output/build_info.json"
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
-            with patch(
-                "simtools.application.control.dependencies.export_build_info"
-            ) as mock_export:
-                with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_build_id": "7.7500"}
+        with patch("simtools.application.control.dependencies.export_build_info") as mock_export:
+            with patch("simtools.application.control.version.__version__", "1.0.0"):
+                mock_build.return_value = {"corsika_build_id": "7.7500"}
 
-                    _version_info(args_dict, mock_io_handler, logger)
+                _version_info(args_dict, mock_io_handler, logger)
 
-                    mock_io_handler.get_output_file.assert_called_once_with("build_info.json")
-                    mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+                mock_io_handler.get_output_file.assert_called_once_with("build_info.json")
+                mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
 
 
 def test_version_info_export_build_info_without_io_handler():
@@ -432,16 +367,13 @@ def test_version_info_export_build_info_without_io_handler():
     logger = logging.getLogger("test")
 
     with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_tag_or_name"):
-            with patch(
-                "simtools.application.control.dependencies.export_build_info"
-            ) as mock_export:
-                with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_build_id": "7.7500"}
+        with patch("simtools.application.control.dependencies.export_build_info") as mock_export:
+            with patch("simtools.application.control.version.__version__", "1.0.0"):
+                mock_build.return_value = {"corsika_build_id": "7.7500"}
 
-                    _version_info(args_dict, None, logger)
+                _version_info(args_dict, None, logger)
 
-                    mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+                mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
 
 
 def test_get_log_file_explicit_file():

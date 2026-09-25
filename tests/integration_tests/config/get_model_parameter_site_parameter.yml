@@ -3,12 +3,11 @@ applications:
 - application: simtools-get-model-parameter
   docs:
     title: Retrieve the North-site reference altitude
-    summary: Read the North observatory reference-point altitude from the simulation-model database.
+    summary: Read the North observatory reference-point altitude from the simulation-model repository.
   configuration:
     model_version: 6.0.2
     parameter: reference_point_altitude
     site: North
-  requires_mongodb: true
   test_name: site_parameter
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

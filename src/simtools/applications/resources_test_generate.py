@@ -42,14 +42,12 @@ _ARGUMENTS = (
         type=Path,
         help="Run only the selected workflow config file from integration_tests/config_files.",
     ),
-    cli.SIMULATION_MODELS_PATH,
-    cli.SIMULATION_MODELS_GIT_PATH,
-    cli.SIMULATION_MODELS_GIT_REVISION,
 )
 
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(*_ARGUMENTS,),
     setup_io_handler=False,
     resolve_sim_software_executables=False,

@@ -4,7 +4,7 @@ applications:
   docs:
     title: Retrieve a versioned LST mirror list
     summary: >-
-      Read version 2.0.0 of the LSTN-01 mirror-list parameter from the simulation-model database.
+      Read version 2.0.0 of the LSTN-01 mirror-list parameter from the simulation-model repository.
   configuration:
     log_level: DEBUG
     output_file: test.json
@@ -21,7 +21,6 @@ applications:
       - type: reference
         file: ${generated:model_parameters/mirror_list-2.0.0.json}
         tolerance: 1.0e-05
-  requires_mongodb: true
   test_name: telescope_parameter_parameter_version
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

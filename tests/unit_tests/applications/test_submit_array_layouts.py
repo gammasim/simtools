@@ -99,8 +99,10 @@ def test_main_retains_legacy_file_input(mocker):
 def test_direct_layout_rejects_base_parameter_from_other_site(mocker):
     from simtools.layout import array_layout_utils
 
-    database = mocker.Mock()
-    database.get_model_parameter.return_value = {"array_layouts": {"site": "North", "value": []}}
+    model_reader = mocker.Mock()
+    model_reader.get_model_parameter.return_value = {
+        "array_layouts": {"site": "North", "value": []}
+    }
 
     with pytest.raises(ValueError, match="does not match requested site 'South'"):
-        array_layout_utils.prepare_array_layouts_for_submission(database, _direct_args())
+        array_layout_utils.prepare_array_layouts_for_submission(model_reader, _direct_args())

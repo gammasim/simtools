@@ -675,7 +675,6 @@ def _write_directory_products(args_dict):
     runtime_args = (
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
-    runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
     jobs = []
     for index, (group_name, event_data_files) in enumerate(groups):
         output_file = validate_file_type(
@@ -693,7 +692,6 @@ def _write_directory_products(args_dict):
                     "output_file": output_file,
                 },
                 runtime_args=runtime_args,
-                runtime_db_config=runtime_db_config,
                 mount_paths=(event_data_directory,),
                 output_paths=(output_file,),
             )
@@ -721,7 +719,6 @@ def _write_production_selection_products(args_dict):
     runtime_args = (
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
-    runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
     products = []
     for group in selection_result["groups"]:
         telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
@@ -769,7 +766,6 @@ def _write_production_selection_products(args_dict):
                     "telescope_configs": telescope_configs,
                 },
                 runtime_args=runtime_args,
-                runtime_db_config=runtime_db_config,
                 mount_paths=(production_path,),
                 output_paths=(output_file, metadata_file),
             )

@@ -16,9 +16,9 @@ def _load_catalog(simtools_root_path):
     )
 
 
-def _model_tag(catalog):
-    return catalog["model-database"].get(
-        "default-tag", catalog["model-database"].get("default-version")
+def _model_revision(catalog):
+    return catalog["model-repository"].get(
+        "default-tag", catalog["model-repository"].get("default-version")
     )
 
 
@@ -32,7 +32,7 @@ def _legacy_catalog(schema_version="0.2.0"):
         "base-image": {"name": "almalinux", "runtime-version": "9-minimal", "build-version": "9"},
         "corsika-interaction-tables": {"version": "v1.0.0"},
         "archives": {"autoconf": {"version": "2.71"}, "gsl": {"version": "2.8"}},
-        "model-database": {"name": "CTAO-Simulation-Model", "default-version": "v0.1.0"},
+        "model-repository": {"name": "CTAO-Simulation-Model", "default-version": "v0.1.0"},
         "production-combinations": [{"corsika": "78010", "sim-telarray": "v1.0.0"}],
         "corsika": [
             {
@@ -57,7 +57,7 @@ def _legacy_catalog(schema_version="0.2.0"):
         ],
     }
     if schema_version == "0.1.0":
-        catalog["model-database"]["default-version"] = "0.16.0"
+        catalog["model-repository"]["default-version"] = "0.16.0"
     else:
         catalog["simtools-tests"] = {
             "repository": "owner/tests",
@@ -174,7 +174,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["corsika_tables_tag"] == catalog["corsika-interaction-tables"]["tag"]
     build_id = corsika["tag"].removeprefix("v").replace(".", "")
     assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
-    assert summary["model_database_tag"] == _model_tag(catalog)
+    assert summary["model_repository_revision"] == dependency_versions._model_revision(catalog)
     assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
     assert summary["simtools_tests_tag"] == catalog["simtools-tests"]["tag"]
     assert summary["simtools_tests_url"] == catalog["simtools-tests"]["source-url"]
@@ -182,57 +182,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
 
 def test_env_template_matches_catalog(simtools_root_path):
     """Test the documented environment defaults match the catalog."""
-    catalog = _load_catalog(simtools_root_path)
-
-    assert (
-        dependency_versions.validate_env_template(catalog, simtools_root_path / ".env_template")
-        is None
-    )
-
-
-def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simtools_root_path):
-    """Test catalog-managed versions are not duplicated in the environment template."""
-    catalog = _load_catalog(simtools_root_path)
-    template = tmp_test_directory / ".env_template"
-    model_key = (
-        "SIMTOOLS_DB_SIMULATION_MODEL_TAG"
-        if "default-tag" in catalog["model-database"]
-        else "SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-    )
-    template.write_text(
-        f"SIMTOOLS_DB_SIMULATION_MODEL={catalog['model-database']['name']}\n"
-        f"{model_key}={_model_tag(catalog)}\n",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValueError, match="catalog-managed"):
-        dependency_versions.validate_env_template(catalog, template)
-
-
-def test_env_template_rejects_mismatched_model_name(tmp_test_directory, simtools_root_path):
-    """Test the non-version catalog default is still validated."""
-    catalog = _load_catalog(simtools_root_path)
-    template = tmp_test_directory / ".env_template"
-    template.write_text(
-        "SIMTOOLS_DB_SIMULATION_MODEL=wrong-model\n",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValueError, match="defaults disagree"):
-        dependency_versions.validate_env_template(catalog, template)
-
-
-def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_path):
-    """Test legacy catalogs still validate their model-version template default."""
-    catalog = _legacy_catalog("0.1.0")
-    template = tmp_test_directory / ".env_template"
-    template.write_text(
-        f"SIMTOOLS_DB_SIMULATION_MODEL={catalog['model-database']['name']}\n"
-        f"SIMTOOLS_DB_SIMULATION_MODEL_VERSION={_model_tag(catalog)}\n",
-        encoding="utf-8",
-    )
-
-    assert dependency_versions.validate_env_template(catalog, template) is None
+    assert dependency_versions.validate_env_template(simtools_root_path / ".env_template") is None
 
 
 @pytest.mark.parametrize(
@@ -276,7 +226,7 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
             "Invalid Git revision",
         ),
         (
-            lambda data: data["model-database"].update({"default-tag": "0.16.0"}),
+            lambda data: data["model-repository"].update({"default-tag": "0.16.0"}),
             "release tags",
         ),
         (
@@ -461,11 +411,9 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
     """Test env output contains catalog-managed runtime values only."""
     output = dependency_versions.export_dependency_configuration(output_format="env")
     catalog = _load_catalog(simtools_root_path)
-    model = catalog["model-database"]
     test_resources = catalog["simtools-tests"]
     expected = [
-        f"SIMTOOLS_DB_SIMULATION_MODEL={model['name']}",
-        f"SIMTOOLS_DB_SIMULATION_MODEL_TAG={_model_tag(catalog)}",
+        f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={dependency_versions._model_revision(catalog)}",
         f"SIMTOOLS_TESTS_TAG={test_resources['tag']}",
         f"SIMTOOLS_TESTS_REPOSITORY={test_resources['repository']}",
         f"SIMTOOLS_TESTS_URL={test_resources['source-url']}",
@@ -481,8 +429,7 @@ def test_dependency_catalog_environment_supports_schema_0_1(simtools_root_path):
     environment = dependency_versions.dependency_catalog_environment(catalog)
 
     assert environment == {
-        "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": _model_tag(catalog),
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
     }
 
 
@@ -547,6 +494,6 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     tagged_schema = next(schema for schema in schemas if "simtools-tests" in schema["required"])
     assert "simtools-tests" not in legacy_schema["required"]
     assert "simtools-tests" in tagged_schema["required"]
-    assert "default-tag" in schema["properties"]["model-database"]["required"]
+    assert "default-tag" in schema["properties"]["model-repository"]["required"]
     assert "source-revision" in schema["definitions"]["corsika"]["required"]
     assert "revision" in schema["definitions"]["simtel"]["required"]

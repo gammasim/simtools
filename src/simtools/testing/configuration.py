@@ -1,7 +1,6 @@
 """Integration test configuration."""
 
 import logging
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -15,10 +14,6 @@ _logger = logging.getLogger(__name__)
 
 class VersionError(Exception):
     """Raise if model version requested is not supported."""
-
-
-class ProductionDBError(Exception):
-    """Raise if production db is used."""
 
 
 def get_list_of_test_configurations(config_files, test_resources_path=None):
@@ -173,7 +168,6 @@ def configure(config, tmp_test_directory, request):
 
     if "configuration" in config:
         _skip_test_for_model_version(config, model_version_requested)
-        _skip_test_for_production_db(config)
 
         config_file, config_string, config_file_model_version = _prepare_test_options(
             config["configuration"],
@@ -215,18 +209,6 @@ def _skip_test_for_model_version(config, model_version_requested):
         raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
         )
-
-
-def _skip_test_for_production_db(config):
-    """Skip test if production db is used."""
-    if not config.get("skip_for_production_db"):
-        return
-
-    if "db.zeuthen.desy.de" in os.getenv("SIMTOOLS_DB_SERVER", ""):
-        raise ProductionDBError("Production database used for this test")
-
-    if "simpipe" in os.getenv("SIMTOOLS_DB_API_USER", ""):
-        raise ProductionDBError("Production database used for this test")
 
 
 def _prepare_test_options(config, output_path, model_version=None, test_resources_path=None):

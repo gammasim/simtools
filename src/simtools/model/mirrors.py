@@ -29,7 +29,7 @@ class Mirrors:
     mirror_list_file: Union[str, Path]
         Mirror list in ECSV format (with panel focal length only).
     parameters: dict, optional
-        Dictionary of parameters from the database.
+        Dictionary of parameters from the model repository.
     """
 
     def __init__(self, mirror_list_file: str | Path, parameters: dict | None = None):
@@ -90,7 +90,7 @@ class Mirrors:
                 )
                 self._logger.debug("Take mirror_panel_diameter from parameters")
             except TypeError as error:
-                msg = "Mirror mirror_panel_diameter not contained in DB"
+                msg = "Mirror mirror_panel_diameter not contained in the model repository"
                 self._logger.error(msg)
                 raise TypeError(msg) from error
         if "focal_length" not in self.mirror_table.colnames:
@@ -109,7 +109,7 @@ class Mirrors:
                     ]
                     self._logger.debug("Take mirror_focal_length from parameters")
                 except TypeError as error:
-                    msg = "mirror_focal_length not contained in DB"
+                    msg = "mirror_focal_length not contained in the model repository"
                     self._logger.error(msg)
                     raise TypeError(msg) from error
 
@@ -122,7 +122,7 @@ class Mirrors:
                 self.shape_type = self.parameters["mirror_panel_shape"]["value"]
                 self._logger.debug("Take shape_type from parameters")
             except TypeError as error:
-                msg = "Mirror shape_type not contained in DB"
+                msg = "Mirror shape_type not contained in the model repository"
                 self._logger.error(msg)
                 raise TypeError(msg) from error
 

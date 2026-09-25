@@ -11,6 +11,7 @@ _ARGUMENTS = (cli.ALL_MODEL_VERSIONS,)
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -18,7 +19,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SIMULATION_SOFTWARE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
 )
 
 

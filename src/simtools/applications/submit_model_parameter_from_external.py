@@ -41,7 +41,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "check_parameter_version",
-        help="Check if the parameter version exists in the database",
+        help="Check if the parameter version exists in the model repository",
         action="store_true",
     ),
 )
@@ -49,12 +49,12 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    database=True,
     initialize_output=True,
 )
 
@@ -94,7 +94,7 @@ def main():
         ),
         output_path=output_path,
         metadata_input_dict=app_context.args,
-        check_db_for_existing_parameter=app_context.args.get("check_parameter_version", False),
+        check_for_existing_parameter=app_context.args.get("check_parameter_version", False),
         model_parameter_schema_version=model_parameter_schema_version,
     )
 

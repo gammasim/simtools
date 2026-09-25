@@ -287,7 +287,7 @@ def test_convert_string_to_list():
         bla_bla,
         "bla blaa",
     ]
-    # import for list of dimensionless entries in database
+    # import for list of dimensionless entries in model repository
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
 

@@ -44,7 +44,7 @@ def plot(config, output_file, data_path=None, model_reader=None):
 
 def read_table_data(config, data_path=None, model_reader=None):
     """
-    Read table data from file or parameter database.
+    Read table data from file or parameter repository.
 
     Parameters
     ----------
@@ -72,7 +72,7 @@ def _read_configured_table(table_config, data_path, model_reader):
     if "file_name" in table_config:
         return _read_table_file(table_config, data_path)
     if "parameter" in table_config:
-        return _read_table_from_model_database(table_config, model_reader)
+        return _read_table_from_model_repository(table_config, model_reader)
     raise ValueError("No table data defined in configuration.")
 
 
@@ -127,9 +127,9 @@ def _process_table_data(table, _config):
     )
 
 
-def _read_table_from_model_database(table_config, model_reader=None):
+def _read_table_from_model_repository(table_config, model_reader=None):
     """
-    Read table data from model parameter database.
+    Read table data from the simulation-model repository.
 
     Parameters
     ----------
@@ -143,7 +143,7 @@ def _read_table_from_model_database(table_config, model_reader=None):
     """
     model_reader = require_model_reader(model_reader)
     destination = (
-        table_config.get("db_export_path") or io_handler.IOHandler().get_output_directory()
+        table_config.get("model_export_path") or io_handler.IOHandler().get_output_directory()
     )
     return model_reader.export_model_file(
         parameter=table_config["parameter"],
@@ -156,8 +156,8 @@ def _read_table_from_model_database(table_config, model_reader=None):
     )
 
 
-def _read_parameter_dict_from_model_database(table_config, model_reader=None):
-    """Read a model parameter dictionary from the model parameter database."""
+def _read_parameter_dict_from_model_repository(table_config, model_reader=None):
+    """Read a model parameter dictionary from the simulation-model repository."""
     model_reader = require_model_reader(model_reader)
     parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
@@ -253,7 +253,7 @@ def generate_plot_configurations(
         "telescope": telescope,
         "parameter_version": parameter_version,
     }
-    parameter_dict = _read_parameter_dict_from_model_database(table_config, model_reader)
+    parameter_dict = _read_parameter_dict_from_model_repository(table_config, model_reader)
 
     schema = gen.change_dict_keys_case(
         _select_schema_entry(
@@ -267,7 +267,7 @@ def generate_plot_configurations(
     if not configs:
         return None
 
-    table = _read_table_from_model_database(table_config, model_reader)
+    table = _read_table_from_model_repository(table_config, model_reader)
     valid_columns = _get_valid_columns(table)
 
     valid_configs = []

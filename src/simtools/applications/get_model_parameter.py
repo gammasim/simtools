@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Get a model parameter from a simulation-model repository or database."""
+"""Get a model parameter from a simulation-model repository."""
 
 from pprint import pprint
 
@@ -49,6 +49,7 @@ def _is_row_table_dict(value):
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *ARGUMENTS,
         cli.MODEL_VERSION,
@@ -58,7 +59,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
     initialize_output=False,
 )
 
@@ -138,8 +138,6 @@ def run(app_context):
     parameter_data = parameters[app_context.args["parameter"]]
     if app_context.args["output_file"] is not None:
         data = dict(parameter_data)
-        data.pop("_id", None)
-        data.pop("entry_date", None)
         ascii_handler.write_data_to_file(
             data=data,
             output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),

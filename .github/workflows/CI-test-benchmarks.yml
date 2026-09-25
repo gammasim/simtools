@@ -38,9 +38,6 @@ jobs:
         uses: ./.github/actions/setup-simtools-tests
 
       - name: Run unit resource benchmark
-        env:
-          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-          SIMTOOLS_DB_SIMULATION_MODEL_TAG: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_TAG }}
         run: |
           pytest --no-cov --color=yes -n 0 \
             --resource-benchmark-output=resource-benchmark-unit \

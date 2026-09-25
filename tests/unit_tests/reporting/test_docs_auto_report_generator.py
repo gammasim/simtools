@@ -181,12 +181,12 @@ def test__get_telescopes_from_layout(io_handler):
             # Verify the result
             assert result == case["expected_telescopes"]
 
-            # Verify DB methods were called correctly based on all_telescopes flag
+            # Verify model repository methods were called correctly based on all_telescopes flag
             if case["args"]["all_telescopes"]:
                 report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_called_once()
                 assert len(result) == len(case["expected_telescopes"])
             else:
-                # Verify DB methods were not called when all_telescopes=False
+                # Verify model repository methods were not called when all_telescopes=False
                 report_generator.model_reader.get_model_parameters_for_all_model_versions.assert_not_called()
                 report_generator.model_reader.get_design_model.assert_not_called()
                 assert result == {case["args"]["telescope"]}

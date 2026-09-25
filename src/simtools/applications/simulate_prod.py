@@ -188,6 +188,7 @@ def _write_job_metadata(args_dict, simulator, output_directory):
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         *cli.BACKEND_ARGUMENTS,
@@ -204,7 +205,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.CORSIKA_PATH_ARGUMENTS,
     ),
-    database=True,
     setup_io_handler=False,
     validate_simulation_dependencies=True,
     post_parse=_post_parse,
