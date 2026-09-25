@@ -1,16 +1,17 @@
 """MC model of a telescope."""
 
 import logging
-from pathlib import Path
+from copy import deepcopy
 
-import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.data_model import schema
 from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 
 
@@ -34,6 +35,8 @@ class TelescopeModel(ModelParameter):
         Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     """
 
     def __init__(
@@ -45,6 +48,7 @@ class TelescopeModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -55,6 +59,7 @@ class TelescopeModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            model_directory=model_directory,
         )
 
         self._logger = logging.getLogger(__name__)
@@ -184,29 +189,48 @@ class TelescopeModel(ModelParameter):
         return eff_focal_length
 
     def _load_camera(self):
-        """Load camera attribute by creating a Camera object with the camera config file."""
-        camera_config_file = self.get_parameter_value("camera_config_file")
+        """Load the camera from its validated component parameters."""
+        configuration = self._resolve_camera_components()
         focal_length = self.get_telescope_effective_focal_length("cm", True)
-        try:
-            camera_config_file_path = gen.find_file(camera_config_file, self.config_file_directory)
-        except TypeError as exc:
-            self._logger.error(
-                f"Camera config file {camera_config_file} or "
-                f"config file directory ({self.config_file_directory}) is None"
-            )
-            raise TypeError from exc
-        except FileNotFoundError:
-            self._logger.warning(
-                f"Camera config file {camera_config_file} not found in the config directory "
-                f"{self.config_file_directory}. Using the one found in the model_path"
-            )
-            camera_config_file_path = gen.find_file(camera_config_file, self.io_handler.model_path)
+        self._camera = Camera.from_configuration(self.name, configuration, focal_length)
 
-        self._camera = Camera(
-            telescope_name=self.name,
-            camera_config_file=camera_config_file_path,
-            focal_length=focal_length,
-        )
+    def _resolve_camera_components(self):
+        """Resolve the independent camera component parameters."""
+        pixel_types = deepcopy(self.get_parameter_value("camera_pixel_types"))
+        for pixel_type in pixel_types:
+            angle_parameter = pixel_type.get("lightguide_angle_parameter")
+            if angle_parameter:
+                parameter_data = self.parameters.get(angle_parameter, {})
+                pixel_type["lightguide_angle_file"] = (
+                    get_simtel_table_file_name(parameter_data)
+                    or f"{angle_parameter}-{self.name}.dat"
+                )
+            wavelength_parameter = pixel_type.get("lightguide_wavelength_parameter")
+            if wavelength_parameter:
+                parameter_data = self.parameters.get(wavelength_parameter, {})
+                pixel_type["lightguide_wavelength_file"] = (
+                    get_simtel_table_file_name(parameter_data)
+                    or f"{wavelength_parameter}-{self.name}.dat"
+                )
+
+        return {
+            "rotate": self.get_parameter_value("camera_rotate"),
+            "pixel_types": pixel_types,
+            "pixels": self._parameter_table_records("camera_pixel_layout"),
+            "triggers": self._parameter_table_records("camera_trigger_groups"),
+            "trigger_members": self._parameter_table_records("camera_trigger_members"),
+        }
+
+    def _parameter_table_records(self, parameter_name):
+        """Return scalar records from a validated model-parameter table."""
+        parameter_data = self._get_parameter_dict(parameter_name)
+        if hasattr(self.model_reader, "get_parameter_table_records"):
+            return self.model_reader.get_parameter_table_records(parameter_data)
+        table = self.get_parameter_table(parameter_name)
+        return [
+            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
+            for row in table
+        ]
 
     def is_file_2d(self, par: str) -> bool:
         """
@@ -223,16 +247,26 @@ class TelescopeModel(ModelParameter):
             True if the file is a 2D map type.
         """
         try:
-            file_name = self.get_parameter_value(par)
+            table = self.get_parameter_table(par)
         except InvalidModelParameterError:
             logging.warning(f"Parameter {par} does not exist")
             return False
 
-        file = self.config_file_directory.joinpath(file_name)
-        with open(file, encoding="utf-8") as f:
-            return "@RPOL@" in f.read()
+        parameter_schema = schema.get_model_parameter_schema(par)
+        schema_supports_angle_dependence = any(
+            software.get("name") == "sim_telarray" and software.get("table_format") == "rpol_matrix"
+            for software in parameter_schema.get("simulation_software", [])
+        )
+        if not schema_supports_angle_dependence:
+            return False
 
-    def read_two_dim_wavelength_angle(self, file_name: str | Path) -> dict:
+        # Some legacy parameters use the same schema for both averaged and
+        # angle-dependent tables. The actual table therefore decides whether
+        # the model needs an incidence-angle weighting distribution.
+        columns = set(table.colnames)
+        return not columns or "incidence_angle" in columns
+
+    def read_two_dim_wavelength_angle(self, parameter_name: str) -> dict:
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
 
@@ -241,53 +275,57 @@ class TelescopeModel(ModelParameter):
 
         Parameters
         ----------
-        file_name: str or Path
-            File assumed to be in the model directory.
+        parameter_name: str
+            Name of the ECSV model parameter.
 
         Returns
         -------
         dict:
             dict of three arrays, wavelength, degrees, z.
         """
-        _file = self.config_file_directory.joinpath(file_name)
-        self._logger.debug("Reading two dimensional distribution from %s", _file)
-        line_to_start_from = 0
-        with open(_file, encoding="utf-8") as f:
-            for i_line, line in enumerate(f):
-                if line.startswith("ANGLE"):
-                    degrees = np.array(line.strip().split("=")[1].split(), dtype=np.float16)
-                    line_to_start_from = i_line + 1
-                    break  # The rest can be read with np.loadtxt
-
-        _data = np.loadtxt(_file, skiprows=line_to_start_from)
-
-        return {
-            "Wavelength": _data[:, 0],
-            "Angle": degrees,
-            "z": np.array(_data[:, 1:]).T,
-        }
+        table = self.get_parameter_table(parameter_name)
+        angle_name = "incidence_angle"
+        value_columns = [name for name in table.colnames if name not in {"wavelength", angle_name}]
+        if len(value_columns) != 1:
+            raise ValueError(
+                f"Two-dimensional table '{parameter_name}' must have one value column, "
+                f"found {value_columns}."
+            )
+        angles = np.unique(np.asarray(table[angle_name]))
+        wavelengths = np.unique(np.asarray(table["wavelength"]))
+        values = np.empty((len(angles), len(wavelengths)))
+        for angle_index, angle in enumerate(angles):
+            for wavelength_index, wavelength in enumerate(wavelengths):
+                selection = table[
+                    (np.asarray(table[angle_name]) == angle)
+                    & (np.asarray(table["wavelength"]) == wavelength)
+                ]
+                if len(selection) != 1:
+                    raise ValueError(
+                        f"Two-dimensional table '{parameter_name}' is not a complete grid."
+                    )
+                values[angle_index, wavelength_index] = selection[value_columns[0]][0]
+        return {"Wavelength": wavelengths, "Angle": angles, "z": values}
 
     def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""
-        ray_tracing_data = astropy.io.ascii.read(
-            self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
-        )
-        if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
+        ray_tracing_data = self.get_parameter_table("optics_properties")
+        if not np.isclose(ray_tracing_data["off_axis_angle"][0], 0):
             msg = (
                 f"No value for the on-axis effective optical area exists."
-                f" The minimum off-axis angle is {ray_tracing_data['Off-axis angle'][0]}"
+                f" The minimum off-axis angle is {ray_tracing_data['off_axis_angle'][0]}"
             )
             raise ValueError(msg)
         return ray_tracing_data["eff_area"][0]
 
-    def read_incidence_angle_distribution(self, incidence_angle_dist_file: str) -> Table:
+    def read_incidence_angle_distribution(self, parameter_name: str) -> Table:
         """
         Read the incidence angle distribution from a file.
 
         Parameters
         ----------
-        incidence_angle_dist_file: str
-            File name of the incidence angle distribution
+        parameter_name: str
+            Name of the incidence angle distribution parameter.
 
         Returns
         -------
@@ -296,9 +334,9 @@ class TelescopeModel(ModelParameter):
         """
         self._logger.debug(
             "Reading incidence angle distribution from %s",
-            self.config_file_directory.joinpath(incidence_angle_dist_file),
+            parameter_name,
         )
-        return astropy.io.ascii.read(self.config_file_directory.joinpath(incidence_angle_dist_file))
+        return self.get_parameter_table(parameter_name)
 
     @staticmethod
     def calc_average_curve(curves: dict, incidence_angle_dist: Table) -> Table:
@@ -316,7 +354,7 @@ class TelescopeModel(ModelParameter):
             reflectivity, transmission, etc.
         incidence_angle_dist: astropy.table.Table
             Instance of astropy.table.Table with the incidence angle distribution. The assumed \
-            columns are "Incidence angle" and "Fraction".
+            columns are "incidence_angle" and "fraction".
 
         Returns
         -------
@@ -324,8 +362,8 @@ class TelescopeModel(ModelParameter):
             Instance of astropy.table.Table with the averaged curve.
         """
         weights = [
-            incidence_angle_dist["Fraction"][
-                np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
+            incidence_angle_dist["fraction"][
+                np.nanargmin(np.abs(angle_now - incidence_angle_dist["incidence_angle"].value))
             ]
             for angle_now in curves["Angle"]
         ]

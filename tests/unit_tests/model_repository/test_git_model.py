@@ -216,53 +216,200 @@ def test_git_source_matches_parameter_filters(data, instrument, site, expected):
 
 
 def test_git_source_exports_files_lazily_and_safely(tmp_test_directory, mocker):
-    """Git files are streamed on demand and cannot escape the Files directory."""
+    """Git files are streamed from their parameter directories and stay contained."""
     objects = {
-        "simulation-models/model_parameters/Files/nested/model.dat": b"model",
-        "simulation-models/model_parameters/Files/other.dat": b"other",
+        "simulation-models/model_parameters/LSTN-design/selected/nested/model.dat": b"model",
+        "simulation-models/model_parameters/LSTN-design/selected/other.dat": b"other",
     }
     store = MemoryObjectStore(objects)
     source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
     destination = Path(str(tmp_test_directory)) / "exported"
+    parameter = {
+        "file": True,
+        "instrument": "LSTN-design",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "value": "nested/model.dat",
+    }
 
-    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
+    assert source.export_model_files(parameters={"selected": parameter}, dest=destination) == {
         "nested/model.dat": "copied from Git"
     }
     assert (destination / "nested/model.dat").read_bytes() == b"model"
-    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
+    assert source.export_model_files(parameters={"selected": parameter}, dest=destination) == {
         "nested/model.dat": "file exists"
     }
-    assert source.export_model_files(
-        parameters={"selected": {"file": True, "value": "other.dat"}}, dest=destination
-    ) == {"other.dat": "copied from Git"}
-    with pytest.raises(ValueError, match="escapes model Files"):
-        source.export_model_files(file_names="../model.dat", dest=destination)
+    parameter["value"] = "other.dat"
+    assert source.export_model_files(parameters={"selected": parameter}, dest=destination) == {
+        "other.dat": "copied from Git"
+    }
+    parameter["value"] = "../model.dat"
+    with pytest.raises(ValueError, match="escapes parameter directory"):
+        source.export_model_files(parameters={"selected": parameter}, dest=destination)
+    with pytest.raises(ValueError, match="requires parameter metadata"):
+        source.export_model_files(file_names="other.dat", dest=destination)
     with pytest.raises(ValueError, match="Destination path is required"):
-        source.export_model_files(file_names="other.dat")
+        source.export_model_files(parameters={"selected": parameter})
 
     missing = mocker.patch.object(store, "open_blob", side_effect=FileNotFoundError)
+    parameter["value"] = "missing.dat"
     with pytest.raises(FileNotFoundError, match="Model file not found at commit"):
-        source.export_model_files(file_names="missing.dat", dest=destination)
+        source.export_model_files(parameters={"selected": parameter}, dest=destination)
     missing.assert_called_once()
+
+
+def test_git_source_qualifies_different_colliding_files(tmp_test_directory):
+    """Different model scopes do not overwrite files with the same basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/selected/model.dat": b"concrete",
+        "simulation-models/model_parameters/LSTN-design/selected/model.dat": b"design",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    concrete = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    design = {
+        **concrete,
+        "instrument": "LSTN-design",
+    }
+
+    assert source.export_model_files(parameters={"selected": concrete}, dest=destination) == {
+        "model.dat": "copied from Git"
+    }
+    assert source.export_model_files(parameters={"selected": design}, dest=destination) == {
+        "model-LSTN-design.dat": "copied from Git"
+    }
+    assert design["value"] == "model-LSTN-design.dat"
+    assert design["_simtools_export_source_value"] == "model.dat"
+    assert (destination / "model.dat").read_bytes() == b"concrete"
+    assert (destination / "model-LSTN-design.dat").read_bytes() == b"design"
+
+
+def test_git_source_reuses_identical_colliding_files(tmp_test_directory):
+    """Identical files with different scopes can share the original basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/selected/model.dat": b"same",
+        "simulation-models/model_parameters/LSTN-design/selected/model.dat": b"same",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    concrete = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "selected",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    design = {**concrete, "instrument": "LSTN-design"}
+
+    source.export_model_files(parameters={"selected": concrete}, dest=destination)
+    assert source.export_model_files(parameters={"selected": design}, dest=destination) == {
+        "model.dat": "file exists"
+    }
+    assert design["value"] == "model.dat"
+
+
+def test_git_source_refuses_second_collision_with_same_scope(tmp_test_directory):
+    """A second different file cannot reuse an occupied qualified basename."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-01/first/model.dat": b"first",
+        "simulation-models/model_parameters/LSTN-design/second/model.dat": b"second",
+        "simulation-models/model_parameters/LSTN-design/third/model.dat": b"third",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    first = {
+        "file": True,
+        "instrument": "LSTN-01",
+        "parameter": "first",
+        "parameter_version": "1.0.0",
+        "value": "model.dat",
+    }
+    second = {
+        **first,
+        "instrument": "LSTN-design",
+        "parameter": "second",
+    }
+    third = {
+        **second,
+        "parameter": "third",
+    }
+
+    source.export_model_files(parameters={"first": first}, dest=destination)
+    source.export_model_files(parameters={"second": second}, dest=destination)
+    with pytest.raises(FileExistsError, match=r"colliding model asset 'model-LSTN-design\.dat'"):
+        source.export_model_files(parameters={"third": third}, dest=destination)
 
 
 def test_git_source_reads_ecsv_and_rejects_invalid_file_paths(tmp_test_directory, mocker):
-    """ECSV blobs are read as tables and missing blobs get a useful error."""
+    """ECSV blobs are read beside their parameter document."""
     buffer = io.StringIO()
     Table({"value": [1, 2]}).write(buffer, format="ascii.ecsv")
     file_name = "values.ecsv"
-    path = f"simulation-models/model_parameters/Files/{file_name}"
+    path = f"simulation-models/model_parameters/LSTN-design/values/{file_name}"
     store = MemoryObjectStore({path: buffer.getvalue().encode()})
     source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    parameter = {
+        "file": True,
+        "instrument": "LSTN-design",
+        "model_parameter_schema_version": "0.3.0",
+        "parameter": "values",
+        "parameter_version": "1.0.0",
+        "value": file_name,
+    }
+    mocker.patch(
+        "simtools.model_repository.git_model.schema.get_model_parameter_schema",
+        return_value={"data": []},
+    )
+    mocker.patch(
+        "simtools.model_repository.git_model.validate_table_asset",
+        side_effect=lambda table, **_: table,
+    )
 
-    assert source.get_ecsv_file_as_astropy_table(file_name)["value"].tolist() == [1, 2]
+    assert source.get_ecsv_file_as_astropy_table(file_name, parameter)["value"].tolist() == [1, 2]
     assert store.reads == [path]
-    with pytest.raises(ValueError, match="escapes model Files"):
-        source.get_ecsv_file_as_astropy_table("../values.ecsv")
-    missing = mocker.patch.object(store, "read_blob", side_effect=FileNotFoundError)
-    with pytest.raises(FileNotFoundError, match="Model file not found at commit"):
+    parameter["value"] = "../values.ecsv"
+    with pytest.raises(ValueError, match="escapes parameter directory"):
+        source.get_ecsv_file_as_astropy_table(file_name, parameter)
+    with pytest.raises(ValueError, match="requires parameter metadata"):
         source.get_ecsv_file_as_astropy_table(file_name)
+    missing = mocker.patch.object(store, "read_blob", side_effect=FileNotFoundError)
+    parameter["value"] = file_name
+    with pytest.raises(FileNotFoundError, match="Model file not found at commit"):
+        source.get_ecsv_file_as_astropy_table(file_name, parameter)
     missing.assert_called_once()
+
+
+def test_git_source_qualifies_ecsv_exports(tmp_test_directory):
+    """Git-backed ECSV assets always use their instrument-qualified name."""
+    objects = {
+        "simulation-models/model_parameters/LSTN-design/values/values.ecsv": b"table",
+    }
+    store = MemoryObjectStore(objects)
+    source = GitModelSource(Path(str(tmp_test_directory)) / "models.git", "v1", object_store=store)
+    destination = Path(str(tmp_test_directory)) / "exported"
+    parameter = {
+        "file": True,
+        "instrument": "LSTN-design",
+        "parameter": "values",
+        "parameter_version": "1.0.0",
+        "value": "values.ecsv",
+    }
+
+    result = source.export_model_files(parameters={"values": parameter}, dest=destination)
+
+    assert result == {"values-LSTN-design.ecsv": "copied from Git"}
+    assert parameter["value"] == "values-LSTN-design.ecsv"
+    assert parameter["_simtools_export_source_value"] == "values.ecsv"
+    assert (destination / "values-LSTN-design.ecsv").read_bytes() == b"table"
 
 
 def test_git_source_preloads_tables_and_parameters_once(tmp_test_directory):

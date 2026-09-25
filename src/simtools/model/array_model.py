@@ -355,6 +355,7 @@ class ArrayModel:
             layout_name=self.layout_name,
             model_version=self.model_version,
             label=self.label,
+            model_reader=self.model_reader,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.config_file_path,

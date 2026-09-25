@@ -3,10 +3,17 @@
 import logging
 from pathlib import Path
 
-import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
+
+
+def uses_segmented_dual_mirror_geometry(parameters):
+    """Return whether sim_telarray derives primary-mirror geometry from segmentation."""
+    return bool(
+        parameters.get("mirror_class", {}).get("value") == 2
+        and parameters.get("primary_mirror_segmentation", {}).get("value")
+    )
 
 
 class InvalidMirrorListFileError(Exception):
@@ -20,7 +27,7 @@ class Mirrors:
     Parameters
     ----------
     mirror_list_file: Union[str, Path]
-        Mirror list in sim_telarray or ecsv format (with panel focal length only).
+        Mirror list in ECSV format (with panel focal length only).
     parameters: dict, optional
         Dictionary of parameters from the database.
     """
@@ -43,12 +50,13 @@ class Mirrors:
         """
         Read the mirror lists from disk and store the data.
 
-        Allow reading of mirror lists in sim_telarray and ecsv format.
+        Read the canonical ECSV mirror-list asset.
         """
-        if str(self._mirror_list_file).find("ecsv") > 0:
-            self._read_mirror_list_from_ecsv()
-        else:
-            self._read_mirror_list_from_sim_telarray()
+        if Path(self._mirror_list_file).suffix.lower() != ".ecsv":
+            raise InvalidMirrorListFileError(
+                "Mirror list model assets must use the canonical ECSV format"
+            )
+        self._read_mirror_list_from_ecsv()
 
     def _read_mirror_list_from_ecsv(self):
         """
@@ -117,67 +125,6 @@ class Mirrors:
                 msg = "Mirror shape_type not contained in DB"
                 self._logger.error(msg)
                 raise TypeError(msg) from error
-
-    def _read_mirror_list_from_sim_telarray(self):
-        """
-        Read the mirror list in sim_telarray format and store the data.
-
-        Allow to read mirror lists with different number of columns.
-
-        Raises
-        ------
-        InvalidMirrorListFileError
-            If number of mirrors is 0.
-        """
-        self._logger.debug(f"Reading mirror properties from {self._mirror_list_file}")
-
-        try:
-            self.mirror_table = Table.read(
-                self._mirror_list_file,
-                format="ascii.no_header",
-                names=[
-                    "mirror_x",
-                    "mirror_y",
-                    "mirror_diameter",
-                    "focal_length",
-                    "shape_type",
-                    "mirror_z",
-                    "sep",
-                    "mirror_panel_id",
-                ],
-                units=["cm", "cm", "cm", "cm", None, "cm", None, None],
-            )
-            self.mirror_table["mirror_panel_id"] = np.array(
-                [
-                    int("".join(filter(str.isdigit, string)))
-                    for string in self.mirror_table["mirror_panel_id"]
-                ]
-            )
-        except astropy.io.ascii.core.InconsistentTableError:
-            self._logger.debug("Try and read mirror list with low number of columns")
-            self.mirror_table = Table.read(
-                self._mirror_list_file,
-                format="ascii.no_header",
-                names=[
-                    "mirror_x",
-                    "mirror_y",
-                    "mirror_diameter",
-                    "focal_length",
-                    "shape_type",
-                ],
-                units=["cm", "cm", "cm", "cm", None],
-            )
-            self.mirror_table["mirror_panel_id"] = np.arange(len(self.mirror_table["mirror_x"]))
-
-        self.shape_type = self.mirror_table["shape_type"][0]
-        self.mirror_diameter = u.Quantity(
-            self.mirror_table["mirror_diameter"][0], self.mirror_table["mirror_diameter"].unit
-        )
-        self.number_of_mirrors = len(self.mirror_table["focal_length"])
-
-        self._logger.debug(f"Mirror shape_type = {self.shape_type}")
-        self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
-        self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
     def get_single_mirror_parameters(self, number: int) -> tuple:
         """

@@ -160,6 +160,40 @@ def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkey
     }
 
 
+def test_run_configured_applications_uses_unique_tmp_directory(tmp_test_directory, monkeypatch):
+    """Use a fresh temporary output subtree for each resource workflow run."""
+    config_root = Path(tmp_test_directory) / "config_files"
+    config_root.mkdir(parents=True)
+    (config_root / "simulate_prod.config.yml").write_text("steps: []\n", encoding="utf-8")
+    called = []
+    monkeypatch.setattr(
+        resource_generation.simtools_runner,
+        "run_applications",
+        lambda config, **kwargs: called.append(kwargs),
+    )
+    integration_dir = Path(tmp_test_directory) / "integration_tests"
+
+    resource_generation.run_configured_applications(
+        args_dict={},
+        config_dir=config_root,
+        log_dir=integration_dir / "log_files",
+        run_time=None,
+        replacements={
+            "__INTEGRATION_TESTS_DIRECTORY__": str(integration_dir),
+            "__INTEGRATION_TESTS_DIRECTORY__/tmp/": "stale/tmp/",
+        },
+        unique_tmp_directories=True,
+    )
+
+    called_config = next(iter(called), None)
+    assert called_config is not None, "The workflow application was not called"
+    replacement = Path(called_config["replacements"]["__INTEGRATION_TESTS_DIRECTORY__/tmp/"])
+    assert replacement.parent == integration_dir / "tmp"
+    assert replacement.name.startswith("simulate_prod.config-")
+    assert replacement.is_relative_to(Path(tmp_test_directory))
+    assert called_config["replacements"]["__INTEGRATION_TESTS_DIRECTORY__"] == str(integration_dir)
+
+
 def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypatch):
     config_root = Path(tmp_test_directory) / "config_files"
     model_parameters_dir = config_root / "model_parameters"
@@ -498,6 +532,7 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
 
     assert len(run_calls) == 1
     assert run_calls[0]["run_time"] == ["podman", "run", "image"]
+    assert run_calls[0]["unique_tmp_directories"] is True
 
 
 def test_generate_test_resources_forwards_selected_config_file(tmp_test_directory, monkeypatch):

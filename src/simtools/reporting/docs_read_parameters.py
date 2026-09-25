@@ -79,6 +79,7 @@ class ReadParameters:
         self.output_path = output_path
         self.observatory = args.get("observatory")
         self.software = args.get("simulation_software", None)
+        self._telescope_identifiers = {}
 
     @property
     def db(self):
@@ -317,7 +318,7 @@ class ReadParameters:
             key: value for key, value in (("telescope", telescope), ("site", site)) if value
         }
 
-        if parameter == "camera_config_file":
+        if parameter == "camera_pixel_layout":
             plot_names = self._plot_camera_config(
                 parameter,
                 parameter_version,
@@ -350,7 +351,7 @@ class ReadParameters:
     def _plot_camera_config(
         self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
     ):
-        """Generate plots for camera configuration files."""
+        """Generate plots for camera component files."""
         if not parameter_version:
             return []
 
@@ -378,7 +379,7 @@ class ReadParameters:
             plot_names.append(plot_name)
         else:
             logger.info(
-                "Camera configuration file plot already exists: %s",
+                "Camera component file plot already exists: %s",
                 plot_path,
             )
             plot_names.append(plot_name)
@@ -410,6 +411,8 @@ class ReadParameters:
             plot_mirrors.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
+                model_reader=self.model_reader,
+                data_file_path=input_file,
             )
             plot_names.append(plot_name)
         else:
@@ -459,15 +462,36 @@ class ReadParameters:
         """Get the appropriate telescope design type for file naming (e.g., LSTN-design)."""
         model_version = model_version or self.model_version
         telescope = telescope or self.array_element
-        telescope_design = self.model_reader.get_design_model(
-            model_version, telescope, collection="telescopes"
-        )
+        cache_key = (model_version, telescope)
+        if cache_key not in self._telescope_identifiers:
+            self._telescope_identifiers[cache_key] = self.model_reader.get_design_model(
+                model_version, telescope, collection="telescopes"
+            )
+        telescope_design = self._telescope_identifiers[cache_key]
 
         if not telescope:
             return None
         if not names.is_design_type(telescope):
             return telescope_design
         return telescope
+
+    def _get_parameter_repository_url(self, parameter, file_name, telescope=None, site=None):
+        """Return the source URL for a model parameter asset."""
+        telescope = telescope or self.array_element
+        if telescope:
+            scope = (
+                self._get_telescope_identifier(telescope=telescope)
+                if self.model_version
+                else telescope
+            )
+        elif site or self.site:
+            scope = f"OBS-{site or self.site}"
+        else:
+            scope = "global"
+        return (
+            f"{DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models/-/blob/main/"
+            f"simulation-models/model_parameters/{scope}/{parameter}/{Path(file_name).name}"
+        )
 
     def _convert_to_md(self, parameter, parameter_version, input_file, telescope=None, site=None):
         """Convert a file to a Markdown file, preserving formatting."""
@@ -502,10 +526,12 @@ class ReadParameters:
                 for plot_name in plot_names:
                     outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
 
+                repository_url = self._get_parameter_repository_url(
+                    parameter, input_file, telescope, site
+                )
                 outfile.write(
                     f"\n\nThe full file can be found in the Simulation Model repository [here]"
-                    f"({DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{input_file.name}).\n\n"
+                    f"({repository_url}).\n\n"
                 )
                 outfile.write("\n\n")
                 outfile.write("The first 30 lines of the file are:\n")
@@ -530,11 +556,10 @@ class ReadParameters:
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
             if parameter_version is None:
-                return (
-                    f"[{Path(value_data).name}]({DEFAULT_SIMULATIONS_REPO}"
-                    f"/simulation-model/simulation-models/-/blob/main/"
-                    f"simulation-models/model_parameters/Files/{value_data})"
-                ).strip()
+                repository_url = self._get_parameter_repository_url(
+                    parameter, value_data, telescope, site
+                )
+                return f"[{Path(value_data).name}]({repository_url})".strip()
             plot_kwargs = {
                 key: value for key, value in (("telescope", telescope), ("site", site)) if value
             }
@@ -1080,7 +1105,6 @@ class ReadParameters:
         file.write("The latest parameter version is plotted below.\n\n")
 
         if parameter in (
-            "camera_config_file",
             "mirror_list",
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
@@ -1115,7 +1139,6 @@ class ReadParameters:
         image_path = outpath / filename_png
 
         plot_descriptions = {
-            "camera_config_file": "Camera configuration plot",
             "mirror_list": "Mirror panel layout",
             "primary_mirror_segmentation": "Primary mirror segmentation",
             "secondary_mirror_segmentation": "Secondary mirror segmentation",

@@ -1,6 +1,7 @@
 """Multi-illuminator simulation orchestration with parallel execution."""
 
 import logging
+from pathlib import Path
 
 from simtools.application.model_reader import (
     create_model_reader_from_source_config,
@@ -15,6 +16,16 @@ from simtools.utils import general
 _logger = logging.getLogger(__name__)
 
 _NO_RESULTS_MSG = "No simulations have been run yet. Call simulate() first."
+
+
+def _get_job_model_directory(config, illuminator, telescope, wavelength):
+    """Return the isolated generated-model directory for one simulation job."""
+    output_path = config.get("output_path")
+    if output_path is None:
+        return None
+    wavelength_nm = wavelength.to_value("nm")
+    job_name = f"{illuminator}_{telescope}_{wavelength_nm:g}nm"
+    return Path(output_path) / "model" / str(config["model_version"]) / job_name
 
 
 def _simulate_illuminator_telescope_pair(job_spec):
@@ -116,11 +127,9 @@ class MultiIlluminatorSimulator:
         - model_version: str
         - number_of_events: int
         - other SimulatorLightEmission parameters
-    visibility_data : dict, optional
-        Dictionary with "columns" and "rows" keys containing the visibility table.
-        The expected structure is:
-        - columns: ["illuminator_id", "telescope_id", "visible"]
-        - rows: list of [illuminator_id, telescope_id, visible] lists
+    visibility_data : list of dict, optional
+        Structured visibility records with ``illuminator_id``, ``telescope_id``,
+        and ``visible`` keys.
         If not provided, the visibility table is retrieved from the site model
         using the site and model_version from config.
     label : str, optional
@@ -171,8 +180,8 @@ class MultiIlluminatorSimulator:
 
         Returns
         -------
-        dict
-            Visibility table dictionary with "columns" and "rows" keys.
+        list of dict
+            Structured visibility records.
         """
         # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
@@ -256,6 +265,11 @@ class MultiIlluminatorSimulator:
                 # Create config with wavelength
                 config_with_wl = self.base_config.copy()
                 config_with_wl["wavelength"] = wavelength
+                model_directory = _get_job_model_directory(
+                    self.base_config, illuminator, telescope, wavelength
+                )
+                if model_directory is not None:
+                    config_with_wl["model_directory"] = model_directory
 
                 job_spec = {
                     "illuminator": illuminator,

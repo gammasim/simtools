@@ -24,7 +24,8 @@ simtools-simulate-prod \
 The Git path may point to a normal, bare, or mirror repository. The revision is resolved once to a
 full commit ID, which is retained in worker configuration. Production tables and all parameter JSON
 files referenced by a selected model version are loaded in batches and cached for the process
-lifetime. Large files below `model_parameters/Files` are read only when explicitly exported.
+lifetime. Large assets are read from the directory alongside their parameter JSON only when
+explicitly exported.
 
 Filesystem and Git paths are mutually exclusive; configuring both is an error. If neither is
 configured, the MongoDB source remains the fallback.

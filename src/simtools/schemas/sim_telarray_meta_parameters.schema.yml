@@ -28,6 +28,10 @@ generated_meta_parameters:
     scope: telescope
     mode: assign
     value_schema: *string_scalar
+  camera_config_file:
+    scope: telescope
+    mode: add
+    value_schema: {kind: file_name}
   camera_config_variant:
     scope: telescope
     mode: assign

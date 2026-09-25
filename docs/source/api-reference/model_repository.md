@@ -19,6 +19,13 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
+## asset names
+
+```{eval-rst}
+.. automodule:: model_repository.asset_names
+   :members:
+```
+
 ## Git backend and source
 
 ```{eval-rst}

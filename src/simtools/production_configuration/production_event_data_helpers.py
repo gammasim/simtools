@@ -102,16 +102,17 @@ def resolve_telescope_configs(args_dict):
         If no supported telescope selector is provided.
     """
     if args_dict.get("array_layout_name"):
+        model_version = args_dict.get("model_version")
         layouts = resolve_array_layout_name(
             args_dict["array_layout_name"],
-            args_dict.get("model_version"),
+            model_version,
         )
         if not isinstance(layouts, list):
             layouts = [layouts]
         return get_array_elements_from_db_for_layouts(
             layouts,
             args_dict.get("site"),
-            args_dict.get("model_version"),
+            _resolve_single_model_version(model_version),
         )
     if args_dict.get("array_element_list"):
         return {"array_element_list": args_dict["array_element_list"]}
@@ -120,6 +121,13 @@ def resolve_telescope_configs(args_dict):
         "No telescope configuration provided. Use one of --array_layout_name "
         "or --array_element_list."
     )
+
+
+def _resolve_single_model_version(model_version):
+    """Return the first model version for APIs that require one version string."""
+    if isinstance(model_version, list):
+        return model_version[0]
+    return model_version
 
 
 def normalize_telescope_configs(telescope_configs):
