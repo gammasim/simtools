@@ -17,6 +17,21 @@ _REUSE_STAT_LABELS = {
     "max": "Max Reuse",
     "std": "Reuse Std Dev",
 }
+_EXPOSURE_INFO_KEYS = (
+    "primary_particle",
+    "zenith",
+    "azimuth",
+    "nsb_level",
+    "spectral_index",
+    "energy_min",
+    "energy_max",
+    "core_scatter_min",
+    "core_scatter_max",
+    "viewcone_min",
+    "viewcone_max",
+    "solid_angle",
+    "scatter_area",
+)
 
 
 class EventDataHistograms:
@@ -85,6 +100,8 @@ class EventDataHistograms:
         self._filled_data_sets = 0
         self._release_event_data_after_fill = False
         self._reuse_stat_accumulators = {}
+        self._file_info_source = None
+        self._current_event_data_file = None
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
@@ -134,6 +151,8 @@ class EventDataHistograms:
         instance._filled_data_sets = 0
         instance._release_event_data_after_fill = True
         instance._reuse_stat_accumulators = {}
+        instance._file_info_source = None
+        instance._current_event_data_file = None
         instance.reader = None
         return instance
 
@@ -247,12 +266,27 @@ class EventDataHistograms:
             return value
         return get_value_as_quantity(value, unit)
 
-    def _update_file_info(self, file_info_table):
-        """Store normalized metadata from the reduced file-info table."""
+    @staticmethod
+    def _file_info_values_equal(first, second):
+        """Return whether two normalized file-info values are equal."""
+        if first is None or second is None:
+            return first is second
+        if isinstance(first, u.Quantity) or isinstance(second, u.Quantity):
+            try:
+                return bool(np.allclose(first.to_value(second.unit), second.value, equal_nan=True))
+            except TypeError, ValueError, u.UnitConversionError:
+                return False
+        try:
+            return bool(np.allclose(first, second, equal_nan=True))
+        except TypeError, ValueError:
+            return first == second
+
+    def _update_file_info(self, file_info_table, source_file=None):
+        """Store normalized metadata and reject incompatible exposures."""
         spectral_index = self._get_file_info_value(file_info_table, "spectral_index")
         if spectral_index is None:
             spectral_index = np.nan
-        self.file_info = {
+        file_info = {
             "primary_particle": self._get_file_info_value(file_info_table, "primary_particle"),
             "zenith": self._get_file_info_value(file_info_table, "zenith", "deg"),
             "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
@@ -267,14 +301,52 @@ class EventDataHistograms:
             "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
             "scatter_area": self._get_file_info_value(file_info_table, "scatter_area", "cm2"),
         }
+        if self.file_info:
+            differing_keys = [
+                key
+                for key in _EXPOSURE_INFO_KEYS
+                if not self._file_info_values_equal(self.file_info.get(key), file_info.get(key))
+            ]
+            if differing_keys:
+                previous_source = self._file_info_source or "the first input file"
+                current_source = source_file or self._current_event_data_file or "current input"
+                details = ", ".join(
+                    f"{key}: {self.file_info.get(key)!r} != {file_info.get(key)!r}"
+                    for key in differing_keys
+                )
+                raise ValueError(
+                    "Cannot accumulate event data with different exposure metadata "
+                    f"between {previous_source} and {current_source}: {details}"
+                )
+        else:
+            self._file_info_source = source_file or self._current_event_data_file
+        self.file_info = file_info
 
     def _merge_histograms(self, current_histograms):
         """Carry over accumulated histogram counts before filling new data."""
         for name, hist in current_histograms.items():
             previous = self.histograms.get(name)
             if previous is not None:
+                if not self._histogram_bin_edges_equal(previous, hist):
+                    raise ValueError(f"Cannot accumulate histogram '{name}' with different bins.")
                 hist["histogram"] = previous["histogram"]
         self.histograms = current_histograms
+
+    @staticmethod
+    def _histogram_bin_edges_equal(first, second):
+        """Return whether two histogram definitions use identical bin edges."""
+        first_edges = first.get("bin_edges")
+        second_edges = second.get("bin_edges")
+        if isinstance(first_edges, (tuple, list)) or isinstance(second_edges, (tuple, list)):
+            if not isinstance(first_edges, (tuple, list)) or not isinstance(
+                second_edges, (tuple, list)
+            ):
+                return False
+            return len(first_edges) == len(second_edges) and all(
+                np.array_equal(first_edge, second_edge)
+                for first_edge, second_edge in zip(first_edges, second_edges)
+            )
+        return np.array_equal(first_edges, second_edges)
 
     def _fill_current_histograms(self):
         """Fill all currently defined histograms with their event data."""
@@ -305,9 +377,11 @@ class EventDataHistograms:
             else:
                 data["event_data"] = tuple(None for _ in data["event_data"])
 
-    def accumulate(self, file_info_table, shower_data, event_data, triggered_data):
+    def accumulate(
+        self, file_info_table, shower_data, event_data, triggered_data, source_file=None
+    ):
         """Accumulate one already-read event dataset into all configured histograms."""
-        self._update_file_info(file_info_table)
+        self._update_file_info(file_info_table, source_file=source_file)
         self._update_data_range("angular_distance", triggered_data.angular_distance)
         current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
         self._merge_histograms(current_histograms)
@@ -344,6 +418,7 @@ class EventDataHistograms:
                         self._log_skipped_event_data_file(event_data_file, exc)
                         break
                     raise
+                self._current_event_data_file = event_data_file
                 yield reader, values
 
     def fill(self, fill_efficiency_histogram=True):
