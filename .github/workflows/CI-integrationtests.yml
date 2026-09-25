@@ -94,7 +94,6 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       IT_NAME: "corsika7-interaction-tables"
-      CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
       # For testing, overwrite CORSIKA_TABLES with branch name
       # CORSIKA_TABLES: "main"
 
@@ -123,6 +122,8 @@ jobs:
             corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}-
 
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
+        env:
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
         run: |
           REPO_URLS=(
             "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}"
@@ -209,7 +210,6 @@ jobs:
     env:
       SIM_MODELS_REPO: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
       SIM_MODELS_MIRROR_REPO: "https://github.com/gammasim/simulations-models"
-      CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
 
     defaults:
       run:
@@ -262,6 +262,8 @@ jobs:
 
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
+        env:
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
         run: |
           REPO_URLS=("$SIM_MODELS_REPO" "$SIM_MODELS_MIRROR_REPO")
           CLONE_DIR="simulation-models.git-clone"
