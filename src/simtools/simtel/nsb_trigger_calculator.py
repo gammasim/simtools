@@ -197,29 +197,36 @@ def calculate_statistics(grouped_data, time_window):
         - 'time_s': total time in seconds
         - 'rate_hz': trigger rate in Hz
         - 'rate_khz': trigger rate in kHz
-        - 'error_hz': standard error of trigger counts in Hz
+        - 'error_hz': exposure-weighted standard error of run rates in Hz
         - 'num_runs': number of runs
     """
     statistics = {}
 
+    if time_window <= 0:
+        raise ValueError("time_window must be positive.")
+
     for threshold, runs_data in grouped_data.items():
         run_triggers = []
         run_events = []
+        run_rates = []
+        run_exposures = []
 
         runs_dict = {}
         for run_num, run_info in sorted(runs_data.items()):
             triggers = run_info["triggers"]
             events = run_info["events"]
 
-            if events is None:
-                _logger.warning(
-                    f"Skipping run {run_num} for threshold {threshold}: missing event count"
-                )
+            if events is None or events <= 0:
+                reason = "missing event count" if events is None else "nonpositive exposure"
+                _logger.warning(f"Skipping run {run_num} for threshold {threshold}: {reason}")
                 continue
 
             runs_dict[run_num] = triggers
             run_triggers.append(triggers)
             run_events.append(events)
+            exposure = events * time_window
+            run_exposures.append(exposure)
+            run_rates.append(triggers / exposure)
 
         total_triggers = np.sum(run_triggers)
         total_events = np.sum(run_events) if run_events else 0
@@ -228,11 +235,17 @@ def calculate_statistics(grouped_data, time_window):
         rate_khz = rate_hz / 1000.0
         error_hz = 0
 
-        if len(run_triggers) > 1 and time_s > 0:
-            std_dev = np.std(run_triggers, ddof=1)
-            error_triggers = std_dev / np.sqrt(len(run_triggers))
-            per_run_time_s = time_s / len(run_triggers)
-            error_hz = error_triggers / per_run_time_s
+        if len(run_rates) > 1 and time_s > 0:
+            exposures = np.asarray(run_exposures, dtype=float)
+            rates = np.asarray(run_rates, dtype=float)
+            weighted_mean = total_triggers / time_s
+            weight_sum = np.sum(exposures)
+            effective_runs = weight_sum**2 / np.sum(exposures**2)
+            variance_denominator = weight_sum - np.sum(exposures**2) / weight_sum
+            if variance_denominator > 0:
+                weighted_variance = np.sum(exposures * (rates - weighted_mean) ** 2)
+                weighted_variance /= variance_denominator
+                error_hz = np.sqrt(weighted_variance / effective_runs)
 
         statistics[threshold] = {
             "runs": runs_dict,

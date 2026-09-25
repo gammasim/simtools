@@ -184,6 +184,31 @@ def test_calculate_statistics_with_no_events_returns_zero_rate():
     assert stats[220]["num_runs"] == 0
 
 
+def test_calculate_statistics_excludes_zero_event_runs():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 0}, 2: {"triggers": 20, "events": 100}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {2: 20}
+    assert stats[220]["num_runs"] == 1
+
+
+def test_calculate_statistics_has_no_error_for_equal_rates_with_unequal_exposure():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 100}, 2: {"triggers": 100, "events": 1000}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["rate_hz"] == pytest.approx(100.0)
+    assert stats[220]["error_hz"] == pytest.approx(0.0)
+
+
+def test_calculate_statistics_rejects_nonpositive_time_window():
+    with pytest.raises(ValueError, match="time_window must be positive"):
+        nsb_trigger_calculator.calculate_statistics({}, time_window=0)
+
+
 def test_generate_ecsv_output_writes_table(tmp_path):
     output_file = tmp_path / "nsb_rates.ecsv"
     statistics = {
