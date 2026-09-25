@@ -162,6 +162,27 @@ def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker
     ]
 
 
+def test_save_figure_passes_pil_kwargs_to_png_only(tmp_test_directory, mocker):
+    fig = mocker.Mock()
+    output_file = Path(tmp_test_directory) / "figure"
+    pil_kwargs = {"compress_level": 1}
+
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], pil_kwargs=pil_kwargs)
+
+    assert fig.savefig.call_args_list == [
+        mocker.call(
+            output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi="figure"
+        ),
+        mocker.call(
+            output_file.with_suffix(".png"),
+            format="png",
+            bbox_inches="tight",
+            dpi="figure",
+            pil_kwargs=pil_kwargs,
+        ),
+    ]
+
+
 def test_plot_histogram_uses_existing_axes():
     data = np.array([0.0, 1.0, 1.0])
     fig, ax = plt.subplots()
