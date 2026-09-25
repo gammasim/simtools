@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790314472318,
+  "lastUpdate": 1790333345840,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -27300,6 +27300,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 419.69140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2ee1c1b044cd3d33a182d29f12ece047a2db1d3",
+          "message": "Model parameter tables as schema-validated astropy tables. (#2508)\n\n* tables\n\n* Simulation models tables\n\n* from dev branch\n\n* camera config\n\n* shape kinds\n\n* limitations\n\n* simplifications\n\n* schema validation\n\n* unit tests\n\n* remove asset path\n\n* no FILES\n\n* remove empty lines\n\n* correct naming\n\n* remove lightguide_angle_parameter\n\n* cleanup\n\n* cleanup\n\n* unit test fix\n\n* parameter writing\n\n* Correct configuration settings\n\n* correct file names\n\n* fix metadata\n\n* unit tests\n\n* model parameter fixes\n\n* generating simtools-tests\n\n* simtools-tests\n\n* simtools-test\n\n* whatever\n\n* avoid overwriting of files\n\n* unit tests; unique table names\n\n* tests\n\n* tests\n\n* simplification (#2520)\n\n* Improved table writing for many telescopes.\n\n* simtools vs sim_telarray parameters\n\n* test fixes\n\n* missing tests\n\n* unit tests, schemas, docs\n\n* coverage; unit tests\n\n* mirror list\n\n* sonar\n\n* hopefully the right branch now\n\n* legacy pulse shape parameters\n\n* removed unused stuff\n\n* copilot comments\n\n* refuse to go without clone\n\n* remove obsolete code\n\n* clearer naming\n\n* changelog\n\n* Model parameter tables issue fixes (#2538)\n\n* correct telescope types\n\n* model tables and trigger patches\n\n* fix model parameter table serialization\n\n* share design segmentation files\n\n* stupid\n\n* move trigger patch work to stacked branch\n\n* schema versions\n\n* fixes segmentation\n\n* serialization\n\n* Add additional option columns to model parameter tables (#2541)\n\n* Allow additional qe columns\n\n* add optional columns\n\n* Add compute resource comparison for simulation productions. (#2535)\n\n* Add compute resource comparison for simulation productions.\n\n* Improve help\n\n* sonar\n\n* co pilot reviewer\n\n* scale and naming\n\n* legends\n\n* copilot comments\n\n* Sonar; warning\n\n* add warnings and labels\n\n* Bugfix in HTCondor submission: enforce bining of simtools from container image (#2544)\n\n* Bugfix in HTCondor submission: enforce bining of simtools from container image\n\n* lists for comparison\n\n* simulation models from main",
+          "timestamp": "2026-09-25T12:36:42+02:00",
+          "tree_id": "4c816baf7f0ecc6f1472e6899cd0fe8957128144",
+          "url": "https://github.com/gammasim/simtools/commit/c2ee1c1b044cd3d33a182d29f12ece047a2db1d3"
+        },
+        "date": 1790333331273,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 64.657699827,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 67.57,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 423.98046875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
