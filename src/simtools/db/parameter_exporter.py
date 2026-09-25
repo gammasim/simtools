@@ -1,18 +1,16 @@
 """Utilities for exporting model parameter values / files from the database."""
 
+import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from simtools.data_model import row_table_utils
-from simtools.simtel import simtel_table_reader
+from astropy.table import Table
+
+from simtools.data_model import schema
+from simtools.data_model.table_asset import validate_table_asset
+from simtools.model_repository.asset_names import qualify_parameter_file_name
 
 ECSV_SUFFIX = ".ecsv"
-
-
-def _is_dict_table_value(parameter_info):
-    """Return True if a parameter stores embedded row-oriented table data."""
-    return parameter_info.get("type") == "dict" and row_table_utils.is_row_table_dict(
-        parameter_info.get("value")
-    )
 
 
 def _get_parameter_info(
@@ -45,6 +43,37 @@ def _normalize_file_names(file_names=None, parameters=None):
             if isinstance(info, dict) and info.get("file") and info.get("value") is not None
         ]
     return []
+
+
+def _get_file_parameters(parameters, file_names):
+    """Return parameter records selected for export."""
+    if parameters is not None and file_names is None:
+        return [
+            parameter
+            for parameter in parameters.values()
+            if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
+        ]
+    return [{"value": file_name} for file_name in _normalize_file_names(file_names)]
+
+
+def _export_file_parameter(db, db_name, destination, dest, parameter):
+    """Export one file parameter and return its name and database id."""
+    source_name = parameter["value"]
+    file_name = (
+        qualify_parameter_file_name(parameter) if parameter.get("parameter") else source_name
+    )
+    target = destination / file_name
+    if target.exists():
+        return file_name, "file exists"
+
+    file_path_instance = db.mongo_db_handler.get_file_from_db(db_name, source_name)
+    if file_name == source_name:
+        db.write_file_from_db_to_disk(db_name, dest, file_path_instance)
+    else:
+        with TemporaryDirectory() as temp_dir:
+            db.write_file_from_db_to_disk(db_name, temp_dir, file_path_instance)
+            shutil.copy2(Path(temp_dir) / file_path_instance.filename, target)
+    return file_name, file_path_instance._id  # pylint: disable=protected-access
 
 
 def write_file_from_db_to_disk(db, db_name, path, file):
@@ -96,56 +125,14 @@ def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=
         raise ValueError("Destination path is required to export model files.")
 
     db_name = db_name or db.db_name
-    file_names = _normalize_file_names(file_names=file_names, parameters=parameters)
     destination = Path(dest)
+    destination.mkdir(parents=True, exist_ok=True)
 
     instance_ids = {}
-    for file_name in file_names:
-        if destination.joinpath(file_name).exists():
-            instance_ids[file_name] = "file exists"
-        else:
-            file_path_instance = db.mongo_db_handler.get_file_from_db(db_name, file_name)
-            db.write_file_from_db_to_disk(db_name, dest, file_path_instance)
-            instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
+    for parameter in _get_file_parameters(parameters, file_names):
+        file_name, instance_id = _export_file_parameter(db, db_name, destination, dest, parameter)
+        instance_ids[file_name] = instance_id
     return instance_ids
-
-
-def _export_dict_table_parameter(
-    db,
-    parameter,
-    site,
-    array_element_name,
-    output_file,
-    par_info,
-    parameters,
-    parameter_version=None,
-    model_version=None,
-):
-    """
-    Export dict-typed (embedded table) parameter to ECSV file.
-
-    Returns the output file path.
-    """
-    if output_file is None:
-        raise ValueError(
-            "Use --output_file when exporting dict-typed parameters with "
-            "--export_model_file or --export_model_file_as_table."
-        )
-
-    table = export_single_model_file(
-        db=db,
-        parameter=parameter,
-        site=site,
-        array_element_name=array_element_name,
-        parameter_version=parameter_version,
-        model_version=model_version,
-        export_file_as_table=True,
-        parameters=parameters,
-        par_info=par_info,
-    )
-    table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
-    table.write(table_file, format="ascii.ecsv", overwrite=True)
-    return [table_file]
 
 
 def _export_file_backed_parameter(
@@ -245,17 +232,29 @@ def export_single_model_file(
             model_version=model_version,
         )
 
-    if _is_dict_table_value(par_info):
+    if par_info.get("type") == "dict":
         if export_file_as_table:
-            return simtel_table_reader.row_data_to_astropy_table(par_info["value"])
+            raise ValueError("Structured JSON model parameters are not ECSV tables")
         return None
 
-    db.export_model_files(parameters=parameters, dest=db.io_handler.get_output_directory())
+    if not str(par_info.get("value", "")).lower().endswith(ECSV_SUFFIX):
+        if export_file_as_table:
+            raise ValueError(f"Parameter '{parameter}' does not reference an ECSV table")
+        db.export_model_files(parameters=parameters, dest=db.io_handler.get_output_directory())
+        return None
+    exported = db.export_model_files(
+        parameters=parameters, dest=db.io_handler.get_output_directory()
+    )
     if export_file_as_table:
-        return simtel_table_reader.read_simtel_table(
-            parameter,
-            db.io_handler.get_output_directory().joinpath(par_info["value"]),
+        source = db.io_handler.get_output_directory() / next(iter(exported))
+        table = Table.read(source, format="ascii.ecsv")
+        schema_dict = schema.get_model_parameter_schema(
+            parameter, par_info.get("model_parameter_schema_version")
         )
+        entry = next(
+            (item for item in schema_dict.get("data", []) if item.get("type") == "file"), None
+        )
+        return validate_table_asset(table, schema_entry=entry, parameter_data=par_info)
     return None
 
 
@@ -317,19 +316,8 @@ def export_parameter_data(
         model_version=model_version,
     )
 
-    # Dispatch to appropriate export handler based on parameter type
-    if _is_dict_table_value(par_info):
-        return _export_dict_table_parameter(
-            db=db,
-            parameter=parameter,
-            site=site,
-            array_element_name=array_element_name,
-            output_file=output_file,
-            par_info=par_info,
-            parameters=parameters,
-            parameter_version=parameter_version,
-            model_version=model_version,
-        )
+    if par_info.get("type") == "dict":
+        raise ValueError("Structured JSON model parameters are not ECSV tables")
 
     return _export_file_backed_parameter(
         db=db,

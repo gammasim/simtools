@@ -54,18 +54,13 @@
     "type": "uint64",
     "file": false
   },
-  "camera_config_file": {
-    "value": "camera_config_dummy.dat",
-    "type": "str",
-    "file": true
-  },
   "optics_properties": {
     "value": "optics_properties_dummy.dat",
     "type": "str",
     "file": true
   },
-  "camera_filter_incidence_angle": {
-    "value": "camera_filter_incidence_angle_dummy.dat",
+  "camera_filter_photon_incident_angle": {
+    "value": "camera_filter_photon_incident_angle_dummy.dat",
     "type": "str",
     "file": true
   },
