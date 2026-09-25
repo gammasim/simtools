@@ -91,8 +91,8 @@ class ArrayLayout:
         """Return telescope at list position i."""
         return self._telescope_list[i]
 
-    def _initialize_site_parameters_from_db(self):
-        """Initialize site parameters required for transformations using the database."""
+    def _initialize_site_parameters_from_repository(self):
+        """Initialize site parameters required for transformations using the model repository."""
         self._logger.debug("Initialize parameters from the selected model source")
 
         try:
@@ -343,7 +343,7 @@ class ArrayLayout:
         astropy.table.QTable
             Table with the telescope layout information.
         """
-        self._initialize_site_parameters_from_db()
+        self._initialize_site_parameters_from_repository()
         self._initialize_coordinate_systems()
 
         if telescope_list_file is None:
@@ -410,7 +410,7 @@ class ArrayLayout:
 
     def _get_telescope_model(self, telescope_name):
         """
-        Get telescope model from the database.
+        Get telescope model from the model repository.
 
         Parameters
         ----------
@@ -433,7 +433,7 @@ class ArrayLayout:
         """
         Set auxiliary CORSIKA parameters for a telescope.
 
-        Uses as default the design model if telescope is not found in the database.
+        Uses as default the design model if telescope is not found in the model repository.
 
         Parameters
         ----------
@@ -449,7 +449,7 @@ class ArrayLayout:
             )
             try:
                 tel_model = self._get_telescope_model(telescope_name)
-            except ValueError:  # telescope not found in the database revert to design model
+            except ValueError:  # telescope not found in the model repository revert to design model
                 tel_model = self._get_telescope_model(
                     names.array_element_design_types(
                         names.get_array_element_type_from_name(telescope_name)
@@ -594,7 +594,7 @@ class ArrayLayout:
         schema_version=None,
     ):
         """
-        Return a list containing a single telescope in simtools-DB-style json.
+        Return a list containing a single telescope in simtools model JSON.
 
         Parameters
         ----------

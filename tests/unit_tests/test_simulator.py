@@ -43,7 +43,7 @@ def simulations_args_dict(corsika_config_data, model_version):
 
 @pytest.fixture
 def mock_array_model(model_version):
-    """Create a mock ArrayModel for testing without database access."""
+    """Create a mock ArrayModel for testing without model repository access."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
     array_model.site = "North"
@@ -62,7 +62,7 @@ def mock_array_model(model_version):
 
 @pytest.fixture
 def patch_simulator_core(mocker, mock_array_model):
-    """Patch core simulator dependencies to avoid DB and heavy init."""
+    """Patch core simulator dependencies to avoid model repository and heavy init."""
 
     def _apply():
         mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
@@ -540,6 +540,18 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     assert "metadata_documents" in call.kwargs
 
 
+def test_write_reduced_event_lists_warns_for_long_output_filename(
+    mocker, tmp_test_directory, caplog
+):
+    input_file = Path(tmp_test_directory) / ("x" * 120 + ".simtel.zst")
+    mocker.patch("simtools.simulator.execute_jobs")
+
+    with caplog.at_level(logging.WARNING):
+        Simulator.write_reduced_event_lists(input_files=[input_file])
+
+    assert "Generated sim_telarray_event_data file name exceeds DIRAC filename limit" in caplog.text
+
+
 def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
     input_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     output_files = ["output_file1.reduced_event_data.hdf5"]
@@ -754,11 +766,9 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
         "number_of_events": [2, 1, 1],
         "flasher_photons": ["1e6", "2e6", "3e6"],
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
@@ -796,11 +806,9 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
         "number_of_events": None,
         "flasher_photons": None,
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     mocker.patch.object(Simulator, "__init__", return_value=None)
@@ -822,11 +830,9 @@ def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_ph
         "number_of_events": [3],
         "flasher_photons": [100, 200],
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     mocker.patch.object(Simulator, "__init__", return_value=None)
@@ -848,11 +854,9 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length
         "number_of_events": [1, 2],
         "flasher_photons": [100, 200, 300],
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     with pytest.raises(
@@ -869,11 +873,9 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_lengt
         "number_of_events": [1, 2, 3],
         "flasher_photons": [100, 200],
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     with pytest.raises(
@@ -890,11 +892,9 @@ def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker
         "number_of_events": 3,
         "flasher_photons": 100,
     }
-    base_db_config = {"db_api_user": "user"}
 
     mock_config = mocker.Mock()
     mock_config.args = base_args
-    mock_config.db_config = base_db_config
     mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
 
     mocker.patch.object(Simulator, "__init__", return_value=None)

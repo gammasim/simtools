@@ -717,7 +717,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
         "ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-"
         "bernlohr-1.68-prod6-baseline-qgs2-no_opt:20250715-152108"
     )
-    common_network = "simtools-mongo-network"
+    common_network = "simtools-test-network"
     common_env_file = "./.env"
     common_container_engine = "podman"
     common_options = ["--arch", "amd64"]
@@ -778,7 +778,7 @@ def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
                 "runtime_environment:",
                 "  container_engine: podman",
                 "  image: test-image",
-                "  network: simtools-mongo-network",
+                "  network: simtools-test-network",
                 "  environment_file: .env",
                 "  options:",
                 '    - "--arch amd64"',
@@ -798,7 +798,7 @@ def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
     assert runtime_environment == {
         "container_engine": "podman",
         "image": "test-image",
-        "network": "simtools-mongo-network",
+        "network": "simtools-test-network",
         "environment_file": ".env",
         "options": ["--arch amd64"],
     }

@@ -54,6 +54,37 @@ def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, t
         mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
+@mock.patch("simtools.visualization.plot_mirrors.plot_mirror_layout")
+@mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
+@mock.patch("simtools.visualization.plot_mirrors.Mirrors")
+@mock.patch("simtools.visualization.plot_mirrors.TelescopeModel")
+def test_plot_uses_explicit_data_file_path(
+    mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, tmp_path
+):
+    config = {
+        "parameter": "mirror_list",
+        "site": "North",
+        "telescope": "LSTN-01",
+    }
+    data_file_path = tmp_path / "mirror_list-2.0.0-LSTN-design.ecsv"
+    mock_fig = mock.MagicMock()
+    mock_plot_layout.return_value = mock_fig
+
+    with mock.patch("simtools.visualization.plot_mirrors.io_handler.IOHandler") as mock_io:
+        mock_io.return_value.get_output_directory.return_value = tmp_path
+
+        plot_mirrors.plot(
+            config,
+            "test.png",
+            model_reader=mock.sentinel.model_reader,
+            data_file_path=data_file_path,
+        )
+
+    mock_telescope_model.assert_not_called()
+    mock_mirrors.assert_called_once_with(mirror_list_file=data_file_path)
+    mock_save.assert_called_once_with(mock_fig, "test.png")
+
+
 @pytest.mark.parametrize(
     ("telescope", "file_name", "file_content", "plot_function"),
     [

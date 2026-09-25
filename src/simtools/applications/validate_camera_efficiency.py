@@ -6,6 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import arguments as cli
 from simtools.io.ascii_handler import write_data_to_file
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.utils import names
 
 _ARGUMENTS = (
@@ -41,6 +42,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -52,7 +54,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.AZIMUTH_ANGLE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
 )
 
 
@@ -67,12 +68,20 @@ def main():
     app_context = APPLICATION.start()
     _validate_required_args(app_context.args)
 
+    telescope_model, site_model, _ = initialize_simulation_models(
+        label=app_context.args.get("label"),
+        model_version=app_context.args["model_version"],
+        site=app_context.args["site"],
+        telescope_name=app_context.args["telescope"],
+    )
     results = {}
     for efficiency_type in ["Shower", "NSB", "Muon"]:
         ce = CameraEfficiency(
             label=app_context.args.get("label"),
             config_data=app_context.args,
             efficiency_type=efficiency_type,
+            telescope_model=telescope_model,
+            site_model=site_model,
         )
         ce.simulate()
         ce.analyze(force=True)

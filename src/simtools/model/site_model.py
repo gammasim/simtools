@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.utils import names
 
 
@@ -32,9 +33,11 @@ class SiteModel(ModelParameter):
     label: str, optional
         Instance label.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters from the model repository with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     parameter_names: iterable of str, optional
         If supplied, load only these site parameters.
     load_simulation_software_parameters: bool
@@ -49,6 +52,7 @@ class SiteModel(ModelParameter):
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
     ):
@@ -63,6 +67,7 @@ class SiteModel(ModelParameter):
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            model_directory=model_directory,
             parameter_names=parameter_names,
             load_simulation_software_parameters=load_simulation_software_parameters,
         )
@@ -113,7 +118,7 @@ class SiteModel(ModelParameter):
                 # We always use a custom profile by filename, so this has to be set to 99
                 "ATMOSPHERE": [99, "Y"],
                 "IACT ATMOFILE": [
-                    model_directory / self.get_parameter_value("atmospheric_profile")
+                    model_directory / self._get_atmospheric_profile_simtel_file_name()
                 ],
                 "MAGNET": [
                     self.get_parameter_value("geomag_horizontal"),
@@ -135,7 +140,8 @@ class SiteModel(ModelParameter):
         """
         Return list of array elements for a given array layout.
 
-        If ``layout_name`` is not found in the database but is a valid, concrete telescope name
+        If ``layout_name`` is not found in the model repository but is a valid,
+        concrete telescope name
         (e.g., ``MSTN-05``) belonging to this site, a single-telescope layout is returned
         automatically.
 
@@ -156,7 +162,7 @@ class SiteModel(ModelParameter):
         validated_name = self._validate_as_single_telescope(layout_name)
         if validated_name is not None:
             self._logger.debug(
-                f"Array layout '{layout_name}' not found in DB; "
+                f"Array layout '{layout_name}' not found in the model repository; "
                 "treating as single-telescope layout."
             )
             return [validated_name]
@@ -230,22 +236,38 @@ class SiteModel(ModelParameter):
 
     def export_atmospheric_transmission_file(self, model_directory):
         """
-        Export atmospheric transmission file from database to the given directory.
+        Export the atmospheric profile source and sim_telarray table files.
 
         Parameters
         ----------
         model_directory: Path
             Model directory to export the file to.
         """
+        atmospheric_profile = self.parameters["atmospheric_profile"].copy()
+        atmospheric_profile["qualify_filename"] = False
         self.model_reader.export_model_files(
-            parameters={
-                "atmospheric_transmission_file": {
-                    "value": self.get_parameter_value("atmospheric_profile"),
-                    "file": True,
-                }
-            },
+            parameters={"atmospheric_profile": atmospheric_profile},
             dest=model_directory,
         )
+        self._export_ecsv_as_simtel_table(
+            parameter_name="atmospheric_profile",
+            parameter=atmospheric_profile,
+            model_directory=model_directory,
+            table_format="plain",
+            output_name=self._get_atmospheric_profile_simtel_file_name(atmospheric_profile),
+        )
+
+    def _get_atmospheric_profile_simtel_file_name(self, parameter=None):
+        """Return the native filename used for the CORSIKA atmospheric profile."""
+        parameter = (parameter or self.parameters["atmospheric_profile"]).copy()
+        parameter["qualify_filename"] = False
+        file_name = get_simtel_table_file_name(parameter)
+        if file_name is not None:
+            return file_name
+        value_path = Path(parameter["value"])
+        if value_path.suffix.lower() == ".ecsv":
+            return value_path.with_suffix(".dat").name
+        return value_path.name
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """
@@ -256,15 +278,15 @@ class SiteModel(ModelParameter):
         float
             Integrated flux value.
         """
-        table = self.model_reader.get_ecsv_file_as_astropy_table(
-            file_name=self.get_parameter_value("nsb_spectrum")
-        )
+        table = self.get_parameter_table("nsb_spectrum")
         table.sort("wavelength")
-        wl = table["wavelength"].quantity.to(u.nm)
-        rate = table["differential photon rate"].quantity.to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
+        wavelength_column = table["wavelength"]
+        rate_column = table["differential_photon_rate"]
+        wl = getattr(wavelength_column, "quantity", wavelength_column).to(u.nm)
+        rate = getattr(rate_column, "quantity", rate_column).to(1 / (u.nm * u.cm**2 * u.ns * u.sr))
         mask = (wl >= wavelength_min) & (wl <= wavelength_max)
         integral_cm2 = np.trapezoid(rate[mask], wl[mask])
         self._logger.debug(
             f"NSB integral between {wavelength_min} and {wavelength_max}: {integral_cm2}"
         )
-        return integral_cm2.value
+        return float(getattr(integral_cm2, "value", integral_cm2))

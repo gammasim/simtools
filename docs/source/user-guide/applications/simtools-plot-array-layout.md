@@ -9,9 +9,9 @@
 ```{eval-rst}
 Plot array layouts in ground or UTM coordinate systems from multiple sources.
 
-For the following options, array element positions are retrieved from the model parameter database:
+For the following options, array element positions are retrieved from the simulation-model repository:
 
-* from the model parameter database using the layout name (e.g., ``-array_layout_name alpha``)
+* from the simulation-model repository using the layout name (e.g., ``-array_layout_name alpha``)
 
 * from the model parameter data, retrieving all layouts for the given site and model version
   (``--plot_all_layouts``)
@@ -20,7 +20,7 @@ For the following options, array element positions are retrieved from the model 
   (e.g., ``-array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json``)
 
 * from a list of array elements (e.g., ``-array_element_list MSTN-01, MSTN-02``).
-  Positions are retrieved from the database.
+  Positions are retrieved from the model repository.
   * explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``
   * listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.
 
@@ -45,7 +45,7 @@ array_layout_file : str
     File (astropy table compatible) with a list of array elements.
 array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
-    Use 'plot_all' to plot all layouts from the database for the given site and model version.
+    Use 'plot_all' to plot all layouts from the model repository for the given site and model version.
 array_layout_parameter_file : str, optional
     File with array layouts similar in the model parameter file format (typically JSON).
 array_layout_name_from_parameter_file : list, optional
@@ -172,16 +172,6 @@ Plot layout with some telescopes grayed out and others highlighted:
 ```{eval-rst}
 .. simtools-integration-example::
     :file: plot_array_layout_from_array_layouts_json.yml
-```
-
-```{eval-rst}
-.. simtools-integration-example::
-    :file: plot_array_layout_from_list_north.yml
-```
-
-```{eval-rst}
-.. simtools-integration-example::
-    :file: plot_array_layout_from_list_south.yml
 ```
 
 ```{eval-rst}

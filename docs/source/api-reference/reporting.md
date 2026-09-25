@@ -2,7 +2,7 @@
 
 # Reporting
 
-The reporting modules read model parameter values and descriptions from the database and write to a report.
+The reporting modules read model parameter values and descriptions from the model repository and write to a report.
 
 
 ## docs_read_parameters

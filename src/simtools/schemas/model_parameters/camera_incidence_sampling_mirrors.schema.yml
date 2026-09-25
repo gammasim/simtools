@@ -1,0 +1,30 @@
+%YAML 1.2
+---
+title: Schema for camera_incidence_sampling_mirrors model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_incidence_sampling_mirrors
+short_description: Mirror geometry used to sample camera incidence angles.
+description: 'Versioned optical geometry used by simtools to calculate the
+  incidence-angle sampling distribution for camera efficiency estimates. This
+  derived sampling asset is not a simulator mirror input.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - {name: mirror_x, description: Mirror x position, type: float64, unit: cm, required: true}
+      - {name: mirror_y, description: Mirror y position, type: float64, unit: cm, required: true}
+      - {name: mirror_diameter, description: Mirror diameter, type: float64, unit: cm, required: true}
+      - {name: focal_length, description: Mirror focal length, type: float64, unit: cm, required: true}
+      - {name: shape_type, description: Mirror shape code, type: float64, unit: dimensionless, required: true}
+      - {name: mirror_z, description: Mirror z position, type: float64, unit: cm, required: true}
+      - {name: mirror_panel_id, description: Mirror panel identifier, type: int64, unit: dimensionless, required: true}
+instrument: {class: Structure}
+activity:
+  setting: [SetParameterFromExternal]
+  validation: [ValidateParameterByExpert, ValidateCameraEfficiency]
+source: [SimPipe Derived]
+simulation_software:
+  - name: simtools

@@ -52,6 +52,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    initialize_model_reader=False,
 )
 
 

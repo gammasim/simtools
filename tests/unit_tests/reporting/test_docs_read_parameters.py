@@ -37,7 +37,9 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         args={"site": site, "model_version": "6.0.0", "observatory": True}, output_path=tmp_path
     )
     with patch.object(
-        rp.db, "get_model_parameters", return_value={"site_elevation": {"value": 2200, "unit": "m"}}
+        rp.model_source,
+        "get_model_parameters",
+        return_value={"site_elevation": {"value": 2200, "unit": "m"}},
     ):
         rp.produce_array_element_report()
     assert (tmp_path / f"OBS-{site}.md").exists()
@@ -49,7 +51,7 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
     )
     with (
         patch.object(
-            rp2.db,
+            rp2.model_source,
             "get_model_parameters",
             return_value={
                 "focal_length": {
@@ -60,7 +62,7 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
                 }
             },
         ),
-        patch.object(rp2.db, "export_model_files"),
+        patch.object(rp2.model_source, "export_model_files"),
         patch(
             "simtools.reporting.docs_read_parameters.TelescopeModel",
             return_value=DummyTelescope(
@@ -94,7 +96,7 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
         }
     }
     mocker.patch.object(
-        read_parameters.db,
+        read_parameters.model_source,
         "get_model_parameters_for_all_model_versions",
         return_value=mock_data,
     )
@@ -179,11 +181,11 @@ def test_patch_version_reports_write_delta(
 ):
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
     get_model_parameters = mocker.patch.object(
-        read_parameters.db,
+        read_parameters.model_source,
         "get_model_parameters",
         side_effect=[base_params, current_params],
     )
-    export_model_files = mocker.patch.object(read_parameters.db, "export_model_files")
+    export_model_files = mocker.patch.object(read_parameters.model_source, "export_model_files")
     telescope_model = None
     if patch_telescope_model:
         telescope_model = mocker.patch("simtools.reporting.docs_read_parameters.TelescopeModel")
@@ -256,7 +258,7 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
     ("parameter", "parameter_version", "patched_method", "return_value"),
     [
         ("some_param", "1.0.0", "_plot_parameter_tables", ["plot2"]),
-        ("camera_config_file", "1.0.0", "_plot_camera_config", ["camera_plot"]),
+        ("camera_pixel_layout", "1.0.0", "_plot_camera_config", ["camera_plot"]),
         ("mirror_list", "1.0.0", "_plot_mirror_config", ["mirror_plot"]),
         (
             "primary_mirror_segmentation",
@@ -340,7 +342,7 @@ def test__plot_parameter_tables(tmp_test_directory, mocker):
     mocker.patch.object(plot_tables, "generate_plot_configurations", return_value=None)
 
     result = read_parameters._plot_parameter_tables(
-        "camera_config_file", "1.0.0", Path(tmp_test_directory)
+        "camera_pixel_layout", "1.0.0", Path(tmp_test_directory)
     )
     assert result == []
 
@@ -372,6 +374,35 @@ def test__format_parameter_value(tmp_path):
     mock_data_6 = [[{"a": 1}, {"b": 2}, {"c": 3}], "m", False, "1.0.0"]
     result_6 = read_parameters._format_parameter_value(parameter_name, *mock_data_6)
     assert result_6 == "[View Test](#test)"
+
+
+def test__format_parameter_value_links_to_parameter_asset(tmp_path):
+    read_parameters = ReadParameters(
+        args={
+            "model_version": "6.0.0",
+            "telescope": "LSTN-01",
+            "site": "North",
+        },
+        output_path=tmp_path,
+    )
+    read_parameters.model_reader.get_design_model = Mock(return_value="LSTN-design")
+
+    result = read_parameters._format_parameter_value(
+        "camera_pixel_layout",
+        "camera_pixel_layout-1.0.0.ecsv",
+        "",
+        True,
+        None,
+        "LSTN-01",
+        "North",
+    )
+
+    assert result == (
+        "[camera_pixel_layout-1.0.0.ecsv](https://gitlab.cta-observatory.org/cta-science/"
+        "simulations/simulation-model/simulation-models/-/blob/main/"
+        "simulation-models/model_parameters/LSTN-design/camera_pixel_layout/"
+        "camera_pixel_layout-1.0.0.ecsv)"
+    )
 
 
 def test__group_model_versions_by_parameter_version(tmp_path):
@@ -450,7 +481,9 @@ def test__compare_parameter_across_versions(tmp_test_directory, mocker):
     read_parameters = ReadParameters(args=args, output_path=output_path)
 
     # Mock get_model_versions to return versions matching mock_data
-    mocker.patch.object(read_parameters.db, "get_model_versions", return_value=["5.0.0", "6.0.0"])
+    mocker.patch.object(
+        read_parameters.model_source, "get_model_versions", return_value=["5.0.0", "6.0.0"]
+    )
 
     mock_data = {
         "5.0.0": {
@@ -549,7 +582,7 @@ def test_produce_observatory_report(mocker, tmp_path):
 
     # Empty data -> warning, no file
     mock_logger = mocker.patch("logging.Logger.warning")
-    with patch.object(rp.db, "get_model_parameters", return_value={}):
+    with patch.object(rp.model_source, "get_model_parameters", return_value={}):
         rp.produce_observatory_report()
     mock_logger.assert_called_once()
     assert not (tmp_path / "OBS-North.md").exists()
@@ -577,7 +610,7 @@ def test_produce_observatory_report(mocker, tmp_path):
         },
         "none_valued_param": {"value": None, "unit": None, "parameter_version": "1.0"},
     }
-    with patch.object(rp.db, "get_model_parameters", return_value=mock_params):
+    with patch.object(rp.model_source, "get_model_parameters", return_value=mock_params):
         rp.produce_observatory_report()
     content = (tmp_path / "OBS-North.md").read_text()
     assert "# Observatory Parameters" in content
@@ -666,9 +699,11 @@ def test_get_simulation_configuration_data(simulation_software, tmp_path):
     )
     with (
         patch.object(rp, "get_all_parameter_descriptions", return_value=_SIM_DESC),
-        patch.object(rp.db, "export_model_files"),
-        patch.object(rp.db, "get_simulation_configuration_parameters", return_value=_SIM_PARAM),
-        patch.object(rp.db, "get_array_elements", return_value=["LSTN-01"]),
+        patch.object(rp.model_source, "export_model_files"),
+        patch.object(
+            rp.model_source, "get_simulation_configuration_parameters", return_value=_SIM_PARAM
+        ),
+        patch.object(rp.model_source, "get_array_elements", return_value=["LSTN-01"]),
         patch("simtools.utils.names.get_site_from_array_element_name", return_value="North"),
     ):
         data, dict_tables = rp.get_simulation_configuration_data()
@@ -688,9 +723,9 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test
         },
         output_path=output_path,
     )
-    read_parameters.db.get_array_elements = Mock(return_value=["LSTN-01"])
-    read_parameters.db.get_design_model = Mock(return_value="LSTN-design")
-    read_parameters.db.get_simulation_configuration_parameters = Mock(
+    read_parameters.model_source.get_array_elements = Mock(return_value=["LSTN-01"])
+    read_parameters.model_source.get_design_model = Mock(return_value="LSTN-design")
+    read_parameters.model_source.get_simulation_configuration_parameters = Mock(
         return_value={
             "pm_photoelectron_spectrum": {
                 "value": "pe-spectrum.dat",
@@ -700,7 +735,7 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test
             }
         }
     )
-    read_parameters.db.export_model_files.side_effect = lambda parameters, dest: (
+    read_parameters.model_source.export_model_files.side_effect = lambda parameters, dest: (
         Path(dest).mkdir(parents=True, exist_ok=True),
         (Path(dest) / "pe-spectrum.dat").write_text("table data\n", encoding="utf-8"),
     )
@@ -719,7 +754,7 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test
 
     read_parameters.get_simulation_configuration_data()
 
-    read_parameters.db.get_design_model.assert_called_once_with(
+    read_parameters.model_source.get_design_model.assert_called_once_with(
         "6.0.0", "LSTN-01", collection="telescopes"
     )
     assert generate_plot_configurations.call_args.kwargs["telescope"] == "LSTN-design"
@@ -848,10 +883,10 @@ def test_produce_simulation_configuration_report(tmp_path):
 
 def test_produce_calibration_reports(mocker, tmp_path):
     rp = ReadParameters(args={"model_version": "6.0.0"}, output_path=tmp_path)
-    mocker.patch.object(rp.db, "get_array_elements", return_value=["ILLN-01"])
-    mocker.patch.object(rp.db, "get_design_model", return_value="ILLN-design")
+    mocker.patch.object(rp.model_source, "get_array_elements", return_value=["ILLN-01"])
+    mocker.patch.object(rp.model_source, "get_design_model", return_value="ILLN-design")
     mocker.patch.object(
-        rp.db,
+        rp.model_source,
         "get_model_parameters",
         return_value={
             "laser_events": {
@@ -981,8 +1016,8 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
         args={"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0"},
         output_path=tmp_test_directory,
     )
-    rp.db = Mock()
-    rp.db.export_model_files.return_value = None
+    rp.model_source = Mock()
+    rp.model_source.export_model_files.return_value = None
     rp.get_all_parameter_descriptions = Mock(
         return_value={
             "test_param": {
@@ -1000,7 +1035,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     # None-valued param is skipped; OTHER instrument is not emphasised
-    rp.db.get_model_parameters.return_value = {
+    rp.model_source.get_model_parameters.return_value = {
         "test_param": {
             "unit": "m",
             "value": 42,
@@ -1026,7 +1061,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
     assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, SHORT_DESC]]
 
     # Instrument match -> bold emphasis
-    rp.db.get_model_parameters.return_value = {
+    rp.model_source.get_model_parameters.return_value = {
         "test_param": {
             "unit": "m",
             "value": 42,
@@ -1045,8 +1080,8 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
         args={"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0"},
         output_path=tmp_test_directory,
     )
-    rp.db = Mock()
-    rp.db.get_model_parameters.return_value = {
+    rp.model_source = Mock()
+    rp.model_source.get_model_parameters.return_value = {
         "file_param": {
             "unit": None,
             "value": "myfile.dat",
@@ -1055,7 +1090,7 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
             "instrument": "OTHER",
         }
     }
-    rp.db.export_model_files.return_value = None
+    rp.model_source.export_model_files.return_value = None
     rp.get_all_parameter_descriptions = Mock(
         return_value={
             "file_param": {
@@ -1080,12 +1115,12 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
     ("parameter_version", "preexisting_plot"),
     [(None, False), ("1.0.0", False), ("1.0.0", True)],
 )
-def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, preexisting_plot):
+def test__plot_camera_components(tmp_test_directory, mocker, parameter_version, preexisting_plot):
     read_parameters = ReadParameters(
         args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
         output_path=tmp_test_directory,
     )
-    input_file = Path(tmp_test_directory / "camera_config_file.dat")
+    input_file = Path(tmp_test_directory / "camera_pixel_layout.ecsv")
     input_file.touch()
     plot_name = input_file.stem.replace(".", "-")
     plot_path = Path(tmp_test_directory / f"{plot_name}.png")
@@ -1094,7 +1129,7 @@ def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, pree
 
     mock_plot = mocker.patch("simtools.visualization.plot_pixels.plot")
     result = read_parameters._plot_camera_config(
-        "camera_config_file", parameter_version, input_file, tmp_test_directory
+        "camera_pixel_layout", parameter_version, input_file, tmp_test_directory
     )
 
     assert result == ([] if parameter_version is None else [plot_name])
@@ -1108,7 +1143,7 @@ def test__plot_camera_config(tmp_test_directory, mocker, parameter_version, pree
                 "parameter_version": "1.0.0",
                 "site": "North",
                 "model_version": "6.0.0",
-                "parameter": "camera_config_file",
+                "parameter": "camera_pixel_layout",
             },
             output_file=plot_path.with_suffix(""),
             model_reader=read_parameters.model_reader,
@@ -1132,9 +1167,6 @@ def test_is_markdown_link():
     ("parameter", "latest_value", "expected_plot_text"),
     [
         ("param_x", None, "![Parameter plot.]"),
-        ("camera_config_file", "[cam_config.dat](link)", "![Camera configuration plot.]"),
-        ("camera_config_file", None, None),
-        ("camera_config_file", "no link here", None),
     ],
 )
 def test_write_file_flag_section(parameter, latest_value, expected_plot_text, tmp_path):
@@ -1291,8 +1323,8 @@ def test_get_array_element_parameter_data_collects_dict_table(tmp_test_directory
         args={"telescope": "LSTN-01", "site": "North", "model_version": "1.0.0"},
         output_path=tmp_test_directory,
     )
-    rp.db = Mock()
-    rp.db.get_model_parameters.return_value = {
+    rp.model_source = Mock()
+    rp.model_source.get_model_parameters.return_value = {
         "dict_param": {
             "unit": "m",
             "value": [{"pixel": 1, "value": 0.1}],
@@ -1301,7 +1333,7 @@ def test_get_array_element_parameter_data_collects_dict_table(tmp_test_directory
             "instrument": "OTHER",
         }
     }
-    rp.db.export_model_files.return_value = None
+    rp.model_source.export_model_files.return_value = None
     rp.get_all_parameter_descriptions = Mock(
         return_value={
             "dict_param": {
@@ -1333,7 +1365,7 @@ def test_get_simulation_configuration_data_collects_dict_table(tmp_path):
 
     with (
         patch.object(
-            rp.db,
+            rp.model_source,
             "get_simulation_configuration_parameters",
             return_value={
                 "dict_param": {
@@ -1354,7 +1386,7 @@ def test_get_simulation_configuration_data_collects_dict_table(tmp_path):
                 }
             },
         ),
-        patch.object(rp.db, "export_model_files"),
+        patch.object(rp.model_source, "export_model_files"),
     ):
         _data, dict_tables = rp.get_simulation_configuration_data()
 
@@ -1402,7 +1434,9 @@ def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mock
     )
 
     mocker.patch("simtools.utils.names.model_parameters", return_value={"dict_param": {}})
-    mocker.patch.object(rp.db, "get_model_parameters_for_all_model_versions", return_value={})
+    mocker.patch.object(
+        rp.model_source, "get_model_parameters_for_all_model_versions", return_value={}
+    )
     mocker.patch.object(
         rp,
         "_compare_parameter_across_versions",
@@ -1562,7 +1596,7 @@ def test__delta_report_returns_false_when_base_or_current_missing(
     method_name, args, base_version, base_data, current_data, tmp_path, mocker
 ):
     rp = ReadParameters(args=args, output_path=tmp_path)
-    get_model_parameters = mocker.patch.object(rp.db, "get_model_parameters")
+    get_model_parameters = mocker.patch.object(rp.model_source, "get_model_parameters")
     if current_data is None:
         get_model_parameters.return_value = base_data
     else:
@@ -1611,7 +1645,9 @@ def test__delta_report_no_changes(
     mocker,
 ):
     rp = ReadParameters(args=args, output_path=tmp_path)
-    mocker.patch.object(rp.db, "get_model_parameters", side_effect=[param_data, param_data])
+    mocker.patch.object(
+        rp.model_source, "get_model_parameters", side_effect=[param_data, param_data]
+    )
     if patch_names_model_parameters:
         mocker.patch("simtools.utils.names.model_parameters", return_value={"focal_length": {}})
 
@@ -1655,4 +1691,6 @@ def test__plot_mirror_config(tmp_test_directory, mocker, parameter_version, pree
                 "model_version": "6.0.0",
             },
             output_file=Path(f"{tmp_test_directory}/{plot_name}"),
+            model_reader=read_parameters.model_reader,
+            data_file_path=input_file,
         )

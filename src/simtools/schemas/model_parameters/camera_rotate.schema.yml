@@ -1,0 +1,29 @@
+%YAML 1.2
+---
+title: Schema for camera_rotate model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: camera_rotate
+developer_note: Part of sim_telarray camera_config_file (parameter Rotate).
+description: |-
+  Camera rotation angle, rotating the whole camera with all the pixels by
+  the given angle.
+short_description: Camera rotation angle.
+data:
+  - type: float64
+    unit: deg
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraGeometry
+source:
+  - Initial instrument setup
+  - Calibration
+simulation_software:
+  - name: sim_telarray

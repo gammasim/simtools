@@ -14,9 +14,8 @@ import zlib
 from contextlib import ExitStack, contextmanager
 from itertools import chain
 from pathlib import Path
-from types import MappingProxyType
 from unittest import mock
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock
 
 import matplotlib.pyplot as plt
 import pytest
@@ -74,15 +73,6 @@ def _local_urlretrieve(url, dest):
     raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
 
 
-def _is_db_unit_test(request):
-    """Return True when the current test carries the db_unit_test marker."""
-    node = getattr(request, "node", None)
-    if node is None:
-        return False
-
-    return node.get_closest_marker("db_unit_test") is not None
-
-
 @functools.lru_cache
 def _load_mock_db_json(file_name):
     mock_db_dir = Path(__file__).parent / "resources" / "mock_db"
@@ -103,10 +93,10 @@ def _apply_mock_param_defaults(parameters):
 
 
 @pytest.fixture(autouse=True)
-def simtools_settings(tmp_test_directory, db_config):
+def simtools_settings(tmp_test_directory):
     """Load simtools settings for the test session."""
     load_dotenv(".env")
-    settings.config.load(db_config=db_config)
+    settings.config.load()
 
 
 @pytest.fixture(autouse=True)
@@ -270,12 +260,6 @@ def _mock_settings_env_vars(tmp_test_directory):
         os.environ,
         {
             "SIMTOOLS_SIM_TELARRAY_PATH": str(settings.config.sim_telarray_path),
-            "SIMTOOLS_DB_API_USER": "db_user",
-            "SIMTOOLS_DB_API_PW": "12345",
-            "SIMTOOLS_DB_API_PORT": "42",
-            "SIMTOOLS_DB_SERVER": "abc@def.de",
-            "SIMTOOLS_DB_SIMULATION_MODEL": "sim_model",
-            "SIMTOOLS_DB_SIMULATION_MODEL_TAG": "v0.0.0",
         },
         clear=True,
     ):
@@ -320,15 +304,7 @@ def args_dict_site(tmp_test_directory):
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mongo_db_logger_settings():
-    """Suppress MongoDB 'IdleConnectionMonitor' DEBUG logs during tests."""
-    monitor_logger = logging.getLogger("IdleConnectionMonitor")
-    monitor_logger.setLevel(logging.INFO)
-    logger.info("[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
-
-
-# Array element configuration for mock database
+# Array element configuration for mock model repository
 _ARRAY_ELEMENT_COUNTS = {"LSTN": 4, "LSTS": 4, "MSTN": 5, "MSTS": 11, "SSTS": 5}
 _ARRAY_ELEMENT_TYPES = list(_ARRAY_ELEMENT_COUNTS.keys())
 _TELESCOPE_TYPE_TO_DESIGN_MODEL = {"LST": "LSTN-design", "MST": "MSTN-design", "SST": "SSTS-design"}
@@ -441,7 +417,7 @@ def _mock_get_ecsv_file_as_astropy_table(*args, **kwargs):
 
     table = Table()
     table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
-    table["differential photon rate"] = Column(
+    table["differential_photon_rate"] = Column(
         [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
     )
     return table
@@ -453,37 +429,13 @@ def _mock_get_array_elements_of_type(array_element_type, all_elements):
 
 
 @pytest.fixture
-def db_config():
-    """DB configuration from .env file."""
-    load_dotenv(".env")
-
-    _db_para = (
-        "db_api_user",
-        "db_api_pw",
-        "db_api_port",
-        "db_api_authentication_database",
-        "db_server",
-        "db_simulation_model",
-        "db_simulation_model_tag",
-    )
-    db_config = {_para: os.environ.get(f"SIMTOOLS_{_para.upper()}") for _para in _db_para}
-    if db_config["db_api_port"] is not None:
-        db_config["db_api_port"] = int(db_config["db_api_port"])
-    return db_config
-
-
-@pytest.fixture
-def mock_model_reader(request):
+def mock_model_reader():
     """
-    Mock source-neutral model reader for non-database unit tests.
+    Mock source-neutral model reader for unit tests.
 
-    Provides common mock behaviors to avoid real database connections.
+    Provides common mock behaviors without external model sources.
     Returns a MagicMock configured with typical model-reader methods.
-    Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
-    if _is_db_unit_test(request):
-        return request.getfixturevalue("db")
-
     # Load mock data from JSON files
     mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
     mock_sim_config_params = _apply_mock_param_defaults(
@@ -551,35 +503,15 @@ def mock_model_reader(request):
     mock_db.export_model_files.side_effect = _mock_export_model_files
     mock_db.export_model_file.return_value = None
     mock_db.get_ecsv_file_as_astropy_table.side_effect = _mock_get_ecsv_file_as_astropy_table
-    mock_db.db_name = "test_db"
-
     return mock_db
 
 
-@pytest.fixture
-def mock_db_handler(request):
-    """Compatibility fixture returning the configured model-reader mock."""
-    return request.getfixturevalue("mock_model_reader")
-
-
 @pytest.fixture(autouse=True)
-def patch_database_handler(request, mocker, monkeypatch, simtools_settings):
+def patch_model_reader(mocker, monkeypatch, simtools_settings, mock_model_reader):
     """
     Install a source-neutral model reader for normal unit tests.
 
-    Database tests retain their real handler and are isolated in ``tests/unit_tests/db``.
     """
-    # Skip mocking for tests in db/ directory
-    if _is_db_unit_test(request):
-        from simtools.db import db_handler  # pylint: disable=import-outside-toplevel
-
-        with mock.patch(
-            "simtools.db.db_handler.DatabaseHandler",
-            new=db_handler.DatabaseHandler,
-        ):
-            yield
-        return
-
     for variable in (
         "SIMTOOLS_SIMULATION_MODELS_PATH",
         "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
@@ -587,7 +519,6 @@ def patch_database_handler(request, mocker, monkeypatch, simtools_settings):
     ):
         monkeypatch.delenv(variable, raising=False)
 
-    mock_model_reader = request.getfixturevalue("mock_model_reader")
     # Mock schema validation to avoid version check issues
     mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
 
@@ -607,74 +538,6 @@ def patch_database_handler(request, mocker, monkeypatch, simtools_settings):
     )
     yield
     settings.config.set_model_reader(previous_model_reader)
-
-
-@pytest.fixture
-def db(request):
-    """Database object with configuration from settings.config.db_handler."""
-
-    if not _is_db_unit_test(request):
-        pytest.skip("The db fixture is restricted to database unit tests.")
-
-    from simtools.db import db_handler  # pylint: disable=import-outside-toplevel
-    from simtools.db.mongo_db import MongoDBHandler  # pylint: disable=import-outside-toplevel
-
-    request.getfixturevalue("reset_db_client")
-
-    db_config = {
-        "db_server": "localhost",
-        "db_api_port": 27017,
-        "db_api_user": "user",
-        "db_api_pw": "pw",
-        "db_api_authentication_database": "admin",
-        "db_simulation_model": "CTAO-Simulation-Model",
-        "db_simulation_model_tag": "v0-12-0",
-    }
-    previous_state = {
-        "_args": settings.config._args,
-        "_db_config": settings.config._db_config,
-        "_sim_telarray_path": settings.config._sim_telarray_path,
-        "_sim_telarray_exe": settings.config._sim_telarray_exe,
-        "_corsika_path": settings.config._corsika_path,
-        "_corsika_interaction_table_path": settings.config._corsika_interaction_table_path,
-        "_corsika_exe": settings.config._corsika_exe,
-    }
-    previous_db_client = MongoDBHandler.db_client
-
-    settings.config._args = MappingProxyType({"corsika_path": None, "sim_telarray_path": None})
-    settings.config._db_config = MappingProxyType(db_config)
-    settings.config._sim_telarray_path = None
-    settings.config._sim_telarray_exe = None
-    settings.config._corsika_path = None
-    settings.config._corsika_interaction_table_path = None
-    settings.config._corsika_exe = None
-
-    # Create a mock MongoClient that properly handles close()
-    mock_mongo_client = MagicMock()
-    mock_mongo_client.close = MagicMock()
-
-    with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
-        db_instance = db_handler.DatabaseHandler()
-        MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
-        yield db_instance
-        # Explicitly close the mock client to avoid un-raisable exception warnings
-        if hasattr(MongoDBHandler.db_client, "close"):
-            try:
-                MongoDBHandler.db_client.close()
-            except Exception as exc:
-                # Ignore close errors in tests to avoid masking real test failures
-                logger.debug("Ignoring exception while closing mock MongoDB client: %r", exc)
-
-    settings.config._args = previous_state["_args"]
-    settings.config._db_config = previous_state["_db_config"]
-    settings.config._sim_telarray_path = previous_state["_sim_telarray_path"]
-    settings.config._sim_telarray_exe = previous_state["_sim_telarray_exe"]
-    settings.config._corsika_path = previous_state["_corsika_path"]
-    settings.config._corsika_interaction_table_path = previous_state[
-        "_corsika_interaction_table_path"
-    ]
-    settings.config._corsika_exe = previous_state["_corsika_exe"]
-    MongoDBHandler.db_client = previous_db_client
 
 
 @pytest.fixture
@@ -805,7 +668,7 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    corsika_params_from_db = {
+    corsika_params_from_repository = {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
         "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
         "corsika_cherenkov_photon_wavelength_range": {
@@ -830,7 +693,7 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
         return_value=corsika_config_data,
     ):
         array_model.site_model.get_simulation_software_parameters.return_value = (
-            corsika_params_from_db
+            corsika_params_from_repository
         )
         corsika_config = CorsikaConfig(
             array_model=array_model, run_number=1, label="test-corsika-config"

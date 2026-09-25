@@ -130,6 +130,7 @@ def test_plot_2d_with_labels(mocker, hist_2d_factory):
     assert len(figs) == 2
     for fig in figs:
         assert hasattr(fig, "savefig")
+        assert fig.axes[0].collections[0].get_rasterized()
 
 
 def test_plot_2d_log_scale(mocker, hist_2d_factory):

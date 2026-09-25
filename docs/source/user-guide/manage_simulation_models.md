@@ -23,13 +23,11 @@ version should be reproducible and attributable.
 
 ## Maintenance
 
-- [Simulation models database and repository operations](manage_simulation_models/simulation_models_database.md)
 - [Import simulation model parameters](manage_simulation_models/model_import.md)
 
 ```{toctree}
 :hidden:
 :glob: true
 :maxdepth: 1
-manage_simulation_models/simulation_models_database.md
 manage_simulation_models/model_import.md
 ```

@@ -6,7 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.layout.array_layout_utils import (
     prepare_array_layouts_for_submission,
-    validate_array_layouts_with_db,
+    validate_array_layouts_with_model_repository,
     write_array_layouts,
 )
 
@@ -49,6 +49,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -59,7 +60,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    database=True,
     initialize_output=True,
 )
 
@@ -70,7 +70,7 @@ def main():
     args_dict = app_context.args
     model_reader = app_context.model_reader
     array_layouts, model_version = prepare_array_layouts_for_submission(model_reader, args_dict)
-    array_layouts = validate_array_layouts_with_db(
+    array_layouts = validate_array_layouts_with_model_repository(
         production_table=model_reader.read_production_table(
             collection_name="telescopes", model_version=model_version
         ),

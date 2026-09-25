@@ -12,12 +12,8 @@ import astropy.units as u
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
 from simtools import dependency_versions
-from simtools.constants import DATABASE_SCHEMA
-from simtools.data_model.schema_loader import load_schema
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
-
-jsonschema_db_dict = load_schema(DATABASE_SCHEMA)
 
 
 class Configurator:
@@ -85,8 +81,8 @@ class Configurator:
 
         Returns
         -------
-        tuple
-            Application configuration and database configuration dictionaries.
+        dict
+            Parsed application configuration.
         """
         cli_arglist = self._get_cli_arglist()
         self._validate_cli_aliases(cli_arglist)
@@ -135,9 +131,8 @@ class Configurator:
         self._initialize_io_handler()
         if initialize_output:
             self._initialize_output()
-        db_dict = self._get_db_parameters()
         self.config["application_label"] = self.config.get("application_label") or self.label
-        return self.config, db_dict
+        return self.config
 
     def _parser_defaults(self):
         """Return parser defaults as a configuration source mapping."""
@@ -149,22 +144,12 @@ class Configurator:
 
     @staticmethod
     def _dependency_defaults(parser_defaults):
-        """Return catalog-managed database defaults supported by this parser."""
-        database_keys = {
-            "db_simulation_model",
-            "db_simulation_model_tag",
-        }
-        if not database_keys & parser_defaults.keys():
+        """Return catalog-managed defaults supported by this parser."""
+        if not {"simulation_models_git_revision"} & parser_defaults.keys():
             return {}
         catalog = dependency_versions.load_dependency_catalog()
-        model = catalog["model-database"]
-        defaults = {}
-        if "db_simulation_model" in parser_defaults:
-            defaults["db_simulation_model"] = model["name"]
-        model_tag = model.get("default-tag", model.get("default-version"))
-        if "db_simulation_model_tag" in parser_defaults:
-            defaults["db_simulation_model_tag"] = model_tag
-        return defaults
+        model = catalog["model-repository"]
+        return {"simulation_models_git_revision": model.get("git-revision")}
 
     @staticmethod
     def _option_value(arg_list, option_name):
@@ -481,15 +466,3 @@ class Configurator:
             input_dict[key] = None if value == "None" else value
 
         return input_dict
-
-    def _get_db_parameters(self):
-        """
-        Return parameters for DB configuration.
-
-        Returns
-        -------
-        dict
-            Dictionary with DB parameters.
-        """
-        db_params = jsonschema_db_dict["properties"].keys()
-        return {param: self.config.get(param) for param in db_params if param in self.config}

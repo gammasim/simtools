@@ -6,7 +6,7 @@ from functools import cache
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
@@ -106,7 +106,13 @@ def _get_local_schema_candidates(schema_file):
     if gen.is_url(str(schema_file)):
         schema_name = Path(str(schema_file)).name
         if schema_name:
-            candidates.extend([SCHEMA_PATH / schema_name, Path(schema_name)])
+            candidates.extend(
+                [
+                    SCHEMA_PATH / schema_name,
+                    MODEL_PARAMETER_SCHEMA_PATH / schema_name,
+                    Path(schema_name),
+                ]
+            )
 
     return list(dict.fromkeys(candidates))
 

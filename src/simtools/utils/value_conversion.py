@@ -56,7 +56,7 @@ def normalize_dimensionless_unit(unit):
 
 
 def normalize_model_parameter_unit(value, unit):
-    """Normalize a model parameter unit for use by database consumers.
+    """Normalize a model parameter unit for use by model repository consumers.
 
     Parameters
     ----------

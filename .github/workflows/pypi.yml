@@ -16,7 +16,7 @@ jobs:
         (github.event_name == 'workflow_dispatch' && !contains(github.ref_name, '-rc')) ||
         (github.event_name == 'release' && !contains(github.event.release.tag_name, '-rc'))
       }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: pypi-release
     permissions:
       id-token: write

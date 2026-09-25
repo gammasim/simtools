@@ -9,7 +9,8 @@ class CalibrationModel(ModelParameter):
     """
     CalibrationModel represents the MC model of an individual calibration device.
 
-    It provides functionality to read the required parameters from the DB.
+    It provides functionality to read the required parameters from the
+    simulation-model repository.
 
     Parameters
     ----------
@@ -22,7 +23,9 @@ class CalibrationModel(ModelParameter):
     label: str, optional
         Instance label. Important for output file naming.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters with provided values.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     """
 
     def __init__(
@@ -33,6 +36,7 @@ class CalibrationModel(ModelParameter):
         label=None,
         overwrite_model_parameter_dict=None,
         model_reader=None,
+        model_directory=None,
     ):
         """Initialize CalibrationModel."""
         super().__init__(
@@ -43,6 +47,7 @@ class CalibrationModel(ModelParameter):
             label=label,
             overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             model_reader=model_reader,
+            model_directory=model_directory,
         )
 
         self._logger = logging.getLogger(__name__)

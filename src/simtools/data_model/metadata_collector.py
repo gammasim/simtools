@@ -19,7 +19,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA, SIM_TELARRAY_META_PARAMETER_REGISTRY
-from simtools.data_model import metadata_model, schema
+from simtools.data_model import metadata_model, schema, schema_loader
 from simtools.io import ascii_handler, io_handler
 from simtools.settings import config
 from simtools.sim_events.file_info import get_corsika_run_and_event_headers
@@ -236,11 +236,14 @@ class MetadataCollector:
             Data model schema dictionary.
 
         """
-        try:
-            return ascii_handler.collect_data_from_file(file_name=self.schema_file)
-        except TypeError:
+        if self.schema_file is None:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
-        return {}
+            return {}
+        try:
+            return schema_loader.load_schema(self.schema_file)
+        except FileNotFoundError, TypeError:
+            self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
+            return {}
 
     def get_site(self, from_input_meta=False):
         """
@@ -280,7 +283,6 @@ class MetadataCollector:
         """
         contact_dict["name"] = contact_dict.get("name") or self.args_dict.get("user_name")
         if contact_dict["name"] is None:
-            self._logger.warning("No user name provided, take user info from system level.")
             try:
                 contact_dict["name"] = getpass.getuser()
             except Exception as exc:  # pylint: disable=broad-except
@@ -390,7 +392,7 @@ class MetadataCollector:
     @staticmethod
     def _is_sensitive_configuration_key(key):
         """Return whether a configuration key may contain a secret."""
-        return key.casefold() == "db_api_pw" or bool(
+        return bool(
             re.search(
                 r"password|passwd|(^|[_-])(pw|pwd)($|[_-])|secret|token|api[_-]?key",
                 key,

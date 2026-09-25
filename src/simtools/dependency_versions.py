@@ -80,10 +80,10 @@ def _simtel_tag(component):
     return component.get("tag", component.get("version"))
 
 
-def _model_tag(catalog):
-    """Return the model-database tag from either catalog schema."""
-    model = catalog["model-database"]
-    return model.get("default-tag", model.get("default-version"))
+def _model_revision(catalog):
+    """Return the pinned simulation-model repository revision."""
+    model = catalog["model-repository"]
+    return model.get("git-revision") or model.get("default-tag", model.get("default-version"))
 
 
 def _tests_tag(test_resources):
@@ -193,7 +193,7 @@ def validate_dependency_catalog(catalog):
         "base-image",
         "corsika-interaction-tables",
         "archives",
-        "model-database",
+        "model-repository",
         "production-combinations",
         "corsika",
         "sim-telarray",
@@ -271,8 +271,9 @@ def _validate_simtel_components(components, require_revisions=False):
 
 
 def _validate_model_and_test_components(catalog, schema_version):
-    """Validate model-database and simtools-tests catalog values."""
-    model_version = _model_tag(catalog)
+    """Validate model-repository and simtools-tests catalog values."""
+    model = catalog["model-repository"]
+    model_version = model.get("default-tag", model.get("default-version"))
     valid_model_version = (
         versioning.is_valid_release_tag(model_version)
         if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
@@ -280,12 +281,11 @@ def _validate_model_and_test_components(catalog, schema_version):
     )
     if not valid_model_version:
         message = (
-            "Model database values must be release tags starting with 'v'."
+            "Invalid simulation-model release tags."
             if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
-            else "Invalid model database version."
+            else "Invalid simulation-model repository revision."
         )
         raise ValueError(message)
-    model = catalog["model-database"]
     if model.get("repository-url") is not None and not str(model["repository-url"]).startswith(
         "https://"
     ):
@@ -375,21 +375,18 @@ def _validate_archive_versions(archives):
             )
 
 
-def validate_env_template(catalog, template_path):
+def validate_env_template(template_path):
     """Validate non-secret runtime defaults against the dependency catalog.
 
     Parameters
     ----------
-    catalog : dict
-        Validated dependency catalog.
     template_path : str or Path
         Environment template to validate.
 
     Raises
     ------
     ValueError
-        If catalog-managed versions are duplicated in a schema 0.2.0 template
-        or if the model database defaults disagree with the catalog.
+        If catalog-managed versions are duplicated in the template.
     """
     values = {}
     for line in Path(template_path).read_text(encoding="utf-8").splitlines():
@@ -399,32 +396,19 @@ def validate_env_template(catalog, template_path):
         key, value = stripped.split("=", maxsplit=1)
         values[key] = value
     version_keys = {"SIMTOOLS_TESTS_VERSION", "SIMTOOLS_TESTS_TAG"}
-    if catalog["schema_version"] in {"0.2.0", "0.3.0", "0.4.0"}:
-        version_keys.update(
-            {"SIMTOOLS_DB_SIMULATION_MODEL_VERSION", "SIMTOOLS_DB_SIMULATION_MODEL_TAG"}
-        )
     configured_versions = sorted(version_keys & values.keys())
     if configured_versions:
         raise ValueError(
             ".env_template must not define catalog-managed versions: "
             + ", ".join(configured_versions)
         )
-    model = catalog["model-database"]
-    expected = {"SIMTOOLS_DB_SIMULATION_MODEL": model["name"]}
-    if catalog["schema_version"] == "0.1.0":
-        expected["SIMTOOLS_DB_SIMULATION_MODEL_VERSION"] = model["default-version"]
-    mismatches = {
-        key: (values.get(key), value) for key, value in expected.items() if values.get(key) != value
-    }
-    if mismatches:
-        raise ValueError(f".env_template defaults disagree with dependency catalog: {mismatches}")
 
 
 def build_workflow_matrices(catalog):
     """Build GitHub Actions matrices from the dependency catalog."""
     variants = catalog["cpu-variants"]
     platform_matrix = [
-        {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-latest"},
+        {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-24.04"},
         {"platform": "linux/arm64/v8", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
     ]
     corsika_components = {_corsika_reference(item): item for item in catalog["corsika"]}
@@ -554,8 +538,8 @@ def dependency_catalog_summary(catalog):
         "corsika_tables_tag": _dependency_tag(
             catalog["corsika-interaction-tables"], "tag", "version"
         ),
-        "model_database": catalog["model-database"]["name"],
-        "model_database_tag": _model_tag(catalog),
+        "model_repository": catalog["model-repository"].get("repository-url", ""),
+        "model_repository_revision": _model_revision(catalog),
         "simtools_tests_repository": test_resources.get("repository", ""),
         "simtools_tests_url": test_resources.get("source-url", ""),
         "simtools_tests_tag": _tests_tag(test_resources),
@@ -583,20 +567,12 @@ def dependency_catalog_environment(catalog):
     Returns
     -------
     dict
-        Environment variable names and values for database and test-resource
+        Environment variable names and values for model repository and test-resource
         configuration. Local paths and credentials are intentionally omitted.
     """
-    model_tag = _model_tag(catalog)
-    if catalog["schema_version"] in {"0.3.0", "0.4.0"}:
-        environment = {
-            "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
-            "SIMTOOLS_DB_SIMULATION_MODEL_TAG": model_tag,
-        }
-    else:
-        environment = {
-            "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
-            "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": model_tag,
-        }
+    environment = {
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
+    }
     if "simtools-tests" in catalog:
         test_tag = _tests_tag(catalog["simtools-tests"])
         tag_key = (
@@ -658,7 +634,7 @@ def export_dependency_configuration(pyproject_path=None, output_format="catalog"
     catalog = load_dependency_catalog(catalog_file)
     env_template = catalog_file.parent / ".env_template"
     if env_template.is_file():
-        validate_env_template(catalog, env_template)
+        validate_env_template(env_template)
     extras = extras or []
     if output_format == "python-requirements":
         project_file = project_file or find_pyproject()

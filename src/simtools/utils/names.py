@@ -8,7 +8,7 @@ Naming in simtools:
 * 'array element ID': e.g., 01, 02, ...
 * 'array element design type': e.g., design, test
 * 'instrument class key': e.g., telescope, camera, structure
-* 'db collection': e.g., telescopes, sites, calibration_devices
+* 'model repository collection': e.g., telescopes, sites, calibration_devices
 
 """
 
@@ -30,8 +30,8 @@ from simtools.data_model import schema_loader
 
 _logger = logging.getLogger(__name__)
 
-# Mapping of db collection names to class keys
-db_collections_to_class_keys = {
+# Mapping of model repository collection names to class keys
+collections_to_class_keys = {
     "sites": ["Site"],
     "telescopes": ["Structure", "Camera", "Telescope"],
     "calibration_devices": ["Calibration"],
@@ -325,26 +325,42 @@ def model_parameters(class_key_list=None):
 
 def site_parameters():
     """Return site model parameters."""
-    return model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
+    return model_parameters(class_key_list=tuple(collections_to_class_keys["sites"]))
 
 
 def telescope_parameters():
     """Return telescope model parameters."""
-    return model_parameters(class_key_list=tuple(db_collections_to_class_keys["telescopes"]))
+    return model_parameters(class_key_list=tuple(collections_to_class_keys["telescopes"]))
 
 
-def instrument_class_key_to_db_collection(class_name):
+def instrument_class_key_to_collection(class_name):
     """Convert instrument class key to collection name."""
-    for collection, classes in db_collections_to_class_keys.items():
+    for collection, classes in collections_to_class_keys.items():
         if class_name in classes:
             return collection
     raise ValueError(f"Class {class_name} not found")
 
 
-def db_collection_to_instrument_class_key(collection_name="telescopes"):
+@cache
+def _model_parameter_for_collection(parameter_name):
+    """Return one parameter schema without loading unrelated parameter schemas."""
+    schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
+    try:
+        parameter = schema_loader.load_schema(schema_file, "latest")
+    except FileNotFoundError:
+        parameter = None
+
+    if parameter is None or parameter.get("name") != parameter_name:
+        parameter = model_parameters().get(parameter_name)
+    if parameter is None:
+        raise KeyError(f"Parameter {parameter_name} without schema definition")
+    return parameter
+
+
+def collection_to_instrument_class_key(collection_name="telescopes"):
     """Return list of instrument classes for a given collection."""
     try:
-        return db_collections_to_class_keys[collection_name]
+        return collections_to_class_keys[collection_name]
     except KeyError as exc:
         raise KeyError(f"Invalid collection name {collection_name}") from exc
 
@@ -755,7 +771,6 @@ def get_collection_name_from_array_element_name(array_element_name, array_elemen
     if array_element_name in {
         "configuration_sim_telarray",
         "configuration_corsika",
-        "Files",
         "Dummy-Telescope",
     }:
         return array_element_name
@@ -764,7 +779,7 @@ def get_collection_name_from_array_element_name(array_element_name, array_elemen
 
 def get_collection_name_from_parameter_name(parameter_name):
     """
-    Get the db collection name for a given parameter.
+    Get the model repository collection name for a given parameter.
 
     Parameters
     ----------
@@ -781,12 +796,9 @@ def get_collection_name_from_parameter_name(parameter_name):
     KeyError
         If the parameter name is not found in the list of model parameters
     """
-    _parameter_names = model_parameters()
-    try:
-        class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
-    except KeyError as exc:
-        raise KeyError(f"Parameter {parameter_name} without schema definition") from exc
-    return instrument_class_key_to_db_collection(class_key)
+    parameter = _model_parameter_for_collection(parameter_name)
+    class_key = parameter.get("instrument", {}).get("class")
+    return instrument_class_key_to_collection(class_key)
 
 
 def get_simulation_software_name_from_parameter_name(

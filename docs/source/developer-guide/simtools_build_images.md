@@ -5,8 +5,9 @@ Pre-built OCI images are available from the
 The GitHub Actions workflows in `.github/workflows/build-*.yml` are the reference image builds.
 
 All scientific build versions come from `dependency_versions.yml`; see
-[Dependency versions and provenance](dependency_versions.md). Dockerfiles deliberately have no
-independent software-version defaults. Before a local build, export the validated values with
+[Dependency versions and provenance](dependency_versions.md). Dockerfiles provide fallback values
+for standalone local builds, while the workflows pass the values generated from the catalog.
+Before a reproducible local build, export the validated values with
 
 ```console
 simtools-dependency-versions --format github-output
