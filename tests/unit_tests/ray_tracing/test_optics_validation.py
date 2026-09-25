@@ -10,6 +10,16 @@ import pytest
 from astropy.table import QTable, Table
 
 from simtools.ray_tracing import optics_validation
+from simtools.applications.validate_cumulative_psf import _ARGUMENTS
+from simtools.configuration.commandline_parser import CommandLineParser
+
+
+def test_cumulative_psf_cli_requires_measured_data():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(_ARGUMENTS)
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
 
 
 def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
@@ -47,7 +57,7 @@ def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
         optics_validation.load_data(data_file)
 
 
-def test_validate_cumulative_psf_raises_without_radius_data():
+def test_validate_cumulative_psf_requires_data_before_simulation():
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -74,8 +84,9 @@ def test_validate_cumulative_psf_raises_without_radius_data():
         ),
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
     ):
-        with pytest.raises(ValueError, match="Radius data is not available"):
+        with pytest.raises(ValueError, match="Measured PSF data is required"):
             optics_validation.validate_cumulative_psf(app_context)
+    mock_ray.simulate.assert_not_called()
 
 
 def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_directory):
