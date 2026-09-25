@@ -149,6 +149,7 @@ scripts.simtools-production-generate-grid = "simtools.applications.production_ge
 scripts.simtools-production-select-files = "simtools.applications.production_select_files:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
+scripts.simtools-run-science-tests = "simtools.applications.run_science_tests:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"

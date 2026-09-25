@@ -1,12 +1,17 @@
 """Tools for running applications in the simtools framework."""
 
 import glob
+import hashlib
+import json
 import logging
 import os
+import re
 import shutil
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
+
+import yaml
 
 import simtools.utils.general as gen
 from simtools import dependencies
@@ -35,7 +40,14 @@ def run_applications(args_dict, run_time=None, replacements=None):
         the runtime environment from the workflow configuration.
     replacements : dict or None
         Placeholder replacements applied recursively to the workflow configuration.
+        The configuration directory is added automatically as
+        __CONFIG_DIRECTORY__ when not supplied.
     """
+    replacements = dict(replacements or {})
+    replacements.setdefault(
+        "__CONFIG_DIRECTORY__",
+        str(Path(args_dict["config_file"]).resolve().parent),
+    )
     (
         configurations,
         runtime_environment,
@@ -48,10 +60,18 @@ def run_applications(args_dict, run_time=None, replacements=None):
         args_dict.get("activity_id"),
         replacements=replacements,
     )
+    _resolve_nested_configuration_files(configurations, replacements)
     if args_dict.get("log_file") is not None:
         log_file = args_dict["log_file"]
     if args_dict.get("runtime_environment") is not None:
         runtime_environment = args_dict["runtime_environment"]
+    _validate_resolved_configuration(configurations, runtime_environment, collection_config)
+    _write_resolved_workflow(
+        args_dict["config_file"],
+        configurations,
+        runtime_environment,
+        collection_config,
+    )
 
     workflow_start = datetime.now(UTC)
     associated_activities = []
@@ -163,13 +183,22 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
         )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
+        inventory = []
         for pattern in files:
-            _copy_pattern_files(
-                pattern,
-                source_directories,
-                collection_output_path,
-                overwrite_files=overwrite_files,
+            inventory.extend(
+                _copy_pattern_files(
+                    pattern,
+                    source_directories,
+                    collection_output_path,
+                    overwrite_files=overwrite_files,
+                )
             )
+        if entry.get("write_inventory"):
+            inventory_path = Path(
+                entry.get("inventory_file", collection_output_path / "inventory.json")
+            )
+            inventory_path.parent.mkdir(parents=True, exist_ok=True)
+            inventory_path.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
 
 
 def _copy_pattern_files(pattern, source_directories, destination, overwrite_files=False):
@@ -191,6 +220,7 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
     FileExistsError
         When a source file would overwrite a different file with the same name.
     """
+    inventory = []
     for source_file in _find_collection_files(pattern, source_directories):
         dest = destination / source_file.name
         if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
@@ -199,6 +229,23 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
             )
         shutil.copy2(source_file, dest)
+        inventory.append(
+            {
+                "source": str(source_file),
+                "destination": str(dest.relative_to(destination)),
+                "sha256": _sha256(dest),
+            }
+        )
+    return inventory
+
+
+def _sha256(path):
+    """Return the SHA-256 checksum of one collected artifact."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _collect_source_directories(configurations, source_directory=None):
@@ -426,6 +473,73 @@ def _read_application_configuration(
         workflow_activity_id,
         job_configuration.get("collection"),
     )
+
+
+_SCIENCE_PLACEHOLDER = re.compile(r"__[A-Z][A-Z0-9_]+__")
+
+
+def _validate_resolved_configuration(configurations, runtime_environment, collection_config):
+    """Reject unresolved workflow placeholders before starting an application."""
+    values = [configurations, runtime_environment, collection_config]
+    unresolved = sorted(
+        {match.group(0) for value in values for match in _iter_placeholder_matches(value)}
+    )
+    if unresolved:
+        raise ValueError("Unresolved workflow placeholder(s): " + ", ".join(unresolved))
+
+
+def _resolve_nested_configuration_files(configurations, replacements):
+    """Resolve placeholders in referenced backend configuration files."""
+    for config in configurations:
+        app_configuration = config.get("configuration", {})
+        backend_config = app_configuration.get("backend_config")
+        if not isinstance(backend_config, (str, Path)):
+            continue
+        backend_path = Path(backend_config)
+        if not backend_path.is_file():
+            continue
+        backend_values = ascii_handler.collect_data_from_file(backend_path)
+        if isinstance(backend_values, dict):
+            app_configuration["backend_config"] = gen.replace_placeholders_recursively(
+                backend_values,
+                replacements,
+            )
+
+
+def _iter_placeholder_matches(value):
+    """Yield placeholder matches from nested workflow values."""
+    if isinstance(value, str):
+        yield from _SCIENCE_PLACEHOLDER.finditer(value)
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _iter_placeholder_matches(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _iter_placeholder_matches(item)
+
+
+def _write_resolved_workflow(configuration_file, configurations, runtime_environment, collection):
+    """Write the resolved workflow next to its first application output."""
+    output_path = next(
+        (
+            config.get("configuration", {}).get("output_path")
+            for config in configurations
+            if config.get("configuration", {}).get("output_path")
+        ),
+        None,
+    )
+    if output_path is None:
+        return
+    provenance_path = Path(output_path) / "provenance" / "resolved-workflow.yml"
+    provenance_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "configuration_file": Path(configuration_file).name,
+        "applications": configurations,
+        "runtime_environment": runtime_environment,
+        "collection": collection,
+    }
+    with provenance_path.open("w", encoding="utf-8") as file:
+        yaml.safe_dump(payload, file, sort_keys=False)
 
 
 def _get_application_log_file(application, app_configuration, counter):
