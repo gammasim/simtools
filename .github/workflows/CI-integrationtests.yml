@@ -144,8 +144,9 @@ jobs:
                   echo "The CTAO_GITLAB_MIRROR secret is required for the GitHub mirror."
                   break
                 fi
+                GIT_AUTH_HEADER=$(printf 'x-access-token:%s' "$CTAO_GITLAB_MIRROR" | base64 -w0)
                 GIT_CLONE_ARGS=(
-                  -c "http.extraheader=Authorization: Bearer $CTAO_GITLAB_MIRROR"
+                  -c "http.extraheader=AUTHORIZATION: basic $GIT_AUTH_HEADER"
                 )
               fi
               if git \
@@ -209,7 +210,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       SIM_MODELS_REPO: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
-      SIM_MODELS_MIRROR_REPO: "https://github.com/gammasim/simulations-models"
+      SIM_MODELS_MIRROR_REPO: "https://github.com/gammasim/simulations-models.git"
 
     defaults:
       run:
@@ -279,8 +280,9 @@ jobs:
                   echo "The CTAO_GITLAB_MIRROR secret is required for the GitHub mirror."
                   break
                 fi
+                GIT_AUTH_HEADER=$(printf 'x-access-token:%s' "$CTAO_GITLAB_MIRROR" | base64 -w0)
                 GIT_CLONE_ARGS=(
-                  -c "http.extraheader=Authorization: Bearer $CTAO_GITLAB_MIRROR"
+                  -c "http.extraheader=AUTHORIZATION: basic $GIT_AUTH_HEADER"
                 )
               fi
               if git \
