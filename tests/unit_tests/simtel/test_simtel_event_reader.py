@@ -147,3 +147,26 @@ def test_read_events_for_telescopes_logs_missing_event_data_and_stops_at_limit(m
     assert descriptions == {"LSTN-01": {"name": "LST"}}
     assert events_by_telescope == {"LSTN-01": ["evt1"]}
     assert "event 0 has no data for selected telescopes" in caplog.text
+
+
+def test_read_events_for_telescopes_caps_each_selected_telescope(monkeypatch):
+    tel_descriptions = {1: {"name": "LST"}, 2: {"name": "MST"}}
+    events = [
+        {"event_id": 0, "telescope_events": {1: "lst-0"}},
+        {"event_id": 1, "telescope_events": {1: "lst-1"}},
+        {"event_id": 2, "telescope_events": {2: "mst-2"}},
+    ]
+    _setup_mocks(monkeypatch, 1, "LSTN-01", tel_descriptions, events)
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_event_reader."
+        "get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        lambda _file: {1: "LSTN-01", 2: "MSTN-01"},
+    )
+
+    event_ids, descriptions, events_by_telescope = read_events_for_telescopes(
+        "file.simtel", ["LSTN-01", "MSTN-01"], max_events=1
+    )
+
+    assert event_ids == [0, 2]
+    assert descriptions == {"LSTN-01": {"name": "LST"}, "MSTN-01": {"name": "MST"}}
+    assert events_by_telescope == {"LSTN-01": ["lst-0"], "MSTN-01": ["mst-2"]}

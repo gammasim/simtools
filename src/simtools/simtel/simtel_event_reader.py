@@ -161,7 +161,9 @@ def _collect_events_for_telescope_ids(simtel_file, telescope_ids, event_ids, max
         telescope_events = event.get("telescope_events", {})
         found_telescope_data = False
         for telescope, tel_id in telescope_ids.items():
-            if tel_id in telescope_events:
+            if tel_id in telescope_events and (
+                not max_events or len(events_by_telescope[telescope]) < max_events
+            ):
                 events_by_telescope[telescope].append(telescope_events[tel_id])
                 found_telescope_data = True
         if found_telescope_data:
