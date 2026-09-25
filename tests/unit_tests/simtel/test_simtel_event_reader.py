@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import logging
+
 import pytest
 
 from simtools.simtel.simtel_event_reader import read_events, read_events_for_telescopes
@@ -107,3 +109,41 @@ def test_read_events_for_telescopes_reads_selected_telescopes_in_one_pass(monkey
         "MSTN-01": ["mst-0", "mst-1"],
     }
     assert len(simtel_file_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("tel_id", "telescope_name", "descriptions", "warning"),
+    [
+        (None, None, {}, "Telescope type 'LSTN-01' not found"),
+        (42, "LSTN-01", {}, "Telescope ID '42' not found"),
+    ],
+)
+def test_read_events_for_telescopes_rejects_missing_telescope_data(
+    monkeypatch, caplog, tel_id, telescope_name, descriptions, warning
+):
+    _setup_mocks(monkeypatch, tel_id, telescope_name, descriptions)
+
+    result = read_events_for_telescopes("file.simtel", ["LSTN-01"])
+
+    assert result == (None, None, None)
+    assert warning in caplog.text
+
+
+def test_read_events_for_telescopes_logs_missing_event_data_and_stops_at_limit(monkeypatch, caplog):
+    tel_id = 7
+    events = [
+        {"event_id": 0, "telescope_events": {}},
+        {"event_id": 1, "telescope_events": {tel_id: "evt1"}},
+        {"event_id": 2, "telescope_events": {tel_id: "evt2"}},
+    ]
+    _setup_mocks(monkeypatch, tel_id, "LSTN-01", {tel_id: {"name": "LST"}}, events)
+
+    with caplog.at_level(logging.DEBUG):
+        event_ids, descriptions, events_by_telescope = read_events_for_telescopes(
+            "file.simtel", ["LSTN-01"], max_events=1, verbose=True
+        )
+
+    assert event_ids == [1]
+    assert descriptions == {"LSTN-01": {"name": "LST"}}
+    assert events_by_telescope == {"LSTN-01": ["evt1"]}
+    assert "event 0 has no data for selected telescopes" in caplog.text

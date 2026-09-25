@@ -14,27 +14,27 @@ DESCRIPTION = "Test parameter"
 SHORT_DESC = "Short"
 
 
-def test_get_all_parameter_descriptions(telescope_model_lst, tmp_path):
+def test_get_all_parameter_descriptions(telescope_model_lst, tmp_test_directory):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
     }
-    read_parameters = ReadParameters(args=args, output_path=tmp_path)
-    # Call get_all_parameter_descriptions
+    read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
     description_dict = read_parameters.get_all_parameter_descriptions()
 
-    assert isinstance(description_dict.get("focal_length"), dict)
-    assert isinstance(description_dict.get("focal_length").get("description"), str)
-    assert isinstance(description_dict.get("focal_length").get("short_description"), str)
-    assert isinstance(description_dict.get("focal_length").get("inst_class"), str)
+    focal_length = description_dict["focal_length"]
+    assert focal_length["description"]
+    assert focal_length["short_description"]
+    assert focal_length["inst_class"]
 
 
-def test_produce_array_element_report(telescope_model_lst, tmp_path):
+def test_produce_array_element_report(telescope_model_lst, tmp_test_directory):
     site = telescope_model_lst.site
     # Observatory branch
     rp = ReadParameters(
-        args={"site": site, "model_version": "6.0.0", "observatory": True}, output_path=tmp_path
+        args={"site": site, "model_version": "6.0.0", "observatory": True},
+        output_path=tmp_test_directory,
     )
     with patch.object(
         rp.model_source,
@@ -42,12 +42,12 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         return_value={"site_elevation": {"value": 2200, "unit": "m"}},
     ):
         rp.produce_array_element_report()
-    assert (tmp_path / f"OBS-{site}.md").exists()
+    assert (tmp_test_directory / f"OBS-{site}.md").exists()
 
     # Telescope branch
     rp2 = ReadParameters(
         args={"site": site, "model_version": "6.0.0", "telescope": telescope_model_lst.name},
-        output_path=tmp_path,
+        output_path=tmp_test_directory,
     )
     with (
         patch.object(
@@ -75,7 +75,7 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         ),
     ):
         rp2.produce_array_element_report()
-    assert (tmp_path / f"{telescope_model_lst.name}.md").exists()
+    assert (tmp_test_directory / f"{telescope_model_lst.name}.md").exists()
 
 
 def test_produce_model_parameter_reports(tmp_test_directory, mocker):
@@ -105,6 +105,9 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
 
     file_path = output_path / args["telescope"] / "quantum_efficiency.md"
     assert file_path.exists()
+    report = file_path.read_text(encoding="utf-8")
+    assert "quantum_efficiency" in report
+    assert "qe_file.dat" in report
 
 
 @pytest.mark.parametrize(
