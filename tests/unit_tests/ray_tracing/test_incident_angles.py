@@ -3,7 +3,7 @@
 
 import logging
 import math
-import re
+import shlex
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -14,6 +14,13 @@ from astropy.table import QTable
 
 from simtools.ray_tracing import incident_angles as ia
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
+
+_IMAGING_HEADER = """# Column 2: Pixel number hit
+# Column 22: Angle to pixel normal (if pixel hit) or focal surface normal [deg.]
+# Column 26: Angle of incidence at focal surface, w.r.t. optical axis [deg.]
+# Column 32: Angle of incidence on primary mirror, w.r.t. normal [deg.]
+# Column 36: Angle of incidence on secondary mirror, w.r.t. normal [deg.]
+"""
 
 
 @pytest.fixture
@@ -58,6 +65,7 @@ def calculator(mock_models, config_data, tmp_test_directory):
 
 
 def test_initialization(calculator, config_data):
+    assert calculator.zenith_angle_deg == pytest.approx(20)
     assert calculator.config_data == config_data
     assert calculator.output_dir.is_dir()
     assert calculator.results is None
@@ -66,6 +74,22 @@ def test_initialization(calculator, config_data):
     assert calculator.scripts_dir.is_dir()
     assert calculator.photons_dir.is_dir()
     assert calculator.results_dir.is_dir()
+
+
+@pytest.mark.parametrize("zenith", [0 * u.deg, 40 * u.deg, (math.pi / 6) * u.rad])
+@pytest.mark.parametrize("offset", [-2, 0, 2])
+def test_source_and_telescope_pointing(
+    mock_models, config_data, tmp_test_directory, zenith, offset
+):
+    config_data.update(zenith_angle=zenith, off_axis_angle=offset * u.deg)
+    calculator = IncidentAnglesCalculator(config_data, tmp_test_directory)
+    photons, stars, log_file = calculator._prepare_psf_io_files()
+    source = stars.read_text().splitlines()[-1].split()
+    assert float(source[1]) == pytest.approx(90 - zenith.to_value(u.deg))
+    script = calculator._write_run_script(photons, stars, log_file).read_text()
+    options = dict(token.split("=", 1) for token in shlex.split(script) if "=" in token)
+    assert float(options["telescope_theta"]) == pytest.approx(zenith.to_value(u.deg) - offset)
+    assert float(options["telescope_phi"]) == pytest.approx(0)
 
 
 def test_run_produces_results(monkeypatch, calculator, tmp_test_directory):
@@ -85,7 +109,7 @@ def test_run_produces_results(monkeypatch, calculator, tmp_test_directory):
         # - focal angle in column 26 (index 25)
         # - primary in column 32 (index 31)
         # - secondary in column 36 (index 35)
-        rows = ["# header\n"]
+        rows = [_IMAGING_HEADER]
         triplets = [(10.0, 1.0, 2.0), (20.0, 3.0, 4.0), (30.0, 5.0, 6.0)]
         for foc, pri, sec in triplets:
             parts = ["0"] * 25 + [str(foc)]
@@ -193,7 +217,7 @@ def test_compute_incidence_angles_parsing(calculator, tmp_test_directory):
         " ".join(["0"] * 25 + ["42.5"]) + "\n",  # valid
         " ".join(["0"] * 25 + ["99"] + ["0"] * 5) + "\n",
     ]
-    pfile.write_text("".join(lines), encoding="utf-8")
+    pfile.write_text(_IMAGING_HEADER + "".join(lines), encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert "angle_incidence_focal_deg" in out
@@ -238,7 +262,7 @@ def test_primary_valueerror_results_in_nan(calculator, tmp_test_directory):
     parts.append("bad")  # primary at col 32 -> ValueError
     parts += ["0", "0", "0", "2.0"]  # pad cols 33-35, secondary at col 36
     pfile = tmp_test_directory / "one.lis"
-    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+    pfile.write_text(_IMAGING_HEADER + " ".join(parts) + "\n", encoding="utf-8")
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert math.isnan(out["angle_incidence_primary_deg"][0])
@@ -258,35 +282,14 @@ def test_header_driven_column_detection(calculator, tmp_test_directory):
     data[29] = "11.1"  # focal at col 30
     data[33] = "22.2"  # primary at col 34
     data[37] = "33.3"  # secondary at col 38
-    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
+    pfile.write_text(
+        _IMAGING_HEADER + "".join(header_lines) + " ".join(data) + "\n", encoding="utf-8"
+    )
 
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert out["angle_incidence_focal_deg"] == pytest.approx([11.1])
     assert out["angle_incidence_primary_deg"] == pytest.approx([22.2])
     assert out["angle_incidence_secondary_deg"] == pytest.approx([33.3])
-
-
-def test_match_header_column_variants():
-    col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*$", re.IGNORECASE)
-    # Focal surface with optical axis mention
-    raw = "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("focal", 30)
-
-    # Primary mirror with onto
-    raw = "# Column 34: Angle of incidence onto primary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 34)
-
-    # Primary mirror with on
-    raw = "# Column 35: Angle of incidence on primary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("primary", 35)
-
-    # Secondary mirror
-    raw = "# Column 40: Angle of incidence onto secondary mirror [deg]"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) == ("secondary", 40)
-
-    # No match
-    raw = "# Column 99: Some other description"
-    assert ia.IncidentAnglesCalculator._match_header_column(col_pat, raw) is None
 
 
 def test_find_column_indices_reflection_headers(calculator, tmp_test_directory):
@@ -299,7 +302,9 @@ def test_find_column_indices_reflection_headers(calculator, tmp_test_directory):
         "# Column 13: Y reflection point on secondary mirror [cm]\n",
     ]
     data = ["0"] * 26
-    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
+    pfile.write_text(
+        _IMAGING_HEADER + "".join(header_lines) + " ".join(data) + "\n", encoding="utf-8"
+    )
 
     idx = calculator._find_column_indices(pfile)
     # Focal remains default (25), check XY indices converted to 0-based
@@ -316,7 +321,7 @@ def test_compute_angles_skips_primary_secondary_when_disabled(tmp_test_directory
 
     pfile = tmp_test_directory / "angles.lis"
     parts = ["0"] * 25 + ["42.5"]  # focal at col 26
-    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
+    pfile.write_text(_IMAGING_HEADER + " ".join(parts) + "\n", encoding="utf-8")
 
     out = calc._compute_incidence_angles_from_imaging_list(pfile)
     assert "angle_incidence_focal_deg" in out
@@ -388,10 +393,10 @@ def test_find_column_indices_ignores_mirror_when_disabled(tmp_test_directory):
             "# Column 30: Y reflection point on primary mirror [cm]",
         ]
     )
-    pfile.write_text(header + "\n0\n", encoding="utf-8")
+    pfile.write_text(_IMAGING_HEADER + header + "\n0\n", encoding="utf-8")
 
     idx = calc._find_column_indices(pfile)
-    assert set(idx.keys()) == {"focal"}
+    assert set(idx.keys()) == {"focal", "filter", "pixel"}
     assert idx["focal"] == 25  # 1-based 26 -> 0-based 25
 
 
@@ -404,6 +409,7 @@ def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
     # Create dummy results
     t1 = QTable()
     t1["angle_incidence_focal"] = [1.0, 2.0] * u.deg
+    t1["angle_incidence_filter"] = [1.0, 2.0] * u.deg
     t1["angle_incidence_primary"] = [10.0, 20.0] * u.deg
 
     results_by_offset = {0.0: t1}
@@ -430,3 +436,205 @@ def test_save_model_parameters_no_results_logs_warning(
 
     assert not list(Path(tmp_test_directory).glob("*.ecsv"))
     assert not list(Path(tmp_test_directory).glob("*.json"))
+
+
+# --- Tests for 100% coverage ---
+
+
+def test_source_distance_km_with_plain_float(calculator):
+    """Cover _source_distance_km when source_distance is a plain float."""
+    calculator.config_data["source_distance"] = 15.0
+    assert calculator._source_distance_km() == pytest.approx(15.0)
+
+
+def test_append_primary_secondary_angles_with_none_arrays():
+    """Cover _append_primary_secondary_angles when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"primary": 31, "secondary": 35}
+    calc._append_primary_secondary_angles(parts, col_idx, None, None)
+
+
+def test_append_primary_hit_geometry_with_none_arrays():
+    """Cover _append_primary_hit_geometry when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"prim_x": 28, "prim_y": 29}
+    calc._append_primary_hit_geometry(parts, col_idx, None, None, None)
+
+
+def test_append_secondary_hit_geometry_with_none_arrays():
+    """Cover _append_secondary_hit_geometry when arrays are None."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    parts = ["0"] * 40
+    col_idx = {"sec_x": 32, "sec_y": 33}
+    calc._append_secondary_hit_geometry(parts, col_idx, None, None, None)
+
+
+def test_update_indices_from_header_desc_primary_secondary():
+    """Cover _update_indices_from_header_desc with primary/secondary mirror headers."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    calc.calculate_primary_secondary_angles = True
+    indices = {"focal": 25}
+
+    calc._update_indices_from_header_desc(
+        "angle of incidence onto primary mirror [deg]", 32, indices
+    )
+    assert indices["primary"] == 31
+
+    calc._update_indices_from_header_desc(
+        "angle of incidence on secondary mirror [deg]", 36, indices
+    )
+    assert indices["secondary"] == 35
+
+
+def test_calculate_histogram_empty_after_filtering():
+    """Cover _calculate_histogram when all data is filtered out as non-finite."""
+    bin_centers, hist = IncidentAnglesCalculator._calculate_histogram(
+        [float("nan"), float("inf"), float("-inf")], bins=10
+    )
+    assert len(bin_centers) == 0
+    assert len(hist) == 0
+
+
+def test_save_model_parameters_mirror_class_2(tmp_test_directory, monkeypatch, mock_models):
+    """Cover save_model_parameters with mirror_class == 2 (dual-mirror telescope)."""
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    config_data = {
+        "telescope": "SSTS-01",
+        "site": "South",
+        "model_version": "7.0.0",
+        "parameter_version": "1.0.0",
+    }
+
+    calculator = IncidentAnglesCalculator(
+        config_data=config_data,
+        output_dir=tmp_test_directory,
+        label="test",
+    )
+
+    calculator.telescope_model = MagicMock()
+    calculator.telescope_model.get_parameter_value.return_value = 2
+
+    t1 = QTable()
+    t1["angle_incidence_focal"] = [1.0, 2.0, 3.0] * u.deg
+    t1["angle_incidence_filter"] = [1.0, 2.0, 3.0] * u.deg
+    t1["angle_incidence_primary"] = [10.0, 20.0, 30.0] * u.deg
+    t1["angle_incidence_secondary"] = [5.0, 10.0, 15.0] * u.deg
+
+    results_by_offset = {0.0: t1}
+    calculator.save_model_parameters(results_by_offset)
+
+    assert mock_writer.write_product_data.call_count >= 3
+    assert mock_writer.write_model_parameter.call_count >= 3
+
+
+def test_save_model_parameters_no_results(tmp_test_directory, monkeypatch, caplog, mock_models):
+    """Cover early return in save_model_parameters when no results."""
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    config_data = {
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "7.0.0",
+    }
+
+    calculator = IncidentAnglesCalculator(
+        config_data=config_data,
+        output_dir=tmp_test_directory,
+        label="test",
+    )
+    calculator.telescope_model = MagicMock()
+    calculator.telescope_model.get_parameter_value.return_value = 1
+
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator.save_model_parameters({})
+
+    assert any("No results to write model parameters." in rec.message for rec in caplog.records)
+    assert mock_writer.write_product_data.call_count == 0
+
+
+def test_run_with_all_columns(monkeypatch, calculator, tmp_test_directory):
+    """Cover run() with all columns including primary/secondary angles and geometry."""
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_run_script", lambda *a, **k: None)
+
+    suffix = f"{calculator.label}_{calculator.config_data['telescope']}_off0"
+    photons_file = calculator.photons_dir / f"incident_angles_photons_{suffix}.lis"
+    stars_file = calculator.photons_dir / f"incident_angles_stars_{suffix}.lis"
+    log_file = calculator.logs_dir / f"incident_angles_{suffix}.log"
+
+    def _prep_files(self):
+        photons_file.parent.mkdir(parents=True, exist_ok=True)
+        rows = [_IMAGING_HEADER]
+        triplets = [(10.0, 1.0, 2.0, 100.0, 200.0, 300.0, 400.0)]
+        for foc, pri, sec, px, py, sx, sy in triplets:
+            parts = ["0"] * 25 + [str(foc)]
+            parts += ["0", "0", str(px), str(py), "0"]
+            parts += [str(pri)]
+            parts += [str(sx), str(sy), "0", "0"]
+            parts += [str(sec)]
+            rows.append(" ".join(parts) + "\n")
+        photons_file.write_text("".join(rows), encoding="utf-8")
+        stars_file.write_text("0 0 1 10\n", encoding="utf-8")
+        return photons_file, stars_file, log_file
+
+    monkeypatch.setattr(ia.IncidentAnglesCalculator, "_prepare_psf_io_files", _prep_files)
+
+    res = calculator.run()
+
+    assert isinstance(res, QTable)
+    assert len(res) == 1
+    assert "angle_incidence_focal" in res.colnames
+    assert "angle_incidence_primary" in res.colnames
+    assert "angle_incidence_secondary" in res.colnames
+    assert "primary_hit_radius" in res.colnames
+    assert "secondary_hit_radius" in res.colnames
+
+
+def test_build_incidence_distribution_table():
+    """Cover _build_incidence_distribution_table static method."""
+    calc = object.__new__(IncidentAnglesCalculator)
+    data = [1.0, 2.0, 3.0, 4.0, 5.0]
+    table = calc._build_incidence_distribution_table(data)
+
+    assert isinstance(table, QTable)
+    assert "Incidence angle" in table.colnames
+    assert "Fraction" in table.colnames
+    assert table["Incidence angle"].unit == u.deg
+    assert len(table) == 100
+
+
+@pytest.mark.parametrize("mirror_class", [0, 1, 2])
+def test_exports_only_incidence_parameters(calculator, monkeypatch, mirror_class):
+    """Keep the laboratory lightguide file intact while exporting ray-traced angles."""
+    calculator.telescope_model.get_parameter_value.side_effect = None
+    calculator.telescope_model.get_parameter_value.return_value = mirror_class
+    writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+    parameter_dir = calculator.output_dir / calculator.config_data["telescope"]
+    parameter_dir.mkdir()
+    lab_file = parameter_dir / "lightguide_efficiency_vs_incidence_angle.ecsv"
+    original_data = "# laboratory measurement\n0 0.85\n30 0.72\n"
+    lab_file.write_text(original_data, encoding="utf-8")
+    table = QTable()
+    for surface in ("filter", "primary", "secondary"):
+        table[f"angle_incidence_{surface}"] = [10, 20, 30] * u.deg
+
+    calculator.save_model_parameters({0.0: table})
+
+    expected = ["camera_filter_incidence_angle"]
+    if mirror_class == 2:
+        expected.extend(["primary_mirror_incidence_angle", "secondary_mirror_incidence_angle"])
+    assert [
+        call.kwargs["parameter_name"] for call in writer.write_model_parameter.call_args_list
+    ] == expected
+    assert [
+        call.kwargs["output_file"].name for call in writer.write_product_data.call_args_list
+    ] == [f"{name}.ecsv" for name in expected]
+    assert lab_file.read_text(encoding="utf-8") == original_data

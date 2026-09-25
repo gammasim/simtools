@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 """Derive photon incident angles on focal plane and primary/secondary mirrors."""
+
+import argparse
 
 import astropy.units as u
 
@@ -9,28 +11,32 @@ from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 _ARGUMENTS = (
+    cli.RAY_TRACING_ZENITH_ANGLE,
     cli.OFF_AXIS_ANGLES,
     cli.SOURCE_DISTANCE,
     cli.NUMBER_OF_PHOTONS,
     cli.ArgumentDefinition(
         "perfect_mirror",
         help="Assume perfect mirror shape/alignment/reflection",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         required=False,
     ),
     cli.ArgumentDefinition(
         "debug_plots",
         dest="debug_plots",
         help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         required=False,
     ),
     cli.ArgumentDefinition(
         "calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
         help="Compute angles of incidence on primary and secondary mirrors",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         required=False,
-        action="store_true",
     ),
 )
 
@@ -41,10 +47,12 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
 )
 
@@ -74,8 +82,8 @@ def main():
         results_by_offset,
         output_dir,
         label_with_telescope,
-        debug_plots=app_context.args.get("debug_plots", False),
-        model_version=app_context.args.get("model_version", None),
+        debug_plots=app_context.args["debug_plots"],
+        model_version=app_context.args["model_version"],
     )
     calculator.save_model_parameters(results_by_offset)
     total = sum(len(t) for t in results_by_offset.values())

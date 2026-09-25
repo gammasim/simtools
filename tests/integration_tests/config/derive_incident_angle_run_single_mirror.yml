@@ -5,7 +5,7 @@ applications:
     title: Derive photon incidence angles for an LST
     summary: >-
       Ray-trace an off-axis source through a single-mirror LST and derive camera photon-incidence
-      angles.
+      angles. Tests export of the filter incidence distribution for single-mirror telescopes.
   configuration:
     site: South
     telescope: LSTS-04
@@ -13,6 +13,7 @@ applications:
     number_of_photons: 10000
     model_version: 6.0.2
     output_path: simtools-output
+    parameter_version: 1.0.0
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
@@ -24,6 +25,12 @@ applications:
     - path_descriptor: output_path
       file: incident_angles_derive_incident_angle_LSTS-04_off1.log
       output_sub_path: logs
+    - path_descriptor: output_path
+      file: camera_filter_incidence_angle.ecsv
+      output_sub_path: LSTS-04
+    - path_descriptor: output_path
+      file: camera_filter_incidence_angle.json
+      output_sub_path: LSTS-04
   test_name: incident_angles_single_mirror
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0
