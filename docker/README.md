@@ -10,14 +10,8 @@ For convenience, the command to use a container as a developer is repeated here:
 podman run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -lc "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
 
-In case a local database is used:
-
-```bash
-podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -lc "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
-```
-
 In some combinations of local git directory and container settings, git might report an issue with unsafe directories. In this case, run:
 
 ```bash
-podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -c "git config --global --add safe.directory /workdir/external/simtools && cd /workdir/external/simtools && pip install -e . && exec bash"
+podman run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -c "git config --global --add safe.directory /workdir/external/simtools && cd /workdir/external/simtools && pip install -e . && exec bash"
  ```

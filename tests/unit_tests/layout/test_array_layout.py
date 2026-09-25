@@ -122,7 +122,7 @@ def test_initialize_coordinate_systems(
     array_layout_south_instance,
 ):
     def test_one_site(center_data_dict, instance, easting, northing):
-        # set center data from database
+        # set center data from model repository
         instance._initialize_coordinate_systems()
         _x, _y, _z = instance._array_center.get_coordinates("ground")
         assert _x.value == pytest.approx(0.0)

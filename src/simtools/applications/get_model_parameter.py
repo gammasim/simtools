@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
-"""Get a model parameter from a simulation-model repository or database."""
+"""Get a model parameter from a simulation-model repository."""
 
 from pprint import pprint
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.application.model_reader import require_model_reader
 from simtools.configuration import arguments as cli
-from simtools.data_model import row_table_utils
 from simtools.io import ascii_handler
 
 ARGUMENTS = (
@@ -43,8 +42,14 @@ ARGUMENTS = (
 )
 
 
+def _is_row_table_dict(value):
+    """Return whether a value uses the legacy row-table dictionary structure."""
+    return isinstance(value, dict) and {"columns", "rows", "column_units"} <= value.keys()
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *ARGUMENTS,
         cli.MODEL_VERSION,
@@ -54,7 +59,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
     initialize_output=False,
 )
 
@@ -66,7 +70,7 @@ def _export_parameter_file(app_context, model_reader, parameters):
     output_file = app_context.args.get("output_file")
     output_directory = app_context.io_handler.get_output_directory()
 
-    if row_table_utils.is_row_table_dict(parameter_info.get("value")):
+    if _is_row_table_dict(parameter_info.get("value")):
         if output_file is None:
             raise ValueError(
                 "Use --output_file when exporting dict-backed parameters as an ECSV table."
@@ -134,8 +138,6 @@ def run(app_context):
     parameter_data = parameters[app_context.args["parameter"]]
     if app_context.args["output_file"] is not None:
         data = dict(parameter_data)
-        data.pop("_id", None)
-        data.pop("entry_date", None)
         ascii_handler.write_data_to_file(
             data=data,
             output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),

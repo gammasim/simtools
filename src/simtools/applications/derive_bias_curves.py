@@ -54,6 +54,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -63,7 +64,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
 )
 
 

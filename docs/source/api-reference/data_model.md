@@ -5,6 +5,10 @@
 Modules in the `data_model` sections provide functionality for reading, writing, and validation of data.
 Data products ingested or produced by simtools generally follows the CTAO data model.
 
+File-backed model parameters use validated Astropy ECSV assets as their canonical tabular
+representation. Structured JSON records are reserved for non-tabular values such as mirror
+segmentation; sim_telarray text is generated only by the simulator adapters.
+
 (datareader)=
 
 ## data_reader
@@ -82,11 +86,23 @@ Data products ingested or produced by simtools generally follows the CTAO data m
    :members:
 ```
 
-## row_table_utils
-
-(row-table-utils-1)=
+## table_asset
 
 ```{eval-rst}
-.. automodule:: data_model.row_table_utils
+.. automodule:: data_model.table_asset
+   :members:
+```
+
+## json_validation
+
+```{eval-rst}
+.. automodule:: data_model.json_validation
+   :members:
+```
+
+## mirror_segmentation
+
+```{eval-rst}
+.. automodule:: data_model.mirror_segmentation
    :members:
 ```

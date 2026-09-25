@@ -68,7 +68,7 @@ Derive trigger rates with a user-defined spectrum:
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: derive_trigger_rates_db_arrays_short.yml
+    :file: derive_trigger_rates_model_repository_arrays_short.yml
 ```
 
 ```{eval-rst}

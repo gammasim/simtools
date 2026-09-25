@@ -61,9 +61,6 @@ optional-dependencies.doc = [
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
 ]
-optional-dependencies.mongodb = [
-  "pymongo",
-]
 optional-dependencies.tests = [
   "psutil",
   "pytest",
@@ -83,14 +80,6 @@ scripts.simtools-compare-productions = "simtools.applications.compare_production
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """
-scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
-scripts.simtools-db-add-simulation-model-from-repository-to-db = """\
-  simtools.applications.db_add_simulation_model_from_repository_to_db:main\
-  """
-scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
-scripts.simtools-db-generate-compound-indexes = "simtools.applications.db_generate_compound_indexes:main"
-scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
-scripts.simtools-db-upload-model-repository = "simtools.applications.db_upload_model_repository:main"
 scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
 scripts.simtools-derive-bias-curves = "simtools.applications.derive_bias_curves:main"
@@ -257,7 +246,6 @@ main.good-names = [
   "C4",
   "C4x",
   "ce",
-  "db",
   "e",
   "ex",
   "f",
@@ -343,8 +331,7 @@ ini_options.addopts = [
   "-rsxXf",
 ]
 ini_options.markers = [
-  "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",
-  "uses_model_database: test uses model parameter database.",
+  "uses_model_repository: test reads simulation-model repository data.",
 ]
 ini_options.filterwarnings = [
   # treat warnings as errors

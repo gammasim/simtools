@@ -1,5 +1,6 @@
 """Tests for production comparison workflows."""
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from simtools.constants import SCHEMA_PATH
 from simtools.production_configuration import production_comparison
 from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.sim_events.production_comparison import ProductionDescriptor
 
 
 def test_write_production_comparison_writes_each_selected_array_layout(mocker, tmp_test_directory):
@@ -119,7 +121,11 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
 ):
     output_directory = Path(tmp_test_directory) / "comparison"
     pairing_key = {"configuration": {"primary": "gamma"}}
-    descriptors = [mocker.sentinel.baseline, mocker.sentinel.candidate]
+    input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
+    descriptors = [
+        ProductionDescriptor("baseline", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
+    ]
     mocker.patch(
         "simtools.production_configuration.production_comparison."
         "_production_descriptor_pairs_from_metadata",
@@ -138,8 +144,41 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
         descriptors,
         {"baseline_path": "baseline", "array_layout_name": ["alpha"]},
     )
-    assert mock_write.call_args.args[2].parent == output_directory
+    assert mock_write.call_args.args[2] == output_directory / input_stem
     assert mock_write.call_args.args[3] == ["alpha"]
+
+
+def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
+    mocker, tmp_test_directory
+):
+    output_directory = Path(tmp_test_directory) / "comparison"
+    input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
+    descriptors = [
+        ProductionDescriptor("baseline", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
+    ]
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_production_descriptor_pairs_from_metadata",
+        return_value=[
+            ({"configuration": {"zenith_angle": 20}}, descriptors),
+            ({"configuration": {"zenith_angle": 40}}, descriptors),
+        ],
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+    )
+
+    production_comparison.write_production_comparison(
+        {"baseline_path": "baseline", "array_layout_name": ["alpha"]},
+        output_directory,
+    )
+
+    output_paths = [call.args[2] for call in mock_write.call_args_list]
+    assert len(output_paths) == 2
+    assert output_paths[0].name != input_stem
+    assert output_paths[1].name != input_stem
+    assert output_paths[0].name != output_paths[1].name
 
 
 def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test_directory):
@@ -157,6 +196,71 @@ def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test
         production_comparison._production_descriptor_pairs_from_metadata(
             {"baseline_path": "baseline", "candidate_path": "candidate"}
         )
+
+
+def test_write_production_comparison_writes_matched_pairs_before_reporting_unmatched_metadata(
+    mocker, caplog, tmp_test_directory
+):
+    base_directory = Path(tmp_test_directory)
+
+    def manifest(directory, zenith):
+        return ProductionManifest(
+            path=base_directory / directory / f"{zenith}.yml",
+            data={
+                "configuration": {"zenith_angle": {"value": zenith, "unit": "deg"}},
+                "files": {"trigger_histograms": [f"{directory}_{zenith}.hdf5"]},
+            },
+        )
+
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_selected_trigger_histogram_manifests",
+        side_effect=[
+            [manifest("baseline", 20), manifest("baseline", 40)],
+            [manifest("candidate", 20)],
+        ],
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+    )
+
+    with caplog.at_level(logging.WARNING, logger=production_comparison.__name__):
+        production_comparison.write_production_comparison(
+            {"baseline_path": "baseline", "candidate_path": "candidate"},
+            base_directory / "comparison",
+        )
+
+    mock_write.assert_called_once()
+    assert "missing candidates=1, missing baselines=0" in caplog.text
+    descriptors = mock_write.call_args.args[0]
+    assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
+    assert descriptors[0].input_files == [str(base_directory / "baseline" / "baseline_20.hdf5")]
+    assert descriptors[1].input_files == [str(base_directory / "candidate" / "candidate_20.hdf5")]
+
+
+def test_write_production_comparison_rejects_completely_unmatched_metadata(
+    mocker, tmp_test_directory
+):
+    pairing_error = production_comparison._ProductionPairingError(
+        "Trigger-histogram metadata pairing failed: missing candidates=1, missing baselines=1.",
+        [],
+    )
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_production_descriptor_pairs_from_metadata",
+        side_effect=pairing_error,
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+    )
+
+    with pytest.raises(ValueError, match="pairing failed"):
+        production_comparison.write_production_comparison(
+            {"baseline_path": "baseline", "candidate_path": "candidate"},
+            Path(tmp_test_directory) / "comparison",
+        )
+
+    mock_write.assert_not_called()
 
 
 def test_selected_trigger_histogram_manifests_checks_matches(mocker):

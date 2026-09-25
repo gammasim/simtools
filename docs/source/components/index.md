@@ -5,7 +5,7 @@ simtools provides tools to configure, run, and analyze simulations and to manage
 The main components are:
 
 - simulation software like CORSIKA and sim_telarray
-- simulation models and parameters, associated databases, setting and validation procedures
+- simulation models and parameters, setting and validation procedures
 - reading and writing simulation data
 
 ## Simulation Software
@@ -21,11 +21,9 @@ Simulation software is external to simtools and developed by the respective team
 ```
 
 
-## Simulation Models and Databases
+## Simulation Models
 
 [Simulation models and parameters](simulation_models.md) describe the properties of all relevant elements of the observatory, including site, telescopes, and calibration devices.
-[Databases](databases.md) are used to store simulation model parameters for efficient querying and management.
-
 ```{toctree}
 :hidden:
 :maxdepth: 1
@@ -33,7 +31,6 @@ corsika.md
 sim_telarray.md
 coordinate_systems.md
 simulation_models.md
-databases.md
 ```
 
 ## I/O using pyeventio

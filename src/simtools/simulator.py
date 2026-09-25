@@ -260,7 +260,6 @@ class Simulator:
                 value.
         """
         base_args = dict(settings.config.args)
-        base_db_config = dict(settings.config.db_config)
         model_reader = settings.config.model_reader
         base_run_number = int(base_args.get("run_number", 1))
 
@@ -297,14 +296,14 @@ class Simulator:
                 if photons[idx] is not None:
                     run_args["flasher_photons"] = photons[idx]
 
-                settings.config.load(args=run_args, db_config=base_db_config)
+                settings.config.load(args=run_args)
                 settings.config.set_model_reader(model_reader)
 
                 simulator = cls(label=label)
                 simulator.simulate()
                 simulator.validate_simulations()
         finally:
-            settings.config.load(args=base_args, db_config=base_db_config)
+            settings.config.load(args=base_args)
             settings.config.set_model_reader(model_reader)
 
     def _get_corsika_file(self):
@@ -520,6 +519,10 @@ class Simulator:
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
         )
+        for output_file in resolved_output_files:
+            runner_services.warn_if_file_name_exceeds_dirac_limit(
+                Path(output_file).name, "sim_telarray_event_data"
+            )
 
         return Simulator._run_reduced_event_list_jobs(
             input_file_batches=input_file_batches,

@@ -4,7 +4,7 @@ title: List of allowed array elements
 version: 0.1.0
 description: |
   List of array elements known to simtools and its
-  corresponding database collections.
+  corresponding model repository collections.
   Also used as part of the schema validation process.
 data:
   LSTN:

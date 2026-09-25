@@ -132,6 +132,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
@@ -146,7 +147,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ARRAY_LAYOUT_NAME_FROM_PARAMETER_FILE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
     post_parse=_validate_parameter_file_layout_selection,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
 )

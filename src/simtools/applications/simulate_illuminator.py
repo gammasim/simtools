@@ -86,6 +86,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         *cli.BACKEND_ARGUMENTS,
@@ -96,7 +97,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
-    database=True,
     validate_simulation_dependencies=True,
 )
 
@@ -139,6 +139,14 @@ def main():
         illuminators=illuminators,
         telescopes=telescopes,
     )
+
+    failed_results = [result for result in results if not result["success"]]
+    if failed_results:
+        failures = "; ".join(
+            f"{result['illuminator']} -> {result['telescope']}: {result['error']}"
+            for result in failed_results
+        )
+        sys.exit(f"error: illuminator simulation failed: {failures}")
 
     if not results and not simulate_all:
         sys.exit(

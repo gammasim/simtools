@@ -73,8 +73,7 @@ def test_map_ordered_serializes_runtime_for_remote_jobs(mocker):
     """Remote function jobs receive the submitting application's runtime configuration."""
     execute = mocker.patch("simtools.job_execution.execution.execute_jobs", return_value=[])
     args = {"output_path": "output", "sim_telarray_path": "simtel"}
-    db_config = {"db_url": "mongodb://example"}
-    config.load(args, db_config, resolve_sim_software_executables=False)
+    config.load(args, resolve_sim_software_executables=False)
 
     try:
         assert map_ordered(_square, [2], backend="htcondor") == []
@@ -83,7 +82,6 @@ def test_map_ordered_serializes_runtime_for_remote_jobs(mocker):
 
     job = execute.call_args.args[0][0]
     assert job.runtime_args == args
-    assert job.runtime_db_config == db_config
 
 
 def test_execute_jobs_empty_input_does_not_resolve_backend():

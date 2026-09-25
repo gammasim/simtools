@@ -210,8 +210,8 @@ def test_write_model_parameter(tmp_test_directory):
     assert position_dict["value"][3] == pytest.approx(0.0)
 
     with patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
-    ) as mock_db_check:
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
+    ) as mock_repository_check:
         writer.ModelDataWriter.write_model_parameter(
             parameter_name=num_gains_name,
             value=2,
@@ -220,7 +220,7 @@ def test_write_model_parameter(tmp_test_directory):
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
         )
-        mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
+        mock_repository_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
 def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, tmp_test_directory):
@@ -230,8 +230,8 @@ def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, t
     monkeypatch.setattr(settings.config, "_args", {"ignore_existing_parameter_version": True})
 
     with patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
-    ) as mock_db_check:
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
+    ) as mock_repository_check:
         writer.ModelDataWriter.write_model_parameter(
             parameter_name=num_gains_name,
             value=2,
@@ -241,7 +241,7 @@ def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, t
             output_path=tmp_test_directory,
         )
 
-    mock_db_check.assert_not_called()
+    mock_repository_check.assert_not_called()
 
 
 def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
@@ -256,7 +256,7 @@ def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp
             output_file=output_file,
             output_path=tmp_test_directory,
             metadata_input_dict={"name": "test_metadata"},
-            check_db_for_existing_parameter=False,
+            check_for_existing_parameter=False,
         )
 
     assert not (Path(tmp_test_directory) / output_file).exists()
@@ -330,6 +330,16 @@ def test_get_validated_parameter_dict():
     assert global_parameter["site"] is None
 
 
+def test_get_validated_parameter_dict_rejects_nonfinite_string_value():
+    with pytest.raises(ValueError, match=r"Non-finite JSON number"):
+        writer.ModelDataWriter().get_validated_parameter_dict(
+            parameter_name="transit_time_error",
+            value="nan ns",
+            instrument="LSTN-01",
+            parameter_version="0.0.1",
+        )
+
+
 def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
     w1 = writer.ModelDataWriter()
     embedded_value = {
@@ -361,61 +371,6 @@ def test_get_parameter_type_for_schema_uses_selected_schema_version():
 
     assert writer_instance.get_parameter_type_for_schema("fadc_pulse_shape", "0.2.0") == "dict"
     assert writer_instance.get_parameter_type_for_schema("fadc_pulse_shape", "0.1.0") == "file"
-
-
-def test_parameter_uses_row_table_schema_true(mocker):
-    writer_instance = writer.ModelDataWriter()
-    mocker.patch.object(
-        writer_instance,
-        "_read_schema_dict",
-        return_value=(
-            {
-                "data": [
-                    {
-                        "type": "dict",
-                        "json_schema": {
-                            "required": ["columns", "column_units", "rows"],
-                            "properties": {
-                                "columns": {},
-                                "column_units": {},
-                                "rows": {},
-                            },
-                        },
-                    }
-                ]
-            },
-            "schema.yml",
-        ),
-    )
-
-    assert writer_instance.parameter_uses_row_table_schema("fadc_pulse_shape", "0.2.0")
-
-
-def test_parameter_uses_row_table_schema_false_for_generic_dict(mocker):
-    writer_instance = writer.ModelDataWriter()
-    mocker.patch.object(
-        writer_instance,
-        "_read_schema_dict",
-        return_value=(
-            {
-                "data": [
-                    {
-                        "type": "dict",
-                        "json_schema": {
-                            "required": ["name", "multiplicity"],
-                            "properties": {
-                                "name": {},
-                                "multiplicity": {},
-                            },
-                        },
-                    }
-                ]
-            },
-            "schema.yml",
-        ),
-    )
-
-    assert not writer_instance.parameter_uses_row_table_schema("array_triggers", "0.2.0")
 
 
 def test_get_validated_parameter_dict_fadc_pulse_shape_file_legacy():
@@ -529,7 +484,7 @@ def test_check_model_reader_for_existing_parameter():
     w1 = writer.ModelDataWriter(model_reader=model_reader)
 
     # Test case where parameter does not exist
-    w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+    w1.check_for_existing_parameter(parameter_name, instrument, parameter_version)
     model_reader.get_model_parameter.assert_called_once_with(
         parameter=parameter_name,
         parameter_version=parameter_version,
@@ -546,7 +501,7 @@ def test_check_model_reader_for_existing_parameter():
         ValueError,
         match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
     ):
-        w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+        w1.check_for_existing_parameter(parameter_name, instrument, parameter_version)
     model_reader.get_model_parameter.assert_called_once_with(
         parameter=parameter_name,
         parameter_version=parameter_version,

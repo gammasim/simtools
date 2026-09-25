@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.layout.array_layout_utils import (
-    get_array_elements_from_db_for_layouts,
+    get_array_elements_from_model_repository,
     resolve_array_layout_name,
 )
 from simtools.sim_events.histograms import EventDataHistograms
@@ -102,16 +102,17 @@ def resolve_telescope_configs(args_dict):
         If no supported telescope selector is provided.
     """
     if args_dict.get("array_layout_name"):
+        model_version = _single_model_version(args_dict.get("model_version"))
         layouts = resolve_array_layout_name(
             args_dict["array_layout_name"],
-            args_dict.get("model_version"),
+            model_version,
         )
         if not isinstance(layouts, list):
             layouts = [layouts]
-        return get_array_elements_from_db_for_layouts(
+        return get_array_elements_from_model_repository(
             layouts,
             args_dict.get("site"),
-            args_dict.get("model_version"),
+            model_version,
         )
     if args_dict.get("array_element_list"):
         return {"array_element_list": args_dict["array_element_list"]}
@@ -120,6 +121,18 @@ def resolve_telescope_configs(args_dict):
         "No telescope configuration provided. Use one of --array_layout_name "
         "or --array_element_list."
     )
+
+
+def _single_model_version(model_version):
+    """Return the scalar model version required for layout resolution."""
+    if isinstance(model_version, list):
+        if len(model_version) != 1:
+            raise ValueError(
+                "Telescope layout resolution requires exactly one model version, "
+                f"got {model_version}."
+            )
+        return model_version[0]
+    return model_version
 
 
 def normalize_telescope_configs(telescope_configs):

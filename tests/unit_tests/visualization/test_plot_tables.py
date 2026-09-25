@@ -38,8 +38,8 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
 
 
-@mock.patch("simtools.visualization.plot_tables.read_simtel_table")
-def test_read_astropy_table_data_from_file(mock_read_simtel_table):
+@mock.patch("simtools.visualization.plot_tables.Table.read")
+def test_read_astropy_table_data_from_file(mock_read_table):
     config = {
         "tables": [
             {
@@ -51,21 +51,25 @@ def test_read_astropy_table_data_from_file(mock_read_simtel_table):
             },
         ]
     }
-    mock_read_simtel_table.return_value = Table({"x": [41, 42], "y": [1.0, 2.0]})
+    mock_read_table.return_value = Table({"x": [41, 42], "y": [1.0, 2.0]})
 
     result = plot_tables.read_table_data(config, None)
 
-    mock_read_simtel_table.assert_called_once_with(None, "test_file.ecsv")
+    mock_read_table.assert_called_once_with("test_file.ecsv", format="ascii.ecsv")
     np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
     np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
 
 
-def test_read_simtel_table_data_from_file(simtel_spe_test_file):
+def test_read_ecsv_table_data_from_file(tmp_test_directory):
+    source = Path(tmp_test_directory) / "spectrum.ecsv"
+    Table({"amplitude": [1.0, 2.0, 3.0], "response": [0.1, 0.2, 0.3]}).write(
+        source, format="ascii.ecsv"
+    )
     config = {
         "tables": [
             {
                 "label": "test_table",
-                "file_name": simtel_spe_test_file.name,
+                "file_name": source.name,
                 "parameter": "pm_photoelectron_spectrum",
                 "column_x": "amplitude",
                 "column_y": "response",
@@ -73,13 +77,13 @@ def test_read_simtel_table_data_from_file(simtel_spe_test_file):
         ]
     }
 
-    result = plot_tables.read_table_data(config, simtel_spe_test_file.parent)
+    result = plot_tables.read_table_data(config, source.parent)
 
     assert len(result["test_table"]) == 3
     assert result["test_table"].dtype.names == ("amplitude", "response")
 
 
-def test_read_simtel_table_data_from_file_without_parameter_raises():
+def test_read_non_ecsv_table_data_from_file_raises():
     config = {
         "tables": [
             {
@@ -91,9 +95,7 @@ def test_read_simtel_table_data_from_file_without_parameter_raises():
         ]
     }
 
-    with pytest.raises(
-        ValueError, match=r"Parameter name must be provided for sim_telarray table reading\."
-    ):
+    with pytest.raises(ValueError, match="ECSV"):
         plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED) / "model_parameters")
 
 
@@ -128,7 +130,7 @@ def test_read_table_data_from_file(
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_model_database(
+def test_read_table_data_from_model_repository(
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -202,13 +204,13 @@ def test_export_model_file():
     )
 
 
-def test_export_model_file_with_db_export_path(tmp_test_directory):
+def test_export_model_file_with_model_export_path(tmp_test_directory):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
         "model_version": "test_version",
         "parameter": "test_parameter",
-        "db_export_path": str(tmp_test_directory / "test_plot_tables"),
+        "model_export_path": str(tmp_test_directory / "test_plot_tables"),
     }
     model_reader = mock.MagicMock()
     model_reader.export_model_file.return_value = mock.MagicMock()
@@ -354,8 +356,8 @@ def test_generate_output_file_name(
     assert result == expected
 
 
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 def test_generate_plot_configurations(
     mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
@@ -452,8 +454,8 @@ def test_get_plotting_label_multiple_duplicates():
 
 
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_parameter_dict, mock_read_table, mock_collect_data, tmp_test_directory
 ):
@@ -531,8 +533,8 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     assert result is None
 
 
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 def test_generate_plot_configurations_selects_schema_matching_parameter_version(
     mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory

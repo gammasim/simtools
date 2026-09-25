@@ -82,7 +82,9 @@ selected layouts, each layout is compared independently and written to its own d
 For production metadata manifests, pass the baseline and candidate metadata directories instead of
 legacy file descriptors. Repeated `select` expressions choose configurations, while `compare_by`
 lists configuration fields that are allowed to differ. Each matched configuration is written below
-`output_path/comparison-<configuration-hash>/`.
+`output_path/<input-stem>/`. If the baseline and candidate stems differ, the
+directory name joins them with `-vs-`; if multiple pairs would use the same
+name, a configuration hash is appended.
 
 ```console
 simtools-compare-productions \

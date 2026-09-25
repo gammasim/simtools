@@ -6,7 +6,7 @@ The dashboard is updated by the scheduled and post-merge
 `CI-test-benchmarks` workflow. It contains the unit and integration suite totals
 and the slower integration-test nodes, separated by model version.
 
-Each benchmark suite runs once and serially on `ubuntu-latest`. A pytest plugin
+Each benchmark suite runs once and serially on `ubuntu-24.04`. A pytest plugin
 records wall time, CPU time, peak RSS of pytest and its application descendants,
 on hosted runners. These measurements are noisy; use repeated runs to identify
 trends.
