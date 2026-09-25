@@ -47,34 +47,44 @@ def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
         _logger.warning(f"Telescope type '{telescope}' not found in file '{file_name}'.")
         return None, None, None
 
-    event_ids = gen.ensure_list(event_ids)
-    ids_with_data, events = [], []
-
     with SimTelFile(file_name, skip_calibration=False) as f:
         tel_desc = f.telescope_descriptions.get(tel_id)
         if tel_desc is None:
             _logger.warning(f"Telescope ID '{tel_id}' not found in file '{file_name}'.")
             return None, None, None
-
-        for event in f:
-            if event_ids and event["event_id"] not in event_ids:
-                continue
-            if tel_id in event["telescope_events"]:
-                events.append(event["telescope_events"][tel_id])
-                ids_with_data.append(event["event_id"])
-                if max_events and len(events) >= max_events:
-                    break
-            elif verbose:
-                triggered = event["trigger_information"]["triggered_telescopes"]
-                triggered_names = [tel_id_map.get(tid, f"ID {tid}") for tid in triggered]
-                _logger.debug(
-                    f"event {event['event_id']} with {len(event['telescope_events'])} "
-                    f"telescope events (triggered telescopes: {triggered_names})"
-                )
+        ids_with_data, events = _collect_events_for_telescope(
+            f, tel_id, tel_id_map, gen.ensure_list(event_ids), max_events, verbose
+        )
 
     _logger.info(f"Read {len(events)} events for telescope '{telescope}' from file '{file_name}'.")
 
     return ids_with_data, tel_desc, events
+
+
+def _collect_events_for_telescope(simtel_file, tel_id, tel_id_map, event_ids, max_events, verbose):
+    """Collect matching events for one telescope during a file scan."""
+    ids_with_data, events = [], []
+    for event in simtel_file:
+        if event_ids and event["event_id"] not in event_ids:
+            continue
+        if tel_id in event["telescope_events"]:
+            events.append(event["telescope_events"][tel_id])
+            ids_with_data.append(event["event_id"])
+            if max_events and len(events) >= max_events:
+                break
+        elif verbose:
+            _log_event_without_telescope_data(event, tel_id_map)
+    return ids_with_data, events
+
+
+def _log_event_without_telescope_data(event, tel_id_map):
+    """Log trigger information for an event without selected telescope data."""
+    triggered = event["trigger_information"]["triggered_telescopes"]
+    triggered_names = [tel_id_map.get(tid, f"ID {tid}") for tid in triggered]
+    _logger.debug(
+        f"event {event['event_id']} with {len(event['telescope_events'])} "
+        f"telescope events (triggered telescopes: {triggered_names})"
+    )
 
 
 def read_events_for_telescopes(
