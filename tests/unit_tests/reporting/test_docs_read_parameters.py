@@ -24,8 +24,11 @@ def test_get_all_parameter_descriptions(telescope_model_lst, tmp_test_directory)
     description_dict = read_parameters.get_all_parameter_descriptions()
 
     focal_length = description_dict["focal_length"]
+    assert isinstance(focal_length["description"], str)
     assert focal_length["description"]
+    assert isinstance(focal_length["short_description"], str)
     assert focal_length["short_description"]
+    assert isinstance(focal_length["inst_class"], str)
     assert focal_length["inst_class"]
 
 
