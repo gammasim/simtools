@@ -9,6 +9,7 @@ This modules provides two main functionalities:
 """
 
 import hashlib
+import hashlib
 import json
 import logging
 import os
@@ -187,7 +188,11 @@ def _validate_table_entries(entries, table_path):
 
 
 def _validate_table_entry(entry, table_path):
-    """Return an error for one manifest table entry, if any."""
+    """Check one manifest entry's file presence, size, and optional SHA-256 digest.
+
+    Entries without a digest receive an installation sanity check only; their content
+    is not verified.
+    """
     if not isinstance(entry, dict):
         return "invalid manifest table entry"
     path_value = entry.get("path")
@@ -196,11 +201,18 @@ def _validate_table_entry(entry, table_path):
         return f"invalid manifest table path: {path_value!r}"
     if not isinstance(expected_size, int) or expected_size < 0:
         return f"invalid manifest table size for {path_value}"
-    return _validate_table_file(table_path / path_value, expected_size)
+    expected_digest = entry.get("sha256")
+    if expected_digest is not None and (
+        not isinstance(expected_digest, str)
+        or len(expected_digest) != 64
+        or any(character not in "0123456789abcdefABCDEF" for character in expected_digest)
+    ):
+        return f"invalid SHA-256 digest for {path_value}"
+    return _validate_table_file(table_path / path_value, expected_size, expected_digest)
 
 
-def _validate_table_file(table_file, expected_size):
-    """Return an error for one installed interaction-table file, if any."""
+def _validate_table_file(table_file, expected_size, expected_sha256=None):
+    """Check file accessibility and size, and verify SHA-256 when supplied."""
     if not table_file.is_file():
         return f"missing file: {table_file}"
     if not os.access(table_file, os.R_OK):
@@ -210,6 +222,16 @@ def _validate_table_file(table_file, expected_size):
     actual_size = table_file.stat().st_size
     if actual_size != expected_size:
         return f"size mismatch for {table_file}: {actual_size} != {expected_size}"
+    if expected_sha256 is not None:
+        digest = hashlib.sha256()
+        try:
+            with table_file.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except OSError as exc:
+            return f"cannot read file for SHA-256 verification: {table_file}: {exc}"
+        if digest.hexdigest().lower() != expected_sha256.lower():
+            return f"SHA-256 mismatch for {table_file}"
     return None
 
 
