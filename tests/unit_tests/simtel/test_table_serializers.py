@@ -6,6 +6,7 @@ from astropy.table import QTable
 
 from simtools.simtel.table_serializers import (
     SimtelTableWriter,
+    _raw_values,
     _unit_matches,
     _validate_contract_definition,
     validate_simtel_serialization,
@@ -37,6 +38,14 @@ def test_write_simtel_table_sorts_plain_rows(tmp_test_directory):
         "1.0 0.1",
         "2.0 0.2",
     ]
+
+
+def test_raw_values_unwraps_quantity_columns_without_iterating():
+    values = [1.0, 2.0] * u.nm
+
+    result = _raw_values(values)
+
+    assert result.tolist() == [1.0, 2.0]
 
 
 def test_write_simtel_table_rejects_missing_contract():

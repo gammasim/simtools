@@ -131,6 +131,35 @@ def test_spectral_curve_averages_angle_dependent_table():
     np.testing.assert_allclose(unweighted, [0.6, 0.4])
 
 
+def test_spectral_curve_weights_each_angle_group_in_its_original_order():
+    table = Table(
+        {
+            "wavelength": [400.0, 400.0, 500.0, 500.0] * u.nm,
+            "incidence_angle": [0.0, 10.0, 10.0, 0.0] * u.deg,
+            "efficiency": [0.8, 0.4, 0.2, 0.6],
+        }
+    )
+
+    class Model:
+        def get_parameter_table(self, name):
+            assert name == "incidence"
+            return Table(
+                {
+                    "incidence_angle": [0.0, 10.0] * u.deg,
+                    "fraction": [0.25, 0.75],
+                }
+            )
+
+    result = _spectral_curve(
+        table,
+        np.array([400.0, 500.0]),
+        model=Model(),
+        weighting_parameter="incidence",
+    )
+
+    np.testing.assert_allclose(result, [0.5, 0.3])
+
+
 def test_spectral_curve_rejects_tables_without_values():
     table = Table({"wavelength": [400.0] * u.nm})
 

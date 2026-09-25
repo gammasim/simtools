@@ -406,7 +406,12 @@ class ArrayModel:
             return None
 
         archive_name = self.get_config_directory() / f"model_files_{self.model_version}.tar.gz"
-        general.pack_tar_file(archive_name, model_files, sub_dir=f"model/{self.model_version}")
+        general.pack_tar_file(
+            archive_name,
+            model_files,
+            sub_dir=f"model/{self.model_version}",
+            compression_level=1,
+        )
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
