@@ -29,7 +29,6 @@ activity:
     - ValidateTelescopeEfficiency
     - ValidateTelescopeSimulationModel
 source:
-  - SimPipe Derived
   - Calibration
 simulation_software:
   - name: simtools
