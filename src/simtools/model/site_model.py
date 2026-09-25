@@ -263,7 +263,10 @@ class SiteModel(ModelParameter):
         file_name = get_simtel_table_file_name(parameter)
         if file_name is not None:
             return file_name
-        return Path(parameter["value"]).with_suffix(".dat").name
+        value_path = Path(parameter["value"])
+        if value_path.suffix.lower() == ".ecsv":
+            return value_path.with_suffix(".dat").name
+        return value_path.name
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """
