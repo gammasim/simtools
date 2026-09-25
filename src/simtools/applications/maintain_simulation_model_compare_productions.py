@@ -1,6 +1,7 @@
 """Compare two directories with model production tables in JSON format."""
 
 from pathlib import Path
+import sys
 
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
@@ -42,13 +43,15 @@ def _print_differences(differences, rel_path):
 
 
 def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
-    """Compare two directories containing JSON files, ignoring a specific key."""
-    for path1 in dir1.rglob("*.json"):
+    """Compare JSON directories and return the number of differences."""
+    difference_count = 0
+    for path1 in sorted(dir1.rglob("*.json")):
         rel_path = path1.relative_to(dir1)
         path2 = dir2 / rel_path
 
         if not path2.exists():
             print(f"Missing in dir2: {rel_path}")
+            difference_count += 1
             continue
 
         try:
@@ -60,24 +63,32 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             )
         except FileNotFoundError as e:
             print(f"Error reading {rel_path}: {e}")
+            difference_count += 1
             continue
 
         differences = gen.find_differences_in_json_objects(json1, json2)
         if differences:
             _print_differences(differences, rel_path)
+            difference_count += 1
 
     # Check for files present in dir2 but not dir1
-    for path2 in dir2.rglob("*.json"):
+    for path2 in sorted(dir2.rglob("*.json")):
         rel_path = path2.relative_to(dir2)
         if not (dir1 / rel_path).exists():
             print(f"Missing in dir1: {rel_path}")
+            difference_count += 1
+    return difference_count
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    _compare_json_dirs(Path(app_context.args["directory_1"]), Path(app_context.args["directory_2"]))
+    difference_count = _compare_json_dirs(
+        Path(app_context.args["directory_1"]), Path(app_context.args["directory_2"])
+    )
+    if difference_count:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
