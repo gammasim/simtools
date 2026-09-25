@@ -77,3 +77,24 @@ def test_main_reports_failed_simulations(mock_application_start, mock_simulator_
 
     with pytest.raises(SystemExit, match="illuminator_tower_height was not found"):
         main()
+
+
+@patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_reports_empty_multi_pair_batch(mock_application_start, mock_simulator_class):
+    from simtools.applications.simulate_illuminator import main
+
+    mock_context = Mock()
+    mock_context.args = {
+        "light_source": None,
+        "telescope": None,
+        "simulate_all": True,
+        "wavelength": [355 * u.nm],
+    }
+    mock_application_start.return_value = mock_context
+    mock_simulator = mock_simulator_class.return_value
+    mock_simulator.simulate.return_value = []
+    mock_simulator.visibility.n_valid_pairs = 0
+
+    with pytest.raises(SystemExit, match="light_source=all, telescope=all.*0 valid pairs"):
+        main()
