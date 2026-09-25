@@ -31,6 +31,21 @@ def test_get_corsika_site_parameters_with_model_directory(array_model_north):
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
 
 
+def test_get_corsika_site_parameters_uses_simtel_atmospheric_profile_file(array_model_north):
+    parameter = array_model_north.site_model.parameters["atmospheric_profile"]
+    parameter.update(
+        value="atmospheric_profile-1.0.0.ecsv",
+        instrument="OBS-North",
+    )
+
+    parameters = array_model_north.site_model.get_corsika_site_parameters(
+        config_file_style=True,
+        model_directory=array_model_north.get_config_directory(),
+    )
+
+    assert parameters["IACT ATMOFILE"][0].name == "atmospheric_profile-1.0.0.dat"
+
+
 def test_get_array_elements_for_layout(model_version):
     _north = SiteModel(
         site="North",
@@ -117,6 +132,35 @@ def test_export_atmospheric_transmission_file(model_version, tmp_test_directory,
             }
         },
         dest=model_directory,
+    )
+
+
+def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
+    model_version, tmp_test_directory, mocker
+):
+    site_model = SiteModel(
+        site="South",
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+    site_model.parameters["atmospheric_profile"].update(
+        value="atmospheric_profile-1.0.0.ecsv",
+        instrument="OBS-South",
+    )
+    serialize = mocker.patch.object(site_model, "_export_ecsv_as_simtel_table")
+    model_directory = tmp_test_directory / "model"
+
+    site_model.export_atmospheric_transmission_file(model_directory)
+
+    serialize.assert_called_once_with(
+        parameter_name="atmospheric_profile",
+        parameter={
+            **site_model.parameters["atmospheric_profile"],
+            "qualify_filename": False,
+        },
+        model_directory=model_directory,
+        table_format="plain",
+        output_name="atmospheric_profile-1.0.0.dat",
     )
 
 
