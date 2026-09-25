@@ -51,6 +51,8 @@ def write_production_comparison(args_dict, output_directory):
                 raise
             descriptor_pairs = exc.descriptor_pairs
             pairing_error = exc
+        if pairing_error is not None and not descriptor_pairs:
+            raise pairing_error
         output_stems = [
             _comparison_pair_output_stem(production_descriptors)
             for _, production_descriptors in descriptor_pairs

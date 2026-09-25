@@ -238,6 +238,31 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
     assert descriptors[1].input_files == [str(base_directory / "candidate" / "candidate_20.hdf5")]
 
 
+def test_write_production_comparison_rejects_completely_unmatched_metadata(
+    mocker, tmp_test_directory
+):
+    pairing_error = production_comparison._ProductionPairingError(
+        "Trigger-histogram metadata pairing failed: missing candidates=1, missing baselines=1.",
+        [],
+    )
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_production_descriptor_pairs_from_metadata",
+        side_effect=pairing_error,
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+    )
+
+    with pytest.raises(ValueError, match="pairing failed"):
+        production_comparison.write_production_comparison(
+            {"baseline_path": "baseline", "candidate_path": "candidate"},
+            Path(tmp_test_directory) / "comparison",
+        )
+
+    mock_write.assert_not_called()
+
+
 def test_selected_trigger_histogram_manifests_checks_matches(mocker):
     manifest = mocker.sentinel.manifest
     mocker.patch(
