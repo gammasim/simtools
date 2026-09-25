@@ -63,6 +63,8 @@ jobs:
       benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
       model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}
       runner_labels: '["ubuntu-24.04"]'
+    secrets:
+      CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
 
   publish:
     name: Publish test resource history
