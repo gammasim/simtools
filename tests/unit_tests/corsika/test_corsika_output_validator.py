@@ -7,9 +7,9 @@ from simtools.corsika.corsika_output_validator import (
 )
 
 
-def test_validate_corsika_output_with_valid_files(tmp_path, mocker):
-    data_file = tmp_path / "corsika.data"
-    log_file = tmp_path / "corsika.log"
+def test_validate_corsika_output_with_valid_files(tmp_test_directory, mocker):
+    data_file = tmp_test_directory / "corsika.data"
+    log_file = tmp_test_directory / "corsika.log"
 
     mock_validate_events = mocker.patch(
         "simtools.corsika.corsika_output_validator.validate_event_numbers"
@@ -20,25 +20,34 @@ def test_validate_corsika_output_with_valid_files(tmp_path, mocker):
 
     validate_corsika_output([data_file], [log_file], expected_shower_events=1000)
 
-    mock_validate_events.assert_called_once()
-    mock_validate_logs.assert_called_once()
+    mock_validate_events.assert_called_once_with([data_file], 1000)
+    mock_validate_logs.assert_called_once_with(
+        [log_file], expected_shower_events=1000, curved_atmo=False
+    )
 
 
-def test_validate_event_numbers_with_matching_events(tmp_path, mocker):
-    data_file = tmp_path / "corsika.data"
+@pytest.mark.parametrize(
+    ("shower_events", "tolerance", "should_warn"),
+    [(1000, 0.001, False), (999, 0.001, True)],
+)
+def test_validate_event_numbers_accepts_counts_within_tolerance(
+    tmp_test_directory, mocker, caplog, shower_events, tolerance, should_warn
+):
+    data_file = tmp_test_directory / "corsika.data"
 
     mock_get_events = mocker.patch(
         "simtools.corsika.corsika_output_validator.file_info.get_simulated_events",
-        return_value=(1001, 100),
+        return_value=(shower_events, 100),
     )
 
-    validate_event_numbers([data_file], expected_shower_events=1000, tolerance=0.01)
+    validate_event_numbers([data_file], expected_shower_events=1000, tolerance=tolerance)
 
     mock_get_events.assert_called_once_with(data_file)
+    assert ("Small mismatch" in caplog.text) is should_warn
 
 
-def test_validate_event_numbers_with_mismatch_raises_error(tmp_path, mocker):
-    data_file = tmp_path / "corsika.data"
+def test_validate_event_numbers_with_mismatch_raises_error(tmp_test_directory, mocker):
+    data_file = tmp_test_directory / "corsika.data"
 
     mocker.patch(
         "simtools.corsika.corsika_output_validator.file_info.get_simulated_events",
