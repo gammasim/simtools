@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
 from simtools.utils.value_conversion import get_value_in_unit
@@ -163,10 +163,6 @@ class CorsikaLimitsLookup:
                         self.lookup_values_for_interpolation[key],
                         fill_value=np.nan,
                     ),
-                    NearestNDInterpolator(
-                        interpolation_points,
-                        self.lookup_values_for_interpolation[key],
-                    ),
                 )
                 for key in self.available_lookup_fields
             }
@@ -192,6 +188,11 @@ class CorsikaLimitsLookup:
         -------
         dict
             Interpolated lookup values on the target grid.
+
+        Raises
+        ------
+        ValueError
+            If any target lies outside the measured convex hull.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
         points = self._build_wrapped_interpolation_points(lookup_arrays["points"])
@@ -226,15 +227,7 @@ class CorsikaLimitsLookup:
                 wrapped_values,
                 fill_value=np.nan,
             )
-            nearest_interpolator = NearestNDInterpolator(
-                interpolation_points,
-                wrapped_values,
-            )
-            interpolated = self._interpolate_with_nearest_fallback(
-                linear_interpolator,
-                nearest_interpolator,
-                interpolation_target,
-            )
+            interpolated = self._interpolate_in_domain(linear_interpolator, interpolation_target)
             return interpolated.reshape(
                 len(target_values["zenith_angle"]),
                 len(target_values["azimuth"]),
@@ -277,29 +270,22 @@ class CorsikaLimitsLookup:
         interpolation_target = target[:, self.lookup_interpolation_axes]
         interpolated_limits = {}
         for key in self.available_lookup_fields:
-            linear_interpolator, nearest_interpolator = self.lookup_interpolators_for_point[key]
+            (linear_interpolator,) = self.lookup_interpolators_for_point[key]
             interpolated_value = float(
-                self._interpolate_with_nearest_fallback(
-                    linear_interpolator,
-                    nearest_interpolator,
-                    interpolation_target,
-                )[0]
+                self._interpolate_in_domain(linear_interpolator, interpolation_target)[0]
             )
             interpolated_limits[key] = interpolated_value * self.lookup_field_units[key]
         return interpolated_limits
 
     @staticmethod
-    def _interpolate_with_nearest_fallback(
-        linear_interpolator,
-        nearest_interpolator,
-        interpolation_target,
-    ):
-        """Interpolate and replace out-of-hull NaNs with nearest-neighbor values."""
+    def _interpolate_in_domain(linear_interpolator, interpolation_target):
+        """Interpolate values and reject targets outside the measured convex hull."""
         interpolated = np.asarray(linear_interpolator(interpolation_target), dtype=float)
-        nan_mask = np.isnan(interpolated)
-        if np.any(nan_mask):
-            nearest_values = np.asarray(nearest_interpolator(interpolation_target), dtype=float)
-            interpolated[nan_mask] = nearest_values[nan_mask]
+        if np.any(np.isnan(interpolated)):
+            raise ValueError(
+                "CORSIKA limits target lies outside the measured lookup-table domain; "
+                "extrapolation is disabled."
+            )
         return interpolated
 
     @staticmethod

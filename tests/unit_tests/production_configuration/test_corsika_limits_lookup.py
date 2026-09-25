@@ -153,16 +153,13 @@ def _write_2d_lookup_table(tmp_test_directory, file_name):
     return lookup_file
 
 
-def test_interpolate_point_falls_back_to_nearest_for_out_of_domain_point(tmp_test_directory):
+def test_interpolate_point_rejects_out_of_domain_point(tmp_test_directory):
     lookup_file = _write_2d_lookup_table(tmp_test_directory, "corsika_limits_outside_domain.ecsv")
 
     lookup = CorsikaLimitsLookup(lookup_file, array_layout_name="2d-array")
 
-    interpolated = lookup.interpolate_point(10 * u.deg, 0 * u.deg, nsb=1)
-
-    assert_quantity_allclose(interpolated["lower_energy_limit"], 0.01 * u.TeV)
-    assert_quantity_allclose(interpolated["upper_radius_limit"], 800.0 * u.m)
-    assert_quantity_allclose(interpolated["viewcone_radius"], 6.0 * u.deg)
+    with pytest.raises(ValueError, match="outside the measured lookup-table domain"):
+        lookup.interpolate_point(10 * u.deg, 0 * u.deg, nsb=1)
 
 
 def test_prepare_point_interpolators_supports_two_varying_dimensions(tmp_test_directory):
