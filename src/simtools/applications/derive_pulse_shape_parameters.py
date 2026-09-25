@@ -95,8 +95,14 @@ def main():
         telescope_name=app_context.args["telescope"],
     )
     fadc_sum_bins = telescope_model.get_parameter_value("fadc_sum_bins")
+    fadc_mhz = telescope_model.get_parameter_value_with_unit("fadc_mhz").to_value("MHz")
+    if fadc_mhz <= 0:
+        raise ValueError("fadc_mhz must be positive to derive pulse-shape parameters.")
 
-    window_ns = fadc_sum_bins + time_margin_ns
+    readout_ns = fadc_sum_bins * 1000.0 / fadc_mhz
+    # The solver uses a symmetric window around the pulse peak. Treat the configured
+    # readout duration as the span on each side, matching the historical CLI convention.
+    window_ns = readout_ns + time_margin_ns
     t_start_ns = -window_ns
     t_stop_ns = window_ns
 
