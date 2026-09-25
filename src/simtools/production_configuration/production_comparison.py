@@ -43,35 +43,7 @@ def write_production_comparison(args_dict, output_directory):
     """
     array_layout_names = args_dict.get("array_layout_name") or [None]
     if args_dict.get("baseline_path"):
-        pairing_error = None
-        try:
-            descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
-        except _ProductionPairingError as exc:
-            if not exc.descriptor_pairs:
-                raise
-            descriptor_pairs = exc.descriptor_pairs
-            pairing_error = exc
-        if pairing_error is not None and not descriptor_pairs:
-            raise pairing_error
-        output_stems = [
-            _comparison_pair_output_stem(production_descriptors)
-            for _, production_descriptors in descriptor_pairs
-        ]
-        stem_counts = Counter(output_stems)
-        for (pairing_key, production_descriptors), output_stem in zip(
-            descriptor_pairs, output_stems
-        ):
-            if stem_counts[output_stem] > 1:
-                output_stem = f"{output_stem}-{stable_configuration_hash(pairing_key)}"
-            pair_output_directory = output_directory / output_stem
-            _write_array_layout_comparisons(
-                production_descriptors,
-                args_dict,
-                pair_output_directory,
-                array_layout_names,
-            )
-        if pairing_error is not None:
-            _logger.warning(str(pairing_error))
+        _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         return
 
     production_descriptors = parse_production_arguments(args_dict["production"])
@@ -81,6 +53,45 @@ def write_production_comparison(args_dict, output_directory):
         output_directory,
         array_layout_names,
     )
+
+
+def _write_metadata_comparisons(args_dict, output_directory, array_layout_names):
+    """Write comparisons for trigger-histogram metadata pairs."""
+    pairing_error = None
+    try:
+        descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
+    except _ProductionPairingError as exc:
+        if not exc.descriptor_pairs:
+            raise
+        descriptor_pairs = exc.descriptor_pairs
+        pairing_error = exc
+    output_stems = [
+        _comparison_pair_output_stem(production_descriptors)
+        for _, production_descriptors in descriptor_pairs
+    ]
+    stem_counts = Counter(output_stems)
+    for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
+        pair_output_directory = _metadata_pair_output_directory(
+            output_directory,
+            pairing_key,
+            output_stem,
+            stem_counts,
+        )
+        _write_array_layout_comparisons(
+            production_descriptors,
+            args_dict,
+            pair_output_directory,
+            array_layout_names,
+        )
+    if pairing_error is not None:
+        _logger.warning(str(pairing_error))
+
+
+def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
+    """Return the output directory for one metadata comparison pair."""
+    if stem_counts[output_stem] > 1:
+        output_stem = f"{output_stem}-{stable_configuration_hash(pairing_key)}"
+    return output_directory / output_stem
 
 
 def _write_array_layout_comparisons(
