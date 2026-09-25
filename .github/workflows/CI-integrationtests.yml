@@ -45,6 +45,10 @@ on:
         required: false
         type: number
         default: 5.0
+    secrets:
+      CTAO_GITLAB_MIRROR:
+        description: 'Token with read access to the private GitHub mirror repositories'
+        required: true
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -118,8 +122,13 @@ jobs:
             corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}-
 
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
+        env:
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
         run: |
-          REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
+          REPO_URLS=(
+            "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}"
+            "https://github.com/gammasim/corsika7-interaction-tables.git"
+          )
           export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
 
           CLONE_DIR="${IT_NAME}-clone"
@@ -127,31 +136,49 @@ jobs:
           rm -rf "$CLONE_DIR"
           CLONE_SUCCESS=false
 
-          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
-            if git \
-              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
-              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
-              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"
-            then
-              git lfs install
-              if ! (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
-                echo "git lfs pull failed; will retry and/or fall back to the cache."
-                rm -rf "$CLONE_DIR"
-                continue
+          for repo_url in "${REPO_URLS[@]}"; do
+            for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
+              GIT_CLONE_ARGS=()
+              if [[ "$repo_url" == https://github.com/* ]]; then
+                if [[ -z "$CTAO_GITLAB_MIRROR" ]]; then
+                  echo "The CTAO_GITLAB_MIRROR secret is required for the GitHub mirror."
+                  break
+                fi
+                GIT_AUTH_HEADER=$(printf 'x-access-token:%s' "$CTAO_GITLAB_MIRROR" | base64 -w0)
+                GIT_CLONE_ARGS=(
+                  -c "http.extraheader=AUTHORIZATION: basic $GIT_AUTH_HEADER"
+                )
               fi
-              rm -rf "$CACHE_DIR"
-              mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES."
-              CLONE_SUCCESS=true
+              if git \
+                "${GIT_CLONE_ARGS[@]}" \
+                -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
+                -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
+                -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
+                clone --depth 1 --branch "$CORSIKA_TABLES" "$repo_url" "$CLONE_DIR"
+              then
+                git lfs install
+                if ! (cd "$CLONE_DIR" && git "${GIT_CLONE_ARGS[@]}" lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
+                  echo "Git LFS pull failed for $repo_url."
+                  rm -rf "$CLONE_DIR"
+                  continue
+                fi
+                rm -rf "$CACHE_DIR"
+                mv "$CLONE_DIR" "$CACHE_DIR"
+                echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES from $repo_url."
+                CLONE_SUCCESS=true
+                break
+              fi
+
+              rm -rf "$CLONE_DIR"
+              if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
+                echo "Clone attempt $attempt failed for $repo_url. Retrying in $RETRY_SLEEP_SECONDS seconds..."
+                sleep "$RETRY_SLEEP_SECONDS"
+              fi
+            done
+            if [[ "$CLONE_SUCCESS" == true ]]; then
               break
             fi
-
-            rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
-              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
-              sleep "$RETRY_SLEEP_SECONDS"
-            fi
+            echo "Repository $repo_url failed; trying the next repository."
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
@@ -160,7 +187,7 @@ jobs:
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
+            echo "All repository clones failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
           fi
 
       - name: Save cached CORSIKA interaction tables
@@ -183,6 +210,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       SIM_MODELS_REPO: "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
+      SIM_MODELS_MIRROR_REPO: "https://github.com/gammasim/simulations-models.git"
 
     defaults:
       run:
@@ -235,32 +263,53 @@ jobs:
 
       - name: Clone simulation models repository
         # if: github.event_name != 'schedule'
+        env:
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
         run: |
+          REPO_URLS=("$SIM_MODELS_REPO" "$SIM_MODELS_MIRROR_REPO")
           CLONE_DIR="simulation-models.git-clone"
           CACHE_DIR="simulation-models.git"
           rm -rf "$CLONE_DIR"
           CLONE_SUCCESS=false
 
-          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
-            if git \
-              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
-              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
-              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-              clone --bare --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" \
-                "$SIM_MODELS_REPO" "$CLONE_DIR"
-            then
-              rm -rf "$CACHE_DIR"
-              mv "$CLONE_DIR" "$CACHE_DIR"
-              echo "Successfully cloned simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-              CLONE_SUCCESS=true
+          for repo_url in "${REPO_URLS[@]}"; do
+            for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
+              GIT_CLONE_ARGS=()
+              if [[ "$repo_url" == https://github.com/* ]]; then
+                if [[ -z "$CTAO_GITLAB_MIRROR" ]]; then
+                  echo "The CTAO_GITLAB_MIRROR secret is required for the GitHub mirror."
+                  break
+                fi
+                GIT_AUTH_HEADER=$(printf 'x-access-token:%s' "$CTAO_GITLAB_MIRROR" | base64 -w0)
+                GIT_CLONE_ARGS=(
+                  -c "http.extraheader=AUTHORIZATION: basic $GIT_AUTH_HEADER"
+                )
+              fi
+              if git \
+                "${GIT_CLONE_ARGS[@]}" \
+                -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
+                -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
+                -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
+                clone --bare --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" \
+                  "$repo_url" "$CLONE_DIR"
+              then
+                rm -rf "$CACHE_DIR"
+                mv "$CLONE_DIR" "$CACHE_DIR"
+                echo "Successfully cloned simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH from $repo_url."
+                CLONE_SUCCESS=true
+                break
+              fi
+
+              rm -rf "$CLONE_DIR"
+              if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
+                echo "Clone attempt $attempt failed for $repo_url. Retrying in $RETRY_SLEEP_SECONDS seconds..."
+                sleep "$RETRY_SLEEP_SECONDS"
+              fi
+            done
+            if [[ "$CLONE_SUCCESS" == true ]]; then
               break
             fi
-
-            rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
-              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
-              sleep "$RETRY_SLEEP_SECONDS"
-            fi
+            echo "Repository $repo_url failed; trying the next repository."
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
@@ -269,8 +318,7 @@ jobs:
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "GitLab clone failed; refusing to use cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-            exit 1
+            echo "All repository clones failed; using cached simulation models revision $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
           fi
 
           git --git-dir="$CACHE_DIR" rev-parse --verify HEAD
