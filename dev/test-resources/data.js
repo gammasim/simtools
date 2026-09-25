@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790337745800,
+  "lastUpdate": 1790339088216,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -27426,6 +27426,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 425.6875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "127ba856861fee28d68de652929b743f5e7d4bfd",
+          "message": "Remove mongoDB (#2548)\n\n* tables\n\n* Simulation models tables\n\n* from dev branch\n\n* camera config\n\n* shape kinds\n\n* limitations\n\n* simplifications\n\n* schema validation\n\n* unit tests\n\n* remove asset path\n\n* no FILES\n\n* remove empty lines\n\n* correct naming\n\n* remove lightguide_angle_parameter\n\n* cleanup\n\n* cleanup\n\n* unit test fix\n\n* parameter writing\n\n* Correct configuration settings\n\n* correct file names\n\n* fix metadata\n\n* unit tests\n\n* model parameter fixes\n\n* generating simtools-tests\n\n* simtools-tests\n\n* simtools-test\n\n* whatever\n\n* avoid overwriting of files\n\n* unit tests; unique table names\n\n* tests\n\n* tests\n\n* simplification (#2520)\n\n* Improved table writing for many telescopes.\n\n* simtools vs sim_telarray parameters\n\n* test fixes\n\n* missing tests\n\n* unit tests, schemas, docs\n\n* coverage; unit tests\n\n* mirror list\n\n* sonar\n\n* hopefully the right branch now\n\n* legacy pulse shape parameters\n\n* removed unused stuff\n\n* copilot comments\n\n* refuse to go without clone\n\n* remove obsolete code\n\n* clearer naming\n\n* changelog\n\n* Efficiency optimizations\n\n* avoid multiple model initialization\n\n* more efficence pdf plotting\n\n* array layout\n\n* plotting\n\n* efficiency\n\n* rasterized running\n\n* dont initialize if we dont need\n\n* changelog\n\n* CI docs\n\n* reviewers comments\n\n* sonar\n\n* Model parameter tables issue fixes (#2538)\n\n* correct telescope types\n\n* model tables and trigger patches\n\n* fix model parameter table serialization\n\n* share design segmentation files\n\n* stupid\n\n* move trigger patch work to stacked branch\n\n* schema versions\n\n* fixes segmentation\n\n* serialization\n\n* Add additional option columns to model parameter tables (#2541)\n\n* Allow additional qe columns\n\n* add optional columns\n\n* Add compute resource comparison for simulation productions. (#2535)\n\n* Add compute resource comparison for simulation productions.\n\n* Improve help\n\n* sonar\n\n* co pilot reviewer\n\n* scale and naming\n\n* legends\n\n* copilot comments\n\n* Sonar; warning\n\n* add warnings and labels\n\n* Bugfix in HTCondor submission: enforce bining of simtools from container image (#2544)\n\n* Bugfix in HTCondor submission: enforce bining of simtools from container image\n\n* Remove mongoDB\n\n* changelog\n\n* dependency without model reader\n\n* remove mongoDB json fields\n\n* remove password test\n\n* correct file name\n\n* reviewers comments\n\n* lists for comparison\n\n* fix unit tests\n\n* configurable number of workers\n\n* Add GitHub mirror fallback for integration test dependencies\n\n* secret handling\n\n* correc path\n\n* that needs to go!",
+          "timestamp": "2026-09-25T14:11:56+02:00",
+          "tree_id": "14f5c7ec035481ed16f6cfb56d8127643c294765",
+          "url": "https://github.com/gammasim/simtools/commit/127ba856861fee28d68de652929b743f5e7d4bfd"
+        },
+        "date": 1790339072268,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 68.44192708700001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 71.25,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 424.52734375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
