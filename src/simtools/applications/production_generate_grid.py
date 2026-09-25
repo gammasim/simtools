@@ -126,6 +126,7 @@ _GRID_ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_GRID_ARGUMENTS,
         cli.MODEL_VERSION(required=True),
@@ -152,7 +153,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
     resolve_sim_software_executables=False,
 )
 

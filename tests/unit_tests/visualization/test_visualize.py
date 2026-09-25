@@ -29,7 +29,7 @@ def test_plot_1d(io_handler, wavelength):
     headers_type = {"names": (x_title, y_title), "formats": ("f8", "f8")}
     title = "Test 1D plot"
 
-    # Create test data file instead of fetching from DB
+    # Create test data file instead of fetching from model repository
     test_file_name = "ref_LST1_2022_04_01.dat"
     test_data_file = io_handler.get_output_directory(sub_dir="model") / test_file_name
     test_data_file.parent.mkdir(parents=True, exist_ok=True)

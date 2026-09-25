@@ -130,7 +130,7 @@ def test_read_table_data_from_file(
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_model_database(
+def test_read_table_data_from_model_repository(
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -204,13 +204,13 @@ def test_export_model_file():
     )
 
 
-def test_export_model_file_with_db_export_path(tmp_test_directory):
+def test_export_model_file_with_model_export_path(tmp_test_directory):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
         "model_version": "test_version",
         "parameter": "test_parameter",
-        "db_export_path": str(tmp_test_directory / "test_plot_tables"),
+        "model_export_path": str(tmp_test_directory / "test_plot_tables"),
     }
     model_reader = mock.MagicMock()
     model_reader.export_model_file.return_value = mock.MagicMock()
@@ -356,8 +356,8 @@ def test_generate_output_file_name(
     assert result == expected
 
 
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 def test_generate_plot_configurations(
     mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
@@ -454,8 +454,8 @@ def test_get_plotting_label_multiple_duplicates():
 
 
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_parameter_dict, mock_read_table, mock_collect_data, tmp_test_directory
 ):
@@ -533,8 +533,8 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     assert result is None
 
 
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
-@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 def test_generate_plot_configurations_selects_schema_matching_parameter_version(
     mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory

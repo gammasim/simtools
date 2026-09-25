@@ -118,13 +118,13 @@ def test_export_atmospheric_transmission_file(model_version, tmp_test_directory,
         model_version=model_version,
     )
 
-    mocker.patch.object(_south.db, "export_model_files")
+    mocker.patch.object(_south.model_source, "export_model_files")
 
     model_directory = tmp_test_directory / "model"
 
     _south.export_atmospheric_transmission_file(model_directory)
 
-    _south.db.export_model_files.assert_called_once_with(
+    _south.model_source.export_model_files.assert_called_once_with(
         parameters={
             "atmospheric_profile": {
                 **_south.parameters["atmospheric_profile"],

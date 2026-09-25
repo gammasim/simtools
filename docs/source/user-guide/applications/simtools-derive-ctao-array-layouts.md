@@ -12,7 +12,7 @@ and synchronizes them with the model parameter definition in 'array_layouts' for
 CTAO sites.
 
 Requires access to the CTAO common identifiers repository. Future versions of the
-common identifiers might be stored in a CTAO technical database.
+common identifiers might be stored in a CTAO technical repository.
 
 **Command line arguments**
 

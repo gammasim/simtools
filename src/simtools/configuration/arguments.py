@@ -84,7 +84,6 @@ def _argument(name, group, **kwargs):
 
 
 _RUN_TIME_GROUP = "run time"
-_DATABASE_CONFIGURATION_GROUP = "database configuration"
 _MODEL_REPOSITORY_GROUP = "model repository"
 _SIMULATION_MODEL_GROUP = "simulation model"
 _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
@@ -324,7 +323,7 @@ IGNORE_EXISTING_PARAMETER_VERSION = _argument(
     "ignore_existing_parameter_version",
     "execution",
     action="store_true",
-    help="skip checking for an existing model parameter version in the database",
+    help="skip checking for an existing model parameter version in the model repository",
 )
 
 VERSION = _argument(
@@ -394,20 +393,10 @@ USER_ARGUMENTS = (
     USER_ORCID,
 )
 
-DB_API_USER = _argument(
-    "db_api_user",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Database username.",
-    type=str,
-)
-
 SIMULATION_MODELS_PATH = _argument(
     "simulation_models_path",
     _MODEL_REPOSITORY_GROUP,
-    help=(
-        "Path containing simulation model files; when set, model parameters are read "
-        "from files instead of MongoDB."
-    ),
+    help=("Path containing the simulation-model repository to read."),
     type=Path,
     default=None,
 )
@@ -428,72 +417,12 @@ SIMULATION_MODELS_GIT_REVISION = _argument(
     default=None,
 )
 
-DATABASE_NAME = _argument(
-    "database_name",
-    "application",
-    help="Database name.",
-    type=str,
-    default=None,
-)
-
-DB_API_PW = _argument(
-    "db_api_pw",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Database password.",
-    type=str,
-)
-
-DB_API_PORT = _argument(
-    "db_api_port",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Database server port.",
-    type=int,
-)
-
-DB_SERVER = _argument(
-    "db_server",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Database server address.",
-    type=str,
-)
-
-DB_API_AUTHENTICATION_DATABASE = _argument(
-    "db_api_authentication_database",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Authentication database name.",
-    type=str,
-)
-
-DB_SIMULATION_MODEL = _argument(
-    "db_simulation_model",
-    _DATABASE_CONFIGURATION_GROUP,
-    help="Simulation-model database name.",
-    type=str.strip,
-)
-
-DB_SIMULATION_MODEL_TAG = _argument(
-    "db_simulation_model_tag",
-    _DATABASE_CONFIGURATION_GROUP,
-    help=(
-        "Simulation-model repository/database release tag (for example, v0.17.0). "
-        "--db_simulation_model_version remains a deprecated alias."
-    ),
-    type=str.strip,
-    aliases=("db_simulation_model_version",),
-)
-
-DATABASE_ARGUMENTS = (
+MODEL_REPOSITORY_ARGUMENTS = (
     SIMULATION_MODELS_PATH,
     SIMULATION_MODELS_GIT_PATH,
     SIMULATION_MODELS_GIT_REVISION,
-    DB_API_USER,
-    DB_API_PW,
-    DB_API_PORT,
-    DB_SERVER,
-    DB_API_AUTHENTICATION_DATABASE,
-    DB_SIMULATION_MODEL,
-    DB_SIMULATION_MODEL_TAG,
 )
+
 
 MODEL_VERSION = _argument(
     "model_version",
@@ -607,7 +536,7 @@ PLOT_ALL_LAYOUTS = _argument(
 IGNORE_MISSING_DESIGN_MODEL = _argument(
     "ignore_missing_design_model",
     _SIMULATION_MODEL_GROUP,
-    help="Ignore missing design model definition of DB",
+    help="Ignore missing design model definition of model repository",
     action="store_true",
 )
 

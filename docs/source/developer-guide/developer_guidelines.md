@@ -64,7 +64,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SITE(required=True),
         cli.OUTPUT_PATH,
     ),
-    database=True,
+    model_repository=True,
 )
 
 
@@ -119,7 +119,7 @@ Data files should be kept outside of the simtools repository with the exception 
 These files should be kept at minimum and are stored in the versioned
 [simtools-tests](https://github.com/gammasim/simtools-tests) repository.
 
-Data files required by integration tests are downloaded during testing from the simulation model database.
+Data files required by integration tests are supplied by the versioned simulation-model repository.
 
 ## Input validation
 

@@ -28,19 +28,17 @@ def test_execute_job_spec_initializes_serialized_runtime(mocker):
     io_handler = mocker.patch("simtools.job_execution.worker.io_handler.IOHandler")
     function = mocker.Mock(return_value=4)
     args = {"output_path": "output", "model_path": "models", "sim_telarray_path": "simtel"}
-    db_config = {"db_url": "mongodb://example"}
     job = JobSpec(
         "job-000000",
         0,
         function=function,
         item=2,
         runtime_args=args,
-        runtime_db_config=db_config,
     )
 
     assert execute_job_spec(job) == 4
 
-    config.load.assert_called_once_with(args, db_config)
+    config.load.assert_called_once_with(args)
     io_handler.return_value.set_paths.assert_called_once_with(
         output_path="output", model_path="models"
     )

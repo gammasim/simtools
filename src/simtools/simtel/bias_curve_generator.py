@@ -521,7 +521,7 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
             output_path=output_path / telescope_name / parameter_name,
             metadata_input_dict={**args, "source": "bias_curve_analysis"},
             unit=unit,
-            check_db_for_existing_parameter=False,
+            check_for_existing_parameter=False,
         )
 
         _logger.info(

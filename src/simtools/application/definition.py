@@ -5,12 +5,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from simtools.configuration import arguments as configurator_arguments
 from simtools.configuration import configurator
-from simtools.configuration.arguments import (
-    DATABASE_ARGUMENTS,
-    STANDARD_ARGUMENTS,
-    ArgumentDefinition,
-)
+from simtools.configuration.arguments import STANDARD_ARGUMENTS, ArgumentDefinition
 from simtools.settings import config
 
 PostParseHook = Callable[[dict, Mapping[str, set], object], None]
@@ -23,7 +20,7 @@ class ApplicationDefinition:
     module_name: str
     description: str
     arguments: tuple[ArgumentDefinition, ...] = ()
-    database: bool = False
+    model_repository: bool = False
     initialize_output: bool = False
     setup_io_handler: bool = True
     resolve_sim_software_executables: bool = True
@@ -31,7 +28,7 @@ class ApplicationDefinition:
     defer_required_validation: bool = False
     usage: str | None = None
     validate_simulation_dependencies: bool = False
-    initialize_model_reader: bool = True
+    initialize_model_reader: bool | None = None
     use_dependency_defaults: bool = True
     excluded_standard_arguments: tuple[str, ...] = ()
 
@@ -53,6 +50,8 @@ class ApplicationDefinition:
             "excluded_standard_arguments",
             tuple(self.excluded_standard_arguments),
         )
+        if self.initialize_model_reader is None:
+            object.__setattr__(self, "initialize_model_reader", self.model_repository)
         self._validate_arguments(self.all_arguments)
 
     @property
@@ -63,13 +62,15 @@ class ApplicationDefinition:
     @property
     def all_arguments(self):
         """Return standard and application-selected arguments in registration order."""
-        database = DATABASE_ARGUMENTS if self.database else ()
+        model_repository = (
+            configurator_arguments.MODEL_REPOSITORY_ARGUMENTS if self.model_repository else ()
+        )
         standard = tuple(
             argument
             for argument in STANDARD_ARGUMENTS
             if argument.name not in self.excluded_standard_arguments
         )
-        return (*self.arguments, *database, *standard)
+        return (*self.arguments, *model_repository, *standard)
 
     @staticmethod
     def _validate_arguments(arguments):
@@ -115,7 +116,7 @@ class ApplicationDefinition:
             else self.all_arguments
         )
         config_builder = self._configurator(runtime_arguments)
-        args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
+        args_dict = config_builder.configure(initialize_output=self.initialize_output)
         if args_dict.get("show_options"):
             from simtools.configuration.show_options import (  # pylint: disable=import-outside-toplevel
                 handle_show_options,
@@ -124,7 +125,6 @@ class ApplicationDefinition:
             try:
                 config.load(
                     args_dict,
-                    db_config,
                     resolve_sim_software_executables=self.resolve_sim_software_executables,
                 )
             except (FileNotFoundError, PermissionError, ValueError) as exc:
@@ -134,12 +134,10 @@ class ApplicationDefinition:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
         if defer_required_validation:
             self._validate_required_values(args_dict, config_builder.parser)
-        if not self.database:
-            db_config = {}
         args_dict["_metadata_configuration_sources"] = {
             source: sorted(keys) for source, keys in config_builder.config_sources.items()
         }
-        return args_dict, db_config
+        return args_dict
 
     @staticmethod
     def _help_requested():
@@ -178,7 +176,7 @@ class ApplicationDefinition:
 
     def start(self):
         """Read configuration and run the standard application startup sequence."""
-        args_dict, db_config = self._parse()
+        args_dict = self._parse()
 
         from simtools.application.control import (  # pylint: disable=import-outside-toplevel
             _initialize_runtime,
@@ -186,7 +184,6 @@ class ApplicationDefinition:
 
         return _initialize_runtime(
             args_dict,
-            db_config,
             setup_io_handler=self.setup_io_handler,
             resolve_sim_software_executables=self.resolve_sim_software_executables,
             validate_simulation_dependencies=self.validate_simulation_dependencies,

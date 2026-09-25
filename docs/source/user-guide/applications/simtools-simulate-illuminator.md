@@ -10,14 +10,14 @@
 Illuminators are calibration light sources not attached to a particular telescope.
 Three modes of operation are supported:
 
-1. Single pair: simulate one illuminator-telescope pair with positions from the model database.
+1. Single pair: simulate one illuminator-telescope pair with positions from the model repository.
 2. Single pair with configurable position: override the illuminator position and pointing.
 3. Multi-pair: simulate all valid illuminator-telescope pairs from the visibility table
    in parallel, using a configurable number of CPU cores.
 
 **Example Usage**
 
-1. Simulate illuminator with positions as defined in the simulation models database:
+1. Simulate illuminator with positions as defined in the simulation-model repository:
 
     .. code-block:: console
 

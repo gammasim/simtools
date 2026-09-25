@@ -15,7 +15,6 @@ configuration_module
 corsika
 data_model
 dependencies
-db_handler
 io
 job_execution
 mc_model
