@@ -140,6 +140,14 @@ def main():
         telescopes=telescopes,
     )
 
+    failed_results = [result for result in results if not result["success"]]
+    if failed_results:
+        failures = "; ".join(
+            f"{result['illuminator']} -> {result['telescope']}: {result['error']}"
+            for result in failed_results
+        )
+        sys.exit(f"error: illuminator simulation failed: {failures}")
+
     if not results and not simulate_all:
         sys.exit(
             "error: no valid illuminator-telescope pairs found for the requested "

@@ -1,5 +1,7 @@
 """Compare trigger-histogram products from simulation productions."""
 
+import logging
+from collections import Counter
 from pathlib import Path
 
 from simtools.constants import SCHEMA_PATH
@@ -18,6 +20,16 @@ from simtools.sim_events.production_comparison import (
 )
 from simtools.visualization import plot_event_level_production_comparison
 
+_logger = logging.getLogger(__name__)
+
+
+class _ProductionPairingError(ValueError):
+    """Report unmatched metadata while retaining the pairs that can be compared."""
+
+    def __init__(self, message, descriptor_pairs):
+        super().__init__(message)
+        self.descriptor_pairs = descriptor_pairs
+
 
 def write_production_comparison(args_dict, output_directory):
     """Compare selected trigger-histogram productions and write their statistics.
@@ -31,17 +43,7 @@ def write_production_comparison(args_dict, output_directory):
     """
     array_layout_names = args_dict.get("array_layout_name") or [None]
     if args_dict.get("baseline_path"):
-        descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
-        for pairing_key, production_descriptors in descriptor_pairs:
-            pair_output_directory = (
-                output_directory / f"comparison-{stable_configuration_hash(pairing_key)}"
-            )
-            _write_array_layout_comparisons(
-                production_descriptors,
-                args_dict,
-                pair_output_directory,
-                array_layout_names,
-            )
+        _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         return
 
     production_descriptors = parse_production_arguments(args_dict["production"])
@@ -51,6 +53,45 @@ def write_production_comparison(args_dict, output_directory):
         output_directory,
         array_layout_names,
     )
+
+
+def _write_metadata_comparisons(args_dict, output_directory, array_layout_names):
+    """Write comparisons for trigger-histogram metadata pairs."""
+    pairing_error = None
+    try:
+        descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
+    except _ProductionPairingError as exc:
+        if not exc.descriptor_pairs:
+            raise
+        descriptor_pairs = exc.descriptor_pairs
+        pairing_error = exc
+    output_stems = [
+        _comparison_pair_output_stem(production_descriptors)
+        for _, production_descriptors in descriptor_pairs
+    ]
+    stem_counts = Counter(output_stems)
+    for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
+        pair_output_directory = _metadata_pair_output_directory(
+            output_directory,
+            pairing_key,
+            output_stem,
+            stem_counts,
+        )
+        _write_array_layout_comparisons(
+            production_descriptors,
+            args_dict,
+            pair_output_directory,
+            array_layout_names,
+        )
+    if pairing_error is not None:
+        _logger.warning(str(pairing_error))
+
+
+def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
+    """Return the output directory for one metadata comparison pair."""
+    if stem_counts[output_stem] > 1:
+        output_stem = f"{output_stem}-{stable_configuration_hash(pairing_key)}"
+    return output_directory / output_stem
 
 
 def _write_array_layout_comparisons(
@@ -105,13 +146,20 @@ def _production_descriptor_pairs_from_metadata(args_dict):
 
     missing_candidates = sorted(set(baseline_by_key) - set(candidate_by_key))
     missing_baselines = sorted(set(candidate_by_key) - set(baseline_by_key))
+    descriptor_pairs = _matched_descriptor_pairs(baseline_by_key, candidate_by_key)
     if missing_candidates or missing_baselines:
-        raise ValueError(
+        raise _ProductionPairingError(
             "Trigger-histogram metadata pairing failed: "
             f"missing candidates={len(missing_candidates)}, "
-            f"missing baselines={len(missing_baselines)}."
+            f"missing baselines={len(missing_baselines)}.",
+            descriptor_pairs,
         )
 
+    return descriptor_pairs
+
+
+def _matched_descriptor_pairs(baseline_by_key, candidate_by_key):
+    """Build descriptor pairs for configurations present in both productions."""
     return [
         (
             key,
@@ -126,8 +174,16 @@ def _production_descriptor_pairs_from_metadata(args_dict):
                 ),
             ],
         )
-        for key in sorted(baseline_by_key, key=str)
+        for key in sorted(set(baseline_by_key) & set(candidate_by_key), key=str)
     ]
+
+
+def _comparison_pair_output_stem(production_descriptors):
+    """Return a readable directory stem from the paired histogram filenames."""
+    input_stems = [Path(descriptor.input_files[0]).stem for descriptor in production_descriptors]
+    if len(set(input_stems)) == 1:
+        return input_stems[0]
+    return "-vs-".join(input_stems)
 
 
 def _selected_trigger_histogram_manifests(path, selections):
