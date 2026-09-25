@@ -303,7 +303,7 @@ jobs:
     name: download test resources
     runs-on: ubuntu-24.04
     env:
-      SIMTOOLS_TESTS_BRANCH: "model-parameter-tables"
+      SIMTOOLS_TESTS_BRANCH: "main"
     outputs:
       test_resources_tag: ${{ steps.test_resources.outputs.tag }}
 
