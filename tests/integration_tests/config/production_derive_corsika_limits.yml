@@ -56,7 +56,7 @@ applications:
               unit: m
           viewcone_radius:
             range:
-              minimum: 5.5
+              minimum: 3.5
               maximum: 6.0
               unit: deg
       - type: metadata

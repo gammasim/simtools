@@ -1,6 +1,109 @@
 %YAML 1.2
 ---
 title: Schema for quantum_efficiency model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: quantum_efficiency
+description: 'Quantum or photon detection efficiency
+  averaged over all pixels per camera.
+  Random pixel-to-pixel variations are calculated using
+  the qe_variation parameter. Pixel-to-pixel differences
+  in detection efficiency using scaling factors can be
+  specified in the camera_config_file.'
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: wavelength
+        description: Wavelength
+        type: float64
+        unit: nm
+        required: true
+      - name: efficiency
+        description: Quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: efficiency_rms
+        description: Quantum efficiency uncertainty
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: efficiency_rms400
+        description: Quantum efficiency uncertainty after normalization to the 350-450 nm mean
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: efficiency_min
+        description: Minimum quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: efficiency_max
+        description: Maximum quantum efficiency
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: efficiency_n
+        description: Number of quantum efficiency measurements
+        type: int64
+        unit: dimensionless
+        required: false
+      - name: efficiency_low
+        description: Quantum efficiency of the low-efficiency group
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: efficiency_low_rms
+        description: Quantum efficiency uncertainty of the low-efficiency group
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
+      - name: wavelength_rms
+        description: Wavelength uncertainty
+        type: float64
+        unit: nm
+        required: false
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+    - ValidateCameraGainsAndEfficiency
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+    table_format: plain
+    serialization:
+      columns: [wavelength, efficiency]
+      optional_columns: [efficiency_rms]
+      allowed_columns: [wavelength, efficiency, efficiency_rms, efficiency_rms400, efficiency_min, efficiency_max, efficiency_n, efficiency_low, efficiency_low_rms, wavelength_rms]
+      row_sort_keys: [wavelength]
+      float_format: ".12g"
+      write_comments: false
+plot_configuration:
+  - type: quantum_efficiency
+    title: Quantum/detection efficiency
+    xtitle: Wavelength [nm]
+    ytitle: Quantum/detection efficiency
+    no_markers: true
+    tables:
+      - parameter: quantum_efficiency
+        column_x: wavelength
+        column_y: efficiency
+---
+title: Schema for quantum_efficiency model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
