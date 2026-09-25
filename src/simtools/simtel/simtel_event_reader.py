@@ -155,6 +155,8 @@ def _collect_events_for_telescope_ids(simtel_file, telescope_ids, event_ids, max
     """Collect selected telescope events during one sim_telarray file scan."""
     ids_with_data = []
     events_by_telescope = {telescope: [] for telescope in telescope_ids}
+    if max_events == 0:
+        return ids_with_data, events_by_telescope
     for event in simtel_file:
         if event_ids and event["event_id"] not in event_ids:
             continue
@@ -162,7 +164,7 @@ def _collect_events_for_telescope_ids(simtel_file, telescope_ids, event_ids, max
         found_telescope_data = False
         for telescope, tel_id in telescope_ids.items():
             if tel_id in telescope_events and (
-                not max_events or len(events_by_telescope[telescope]) < max_events
+                max_events is None or len(events_by_telescope[telescope]) < max_events
             ):
                 events_by_telescope[telescope].append(telescope_events[tel_id])
                 found_telescope_data = True
@@ -173,6 +175,8 @@ def _collect_events_for_telescope_ids(simtel_file, telescope_ids, event_ids, max
                 f"event {event['event_id']} has no data for selected telescopes "
                 f"{list(telescope_ids)}"
             )
-        if max_events and all(len(events) >= max_events for events in events_by_telescope.values()):
+        if max_events is not None and all(
+            len(events) >= max_events for events in events_by_telescope.values()
+        ):
             break
     return ids_with_data, events_by_telescope

@@ -170,3 +170,22 @@ def test_read_events_for_telescopes_caps_each_selected_telescope(monkeypatch):
     assert event_ids == [0, 2]
     assert descriptions == {"LSTN-01": {"name": "LST"}, "MSTN-01": {"name": "MST"}}
     assert events_by_telescope == {"LSTN-01": ["lst-0"], "MSTN-01": ["mst-2"]}
+
+
+def test_read_events_for_telescopes_returns_no_events_for_zero_max(monkeypatch):
+    tel_descriptions = {1: {"name": "LST"}, 2: {"name": "MST"}}
+    events = [{"event_id": 0, "telescope_events": {1: "lst-0", 2: "mst-0"}}]
+    _setup_mocks(monkeypatch, 1, "LSTN-01", tel_descriptions, events)
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_event_reader."
+        "get_sim_telarray_telescope_id_to_telescope_name_mapping",
+        lambda _file: {1: "LSTN-01", 2: "MSTN-01"},
+    )
+
+    event_ids, descriptions, events_by_telescope = read_events_for_telescopes(
+        "file.simtel", ["LSTN-01", "MSTN-01"], max_events=0
+    )
+
+    assert event_ids == []
+    assert descriptions == {"LSTN-01": {"name": "LST"}, "MSTN-01": {"name": "MST"}}
+    assert events_by_telescope == {"LSTN-01": [], "MSTN-01": []}
