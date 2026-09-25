@@ -5,7 +5,7 @@ applications:
     title: Derive photon incidence angles for an SST
     summary: >-
       Ray-trace an off-axis source through a dual-mirror SST and derive camera photon-incidence
-      angles. Tests export of all four model parameters for dual-mirror telescopes.
+      angles. Tests export of all three incidence-angle model parameters for dual-mirror telescopes.
   configuration:
     site: South
     telescope: SSTS-01
@@ -25,7 +25,7 @@ applications:
     - path_descriptor: output_path
       file: incident_angles_derive_incident_angle_SSTS-01_off1.log
       output_sub_path: logs
-    # Dual-mirror telescope: exports all four parameters in telescope subdirectory
+    # Dual-mirror telescope: exports all three incidence-angle parameters in telescope subdirectory
     - path_descriptor: output_path
       file: camera_filter_incidence_angle.ecsv
       output_sub_path: SSTS-01
@@ -43,12 +43,6 @@ applications:
       output_sub_path: SSTS-01
     - path_descriptor: output_path
       file: secondary_mirror_incidence_angle.json
-      output_sub_path: SSTS-01
-    - path_descriptor: output_path
-      file: lightguide_efficiency_vs_incidence_angle.ecsv
-      output_sub_path: SSTS-01
-    - path_descriptor: output_path
-      file: lightguide_efficiency_vs_incidence_angle.json
       output_sub_path: SSTS-01
   test_name: incident_angles_dual_mirror
 schema_name: application_workflow.metaschema

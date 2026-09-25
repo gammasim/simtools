@@ -5,7 +5,7 @@ applications:
     title: Derive photon incidence angles for an LST
     summary: >-
       Ray-trace an off-axis source through a single-mirror LST and derive camera photon-incidence
-      angles. Tests export of only lightguide efficiency for single-mirror telescopes.
+      angles. Tests export of the filter incidence distribution for single-mirror telescopes.
   configuration:
     site: South
     telescope: LSTS-04
@@ -25,12 +25,11 @@ applications:
     - path_descriptor: output_path
       file: incident_angles_derive_incident_angle_LSTS-04_off1.log
       output_sub_path: logs
-    # Single-mirror telescope: exports only lightguide efficiency in telescope subdirectory
     - path_descriptor: output_path
-      file: lightguide_efficiency_vs_incidence_angle.ecsv
+      file: camera_filter_incidence_angle.ecsv
       output_sub_path: LSTS-04
     - path_descriptor: output_path
-      file: lightguide_efficiency_vs_incidence_angle.json
+      file: camera_filter_incidence_angle.json
       output_sub_path: LSTS-04
   test_name: incident_angles_single_mirror
 schema_name: application_workflow.metaschema

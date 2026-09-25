@@ -11,6 +11,7 @@ from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 _ARGUMENTS = (
+    cli.RAY_TRACING_ZENITH_ANGLE,
     cli.OFF_AXIS_ANGLES,
     cli.SOURCE_DISTANCE,
     cli.NUMBER_OF_PHOTONS,
@@ -32,7 +33,7 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
-        help="Compute angles of incidence on primary and secondary mirrors (enabled by default)",
+        help="Compute angles of incidence on primary and secondary mirrors",
         action=argparse.BooleanOptionalAction,
         default=True,
         required=False,
