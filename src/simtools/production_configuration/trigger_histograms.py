@@ -4,6 +4,7 @@ import copy
 import logging
 import os
 import re
+from collections import Counter
 from pathlib import Path
 
 import astropy.units as u
@@ -721,16 +722,30 @@ def _write_production_selection_products(args_dict):
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
     runtime_db_config = dict(settings_config.db_config) if runtime_args is not None else None
-    jobs = []
-    for index, group in enumerate(selection_result["groups"]):
+    products = []
+    for group in selection_result["groups"]:
         telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
         product_identity = {
             "histogram_settings": _histogram_settings(args_dict),
             "array_selection": telescope_configs,
         }
+        output_stem = _group_output_stem(
+            group, product_identity, selections=args_dict.get("select"), include_hash=False
+        )
+        products.append((group, telescope_configs, product_identity, output_stem))
+
+    stem_counts = Counter(product[-1] for product in products)
+    jobs = []
+    for index, (group, telescope_configs, product_identity, output_stem) in enumerate(products):
+        if stem_counts[output_stem] > 1:
+            output_stem = _group_output_stem(
+                group,
+                product_identity,
+                selections=args_dict.get("select"),
+                include_hash=True,
+            )
         output_file = validate_file_type(
-            output_directory
-            / f"{_group_output_stem(group, product_identity)}.trigger_histograms.hdf5",
+            output_directory / f"{output_stem}.trigger_histograms.hdf5",
             file_type="hdf5",
         )
         metadata_file = output_file.with_suffix(".yml")
@@ -794,38 +809,115 @@ def write_trigger_histograms(args_dict):
     return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
 
 
-def _group_output_stem(group, product_identity=None):
-    """Return a readable, stable output stem for a selected production group."""
+def _group_output_stem(group, product_identity=None, selections=None, include_hash=False):
+    """Return a descriptive output stem for a selected production group.
+
+    Parameters
+    ----------
+    group : ProductionFileGroup
+        Selected production configuration group.
+    product_identity : dict, optional
+        Additional settings that define the product.
+    selections : sequence of str, optional
+        Command-line selection expressions to include in the filename.
+    include_hash : bool, optional
+        Append a stable identity hash when the descriptive filename is ambiguous.
+        The production-selection workflow only enables this for colliding names.
+    """
     configuration = group.configuration
     parts = [
         _safe_stem_part(configuration.get("primary", "production")),
+        *_energy_stem_parts(configuration),
         _angle_stem_part("za", configuration.get("zenith_angle")),
+        _angle_stem_part("azm", configuration.get("azimuth_angle")),
         _safe_stem_part(configuration.get("corsika_he_interaction")),
     ]
     parts = [part for part in parts if part]
-    parts.append(
-        stable_configuration_hash(
-            {
-                "configuration": configuration,
-                **(product_identity or {}),
-            }
+    parts.extend(_selection_stem_parts(selections))
+    layout_part = _safe_stem_part(configuration.get("array_layout_name"))
+    if layout_part:
+        parts.append(layout_part)
+    if include_hash:
+        parts.append(
+            stable_configuration_hash(
+                {
+                    "configuration": configuration,
+                    **(product_identity or {}),
+                }
+            )
         )
-    )
-    return "_".join(parts)
+    return "-".join(parts)
+
+
+def _selection_stem_parts(selections):
+    """Return filename components for command-line selection expressions."""
+    parts = []
+    for selection in selections or []:
+        if "=" not in selection:
+            continue
+        key, value = selection.split("=", maxsplit=1)
+        key = key.rsplit(".", maxsplit=1)[-1]
+        if key in {
+            "array_layout_name",
+            "primary",
+            "zenith_angle",
+            "azimuth_angle",
+            "energy_min",
+            "energy_max",
+        }:
+            continue
+        value = value.strip().strip("\"'")
+        key_part = _safe_stem_part(key)
+        value_part = _safe_stem_part(value)
+        if key_part and value_part:
+            parts.append(f"{key_part}-{value_part}")
+    return parts
 
 
 def _angle_stem_part(prefix, value):
     """Return an angle value formatted for an output file stem."""
     if isinstance(value, dict) and set(value) == {"value", "unit"}:
         quantity = float(value["value"]) * u.Unit(value["unit"])
-        return f"{prefix}{quantity.to_value(u.deg):g}"
+        return f"{prefix}{quantity.to_value(u.deg):g}deg"
     return None
+
+
+def _energy_stem_parts(configuration):
+    """Return compact energy components for an output file stem."""
+    minimum = _stem_quantity(configuration.get("energy_min"))
+    maximum = _stem_quantity(configuration.get("energy_max"))
+    if minimum is None or maximum is None:
+        return []
+    minimum = minimum.to(u.GeV)
+    maximum = maximum.to(u.GeV)
+    if np.isclose(minimum.value, maximum.value):
+        return [_compact_energy_stem_part("e", minimum)]
+    return [
+        _compact_energy_stem_part("emin", minimum),
+        _compact_energy_stem_part("emax", maximum),
+    ]
+
+
+def _compact_energy_stem_part(prefix, quantity):
+    """Return an energy using GeV below 1 TeV and TeV otherwise."""
+    if abs(quantity.to_value(u.TeV)) >= 1:
+        quantity = quantity.to(u.TeV)
+    return f"{prefix}{quantity.value:g}{str(quantity.unit).lower()}"
+
+
+def _stem_quantity(value):
+    """Return a quantity from a manifest value or an existing quantity."""
+    if isinstance(value, dict) and set(value) == {"value", "unit"}:
+        return float(value["value"]) * u.Unit(value["unit"])
+    return value if hasattr(value, "to") else None
 
 
 def _safe_stem_part(value):
     """Return a filesystem-safe output stem component."""
     if value is None:
         return None
+    if isinstance(value, list | tuple):
+        value = "-".join(map(str, value))
     return re.sub(r"[^A-Za-z0-9]+", "-", str(value)).strip("-").lower()
 
 

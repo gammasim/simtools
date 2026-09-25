@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools.io import table_handler
+from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_BINS_TABLE,
@@ -28,6 +28,7 @@ from simtools.production_configuration.trigger_histograms import (
     _write_dense_histogram_payload,
     _write_directory_group_job,
     _write_directory_products,
+    _write_production_selection_products,
     _write_trigger_histogram_metadata,
     discover_event_data_groups,
     inspect_trigger_histogram_file,
@@ -446,6 +447,7 @@ def test_group_output_stem_changes_with_histogram_settings_and_array_selection()
             "histogram_settings": {"minimum_triggered_telescopes": 2},
             "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
         },
+        include_hash=True,
     )
     second = _group_output_stem(
         group,
@@ -453,9 +455,99 @@ def test_group_output_stem_changes_with_histogram_settings_and_array_selection()
             "histogram_settings": {"minimum_triggered_telescopes": 3},
             "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
         },
+        include_hash=True,
     )
 
     assert first != second
+
+
+def test_group_output_stem_includes_selections_without_hash():
+    group = SimpleNamespace(
+        configuration={
+            "array_layout_name": ["CTAO-South-Beta"],
+            "primary": "gamma",
+            "energy_min": {"value": 30.0, "unit": "GeV"},
+            "energy_max": {"value": 30.0, "unit": "GeV"},
+            "zenith_angle": {"value": 20.0, "unit": "deg"},
+            "azimuth_angle": {"value": 31.0, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        }
+    )
+
+    stem = _group_output_stem(
+        group,
+        selections=["configuration.primary=gamma", "configuration.eslope=-2"],
+        include_hash=False,
+    )
+
+    assert stem == "gamma-e30gev-za20deg-azm31deg-qgs3-eslope-2-ctao-south-beta"
+
+
+@pytest.mark.parametrize(
+    ("group_count", "expected_hash"),
+    [(1, False), (2, True)],
+)
+def test_production_selection_controls_hash_for_number_of_outputs(
+    mocker, tmp_test_directory, group_count, expected_hash
+):
+    configuration = {
+        "array_layout_name": ["CTAO-South-Beta"],
+        "primary": "gamma",
+        "zenith_angle": {"value": 20.0, "unit": "deg"},
+        "corsika_he_interaction": "qgs3",
+    }
+    groups = [
+        SimpleNamespace(
+            configuration=configuration,
+            file_paths=[Path("input.hdf5")],
+            run_numbers=[1],
+            missing_run_numbers=[],
+        )
+        for _ in range(group_count)
+    ]
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms.select_file_groups",
+        return_value={
+            "metadata_files_read": group_count,
+            "matching_jobs": group_count,
+            "configuration_groups": group_count,
+            "groups": groups,
+        },
+    )
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms._resolve_group_telescope_configs",
+        return_value=[{"array_name": "CTAO-South-Beta", "telescope_ids": ["LSTS-01"]}],
+    )
+    stem = mocker.patch(
+        "simtools.production_configuration.trigger_histograms._group_output_stem",
+        wraps=_group_output_stem,
+    )
+    submit_jobs = mocker.patch(
+        "simtools.production_configuration.trigger_histograms.submit_jobs",
+        return_value=None,
+    )
+    io_handler.IOHandler().set_paths(output_path=tmp_test_directory)
+
+    write_trigger_histograms_args = {
+        "production_path": str(tmp_test_directory),
+        "select": ["configuration.primary=gamma"],
+        "file_type": "reduced_event_data",
+        "backend": "local",
+        "backend_config": None,
+        "max_workers": 1,
+        "energy_bins_per_decade": 10,
+        "angular_distance_bin_width": 0.5 * u.deg,
+        "core_distance_bin_width": 20.0 * u.m,
+        "minimum_triggered_telescopes": 2,
+    }
+    _write_production_selection_products(write_trigger_histograms_args)
+
+    assert len(submit_jobs.call_args.args[0]) == group_count
+    hash_values = [call.kwargs["include_hash"] for call in stem.call_args_list]
+    if expected_hash:
+        assert hash_values == [False, False, True, True]
+    else:
+        assert hash_values == [False]
 
 
 def test_relative_to_directory_handles_sibling_directories(tmp_test_directory):
