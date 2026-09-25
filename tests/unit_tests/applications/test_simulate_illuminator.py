@@ -5,6 +5,7 @@
 from unittest.mock import Mock, patch
 
 import astropy.units as u
+import pytest
 
 
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
@@ -46,3 +47,33 @@ def test_main_single_pair_mode(mock_application_start, mock_simulator_class):
     assert call_kwargs["wavelengths"] == [355 * u.nm]
     assert call_kwargs["illuminators"] == ["ILLN-01"]
     assert call_kwargs["telescopes"] == ["MSTN-04"]
+
+
+@patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_reports_failed_simulations(mock_application_start, mock_simulator_class):
+    from simtools.applications.simulate_illuminator import main
+
+    mock_context = Mock()
+    mock_context.args = {
+        "light_source": "ILLN-01",
+        "telescope": "MSTN-04",
+        "simulate_all": False,
+        "wavelength": [355 * u.nm],
+        "label": "test_label",
+        "max_workers": None,
+        "site": "North",
+        "model_version": "7.0.0",
+    }
+    mock_application_start.return_value = mock_context
+    mock_simulator_class.return_value.simulate.return_value = [
+        {
+            "illuminator": "ILLN-01",
+            "telescope": "MSTN-04",
+            "success": False,
+            "error": "Parameter illuminator_tower_height was not found",
+        }
+    ]
+
+    with pytest.raises(SystemExit, match="illuminator_tower_height was not found"):
+        main()
