@@ -4,10 +4,13 @@ from pathlib import Path
 
 import numpy as np
 from astropy import units as u
-from matplotlib import colormaps, colors
 
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figures_to_single_document
+
+matplotlib = lazy_module("matplotlib")
+colors = lazy_module("matplotlib.colors")
 
 
 def _plot_2d(hist_list, labels=None):
@@ -44,7 +47,11 @@ def _plot_2d(hist_list, labels=None):
             else:
                 norm = None
             mesh = ax.pcolormesh(
-                x_bin_edges[i_hist], y_bin_edges[i_hist], hist_values[i_hist], norm=norm
+                x_bin_edges[i_hist],
+                y_bin_edges[i_hist],
+                hist_values[i_hist],
+                norm=norm,
+                rasterized=True,
             )
             ax.set_xlabel(_get_axis_label(hist_dict["x_axis_title"], hist_dict["x_axis_unit"]))
             ax.set_ylabel(_get_axis_label(hist_dict["y_axis_title"], hist_dict["y_axis_unit"]))
@@ -132,7 +139,7 @@ def _plot_1d(hist_list, labels=None):
         return []
 
     hist = hist_list[0]
-    plot_colors = colormaps["tab10"](np.linspace(0, 1, len(hist_list)))
+    plot_colors = matplotlib.colormaps["tab10"](np.linspace(0, 1, len(hist_list)))
     fig, ax = plt.subplots()
 
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):

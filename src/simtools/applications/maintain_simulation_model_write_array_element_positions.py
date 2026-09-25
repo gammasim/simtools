@@ -11,7 +11,6 @@ _ARGUMENTS = (
         help="File containing a table of array element positions.",
         required=True,
     ),
-    cli.SIMULATION_MODELS_PATH(required=True),
     cli.ArgumentDefinition(
         "coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
@@ -27,6 +26,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        cli.SIMULATION_MODELS_PATH(required=True),
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
     ),

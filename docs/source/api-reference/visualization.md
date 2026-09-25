@@ -98,6 +98,13 @@ the visualization module.
    :members:
 ```
 
+## plot_resource_requirements
+
+```{eval-rst}
+.. automodule:: visualization.plot_resource_requirements
+   :members:
+```
+
 ## plot_psf
 
 ```{eval-rst}

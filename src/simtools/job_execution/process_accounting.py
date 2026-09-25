@@ -13,6 +13,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from simtools.version import __version__
+
 
 def build_accounting_command(
     command,
@@ -267,6 +269,7 @@ def _build_record(
     return {
         "schema_name": "process_resource_record",
         "schema_version": "1.0.0",
+        "simtools_version": __version__,
         "run_id": str(run_id),
         "role": role,
         "model_version": model_version,

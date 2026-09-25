@@ -622,10 +622,10 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
         "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name",
         return_value="single-layout",
     )
-    mock_db_lookup = mocker.patch(
+    mock_repository_lookup = mocker.patch(
         (
             "simtools.production_configuration.production_event_data_helpers."
-            "get_array_elements_from_db_for_layouts"
+            "get_array_elements_from_model_repository"
         ),
         return_value={"LST": ["LSTN-01"]},
     )
@@ -639,7 +639,7 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     )
 
     mock_resolve.assert_called_once_with("layout", "1.0.0")
-    mock_db_lookup.assert_called_once_with(["single-layout"], "South", "1.0.0")
+    mock_repository_lookup.assert_called_once_with(["single-layout"], "South", "1.0.0")
     assert result == {"LST": ["LSTN-01"]}
 
 

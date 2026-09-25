@@ -69,73 +69,70 @@ def test_application_definition_can_exclude_standard_arguments():
     assert "config" in argument_names
 
 
-@pytest.mark.parametrize(
-    "module_name",
-    [
-        "simtools.applications.db_upload_model_repository",
-        "simtools.applications.db_add_simulation_model_from_repository_to_db",
-    ],
-)
-def test_database_maintenance_applications_require_explicit_targets(module_name):
-    """Test database-maintenance applications do not receive catalog targets."""
-    application = importlib.import_module(module_name).APPLICATION
-
-    assert application.use_dependency_defaults is False
-
-
-def test_db_upload_model_repository_has_no_output_options():
-    """Test the database upload application does not configure unused output options."""
-    application = importlib.import_module(
-        "simtools.applications.db_upload_model_repository"
-    ).APPLICATION
-
-    argument_names = {argument.name for argument in application.all_arguments}
-
-    assert {
-        "output_path",
-        "output_file",
-        "output_file_format",
-        "skip_output_validation",
-    }.isdisjoint(argument_names)
-    assert application.initialize_output is False
-    assert application.setup_io_handler is False
-
-
 def test_start_delegates_to_common_startup(mocker):
     startup = mocker.patch(
-        "simtools.application.definition._initialize_runtime", return_value="context"
+        "simtools.application.control._initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
         description="Test application.",
         setup_io_handler=False,
     )
-    mocker.patch.object(ApplicationDefinition, "_parse", return_value=({"value": 3}, {"db": 4}))
+    mocker.patch.object(ApplicationDefinition, "_parse", return_value={"value": 3})
 
     assert application.start() == "context"
-    assert startup.call_args.args == ({"value": 3}, {"db": 4})
+    assert startup.call_args.args == ({"value": 3},)
     assert startup.call_args.kwargs == {
         "setup_io_handler": False,
         "resolve_sim_software_executables": True,
         "validate_simulation_dependencies": False,
-        "initialize_model_reader": True,
+        "initialize_model_reader": False,
     }
+
+
+def test_model_repository_definitions_initialize_the_reader_by_default():
+    """Model-backed applications initialize the configured reader by default."""
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        model_repository=True,
+    )
+
+    assert application.initialize_model_reader is True
 
 
 def test_start_can_skip_model_reader_initialization(mocker):
     """Write-only applications can start without an existing model repository."""
     startup = mocker.patch(
-        "simtools.application.definition._initialize_runtime", return_value="context"
+        "simtools.application.control._initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
         description="Test application.",
         initialize_model_reader=False,
     )
-    mocker.patch.object(ApplicationDefinition, "_parse", return_value=({}, {}))
+    mocker.patch.object(ApplicationDefinition, "_parse", return_value={})
 
     assert application.start() == "context"
     assert startup.call_args.kwargs["initialize_model_reader"] is False
+
+
+@pytest.mark.parametrize("arguments", [[], ["--help"], ["-h"]])
+def test_help_does_not_initialize_configuration(arguments, monkeypatch, mocker):
+    """Help only requires parser construction, not configuration or runtime setup."""
+    configure = mocker.patch("simtools.application.definition.configurator.Configurator.configure")
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        arguments=(ArgumentDefinition("required_value", required=True),),
+    )
+    monkeypatch.setattr(sys, "argv", ["application", *arguments])
+
+    with pytest.raises(SystemExit) as exc:
+        application._parse()
+
+    assert exc.value.code == 0
+    configure.assert_not_called()
 
 
 def test_array_position_writer_does_not_require_model_reader():
@@ -159,10 +156,10 @@ def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch, 
     assert application.label == "example_app"
 
 
-def test_post_parse_hook_receives_configuration_sources(mocker):
+def test_post_parse_hook_receives_configuration_sources(mocker, monkeypatch):
     initialize = mocker.patch(
         "simtools.application.definition.configurator.Configurator.configure",
-        return_value=({"value": 3}, {}),
+        return_value={"value": 3},
     )
     hook = Mock()
     application = ApplicationDefinition(
@@ -171,8 +168,9 @@ def test_post_parse_hook_receives_configuration_sources(mocker):
         arguments=(ArgumentDefinition("value", type=int),),
         post_parse=hook,
     )
+    monkeypatch.setattr(sys, "argv", ["application", "--value", "3"])
 
-    args, database = application._parse()
+    args = application._parse()
 
     assert args["value"] == 3
     assert args["_metadata_configuration_sources"] == {
@@ -182,7 +180,6 @@ def test_post_parse_hook_receives_configuration_sources(mocker):
         "environment": [],
         "yaml": [],
     }
-    assert database == {}
     initialize.assert_called_once()
     hook.assert_called_once()
     assert hook.call_args.args[0] is args

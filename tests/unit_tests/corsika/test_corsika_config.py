@@ -232,11 +232,11 @@ def test_corsika_configuration_without_first_interaction_height(
     corsika_config_mock_array_model, get_standard_corsika_parameters
 ):
     """Test interaction flags with a model that deprecated FIXHEI."""
-    parameters_from_db = get_standard_corsika_parameters.copy()
-    del parameters_from_db["corsika_first_interaction_height"]
+    parameters_from_repository = get_standard_corsika_parameters.copy()
+    del parameters_from_repository["corsika_first_interaction_height"]
 
     interaction_flags = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
-        parameters_from_db
+        parameters_from_repository
     )
 
     assert "FIXHEI" not in interaction_flags
@@ -708,7 +708,7 @@ def test_fill_corsika_configuration_variations(
     assert config["USER_INPUT"]["PRMPAR"] == [1]
 
     corsika_config_mock_array_model.array_model.site_model.get_simulation_software_parameters.return_value = get_standard_corsika_parameters
-    result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(["5.0.0"])
+    result = corsika_config_mock_array_model._fill_corsika_configuration_from_repository(["5.0.0"])
     assert all(
         key in result
         for key in [

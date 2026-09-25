@@ -6,13 +6,14 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.reporting.docs_production_summary import write_production_summary_markdown
 
-_ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
+_ARGUMENTS = ()
 
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        cli.SIMULATION_MODELS_PATH(required=True),
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

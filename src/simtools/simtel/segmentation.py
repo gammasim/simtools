@@ -4,6 +4,8 @@ from pathlib import Path
 
 from simtools.data_model.mirror_segmentation import (
     _kind_required_fields,
+    make_quantity,
+    quantity_value,
     validate_segments,
 )
 
@@ -14,11 +16,11 @@ def _parse_ring(fields, line, kind, count):
     return {
         "kind": kind,
         "count": count,
-        "r_min_cm": float(fields[0]),
-        "r_max_cm": float(fields[1]),
-        "dphi_deg": float(fields[2]),
-        "phi0_deg": float(fields[3]) if len(fields) > 3 else 0.0,
-        "gap_cm": float(fields[4]) if len(fields) > 4 else 0.0,
+        "r_min": make_quantity(float(fields[0]), "cm"),
+        "r_max": make_quantity(float(fields[1]), "cm"),
+        "dphi": make_quantity(float(fields[2]), "deg"),
+        "phi0": make_quantity(float(fields[3]) if len(fields) > 3 else 0.0, "deg"),
+        "gap": make_quantity(float(fields[4]) if len(fields) > 4 else 0.0, "cm"),
     }
 
 
@@ -28,10 +30,10 @@ def _parse_shape(fields, line, kind, count):
     return {
         "kind": kind,
         "count": count,
-        "x_cm": float(fields[0]),
-        "y_cm": float(fields[1]),
-        "diameter_cm": float(fields[2]),
-        "rotation_deg": float(fields[3]) if len(fields) == 4 else 0.0,
+        "x": make_quantity(float(fields[0]), "cm"),
+        "y": make_quantity(float(fields[1]), "cm"),
+        "diameter": make_quantity(float(fields[2]), "cm"),
+        "rotation": make_quantity(float(fields[3]) if len(fields) == 4 else 0.0, "deg"),
     }
 
 
@@ -41,9 +43,9 @@ def _parse_polygon(fields, line, kind, count):
     return {
         "kind": kind,
         "count": count,
-        "rotation_deg": float(fields[0]),
-        "vertices_cm": [
-            {"x_cm": float(x), "y_cm": float(y)}
+        "rotation": make_quantity(float(fields[0]), "deg"),
+        "vertices": [
+            {"x": make_quantity(float(x), "cm"), "y": make_quantity(float(y), "cm")}
             for x, y in zip(fields[1::2], fields[2::2], strict=False)
         ],
     }
@@ -56,9 +58,9 @@ def _parse_line(line, parameter_name, schema_version):
     required = _kind_required_fields(parameter_name, schema_version).get(kind)
     if required is None:
         raise ValueError(f"Unknown mirror segmentation kind: {kind}")
-    if "r_min_cm" in required:
+    if "r_min" in required:
         return _parse_ring(fields, line, kind, count)
-    if "vertices_cm" in required:
+    if "vertices" in required:
         return _parse_polygon(fields, line, kind, count)
     return _parse_shape(fields, line, kind, count)
 
@@ -83,20 +85,25 @@ def write_mirror_segmentation(records, output_path, parameter_name, schema_versi
     lines = []
     for record in records:
         required = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
-        if "r_min_cm" in required:
+        if "r_min" in required:
             lines.append(
-                f"RING {record['count']} {record['r_min_cm']} {record['r_max_cm']} "
-                f"{record['dphi_deg']} {record.get('phi0_deg', 0)} {record.get('gap_cm', 0)}"
+                f"RING {record['count']} {quantity_value(record, 'r_min', 'cm')} "
+                f"{quantity_value(record, 'r_max', 'cm')} "
+                f"{quantity_value(record, 'dphi', 'deg')} "
+                f"{quantity_value(record, 'phi0', 'deg', 0)} "
+                f"{quantity_value(record, 'gap', 'cm', 0)}"
             )
-        elif "vertices_cm" not in required:
+        elif "vertices" not in required:
             lines.append(
-                f"{record['kind'].upper()} 1 {record['x_cm']} {record['y_cm']} "
-                f"{record['diameter_cm']} {record.get('rotation_deg', 0)}"
+                f"{record['kind'].upper()} 1 {quantity_value(record, 'x', 'cm')} "
+                f"{quantity_value(record, 'y', 'cm')} {quantity_value(record, 'diameter', 'cm')} "
+                f"{quantity_value(record, 'rotation', 'deg', 0)}"
             )
         else:
             vertices = " ".join(
-                f"{vertex['x_cm']} {vertex['y_cm']}" for vertex in record["vertices_cm"]
+                f"{quantity_value(vertex, 'x', 'cm')} {quantity_value(vertex, 'y', 'cm')}"
+                for vertex in record["vertices"]
             )
-            lines.append(f"POLYGON 1 {record.get('rotation_deg', 0)} {vertices}")
+            lines.append(f"POLYGON 1 {quantity_value(record, 'rotation', 'deg', 0)} {vertices}")
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return output_path.name

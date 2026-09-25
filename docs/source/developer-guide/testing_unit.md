@@ -41,7 +41,7 @@ pytest -n 4 --dist loadscope tests/unit_tests/
 
 - Reuse fixtures from `tests/unit_tests/conftest.py` and `tests/conftest.py`
   before adding new helpers.
-- Keep mutable settings, database clients, simulator paths, and I/O handlers
+- Keep mutable settings, simulator paths, and I/O handlers
   explicit in the test or module that needs them. Global autouse fixtures are
   reserved for harmless process-wide safety such as the matplotlib backend.
 - Prefer one parametrized test with descriptive case IDs for an invariant that
@@ -55,7 +55,7 @@ pytest -n 4 --dist loadscope tests/unit_tests/
   When file parsing or writing is the behavior under test, generate the
   smallest valid input in `tmp_test_directory` within the test.
 - Keep file-format compatibility and resource-heavy checks in integration tests.
-- Mock external dependencies such as databases, network access, file downloads,
+- Mock external dependencies such as network access, file downloads,
   and installed simulation software.
 - Use `pytest.approx()` for floating-point values.
 - Use `astropy.tests.helper.assert_quantity_allclose` for astropy quantities.

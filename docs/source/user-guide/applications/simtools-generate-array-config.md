@@ -8,7 +8,7 @@
 
 ```{eval-rst}
 The applications generates the sim_telarray configuration files for a given array, site,
-and model_version using the model parameters stored in the database.
+and model_version using the model parameters stored in the simulation-model repository.
 
 **Command line arguments**
 

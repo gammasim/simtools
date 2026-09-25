@@ -51,6 +51,7 @@ simulation_software:
       missing_value: 99999
       float_format: ".12g"
       write_comments: false
+      incomplete_grid_policy: opaque
 plot_configuration:
   - type: atmospheric_transmission
     title: Atmospheric transmission profile

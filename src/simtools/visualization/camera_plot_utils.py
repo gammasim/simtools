@@ -1,11 +1,13 @@
 """Shared helpers for camera pixel plotting."""
 
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import numpy as np
-from matplotlib.collections import PatchCollection
 
 from simtools.visualization import legend_handlers as leg_h
+from simtools.visualization.matplotlib_backend import lazy_module
+
+mcolors = lazy_module("matplotlib.colors")
+mpatches = lazy_module("matplotlib.patches")
+collections = lazy_module("matplotlib.collections")
 
 
 def pixel_shape(camera, x, y):
@@ -158,10 +160,10 @@ def add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels):
     None
     """
     ax.add_collection(
-        PatchCollection(on_pixels, facecolor="none", edgecolor="black", linewidth=0.2)
+        collections.PatchCollection(on_pixels, facecolor="none", edgecolor="black", linewidth=0.2)
     )
     ax.add_collection(
-        PatchCollection(
+        collections.PatchCollection(
             edge_pixels,
             facecolor=(*mcolors.to_rgb("brown"), 0.5),
             edgecolor=(*mcolors.to_rgb("black"), 1),
@@ -169,7 +171,7 @@ def add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels):
         )
     )
     ax.add_collection(
-        PatchCollection(off_pixels, facecolor="black", edgecolor="black", linewidth=0.2)
+        collections.PatchCollection(off_pixels, facecolor="black", edgecolor="black", linewidth=0.2)
     )
 
 

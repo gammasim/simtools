@@ -19,7 +19,6 @@ class _Config:
     def __init__(self):
         """Initialize empty config."""
         self._args = {}
-        self._db_config = {}
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
         self._corsika_path = None
@@ -32,7 +31,7 @@ class _Config:
         self.activity_id = get_uuid()
         self.activity_name = None
 
-    def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
+    def load(self, args=None, resolve_sim_software_executables=True):
         """
         Load configuration from command line arguments and environment variables.
 
@@ -42,8 +41,6 @@ class _Config:
         ----------
         args : dict, optional
             Command line arguments.
-        db_config : dict, optional
-            Database configuration.
         resolve_sim_software_executables : bool, optional
             Resolve simulation software executable paths during loading.
             If False, skip resolving CORSIKA executable.
@@ -51,7 +48,6 @@ class _Config:
         """
         self._model_reader = None
         self._args = MappingProxyType(args) if args is not None else {}
-        self._db_config = MappingProxyType(db_config) if db_config is not None else {}
         self.activity_id = self._get_activity_id(args)
         self.activity_name = args.get("application_label") if args is not None else None
         self._sim_telarray_path = self._get_config_value(
@@ -145,11 +141,6 @@ class _Config:
     def set_model_reader(self, reader):
         """Set the reader selected for the current application context."""
         self._model_reader = reader
-
-    @property
-    def db_config(self):
-        """Database configuration."""
-        return self._db_config
 
     @property
     def sim_telarray_path(self):

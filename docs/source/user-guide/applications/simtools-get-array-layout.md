@@ -20,7 +20,7 @@ Listing of array elements follows this logic:
 **Command line arguments**
 
 list_available_layouts : bool, optional
-    List available layouts in the database.
+    List available layouts in the repository.
 include_calibration_array_elements : bool, optional
     Include calibration array elements in output table (default: only telescopes).
 array_layout_name : str
@@ -40,14 +40,14 @@ List pre-defined array layouts.
 
     simtools-get-array-layout --site North --model_version "6.0.0" --list_available_layouts
 
-Retrieve telescope positions for array layout 'test_layout' from database.
+Retrieve telescope positions for array layout 'test_layout' from the model repository.
 
 .. code-block:: console
 
     simtools-get-array-layout --site North --model_version "6.0.0"
         --array_layout_name test_layout
 
-Retrieve telescope positions from database (utm coordinate system) and write to an ecsv files
+Retrieve telescope positions from the model repository (utm coordinate system) and write to an ecsv files
 
 .. code-block:: console
 

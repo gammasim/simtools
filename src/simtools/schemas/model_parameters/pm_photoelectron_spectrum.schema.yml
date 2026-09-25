@@ -28,6 +28,22 @@ data:
         type: float64
         unit: dimensionless
         required: false
+      - name: original_amplitude
+        description: Amplitude before interpolation and scaling
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: original_response
+        description: Prompt response before interpolation and scaling
+        type: float64
+        unit: dimensionless
+        required: false
+      - name: original_response_with_ap
+        description: Response including afterpulsing before interpolation and scaling
+        type: float64
+        unit: dimensionless
+        required: false
+        input_processing: [allow_nan]
 instrument:
   class: Camera
 activity:
@@ -49,7 +65,7 @@ simulation_software:
     serialization:
       columns: [amplitude, response]
       optional_columns: [response_with_ap]
-      allowed_columns: [amplitude, response, response_with_ap]
+      allowed_columns: [amplitude, response, response_with_ap, original_amplitude, original_response, original_response_with_ap]
       row_sort_keys: [amplitude]
       float_format: ".12g"
       write_comments: false

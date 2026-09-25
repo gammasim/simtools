@@ -14,7 +14,7 @@ def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elemen
     )
     mock_get = mocker.patch(
         "simtools.production_configuration.production_event_data_helpers."
-        "get_array_elements_from_db_for_layouts",
+        "get_array_elements_from_model_repository",
         return_value={"alpha": ["LSTN-01"]},
     )
 
@@ -29,6 +29,45 @@ def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elemen
 
     with pytest.raises(ValueError, match="No telescope configuration provided"):
         helpers.resolve_telescope_configs({})
+
+
+def test_resolve_telescope_configs_passes_scalar_model_version_to_repository(mocker):
+    mock_resolve = mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name",
+        return_value="alpha",
+    )
+    mock_get = mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers."
+        "get_array_elements_from_model_repository",
+        return_value={"alpha": ["LSTN-01"]},
+    )
+
+    result = helpers.resolve_telescope_configs(
+        {
+            "array_layout_name": ["alpha"],
+            "model_version": ["7.0.0"],
+            "site": "North",
+        }
+    )
+
+    assert result == {"alpha": ["LSTN-01"]}
+    mock_resolve.assert_called_once_with(["alpha"], "7.0.0")
+    mock_get.assert_called_once_with(["alpha"], "North", "7.0.0")
+
+
+def test_resolve_telescope_configs_rejects_multiple_model_versions(mocker):
+    mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name"
+    )
+
+    with pytest.raises(ValueError, match="requires exactly one model version"):
+        helpers.resolve_telescope_configs(
+            {
+                "array_layout_name": ["alpha"],
+                "model_version": ["7.0.0", "7.1.0"],
+                "site": "North",
+            }
+        )
 
 
 def test_normalize_telescope_configs_normalizes_dict_and_list_inputs(mocker):

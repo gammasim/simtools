@@ -6,23 +6,20 @@ from pathlib import Path
 import numpy as np
 
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
-from simtools.simtel.trigger_patch_validator import validate_trigger_patches
 
 logger = logging.getLogger(__name__)
 
 
-def write_camera_file(camera_components, output_path, *, trigger_patch_policy="warn"):
+def write_camera_file(camera_components, output_path):
     """Write validated camera components in sim_telarray camera syntax.
 
     ``camera_components`` is a mapping containing ``rotate``, ``pixel_types``,
     ``pixels`` and optional ``triggers``/``trigger_members`` sequences. The
     function deliberately accepts plain mappings so model-repository values
-    can be passed without an intermediate bespoke class. Trigger-patch
-    geometry warnings are logged by default; use ``strict`` to reject them or
-    ``off`` to skip geometry validation.
+    can be passed without an intermediate bespoke class.
     """
     output_path = Path(output_path)
-    _validate_camera_components(camera_components, trigger_patch_policy)
+    _validate_camera_components(camera_components)
     if any(part == ".." for part in output_path.parts):
         raise ValueError(f"Unsafe camera configuration path: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -121,36 +118,30 @@ def _trigger_line(trigger, index, members_by_group):
         "*" if bool(trigger["use_default_multiplicity"]) else str(trigger["multiplicity"])
     )
     group_id = trigger.get("group_id", index)
-    tokens = _trigger_member_tokens(members_by_group.get(group_id, []), trigger["kind"])
+    tokens = _trigger_member_tokens(members_by_group.get(group_id, []))
     return f"{keyword} {multiplicity} of {' '.join(tokens)}\n"
 
 
-def _trigger_member_tokens(members, kind=None):
+def _trigger_member_tokens(members):
     """Build sim_telarray tokens for normalized trigger members."""
     grouped_members = {}
     for member in members:
         grouped_members.setdefault(member["member_order"], []).append(member)
-    return [
-        _trigger_member_token(grouped_members[order], kind) for order in sorted(grouped_members)
-    ]
+    return [_trigger_member_token(rows) for rows in grouped_members.values()]
 
 
-def _trigger_member_token(member_rows, kind=None):
+def _trigger_member_token(member_rows):
     """Build one scalar or bracketed trigger member token."""
-    rows = sorted(member_rows, key=lambda row: row["pixel_order"])
-    first = rows[0]
-    prefix = "+" if bool(first.get("required", False)) else ""
-    if prefix and kind is not None and str(kind).lower() != "majority":
-        raise ValueError("Required trigger members are only valid for majority triggers")
-    if len(rows) > 1 and kind is not None and str(kind).lower() == "analogsum":
-        raise ValueError("Analog-sum triggers do not support bracketed members")
-    if len(rows) == 1:
+    member_rows.sort(key=lambda row: row["pixel_order"])
+    first = member_rows[0]
+    prefix = "+" if bool(first["required"]) else ""
+    if len(member_rows) == 1:
         return prefix + str(first["pixel_id"])
-    slaves = ",".join(str(row["pixel_id"]) for row in rows[1:])
+    slaves = ",".join(str(row["pixel_id"]) for row in member_rows[1:])
     return f"{prefix}{first['pixel_id']}[{slaves}]"
 
 
-def _validate_camera_components(configuration, trigger_patch_policy="warn"):
+def _validate_camera_components(configuration):
     """Validate camera component records before serializing them."""
     pixel_types = configuration.get("pixel_types", [])
     pixels = configuration.get("pixels", [])
@@ -161,21 +152,6 @@ def _validate_camera_components(configuration, trigger_patch_policy="warn"):
     type_ids = _validate_pixel_types(pixel_types)
     _validate_pixels(pixels, type_ids)
     _validate_triggers(triggers, members, pixels)
-    _validate_trigger_patch_policy(configuration, trigger_patch_policy)
-
-
-def _validate_trigger_patch_policy(configuration, policy):
-    """Apply the selected geometry-validation policy to trigger patches."""
-    if policy not in {"warn", "strict", "off"}:
-        raise ValueError("trigger_patch_policy must be one of: off, warn, strict")
-    if policy == "off" or not configuration.get(
-        "triggers", configuration.get("trigger_groups", [])
-    ):
-        return
-    result = validate_trigger_patches(configuration, strict=policy == "strict")
-    result.raise_if_invalid()
-    for diagnostic in result.warnings:
-        logger.warning(diagnostic.message)
 
 
 def _validate_pixel_types(pixel_types):
@@ -227,7 +203,7 @@ def _validate_trigger(trigger, members, pixel_ids):
     _validate_trigger_multiplicity(use_default, multiplicity)
     if not members:
         raise ValueError(f"Camera trigger group has no members: {trigger['group_id']}")
-    _validate_trigger_members(members, pixel_ids, trigger["kind"])
+    _validate_trigger_members(members, pixel_ids)
 
 
 def _validate_trigger_kind(trigger):
@@ -246,7 +222,7 @@ def _validate_trigger_multiplicity(use_default, multiplicity):
         raise ValueError("Explicit trigger multiplicity must be positive")
 
 
-def _validate_trigger_members(members, pixel_ids, kind):
+def _validate_trigger_members(members, pixel_ids):
     """Validate normalized trigger member rows."""
     member_orders = sorted({member["member_order"] for member in members})
     if member_orders != list(range(len(member_orders))):
@@ -258,12 +234,8 @@ def _validate_trigger_members(members, pixel_ids, kind):
         )
         if [row["pixel_order"] for row in rows] != list(range(len(rows))):
             raise ValueError("Camera trigger pixel orders must be contiguous")
-        if any(row.get("required", False) for row in rows[1:]):
+        if rows[0]["required"] and any(row["required"] for row in rows[1:]):
             raise ValueError("Only the first pixel of a trigger member may be required")
-        if any(row.get("required", False) for row in rows) and str(kind).lower() != "majority":
-            raise ValueError("Required trigger members are only valid for majority triggers")
-        if len(rows) > 1 and str(kind).lower() == "analogsum":
-            raise ValueError("Analog-sum triggers do not support bracketed members")
         if any(row["pixel_id"] not in pixel_ids for row in rows):
             raise ValueError("Camera trigger contains an unknown pixel ID")
 

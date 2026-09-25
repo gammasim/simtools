@@ -11,7 +11,7 @@ from ctao_cr_spectra.spectral import LogParabola, PowerLaw, PowerLawWithExponent
 from scipy import integrate
 
 from simtools.io import ascii_handler, io_handler
-from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
+from simtools.layout.array_layout_utils import get_array_elements_from_model_repository
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
@@ -52,7 +52,7 @@ def telescope_trigger_rates(args_dict):
 
     if layout_name:
         layout_names = [layout_name] if isinstance(layout_name, str) else layout_name
-        telescope_configs = get_array_elements_from_db_for_layouts(
+        telescope_configs = get_array_elements_from_model_repository(
             layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),

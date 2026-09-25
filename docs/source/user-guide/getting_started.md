@@ -1,7 +1,7 @@
 # Getting Started
 
 Using simtools requires installing and accessing its [main components](../components/index.md):
-the [simtools package](#installation), the simulation software [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray), and the [simulation model database](model-database-access).
+the [simtools package](#installation), the simulation software [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray), and the [simulation-model repository](#simulation-model-repository).
 
 For development-related information, see [Getting Started as a Developer](../developer-guide/getting_started_as_developer.md).
 
@@ -34,7 +34,7 @@ Container images do not include the interaction tables required by CORSIKA. Foll
 
 ### Running a simtools Production Image
 
-**Prerequisite**: Configure [simulation model database access](model-database-access).
+**Prerequisite**: Configure access to a local checkout or Git repository containing the simulation models.
 
 Start an Interactive Container:
 
@@ -121,17 +121,12 @@ The following environment variables must be set for simtools applications to fin
 - `$SIMTOOLS_CORSIKA_PATH`: Path to the CORSIKA installation (e.g., `/workdir/corsika` in the container environment)
 - `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH`: Path to the CORSIKA interaction tables (e.g., `/workdir/corsika-interaction-tables` in the container environment)
 
-## Model Database Access
+## Simulation-model repository
 
-Simulation model parameters are stored in the database.
-Many simtools applications depend on access to this database.
-
-:::{note}
-Ask one of the developers for the credentials to access the database.
-:::
-
-Credentials for database access are passed on to simtools applications using environmental variables stored
-in a file named `.env`, see the [Environment Variables](#environment-variables) section below.
+Simulation-model parameters and referenced files are read from a local checkout or a local
+normal, bare, or mirror Git repository. Applications that use model parameters accept
+`--simulation_models_path`, `--simulation_models_git_path`, and
+`--simulation_models_git_revision`.
 
 (environment-variables)=
 
@@ -140,21 +135,15 @@ in a file named `.env`, see the [Environment Variables](#environment-variables) 
 The environment variables listed below are used by simtools applications and defined by the user
 in a `.env` file to be placed in the working directory. Copy the template file
 [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to a new file named
-`.env` and update it accordingly. The model database version and the default `simtools-tests`
-resource version are maintained in `dependency_versions.yml`.
+`.env` and update it accordingly. The pinned model-repository revision and the default
+`simtools-tests` resource version are maintained in `dependency_versions.yml`.
 
 ```console
-# Hostname of the database server
-SIMTOOLS_DB_SERVER=<hostname>
-# Port on the database server
-SIMTOOLS_DB_API_PORT=<integer>
-# Username for database
-SIMTOOLS_DB_API_USER=<username>
-# Password for database
-SIMTOOLS_DB_API_PW=<password>
-SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-# Name of the simulation model database
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-7-0'
+# Path to a checked-out simulation-model repository
+SIMTOOLS_SIMULATION_MODELS_PATH='/workdir/simulation-models'
+# Or use a local Git repository and revision
+SIMTOOLS_SIMULATION_MODELS_GIT_PATH='/workdir/simulation-models.git'
+SIMTOOLS_SIMULATION_MODELS_GIT_REVISION='HEAD'
 # Path to the sim_telarray installation
 SIMTOOLS_SIM_TELARRAY_PATH='/workdir/sim_telarray'
 # Path to the CORSIKA installation

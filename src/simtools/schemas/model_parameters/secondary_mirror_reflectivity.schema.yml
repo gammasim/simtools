@@ -61,6 +61,10 @@ simulation_software:
     table_format: rpol_matrix
     internal_parameter_name: mirror_secondary_reflectivity
     serialization:
+      description: |-
+        One-dimensional output is wavelength and reflectivity. For an
+        incidence_angle column, output uses sim_telarray RPOL syntax with
+        '#@RPOL@[ANGLE=] 2' and degree-valued ANGLE coordinates.
       columns: [wavelength, reflectivity]
       allowed_columns:
         [wavelength, incidence_angle, reflectivity, reflectivity_rms, reflectivity_min, reflectivity_max]

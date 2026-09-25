@@ -28,7 +28,7 @@ runs:
       shell: bash -leo pipefail {0}
       run: pip install -e '.[tests]'
 
-    - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
+    - name: Export catalog-managed model repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}
       shell: bash -leo pipefail {0}
       run: |

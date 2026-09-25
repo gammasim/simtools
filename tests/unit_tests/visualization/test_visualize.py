@@ -29,7 +29,7 @@ def test_plot_1d(io_handler, wavelength):
     headers_type = {"names": (x_title, y_title), "formats": ("f8", "f8")}
     title = "Test 1D plot"
 
-    # Create test data file instead of fetching from DB
+    # Create test data file instead of fetching from model repository
     test_file_name = "ref_LST1_2022_04_01.dat"
     test_data_file = io_handler.get_output_directory(sub_dir="model") / test_file_name
     test_data_file.parent.mkdir(parents=True, exist_ok=True)
@@ -159,6 +159,27 @@ def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker
     assert fig.savefig.call_args_list == [
         mocker.call(output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi=150),
         mocker.call(output_file.with_suffix(".png"), format="png", bbox_inches="tight", dpi=123),
+    ]
+
+
+def test_save_figure_passes_pil_kwargs_to_png_only(tmp_test_directory, mocker):
+    fig = mocker.Mock()
+    output_file = Path(tmp_test_directory) / "figure"
+    pil_kwargs = {"compress_level": 1}
+
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], pil_kwargs=pil_kwargs)
+
+    assert fig.savefig.call_args_list == [
+        mocker.call(
+            output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi="figure"
+        ),
+        mocker.call(
+            output_file.with_suffix(".png"),
+            format="png",
+            bbox_inches="tight",
+            dpi="figure",
+            pil_kwargs=pil_kwargs,
+        ),
     ]
 
 

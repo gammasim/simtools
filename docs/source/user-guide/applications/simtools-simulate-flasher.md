@@ -67,7 +67,7 @@ light_source (str, optional)
     Explicit calibration light source model, e.g. MSFx-FlashCam.
 light_source_type (str, optional)
     Light source type, e.g. flat_fielding. Recommended for array-style simulations
-    because the corresponding flasher model is read from the model-parameter database
+    because the corresponding flasher model is read from the simulation-model repository
     for each telescope.
 number_of_events (int, optional):
     Number of events to simulate (default: 1). Can be a single value or a list.

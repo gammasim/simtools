@@ -6,18 +6,20 @@ from collections import Counter
 from typing import NamedTuple
 
 import astropy.units as u
-import matplotlib.patches as mpatches
 import numpy as np
-from adjustText import adjust_text
 from astropy.table import Column
-from matplotlib.collections import PatchCollection
 
 from simtools.application.model_reader import require_model_reader
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+
+mpatches = lazy_module("matplotlib.patches")
+collections = lazy_module("matplotlib.collections")
+adjust_text_module = lazy_module("adjustText")
 
 logging.getLogger("adjustText").setLevel(logging.CRITICAL)
 
@@ -214,7 +216,7 @@ def plot_array_layout(
     finalize_plot(ax, patches, "Easting [m]", "Northing [m]", x_lim, y_lim, highlighted_patches)
 
     if text_objects:
-        adjust_text(
+        adjust_text_module.adjust_text(
             text_objects,
             ax=ax,
             arrowprops={"arrowstyle": "->", "color": "grey", "alpha": 0.8, "lw": 0.8, "ls": "--"},
@@ -291,7 +293,7 @@ def _get_patches_for_background_telescopes(
         filter_x_lim=filter_x_lim,
         filter_y_lim=filter_y_lim,
     )
-    ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
+    ax.add_collection(collections.PatchCollection(bg_patches, match_original=True, alpha=0.1))
     if axes_range is None:
         if bounds_mode == "symmetric":
             plot_range = max(plot_range, bg_range)
@@ -651,10 +653,10 @@ def finalize_plot(
     highlighted_patches=None,
 ):
     """Finalize plot appearance and limits."""
-    ax.add_collection(PatchCollection(patches, match_original=True))
+    ax.add_collection(collections.PatchCollection(patches, match_original=True))
 
     if highlighted_patches:
-        ax.add_collection(PatchCollection(highlighted_patches, match_original=True))
+        ax.add_collection(collections.PatchCollection(highlighted_patches, match_original=True))
 
     ax.set(xlabel=x_title, ylabel=y_title)
     ax.tick_params(labelsize=8)

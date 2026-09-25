@@ -431,8 +431,9 @@ def test_create_plot_with_output_file(tmp_test_directory):
         assert result is not None
         mock_fig.savefig.assert_called_once()
         # Ensure file path argument matches expected name
-        save_args, _ = mock_fig.savefig.call_args
+        save_args, save_kwargs = mock_fig.savefig.call_args
         assert str(output_file) in str(save_args[0])
+        assert save_kwargs["pil_kwargs"] == {"compress_level": 1}
         mock_close.assert_called_once_with(mock_fig)
         mock_show.assert_not_called()
 

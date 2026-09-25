@@ -144,34 +144,40 @@ class CorsikaConfig:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args)
 
         config.update(
-            self._fill_corsika_configuration_from_db(gen.ensure_list(args.get("model_version")))
+            self._fill_corsika_configuration_from_repository(
+                gen.ensure_list(args.get("model_version"))
+            )
         )
         return config
 
-    def _fill_corsika_configuration_from_db(self, model_versions):
-        """Fill CORSIKA configuration from database."""
+    def _fill_corsika_configuration_from_repository(self, model_versions):
+        """Fill CORSIKA configuration from the model repository."""
         config = {}
-        # all following parameters require DB
-        if settings.config.db_config is None or not model_versions:
+        # all following parameters require model repository
+        if not model_versions:
             return config
 
         # For multiple model versions, check that CORSIKA parameters are identical
         self.assert_corsika_configurations_match(model_versions)
         model_version = model_versions[0]
 
-        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
-        parameters_from_db = self.array_model.site_model.get_simulation_software_parameters(
+        self._logger.debug(
+            f"Using model version {model_version} for CORSIKA parameters from the model repository"
+        )
+        parameters_from_repository = self.array_model.site_model.get_simulation_software_parameters(
             "corsika"
         )
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
-            parameters_from_db
+            parameters_from_repository
         )
         config["CHERENKOV_EMISSION_PARAMETERS"] = self._corsika_configuration_cherenkov_parameters(
-            parameters_from_db
+            parameters_from_repository
         )
         config["DEBUGGING_OUTPUT_PARAMETERS"] = self._corsika_configuration_debugging_parameters()
-        config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
+        config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(
+            parameters_from_repository
+        )
         return config
 
     def _initialize_from_config(self, args):
@@ -227,26 +233,26 @@ class CorsikaConfig:
         if len(model_versions) < 2:
             return
 
-        parameters_from_db_list = []
+        parameters_from_repository_list = []
 
         # Get parameters for all model versions
         for model_version in model_versions:
-            db_model_parameters = ModelParameter(model_version=model_version)
-            parameters_from_db_list.append(
-                db_model_parameters.get_simulation_software_parameters("corsika")
+            model_parameters = ModelParameter(model_version=model_version)
+            parameters_from_repository_list.append(
+                model_parameters.get_simulation_software_parameters("corsika")
             )
 
         # Parameters that can differ between model versions (e.g., i/o buffer size)
         skip_parameters = ["corsika_iact_io_buffer", "corsika_iact_split_auto"]
 
         # Check if all parameters match
-        for i in range(len(parameters_from_db_list) - 1):
-            for key in parameters_from_db_list[i]:
+        for i in range(len(parameters_from_repository_list) - 1):
+            for key in parameters_from_repository_list[i]:
                 if key in skip_parameters:
                     continue
 
-                current_value = parameters_from_db_list[i][key]["value"]
-                next_value = parameters_from_db_list[i + 1][key]["value"]
+                current_value = parameters_from_repository_list[i][key]["value"]
+                next_value = parameters_from_repository_list[i + 1][key]["value"]
 
                 if current_value != next_value:
                     self._logger.warning(
@@ -398,14 +404,14 @@ class CorsikaConfig:
         )
         return theta, phi
 
-    def _corsika_configuration_interaction_flags(self, parameters_from_db):
+    def _corsika_configuration_interaction_flags(self, parameters_from_repository):
         """
         Return CORSIKA interaction flags / parameters.
 
         Parameters
         ----------
-        parameters_from_db : dict
-            CORSIKA parameters from the database.
+        parameters_from_repository : dict
+            CORSIKA parameters from the model repository.
 
         Returns
         -------
@@ -413,25 +419,27 @@ class CorsikaConfig:
             Dictionary with CORSIKA interaction parameters.
         """
         parameters = {}
-        first_interaction_height = parameters_from_db.get("corsika_first_interaction_height")
+        first_interaction_height = parameters_from_repository.get(
+            "corsika_first_interaction_height"
+        )
         if first_interaction_height is not None:
             parameters["FIXHEI"] = self._input_config_first_interaction_height(
                 first_interaction_height
             )
         parameters["FIXCHI"] = [
             self._input_config_corsika_starting_grammage(
-                parameters_from_db["corsika_starting_grammage"]
+                parameters_from_repository["corsika_starting_grammage"]
             )
         ]
         if not self.use_curved_atmosphere:
             parameters["TSTART"] = ["T"]
         parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
-            parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
+            parameters_from_repository["corsika_particle_kinetic_energy_cutoff"]
         )
         parameters["MUADDI"] = ["F"]
         parameters["MUMULT"] = ["T"]
         parameters["LONGI"] = self._input_config_corsika_longitudinal_parameters(
-            parameters_from_db["corsika_longitudinal_shower_development"]
+            parameters_from_repository["corsika_longitudinal_shower_development"]
         )
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
@@ -520,14 +528,14 @@ class CorsikaConfig:
         """Return LONGI parameter CORSIKA format."""
         return ["T", f"{entry['value'] * u.Unit(entry['unit']).to('g/cm2')}", "F", "F"]
 
-    def _corsika_configuration_cherenkov_parameters(self, parameters_from_db):
+    def _corsika_configuration_cherenkov_parameters(self, parameters_from_repository):
         """
         Return CORSIKA Cherenkov emission parameters.
 
         Parameters
         ----------
-        parameters_from_db : dict
-            CORSIKA parameters from the database.
+        parameters_from_repository : dict
+            CORSIKA parameters from the model repository.
 
         Returns
         -------
@@ -535,10 +543,12 @@ class CorsikaConfig:
             Dictionary with CORSIKA Cherenkov emission parameters.
         """
         parameters = {}
-        parameters["CERSIZ"] = [parameters_from_db["corsika_cherenkov_photon_bunch_size"]["value"]]
+        parameters["CERSIZ"] = [
+            parameters_from_repository["corsika_cherenkov_photon_bunch_size"]["value"]
+        ]
         parameters["CERFIL"] = "0"
         parameters["CWAVLG"] = self._input_config_corsika_cherenkov_wavelength(
-            parameters_from_db["corsika_cherenkov_photon_wavelength_range"]
+            parameters_from_repository["corsika_cherenkov_photon_wavelength_range"]
         )
         self._logger.debug(f"Cherenkov parameters: {parameters}")
         return parameters
@@ -551,14 +561,14 @@ class CorsikaConfig:
             f"{wavelength_range[1] * u.Unit(entry['unit']).to('nm')}",
         ]
 
-    def _corsika_configuration_iact_parameters(self, parameters_from_db):
+    def _corsika_configuration_iact_parameters(self, parameters_from_repository):
         """
         Return CORSIKA IACT parameters.
 
         Parameters
         ----------
-        parameters_from_db : dict
-            CORSIKA parameters from the database.
+        parameters_from_repository : dict
+            CORSIKA parameters from the model repository.
 
         Returns
         -------
@@ -566,11 +576,13 @@ class CorsikaConfig:
             Dictionary with CORSIKA IACT parameters.
         """
         parameters = {}
-        parameters["SPLIT_AUTO"] = [parameters_from_db["corsika_iact_split_auto"]["value"]]
+        parameters["SPLIT_AUTO"] = [parameters_from_repository["corsika_iact_split_auto"]["value"]]
         parameters["IO_BUFFER"] = [
-            self._input_config_io_buff(parameters_from_db["corsika_iact_io_buffer"])
+            self._input_config_io_buff(parameters_from_repository["corsika_iact_io_buffer"])
         ]
-        parameters["MAX_BUNCHES"] = [parameters_from_db["corsika_iact_max_bunches"]["value"]]
+        parameters["MAX_BUNCHES"] = [
+            parameters_from_repository["corsika_iact_max_bunches"]["value"]
+        ]
         self._logger.debug(f"IACT parameters: {parameters}")
         return parameters
 

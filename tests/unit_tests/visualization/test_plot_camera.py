@@ -146,6 +146,9 @@ def test_plot_layout_with_image_axes(camera_square):
     image = np.array([0.0, 0.5, 1.0])
     fig = plot_pixel_layout_with_image(camera_square, image=image, ax=ax)
     assert fig is not None
+    assert len(ax.collections) == 1
+    assert not ax.patches
+    plt.close(fig)
 
 
 def test_plot_one_axis_no_invert():

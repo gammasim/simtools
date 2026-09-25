@@ -23,11 +23,11 @@ def test_parse_segmentation_file_ignores_comments_and_commas(tmp_test_directory)
         {
             "kind": "ring",
             "count": 2,
-            "r_min_cm": 1.0,
-            "r_max_cm": 2.0,
-            "dphi_deg": 90.0,
-            "phi0_deg": 0.0,
-            "gap_cm": 0.1,
+            "r_min": {"value": 1.0, "unit": "cm"},
+            "r_max": {"value": 2.0, "unit": "cm"},
+            "dphi": {"value": 90.0, "unit": "deg"},
+            "phi0": {"value": 0.0, "unit": "deg"},
+            "gap": {"value": 0.1, "unit": "cm"},
         }
     ]
 
@@ -35,15 +35,21 @@ def test_parse_segmentation_file_ignores_comments_and_commas(tmp_test_directory)
 def test_write_mirror_segmentation_serializes_all_supported_shapes(tmp_test_directory):
     output = Path(tmp_test_directory) / "segments.dat"
     records = [
-        {"kind": "hex", "x_cm": 1, "y_cm": 2, "diameter_cm": 3, "rotation_deg": 4},
+        {
+            "kind": "hex",
+            "x": {"value": 1, "unit": "cm"},
+            "y": {"value": 2, "unit": "cm"},
+            "diameter": {"value": 3, "unit": "cm"},
+            "rotation": {"value": 4, "unit": "deg"},
+        },
         {
             "kind": "polygon",
-            "vertices_cm": [
-                {"x_cm": 0, "y_cm": 0},
-                {"x_cm": 1, "y_cm": 0},
-                {"x_cm": 0, "y_cm": 1},
+            "vertices": [
+                {"x": {"value": 0, "unit": "cm"}, "y": {"value": 0, "unit": "cm"}},
+                {"x": {"value": 1, "unit": "cm"}, "y": {"value": 0, "unit": "cm"}},
+                {"x": {"value": 0, "unit": "cm"}, "y": {"value": 1, "unit": "cm"}},
             ],
-            "rotation_deg": 5,
+            "rotation": {"value": 5, "unit": "deg"},
         },
     ]
 
@@ -51,8 +57,8 @@ def test_write_mirror_segmentation_serializes_all_supported_shapes(tmp_test_dire
 
     assert result == "segments.dat"
     assert output.read_text(encoding="utf-8").splitlines() == [
-        "HEX 1 1 2 3 4",
-        "POLYGON 1 5 0 0 1 0 0 1",
+        "HEX 1 1.0 2.0 3.0 4.0",
+        "POLYGON 1 5.0 0.0 0.0 1.0 0.0 0.0 1.0",
     ]
 
 
@@ -67,7 +73,14 @@ def test_parse_segmentation_file_rejects_unknown_kind(tmp_test_directory):
 def test_write_mirror_segmentation_rejects_path_traversal(tmp_test_directory):
     with pytest.raises(ValueError, match="Unsafe"):
         write_mirror_segmentation(
-            [{"kind": "hex", "x_cm": 0, "y_cm": 0, "diameter_cm": 1}],
+            [
+                {
+                    "kind": "hex",
+                    "x": {"value": 0, "unit": "cm"},
+                    "y": {"value": 0, "unit": "cm"},
+                    "diameter": {"value": 1, "unit": "cm"},
+                }
+            ],
             Path(tmp_test_directory) / ".." / "segments.dat",
             PARAMETER_NAME,
             SCHEMA_VERSION,

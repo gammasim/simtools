@@ -421,7 +421,7 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "count"
-        assert call_kwargs["check_db_for_existing_parameter"] is False
+        assert call_kwargs["check_for_existing_parameter"] is False
 
 
 def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
@@ -454,7 +454,7 @@ def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "mV"
-        assert call_kwargs["check_db_for_existing_parameter"] is False
+        assert call_kwargs["check_for_existing_parameter"] is False
 
 
 def test_export_trigger_threshold_handles_missing_telescope(tmp_path):

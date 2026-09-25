@@ -29,7 +29,7 @@ class ModelParameter:
     """
     Base class for simulation model parameters.
 
-    Provides methods to read and manipulate parameters from DB and to write
+    Provides methods to read and manipulate parameters from the model repository and to write
     sim_telarray configuration files.
 
     Parameters
@@ -42,11 +42,11 @@ class ModelParameter:
         Array element name (e.g., LSTN-01, LSTN-design, ILLN-01).
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
-        as stored under collection in the DB.
+        as stored under collection in the model repository.
     label: str
         Instance label. Used for output file naming.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters from the model repository with provided values.
         Instance label. Important for output file naming.
     ignore_software_version: bool
         If True, ignore software version checks for deprecated parameters.
@@ -107,22 +107,22 @@ class ModelParameter:
         self._is_exported_model_files_up_to_date = False
         self._serialized_simtel_tables = {}
 
-        self._load_parameters_from_db()
+        self._load_parameters_from_repository()
 
         self.simtel_config_writer = None
 
     @property
-    def db(self):
+    def model_source(self):
         """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
-    @db.setter
-    def db(self, reader):
+    @model_source.setter
+    def model_source(self, reader):
         self.model_reader = reader
 
     def _get_parameter_dict(self, par_name):
         """
-        Get model parameter dictionary for a specific parameter as stored in the DB.
+        Get model parameter dictionary for a specific parameter as stored in the model repository.
 
         No conversion to values are applied for the use in simtools
         (e.g., no conversion from the string representation of lists
@@ -136,7 +136,7 @@ class ModelParameter:
         Returns
         -------
         dict
-            Dictionary with complete DB entry for the given parameter.
+            Dictionary with complete model repository entry for the given parameter.
 
         Raises
         ------
@@ -155,7 +155,7 @@ class ModelParameter:
         Get the value of a model parameter.
 
         List of values stored in strings are returns as lists, so that no knowledge
-        of the database structure is needed when accessing the model parameters.
+        of the model repository structure is needed when accessing the model parameters.
 
         Parameters
         ----------
@@ -245,7 +245,7 @@ class ModelParameter:
 
     def get_parameter_type(self, par_name):
         """
-        Get the type of existing parameter of the model (value of 'type' field of DB entry).
+        Get the type of an existing model parameter (the ``type`` field).
 
         Parameters
         ----------
@@ -265,7 +265,7 @@ class ModelParameter:
 
     def get_parameter_file_flag(self, par_name):
         """
-        Get value of parameter file flag of this database entry (boolean 'file' field of DB entry).
+        Get the file flag of an existing model parameter (the ``file`` field).
 
         Parameters
         ----------
@@ -331,7 +331,7 @@ class ModelParameter:
         return self._simulation_config_parameters.get(simulation_software)
 
     def _load_simulation_software_parameter(self):
-        """Read simulation software parameters from DB."""
+        """Read simulation software parameters from the model repository."""
         for simulation_software in self._simulation_config_parameters:
             self._load_simulation_software_parameter_for_software(simulation_software)
 
@@ -343,7 +343,7 @@ class ModelParameter:
             ).copy()
 
             self._simulation_config_parameters[simulation_software] = (
-                self.db.get_simulation_configuration_parameters(
+                self.model_source.get_simulation_configuration_parameters(
                     site=self.site,
                     array_element_name=self.name,
                     model_version=self.model_version,
@@ -432,11 +432,11 @@ class ModelParameter:
 
         return filtered_parameter_changes
 
-    def _load_parameters_from_db(self):
+    def _load_parameters_from_repository(self):
         """
-        Read parameters from Database.
+        Read parameters from the model repository.
 
-        This is the main function to load the model parameters from the DB.
+        This is the main function to load the model parameters from the model repository.
         """
         if self.model_reader is None:
             return
@@ -444,11 +444,11 @@ class ModelParameter:
         if not (self.name or self.site):
             return
 
-        self._load_parameters_from_db_core()
+        self._load_parameters_from_repository_core()
         ignore_collections = self._determine_ignore_collections()
         self._apply_overrides_with_ignore_collections(ignore_collections)
 
-    def _load_parameters_from_db_core(self):
+    def _load_parameters_from_repository_core(self):
         """Load the model parameters from the selected reader."""
         self.parameters = deepcopy(
             self.model_reader.get_model_parameters(
@@ -587,11 +587,11 @@ class ModelParameter:
         """
         Overwrite the parameter dictionary for a specific parameter in the model.
 
-        This function does not modify the DB, it affects only the current instance of
+        This function does not modify the model repository, it affects only the current instance of
         the model parameter dictionary.
 
         If the parameter version is given only, the parameter dictionary is updated
-        from the database for the given version.
+        from the model repository for the given version.
 
         Parameters
         ----------
@@ -617,7 +617,7 @@ class ModelParameter:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
         if value is None and parameter_version:
-            self._overwrite_model_parameter_from_db(
+            self._overwrite_model_parameter_from_repository(
                 par_name,
                 parameter_version,
                 parameter_store=target_parameters,
@@ -724,8 +724,10 @@ class ModelParameter:
         par_dict.setdefault("unit", schema_unit)
         return par_dict
 
-    def _overwrite_model_parameter_from_db(self, par_name, parameter_version, parameter_store=None):
-        """Overwrite model parameter from DB for a specific version."""
+    def _overwrite_model_parameter_from_repository(
+        self, par_name, parameter_version, parameter_store=None
+    ):
+        """Overwrite model parameter from the model repository for a specific version."""
         target_parameters = self.parameters if parameter_store is None else parameter_store
         _para_dict = self.model_reader.get_model_parameter(
             parameter=par_name,
@@ -788,7 +790,7 @@ class ModelParameter:
         parameter_store=None,
     ):
         """
-        Overwrite multiple parameters in memory (no DB update).
+        Overwrite multiple parameters in memory (no model repository update).
 
         Parameters
         ----------
@@ -948,7 +950,7 @@ class ModelParameter:
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
-        Export model files from the database into the config file directory.
+        Export model files from the model repository into the config file directory.
 
         Parameters
         ----------
@@ -963,14 +965,14 @@ class ModelParameter:
                 f"Model files for {self.name} are already exported to {self.config_file_directory}"
             )
             return
-        # Removing parameter files added manually (which are not in DB)
-        pars_from_db = copy(self.parameters)
+        # Removing parameter files added manually (which are not in the model repository)
+        parameters_copy = copy(self.parameters)
         if self._added_parameter_files is not None:
             for par in self._added_parameter_files:
-                pars_from_db.pop(par)
+                parameters_copy.pop(par)
 
         self.model_reader.export_model_files(
-            parameters=pars_from_db,
+            parameters=parameters_copy,
             dest=destination_path or self.config_file_directory,
         )
         self._is_exported_model_files_up_to_date = True

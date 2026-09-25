@@ -3,6 +3,7 @@
 import math
 from functools import lru_cache
 
+import astropy.units as u
 from jsonschema.exceptions import ValidationError
 
 from simtools.data_model import schema
@@ -63,22 +64,86 @@ def validate_segments(
     for record in records:
         validate_finite_json_values(record, path="$[record]")
         required_fields = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
-        if "r_min_cm" in required_fields:
+        if "r_min" in required_fields:
             _validate_ring(record)
-        elif "vertices_cm" in required_fields:
+        elif "vertices" in required_fields:
             _validate_polygon(record)
+        else:
+            _validate_shape(record)
     return records
 
 
+def quantity_value(record, field, unit, default=None):
+    """Return one segmentation quantity converted to the requested unit.
+
+    Parameters
+    ----------
+    record : dict
+        Segmentation record containing an explicit ``value``/``unit`` object.
+    field : str
+        Quantity field name.
+    unit : str
+        Unit to which the value is converted.
+    default : float, optional
+        Value returned when the optional field is absent.
+
+    Returns
+    -------
+    float
+        Numeric value in ``unit``.
+    """
+    quantity = record.get(field)
+    if quantity is None:
+        return default
+    try:
+        return (quantity["value"] * u.Unit(quantity["unit"])).to(unit).value
+    except (KeyError, TypeError, ValueError, u.UnitConversionError) as exc:
+        raise ValueError(f"Invalid unit-bearing segmentation field '{field}'") from exc
+
+
+def make_quantity(value, unit):
+    """Return a JSON-compatible explicit quantity object.
+
+    Parameters
+    ----------
+    value : float
+        Numeric quantity value.
+    unit : str
+        Unit associated with ``value``.
+
+    Returns
+    -------
+    dict
+        Quantity represented by ``value`` and ``unit`` keys.
+    """
+    return {"value": value, "unit": unit}
+
+
 def _validate_ring(record):
-    if record["r_max_cm"] <= record["r_min_cm"]:
-        raise ValueError("Ring r_max_cm must be greater than r_min_cm")
+    r_min = quantity_value(record, "r_min", "cm")
+    r_max = quantity_value(record, "r_max", "cm")
+    if r_min < 0 or r_max <= 0 or r_max <= r_min:
+        raise ValueError("Ring r_max must be greater than r_min")
+    if quantity_value(record, "dphi", "deg") <= 0:
+        raise ValueError("Ring dphi must be positive")
+    if quantity_value(record, "gap", "cm", 0) < 0:
+        raise ValueError("Ring gap must not be negative")
+
+
+def _validate_shape(record):
+    """Validate the positive size of a shaped mirror facet."""
+    if quantity_value(record, "diameter", "cm") <= 0:
+        raise ValueError("Shape diameter must be positive")
 
 
 def _validate_polygon(record):
-    vertices = record.get("vertices_cm")
+    vertices = record.get("vertices")
+    vertices = [
+        {"x": quantity_value(vertex, "x", "cm"), "y": quantity_value(vertex, "y", "cm")}
+        for vertex in vertices
+    ]
     area = sum(
-        first["x_cm"] * second["y_cm"] - second["x_cm"] * first["y_cm"]
+        first["x"] * second["y"] - second["x"] * first["y"]
         for first, second in zip(vertices, vertices[1:] + vertices[:1], strict=False)
     )
     if math.isclose(area, 0, abs_tol=1e-12):

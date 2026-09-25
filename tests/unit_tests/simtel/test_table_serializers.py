@@ -6,6 +6,7 @@ from astropy.table import QTable
 
 from simtools.simtel.table_serializers import (
     SimtelTableWriter,
+    _raw_values,
     _unit_matches,
     _validate_contract_definition,
     validate_simtel_serialization,
@@ -37,6 +38,14 @@ def test_write_simtel_table_sorts_plain_rows(tmp_test_directory):
         "1.0 0.1",
         "2.0 0.2",
     ]
+
+
+def test_raw_values_unwraps_quantity_columns_without_iterating():
+    values = [1.0, 2.0] * u.nm
+
+    result = _raw_values(values)
+
+    assert result.tolist() == [1.0, 2.0]
 
 
 def test_write_simtel_table_rejects_missing_contract():
@@ -109,6 +118,16 @@ def test_contract_definition_rejects_invalid_references(change, message):
 
     with pytest.raises(ValueError, match=message):
         _validate_contract_definition(contract)
+
+
+def test_contract_definition_requires_missing_value_for_opaque_policy():
+    contract = _contract("plain", ["value"], incomplete_grid_policy="opaque")
+
+    with pytest.raises(ValueError, match="Opaque incomplete-grid policy"):
+        _validate_contract_definition(contract)
+
+    contract["missing_value"] = -1.0
+    _validate_contract_definition(contract)
 
 
 def test_validate_simtel_serialization_rejects_missing_and_unexpected_columns():

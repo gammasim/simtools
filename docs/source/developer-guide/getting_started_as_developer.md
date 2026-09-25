@@ -1,8 +1,8 @@
 # Getting Started as Developer
 
-The developer environment for simtools consists of the simtools packages, the CORSIKA/sim_telarray packages, and the model database.
+The developer environment for simtools consists of the simtools packages, the CORSIKA/sim_telarray packages, and a local simulation-model repository checkout.
 The usage of the container for developers is strongly recommended and assumed to be the default environment for developers.
-Note the correct setting of environment variables to connect to the model database (see also the [user's guide](../user-guide/getting_started.md))
+See the [user's guide](../user-guide/getting_started.md) for configuring a local simulation-model repository.
 and to point to the simulation software paths.
 
 ## Container Environment for Developers
@@ -38,7 +38,7 @@ The following steps outline how to set up the development environment using cont
     ```
 
     The container includes a CORSIKA and sim_telarray installation;
-    the environmental variables required by the simulation software and those for the database access are automatically set
+    the environmental variables required by the simulation software and model repository are automatically set
     (if the variables are set correctly in the `.env` file).
 
 ## Installation without Containers
@@ -55,7 +55,7 @@ Create a virtual environment with the simtools dependencies installed:
 ```console
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e '.[tests,dev,doc,mongodb]'
+pip install -e '.[tests,dev,doc]'
 ```
 
 To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray Docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika-simtel).

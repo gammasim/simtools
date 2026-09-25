@@ -95,6 +95,20 @@ def test_model_parameter_metaschema_accepts_serialization_missing_value():
     )
 
 
+def test_model_parameter_metaschema_accepts_serialization_description(caplog):
+    parameter_schema = schema.get_model_parameter_schema("camera_filter", "0.3.0")
+
+    with caplog.at_level(logging.WARNING):
+        schema.validate_dict_using_schema(
+            parameter_schema,
+            schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
+            offline=True,
+            ignore_software_version=True,
+        )
+
+    assert "does not match" not in caplog.text
+
+
 def test_get_parameter_type_and_unit_from_schema():
     assert (
         schema.get_parameter_attribute_from_schema("mirror_focal_length", "0.1.0", "type")

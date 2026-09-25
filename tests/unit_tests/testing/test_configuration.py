@@ -247,27 +247,3 @@ def test_skip_test_for_model_version_skip():
     config = {"configuration": {"model_version": "v1.0"}, "model_version_use_current": True}
     model_version_requested = "v1.0"
     configuration._skip_test_for_model_version(config, model_version_requested)
-
-
-def test_skip_test_for_production_db_no_db_server(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
-    assert configuration._skip_test_for_production_db(config) is None
-
-
-def test_skip_test_for_production_db_skip(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.setenv("SIMTOOLS_DB_SERVER", "db.zeuthen.desy.de")
-    with pytest.raises(
-        configuration.ProductionDBError, match="Production database used for this test"
-    ):
-        configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_skip_for_user(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.setenv("SIMTOOLS_DB_API_USER", "simpipe")
-    with pytest.raises(
-        configuration.ProductionDBError, match="Production database used for this test"
-    ):
-        configuration._skip_test_for_production_db(config)

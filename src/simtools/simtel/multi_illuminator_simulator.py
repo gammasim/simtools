@@ -171,7 +171,7 @@ class MultiIlluminatorSimulator:
     @staticmethod
     def _load_visibility_from_site_model(config, model_reader=None):
         """
-        Load visibility data from the site model database.
+        Load visibility data from the model repository.
 
         Parameters
         ----------

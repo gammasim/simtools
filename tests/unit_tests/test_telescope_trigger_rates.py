@@ -63,7 +63,7 @@ def test_telescope_trigger_rates_forwards_cr_spectrum():
 
     with (
         patch(
-            "simtools.telescope_trigger_rates.get_array_elements_from_db_for_layouts"
+            "simtools.telescope_trigger_rates.get_array_elements_from_model_repository"
         ) as mock_get_array_elements,
         patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
         patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,

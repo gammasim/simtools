@@ -75,6 +75,13 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+## resource_requirements
+
+```{eval-rst}
+.. automodule:: production_configuration.resource_requirements
+   :members:
+```
+
 ## production_metadata
 
 ```{eval-rst}

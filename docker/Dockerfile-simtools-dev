@@ -11,9 +11,9 @@
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE
-ARG SIMTEL_IMAGE
-ARG BASE_IMAGE
+ARG CORSIKA_IMAGE=ghcr.io/gammasim/corsika7:v78010-generic
+ARG SIMTEL_IMAGE=ghcr.io/gammasim/sim_telarray:v2025-11-30-rc
+ARG BASE_IMAGE=docker.io/library/almalinux:9.8-minimal
 
 FROM ${CORSIKA_IMAGE} AS corsika_img
 FROM ${SIMTEL_IMAGE} AS simtel_img
@@ -56,7 +56,7 @@ COPY src /workdir/src
 RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packaging pyyaml && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
-      --extras dev doc tests mongodb > /workdir/requirements-dev.txt && \
+      --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
     python -m pip install --no-cache-dir --upgrade pip && \

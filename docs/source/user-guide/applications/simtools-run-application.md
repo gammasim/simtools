@@ -36,7 +36,6 @@ shows how to define a runtime environment:
 
     runtime_environment:
         image: ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-bernlohr-1.68-prod6-baseline-qgs2-no_opt:20250716-122341
-        network: simtools-mongo-network
         environment_file: ./.env
         container_engine: podman
         options:
@@ -53,8 +52,8 @@ If the ``overwrite_collection_files`` flag is set, files collected in the option
 ``collection`` block of the workflow configuration are allowed to overwrite existing
 destination files with the same basename.
 
-The database configuration and setting of other environment variables is done as
-described in :ref:`environment-variables`.
+The model-repository configuration and other environment variables are described in
+:ref:`environment-variables`.
 
 **Example**
 

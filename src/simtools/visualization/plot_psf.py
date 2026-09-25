@@ -10,11 +10,13 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+
+pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 # Constants
 RADIUS = "Radius [cm]"
@@ -728,7 +730,7 @@ def setup_pdf_plotting(args_dict, output_dir, tel_model_name):
     if not args_dict.get("plot_all", False):
         return None
     pdf_filename = output_dir / f"psf_gradient_descent_plots_{tel_model_name}.pdf"
-    pdf_pages = PdfPages(pdf_filename)
+    pdf_pages = pdf_backend.PdfPages(pdf_filename)
     logger.info(f"Creating cumulative PSF plots for each iteration (saving to {pdf_filename})")
     return pdf_pages
 
@@ -761,7 +763,7 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
 
     fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     pdf_filename = output_dir.joinpath(f"psf_optimization_results_{tel_model.name}.pdf")
-    pdf_pages = PdfPages(pdf_filename)
+    pdf_pages = pdf_backend.PdfPages(pdf_filename)
     logger.info(f"Creating PSF plots for each optimization iteration (saving to {pdf_filename})")
 
     for i, (params, rmsd, _, psf_diameter, _) in enumerate(gd_results):

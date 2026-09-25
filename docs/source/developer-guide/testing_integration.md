@@ -8,7 +8,7 @@ workflow files in `tests/integration_tests/config/` and validate their outputs.
 Integration tests should cover:
 
 - representative command-line use cases for each application
-- external interfaces such as the model database and downloaded input files
+- external interfaces such as the model repository and downloaded input files
 - internal interfaces where one `simtools` output becomes another input
 - selected compatibility checks for generated products
 
@@ -65,7 +65,7 @@ pytest -v --model_version 6.0.2 -k "<test_name>" \
 
 ### Run with simulation models from Git
 
-To run the integration tests without MongoDB, pass a local Git repository and revision:
+To run the integration tests with a local Git repository and revision:
 
 ```bash
 pytest --no-cov -v \
@@ -85,8 +85,8 @@ pytest --no-cov -vv \
   'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-array-element-report_run]'
 ```
 
-Filesystem and Git sources take precedence over MongoDB settings, but cannot be configured
-together. Integration workflows marked with `requires_mongodb: true` are skipped.
+Filesystem and Git sources cannot be configured together. All model-dependent workflows use
+one of these repository sources.
 
 ## Resources
 

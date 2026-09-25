@@ -91,6 +91,8 @@ def _validate_contract_definition(contract):
         raise ValueError("sim_telarray serialization matrix_axes must contain two declared axes")
     if axes and contract.get("value_column") not in allowed:
         raise ValueError("sim_telarray serialization matrix requires a declared value_column")
+    if contract.get("incomplete_grid_policy") == "opaque" and "missing_value" not in contract:
+        raise ValueError("Opaque incomplete-grid policy requires a missing_value")
 
 
 def _validate_contract_columns(table, contract):
@@ -172,7 +174,7 @@ def _format(value, contract):
 
 def _raw_values(values):
     """Return scalar values from an Astropy column."""
-    return [getattr(value, "value", value) for value in values]
+    return getattr(values, "value", values)
 
 
 @SimtelTableWriter.register("plain")
@@ -185,11 +187,10 @@ class PlainTableWriter:
     def write(table, output_path, contract):
         """Write the selected sorted rows."""
         ordered = _ordered_table(table, contract)
+        columns = [_raw_values(ordered[name]) for name in ordered.colnames]
         with output_path.open("w", encoding="utf-8") as file:
-            for row in ordered:
-                file.write(
-                    " ".join(_format(row[name], contract) for name in ordered.colnames) + "\n"
-                )
+            for row in zip(*columns, strict=True):
+                file.write(" ".join(_format(value, contract) for value in row) + "\n")
 
 
 @SimtelTableWriter.register("rpol_matrix")
@@ -198,15 +199,29 @@ class RpolMatrixWriter:
 
     @staticmethod
     def write(table, output_path, contract):
-        """Write either a one-dimensional response or a rectangular RPOL matrix."""
+        """Write a one-dimensional response or sim_telarray's RPOL matrix dialect.
+
+        Two-dimensional output starts with ``#@RPOL@[ANGLE=] 2`` and an
+        ``ANGLE=`` row. sim_telarray reads these mirror/filter tables with
+        degree-valued angle coordinates and its ``yscale=deg2rad`` option;
+        one-dimensional input remains a normal wavelength-response table.
+        """
         axis_0, axis_1 = contract["matrix_axes"]
         if axis_1 not in table.colnames:
             PlainTableWriter.write(table, output_path, contract)
             return
         value_column = contract["value_column"]
-        values = {(_scalar(row[axis_0]), _scalar(row[axis_1])): row[value_column] for row in table}
-        axis_0_values = sorted(set(_raw_values(table[axis_0])))
-        axis_1_values = sorted(set(_raw_values(table[axis_1])))
+        axis_0_values = _raw_values(table[axis_0])
+        axis_1_values = _raw_values(table[axis_1])
+        values = dict(
+            zip(
+                zip(axis_0_values, axis_1_values, strict=True),
+                _raw_values(table[value_column]),
+                strict=True,
+            )
+        )
+        axis_0_values = sorted(set(axis_0_values))
+        axis_1_values = sorted(set(axis_1_values))
         with output_path.open("w", encoding="utf-8") as file:
             file.write("#@RPOL@[ANGLE=] 2\n")
             file.write(
@@ -227,12 +242,26 @@ class AtmosphericTransmissionWriter:
 
     @staticmethod
     def write(table, output_path, contract):
-        """Write altitude header and wavelength rows by explicit matrix lookup."""
+        """Write an altitude header and wavelength matrix.
+
+        Missing wavelength-altitude cells are written with the contract's
+        explicit opaque optical-depth sentinel. sim_telarray interprets every
+        matrix entry as an optical depth, so this policy is deterministic but
+        must only be used for cells known to represent zero transmission.
+        """
         axis_0, axis_1 = contract["matrix_axes"]
         value_column = contract["value_column"]
-        values = {(_scalar(row[axis_0]), _scalar(row[axis_1])): row[value_column] for row in table}
-        axis_0_values = sorted(set(_raw_values(table[axis_0])))
-        axis_1_values = sorted(set(_raw_values(table[axis_1])))
+        axis_0_values = _raw_values(table[axis_0])
+        axis_1_values = _raw_values(table[axis_1])
+        values = dict(
+            zip(
+                zip(axis_0_values, axis_1_values, strict=True),
+                _raw_values(table[value_column]),
+                strict=True,
+            )
+        )
+        axis_0_values = sorted(set(axis_0_values))
+        axis_1_values = sorted(set(axis_1_values))
         level = _scalar(table.meta.get("observatory_level"))
         with output_path.open("w", encoding="utf-8") as file:
             header = "# H1= " + " ".join(_format(value, contract) for value in axis_1_values)

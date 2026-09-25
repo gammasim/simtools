@@ -127,6 +127,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
+    initialize_model_reader=False,
     post_parse=_post_parse,
 )
 

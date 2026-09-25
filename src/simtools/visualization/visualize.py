@@ -9,12 +9,14 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 from cycler import cycler
-from matplotlib import gridspec
-from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
 from simtools.settings import config
+from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+
+gridspec = lazy_module("matplotlib.gridspec")
+pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 COLORS = {}
 COLORS["classic"] = [
@@ -654,7 +656,9 @@ def plot_histogram(data, ax=None, **kwargs):
     return ax.figure
 
 
-def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure", close=False):
+def save_figure(
+    fig, output_file, figure_format=None, log_title="", dpi="figure", close=False, pil_kwargs=None
+):
     """
     Save figure to output file(s).
 
@@ -674,6 +678,8 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
         configured. Defaults to ``"figure"``.
     close : bool, optional
         Close the figure after saving. Defaults to False.
+    pil_kwargs : dict, optional
+        Keyword arguments passed to Pillow when saving PNG files.
     """
     configured_formats = config.args.get("figure_format")
     configured_dpi = config.args.get("figure_dpi")
@@ -683,7 +689,10 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     for fmt in gen.ensure_list(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
         save_dpi = configured_dpi if fmt == "png" and configured_dpi is not None else dpi
-        fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=save_dpi)
+        save_kwargs = {"format": fmt, "bbox_inches": "tight", "dpi": save_dpi}
+        if fmt == "png" and pil_kwargs is not None:
+            save_kwargs["pil_kwargs"] = pil_kwargs
+        fig.savefig(_file, **save_kwargs)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
@@ -705,7 +714,7 @@ def save_figures_to_single_document(figs, output_file_name, close=False):
         Close each figure after saving. Defaults to False.
     """
     _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
-    pdf_pages = PdfPages(Path(output_file_name).absolute().as_posix())
+    pdf_pages = pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix())
     for fig in figs:
         fig.tight_layout()
         pdf_pages.savefig(fig)

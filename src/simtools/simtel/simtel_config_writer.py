@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """Configuration file writer for sim_telarray."""
 
-import hashlib
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -198,14 +197,12 @@ class SimtelConfigWriter:
 
         destination = Path(config_file_path).parent
         telescope_name = telescope_name or Path(config_file_path).stem
-        output = destination / f"camera-{telescope_name}.dat"
         cache_key = repr(
             tuple((name, parameters.get(name)) for name in _CAMERA_COMPONENT_PARAMETERS)
         )
-        shared_camera = self._telescope_design_model is not None
-        if shared_camera:
-            digest = hashlib.sha256(cache_key.encode()).hexdigest()[:12]
-            output = destination / f"camera-{self._telescope_design_model}-{digest}.dat"
+        shared_camera = self._camera_uses_design_parameters(parameters)
+        camera_name = self._telescope_design_model if shared_camera else telescope_name
+        output = destination / f"camera-{camera_name}.dat"
         if output.is_file() and (shared_camera or self._camera_file_cache.get(output) == cache_key):
             return output.name
 
@@ -247,6 +244,15 @@ class SimtelConfigWriter:
         result = simtel_file_writer.write_camera_file(configuration, output)
         self._camera_file_cache[output] = cache_key
         return result
+
+    def _camera_uses_design_parameters(self, parameters):
+        """Return whether all camera components come from the design model."""
+        if self._telescope_design_model is None:
+            return False
+        return all(
+            parameters[name].get("instrument") == self._telescope_design_model
+            for name in _CAMERA_COMPONENT_PARAMETERS
+        )
 
     @staticmethod
     def _parameter_value(parameters, parameter_name):
@@ -804,7 +810,11 @@ class SimtelConfigWriter:
         if simtel_name in {"primary_segmentation", "secondary_segmentation"} and isinstance(
             value, list
         ):
-            output = Path(model_path).parent / f"{parameter_name}-{Path(model_path).stem}.dat"
+            output, shared_output = self._get_segmentation_output_path(
+                parameter_name, model_path, parameter_data
+            )
+            if shared_output and output.is_file():
+                return simtel_name, output.name
             return simtel_name, segmentation.write_mirror_segmentation(
                 value,
                 output,
@@ -822,6 +832,18 @@ class SimtelConfigWriter:
         except AttributeError:  # covers cases where telescope_model is None
             return None, None
         return simtel_name, value
+
+    def _get_segmentation_output_path(self, parameter_name, model_path, parameter_data):
+        """Return the output path and sharing flag for mirror segmentation."""
+        instrument = parameter_data.get("instrument")
+        if instrument is not None and instrument == self._telescope_design_model:
+            suffix = instrument
+            shared_output = True
+        else:
+            suffix = Path(model_path).stem
+            shared_output = False
+        output = Path(model_path).parent / f"{parameter_name}-{suffix}.dat"
+        return output, shared_output
 
     def _write_table_parameter_file(
         self,
