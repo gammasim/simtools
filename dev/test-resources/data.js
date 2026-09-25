@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790335302535,
+  "lastUpdate": 1790337745800,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -27384,6 +27384,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 423.4375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f376316f2b0626e92885da1ff2850483c15996dc",
+          "message": "Add GitHub mirror fallback for integration test dependencies (#2556)\n\n* Add GitHub mirror fallback for integration test dependencies\n\n* secret handling\n\n* correc path",
+          "timestamp": "2026-09-25T13:47:32+02:00",
+          "tree_id": "13705578f68f260fa7a9c627e6002cb985dcc3fb",
+          "url": "https://github.com/gammasim/simtools/commit/f376316f2b0626e92885da1ff2850483c15996dc"
+        },
+        "date": 1790337729030,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 53.748196243999985,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 52.599999999999994,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 425.6875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
