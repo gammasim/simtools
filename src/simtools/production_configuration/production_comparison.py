@@ -47,6 +47,8 @@ def write_production_comparison(args_dict, output_directory):
         try:
             descriptor_pairs = _production_descriptor_pairs_from_metadata(args_dict)
         except _ProductionPairingError as exc:
+            if not exc.descriptor_pairs:
+                raise
             descriptor_pairs = exc.descriptor_pairs
             pairing_error = exc
         output_stems = [
