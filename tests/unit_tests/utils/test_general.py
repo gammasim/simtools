@@ -674,8 +674,8 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
 
     # Verify tarfile.open was called correctly
     mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
-    mock_tar.add.assert_any_call(file1, arcname="file1.txt")
-    mock_tar.add.assert_any_call(file2, arcname="file2.txt")
+    mock_tar.add.assert_any_call(file1, arcname="file1.txt", recursive=False)
+    mock_tar.add.assert_any_call(file2, arcname="file2.txt", recursive=False)
 
     # Test sub_dir option
     mock_tarfile_open.reset_mock()
@@ -683,8 +683,8 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     with patch_is_file, patch_resolve:
         gen.pack_tar_file(tar_file_name, [file1, file2], sub_dir="subdir")
     mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
-    mock_tar.add.assert_any_call(file1, arcname="subdir/file1.txt")
-    mock_tar.add.assert_any_call(file2, arcname="subdir/file2.txt")
+    mock_tar.add.assert_any_call(file1, arcname="subdir/file1.txt", recursive=False)
+    mock_tar.add.assert_any_call(file2, arcname="subdir/file2.txt", recursive=False)
 
     with pytest.raises(ValueError, match="Unsafe file path"):
         gen.pack_tar_file(tar_file_name, ["unsafe_file"])

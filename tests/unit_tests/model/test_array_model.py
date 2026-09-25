@@ -197,6 +197,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
         archive_path = array_model_north.pack_model_files()
 
         assert archive_path == mock_output_dir.joinpath(f"model_files_{model_version}.tar.gz")
+        mock_tarfile_open.assert_called_once_with(archive_path, "w:gz", compresslevel=1)
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])

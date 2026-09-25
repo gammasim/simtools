@@ -172,6 +172,7 @@ def create_annotated_psf_image_figure(
         image_range=image_range,
         bins=bins,
         cmap=cmap,
+        rasterized=True,
         psf_kwargs=psf_kwargs,
     )
     ax.set_xlabel(f"X Position ({unit_str})")
