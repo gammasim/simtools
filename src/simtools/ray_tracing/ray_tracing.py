@@ -27,6 +27,7 @@ from simtools.utils import names
 from simtools.visualization import visualize
 
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
+DEFAULT_MAX_WORKERS = 8
 
 
 class RayTracing:
@@ -367,7 +368,9 @@ class RayTracing:
                 )
         return _focal_length
 
-    def simulate(self, test=False, force=False, compress_photons=True):
+    def simulate(
+        self, test=False, force=False, compress_photons=True, max_workers=DEFAULT_MAX_WORKERS
+    ):
         """
         Run ray tracing simulations using sim_telarray.
 
@@ -385,8 +388,18 @@ class RayTracing:
             Force flag will remove existing files and simulate again.
         compress_photons: bool
             If True, compress photon list files to ``.gz`` after simulation.
+        max_workers: int
+            Maximum number of concurrent full-telescope simulations. Defaults to 8.
+
+        Raises
+        ------
+        ValueError
+            If ``max_workers`` is not positive.
 
         """
+        if max_workers < 1:
+            raise ValueError("max_workers must be a positive integer")
+
         if not self.single_mirror_mode:
             self.telescope_model.write_sim_telarray_config_file(
                 additional_models=self.site_model,
@@ -405,7 +418,7 @@ class RayTracing:
         ]
 
         if not self.single_mirror_mode and len(simulations) > 1:
-            workers = min(8, len(simulations))
+            workers = min(max_workers, len(simulations))
             with ThreadPoolExecutor(max_workers=workers) as executor:
                 list(
                     executor.map(
