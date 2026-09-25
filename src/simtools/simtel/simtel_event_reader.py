@@ -158,25 +158,42 @@ def _collect_events_for_telescope_ids(simtel_file, telescope_ids, event_ids, max
     if max_events == 0:
         return ids_with_data, events_by_telescope
     for event in simtel_file:
-        if event_ids and event["event_id"] not in event_ids:
-            continue
-        telescope_events = event.get("telescope_events", {})
-        found_telescope_data = False
-        for telescope, tel_id in telescope_ids.items():
-            if tel_id in telescope_events and (
-                max_events is None or len(events_by_telescope[telescope]) < max_events
-            ):
-                events_by_telescope[telescope].append(telescope_events[tel_id])
-                found_telescope_data = True
-        if found_telescope_data:
-            ids_with_data.append(event["event_id"])
-        elif verbose:
-            _logger.debug(
-                f"event {event['event_id']} has no data for selected telescopes "
-                f"{list(telescope_ids)}"
+        if _requested_event(event, event_ids):
+            _collect_event_data(
+                event, telescope_ids, events_by_telescope, ids_with_data, max_events, verbose
             )
-        if max_events is not None and all(
-            len(events) >= max_events for events in events_by_telescope.values()
-        ):
+        if _all_limits_reached(events_by_telescope, max_events):
             break
     return ids_with_data, events_by_telescope
+
+
+def _requested_event(event, event_ids):
+    """Return True if the event matches the requested IDs."""
+    return not event_ids or event["event_id"] in event_ids
+
+
+def _collect_event_data(
+    event, telescope_ids, events_by_telescope, ids_with_data, max_events, verbose
+):
+    """Append matching telescope data for one event and track its ID."""
+    telescope_events = event.get("telescope_events", {})
+    found_telescope_data = False
+    for telescope, tel_id in telescope_ids.items():
+        if tel_id in telescope_events and (
+            max_events is None or len(events_by_telescope[telescope]) < max_events
+        ):
+            events_by_telescope[telescope].append(telescope_events[tel_id])
+            found_telescope_data = True
+    if found_telescope_data:
+        ids_with_data.append(event["event_id"])
+    elif verbose:
+        _logger.debug(
+            f"event {event['event_id']} has no data for selected telescopes {list(telescope_ids)}"
+        )
+
+
+def _all_limits_reached(events_by_telescope, max_events):
+    """Return True once every telescope reached its event limit."""
+    return max_events is not None and all(
+        len(events) >= max_events for events in events_by_telescope.values()
+    )
