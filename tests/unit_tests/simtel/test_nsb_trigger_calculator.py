@@ -204,9 +204,10 @@ def test_calculate_statistics_has_no_error_for_equal_rates_with_unequal_exposure
     assert stats[220]["error_hz"] == pytest.approx(0.0)
 
 
-def test_calculate_statistics_rejects_nonpositive_time_window():
-    with pytest.raises(ValueError, match="time_window must be positive"):
-        nsb_trigger_calculator.calculate_statistics({}, time_window=0)
+@pytest.mark.parametrize("time_window", [0, -1, float("nan"), float("inf")])
+def test_calculate_statistics_rejects_invalid_time_window(time_window):
+    with pytest.raises(ValueError, match="time_window must be finite and positive"):
+        nsb_trigger_calculator.calculate_statistics({}, time_window=time_window)
 
 
 def test_generate_ecsv_output_writes_table(tmp_path):
@@ -293,9 +294,9 @@ def test_derive_nsb_triggers_raises_for_missing_time_window(tmp_path):
         nsb_trigger_calculator.derive_nsb_triggers({"root_dir": tmp_path})
 
 
-@pytest.mark.parametrize("time_window", [0, -1e-9])
-def test_derive_nsb_triggers_raises_for_non_positive_time_window(tmp_path, time_window):
-    with pytest.raises(ValueError, match="Argument 'time_window' must be > 0"):
+@pytest.mark.parametrize("time_window", [0, -1e-9, float("nan"), float("inf")])
+def test_derive_nsb_triggers_raises_for_invalid_time_window(tmp_path, time_window):
+    with pytest.raises(ValueError, match="Argument 'time_window' must be finite and > 0"):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": time_window}
         )

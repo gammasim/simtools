@@ -202,8 +202,8 @@ def calculate_statistics(grouped_data, time_window):
     """
     statistics = {}
 
-    if time_window <= 0:
-        raise ValueError("time_window must be positive.")
+    if not np.isfinite(time_window) or time_window <= 0:
+        raise ValueError("time_window must be finite and positive.")
 
     for threshold, runs_data in grouped_data.items():
         run_triggers = []
@@ -386,8 +386,8 @@ def derive_nsb_triggers(args):
     except (TypeError, ValueError) as exc:
         raise ValueError("Argument 'time_window' must be a number.") from exc
 
-    if time_window <= 0:
-        raise ValueError("Argument 'time_window' must be > 0.")
+    if not np.isfinite(time_window) or time_window <= 0:
+        raise ValueError("Argument 'time_window' must be finite and > 0.")
 
     _logger.info("NSB Trigger Rate Calculator")
     _logger.info(f"Root directory: {args['root_dir']}")
