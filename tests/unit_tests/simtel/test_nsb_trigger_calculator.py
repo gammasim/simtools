@@ -138,11 +138,11 @@ def test_group_by_threshold_and_run():
 
     assert grouped == {
         220: {
-            1: {"triggers": 10, "events": 100, "file_path": None},
-            2: {"triggers": 20, "events": 100, "file_path": None},
+            1: {"triggers": 10, "events": 100},
+            2: {"triggers": 20, "events": 100},
         },
         240: {
-            1: {"triggers": 5, "events": 50, "file_path": None},
+            1: {"triggers": 5, "events": 50},
         },
     }
 

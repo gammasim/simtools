@@ -164,12 +164,13 @@ def group_by_threshold_and_run(data):
         Nested dictionary: {threshold: {run: {'triggers': int, 'events': int}}}
     """
     grouped = defaultdict(dict)
+    source_files = defaultdict(dict)
 
     for entry in data:
         threshold = entry["threshold"]
         run = entry["run"]
         if run in grouped[threshold]:
-            previous = grouped[threshold][run]["file_path"]
+            previous = source_files[threshold][run]
             raise ValueError(
                 f"Duplicate NSB input for threshold {threshold}, run {run}: "
                 f"{previous} and {entry.get('file_path', '<unknown>')}"
@@ -177,8 +178,8 @@ def group_by_threshold_and_run(data):
         grouped[threshold][run] = {
             "triggers": entry["triggers"],
             "events": entry["events"],
-            "file_path": entry.get("file_path"),
         }
+        source_files[threshold][run] = entry.get("file_path", "<unknown>")
 
     return dict(grouped)
 
