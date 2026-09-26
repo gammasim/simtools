@@ -2,7 +2,7 @@
 "$schema": http://json-schema.org/draft-06/schema#
 title: simtools dependency manifest
 description: YAML representation of the simtools dependency manifest schema.
-schema_version: 0.1.0
+schema_version: 0.2.0
 schema_name: dependency_manifest.schema
 type: object
 additionalProperties: false
@@ -15,7 +15,7 @@ required:
 - container
 properties:
   schema_version:
-    const: 0.1.0
+    const: 0.2.0
   source:
     enum:
     - runtime-discovery
@@ -63,4 +63,6 @@ properties:
       corsika_image:
         type: string
       sim_telarray_image:
+        type: string
+      obdeect_version:
         type: string

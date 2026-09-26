@@ -86,10 +86,77 @@ class PSFImage:
         use_rx: bool
             Use the RX method for analysis.
         """
-        if use_rx:
+        if not use_rx and self._is_obdeect_arrival_file(photon_file):
+            self.read_obdeect_arrival_file(photon_file)
+        elif use_rx:
             self._process_simtel_file_using_rx(photon_file)
         else:
             self.read_photon_list_from_simtel_file(photon_file)
+
+    @staticmethod
+    def _is_obdeect_arrival_file(photon_file):
+        """Return whether ``photon_file`` has the obdeect CSV contract."""
+        path = Path(photon_file)
+        if path.suffix.lower() != ".csv":
+            return False
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                header = handle.readline()
+        except OSError:
+            return False
+        return "contract_version" in header and "obdeect-arrival-v1" not in header
+
+    def read_obdeect_arrival_file(self, photon_file):
+        """Read a validated ``obdeect-arrival-v1`` CSV file.
+
+        The current PSF implementation is count based.  It therefore accepts
+        only equal source weights; weighted arrival analysis needs a separate
+        weighted-containment implementation and must not silently produce an
+        unweighted result.
+        """
+        try:
+            from obdeect.result_contract import ArrivalContractError, read_arrivals
+
+            arrivals = read_arrivals(Path(photon_file))
+        except ModuleNotFoundError as error:
+            raise RuntimeError(
+                "Reading obdeect arrivals requires the obdeect-dev package"
+            ) from error
+        except ArrivalContractError as error:
+            raise RuntimeError(f"Invalid obdeect arrival file {photon_file}: {error}") from error
+
+        if not arrivals:
+            raise RuntimeError(f"No arrivals in obdeect file {photon_file}")
+        weights = np.asarray([arrival.source_weight for arrival in arrivals], dtype=float)
+        if not np.allclose(weights, weights[0], rtol=0.0, atol=1.0e-12):
+            raise ValueError(
+                "obdeect arrival weights are not uniform; weighted PSF analysis is not supported"
+            )
+        detected = [arrival for arrival in arrivals if arrival.detected]
+        if not detected:
+            raise RuntimeError(f"No detected photons in obdeect file {photon_file}")
+
+        self._total_photons = len(arrivals)
+        self._number_of_detected_photons = len(detected)
+        # The reference contract has no telescope-area field.  Keep the
+        # detection fraction here; callers can replace it with a calibrated
+        # area through ``set_effective_area``.
+        self._total_area = 1.0
+        self._effective_area = self._number_of_detected_photons / self._total_photons
+        self.photon_pos_x = np.asarray([arrival.focal_x_m * 100.0 for arrival in detected])
+        self.photon_pos_y = np.asarray([arrival.focal_y_m * 100.0 for arrival in detected])
+        if not self._is_photon_positions_ok():
+            raise RuntimeError(f"Invalid detected focal positions in {photon_file}")
+        self.centroid_x = np.mean(self.photon_pos_x)
+        self.centroid_y = np.mean(self.photon_pos_y)
+        self.centroid_x_error = self._compute_centroid_standard_error(self.photon_pos_x)
+        self.centroid_y_error = self._compute_centroid_standard_error(self.photon_pos_y)
+        self.photon_r = np.sort(
+            np.sqrt(
+                (self.photon_pos_x - self.centroid_x) ** 2
+                + (self.photon_pos_y - self.centroid_y) ** 2
+            )
+        )
 
     def _process_simtel_file_using_rx(self, photon_file):
         """

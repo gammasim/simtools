@@ -19,9 +19,11 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing.psf_analysis import PSFImage
+from simtools.simtel.simulator_obdeect import SimulatorObdeect
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 from simtools.utils import names
 from simtools.visualization import visualize
@@ -400,7 +402,7 @@ class RayTracing:
         if max_workers < 1:
             raise ValueError("max_workers must be a positive integer")
 
-        if not self.single_mirror_mode:
+        if not self.single_mirror_mode and settings.config.ray_tracing_backend == "sim_telarray":
             self.telescope_model.write_sim_telarray_config_file(
                 additional_models=self.site_model,
                 label=self.label,
@@ -439,6 +441,31 @@ class RayTracing:
             f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), mirror={mirror_number}"
         )
         theta_offset = np.sqrt(off_x**2 + off_y**2)
+        if settings.config.ray_tracing_backend == "obdeect":
+            output_file = self.output_directory.joinpath(
+                self._generate_file_name(
+                    file_type="photons",
+                    suffix=".csv",
+                    off_axis_x=off_x,
+                    off_axis_y=off_y,
+                    mirror_number=None,
+                )
+            )
+            simulator = SimulatorObdeect(
+                telescope_model=self.telescope_model,
+                label=self.label,
+                config_data={
+                    "off_axis_x": off_x,
+                    "off_axis_y": off_y,
+                    "source_distance": mirror_data["source_distance"] * u.km,
+                    "single_mirror_mode": self.single_mirror_mode,
+                    "number_of_photons": 100 if test else 10000,
+                },
+                output_file=output_file,
+                force_simulate=force,
+                test=test,
+            )
+            return simulator, off_x, off_y, mirror_number
         simulator = SimulatorRayTracing(
             telescope_model=self.telescope_model,
             site_model=self.site_model,
@@ -464,6 +491,8 @@ class RayTracing:
         """Run one prepared simulator and optionally compress its photon list."""
         simulator, off_x, off_y, mirror_number = simulation
         simulator.run(test=test)
+        if settings.config.ray_tracing_backend == "obdeect":
+            return
         photons_file = self.output_directory.joinpath(
             self._generate_file_name(
                 file_type="photons",
@@ -573,10 +602,13 @@ class RayTracing:
             for mirror_number, mirror_data in self.mirrors.items():
                 self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
 
+                photon_suffix = (
+                    ".csv" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
+                )
                 photons_file_lis = self.output_directory.joinpath(
                     self._generate_file_name(
                         "photons",
-                        ".lis",
+                        photon_suffix,
                         off_axis_x=off_x,
                         off_axis_y=off_y,
                         mirror_number=mirror_number,
@@ -655,6 +687,8 @@ class RayTracing:
         list
             Telescope transmission parameters.
         """
+        if settings.config.ray_tracing_backend == "obdeect":
+            return [1, 0, 0, 0]
         return (
             self.telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
@@ -682,7 +716,10 @@ class RayTracing:
             PSF image object.
         """
         image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
-        image.process_photon_list(photons_file, use_rx)
+        image.process_photon_list(
+            photons_file,
+            use_rx if settings.config.ray_tracing_backend == "sim_telarray" else False,
+        )
         return image
 
     def _analyze_image(

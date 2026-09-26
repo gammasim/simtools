@@ -55,7 +55,7 @@ class IncidentAnglesCalculator:
 
         self.config_data = config_data
         self.output_dir = Path(output_dir)
-        self.label = label or f"incident_angles_{config_data['telescope']}"
+        self.label = label or f"incident_angles_{config_data.get('telescope', 'obdeect_scene')}"
         cfg = config_data
         self.perfect_mirror = cfg.get("perfect_mirror", False)
         self.calculate_primary_secondary_angles = cfg.get(
@@ -105,6 +105,8 @@ class IncidentAnglesCalculator:
             Table containing at least the ``angle_incidence_focal`` column
             and, when configured, primary/secondary angles and hit geometry.
         """
+        if settings.config.ray_tracing_backend == "obdeect":
+            return self._run_obdeect()
         self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
@@ -129,6 +131,82 @@ class IncidentAnglesCalculator:
                 if key in data:
                     self.results[name] = data[key] * unit
 
+        self._save_results()
+        return self.results
+
+    def _run_obdeect(self):
+        """Run the packaged reference tracer and read its interaction records."""
+        from obdeect.result_contract import read_arrivals
+
+        telescope = str(self.config_data.get("telescope", "")).upper()
+        telescope_type = next(
+            (name for name in ("LST", "MST", "SST", "SCT") if telescope.startswith(name)),
+            None,
+        )
+        scene_file = self.config_data.get("obdeect_scene_file")
+        if telescope_type is None and not scene_file:
+            raise ValueError(f"obdeect reference CLI does not support telescope {telescope!r}")
+        output_file = self.results_dir / f"arrivals_{self._label_suffix()}.csv"
+        distance_m = self._source_distance_km() * 1000.0
+        off_axis = self.config_data.get("off_axis_angle", 0.0 * u.deg)
+        off_axis_deg = (
+            float(off_axis.to_value(u.deg)) if isinstance(off_axis, u.Quantity) else float(off_axis)
+        )
+        command = [
+            str(settings.config.obdeect_exe),
+        ]
+        if scene_file:
+            command.extend(["--scene-file", str(Path(scene_file).expanduser())])
+        else:
+            command.extend(["--telescope", telescope_type])
+        command.extend([
+            "--photons",
+            str(int(self.config_data["number_of_photons"])),
+            "--output",
+            str(output_file),
+            "--field-x-deg",
+            str(off_axis_deg),
+            "--field-y-deg",
+            "0.0",
+            "--distance-m",
+            str(distance_m),
+            "--wavelength-nm",
+            str(float(self.config_data.get("wavelength_nm", 400.0))),
+        ])
+        job_manager.submit(command)
+        arrivals = read_arrivals(output_file)
+        arrivals = [arrival for arrival in arrivals if arrival.detected]
+        if not arrivals:
+            raise RuntimeError(f"obdeect produced no arrivals: {output_file}")
+
+        result = QTable()
+        result["angle_incidence_focal"] = [a.incidence_focal_deg for a in arrivals] * u.deg
+        if self.calculate_primary_secondary_angles:
+            result["angle_incidence_primary"] = [a.incidence_primary_deg for a in arrivals] * u.deg
+            result["angle_incidence_secondary"] = [
+                a.incidence_secondary_deg for a in arrivals
+            ] * u.deg
+            nan_point = (float("nan"), float("nan"), float("nan"))
+            primary_points = [
+                a.interaction_points_m[1] if len(a.interaction_points_m) > 1 else nan_point
+                for a in arrivals
+            ]
+            secondary_points = [
+                a.interaction_points_m[2] if len(a.interaction_points_m) > 3 else nan_point
+                for a in arrivals
+            ]
+            result["primary_hit_radius"] = [
+                math.hypot(point[0], point[1]) for point in primary_points
+            ] * u.m
+            result["primary_hit_x"] = [point[0] for point in primary_points] * u.m
+            result["primary_hit_y"] = [point[1] for point in primary_points] * u.m
+            result["secondary_hit_radius"] = [
+                math.hypot(point[0], point[1]) for point in secondary_points
+            ] * u.m
+            result["secondary_hit_x"] = [point[0] for point in secondary_points] * u.m
+            result["secondary_hit_y"] = [point[1] for point in secondary_points] * u.m
+
+        self.results = result
         self._save_results()
         return self.results
 

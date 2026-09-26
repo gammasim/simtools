@@ -40,6 +40,8 @@ APPLICATION = ApplicationDefinition.for_module(
     model_repository=True,
     arguments=(
         *_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,

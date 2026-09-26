@@ -31,7 +31,7 @@ from simtools.version import __version__
 _logger = logging.getLogger(__name__)
 
 DEPENDENCY_MANIFEST_PATH = Path("/opt/simtools/provenance/dependency-manifest.json")
-DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.1.0"
+DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.2.0"
 SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "avx_flag",
     "build_date",
@@ -359,6 +359,7 @@ def build_dependency_manifest():
                 "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
                 "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
                 "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
+                "obdeect_version": os.getenv("SIMTOOLS_OBDEECT_VERSION"),
             }.items()
             if value
         },
@@ -486,6 +487,7 @@ def write_development_dependency_manifest(output_file, project_file, build_optio
                 "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
                 "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
                 "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
+                "obdeect_version": os.getenv("SIMTOOLS_OBDEECT_VERSION"),
             }.items()
             if value
         },

@@ -2,6 +2,7 @@
 
 import os
 import socket
+from importlib import metadata
 from pathlib import Path
 from types import MappingProxyType
 
@@ -21,6 +22,9 @@ class _Config:
         self._args = {}
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
+        self._ray_tracing_backend = "sim_telarray"
+        self._obdeect_path = None
+        self._obdeect_exe = None
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
@@ -58,6 +62,18 @@ class _Config:
             "sim_telarray_executable",
             "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
             default="sim_telarray",
+        )
+        self._ray_tracing_backend = self._get_config_value(
+            args, "ray_tracing_backend", "SIMTOOLS_RAY_TRACING_BACKEND", default="sim_telarray"
+        )
+        if self._ray_tracing_backend not in {"sim_telarray", "obdeect"}:
+            raise ValueError("ray_tracing_backend must be one of 'sim_telarray' or 'obdeect'")
+        self._obdeect_path = self._get_config_value(args, "obdeect_path", "SIMTOOLS_OBDEECT_PATH")
+        self._obdeect_exe = self._get_config_value(
+            args,
+            "obdeect_executable",
+            "SIMTOOLS_OBDEECT_EXECUTABLE",
+            default="obdeect-simtools-raytrace",
         )
         self._corsika_path = self._get_config_value(
             args,
@@ -148,6 +164,66 @@ class _Config:
         if self._sim_telarray_path and Path(self._sim_telarray_path).is_dir():
             return Path(self._sim_telarray_path)
         raise FileNotFoundError(f"sim_telarray path not found: {self._sim_telarray_path}")
+
+    @property
+    def ray_tracing_backend(self):
+        """Configured optical ray-tracing backend."""
+        return self._ray_tracing_backend
+
+    @property
+    def obdeect_path(self):
+        """Path to obdeect, retaining the legacy override when configured."""
+        if self._obdeect_path and Path(self._obdeect_path).is_dir():
+            return Path(self._obdeect_path)
+        try:
+            from obdeect import executable_path
+
+            return executable_path(self._obdeect_exe).parent.parent
+        except ModuleNotFoundError as exc:
+            raise FileNotFoundError(
+                "obdeect-dev is not installed; install gammasimtools[obdeect]"
+            ) from exc
+
+    @property
+    def obdeect_exe(self):
+        """Path to the packaged or explicitly overridden obdeect executable."""
+        executable = Path(self._obdeect_exe)
+        if executable.is_absolute():
+            return find_executable_in_dir(executable.name, executable.parent)
+        if self._obdeect_path:
+            root = self.obdeect_path
+            for directory in (root / "bin", root / "build" / "release", root / "build" / "debug"):
+                candidate = directory / executable
+                if candidate.is_file():
+                    return find_executable_in_dir(executable, directory)
+            raise FileNotFoundError(
+                f"obdeect executable {executable} not found under {root}/bin or "
+                f"{root}/build/{{release,debug}}; a simtools-compatible production "
+                "tracing executable is required"
+            )
+        try:
+            from obdeect import executable_path
+
+            return executable_path(executable.name)
+        except ModuleNotFoundError as exc:
+            raise FileNotFoundError(
+                "obdeect-dev is not installed; install gammasimtools[obdeect]"
+            ) from exc
+
+    @property
+    def obdeect_version(self):
+        """Return the installed obdeect distribution version."""
+        try:
+            return metadata.version("obdeect-dev")
+        except metadata.PackageNotFoundError as exc:
+            raise FileNotFoundError(
+                "obdeect-dev is not installed; install gammasimtools[obdeect]"
+            ) from exc
+
+    @property
+    def obdeect_contract_version(self):
+        """Return the arrival-table contract consumed by simtools."""
+        return "obdeect-arrival-v1"
 
     @property
     def sim_telarray_exe(self):

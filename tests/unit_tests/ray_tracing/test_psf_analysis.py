@@ -236,6 +236,46 @@ def test_process_photon_list_without_rx(mocker, psf_image, dummy_photon_file):
     image._process_simtel_file_using_rx.assert_not_called()
 
 
+def test_reading_obdeect_arrival_file(tmp_test_directory):
+    arrival_file = tmp_test_directory / "arrivals.csv"
+    arrival_file.write_text(
+        "contract_version,photon_id,source_kind,wavelength_nm,emission_time_ns,"
+        "source_weight,throughput,status,point_count,path_length_m,"
+        "incidence_primary_deg,incidence_secondary_deg,incidence_focal_deg,"
+        "x0_m,y0_m,z0_m,x1_m,y1_m,z1_m,x2_m,y2_m,z2_m,x3_m,y3_m,z3_m\n"
+        "obdeect-arrival-v1,0,star,400,0,1,1,detected,3,10,10,0,2,"
+        "0,0,10,0,0,0,0.01,0.02,0,0,0,0,0\n"
+        "obdeect-arrival-v1,1,star,400,0,1,0,missed_screen,2,5,10,0,0,"
+        "0,0,10,0,0,0,0,0,0,0,0,0,0\n",
+        encoding="utf-8",
+    )
+
+    image = PSFImage(focal_length=1000.0, containment_fraction=0.8)
+    image.process_photon_list(arrival_file, use_rx=False)
+
+    assert image._total_photons == 2
+    assert image._number_of_detected_photons == 1
+    assert image.photon_pos_x.tolist() == pytest.approx([1.0])
+    assert image.photon_pos_y.tolist() == pytest.approx([2.0])
+    assert image.get_effective_area() == pytest.approx(0.5)
+
+
+def test_obdeect_weighted_arrivals_are_rejected(tmp_test_directory):
+    arrival_file = tmp_test_directory / "weighted.csv"
+    header = (
+        "contract_version,photon_id,source_kind,wavelength_nm,emission_time_ns,"
+        "source_weight,throughput,status,point_count,path_length_m,x0_m,y0_m,z0_m\n"
+    )
+    arrival_file.write_text(
+        header
+        + "obdeect-arrival-v1,0,star,400,0,1,1,detected,1,1,0,0,0\n"
+        + "obdeect-arrival-v1,1,star,400,0,2,1,detected,1,1,0,0,0\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="weighted PSF"):
+        PSFImage(focal_length=1000.0).process_photon_list(arrival_file, use_rx=False)
+
+
 def test_process_simtel_file_using_rx_success(
     mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
 ):

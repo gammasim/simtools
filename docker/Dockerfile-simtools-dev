@@ -13,6 +13,7 @@
 
 ARG CORSIKA_IMAGE=ghcr.io/gammasim/corsika7:v78010-generic
 ARG SIMTEL_IMAGE=ghcr.io/gammasim/sim_telarray:v2025-11-30-rc
+ARG OBDEECT_VERSION=0.1.0
 ARG BASE_IMAGE=docker.io/library/almalinux:9.8-minimal
 
 FROM ${CORSIKA_IMAGE} AS corsika_img
@@ -23,6 +24,7 @@ ARG PYTHON_VERSION
 ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
+ARG OBDEECT_VERSION
 ARG BASE_IMAGE
 
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
@@ -61,11 +63,13 @@ RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packag
     . env/bin/activate && \
     python -m pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
+    pip install --no-cache-dir "obdeect-dev==${OBDEECT_VERSION}" && \
     SIMTOOLS_CONTAINER_BUILD=1 \
       SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
       SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \
       SIMTOOLS_CORSIKA_IMAGE="${CORSIKA_IMAGE}" \
       SIMTOOLS_SIMTEL_IMAGE="${SIMTEL_IMAGE}" \
+      SIMTOOLS_OBDEECT_VERSION="${OBDEECT_VERSION}" \
       PYTHONPATH=/workdir/src python -m simtools.applications.dependency_manifest \
         --development \
         --project_file /workdir/pyproject.toml \
@@ -76,6 +80,7 @@ RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packag
     mkdir -p /workdir/external
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_OBDEECT_VERSION="${OBDEECT_VERSION}"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
 ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/stdtools/lib:\

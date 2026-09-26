@@ -143,6 +143,15 @@ incomplete contracts and invalid matrix grids before creating a configuration.
    :members:
 ```
 
+## simulator_obdeect
+
+(simulate-obdeect-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simulator_obdeect
+   :members:
+```
+
 ## pulse_shapes
 
 (pulse_shapes-1)=
