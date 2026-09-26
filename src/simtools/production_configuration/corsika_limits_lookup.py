@@ -157,12 +157,10 @@ class CorsikaLimitsLookup:
         ]
         try:
             self.lookup_interpolators_for_point = {
-                key: (
-                    LinearNDInterpolator(
-                        interpolation_points,
-                        self.lookup_values_for_interpolation[key],
-                        fill_value=np.nan,
-                    ),
+                key: LinearNDInterpolator(
+                    interpolation_points,
+                    self.lookup_values_for_interpolation[key],
+                    fill_value=np.nan,
                 )
                 for key in self.available_lookup_fields
             }
@@ -270,7 +268,7 @@ class CorsikaLimitsLookup:
         interpolation_target = target[:, self.lookup_interpolation_axes]
         interpolated_limits = {}
         for key in self.available_lookup_fields:
-            (linear_interpolator,) = self.lookup_interpolators_for_point[key]
+            linear_interpolator = self.lookup_interpolators_for_point[key]
             interpolated_value = float(
                 self._interpolate_in_domain(linear_interpolator, interpolation_target)[0]
             )
