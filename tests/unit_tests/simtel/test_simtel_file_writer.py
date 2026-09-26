@@ -548,6 +548,47 @@ def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
         simtel_file_writer._validate_camera_components(configuration)
 
 
+@pytest.mark.parametrize(
+    ("kind", "members", "message"),
+    [
+        (
+            "majority",
+            [
+                {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0},
+                {
+                    "group_id": 0,
+                    "member_order": 0,
+                    "pixel_order": 1,
+                    "pixel_id": 0,
+                    "required": True,
+                },
+            ],
+            "first pixel",
+        ),
+        (
+            "digitalsum",
+            [{"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True}],
+            "only valid for majority",
+        ),
+        (
+            "analogsum",
+            [
+                {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0},
+                {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0},
+            ],
+            "cannot use pre-sums",
+        ),
+    ],
+)
+def test_camera_validation_rejects_invalid_trigger_syntax(kind, members, message):
+    configuration = _camera_configuration()
+    configuration["triggers"] = [{"group_id": 0, "kind": kind, "use_default_multiplicity": True}]
+    configuration["trigger_members"] = members
+
+    with pytest.raises(ValueError, match=message):
+        simtel_file_writer._validate_camera_components(configuration)
+
+
 def test_camera_validation_rejects_empty_trigger_group():
     configuration = _camera_configuration()
     configuration["triggers"] = [

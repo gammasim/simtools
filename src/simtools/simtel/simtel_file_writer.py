@@ -203,7 +203,7 @@ def _validate_trigger(trigger, members, pixel_ids):
     _validate_trigger_multiplicity(use_default, multiplicity)
     if not members:
         raise ValueError(f"Camera trigger group has no members: {trigger['group_id']}")
-    _validate_trigger_members(members, pixel_ids)
+    _validate_trigger_members(members, pixel_ids, trigger["kind"].lower())
 
 
 def _validate_trigger_kind(trigger):
@@ -222,7 +222,7 @@ def _validate_trigger_multiplicity(use_default, multiplicity):
         raise ValueError("Explicit trigger multiplicity must be positive")
 
 
-def _validate_trigger_members(members, pixel_ids):
+def _validate_trigger_members(members, pixel_ids, trigger_kind):
     """Validate normalized trigger member rows."""
     member_orders = sorted({member["member_order"] for member in members})
     if member_orders != list(range(len(member_orders))):
@@ -234,8 +234,12 @@ def _validate_trigger_members(members, pixel_ids):
         )
         if [row["pixel_order"] for row in rows] != list(range(len(rows))):
             raise ValueError("Camera trigger pixel orders must be contiguous")
-        if rows[0]["required"] and any(row["required"] for row in rows[1:]):
+        if any(row.get("required", False) for row in rows[1:]):
             raise ValueError("Only the first pixel of a trigger member may be required")
+        if rows[0].get("required", False) and trigger_kind != "majority":
+            raise ValueError("Required trigger pixels are only valid for majority triggers")
+        if len(rows) > 1 and trigger_kind == "analogsum":
+            raise ValueError("Analog-sum trigger members cannot use pre-sums")
         if any(row["pixel_id"] not in pixel_ids for row in rows):
             raise ValueError("Camera trigger contains an unknown pixel ID")
 
