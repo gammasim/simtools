@@ -9,7 +9,6 @@ This modules provides two main functionalities:
 """
 
 import hashlib
-import hashlib
 import json
 import logging
 import os
@@ -17,6 +16,7 @@ import platform
 import re
 import subprocess
 import tomllib
+from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
 
@@ -223,16 +223,25 @@ def _validate_table_file(table_file, expected_size, expected_sha256=None):
     if actual_size != expected_size:
         return f"size mismatch for {table_file}: {actual_size} != {expected_size}"
     if expected_sha256 is not None:
-        digest = hashlib.sha256()
         try:
-            with table_file.open("rb") as stream:
-                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                    digest.update(chunk)
+            stat = table_file.stat()
+            actual_sha256 = _sha256_file(str(table_file.resolve()), actual_size, stat.st_mtime_ns)
         except OSError as exc:
             return f"cannot read file for SHA-256 verification: {table_file}: {exc}"
-        if digest.hexdigest().lower() != expected_sha256.lower():
+        if actual_sha256 != expected_sha256.lower():
             return f"SHA-256 mismatch for {table_file}"
     return None
+
+
+@lru_cache(maxsize=128)
+def _sha256_file(file_path, file_size, modified_time_ns):
+    """Return a cached digest keyed by path and file stat data."""
+    del file_size, modified_time_ns
+    digest = hashlib.sha256()
+    with Path(file_path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _is_git_lfs_pointer(path):
