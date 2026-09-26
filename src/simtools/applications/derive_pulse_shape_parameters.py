@@ -2,6 +2,7 @@
 """Derive Gaussian sigma and exponential tau from specified rise/fall widths."""
 
 import logging
+import math
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition
@@ -96,8 +97,8 @@ def main():
     )
     fadc_sum_bins = telescope_model.get_parameter_value("fadc_sum_bins")
     fadc_mhz = telescope_model.get_parameter_value_with_unit("fadc_mhz").to_value("MHz")
-    if fadc_mhz <= 0:
-        raise ValueError("fadc_mhz must be positive to derive pulse-shape parameters.")
+    if not math.isfinite(fadc_mhz) or fadc_mhz <= 0:
+        raise ValueError("fadc_mhz must be finite and positive to derive pulse-shape parameters.")
 
     readout_ns = fadc_sum_bins * 1000.0 / fadc_mhz
     # The solver uses a symmetric window around the pulse peak. Treat the configured
