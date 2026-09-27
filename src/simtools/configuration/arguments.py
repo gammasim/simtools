@@ -181,13 +181,6 @@ RAY_TRACING_BACKEND = _argument(
     default=None,
 )
 
-OBDEECT_PATH = _argument(
-    "obdeect_path",
-    "paths",
-    help="legacy obdeect installation directory override; pip installs use obdeect-dev.",
-    type=Path,
-)
-
 OBDEECT_EXECUTABLE = _argument(
     "obdeect_executable",
     "ray tracing configuration",
@@ -195,7 +188,7 @@ OBDEECT_EXECUTABLE = _argument(
     default="obdeect-simtools-raytrace",
 )
 
-RAY_TRACING_ARGUMENTS = (RAY_TRACING_BACKEND, OBDEECT_PATH, OBDEECT_EXECUTABLE)
+RAY_TRACING_ARGUMENTS = (RAY_TRACING_BACKEND, OBDEECT_EXECUTABLE)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 

@@ -9,6 +9,7 @@ Angle of incidence on to secondary mirror [deg] (if available).
 import logging
 import math
 import re
+import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -135,17 +136,15 @@ class IncidentAnglesCalculator:
         return self.results
 
     def _run_obdeect(self):
-        """Run the packaged reference tracer and read its interaction records."""
-        from obdeect.result_contract import read_arrivals
-
-        telescope = str(self.config_data.get("telescope", "")).upper()
-        telescope_type = next(
-            (name for name in ("LST", "MST", "SST", "SCT") if telescope.startswith(name)),
-            None,
+        """Run a model-derived trace and read its interaction records."""
+        # pylint: disable-next=import-outside-toplevel,import-error
+        from obdeect.result_contract import (
+            read_arrivals,
         )
+
         scene_file = self.config_data.get("obdeect_scene_file")
-        if telescope_type is None and not scene_file:
-            raise ValueError(f"obdeect reference CLI does not support telescope {telescope!r}")
+        if not scene_file:
+            raise ValueError("obdeect_scene_file is required for model-derived ray tracing")
         output_file = self.results_dir / f"arrivals_{self._label_suffix()}.csv"
         distance_m = self._source_distance_km() * 1000.0
         off_axis = self.config_data.get("off_axis_angle", 0.0 * u.deg)
@@ -155,25 +154,24 @@ class IncidentAnglesCalculator:
         command = [
             str(settings.config.obdeect_exe),
         ]
-        if scene_file:
-            command.extend(["--scene-file", str(Path(scene_file).expanduser())])
-        else:
-            command.extend(["--telescope", telescope_type])
-        command.extend([
-            "--photons",
-            str(int(self.config_data["number_of_photons"])),
-            "--output",
-            str(output_file),
-            "--field-x-deg",
-            str(off_axis_deg),
-            "--field-y-deg",
-            "0.0",
-            "--distance-m",
-            str(distance_m),
-            "--wavelength-nm",
-            str(float(self.config_data.get("wavelength_nm", 400.0))),
-        ])
-        job_manager.submit(command)
+        command.extend(["--scene-file", str(Path(scene_file).expanduser())])
+        command.extend(
+            [
+                "--photons",
+                str(int(self.config_data["number_of_photons"])),
+                "--output",
+                str(output_file),
+                "--field-x-deg",
+                str(off_axis_deg),
+                "--field-y-deg",
+                "0.0",
+                "--distance-m",
+                str(distance_m),
+                "--wavelength-nm",
+                str(float(self.config_data.get("wavelength_nm", 400.0))),
+            ]
+        )
+        subprocess.run(command, check=True)
         arrivals = read_arrivals(output_file)
         arrivals = [arrival for arrival in arrivals if arrival.detected]
         if not arrivals:

@@ -26,7 +26,6 @@ def clear_simtools_env():
         "SIMTOOLS_CORSIKA_HE_INTERACTION",
         "SIMTOOLS_CORSIKA_LE_INTERACTION",
         "SIMTOOLS_RAY_TRACING_BACKEND",
-        "SIMTOOLS_OBDEECT_PATH",
         "SIMTOOLS_OBDEECT_EXECUTABLE",
     ]
     for var in simtools_vars:
@@ -88,29 +87,6 @@ def test_ray_tracing_backend_rejects_unknown_value(config_instance):
 
 
 @patch.dict(os.environ, {}, clear=True)
-def test_obdeect_executable_from_local_build(config_instance, tmp_test_directory):
-    executable = Path(tmp_test_directory) / "build" / "debug" / "obdeect-simtools-raytrace"
-    executable.parent.mkdir(parents=True)
-    executable.write_text("#!/bin/sh\n", encoding="utf-8")
-    executable.chmod(0o755)
-    config_instance.load(
-        args={"obdeect_path": tmp_test_directory}, resolve_sim_software_executables=False
-    )
-    assert config_instance.obdeect_exe == executable
-
-
-@patch.dict(os.environ, {}, clear=True)
-def test_obdeect_executable_from_explicit_path(config_instance, tmp_test_directory):
-    executable = Path(tmp_test_directory) / "obdeect-simtools-raytrace"
-    executable.write_text("#!/bin/sh\n", encoding="utf-8")
-    executable.chmod(0o755)
-    config_instance.load(
-        args={"obdeect_executable": str(executable)},
-        resolve_sim_software_executables=False,
-    )
-    assert config_instance.obdeect_exe == executable
-
-
 @patch.dict(os.environ, {}, clear=True)
 def test_obdeect_executable_from_installed_package(config_instance, tmp_test_directory, mocker):
     executable = Path(tmp_test_directory) / "obdeect-simtools-raytrace"
@@ -125,14 +101,6 @@ def test_obdeect_executable_from_installed_package(config_instance, tmp_test_dir
 
 
 @patch.dict(os.environ, {}, clear=True)
-def test_obdeect_executable_missing_reports_compatible_target(config_instance, tmp_test_directory):
-    config_instance.load(
-        args={"obdeect_path": tmp_test_directory}, resolve_sim_software_executables=False
-    )
-    with pytest.raises(FileNotFoundError, match="simtools-compatible production"):
-        _ = config_instance.obdeect_exe
-
-
 def test_obdeect_contract_and_version(config_instance, mocker):
     config_instance.load(args={}, resolve_sim_software_executables=False)
     mocker.patch("simtools.settings.metadata.version", return_value="0.1.0")

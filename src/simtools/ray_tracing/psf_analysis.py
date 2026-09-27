@@ -115,7 +115,10 @@ class PSFImage:
         unweighted result.
         """
         try:
-            from obdeect.result_contract import ArrivalContractError, read_arrivals
+            from obdeect.result_contract import (  # pylint: disable=import-outside-toplevel
+                ArrivalContractError,
+                read_arrivals,
+            )
 
             arrivals = read_arrivals(Path(photon_file))
         except ModuleNotFoundError as error:

@@ -600,70 +600,115 @@ class RayTracing:
 
         for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
-                self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
-
-                photon_suffix = (
-                    ".csv" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
-                )
-                photons_file_lis = self.output_directory.joinpath(
-                    self._generate_file_name(
-                        "photons",
-                        photon_suffix,
-                        off_axis_x=off_x,
-                        off_axis_y=off_y,
-                        mirror_number=mirror_number,
-                    )
-                )
-                photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
-                stars_file = self.output_directory.joinpath(
-                    self._generate_file_name(
-                        "stars",
-                        ".lis",
-                        off_axis_x=off_x,
-                        off_axis_y=off_y,
-                        mirror_number=mirror_number,
-                    )
-                )
-                photons_file = photons_file_gz
-                if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
-                    photons_file = photons_file_lis
-
-                # Calculate theta and phi for transmission calculation
-                theta_offset = np.sqrt(off_x**2 + off_y**2)
-
-                tel_transmission = compute_telescope_transmission(
-                    tel_transmission_pars, theta_offset
-                )
-                image = self._create_psf_image(
-                    photons_file,
-                    mirror_data["focal_length"],
-                    containment_fraction,
+                current_result = self._process_mirror_result(
+                    off_x,
+                    off_y,
+                    mirror_number,
+                    mirror_data,
+                    tel_transmission_pars,
+                    do_analyze,
                     use_rx,
+                    containment_fraction,
+                    save_photons,
                 )
-
-                # Store PSF image with (x, y) tuple key
-                self.psf_images[(off_x, off_y)] = copy(image)
-
-                if do_analyze:
-                    _current_results = self._analyze_image(
-                        image,
-                        off_x,
-                        off_y,
-                        theta_offset,
-                        containment_fraction,
-                        tel_transmission,
-                    )
-
-                    if self.single_mirror_mode:
-                        _current_results += (mirror_number,)
-
-                    _rows.append(_current_results)
-
-                self._remove_photon_files(
-                    photons_file_lis, photons_file_gz, stars_file, save_photons
-                )
+                if current_result is not None:
+                    _rows.append(current_result)
 
         return _rows
+
+    def _process_mirror_result(
+        self,
+        off_x,
+        off_y,
+        mirror_number,
+        mirror_data,
+        tel_transmission_pars,
+        do_analyze,
+        use_rx,
+        containment_fraction,
+        save_photons,
+    ):
+        """Create and analyze the PSF image for one offset and mirror."""
+        self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
+        photons_file_lis, photons_file_gz, stars_file = self._get_ray_tracing_files(
+            off_x, off_y, mirror_number
+        )
+        photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
+        theta_offset = np.sqrt(off_x**2 + off_y**2)
+        tel_transmission = compute_telescope_transmission(tel_transmission_pars, theta_offset)
+        image = self._create_psf_image(
+            photons_file, mirror_data["focal_length"], containment_fraction, use_rx
+        )
+        self.psf_images[(off_x, off_y)] = copy(image)
+        current_result = self._analyze_mirror_image(
+            image,
+            off_x,
+            off_y,
+            mirror_number,
+            theta_offset,
+            containment_fraction,
+            tel_transmission,
+            do_analyze,
+        )
+        self._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons)
+        return current_result
+
+    def _get_ray_tracing_files(self, off_x, off_y, mirror_number):
+        """Return photon and star list paths for one ray-tracing simulation."""
+        photon_suffix = ".csv" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
+        photons_file_lis = self.output_directory.joinpath(
+            self._generate_file_name(
+                "photons",
+                photon_suffix,
+                off_axis_x=off_x,
+                off_axis_y=off_y,
+                mirror_number=mirror_number,
+            )
+        )
+        photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
+        stars_file = self.output_directory.joinpath(
+            self._generate_file_name(
+                "stars",
+                ".lis",
+                off_axis_x=off_x,
+                off_axis_y=off_y,
+                mirror_number=mirror_number,
+            )
+        )
+        return photons_file_lis, photons_file_gz, stars_file
+
+    @staticmethod
+    def _select_photon_file(photons_file_lis, photons_file_gz, use_rx):
+        """Choose the available photon list, preferring a reusable compressed list."""
+        if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
+            return photons_file_lis
+        return photons_file_gz
+
+    def _analyze_mirror_image(
+        self,
+        image,
+        off_x,
+        off_y,
+        mirror_number,
+        theta_offset,
+        containment_fraction,
+        tel_transmission,
+        do_analyze,
+    ):
+        """Return analysis results for an image when analysis was requested."""
+        if not do_analyze:
+            return None
+        current_results = self._analyze_image(
+            image,
+            off_x,
+            off_y,
+            theta_offset,
+            containment_fraction,
+            tel_transmission,
+        )
+        if self.single_mirror_mode:
+            return (*current_results, mirror_number)
+        return current_results
 
     @staticmethod
     def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
