@@ -73,13 +73,11 @@ def _threshold_values(threshold_param, trigger_thresholds=None):
 
         return [minimum + index * step_size for index in range(int(number))]
 
-    return (
-        _DEFAULT_ASUM_THRESHOLDS
-        if threshold_param == "asum_threshold"
-        else _DEFAULT_DISCRIMINATOR_THRESHOLDS
-        if threshold_param == "discriminator_threshold"
-        else _DEFAULT_DSUM_THRESHOLDS
-    )
+    if threshold_param == "asum_threshold":
+        return _DEFAULT_ASUM_THRESHOLDS
+    if threshold_param == "discriminator_threshold":
+        return _DEFAULT_DISCRIMINATOR_THRESHOLDS
+    return _DEFAULT_DSUM_THRESHOLDS
 
 
 def _parameter_scan_entry(telescope, threshold_param, trigger_thresholds=None):
