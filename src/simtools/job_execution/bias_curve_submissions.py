@@ -38,6 +38,7 @@ _PRODUCTION_GRID_ARGS = [
 ]
 _DEFAULT_ASUM_THRESHOLDS = [*range(220, 310, 10), *range(320, 361, 20)]
 _DEFAULT_DSUM_THRESHOLDS = list(range(22, 31))
+_DEFAULT_DISCRIMINATOR_THRESHOLDS = list(range(0, 10))
 
 
 def _threshold_param_name(args):
@@ -47,8 +48,11 @@ def _threshold_param_name(args):
         telescope_name=_telescope_from_layout(args),
         model_version=args["model_version"],
     )
-    if telescope_model.get_parameter_value("default_trigger") == "AnalogSum":
+    default_trigger = telescope_model.get_parameter_value("default_trigger")
+    if default_trigger == "AnalogSum":
         return "asum_threshold"
+    if default_trigger == "Majority":
+        return "discriminator_threshold"
     return "dsum_threshold"
 
 
@@ -72,6 +76,8 @@ def _threshold_values(threshold_param, trigger_thresholds=None):
     return (
         _DEFAULT_ASUM_THRESHOLDS
         if threshold_param == "asum_threshold"
+        else _DEFAULT_DISCRIMINATOR_THRESHOLDS
+        if threshold_param == "discriminator_threshold"
         else _DEFAULT_DSUM_THRESHOLDS
     )
 
