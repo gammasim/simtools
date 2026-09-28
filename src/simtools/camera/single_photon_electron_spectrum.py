@@ -188,6 +188,10 @@ class SinglePhotonElectronSpectrum:
             left=0.0,
             right=0.0,
         )
+        afterpulse_minimum, afterpulse_maximum = self.args_dict["afterpulse_amplitude_range"]
+        sampled_afterpulse[
+            (folded_amplitude < afterpulse_minimum) | (folded_amplitude > afterpulse_maximum)
+        ] = 0.0
         afterpulse_scale = self.args_dict["scale_afterpulse_spectrum"]
         combined = (
             folded_prompt
@@ -200,8 +204,8 @@ class SinglePhotonElectronSpectrum:
 
     @staticmethod
     def _linear_interpolate(amplitude, frequency, output_amplitude):
-        """Linearly interpolate, using the end value outside the input range."""
-        return np.interp(output_amplitude, amplitude, frequency)
+        """Linearly interpolate, returning zero outside the input range."""
+        return np.interp(output_amplitude, amplitude, frequency, left=0.0, right=0.0)
 
     @staticmethod
     def _format_spectrum(amplitude, prompt, prompt_plus_afterpulse):
