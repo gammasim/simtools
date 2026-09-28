@@ -8,6 +8,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.application.model_reader import require_model_reader
 from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
+from simtools.model_repository.asset_names import get_export_file_name
 
 ARGUMENTS = (
     cli.ArgumentDefinition("parameter", help="Parameter name", type=str, required=True),
@@ -100,7 +101,9 @@ def _export_parameter_file(app_context, model_reader, parameters):
         export_file_as_table=app_context.args["export_model_file_as_table"],
         dest=output_directory,
     )
-    source_file = output_directory / parameter_info["value"]
+    source_file = output_directory / get_export_file_name(parameter_info)
+    if not source_file.exists():
+        source_file = output_directory / parameter_info["value"]
     model_output_file = (
         app_context.io_handler.get_output_file(output_file) if output_file else source_file
     )
