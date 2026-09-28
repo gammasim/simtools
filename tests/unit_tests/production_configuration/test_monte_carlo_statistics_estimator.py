@@ -144,6 +144,38 @@ def test_resolve_effective_throw_radius_rejects_invalid_override():
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
 
 
+def test_power_law_bin_integrals_handles_logarithmic_and_general_indices():
+    logarithmic = monte_carlo_statistics_estimator._power_law_bin_integrals(
+        [1.0, 10.0], [10.0, 100.0], spectral_index=-1.0
+    )
+    general = monte_carlo_statistics_estimator._power_law_bin_integrals(
+        [1.0, 10.0], [10.0, 100.0], spectral_index=-2.0
+    )
+
+    np.testing.assert_allclose(logarithmic, [np.log(10.0), np.log(10.0)])
+    np.testing.assert_allclose(general, [0.9, 0.09])
+
+
+def test_compute_spectral_bin_weights_clips_to_thrown_energy_range():
+    weights = monte_carlo_statistics_estimator._compute_spectral_bin_weights(
+        [1.0, 10.0, 100.0], spectral_index=0.0, br_energy=(5.0 * u.TeV, 50.0 * u.TeV)
+    )
+
+    np.testing.assert_allclose(weights, [5.0, 40.0])
+
+
+def test_compute_energy_bin_probabilities_reweights_different_spectra():
+    probabilities = monte_carlo_statistics_estimator._compute_energy_bin_probabilities(
+        [1.0, 10.0, 100.0],
+        [50.0, 50.0],
+        source_spectral_index=-2.0,
+        target_spectral_index=-1.0,
+        br_energy=(1.0 * u.TeV, 100.0 * u.TeV),
+    )
+
+    np.testing.assert_allclose(probabilities, [1.0 / 11.0, 10.0 / 11.0])
+
+
 def test_compute_core_distance_weights_uses_area_fraction():
     edges = np.array([0.0, 50.0, 100.0])
 
