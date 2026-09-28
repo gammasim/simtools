@@ -59,7 +59,7 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "use_norm_spe",
-        help="Use sim_telarray tool 'norm_spe' to normalize the spectrum.",
+        help="Deprecated compatibility option; spectrum normalization is performed by simtools.",
         action="store_true",
         required=False,
     ),

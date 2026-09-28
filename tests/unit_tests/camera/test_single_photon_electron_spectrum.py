@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import copy
-from pathlib import Path
+from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -55,24 +55,13 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
     "SinglePhotonElectronSpectrum._derive_spectrum_norm_spe"
 )
 def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
-    spe_spectrum.args_dict["use_norm_spe"] = True
     spe_spectrum.derive_single_pe_spectrum()
 
-    # Check that _derive_spectrum_norm_spe is called with the correct parameters
     mock_derive_spectrum_norm_spe.assert_called_once_with(
         input_spectrum=spe_spectrum.args_dict["input_spectrum"],
         afterpulse_spectrum=spe_spectrum.args_dict.get("afterpulse_spectrum"),
-        afterpulse_fitted_spectrum=None,  # Add the missing parameter
+        afterpulse_fitted_spectrum=None,
     )
-
-    spe_spectrum.args_dict["use_norm_spe"] = False
-    with pytest.raises(
-        NotImplementedError,
-        match=(
-            r"Derivation of single photon electron spectrum using a simtool is not yet implemented."
-        ),
-    ):
-        spe_spectrum.derive_single_pe_spectrum()
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
@@ -101,110 +90,66 @@ def test_write_single_pe_spectrum(
     mock_dump.assert_called_once()
 
 
-@patch("simtools.job_execution.job_manager.submit")
-@patch(
-    "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._get_input_data"
-)
-def test_derive_spectrum_norm_spe(
-    mock_get_input_data, mock_job_submit, spe_spectrum, spe_data, tmp_test_directory
-):
-    tmpfile_path = tmp_test_directory / "test_spe_data.txt"
-    tmpfile_path.write_text(spe_data, encoding="utf-8")
+def test_derive_spectrum_norm_spe(spe_spectrum, tmp_test_directory):
+    input_file = tmp_test_directory / "prompt.csv"
+    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=2.0)
 
-    # Create a mock file object that behaves like the NamedTemporaryFile
-    class MockTempFile:
-        def __init__(self, path):
-            self.name = str(path)
+    assert spe_spectrum._derive_spectrum_norm_spe(input_file, None, None) == 0
 
-    tmpfile = MockTempFile(tmpfile_path)
-    # first call to _get_input_data returns tmpfile, second call None
-    mock_get_input_data.side_effect = [tmpfile, None]
-    mock_job_submit.return_value.stdout = spe_data
-    mock_job_submit.return_value.returncode = 0
+    output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
+    np.testing.assert_allclose(output[:, 0], np.arange(0.0, 2.1, 0.1))
+    np.testing.assert_allclose(output[:, 1], np.maximum(0.0, 1.0 - np.abs(output[:, 0] - 1.0)))
+    np.testing.assert_allclose(output[:, 2], output[:, 1])
 
-    return_code = spe_spectrum._derive_spectrum_norm_spe(
-        input_spectrum=spe_spectrum.args_dict["input_spectrum"],
-        afterpulse_spectrum=None,
-        afterpulse_fitted_spectrum=None,  # Add the missing parameter
-    )
 
-    assert mock_get_input_data.call_count == 2
-    mock_job_submit.assert_called_once()
-    assert return_code == 0
-    assert spe_spectrum.data == spe_data
-
-    mock_get_input_data.reset_mock()
-    mock_job_submit.reset_mock()
-
-    tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
-    tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
-    tmp_spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
-    mock_get_input_data.side_effect = [tmpfile, tmpfile]
-
-    return_code = tmp_spe_spectrum._derive_spectrum_norm_spe(
-        input_spectrum=tmp_spe_spectrum.args_dict["input_spectrum"],
-        afterpulse_spectrum="afterpulse_spectrum",
-        afterpulse_fitted_spectrum=None,  # Add the missing parameter
-    )
-
-    mock_job_submit.assert_called()
-    assert return_code == 0
-
-    # Reset mocks again
-    mock_get_input_data.reset_mock()
-
-    # Test error handling
-    spe_spectrum = copy.deepcopy(spe_spectrum)
-    mock_get_input_data.side_effect = [tmpfile, None]
-    from simtools.job_execution.job_manager import JobExecutionError
-
-    mock_job_submit.side_effect = JobExecutionError("Error running norm_spe")
-
-    with pytest.raises(JobExecutionError):
-        spe_spectrum._derive_spectrum_norm_spe(
-            input_spectrum=spe_spectrum.args_dict["input_spectrum"],
-            afterpulse_spectrum=None,
-            afterpulse_fitted_spectrum=None,  # Add the missing parameter
+def test_normalize_prompt_spectrum_rejects_invalid_input():
+    with pytest.raises(ValueError, match="increasing"):
+        SinglePhotonElectronSpectrum._normalize_prompt_spectrum(
+            np.array([0.0, 0.0]), np.array([1.0, 1.0])
+        )
+    with pytest.raises(ValueError, match="non-positive"):
+        SinglePhotonElectronSpectrum._normalize_prompt_spectrum(
+            np.array([0.0, 1.0]), np.array([0.0, 0.0])
         )
 
 
-@patch("simtools.camera.single_photon_electron_spectrum.open", new_callable=MagicMock)
-def test_get_input_data(mock_open, spe_spectrum, spe_data):
-    assert (
-        spe_spectrum._get_input_data(None, None, spe_spectrum.prompt_column) is None
-    )  # Add the missing parameter
+def test_fold_afterpulse_spectrum(spe_spectrum):
+    spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
+    amplitude, combined = spe_spectrum._fold_afterpulse_spectrum(
+        np.array([0.0, 1.0, 2.0]),
+        np.array([0.0, 1.0, 0.0]),
+        np.array([0.0, 1.0, 2.0]),
+        np.array([0.0, 0.2, 0.0]),
+    )
 
-    mock_open.return_value.__enter__.return_value.read.return_value = spe_data.replace(" ", ",")
-    input_data = spe_spectrum._get_input_data(
-        "input_spectrum", None, spe_spectrum.prompt_column
-    )  # Add the missing parameter
-    mock_open.assert_called_once_with(Path("input_spectrum"), encoding="utf-8")
-    assert input_data is not None
-    with open(input_data.name, encoding="utf-8") as f:
-        assert f.read() == spe_data.replace(",", " ")
+    np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0])
+    np.testing.assert_allclose(combined, [0.0, 1.0, 0.2])
 
-    input_data = spe_spectrum._get_input_data(
-        "input_spectrum", None, spe_spectrum.afterpulse_column
-    )  # Add the missing parameter
-    assert input_data is not None
-    with open(input_data.name, encoding="utf-8") as f:
-        assert f.read() == spe_data.replace(" ", ",")
+
+def test_read_input_data(spe_spectrum, tmp_test_directory):
+    assert spe_spectrum._read_input_data(None, None, spe_spectrum.prompt_column) is None
+
+    input_file = tmp_test_directory / "input_spectrum"
+    input_file.write_text("0,0.4\n1,0.2\n", encoding="utf-8")
+    amplitude, frequency = spe_spectrum._read_input_data(
+        input_file, None, spe_spectrum.prompt_column
+    )
+    np.testing.assert_allclose(amplitude, [0.0, 1.0])
+    np.testing.assert_allclose(frequency, [0.4, 0.2])
 
     with patch(
         "simtools.data_model.validate_data.DataValidator.validate_and_transform"
     ) as mock_validator:
         mock_table = Table()
-        mock_table["amplitude"] = [0.0, 0.02, 0.04, 0.06]
-        mock_table["frequency (prompt)"] = [0.4694, 0.46378, 0.45267, 0.44172]
+        mock_table["amplitude"] = [0.0, 0.02]
+        mock_table["frequency (prompt)"] = [0.4694, 0.46378]
         mock_validator.return_value = mock_table
-
-        ecsv_data = spe_spectrum._get_input_data(
-            "input_spectrum.ecsv", None, spe_spectrum.prompt_column
-        )  # Add the missing parameter
-        assert ecsv_data is not None
-        with open(ecsv_data.name, encoding="utf-8") as f:
-            table_data = f.read()
-            assert table_data.splitlines()[0] == "0.0 0.4694"
+        amplitude, frequency = spe_spectrum._read_input_data(
+            tmp_test_directory / "input_spectrum.ecsv", None, spe_spectrum.prompt_column
+        )
+        np.testing.assert_allclose(amplitude, [0.0, 0.02])
+        np.testing.assert_allclose(frequency, [0.4694, 0.46378])
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.Table")
