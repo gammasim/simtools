@@ -113,6 +113,7 @@ simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-validate-repository-consistency <applications/simtools-validate-repository-consistency>
 simtools-write-production-metadata <applications/simtools-write-production-metadata>
 simtools-write-reduced-event-lists <applications/simtools-write-reduced-event-lists>
 simtools-write-trigger-histograms <applications/simtools-write-trigger-histograms>
