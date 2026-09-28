@@ -1,5 +1,10 @@
 #!/usr/bin/python3
-"""Derive photon incident angles on focal plane and primary/secondary mirrors."""
+"""Derive photon incident angles on focal plane and primary/secondary mirrors.
+
+Save model-parameter tables, per-offset angle histograms, metadata and logs.
+Simulation model assets and scripts are removed after successful completion.
+Use ``--keep_photon_files`` to retain raw photon lists, and ``--debug_plots`` to save plots.
+"""
 
 import argparse
 
@@ -8,9 +13,16 @@ import astropy.units as u
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
+from simtools.utils.general import cleanup_intermediate_files
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "keep_photon_files",
+        help="Keep the raw sim_telarray photon lists in the output directory",
+        action="store_true",
+        default=False,
+    ),
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.OFF_AXIS_ANGLES,
     cli.SOURCE_DISTANCE,
@@ -25,17 +37,9 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "debug_plots",
         dest="debug_plots",
-        help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
+        help="Save angle plots and debug plots",
         action=argparse.BooleanOptionalAction,
         default=False,
-        required=False,
-    ),
-    cli.ArgumentDefinition(
-        "calculate_primary_secondary_angles",
-        dest="calculate_primary_secondary_angles",
-        help="Compute angles of incidence on primary and secondary mirrors",
-        action=argparse.BooleanOptionalAction,
-        default=True,
         required=False,
     ),
 )
@@ -54,6 +58,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
+    initialize_output=True,
 )
 
 
@@ -68,24 +73,26 @@ def main():
     telescope_name = app_context.args["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"
 
+    offsets = [
+        value.to_value(u.deg) for value in app_context.args.get("off_axis_angles", [0.0 * u.deg])
+    ]
+
     calculator = IncidentAnglesCalculator(
         config_data=app_context.args,
         output_dir=output_dir,
         label=base_label,
     )
-    offsets = [
-        value.to_value(u.deg) for value in app_context.args.get("off_axis_angles", [0.0 * u.deg])
-    ]
-
     results_by_offset = calculator.run_for_offsets(offsets)
-    plot_incident_angles(
-        results_by_offset,
-        output_dir,
-        label_with_telescope,
-        debug_plots=app_context.args["debug_plots"],
-        model_version=app_context.args["model_version"],
-    )
     calculator.save_model_parameters(results_by_offset)
+    if app_context.args["debug_plots"]:
+        plot_incident_angles(
+            results_by_offset,
+            output_dir,
+            label_with_telescope,
+            debug_plots=True,
+            model_version=app_context.args["model_version"],
+        )
+    cleanup_intermediate_files(output_dir, **calculator.cleanup_options)
     total = sum(len(t) for t in results_by_offset.values())
     summary_msg = (
         f"Derived incident angles for {len(results_by_offset)} offsets,\n"
