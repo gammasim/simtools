@@ -319,8 +319,8 @@ def _model_source_options(args_dict):
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
 
-def _application_accepts_model_source_options(application):
-    """Return whether a simtools application accepts model-source options."""
+def _application_accepts_model_source_options(application, source_options):
+    """Return whether a simtools application accepts all model-source options."""
     if not application.startswith("simtools-"):
         return False
 
@@ -331,12 +331,12 @@ def _application_accepts_model_source_options(application):
         return False
 
     argument_names = {argument.name for argument in definition.all_arguments}
-    return "simulation_models_git_path" in argument_names
+    return set(source_options) <= argument_names
 
 
 def _apply_model_source_options(application, configuration, source_options):
     """Apply inherited model-source options to applications that accept them."""
-    if not _application_accepts_model_source_options(application):
+    if not _application_accepts_model_source_options(application, source_options):
         return
     for key, value in source_options.items():
         if configuration.get(key) is None:

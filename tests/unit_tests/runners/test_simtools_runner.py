@@ -247,6 +247,7 @@ def test_read_application_configuration_resolves_collection_path(monkeypatch):
 
 def test_model_source_options_only_reach_model_aware_applications():
     source_options = {
+        "simulation_models_path": "/models",
         "simulation_models_git_path": "/models.git",
         "simulation_models_git_revision": "main",
     }
