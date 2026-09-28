@@ -82,9 +82,6 @@ class SinglePhotonElectronSpectrum:
         Write the generated model-parameter ECSV and its metadata.
 
         """
-        output_file = Path(self.args_dict["output_file"])
-        metadata_output_file = Path(self.io_handler.get_output_directory()) / output_file.name
-
         cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove norm_spe row metadata
         table = Table.read(
             BytesIO(cleaned_data.encode("utf-8")),
@@ -106,7 +103,6 @@ class SinglePhotonElectronSpectrum:
             metadata=self.metadata,
             product_data=table,
             validate_schema_file=self.output_schema,
-            metadata_output_file=metadata_output_file.with_suffix(".ecsv"),
         )
 
     @classmethod
