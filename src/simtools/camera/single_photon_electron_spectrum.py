@@ -131,10 +131,13 @@ class SinglePhotonElectronSpectrum:
 
         if afterpulse_data is None:
             folded_amplitude = normalized_amplitude
+            folded_prompt = normalized_prompt
             prompt_plus_afterpulse = normalized_prompt
         else:
-            folded_amplitude, prompt_plus_afterpulse = self._fold_afterpulse_spectrum(
-                normalized_amplitude, normalized_prompt, *afterpulse_data
+            folded_amplitude, folded_prompt, prompt_plus_afterpulse = (
+                self._fold_afterpulse_spectrum(
+                    normalized_amplitude, normalized_prompt, *afterpulse_data
+                )
             )
 
         output_amplitude = np.arange(
@@ -142,9 +145,7 @@ class SinglePhotonElectronSpectrum:
             self.args_dict["max_amplitude"] + self.args_dict["step_size"] / 2,
             self.args_dict["step_size"],
         )
-        output_prompt = self._linear_interpolate(
-            normalized_amplitude, normalized_prompt, output_amplitude
-        )
+        output_prompt = self._linear_interpolate(folded_amplitude, folded_prompt, output_amplitude)
         output_combined = self._linear_interpolate(
             folded_amplitude, prompt_plus_afterpulse, output_amplitude
         )
@@ -158,7 +159,10 @@ class SinglePhotonElectronSpectrum:
             raise ValueError("Amplitude values must contain at least two increasing values.")
 
         integral = np.trapezoid(prompt, amplitude)
-        first_moment = np.trapezoid(amplitude * prompt, amplitude)
+        interval_width = np.diff(amplitude)
+        interval_midpoint = (amplitude[1:] + amplitude[:-1]) / 2
+        interval_frequency = (prompt[1:] + prompt[:-1]) / 2
+        first_moment = np.sum(interval_midpoint * interval_width * interval_frequency)
         if integral <= 0 or first_moment <= 0:
             raise ValueError("Cannot normalize a spectrum with non-positive integral or mean.")
 
@@ -192,21 +196,12 @@ class SinglePhotonElectronSpectrum:
                 : len(folded_prompt)
             ]
         )
-        return folded_amplitude, combined
+        return folded_amplitude, folded_prompt, combined
 
     @staticmethod
     def _linear_interpolate(amplitude, frequency, output_amplitude):
-        """Linearly interpolate, extending the end intervals when required."""
-        interpolated = np.interp(output_amplitude, amplitude, frequency)
-        low = output_amplitude < amplitude[0]
-        high = output_amplitude > amplitude[-1]
-        if np.any(low):
-            slope = (frequency[1] - frequency[0]) / (amplitude[1] - amplitude[0])
-            interpolated[low] = frequency[0] + slope * (output_amplitude[low] - amplitude[0])
-        if np.any(high):
-            slope = (frequency[-1] - frequency[-2]) / (amplitude[-1] - amplitude[-2])
-            interpolated[high] = frequency[-1] + slope * (output_amplitude[high] - amplitude[-1])
-        return interpolated
+        """Linearly interpolate, using the end value outside the input range."""
+        return np.interp(output_amplitude, amplitude, frequency)
 
     @staticmethod
     def _format_spectrum(amplitude, prompt, prompt_plus_afterpulse):

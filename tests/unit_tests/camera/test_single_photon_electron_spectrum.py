@@ -114,9 +114,25 @@ def test_normalize_prompt_spectrum_rejects_invalid_input():
         )
 
 
+def test_normalize_prompt_spectrum_uses_norm_spe_first_moment():
+    amplitude, prompt = SinglePhotonElectronSpectrum._normalize_prompt_spectrum(
+        np.array([0.0, 1.0, 3.0]), np.array([1.0, 4.0, 2.0])
+    )
+    scale = 8.5 / 13.25
+    np.testing.assert_allclose(amplitude, [0.0, scale, 3 * scale])
+    np.testing.assert_allclose(prompt, np.array([1.0, 4.0, 2.0]) / (8.5 * scale))
+
+
+def test_linear_interpolate_uses_end_values_outside_input_range():
+    result = SinglePhotonElectronSpectrum._linear_interpolate(
+        np.array([0.0, 1.0]), np.array([0.2, 0.4]), np.array([-1.0, 0.5, 2.0])
+    )
+    np.testing.assert_allclose(result, [0.2, 0.3, 0.4])
+
+
 def test_fold_afterpulse_spectrum(spe_spectrum):
     spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
-    amplitude, combined = spe_spectrum._fold_afterpulse_spectrum(
+    amplitude, prompt, combined = spe_spectrum._fold_afterpulse_spectrum(
         np.array([0.0, 1.0, 2.0]),
         np.array([0.0, 1.0, 0.0]),
         np.array([0.0, 1.0, 2.0]),
@@ -124,6 +140,7 @@ def test_fold_afterpulse_spectrum(spe_spectrum):
     )
 
     np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0])
+    np.testing.assert_allclose(prompt, [0.0, 1.0, 0.0])
     np.testing.assert_allclose(combined, [0.0, 1.0, 0.2])
 
 
