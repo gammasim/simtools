@@ -1,6 +1,7 @@
 """Tools for running applications in the simtools framework."""
 
 import glob
+import importlib
 import logging
 import os
 import shutil
@@ -83,7 +84,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
                     continue
 
                 app_configuration = config.get("configuration", {})
-                _apply_model_source_options(app_configuration, model_source_options)
+                _apply_model_source_options(app, app_configuration, model_source_options)
                 if args_dict.get("ignore_existing_parameter_version"):
                     app_configuration["ignore_existing_parameter_version"] = True
                 if explicit_env_file is not None:
@@ -170,9 +171,9 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
         )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
-        for pattern in files:
+        for file_spec in files:
             _copy_pattern_files(
-                pattern,
+                file_spec,
                 source_directories,
                 collection_output_path,
                 overwrite_files=overwrite_files,
@@ -198,8 +199,20 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
     FileExistsError
         When a source file would overwrite a different file with the same name.
     """
-    for source_file in _find_collection_files(pattern, source_directories):
-        dest = destination / source_file.name
+    destination_name = None
+    if isinstance(pattern, dict):
+        destination_name = pattern.get("destination")
+        pattern = pattern["source"]
+
+    source_files = _find_collection_files(pattern, source_directories)
+    if destination_name is not None and len(source_files) != 1:
+        raise FileExistsError(
+            f"Collection destination '{destination_name}' requires exactly one source file, "
+            f"but pattern '{pattern}' matched {len(source_files)} files."
+        )
+
+    for source_file in source_files:
+        dest = destination / (destination_name or source_file.name)
         if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
             raise FileExistsError(
                 f"Filename collision in collection: '{source_file.name}' would be "
@@ -306,8 +319,25 @@ def _model_source_options(args_dict):
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
 
-def _apply_model_source_options(configuration, source_options):
-    """Apply inherited model-source options without overriding app settings."""
+def _application_accepts_model_source_options(application):
+    """Return whether a simtools application accepts model-source options."""
+    if not application.startswith("simtools-"):
+        return False
+
+    module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
+    try:
+        definition = importlib.import_module(module_name).APPLICATION
+    except ImportError, AttributeError:
+        return False
+
+    argument_names = {argument.name for argument in definition.all_arguments}
+    return "simulation_models_git_path" in argument_names
+
+
+def _apply_model_source_options(application, configuration, source_options):
+    """Apply inherited model-source options to applications that accept them."""
+    if not _application_accepts_model_source_options(application):
+        return
     for key, value in source_options.items():
         if configuration.get(key) is None:
             configuration[key] = value

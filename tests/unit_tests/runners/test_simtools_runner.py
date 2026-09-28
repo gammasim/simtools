@@ -244,6 +244,29 @@ def test_read_application_configuration_resolves_collection_path(monkeypatch):
     )
 
 
+def test_model_source_options_only_reach_model_aware_applications():
+    source_options = {
+        "simulation_models_git_path": "/models.git",
+        "simulation_models_git_revision": "main",
+    }
+    derive_configuration = {}
+    submit_configuration = {}
+
+    simtools_runner._apply_model_source_options(
+        "simtools-derive-photon-electron-spectrum",
+        derive_configuration,
+        source_options,
+    )
+    simtools_runner._apply_model_source_options(
+        "simtools-submit-model-parameter-from-external",
+        submit_configuration,
+        source_options,
+    )
+
+    assert derive_configuration == {}
+    assert submit_configuration == source_options
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,
@@ -573,6 +596,42 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
 
     copied_file = collection_output / "result.dat"
     assert copied_file.exists()
+    assert copied_file.read_text(encoding="utf-8") == "test-data"
+
+
+def test_run_applications_copies_collection_file_to_destination_name(
+    monkeypatch, tmp_test_directory
+):
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output"
+    source_output.mkdir(parents=True, exist_ok=True)
+    source_file = source_output / "input-name.ecsv"
+    source_file.write_text("test-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection"
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+            },
+        }
+    ]
+    _patch_run_applications_dependencies(
+        monkeypatch,
+        mock_configurations,
+        tmp_path / "simtools.log",
+        {
+            "output_path": str(collection_output),
+            "files": [{"source": "input-name.ecsv", "destination": "model.ecsv"}],
+        },
+    )
+
+    simtools_runner.run_applications(_runner_args())
+
+    copied_file = collection_output / "model.ecsv"
     assert copied_file.read_text(encoding="utf-8") == "test-data"
 
 

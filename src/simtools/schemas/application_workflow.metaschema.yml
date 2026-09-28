@@ -49,7 +49,19 @@ definitions:
       files:
         type: array
         items:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: false
+              properties:
+                source:
+                  type: string
+                  description: "Filename or pattern to copy from source directories."
+                destination:
+                  type: string
+                  description: "Optional destination filename in the collection output directory."
+              required:
+                - source
         description: "List of files to copy from source directories to collection output_path."
       source_directory:
         oneOf:
@@ -492,7 +504,19 @@ definitions:
       files:
         type: array
         items:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: false
+              properties:
+                source:
+                  type: string
+                  description: "Filename or pattern to copy from source directories."
+                destination:
+                  type: string
+                  description: "Optional destination filename in the collection output directory."
+              required:
+                - source
         description: "List of files to copy from source directories to collection output_path."
       source_directory:
         oneOf:
