@@ -414,6 +414,10 @@ def _read_application_configuration(
     )
     derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
+    collection_config = gen.replace_placeholders_recursively(
+        job_configuration.get("collection"),
+        {"__SETTING_WORKFLOW__": setting_workflow},
+    )
 
     output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
@@ -443,7 +447,7 @@ def _read_application_configuration(
         job_configuration.get("runtime_environment"),
         log_path / "simtools.log",
         workflow_activity_id,
-        job_configuration.get("collection"),
+        collection_config,
     )
 
 

@@ -215,6 +215,35 @@ def test_read_application_configuration_applies_replacements(monkeypatch, tmp_te
     )
 
 
+def test_read_application_configuration_resolves_collection_path(monkeypatch):
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        lambda _: {
+            "applications": [
+                {
+                    "application": "app",
+                    "configuration": {"output_path": "output/__SETTING_WORKFLOW__/"},
+                }
+            ],
+            "collection": {
+                "output_path": "output/__SETTING_WORKFLOW__/collection/",
+                "files": ["result.ecsv"],
+            },
+        },
+    )
+
+    _, _, _, _, collection = simtools_runner._read_application_configuration(
+        "input/LSTN-01/fadc_pulse_shape/019d7d43-84d0-70a3-873e-8d6ab0636895/config.yml",
+        steps=None,
+        workflow_activity_id=None,
+    )
+
+    assert collection["output_path"] == (
+        "output/LSTN-01/fadc_pulse_shape/019d7d43-84d0-70a3-873e-8d6ab0636895/collection/"
+    )
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,
