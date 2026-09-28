@@ -14,6 +14,7 @@ from simtools.io import ascii_handler
 _DEFAULT_METADATA_ROOTS = (Path("input"), Path("output"))
 _SKIP_MARKER = "SKIP_WORKFLOW_CI"
 _SUBMIT_APPLICATION = "simtools-submit-model-parameter-from-external"
+_HASH_CHUNK_SIZE = 1024 * 1024
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -59,6 +60,15 @@ def _tracked_files(repository):
     return {Path(entry.path) for entry in git_repository.index}
 
 
+def _file_digest(file_path):
+    """Return a SHA-256 digest without reading the entire file into memory."""
+    digest = hashlib.sha256()
+    with file_path.open("rb") as file_handle:
+        while chunk := file_handle.read(_HASH_CHUNK_SIZE):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _metadata_product(metadata_file, relative_metadata):
     """Read the product section from one metadata file."""
     try:
@@ -94,9 +104,12 @@ def _product_file(
 def _validate_metadata_file(metadata_file, repository, tracked):
     """Validate one metadata file and return its product identifier record."""
     relative_metadata = metadata_file.relative_to(repository)
+    errors = []
+    if tracked is not None and relative_metadata not in tracked:
+        errors.append(f"{relative_metadata}: metadata file is untracked")
     product, filename, error = _metadata_product(metadata_file, relative_metadata)
     if error:
-        return [error], None
+        return [*errors, error], None
 
     product_file, error = _product_file(
         metadata_file,
@@ -106,15 +119,15 @@ def _validate_metadata_file(metadata_file, repository, tracked):
         relative_metadata,
     )
     if error:
-        return [error], None
+        return [*errors, error], None
     if product_file is None:
-        return [], None
+        return errors, None
 
     product_id = product.get("id")
     if product_id is None:
-        return [], None
-    digest = hashlib.sha256(product_file.read_bytes()).hexdigest()
-    return [], (str(product_id), relative_metadata, digest)
+        return errors, None
+    digest = _file_digest(product_file)
+    return errors, (str(product_id), relative_metadata, digest)
 
 
 def _validate_metadata_references(
@@ -152,6 +165,18 @@ def _validate_metadata_references(
                 f"product ID {product_id} identifies different file contents: {locations}"
             )
     return errors
+
+
+def _missing_scan_roots(repository, metadata_roots, workflow_root):
+    """Return errors for configured scan roots that are not directories."""
+    roots = [(root, "metadata") for root in metadata_roots]
+    if workflow_root not in metadata_roots:
+        roots.append((workflow_root, "workflow"))
+    return [
+        f"{root}: {kind} scan directory does not exist"
+        for root, kind in roots
+        if not (repository / root).is_dir()
+    ]
 
 
 def _submission_key(application, relative_config):
@@ -259,6 +284,7 @@ def validate_repository_consistency(
     metadata_roots = tuple(Path(root) for root in metadata_roots)
     workflow_root = Path(workflow_root)
     return [
+        *_missing_scan_roots(repository, metadata_roots, workflow_root),
         *_validate_metadata_references(
             repository,
             metadata_roots,

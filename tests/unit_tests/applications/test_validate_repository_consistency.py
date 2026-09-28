@@ -1,5 +1,6 @@
 """Tests for the repository validation application."""
 
+from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -31,6 +32,15 @@ def test_validates_product_references_and_allows_identical_product_ids(tmp_path)
         )
         == []
     )
+
+
+def test_rejects_missing_scan_roots(tmp_path):
+    errors = validate_repository_consistency.validate_repository_consistency(
+        tmp_path, [Path("input")], Path("workflows")
+    )
+
+    assert "input: metadata scan directory does not exist" in errors
+    assert "workflows: workflow scan directory does not exist" in errors
 
 
 def test_rejects_one_product_id_for_different_contents(tmp_path):
@@ -101,9 +111,28 @@ def test_requires_git_tracked_products(monkeypatch, tmp_path):
     )
 
     assert "product file is missing or untracked" in "\n".join(errors)
+    assert "metadata file is untracked" in "\n".join(errors)
     validate_repository_consistency.pygit2.Repository.assert_called_once_with(
         str(tmp_path.resolve())
     )
+
+
+def test_hashes_product_files_in_chunks(monkeypatch, tmp_path):
+    chunks = [b"first", b"second", b""]
+    file_handle = Mock()
+    file_handle.__enter__ = Mock(return_value=file_handle)
+    file_handle.__exit__ = Mock(return_value=False)
+    file_handle.read = Mock(side_effect=chunks)
+    monkeypatch.setattr(Path, "open", Mock(return_value=file_handle))
+
+    digest = validate_repository_consistency._file_digest(tmp_path / "product")
+
+    assert digest == sha256(b"firstsecond").hexdigest()
+    assert all(
+        call.args == (validate_repository_consistency._HASH_CHUNK_SIZE,)
+        for call in file_handle.read.call_args_list
+    )
+    assert file_handle.read.call_count == 3
 
 
 @patch.object(validate_repository_consistency, "validate_repository_consistency", return_value=[])
