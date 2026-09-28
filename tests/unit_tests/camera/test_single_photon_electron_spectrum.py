@@ -75,8 +75,12 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
         spe_spectrum.derive_single_pe_spectrum()
 
 
+@patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.write_product_data")
-def test_write_single_pe_spectrum(mock_dump, spe_spectrum):
+def test_write_single_pe_spectrum(
+    mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory
+):
+    mock_get_output_directory.return_value = tmp_test_directory / "output" / "directory"
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
 
@@ -95,6 +99,7 @@ def test_write_single_pe_spectrum(mock_dump, spe_spectrum):
         metadata=tmp_spe_spectrum.metadata,
         product_data=mock_dump.call_args.kwargs["product_data"],
         validate_schema_file=tmp_spe_spectrum.output_schema,
+        metadata_output_file=(tmp_test_directory / "output" / "directory" / "output_file.ecsv"),
     )
     assert mock_dump.call_args.kwargs["product_data"].colnames == [
         "amplitude",
