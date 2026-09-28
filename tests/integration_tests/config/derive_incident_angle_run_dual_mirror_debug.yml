@@ -14,7 +14,6 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
     debug_plots: true
-    calculate_primary_secondary_angles: true
     parameter_version: 1.0.0
   integration_tests:
   - test_outputs:

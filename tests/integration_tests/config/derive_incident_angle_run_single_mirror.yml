@@ -20,16 +20,13 @@ applications:
       file: incident_angles_derive_incident_angle_LSTS-04_off1.ecsv
       output_sub_path: incident_angles
     - path_descriptor: output_path
-      file: incident_angles_multi_derive_incident_angle_LSTS-04.png
-      output_sub_path: plots
-    - path_descriptor: output_path
       file: incident_angles_derive_incident_angle_LSTS-04_off1.log
       output_sub_path: logs
     - path_descriptor: output_path
-      file: camera_filter_incidence_angle.ecsv
+      file: camera_filter_photon_incident_angle.ecsv
       output_sub_path: LSTS-04
     - path_descriptor: output_path
-      file: camera_filter_incidence_angle.json
+      file: camera_filter_photon_incident_angle.json
       output_sub_path: LSTS-04
   test_name: incident_angles_single_mirror
 schema_name: application_workflow.metaschema
