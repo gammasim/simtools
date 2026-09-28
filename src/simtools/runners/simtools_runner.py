@@ -218,7 +218,7 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
                 f"Filename collision in collection: '{source_file.name}' would be "
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
             )
-        shutil.copy2(source_file, dest)
+        shutil.copy(source_file, dest)
 
 
 def _collect_source_directories(configurations, source_directory=None):

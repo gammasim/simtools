@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import os
 import shutil
 from pathlib import Path
 from unittest import mock
@@ -607,6 +608,8 @@ def test_run_applications_copies_collection_file_to_destination_name(
     source_output.mkdir(parents=True, exist_ok=True)
     source_file = source_output / "input-name.ecsv"
     source_file.write_text("test-data", encoding="utf-8")
+    source_mtime = 1_000_000_000
+    os.utime(source_file, (source_mtime, source_mtime))
 
     collection_output = tmp_path / "collection"
     mock_configurations = [
@@ -633,6 +636,7 @@ def test_run_applications_copies_collection_file_to_destination_name(
 
     copied_file = collection_output / "model.ecsv"
     assert copied_file.read_text(encoding="utf-8") == "test-data"
+    assert copied_file.stat().st_mtime > source_mtime
 
 
 def test_run_applications_copies_collection_files_from_grid_output_path(
