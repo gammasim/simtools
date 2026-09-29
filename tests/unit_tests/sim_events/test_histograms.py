@@ -389,7 +389,7 @@ def test_update_file_info_rejects_mixed_exposure_metadata(
     histograms._update_file_info(reduced_file_info, source_file="first.h5")
 
     different_info = dict(reduced_file_info, scatter_area=2.0 * u.cm**2)
-    with pytest.raises(ValueError, match="first.h5.*second.h5.*scatter_area"):
+    with pytest.raises(ValueError, match=r"first\.h5.*second\.h5.*scatter_area"):
         histograms._update_file_info(different_info, source_file="second.h5")
 
 
