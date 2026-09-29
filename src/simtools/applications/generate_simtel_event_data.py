@@ -44,6 +44,16 @@ APPLICATION = ApplicationDefinition.for_module(
 )
 
 
+def _collect_table_samples(tables, tables_to_print, print_limit):
+    """Retain the first rows needed for optional dataset information output."""
+    if print_limit <= 0:
+        return
+    for table in tables:
+        table_name = table.meta["EXTNAME"]
+        if table_name not in tables_to_print and len(table) > 0:
+            tables_to_print[table_name] = table[:print_limit]
+
+
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
@@ -68,11 +78,7 @@ def main():
     def iter_table_chunks():
         """Yield streaming output chunks and retain only bounded print samples."""
         for tables in generator.iter_table_chunks():
-            if print_limit > 0:
-                for table in tables:
-                    table_name = table.meta["EXTNAME"]
-                    if table_name not in tables_to_print and len(table) > 0:
-                        tables_to_print[table_name] = table[:print_limit]
+            _collect_table_samples(tables, tables_to_print, print_limit)
             yield tables
 
     table_handler.write_tables(
