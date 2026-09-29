@@ -382,6 +382,29 @@ def test_fill_accumulates_histograms_across_data_sets(
     assert mock_reader.return_value.read_event_data.call_count == 2
 
 
+def test_update_file_info_rejects_mixed_exposure_metadata(
+    mock_reader, hdf5_file_name, reduced_file_info
+):
+    histograms = EventDataHistograms(hdf5_file_name)
+    histograms._update_file_info(reduced_file_info, source_file="first.h5")
+
+    different_info = dict(reduced_file_info, scatter_area=2.0 * u.cm**2)
+    with pytest.raises(ValueError, match=r"first\.h5.*second\.h5.*scatter_area"):
+        histograms._update_file_info(different_info, source_file="second.h5")
+
+
+def test_merge_histograms_rejects_different_bin_edges(mock_reader, hdf5_file_name):
+    histograms = EventDataHistograms(hdf5_file_name)
+    histograms.histograms = {
+        "energy": {"bin_edges": np.array([0.0, 1.0, 2.0]), "histogram": np.array([1, 2])}
+    }
+
+    with pytest.raises(ValueError, match="different bins"):
+        histograms._merge_histograms(
+            {"energy": {"bin_edges": np.array([0.0, 2.0, 4.0]), "histogram": None}}
+        )
+
+
 def test_triggered_reuse_counts_repeat_per_triggered_event(mock_reader, hdf5_file_name, mocker):
     histograms = EventDataHistograms(hdf5_file_name)
     triggered_data = mocker.Mock(
