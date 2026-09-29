@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790696168521,
+  "lastUpdate": 1790696336945,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -27796,6 +27796,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 425.59375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "908b3e68f3b4502b74afb3e14f318dac90da65ba",
+          "message": "[P3-1] Return failure for production differences (#2564)\n\n* Return nonzero for production differences\n\n* Sort comparison application imports\n\n* Add towncrier fragment for PR #2564",
+          "timestamp": "2026-09-29T17:23:48+02:00",
+          "tree_id": "e9705cd10b38a1bb9f47d34acf9aac41bb2de6de",
+          "url": "https://github.com/gammasim/simtools/commit/908b3e68f3b4502b74afb3e14f318dac90da65ba"
+        },
+        "date": 1790696322686,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 53.404678817000004,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 53.21,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 426.55859375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
