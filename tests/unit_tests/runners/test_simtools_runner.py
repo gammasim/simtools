@@ -1167,6 +1167,23 @@ def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_dir
     assert (collection_output / "energy_z20.png").read_text(encoding="utf-8") == "b"
 
 
+def test_copy_collection_files_does_not_copy_file_modes(tmp_test_directory, mocker):
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "source"
+    collection_output = tmp_path / "collection"
+    source_output.mkdir()
+    source_file = source_output / "result.ecsv"
+    source_file.write_text("data", encoding="utf-8")
+    copyfile = mocker.patch.object(simtools_runner.shutil, "copyfile")
+
+    simtools_runner._copy_collection_files(
+        [{"configuration": {"output_path": str(source_output)}}],
+        {"output_path": str(collection_output), "files": ["result.ecsv"]},
+    )
+
+    copyfile.assert_called_once_with(source_file, collection_output / "result.ecsv")
+
+
 def test_copy_collection_files_list_format(tmp_test_directory):
     tmp_path = Path(str(tmp_test_directory))
     src = tmp_path / "app_out"
