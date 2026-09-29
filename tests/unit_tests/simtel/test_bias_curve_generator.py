@@ -103,7 +103,7 @@ def test_group_hdf5_files_by_threshold_and_run_rejects_duplicates(tmp_path):
     _write_file_info_hdf5(first, "proton_run000001_asum220.simtel.zst")
     _write_file_info_hdf5(second, "proton_run000001_asum220.simtel.zst")
 
-    with pytest.raises(ValueError, match="Duplicate proton input.*a.*b"):
+    with pytest.raises(ValueError, match=r"Duplicate proton input.*a.*b"):
         bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
 
 
