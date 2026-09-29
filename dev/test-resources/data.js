@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790662324600,
+  "lastUpdate": 1790696141018,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -27712,6 +27712,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 425.13671875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "662a87d4521f76b6ea22291d4d52649b21c8aa37",
+          "message": "[P1-2] Reject mixed histogram exposures (#2567)\n\n* Reject mixed histogram exposures\n\n* Fix histogram review test lint\n\n* Add towncrier fragment for PR #2567\n\n* Fix histogram linter complexity",
+          "timestamp": "2026-09-29T17:25:09+02:00",
+          "tree_id": "f0af759299e8de34b35373326d95cecf0e5edf93",
+          "url": "https://github.com/gammasim/simtools/commit/662a87d4521f76b6ea22291d4d52649b21c8aa37"
+        },
+        "date": 1790696126809,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 69.71296110200001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 72.78,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 425.1796875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
