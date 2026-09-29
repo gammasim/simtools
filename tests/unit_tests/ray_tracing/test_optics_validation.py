@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 from astropy.table import QTable, Table
 
-from simtools.ray_tracing import optics_validation
 from simtools.applications.validate_cumulative_psf import _ARGUMENTS
 from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.ray_tracing import optics_validation
 
 
 def test_cumulative_psf_cli_requires_measured_data():
