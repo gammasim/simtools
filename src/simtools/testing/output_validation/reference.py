@@ -180,8 +180,139 @@ def compare_files(
     return False
 
 
-def difference_report(reference_file, output_file):
-    """Return a unified diff between a reference file and generated output."""
+def _format_mismatch_rows(reference_values, generated_values, mismatch_indices):
+    """Format a small sample of mismatching rows."""
+    return [
+        f"  row {index}: reference={reference_values[index]!r}, "
+        f"generated={generated_values[index]!r}"
+        for index in mismatch_indices[:5]
+    ]
+
+
+def _numeric_ecsv_column_differences(column, reference_values, generated_values, tolerance):
+    """Return differences for one numeric ECSV column."""
+    equal = np.isclose(
+        reference_values,
+        generated_values,
+        rtol=tolerance,
+        atol=0.0,
+        equal_nan=True,
+    )
+    mismatch_indices = np.flatnonzero(~equal)
+    if mismatch_indices.size == 0:
+        return []
+    maximum = np.nanmax(
+        np.abs(reference_values[mismatch_indices] - generated_values[mismatch_indices])
+    )
+    return [
+        (
+            f"{column}: {len(mismatch_indices)} differing row(s), "
+            f"maximum absolute difference={maximum:g}"
+        ),
+        *_format_mismatch_rows(reference_values, generated_values, mismatch_indices),
+    ]
+
+
+def _text_ecsv_column_differences(column, reference_values, generated_values):
+    """Return differences for one non-numeric ECSV column."""
+    mismatch_indices = np.flatnonzero(reference_values != generated_values)
+    if mismatch_indices.size == 0:
+        return []
+    return [
+        f"{column}: {len(mismatch_indices)} differing row(s)",
+        *_format_mismatch_rows(reference_values, generated_values, mismatch_indices),
+    ]
+
+
+def _ecsv_column_differences(reference, generated, column, tolerance):
+    """Return differences for one selected ECSV column."""
+    if column not in reference.colnames or column not in generated.colnames:
+        return [f"{column}: missing from one of the tables"]
+
+    reference_column = reference[column]
+    generated_column = generated[column]
+    if reference_column.dtype != generated_column.dtype:
+        return [f"{column}: dtype differs ({reference_column.dtype} vs {generated_column.dtype})"]
+    if reference_column.unit != generated_column.unit:
+        return [f"{column}: unit differs ({reference_column.unit} vs {generated_column.unit})"]
+
+    count = min(len(reference_column), len(generated_column))
+    reference_values = np.asarray(reference_column[:count])
+    generated_values = np.asarray(generated_column[:count])
+    if np.issubdtype(reference_column.dtype, np.number):
+        return _numeric_ecsv_column_differences(
+            column, reference_values, generated_values, tolerance
+        )
+    return _text_ecsv_column_differences(column, reference_values, generated_values)
+
+
+def _ecsv_difference_report(
+    reference_file,
+    output_file,
+    tolerance=1.0e-5,
+    columns=None,
+    metadata=False,
+    filters=None,
+    key_columns=None,
+):
+    """Return a compact comparison report for ECSV files."""
+    reference = _prepare_table(
+        Table.read(reference_file, format="ascii.ecsv"), filters, key_columns
+    )
+    generated = _prepare_table(Table.read(output_file, format="ascii.ecsv"), filters, key_columns)
+    selected = columns or reference.colnames
+    report = [
+        f"reference: {reference_file} (rows={len(reference)}, columns={reference.colnames})",
+        f"generated: {output_file} (rows={len(generated)}, columns={generated.colnames})",
+    ]
+
+    if len(reference) != len(generated):
+        report.append(f"row count differs: reference={len(reference)}, generated={len(generated)}")
+
+    differences = [
+        difference
+        for column in selected
+        for difference in _ecsv_column_differences(reference, generated, column, tolerance)
+    ]
+
+    if metadata and reference.meta != generated.meta:
+        differences.append("metadata differs")
+
+    report.append("differences:")
+    report.extend(f"  {difference}" for difference in differences or ["none detected"])
+    report.append("generated preview:")
+    if selected and all(column in generated.colnames for column in selected):
+        report.extend(f"  {line}" for line in generated[selected][:3].pformat(max_width=-1))
+    return "\n".join(report)
+
+
+def difference_report(
+    reference_file,
+    output_file,
+    tolerance=1.0e-5,
+    columns=None,
+    metadata=False,
+    filters=None,
+    key_columns=None,
+):
+    """Return a readable difference report for a reference and generated file."""
+    if (
+        Path(reference_file).suffix.lower() == ".ecsv"
+        and Path(output_file).suffix.lower() == ".ecsv"
+    ):
+        try:
+            return _ecsv_difference_report(
+                reference_file,
+                output_file,
+                tolerance,
+                columns,
+                metadata,
+                filters,
+                key_columns,
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            return f"(Unable to read ECSV files for comparison: {exc})"
+
     try:
         reference_lines = (
             Path(reference_file)

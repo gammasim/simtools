@@ -106,6 +106,31 @@ def test_json_difference_report_identifies_generated_values(tmp_test_directory):
     assert '+  "value": 2.0' in report
 
 
+def test_ecsv_difference_report_is_compact_and_includes_paths(tmp_test_directory):
+    """Summarize ECSV differences without dumping the complete table."""
+    reference_file = Path(tmp_test_directory) / "reference.ecsv"
+    output_file = Path(tmp_test_directory) / "output.ecsv"
+    Table({"amplitude": [0.0, 0.02, 0.04], "response": [1.0, 0.8, 0.6]}).write(
+        reference_file, format="ascii.ecsv"
+    )
+    Table({"amplitude": [0.0, 0.02, 0.04], "response": [1.0, 0.9, 0.6]}).write(
+        output_file, format="ascii.ecsv"
+    )
+
+    report = reference.difference_report(
+        reference_file,
+        output_file,
+        columns=["amplitude", "response"],
+        tolerance=1.0e-5,
+    )
+
+    assert f"reference: {reference_file}" in report
+    assert f"generated: {output_file}" in report
+    assert "response: 1 differing row(s)" in report
+    assert "generated preview:" in report
+    assert len(report.splitlines()) < 20
+
+
 def test_reference_resolve_path_handles_absolute_and_repository_relative_paths():
     """Resolve absolute paths unchanged and relative paths from the repository root."""
     absolute = Path.cwd() / "reference.json"
