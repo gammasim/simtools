@@ -61,6 +61,7 @@ optional-dependencies.doc = [
 optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
 ]
+optional-dependencies.obdeect = [ "obdeect-dev" ]
 optional-dependencies.tests = [
   "psutil",
   "pytest",
