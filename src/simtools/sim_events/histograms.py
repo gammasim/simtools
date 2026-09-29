@@ -76,7 +76,6 @@ class EventDataHistograms:
     ):
         """Initialize."""
         self._logger = logging.getLogger(__name__)
-        self.event_data_file = event_data_file
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
         self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
@@ -101,7 +100,6 @@ class EventDataHistograms:
         self._release_event_data_after_fill = False
         self._reuse_stat_accumulators = {}
         self._file_info_source = None
-        self._current_event_data_file = None
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
@@ -128,7 +126,6 @@ class EventDataHistograms:
         """
         instance = cls.__new__(cls)
         instance._logger = logging.getLogger(__name__)
-        instance.event_data_file = None
         instance.event_data_files = []
         instance.array_name = array_name
         instance.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
@@ -152,7 +149,6 @@ class EventDataHistograms:
         instance._release_event_data_after_fill = True
         instance._reuse_stat_accumulators = {}
         instance._file_info_source = None
-        instance._current_event_data_file = None
         instance.reader = None
         return instance
 
@@ -214,6 +210,13 @@ class EventDataHistograms:
     def core_distance_bin_width(self):
         """Return the configured fixed core-distance bin width, if any."""
         return self._core_distance_binning[1]
+
+    @property
+    def event_data_file(self):
+        """Return the first resolved event-data file, or all files for an accumulator."""
+        if len(self.event_data_files) == 1:
+            return self.event_data_files[0]
+        return self.event_data_files
 
     def _normalize_event_data_files(self, event_data_file):
         """Return event-data files as a list of resolved file names."""
@@ -309,7 +312,7 @@ class EventDataHistograms:
             ]
             if differing_keys:
                 previous_source = self._file_info_source or "the first input file"
-                current_source = source_file or self._current_event_data_file or "current input"
+                current_source = source_file or "current input"
                 details = ", ".join(
                     f"{key}: {self.file_info.get(key)!r} != {file_info.get(key)!r}"
                     for key in differing_keys
@@ -319,7 +322,7 @@ class EventDataHistograms:
                     f"between {previous_source} and {current_source}: {details}"
                 )
         else:
-            self._file_info_source = source_file or self._current_event_data_file
+            self._file_info_source = source_file
         self.file_info = file_info
 
     def _merge_histograms(self, current_histograms):
@@ -418,7 +421,6 @@ class EventDataHistograms:
                         self._log_skipped_event_data_file(event_data_file, exc)
                         break
                     raise
-                self._current_event_data_file = event_data_file
                 yield reader, values
 
     def fill(self, fill_efficiency_histogram=True):
