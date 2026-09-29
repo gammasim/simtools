@@ -49,7 +49,6 @@ def validate_event_numbers(data_files, expected_shower_events=None, tolerance=1.
     ValueError
         If the number of simulated events does not match the expected number.
     """
-
     if expected_shower_events is None:
         _logger.info("Skipping CORSIKA event-count validation: no expected count was supplied.")
         return
