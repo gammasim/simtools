@@ -96,5 +96,5 @@ def test_main_reports_empty_multi_pair_batch(mock_application_start, mock_simula
     mock_simulator.simulate.return_value = []
     mock_simulator.visibility.n_valid_pairs = 0
 
-    with pytest.raises(SystemExit, match="light_source=all, telescope=all.*0 valid pairs"):
+    with pytest.raises(SystemExit, match=r"light_source=all, telescope=all.*0 valid pairs"):
         main()
