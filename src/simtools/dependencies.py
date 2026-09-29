@@ -213,24 +213,29 @@ def _validate_table_entry(entry, table_path):
 
 def _validate_table_file(table_file, expected_size, expected_sha256=None):
     """Check file accessibility and size, and verify SHA-256 when supplied."""
+    error = None
     if not table_file.is_file():
-        return f"missing file: {table_file}"
-    if not os.access(table_file, os.R_OK):
-        return f"file is not readable: {table_file}"
-    if _is_git_lfs_pointer(table_file):
-        return f"Git LFS pointer is not hydrated: {table_file}"
-    actual_size = table_file.stat().st_size
-    if actual_size != expected_size:
-        return f"size mismatch for {table_file}: {actual_size} != {expected_size}"
-    if expected_sha256 is not None:
-        try:
-            stat = table_file.stat()
-            actual_sha256 = _sha256_file(str(table_file.resolve()), actual_size, stat.st_mtime_ns)
-        except OSError as exc:
-            return f"cannot read file for SHA-256 verification: {table_file}: {exc}"
-        if actual_sha256 != expected_sha256.lower():
-            return f"SHA-256 mismatch for {table_file}"
-    return None
+        error = f"missing file: {table_file}"
+    elif not os.access(table_file, os.R_OK):
+        error = f"file is not readable: {table_file}"
+    elif _is_git_lfs_pointer(table_file):
+        error = f"Git LFS pointer is not hydrated: {table_file}"
+    else:
+        actual_size = table_file.stat().st_size
+        if actual_size != expected_size:
+            error = f"size mismatch for {table_file}: {actual_size} != {expected_size}"
+        elif expected_sha256 is not None:
+            try:
+                stat = table_file.stat()
+                actual_sha256 = _sha256_file(
+                    str(table_file.resolve()), actual_size, stat.st_mtime_ns
+                )
+            except OSError as exc:
+                error = f"cannot read file for SHA-256 verification: {table_file}: {exc}"
+            else:
+                if actual_sha256 != expected_sha256.lower():
+                    error = f"SHA-256 mismatch for {table_file}"
+    return error
 
 
 @lru_cache(maxsize=128)
