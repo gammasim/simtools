@@ -216,8 +216,12 @@ def calculate_statistics(grouped_data, time_window):
             triggers = run_info["triggers"]
             events = run_info["events"]
 
-            if events is None or events <= 0:
-                reason = "missing event count" if events is None else "nonpositive exposure"
+            if events is None or not np.isfinite(events) or events <= 0:
+                reason = (
+                    "missing event count"
+                    if events is None
+                    else "nonpositive or non-finite exposure"
+                )
                 _logger.warning(f"Skipping run {run_num} for threshold {threshold}: {reason}")
                 continue
 

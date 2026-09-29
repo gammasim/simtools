@@ -194,6 +194,17 @@ def test_calculate_statistics_excludes_zero_event_runs():
     assert stats[220]["num_runs"] == 1
 
 
+@pytest.mark.parametrize("events", [float("nan"), float("inf")])
+def test_calculate_statistics_excludes_nonfinite_event_counts(events):
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": events}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {}
+    assert stats[220]["num_runs"] == 0
+
+
 def test_calculate_statistics_has_no_error_for_equal_rates_with_unequal_exposure():
     stats = nsb_trigger_calculator.calculate_statistics(
         {220: {1: {"triggers": 10, "events": 100}, 2: {"triggers": 100, "events": 1000}}},
