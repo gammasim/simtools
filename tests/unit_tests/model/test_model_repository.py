@@ -804,6 +804,7 @@ def test_download_model_parameter_from_workflow(
 def test_download_model_parameter_from_workflow_keeps_existing_file(
     mock_write_json, mock_collect_data, tmp_test_directory
 ):
+    tmp_test_directory = Path(tmp_test_directory)
     target = (
         tmp_test_directory
         / "simulation-models"

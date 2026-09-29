@@ -736,6 +736,16 @@ def _download_model_parameter_from_workflow(
     ValueError
         If downloaded parameter_version does not match requested version.
     """
+    target_scope = _get_model_parameter_scope(telescope, param)
+    target_file = get_model_parameter_file_path(
+        simulation_models_path, target_scope, param, param_data["version"]
+    )
+    if target_file.exists():
+        _logger.info(
+            "Model parameter file already exists for requested version: '%s'.", target_file
+        )
+        return
+
     source_file = (
         f"output/{telescope}/{param}/{param_data['activity_id']}/"
         f"{param}/{param}-{param_data['version']}.json"
@@ -760,18 +770,7 @@ def _download_model_parameter_from_workflow(
             f"'{param_data['version']}', downloaded '{downloaded_version}'."
         )
 
-    target_scope = _get_model_parameter_scope(telescope, param)
-    target_dir = get_model_parameter_file_path(
-        simulation_models_path, target_scope, param, param_data["version"]
-    ).parent
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target_file = target_dir / f"{param}-{param_data['version']}.json"
-    if target_file.exists():
-        _logger.info(
-            "Model parameter file already exists for requested version: '%s'.", target_file
-        )
-        return
-
+    target_file.parent.mkdir(parents=True, exist_ok=True)
     if target_scope == "global":
         downloaded_data["instrument"] = None
         downloaded_data["site"] = None
