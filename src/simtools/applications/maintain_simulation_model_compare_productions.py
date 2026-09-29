@@ -1,7 +1,7 @@
 """Compare two directories with model production tables in JSON format."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
