@@ -801,6 +801,34 @@ def test_download_model_parameter_from_workflow(
 
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
 @patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+def test_download_model_parameter_from_workflow_keeps_existing_file(
+    mock_write_json, mock_collect_data, tmp_test_directory
+):
+    target = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / "LSTN-design"
+        / "fadc_pulse_shape"
+        / "fadc_pulse_shape-2.0.1.json"
+    )
+    target.parent.mkdir(parents=True)
+    target.write_text('{"type": "file"}', encoding="utf-8")
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope="LSTN-design",
+        param="fadc_pulse_shape",
+        param_data={"version": "2.0.1", "activity_id": "activity-id"},
+        simulation_models_path=tmp_test_directory,
+    )
+
+    mock_collect_data.assert_not_called()
+    mock_write_json.assert_not_called()
+    assert target.read_text(encoding="utf-8") == '{"type": "file"}'
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
     mock_write_json, mock_collect_data, tmp_test_directory
 ):

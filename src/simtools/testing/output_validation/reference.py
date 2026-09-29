@@ -11,6 +11,8 @@ from simtools.io import ascii_handler
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
+_ECSV_FORMAT = "ascii.ecsv"
+_ECSV_SUFFIX = ".ecsv"
 
 
 def resolve_path(path):
@@ -137,8 +139,8 @@ def compare_ecsv_files(
     key_columns=None,
 ):
     """Compare ECSV rows, selected columns, units, and optional metadata."""
-    first = _prepare_table(Table.read(first_file, format="ascii.ecsv"), filters, key_columns)
-    second = _prepare_table(Table.read(second_file, format="ascii.ecsv"), filters, key_columns)
+    first = _prepare_table(Table.read(first_file, format=_ECSV_FORMAT), filters, key_columns)
+    second = _prepare_table(Table.read(second_file, format=_ECSV_FORMAT), filters, key_columns)
     selected = columns or first.colnames
     if columns is None and first.colnames != second.colnames:
         return False
@@ -164,7 +166,7 @@ def compare_files(
     first_suffix = Path(first_file).suffix.lower()
     if first_suffix != Path(second_file).suffix.lower():
         raise ValueError(f"File suffixes do not match: {first_file} and {second_file}")
-    if first_suffix == ".ecsv":
+    if first_suffix == _ECSV_SUFFIX:
         return compare_ecsv_files(
             first_file,
             second_file,
@@ -257,9 +259,9 @@ def _ecsv_difference_report(
 ):
     """Return a compact comparison report for ECSV files."""
     reference = _prepare_table(
-        Table.read(reference_file, format="ascii.ecsv"), filters, key_columns
+        Table.read(reference_file, format=_ECSV_FORMAT), filters, key_columns
     )
-    generated = _prepare_table(Table.read(output_file, format="ascii.ecsv"), filters, key_columns)
+    generated = _prepare_table(Table.read(output_file, format=_ECSV_FORMAT), filters, key_columns)
     selected = columns or reference.colnames
     report = [
         f"reference: {reference_file} (rows={len(reference)}, columns={reference.colnames})",
@@ -297,8 +299,8 @@ def difference_report(
 ):
     """Return a readable difference report for a reference and generated file."""
     if (
-        Path(reference_file).suffix.lower() == ".ecsv"
-        and Path(output_file).suffix.lower() == ".ecsv"
+        Path(reference_file).suffix.lower() == _ECSV_SUFFIX
+        and Path(output_file).suffix.lower() == _ECSV_SUFFIX
     ):
         try:
             return _ecsv_difference_report(

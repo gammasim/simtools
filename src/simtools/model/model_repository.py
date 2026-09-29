@@ -766,6 +766,12 @@ def _download_model_parameter_from_workflow(
     ).parent
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / f"{param}-{param_data['version']}.json"
+    if target_file.exists():
+        _logger.info(
+            "Model parameter file already exists for requested version: '%s'.", target_file
+        )
+        return
+
     if target_scope == "global":
         downloaded_data["instrument"] = None
         downloaded_data["site"] = None
