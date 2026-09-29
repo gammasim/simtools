@@ -204,6 +204,8 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
         destination_name = pattern.get("destination")
         pattern = pattern["source"]
 
+    _validate_collection_destination_name(destination_name)
+
     source_files = _find_collection_files(pattern, source_directories)
     if destination_name is not None and len(source_files) != 1:
         raise FileExistsError(
@@ -219,6 +221,32 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
             )
         shutil.copy(source_file, dest)
+
+
+def _validate_collection_destination_name(destination_name):
+    """Validate an optional collection destination as a plain filename."""
+    if destination_name is None:
+        return
+    if not isinstance(destination_name, str):
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if not destination_name or destination_name in {".", ".."}:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if Path(destination_name).name != destination_name:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if "/" in destination_name or "\\" in destination_name:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
 
 
 def _collect_source_directories(configurations, source_directory=None):

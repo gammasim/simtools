@@ -640,6 +640,27 @@ def test_run_applications_copies_collection_file_to_destination_name(
     assert copied_file.stat().st_mtime > source_mtime
 
 
+@pytest.mark.parametrize("destination", ["../outside.ecsv", "/tmp/outside.ecsv", "nested/out.ecsv"])
+def test_copy_collection_files_rejects_destination_paths(tmp_test_directory, destination):
+    source_output = Path(str(tmp_test_directory)) / "app_output"
+    source_output.mkdir()
+    (source_output / "input.ecsv").write_text("test-data", encoding="utf-8")
+    collection_output = Path(str(tmp_test_directory)) / "collection"
+
+    with pytest.raises(ValueError, match="non-empty filename"):
+        simtools_runner._copy_collection_files(
+            [
+                {
+                    "configuration": {"output_path": str(source_output)},
+                }
+            ],
+            {
+                "output_path": str(collection_output),
+                "files": [{"source": "input.ecsv", "destination": destination}],
+            },
+        )
+
+
 def test_run_applications_copies_collection_files_from_grid_output_path(
     monkeypatch, tmp_test_directory
 ):

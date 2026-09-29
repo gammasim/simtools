@@ -94,6 +94,39 @@ def test_export_ecsv_parameter_resolves_qualified_source(tmp_test_directory):
     ) == "data"
 
 
+def test_export_ecsv_parameter_uses_telescope_when_instrument_is_missing(tmp_test_directory):
+    output_path = Path(str(tmp_test_directory)) / "output"
+    source_path = output_path / "source-LSTN-design.ecsv"
+    source_path.parent.mkdir(exist_ok=True)
+    source_path.write_text("data", encoding="utf-8")
+    context = SimpleNamespace(
+        args={
+            "parameter": "file_parameter",
+            "site": "North",
+            "telescope": "LSTN-design",
+            "model_version": "6.0.2",
+            "parameter_version": None,
+            "output_file": "renamed.ecsv",
+            "export_model_file": True,
+            "export_model_file_as_table": False,
+        },
+        io_handler=SimpleNamespace(
+            get_output_directory=lambda: output_path,
+            get_output_file=lambda name: output_path / name,
+        ),
+    )
+    reader = SimpleNamespace(export_model_file=lambda **kwargs: None)
+
+    result = application._export_parameter_file(
+        context,
+        reader,
+        {"file_parameter": {"file": True, "value": "source.ecsv"}},
+    )
+
+    assert result == [output_path / "renamed.ecsv"]
+    assert (output_path / "renamed.ecsv").read_text(encoding="utf-8") == "data"
+
+
 def test_export_non_file_parameter_is_rejected(tmp_test_directory):
     context = SimpleNamespace(
         args={

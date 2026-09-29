@@ -19,6 +19,8 @@ from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 
+ECSV_SUFFIX = ".ecsv"
+
 
 class SinglePhotonElectronSpectrum:
     """
@@ -46,7 +48,7 @@ class SinglePhotonElectronSpectrum:
         self.args_dict = args_dict
         # default output is of ecsv format
         self.args_dict["output_file"] = str(
-            Path(self.args_dict["output_file"]).with_suffix(".ecsv")
+            Path(self.args_dict["output_file"]).with_suffix(ECSV_SUFFIX)
         )
         self.io_handler = io_handler.IOHandler()
         self.data = ""  # Single photon electron spectrum data (as string)
@@ -106,7 +108,7 @@ class SinglePhotonElectronSpectrum:
             metadata=self.metadata,
             product_data=table,
             validate_schema_file=self.output_schema,
-            metadata_output_file=metadata_output_file.with_suffix(".ecsv"),
+            metadata_output_file=metadata_output_file.with_suffix(ECSV_SUFFIX),
         )
 
     @classmethod
@@ -202,7 +204,7 @@ class SinglePhotonElectronSpectrum:
         input_file = Path(input_file)
 
         input_data = ""
-        if input_file.suffix == ".ecsv" or input_table:
+        if input_file.suffix == ECSV_SUFFIX or input_table:
             data_validator = validate_data.DataValidator(
                 schema_file=self.input_schema,
                 data_table=input_table,

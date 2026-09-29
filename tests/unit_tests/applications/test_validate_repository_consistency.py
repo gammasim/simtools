@@ -59,6 +59,23 @@ def test_validates_product_in_declared_model_directory(tmp_path):
     )
 
 
+def test_malformed_product_data_does_not_crash_validation(tmp_path):
+    input_directory = tmp_path / "input"
+    input_directory.mkdir()
+    (input_directory / "product.ecsv").write_text("data\n", encoding="utf-8")
+    (input_directory / "product.ecsv.meta.yml").write_text(
+        "cta:\n  product:\n    filename: product.ecsv\n    id: product\n    data: malformed\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_repository_consistency.validate_repository_consistency(
+            tmp_path, [Path("input")], Path("input")
+        )
+        == []
+    )
+
+
 def test_rejects_missing_scan_roots(tmp_path):
     errors = validate_repository_consistency.validate_repository_consistency(
         tmp_path, [Path("input")], Path("workflows")

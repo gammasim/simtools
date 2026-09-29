@@ -59,6 +59,8 @@ definitions:
                   description: "Filename or pattern to copy from source directories."
                 destination:
                   type: string
+                  minLength: 1
+                  pattern: "^[^/\\\\]+$"
                   description: "Optional destination filename in the collection output directory."
               required:
                 - source
@@ -514,6 +516,8 @@ definitions:
                   description: "Filename or pattern to copy from source directories."
                 destination:
                   type: string
+                  minLength: 1
+                  pattern: "^[^/\\\\]+$"
                   description: "Optional destination filename in the collection output directory."
               required:
                 - source

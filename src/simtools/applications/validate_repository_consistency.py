@@ -94,7 +94,9 @@ def _product_file(
         return None, (f"{relative_metadata}: filename must name a file beside the metadata")
 
     product_files = [metadata_file.parent / filename]
-    model_name = product.get("data", {}).get("model", {}).get("name")
+    product_data = product.get("data", {})
+    model = product_data.get("model", {}) if isinstance(product_data, dict) else {}
+    model_name = model.get("name") if isinstance(model, dict) else None
     if isinstance(model_name, str) and model_name and Path(model_name).name == model_name:
         product_files.append(metadata_file.parent / model_name / filename)
 
