@@ -38,8 +38,8 @@ def test_main_converts_fadc_bins_to_nanoseconds(
     main()
 
     call = mock_solver.call_args.kwargs
-    assert call["t_start_ns"] == -165.0
-    assert call["t_stop_ns"] == 165.0
+    assert call["t_start_ns"] == pytest.approx(-165.0)
+    assert call["t_stop_ns"] == pytest.approx(165.0)
 
 
 @patch("simtools.applications.derive_pulse_shape_parameters.solve_sigma_tau_from_rise_fall")
