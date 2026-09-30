@@ -19,6 +19,7 @@ SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
+SOURCE_REF_INVALID_CHARACTERS = re.compile(r"[ ~^:?*\\[\\\\]")
 
 
 def _corsika_tag(component):
@@ -28,6 +29,8 @@ def _corsika_tag(component):
 
 def _corsika_build_id(component):
     """Return the CORSIKA build identifier from either catalog schema."""
+    if "build-id" in component:
+        return component["build-id"]
     if "version" in component:
         return component["version"]
     tag = _corsika_tag(component)
@@ -40,7 +43,7 @@ def _corsika_build_id(component):
 
 def _corsika_reference(component):
     """Return the production-combination reference for a CORSIKA record."""
-    return _corsika_tag(component) if "tag" in component else _corsika_build_id(component)
+    return _corsika_build_id(component) if "version" in component else _corsika_tag(component)
 
 
 def corsika_source_tag_for_build_id(build_id, catalog=None):
@@ -77,7 +80,7 @@ def corsika_source_tag_for_build_id(build_id, catalog=None):
 
 def _simtel_tag(component):
     """Return a sim_telarray tag from either catalog schema."""
-    return component.get("tag", component.get("version"))
+    return component.get("tag", component.get("source-ref", component.get("version")))
 
 
 def _model_revision(catalog):
@@ -86,13 +89,23 @@ def _model_revision(catalog):
     return model.get("git-revision") or model.get("default-tag", model.get("default-version"))
 
 
+def _tests_ref(test_resources):
+    """Return the human-readable simtools-tests Git ref."""
+    return test_resources.get("ref")
+
+
+def _tests_resource_version(test_resources):
+    """Return the versioned simtools-tests resource directory name."""
+    return test_resources.get("resource-version")
+
+
 def _tests_tag(test_resources):
-    """Return the simtools-tests tag from either catalog schema."""
+    """Return the simtools-tests tag from pre-0.5 catalogs."""
     return test_resources.get("tag", test_resources.get("version", ""))
 
 
 def _dependency_tag(component, new_key, old_key):
-    """Read a renamed dependency field while retaining old catalogs."""
+    """Read a renamed dependency field from pre-0.5 catalogs."""
     return component.get(new_key, component.get(old_key))
 
 
@@ -202,9 +215,9 @@ def validate_dependency_catalog(catalog):
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     schema_version = catalog["schema_version"]
-    if schema_version not in {"0.1.0", "0.2.0", "0.3.0", "0.4.0"}:
+    if schema_version not in {"0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"}:
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
-    if schema_version in {"0.2.0", "0.3.0", "0.4.0"} and "simtools-tests" not in catalog:
+    if schema_version in {"0.2.0", "0.3.0", "0.4.0", "0.5.0"} and "simtools-tests" not in catalog:
         raise ValueError("Missing dependency catalog keys: simtools-tests")
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
@@ -216,30 +229,48 @@ def validate_dependency_catalog(catalog):
 
 def _validate_components(catalog, schema_version):
     """Validate CORSIKA and sim_telarray component records."""
-    _validate_release_tag(
-        _dependency_tag(catalog["corsika-interaction-tables"], "tag", "version"),
-        "CORSIKA interaction tables",
+    ref_validator = _validate_source_ref if schema_version == "0.5.0" else _validate_release_tag
+    interaction_tables = catalog["corsika-interaction-tables"]
+    interaction_ref = (
+        interaction_tables["ref"]
+        if schema_version == "0.5.0"
+        else interaction_tables.get("tag", interaction_tables.get("version"))
     )
-    require_revisions = schema_version == "0.4.0"
-    _validate_corsika_components(catalog["corsika"], require_revisions)
-    _validate_simtel_components(catalog["sim-telarray"], require_revisions)
+    ref_validator(interaction_ref, "CORSIKA interaction tables")
+    require_revisions = schema_version in {"0.4.0", "0.5.0"}
+    if schema_version == "0.5.0":
+        _validate_source_url(interaction_tables.get("source-url"), "CORSIKA interaction tables")
+        _validate_revision(interaction_tables.get("revision"), "CORSIKA interaction tables")
+    _validate_corsika_components(
+        catalog["corsika"], require_revisions, ref_validator, schema_version == "0.5.0"
+    )
+    _validate_simtel_components(
+        catalog["sim-telarray"], require_revisions, ref_validator, schema_version == "0.5.0"
+    )
     _validate_model_and_test_components(catalog, schema_version)
     _validate_archive_versions(catalog["archives"])
 
 
-def _validate_corsika_components(components, require_revisions=False):
+def _validate_corsika_components(
+    components, require_revisions=False, ref_validator=None, current_schema=False
+):
     """Validate CORSIKA tags, legacy IDs, revisions, and image digests."""
+    ref_validator = ref_validator or _validate_release_tag
     for component in components:
         source_tag = _corsika_tag(component)
-        _validate_release_tag(source_tag, "CORSIKA source")
-        _validate_release_tag(
-            _dependency_tag(component, "config-tag", "config-version"),
-            "CORSIKA configuration",
+        ref_validator(source_tag, "CORSIKA source")
+        config_ref = (
+            component["config-ref"]
+            if current_schema
+            else _dependency_tag(component, "config-tag", "config-version")
         )
-        _validate_release_tag(
-            _dependency_tag(component, "opt-patch-tag", "opt-patch-version"),
-            "CORSIKA optimization patch",
+        opt_patch_ref = (
+            component["opt-patch-ref"]
+            if current_schema
+            else _dependency_tag(component, "opt-patch-tag", "opt-patch-version")
         )
+        ref_validator(config_ref, "CORSIKA configuration")
+        ref_validator(opt_patch_ref, "CORSIKA optimization patch")
         try:
             _corsika_build_id(component)
         except ValueError as exc:
@@ -254,14 +285,25 @@ def _validate_corsika_components(components, require_revisions=False):
             _validate_optional_digest(digest, f"CORSIKA {source_tag} {variant}")
 
 
-def _validate_simtel_components(components, require_revisions=False):
+def _validate_simtel_components(
+    components, require_revisions=False, ref_validator=None, current_schema=False
+):
     """Validate sim_telarray component revisions and image digests."""
+    ref_validator = ref_validator or _validate_release_tag
     for component in components:
-        _validate_release_tag(_simtel_tag(component), "sim_telarray")
-        _validate_release_tag(_dependency_tag(component, "hessio-tag", "hessio-version"), "hessio")
-        _validate_release_tag(
-            _dependency_tag(component, "stdtools-tag", "stdtools-version"), "stdtools"
+        ref_validator(_simtel_tag(component), "sim_telarray")
+        hessio_ref = (
+            component["hessio-ref"]
+            if current_schema
+            else _dependency_tag(component, "hessio-tag", "hessio-version")
         )
+        stdtools_ref = (
+            component["stdtools-ref"]
+            if current_schema
+            else _dependency_tag(component, "stdtools-tag", "stdtools-version")
+        )
+        ref_validator(hessio_ref, "hessio")
+        ref_validator(stdtools_ref, "stdtools")
         revision_validator = (
             _validate_revision if require_revisions else _validate_optional_revision
         )
@@ -273,41 +315,56 @@ def _validate_simtel_components(components, require_revisions=False):
 def _validate_model_and_test_components(catalog, schema_version):
     """Validate model-repository and simtools-tests catalog values."""
     model = catalog["model-repository"]
-    model_version = model.get("default-tag", model.get("default-version"))
-    valid_model_version = (
-        versioning.is_valid_release_tag(model_version)
-        if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
-        else isinstance(model_version, str) and versioning.is_valid_model_version(model_version)
+    model_version = (
+        model["default-ref"]
+        if schema_version == "0.5.0"
+        else model.get("default-tag", model.get("default-version"))
     )
+    if schema_version == "0.5.0":
+        valid_model_version = _is_valid_source_ref(model_version)
+    elif schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
+        valid_model_version = versioning.is_valid_release_tag(model_version)
+    else:
+        valid_model_version = isinstance(model_version, str) and versioning.is_valid_model_version(
+            model_version
+        )
     if not valid_model_version:
         message = (
             "Invalid simulation-model release tags."
             if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
-            else "Invalid simulation-model repository revision."
+            else (
+                "Invalid simulation-model source ref."
+                if schema_version == "0.5.0"
+                else "Invalid simulation-model repository revision."
+            )
         )
         raise ValueError(message)
-    if model.get("repository-url") is not None and not str(model["repository-url"]).startswith(
-        "https://"
-    ):
-        raise ValueError("Simulation-model repository URL must use HTTPS.")
+    if model.get("repository-url") is not None:
+        _validate_source_url(model["repository-url"], "simulation-model repository")
     if model.get("git-revision") is not None:
         _validate_revision(model["git-revision"], "simulation-model repository")
-    if schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
-        _validate_simtools_tests(catalog["simtools-tests"])
+    if schema_version in {"0.2.0", "0.3.0", "0.4.0", "0.5.0"}:
+        _validate_simtools_tests(catalog["simtools-tests"], schema_version == "0.5.0")
 
 
-def _validate_simtools_tests(test_resources):
+def _validate_simtools_tests(test_resources, require_revision=False):
     """Validate the simtools-tests repository configuration."""
     repository = test_resources.get("repository")
     if not isinstance(repository, str) or not SIMTOOLS_TESTS_REPOSITORY_PATTERN.fullmatch(
         repository
     ):
         raise ValueError("simtools-tests repository must use the owner/name format.")
-    source_url = test_resources.get("source-url")
-    if not isinstance(source_url, str) or not source_url.startswith("https://"):
-        raise ValueError("simtools-tests source URL must use HTTPS.")
-    tag = test_resources.get("tag", test_resources.get("version"))
-    if not versioning.is_valid_release_tag(tag):
+    _validate_source_url(test_resources.get("source-url"), "simtools-tests")
+    source_ref = _tests_ref(test_resources) if require_revision else _tests_tag(test_resources)
+    if require_revision:
+        _validate_source_ref(source_ref, "simtools-tests")
+        _validate_revision(test_resources.get("revision"), "simtools-tests")
+        resource_version = _tests_resource_version(test_resources)
+        if not versioning.is_valid_release_tag(resource_version):
+            raise ValueError(
+                "simtools-tests resource version must be a release tag starting with 'v'."
+            )
+    elif not versioning.is_valid_release_tag(source_ref):
         raise ValueError("simtools-tests tag must be a release tag starting with 'v'.")
 
 
@@ -366,6 +423,32 @@ def _validate_release_tag(value, label):
         raise ValueError(f"Invalid release tag for {label}: {value!r}")
 
 
+def _is_valid_source_ref(value):
+    """Return whether a Git branch or tag name is safe to use as a source ref."""
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and not value.startswith(("-", "/", "."))
+        and not value.endswith((".", "/"))
+        and ".." not in value
+        and "//" not in value
+        and "@{" not in value
+        and SOURCE_REF_INVALID_CHARACTERS.search(value) is None
+    )
+
+
+def _validate_source_ref(value, label):
+    """Validate a human-readable Git tag or branch name."""
+    if not _is_valid_source_ref(value):
+        raise ValueError(f"Invalid source ref for {label}: {value!r}")
+
+
+def _validate_source_url(value, label):
+    """Validate a source URL that may be cloned by a build workflow."""
+    if not isinstance(value, str) or not value.startswith("https://"):
+        raise ValueError(f"{label} source URL must use HTTPS.")
+
+
 def _validate_archive_versions(archives):
     """Validate package versions recorded for archived dependencies."""
     for archive_name, archive in archives.items():
@@ -395,7 +478,7 @@ def validate_env_template(template_path):
             continue
         key, value = stripped.split("=", maxsplit=1)
         values[key] = value
-    version_keys = {"SIMTOOLS_TESTS_VERSION", "SIMTOOLS_TESTS_TAG"}
+    version_keys = {"SIMTOOLS_TESTS_RESOURCE_VERSION"}
     configured_versions = sorted(version_keys & values.keys())
     if configured_versions:
         raise ValueError(
@@ -419,10 +502,10 @@ def build_workflow_matrices(catalog):
             "corsika_build_id": _corsika_build_id(corsika),
             "corsika_source_url": corsika["source-url"],
             "corsika_source_revision": corsika.get("source-revision", ""),
-            "corsika_config_tag": _dependency_tag(corsika, "config-tag", "config-version"),
+            "corsika_config_tag": corsika["config-ref"],
             "corsika_config_source_url": corsika["config-source-url"],
             "corsika_config_revision": corsika.get("config-revision", ""),
-            "corsika_opt_patch_tag": _dependency_tag(corsika, "opt-patch-tag", "opt-patch-version"),
+            "corsika_opt_patch_tag": corsika["opt-patch-ref"],
             "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
             "corsika_opt_patch_revision": corsika.get("opt-patch-revision", ""),
             "avx_flag": variant,
@@ -440,10 +523,10 @@ def build_workflow_matrices(catalog):
             "simtel_tag": _simtel_tag(component),
             "simtel_source_url": component["source-url"],
             "simtel_revision": component.get("revision", ""),
-            "hessio_tag": _dependency_tag(component, "hessio-tag", "hessio-version"),
+            "hessio_tag": component["hessio-ref"],
             "hessio_source_url": component["hessio-source-url"],
             "hessio_revision": component.get("hessio-revision", ""),
-            "stdtools_tag": _dependency_tag(component, "stdtools-tag", "stdtools-version"),
+            "stdtools_tag": component["stdtools-ref"],
             "stdtools_source_url": component["stdtools-source-url"],
             "stdtools_revision": component.get("stdtools-revision", ""),
         }
@@ -454,12 +537,10 @@ def build_workflow_matrices(catalog):
             "corsika_tag": _corsika_tag(component),
             "corsika_source_url": component["source-url"],
             "corsika_source_revision": component.get("source-revision", ""),
-            "corsika_config_tag": _dependency_tag(component, "config-tag", "config-version"),
+            "corsika_config_tag": component["config-ref"],
             "corsika_config_source_url": component["config-source-url"],
             "corsika_config_revision": component.get("config-revision", ""),
-            "corsika_opt_patch_tag": _dependency_tag(
-                component, "opt-patch-tag", "opt-patch-version"
-            ),
+            "corsika_opt_patch_tag": component["opt-patch-ref"],
             "corsika_opt_patch_source_url": component["opt-patch-source-url"],
             "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
         }
@@ -489,9 +570,7 @@ def _production_matrix_entry(corsika_components, simtel_components, combination,
     """Build one production image matrix entry."""
     corsika = corsika_components[combination["corsika"]]
     simtel = simtel_components[combination["sim-telarray"]]
-    production_corsika = (
-        _corsika_tag(corsika) if "tag" in corsika else f"v{_corsika_build_id(corsika)}"
-    )
+    production_corsika = _corsika_tag(corsika) or f"v{_corsika_build_id(corsika)}"
     return {
         "corsika_tag": production_corsika,
         "corsika_build_id": _corsika_build_id(corsika),
@@ -535,14 +614,15 @@ def dependency_catalog_summary(catalog):
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "gsl_version": catalog["archives"]["gsl"]["version"],
         "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
-        "corsika_tables_tag": _dependency_tag(
-            catalog["corsika-interaction-tables"], "tag", "version"
-        ),
+        "corsika_tables_ref": catalog["corsika-interaction-tables"]["ref"],
+        "corsika_tables_revision": catalog["corsika-interaction-tables"].get("revision", ""),
         "model_repository": catalog["model-repository"].get("repository-url", ""),
         "model_repository_revision": _model_revision(catalog),
         "simtools_tests_repository": test_resources.get("repository", ""),
         "simtools_tests_url": test_resources.get("source-url", ""),
-        "simtools_tests_tag": _tests_tag(test_resources),
+        "simtools_tests_ref": _tests_ref(test_resources),
+        "simtools_tests_resource_version": _tests_resource_version(test_resources),
+        "simtools_tests_revision": test_resources.get("revision", ""),
         "dev_corsika_image": _image_reference(
             "ghcr.io/gammasim/corsika7",
             f"v{_corsika_build_id(default_corsika)}-generic",
@@ -574,19 +654,30 @@ def dependency_catalog_environment(catalog):
         "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
     }
     if "simtools-tests" in catalog:
-        test_tag = _tests_tag(catalog["simtools-tests"])
-        tag_key = (
-            "SIMTOOLS_TESTS_TAG"
-            if catalog["schema_version"] in {"0.3.0", "0.4.0"}
-            else "SIMTOOLS_TESTS_VERSION"
-        )
+        if catalog["schema_version"] == "0.5.0":
+            test_environment = {
+                "SIMTOOLS_TESTS_REF": _tests_ref(catalog["simtools-tests"]),
+                "SIMTOOLS_TESTS_RESOURCE_VERSION": _tests_resource_version(
+                    catalog["simtools-tests"]
+                ),
+            }
+        else:
+            tag_key = (
+                "SIMTOOLS_TESTS_TAG"
+                if catalog["schema_version"] in {"0.3.0", "0.4.0"}
+                else "SIMTOOLS_TESTS_VERSION"
+            )
+            test_environment = {tag_key: _tests_tag(catalog["simtools-tests"])}
         environment.update(
             {
-                tag_key: test_tag,
+                **test_environment,
                 "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
                 "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
             }
         )
+        revision = catalog["simtools-tests"].get("revision")
+        if revision:
+            environment["SIMTOOLS_TESTS_REVISION"] = revision
     return environment
 
 

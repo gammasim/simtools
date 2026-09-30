@@ -92,14 +92,14 @@ one of these repository sources.
 
 Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
 resource path is configured, `SIMTOOLS_TESTS_PATH` identifies the
-`simtools-tests` checkout. The default tag is maintained in
-`dependency_versions.yml`; the command-line option `--simtools_tests_tag` can
-select a different tag for an individual run. `SIMTOOLS_TESTS_TAG` is the
-canonical environment override; `SIMTOOLS_TESTS_VERSION` remains supported as
-an alias.
+`simtools-tests` checkout. The catalog separately records the Git ref used to
+obtain the repository and its `resource-version`, which names the directory
+below. The command-line option `--simtools_tests_resource_version` selects a
+different resource directory for an individual run. `SIMTOOLS_TESTS_RESOURCE_VERSION`
+is the environment override.
 
 ```text
-<simtools-tests>/simtools-tests/<selected-tag>/integration_tests/
+<simtools-tests>/simtools-tests/<resource-version>/integration_tests/
   static/
   generated/
   downloaded/
@@ -115,10 +115,10 @@ pytest --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-To select a tag instead of a path:
+To select a resource version instead of a path:
 
 ```bash
-pytest --simtools_tests_tag v0.36.0 \
+pytest --simtools_tests_resource_version v0.36.0 \
   tests/integration_tests/test_applications_from_config.py
 ```
 

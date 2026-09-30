@@ -12,7 +12,7 @@ The dependency information is maintained in two places with distinct responsibil
   supported direct Python requirements.
 - `dependency_versions.yml` declares the supported Python version, container base images, scientific
   software releases, archive checksums, the default simulation-model version, and the
-  `simtools-tests` repository URL and version.
+  `simtools-tests` repository URL, Git ref and revision, and resource-directory version.
 
 Dockerfiles do not provide independent version defaults. GitHub Actions reads the catalog with
 
@@ -26,9 +26,22 @@ and supplies the resulting image references and build arguments.
 
 Change the compatible Python requirements in `pyproject.toml` or the external component entry in
 `dependency_versions.yml`.
-For external sources, update the human-readable release. An optional Git revision, OCI image
-digest, or archive SHA-256 can be added when an immutable build input is required. Dockerfiles
-always record the archive checksum and source revisions actually used for a build.
+For every Git source, keep both a readable `ref` (or component-specific `source-ref`) and a
+40-character `revision`. The ref may be a release tag or branch name and is used for review and
+auditing. Image workflows check out the revision, so a moved tag or branch cannot silently change
+a build. `simtools-tests` also has `resource-version`: this is the release-named directory selected
+inside its checkout, not a Git ref. CORSIKA branch refs also need an explicit numeric `build-id`,
+because image names use that identifier. OCI image digests and archive SHA-256 values serve the same
+immutable role for their respective inputs.
+
+When updating a Git dependency, resolve the intended ref first and record its commit:
+
+```console
+git ls-remote https://example.org/group/project.git refs/tags/v1.2.3
+```
+
+Use the full returned SHA as `revision`. The catalog validator checks its shape; CI verifies that
+the fetched checkout is exactly that commit.
 
 Install the compatible Python environment in a clean Python 3.14 environment containing all extras:
 
@@ -39,7 +52,7 @@ python -m pip install -e '.[dev,doc,tests]'
 ```
 
 The resulting Python and package versions are recorded in the image dependency manifest. Image
-builds use the catalogued release tags unless an optional revision or digest is declared.
+builds use catalogued Git revisions and retain the readable refs in build metadata.
 
 Validate the catalog and matrices with
 

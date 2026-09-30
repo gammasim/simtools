@@ -47,7 +47,7 @@ def _catalog_test_resources_version():
     catalog = dependency_versions.load_dependency_catalog(
         SIMTOOLS_ROOT_PATH / "dependency_versions.yml"
     )
-    return catalog["simtools-tests"].get("tag", catalog["simtools-tests"].get("version"))
+    return catalog["simtools-tests"]["resource-version"]
 
 
 def _configured_test_resources_path(config):
@@ -55,20 +55,13 @@ def _configured_test_resources_path(config):
     integration_test_run = any(_is_integration_test_argument(argument) for argument in config.args)
     configured_path = config.getoption("test_resources_path", default=None)
     path = configured_path or os.environ.get("SIMTOOLS_TEST_RESOURCES")
-    canonical_tag = config.getoption("simtools_tests_tag", default=None) or os.environ.get(
-        "SIMTOOLS_TESTS_TAG"
-    )
-    legacy_tag = config.getoption("simtools_tests_version", default=None) or os.environ.get(
-        "SIMTOOLS_TESTS_VERSION"
-    )
-    if canonical_tag and legacy_tag and canonical_tag != legacy_tag:
-        raise ValueError(
-            "simtools_tests_tag and simtools_tests_version must match when both are set."
-        )
-    tag = canonical_tag or legacy_tag or _catalog_test_resources_version()
-    if tag:
-        versioning.validate_release_tag(tag)
-    path = path or _versioned_test_resources_path(tag, integration_test_run)
+    resource_version = config.getoption(
+        "simtools_tests_resource_version", default=None
+    ) or os.environ.get("SIMTOOLS_TESTS_RESOURCE_VERSION")
+    resource_version = resource_version or _catalog_test_resources_version()
+    if resource_version:
+        versioning.validate_release_tag(resource_version)
+    path = path or _versioned_test_resources_path(resource_version, integration_test_run)
     path = path or SIMTOOLS_ROOT_PATH / "tests" / "unit_tests" / "resources"
     return Path(path).expanduser().resolve()
 
@@ -83,16 +76,10 @@ def pytest_addoption(parser):
         help="Full path to test resources (default: SIMTOOLS_TEST_RESOURCES).",
     )
     parser.addoption(
-        "--simtools_tests_tag",
-        dest="simtools_tests_tag",
-        default=os.environ.get("SIMTOOLS_TESTS_TAG"),
-        help="Tag of simtools-tests to use when no path is configured (default: catalog).",
-    )
-    parser.addoption(
-        "--simtools_tests_version",
-        dest="simtools_tests_version",
-        default=os.environ.get("SIMTOOLS_TESTS_VERSION"),
-        help="Version of simtools-tests to use when no path is configured (default: catalog).",
+        "--simtools_tests_resource_version",
+        dest="simtools_tests_resource_version",
+        default=os.environ.get("SIMTOOLS_TESTS_RESOURCE_VERSION"),
+        help="Versioned simtools-tests resource directory (default: catalog).",
     )
 
 

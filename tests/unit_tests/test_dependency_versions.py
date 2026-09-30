@@ -18,7 +18,10 @@ def _load_catalog(simtools_root_path):
 
 def _model_revision(catalog):
     return catalog["model-repository"].get(
-        "default-tag", catalog["model-repository"].get("default-version")
+        "default-ref",
+        catalog["model-repository"].get(
+            "default-tag", catalog["model-repository"].get("default-version")
+        ),
     )
 
 
@@ -70,17 +73,19 @@ def _legacy_catalog(schema_version="0.2.0"):
 def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     """Use source tags for selection and derive the legacy build ID."""
     catalog = _load_catalog(simtools_root_path)
-    assert catalog["schema_version"] == "0.4.0"
-    assert catalog["corsika"][0]["tag"] == "v7.8010"
+    assert catalog["schema_version"] == "0.5.0"
+    assert catalog["corsika"][0]["source-ref"] == "v7.8010"
     combination = catalog["production-combinations"][0]
-    corsika = next(item for item in catalog["corsika"] if item["tag"] == combination["corsika"])
-    build_id = corsika["tag"].removeprefix("v").replace(".", "")
+    corsika = next(
+        item for item in catalog["corsika"] if item["source-ref"] == combination["corsika"]
+    )
+    build_id = corsika["source-ref"].removeprefix("v").replace(".", "")
     variant = combination.get("cpu-variants", catalog["cpu-variants"])[0]
     matrices = dependency_versions.build_workflow_matrices(catalog)
     production = matrices["production_matrix"][0]
 
     assert "build-id" not in corsika
-    assert production["corsika_tag"] == corsika["tag"]
+    assert production["corsika_tag"] == corsika["source-ref"]
     assert production["corsika_build_id"] == build_id
     assert production["corsika_image"].endswith(f":v{build_id}-{variant}")
 
@@ -113,13 +118,29 @@ def test_catalog_reads_legacy_corsika_fields():
     assert dependency_versions.validate_dependency_catalog(catalog) == catalog
 
 
-def test_schema_0_4_requires_source_revisions(simtools_root_path):
+def test_schema_0_5_requires_source_revisions(simtools_root_path):
     """Require immutable source revisions in the current catalog schema."""
     catalog = _load_catalog(simtools_root_path)
     del catalog["corsika"][0]["source-revision"]
 
     with pytest.raises(ValueError, match="Invalid Git revision"):
         dependency_versions.validate_dependency_catalog(catalog)
+
+
+def test_schema_0_5_accepts_branch_refs_with_immutable_revisions(simtools_root_path):
+    """Allow readable branch names while retaining the pinned checkout revision."""
+    catalog = _load_catalog(simtools_root_path)
+    corsika = catalog["corsika"][0]
+    corsika["source-ref"] = "release/7.8"
+    corsika["build-id"] = "78010"
+    catalog["production-combinations"][0]["corsika"] = "release/7.8"
+    catalog["sim-telarray"][0]["source-ref"] = "release/2025"
+    for combination in catalog["production-combinations"]:
+        combination["sim-telarray"] = "release/2025"
+    catalog["model-repository"]["default-ref"] = "main"
+    catalog["simtools-tests"]["ref"] = "release/3"
+
+    assert dependency_versions.validate_dependency_catalog(catalog) is catalog
 
 
 def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypatch):
@@ -151,10 +172,10 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
     assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v0.1.0"
     assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
     assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == (
-        "6b720388124871f8e07741e40e3446a7375efe78"
+        "6abdab0a09f31398a1370d04c02e75f9c11ffa18"
     )
     assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == (
-        "6b720388124871f8e07741e40e3446a7375efe78"
+        "6abdab0a09f31398a1370d04c02e75f9c11ffa18"
     )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
@@ -171,12 +192,17 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     corsika = catalog["corsika"][0]
 
     assert summary["base_image"] == f"{base['name']}:{base['runtime-version']}"
-    assert summary["corsika_tables_tag"] == catalog["corsika-interaction-tables"]["tag"]
-    build_id = corsika["tag"].removeprefix("v").replace(".", "")
+    assert summary["corsika_tables_ref"] == catalog["corsika-interaction-tables"]["ref"]
+    assert summary["corsika_tables_revision"] == catalog["corsika-interaction-tables"]["revision"]
+    build_id = corsika["source-ref"].removeprefix("v").replace(".", "")
     assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
     assert summary["model_repository_revision"] == dependency_versions._model_revision(catalog)
     assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
-    assert summary["simtools_tests_tag"] == catalog["simtools-tests"]["tag"]
+    assert summary["simtools_tests_ref"] == catalog["simtools-tests"]["ref"]
+    assert (
+        summary["simtools_tests_resource_version"] == catalog["simtools-tests"]["resource-version"]
+    )
+    assert summary["simtools_tests_revision"] == catalog["simtools-tests"]["revision"]
     assert summary["simtools_tests_url"] == catalog["simtools-tests"]["source-url"]
 
 
@@ -206,16 +232,16 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid SHA-256 checksum",
         ),
         (
-            lambda data: data["corsika"][0].update({"tag": "master"}),
-            "Invalid release tag",
+            lambda data: data["corsika"][0].update({"source-ref": "bad ref"}),
+            "Invalid source ref",
         ),
         (
-            lambda data: data["sim-telarray"][0].update({"tag": "master"}),
-            "Invalid release tag",
+            lambda data: data["sim-telarray"][0].update({"source-ref": "bad ref"}),
+            "Invalid source ref",
         ),
         (
-            lambda data: data["corsika-interaction-tables"].update({"tag": "latest"}),
-            "Invalid release tag",
+            lambda data: data["corsika-interaction-tables"].update({"ref": "bad ref"}),
+            "Invalid source ref",
         ),
         (
             lambda data: data["sim-telarray"][0].update({"revision": "short"}),
@@ -226,8 +252,8 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid Git revision",
         ),
         (
-            lambda data: data["model-repository"].update({"default-tag": "0.16.0"}),
-            "release tags",
+            lambda data: data["model-repository"].update({"default-ref": "bad ref"}),
+            "source ref",
         ),
         (
             lambda data: data["production-combinations"][0].update({"cpu-variants": ["unknown"]}),
@@ -242,8 +268,12 @@ def test_env_template_matches_catalog(simtools_root_path):
             "HTTPS",
         ),
         (
-            lambda data: data["simtools-tests"].pop("tag"),
-            "release tag",
+            lambda data: data["simtools-tests"].pop("ref"),
+            "Invalid source ref",
+        ),
+        (
+            lambda data: data["simtools-tests"].pop("resource-version"),
+            "resource version",
         ),
         (
             lambda data: data["simtools-tests"].update({"repository": "foo"}),
@@ -254,8 +284,8 @@ def test_env_template_matches_catalog(simtools_root_path):
             "HTTPS",
         ),
         (
-            lambda data: data["simtools-tests"].update({"tag": "latest"}),
-            "release tag",
+            lambda data: data["simtools-tests"].update({"ref": "bad ref"}),
+            "Invalid source ref",
         ),
     ],
 )
@@ -414,9 +444,11 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
     test_resources = catalog["simtools-tests"]
     expected = [
         f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={dependency_versions._model_revision(catalog)}",
-        f"SIMTOOLS_TESTS_TAG={test_resources['tag']}",
+        f"SIMTOOLS_TESTS_REF={test_resources['ref']}",
+        f"SIMTOOLS_TESTS_RESOURCE_VERSION={test_resources['resource-version']}",
         f"SIMTOOLS_TESTS_REPOSITORY={test_resources['repository']}",
         f"SIMTOOLS_TESTS_URL={test_resources['source-url']}",
+        f"SIMTOOLS_TESTS_REVISION={test_resources['revision']}",
     ]
 
     assert output.splitlines() == expected
@@ -486,6 +518,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.2.0",
         "0.3.0",
         "0.4.0",
+        "0.5.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
@@ -494,6 +527,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     tagged_schema = next(schema for schema in schemas if "simtools-tests" in schema["required"])
     assert "simtools-tests" not in legacy_schema["required"]
     assert "simtools-tests" in tagged_schema["required"]
-    assert "default-tag" in schema["properties"]["model-repository"]["required"]
+    assert "default-ref" in schema["properties"]["model-repository"]["required"]
+    assert "resource-version" in schema["properties"]["simtools-tests"]["required"]
     assert "source-revision" in schema["definitions"]["corsika"]["required"]
     assert "revision" in schema["definitions"]["simtel"]["required"]

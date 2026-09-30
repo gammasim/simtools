@@ -106,11 +106,17 @@ jobs:
       - name: Read CORSIKA interaction tables version
         id: interaction_table_version
         run: |
-          CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
-            --format github-output | sed -n 's/^corsika_tables_tag=//p')
-          test -n "$CORSIKA_TABLES"
-          echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
-          echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"
+          CATALOG_OUTPUT=$(python src/simtools/applications/dependency_versions.py \
+            --format github-output)
+          CORSIKA_TABLES_REF=$(printf '%s\n' "$CATALOG_OUTPUT" | \
+            sed -n 's/^corsika_tables_ref=//p')
+          CORSIKA_TABLES_REVISION=$(printf '%s\n' "$CATALOG_OUTPUT" | \
+            sed -n 's/^corsika_tables_revision=//p')
+          test -n "$CORSIKA_TABLES_REF"
+          test -n "$CORSIKA_TABLES_REVISION"
+          echo "CORSIKA_TABLES_REF=$CORSIKA_TABLES_REF" >> "$GITHUB_ENV"
+          echo "CORSIKA_TABLES_REVISION=$CORSIKA_TABLES_REVISION" >> "$GITHUB_ENV"
+          echo "version=$CORSIKA_TABLES_REVISION" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
@@ -154,8 +160,15 @@ jobs:
                 -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
                 -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
                 -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-                clone --depth 1 --branch "$CORSIKA_TABLES" "$repo_url" "$CLONE_DIR"
+                clone --depth 1 "$repo_url" "$CLONE_DIR"
               then
+                if ! git -C "$CLONE_DIR" fetch --depth 1 origin "$CORSIKA_TABLES_REVISION" || \
+                  ! git -C "$CLONE_DIR" checkout --detach "$CORSIKA_TABLES_REVISION"
+                then
+                  echo "Could not check out $CORSIKA_TABLES_REVISION from $repo_url."
+                  rm -rf "$CLONE_DIR"
+                  continue
+                fi
                 git lfs install
                 if ! (cd "$CLONE_DIR" && git "${GIT_CLONE_ARGS[@]}" lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
                   echo "Git LFS pull failed for $repo_url."
@@ -164,7 +177,7 @@ jobs:
                 fi
                 rm -rf "$CACHE_DIR"
                 mv "$CLONE_DIR" "$CACHE_DIR"
-                echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES from $repo_url."
+                echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES_REF at $CORSIKA_TABLES_REVISION from $repo_url."
                 CLONE_SUCCESS=true
                 break
               fi
@@ -182,12 +195,12 @@ jobs:
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES and no cache is available."
+            echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES_REF and no cache is available."
             exit 1
           fi
 
           if [ "$CLONE_SUCCESS" = false ]; then
-            echo "All repository clones failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
+            echo "All repository clones failed; using cached CORSIKA interaction tables $CORSIKA_TABLES_REF."
           fi
 
       - name: Save cached CORSIKA interaction tables
@@ -351,10 +364,8 @@ jobs:
   prepare_test_resources:
     name: download test resources
     runs-on: ubuntu-24.04
-    env:
-      SIMTOOLS_TESTS_BRANCH: "main"
     outputs:
-      test_resources_tag: ${{ steps.test_resources.outputs.tag }}
+      test_resources_version: ${{ steps.test_resources.outputs.resource_version }}
 
     defaults:
       run:
@@ -371,18 +382,23 @@ jobs:
       - name: Set test resource version
         id: test_resources
         run: |
-          test -n "$SIMTOOLS_TESTS_TAG"
+          test -n "$SIMTOOLS_TESTS_REF"
+          test -n "$SIMTOOLS_TESTS_REVISION"
+          test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
           test -n "$SIMTOOLS_TESTS_REPOSITORY"
-          echo "tag=$SIMTOOLS_TESTS_TAG" >> "$GITHUB_OUTPUT"
-          echo "repository=$SIMTOOLS_TESTS_REPOSITORY" >> "$GITHUB_OUTPUT"
+          {
+            echo "resource_version=$SIMTOOLS_TESTS_RESOURCE_VERSION"
+            echo "revision=$SIMTOOLS_TESTS_REVISION"
+            echo "repository=$SIMTOOLS_TESTS_REPOSITORY"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Checkout test resources
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
-          ref: ${{ env.SIMTOOLS_TESTS_BRANCH }}
+          ref: ${{ steps.test_resources.outputs.revision }}
           path: simtools-tests
-          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.tag }}
+          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.resource_version }}
 
       - name: Upload test resources
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
@@ -429,7 +445,7 @@ jobs:
         run: |
           {
             echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
-            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/${{ needs.prepare_test_resources.outputs.test_resources_tag }}/integration_tests"
+            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/${{ needs.prepare_test_resources.outputs.test_resources_version }}/integration_tests"
           } >> "$GITHUB_ENV"
 
       - name: Download test resources
