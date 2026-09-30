@@ -5,6 +5,7 @@ from unittest import mock
 
 import numpy as np
 import pytest
+from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
@@ -58,6 +59,16 @@ def test_read_astropy_table_data_from_file(mock_read_table):
     mock_read_table.assert_called_once_with("test_file.ecsv", format="ascii.ecsv")
     np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
     np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
+
+
+def test_select_values_from_table_accepts_unitless_schema_value_for_unit_column():
+    table = Table({"altitude": [15.0, 30.0] * u.km, "extinction": [0.1, 0.2]})
+
+    selected = plot_tables._select_values_from_table(table, "altitude", 30.0)
+
+    assert len(selected) == 1
+    assert selected["altitude"].unit == u.km
+    np.testing.assert_allclose(selected["altitude"][0], 30.0)
 
 
 def test_read_ecsv_table_data_from_file(tmp_test_directory):
