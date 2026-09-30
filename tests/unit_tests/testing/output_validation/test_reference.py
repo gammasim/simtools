@@ -131,6 +131,20 @@ def test_ecsv_difference_report_is_compact_and_includes_paths(tmp_test_directory
     assert len(report.splitlines()) < 20
 
 
+def test_ecsv_difference_report_identifies_column_list_differences(tmp_test_directory):
+    """Report extra or reordered columns when comparing all ECSV columns."""
+    reference_file = Path(tmp_test_directory) / "reference.ecsv"
+    output_file = Path(tmp_test_directory) / "output.ecsv"
+    Table({"id": [1], "value": [2.0]}).write(reference_file, format="ascii.ecsv")
+    Table({"value": [2.0], "id": [1], "extra": [3]}).write(output_file, format="ascii.ecsv")
+
+    report = reference.difference_report(reference_file, output_file)
+
+    assert "columns differ:" in report
+    assert "differences:" in report
+    assert "none detected" not in report
+
+
 def test_reference_resolve_path_handles_absolute_and_repository_relative_paths():
     """Resolve absolute paths unchanged and relative paths from the repository root."""
     absolute = Path.cwd() / "reference.json"

@@ -101,10 +101,12 @@ def _export_parameter_file(app_context, model_reader, parameters):
         export_file_as_table=app_context.args["export_model_file_as_table"],
         dest=output_directory,
     )
-    source_file = output_directory / get_export_file_name(
-        parameter_info,
-        fallback_instrument=app_context.args.get("telescope"),
-    )
+    source_file = output_directory / get_export_file_name(parameter_info)
+    if not source_file.exists():
+        source_file = output_directory / get_export_file_name(
+            parameter_info,
+            fallback_instrument=app_context.args.get("telescope"),
+        )
     if not source_file.exists():
         source_file = output_directory / parameter_info["value"]
     model_output_file = (

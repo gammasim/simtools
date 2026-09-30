@@ -272,11 +272,16 @@ def _ecsv_difference_report(
     if len(reference) != len(generated):
         report.append(f"row count differs: reference={len(reference)}, generated={len(generated)}")
 
-    differences = [
+    differences = []
+    if columns is None and reference.colnames != generated.colnames:
+        differences.append(
+            f"columns differ: reference={reference.colnames}, generated={generated.colnames}"
+        )
+    differences.extend(
         difference
         for column in selected
         for difference in _ecsv_column_differences(reference, generated, column, tolerance)
-    ]
+    )
 
     if metadata and reference.meta != generated.meta:
         differences.append("metadata differs")
