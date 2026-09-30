@@ -183,6 +183,19 @@ def test_resolve_prepared_resource_paths(tmp_test_directory):
     }
 
 
+def test_resolve_prepared_resource_paths_handles_lists_and_scalars(tmp_test_directory):
+    prepared_resources_path = Path(tmp_test_directory) / "prepared-resources"
+    resolved = configuration.resolve_prepared_resource_paths(
+        ["${prepared:array_layouts.json}", None, 42], prepared_resources_path
+    )
+
+    assert resolved == [
+        str(prepared_resources_path.resolve() / "array_layouts.json"),
+        None,
+        42,
+    ]
+
+
 @pytest.mark.parametrize("path", ["${prepared:/absolute.json}", "${prepared:../outside.json}"])
 def test_resolve_prepared_resource_paths_rejects_invalid_paths(tmp_test_directory, path):
     with pytest.raises(ValueError, match="Invalid prepared-resource path"):
