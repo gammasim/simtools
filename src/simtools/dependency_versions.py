@@ -19,7 +19,8 @@ SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
-SOURCE_REF_INVALID_CHARACTERS = re.compile(r"[ ~^:?*\\[\\\\]")
+SOURCE_REF_INVALID_CHARACTERS = re.compile(r"[ ~^:?*\[\\]")
+CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 
 
 def _corsika_tag(component):
@@ -236,11 +237,11 @@ def _validate_components(catalog, schema_version):
         if schema_version == "0.5.0"
         else interaction_tables.get("tag", interaction_tables.get("version"))
     )
-    ref_validator(interaction_ref, "CORSIKA interaction tables")
+    ref_validator(interaction_ref, CORSIKA_INTERACTION_TABLES_LABEL)
     require_revisions = schema_version in {"0.4.0", "0.5.0"}
     if schema_version == "0.5.0":
-        _validate_source_url(interaction_tables.get("source-url"), "CORSIKA interaction tables")
-        _validate_revision(interaction_tables.get("revision"), "CORSIKA interaction tables")
+        _validate_source_url(interaction_tables.get("source-url"), CORSIKA_INTERACTION_TABLES_LABEL)
+        _validate_revision(interaction_tables.get("revision"), CORSIKA_INTERACTION_TABLES_LABEL)
     _validate_corsika_components(
         catalog["corsika"], require_revisions, ref_validator, schema_version == "0.5.0"
     )
@@ -662,11 +663,10 @@ def dependency_catalog_environment(catalog):
                 ),
             }
         else:
-            tag_key = (
-                "SIMTOOLS_TESTS_TAG"
-                if catalog["schema_version"] in {"0.3.0", "0.4.0"}
-                else "SIMTOOLS_TESTS_VERSION"
-            )
+            if catalog["schema_version"] in {"0.3.0", "0.4.0"}:
+                tag_key = "SIMTOOLS_TESTS_TAG"
+            else:
+                tag_key = "SIMTOOLS_TESTS_VERSION"
             test_environment = {tag_key: _tests_tag(catalog["simtools-tests"])}
         environment.update(
             {
