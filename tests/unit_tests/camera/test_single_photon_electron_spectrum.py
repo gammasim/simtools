@@ -77,12 +77,10 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
 
 @patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.write_product_data")
-@patch("builtins.open", new_callable=MagicMock)
 def test_write_single_pe_spectrum(
-    mock_open, mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory
+    mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory
 ):
     mock_get_output_directory.return_value = tmp_test_directory / "output" / "directory"
-    mock_open.return_value.__enter__.return_value = MagicMock()
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
 
@@ -95,10 +93,30 @@ def test_write_single_pe_spectrum(
 """
     tmp_spe_spectrum.write_single_pe_spectrum()
 
-    mock_open.assert_called_once_with(
-        (tmp_test_directory / "output" / "directory" / "output_file.dat"), "w", encoding="utf-8"
+    mock_dump.assert_called_once_with(
+        output_file="output_file.ecsv",
+        output_file_format=None,
+        metadata=tmp_spe_spectrum.metadata,
+        product_data=mock_dump.call_args.kwargs["product_data"],
+        validate_schema_file=tmp_spe_spectrum.output_schema,
+        metadata_output_file=(tmp_test_directory / "output" / "directory" / "output_file.ecsv"),
     )
-    mock_dump.assert_called_once()
+    assert mock_dump.call_args.kwargs["product_data"].colnames == [
+        "amplitude",
+        "response",
+        "response_with_ap",
+    ]
+
+
+def test_get_output_columns_uses_model_parameter_schema(spe_spectrum):
+    assert spe_spectrum._get_output_columns() == ["amplitude", "response", "response_with_ap"]
+
+
+def test_write_single_pe_spectrum_rejects_unexpected_norm_spe_columns(spe_spectrum):
+    spe_spectrum.data = "0.0\t0.4694\n"
+
+    with pytest.raises(ValueError, match="expected 3 columns, got 2"):
+        spe_spectrum.write_single_pe_spectrum()
 
 
 @patch("simtools.job_execution.job_manager.submit")

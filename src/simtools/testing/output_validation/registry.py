@@ -22,9 +22,17 @@ def validate_reference(artifact, rule, _context):
         rule.get("filters"),
         rule.get("key_columns"),
     ):
+        report = reference.difference_report(
+            reference_file,
+            artifact.path,
+            rule.get("tolerance", 1.0e-5),
+            rule.get("columns"),
+            rule.get("metadata", False),
+            rule.get("filters"),
+            rule.get("key_columns"),
+        )
         raise AssertionError(
-            f"Output '{artifact.path}' differs from reference '{reference_file}'.\n"
-            f"{reference.difference_report(reference_file, artifact.path)}"
+            f"Output '{artifact.path}' differs from reference '{reference_file}'.\n{report}"
         )
 
 
