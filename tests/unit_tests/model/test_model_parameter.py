@@ -183,13 +183,23 @@ def test_load_simulation_software_parameter_ignores_repository_value_error(
     telescope_model_lst, mocker
 ):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker.patch.object(
+    existing = {"min_photons": {"value": 3}}
+    telescope_copy._simulation_config_parameters["corsika"] = existing.copy()
+    get_parameters = mocker.patch.object(
         telescope_copy.model_source,
         "get_simulation_configuration_parameters",
         side_effect=ValueError("missing configuration"),
     )
 
     telescope_copy._load_simulation_software_parameter_for_software("corsika")
+
+    assert telescope_copy.get_simulation_software_parameters("corsika") == existing
+    get_parameters.assert_called_once_with(
+        site=telescope_copy.site,
+        array_element_name=telescope_copy.name,
+        model_version=telescope_copy.model_version,
+        simulation_software="corsika",
+    )
 
 
 def test_load_simulation_software_parameter_preserves_preloaded_overrides(
@@ -1212,5 +1222,13 @@ def test_check_model_parameter_versions_allows_older_scalar_schema(mocker):
         "simtools.model.model_parameter.names.model_parameters",
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
-    mocker.patch("simtools.model.model_parameter.schema.validate_deprecation_and_version")
+    validate_schema = mocker.patch(
+        "simtools.model.model_parameter.schema.validate_deprecation_and_version"
+    )
     _check_model_parameter_versions(parameters, ignore_software_version=False)
+
+    validate_schema.assert_called_once_with(
+        data={"schema_version": "1.0.0"},
+        software_name=None,
+        ignore_software_version=False,
+    )
