@@ -202,9 +202,11 @@ def _numeric_ecsv_column_differences(column, reference_values, generated_values,
     mismatch_indices = np.flatnonzero(~equal)
     if mismatch_indices.size == 0:
         return []
-    maximum = np.nanmax(
-        np.abs(reference_values[mismatch_indices] - generated_values[mismatch_indices])
+    absolute_differences = np.abs(
+        reference_values[mismatch_indices] - generated_values[mismatch_indices]
     )
+    valid_differences = absolute_differences[~np.isnan(absolute_differences)]
+    maximum = np.max(valid_differences) if valid_differences.size else float("nan")
     return [
         (
             f"{column}: {len(mismatch_indices)} differing row(s), "
