@@ -281,3 +281,22 @@ def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": "not-a-number"}
         )
+
+
+@pytest.mark.parametrize("label", ["asum", "dsum"])
+@pytest.mark.parametrize("threshold", [7, 7.2, 7.4, 8, 9])
+def test_extract_threshold_preserves_decimals(tmp_test_directory, label, threshold):
+    file_path = tmp_test_directory / "events.hdf5"
+    _write_file_info_hdf5(file_path, f"gamma_run000001_{label}{threshold}.simtel.zst")
+    assert nsb_trigger_calculator.extract_threshold(file_path) == pytest.approx(threshold)
+
+
+def test_nsb_grouping_preserves_decimal_thresholds(tmp_test_directory):
+    parsed = []
+    for threshold in (7, 7.2, 7.4):
+        file_path = tmp_test_directory / f"gamma_asum{threshold}.hdf5"
+        _write_nsb_hdf5(file_path, n_showers=10, n_triggers=2, threshold=threshold)
+        parsed.append(nsb_trigger_calculator.parse_nsb_hdf5_file(file_path))
+    grouped = nsb_trigger_calculator.group_by_threshold_and_run(parsed)
+    assert set(grouped) == {7, 7.2, 7.4}
+    assert all(data[1]["triggers"] == 2 for data in grouped.values())

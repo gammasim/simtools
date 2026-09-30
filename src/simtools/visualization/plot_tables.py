@@ -345,7 +345,7 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
     proton_stats : dict
         Proton statistics by threshold.
     config : dict
-        Plot configuration with title, ymin, and ymax.
+        Plot configuration with title, ymin, ymax, and scaling_factor.
     output_path : Path or str
         Output path for plot image.
     trigger_threshold : float, optional
@@ -355,7 +355,8 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
 
     _plot_nsb_curve(axis, nsb_stats)
     _plot_proton_curve(axis, proton_stats)
-    _plot_scaled_proton_curve(axis, proton_stats)
+    scaling_factor = config.get("scaling_factor", 1.35)
+    _plot_scaled_proton_curve(axis, proton_stats, scaling_factor)
 
     # Add vertical line at trigger threshold if provided (before legend creation)
     if trigger_threshold is not None:
@@ -421,8 +422,8 @@ def _plot_proton_curve(axis, proton_stats):
     _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
 
 
-def _plot_scaled_proton_curve(axis, proton_stats):
-    """Plot 1.35 * proton trigger rates for bias curve intersection."""
+def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
+    """Plot scaled proton trigger rates for bias curve intersection."""
     if not proton_stats:
         return
 
@@ -430,16 +431,16 @@ def _plot_scaled_proton_curve(axis, proton_stats):
     proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
     proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
 
-    # Scale by 1.35
-    scaled_proton_rates = [1.35 * r for r in proton_rates]
-    scaled_proton_errors = [1.35 * e for e in proton_errors]
+    # Scale by the provided scaling factor
+    scaled_proton_rates = [scaling_factor * r for r in proton_rates]
+    scaled_proton_errors = [scaling_factor * e for e in proton_errors]
 
     axis.errorbar(
         proton_thresholds,
         scaled_proton_rates,
         yerr=scaled_proton_errors,
         fmt="^",
-        label="1.35 x Proton",
+        label=f"{scaling_factor} x Proton",
         color="tab:red",
         capsize=3,
     )
@@ -449,21 +450,40 @@ def _plot_scaled_proton_curve(axis, proton_stats):
 
 def _plot_log_linear_trend(axis, thresholds, rates, color):
     """Plot a log-linear trend line when at least two positive rates are available."""
-    if len(thresholds) < 2:
+    fit = fit_bias_curve(thresholds, rates)
+    if fit is None:
         return
-
-    valid_mask = np.array(rates) > 0
-    if np.sum(valid_mask) < 2:
-        return
-
-    fit_thresholds = np.array(thresholds)[valid_mask]
-    fit_rates = np.array(rates)[valid_mask]
-
-    coeffs = np.polyfit(fit_thresholds, np.log10(fit_rates), 1)
+    fit_thresholds, coeffs = fit
     x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
     y_fit = 10 ** (coeffs[0] * x_fit + coeffs[1])
 
     axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
+
+
+def fit_bias_curve(thresholds, rates):
+    """
+    Fit log10(rate) as a linear function of threshold.
+
+    Parameters
+    ----------
+    thresholds : array-like
+        Trigger thresholds.
+    rates : array-like
+        Trigger rates; only finite positive values are used.
+
+    Returns
+    -------
+    tuple or None
+        Valid thresholds and fit coefficients (slope, intercept), or None if
+        fewer than two distinct finite thresholds have positive finite rates.
+    """
+    thresholds = np.asarray(thresholds, dtype=float)
+    rates = np.asarray(rates, dtype=float)
+    valid = np.isfinite(thresholds) & np.isfinite(rates) & (rates > 0)
+    fit_thresholds = thresholds[valid]
+    if len(np.unique(fit_thresholds)) < 2:
+        return None
+    return fit_thresholds, np.polyfit(fit_thresholds, np.log10(rates[valid]), 1)
 
 
 def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):

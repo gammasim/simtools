@@ -357,8 +357,8 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     """
     Calculate trigger threshold from bias curve intersection.
 
-    Trigger threshold is calculated as the intersection between NSB curve and
-    scaled proton curve (using the scaling factor from args).
+    Trigger threshold is the intersection of the log-linear fits to the NSB and
+    scaled proton rates, within their shared threshold range.
 
     Parameters
     ----------
@@ -379,96 +379,41 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     ValueError
         If no valid threshold points exist or intersection cannot be found.
     """
-    # Get all unique thresholds from both NSB and proton stats
-    thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
-    # Extract rates for each threshold
-    nsb_rates = []
-    proton_rates = []
-    for threshold in thresholds:
-        nsb_rate = nsb_stats[threshold]["rate_hz"] if threshold in nsb_stats else np.nan
-        proton_rate = proton_stats[threshold]["rate_hz"] if threshold in proton_stats else np.nan
-        nsb_rates.append(nsb_rate)
-        proton_rates.append(proton_rate)
-    nsb_rates = np.array(nsb_rates)
-    proton_rates = np.array(proton_rates)
-    thresholds = np.array(thresholds)
-
-    # Remove NaN values (keep only thresholds where both NSB and proton data exist)
-    valid_mask = ~(np.isnan(nsb_rates) | np.isnan(proton_rates))
-    nsb_rates = nsb_rates[valid_mask]
-    proton_rates = proton_rates[valid_mask]
-    thresholds = thresholds[valid_mask]
-
-    if len(thresholds) == 0:
-        raise ValueError(
-            "No valid threshold points with both NSB and proton data. "
-            "Cannot calculate trigger threshold."
-        )
-    # Scale proton rates to account for ions we didn't simulate
     scaling_factor = args.get("scaling_factor", 1.35)
-    scaled_proton_rates = scaling_factor * proton_rates
-    trigger_threshold = _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates)
-    if trigger_threshold is not None:
-        _logger.info(f"Calculated trigger threshold: {trigger_threshold}")
-        return trigger_threshold
-    raise ValueError("Could not find intersection point between NSB and scaled proton curves.")
+    fits = []
+    for stats, scale in ((nsb_stats, 1.0), (proton_stats, scaling_factor)):
+        thresholds = sorted(stats)
+        fit = plot_tables.fit_bias_curve(
+            thresholds, [scale * stats[threshold]["rate_hz"] for threshold in thresholds]
+        )
+        if fit is None:
+            raise ValueError("At least two finite positive rates per curve are required.")
+        fits.append(fit)
 
+    nsb_thresholds, nsb_fit = fits[0]
+    proton_thresholds, proton_fit = fits[1]
+    slope_difference = nsb_fit[0] - proton_fit[0]
+    if np.isclose(slope_difference, 0):
+        raise ValueError("Could not find intersection point between parallel fitted curves.")
 
-def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
-    """
-    Find the threshold value where NSB trigger rate intersects with scaled proton trigger rate.
-
-    Uses linear interpolation between the two data points that bracket the intersection.
-
-    Parameters
-    ----------
-    thresholds : numpy.ndarray
-        Threshold values from bias curve.
-    nsb_rates : numpy.ndarray
-        NSB trigger rates at each threshold.
-    scaled_proton_rates : numpy.ndarray
-        Scaled proton trigger rates at each threshold.
-
-    Returns
-    -------
-    float or None
-        Threshold value at intersection point, or None if no intersection found.
-    """
-    # Sort by threshold to ensure ordering
-    sort_idx = np.argsort(thresholds)
-    x = thresholds[sort_idx]
-    y_nsb = nsb_rates[sort_idx]
-    y_proton = scaled_proton_rates[sort_idx]
-
-    # Find where NSB crosses below scaled proton
-    # Look for: y_nsb[i] > y_proton[i] and y_nsb[i+1] <= y_proton[i+1]
-    for i in range(len(x) - 1):
-        if y_nsb[i] > y_proton[i] and y_nsb[i + 1] <= y_proton[i + 1]:
-            # Found the bracket
-            x1, x2 = float(x[i]), float(x[i + 1])
-            y1_nsb, y2_nsb = float(y_nsb[i]), float(y_nsb[i + 1])
-            y1_proton, y2_proton = float(y_proton[i]), float(y_proton[i + 1])
-
-            # Linear interpolation
-            # At intersection: y1_nsb + t*(y2_nsb-y1_nsb) = y1_proton + t*(y2_proton-y1_proton)
-            # Solve for t: t = (y1_proton - y1_nsb) / ((y2_nsb - y1_nsb) - (y2_proton - y1_proton))
-            numerator = y1_proton - y1_nsb
-            denominator = (y2_nsb - y1_nsb) - (y2_proton - y1_proton)
-            t = numerator / denominator
-            # Clamp t to [0, 1] to stay within bracket
-            t = max(0.0, min(1.0, t))
-            return x1 + t * (x2 - x1)
-
-    _logger.debug("No intersection found")
-    return None
+    trigger_threshold = (proton_fit[1] - nsb_fit[1]) / slope_difference
+    lower = max(min(nsb_thresholds), min(proton_thresholds))
+    upper = min(max(nsb_thresholds), max(proton_thresholds))
+    if not lower <= trigger_threshold <= upper:
+        raise ValueError(
+            "Could not find intersection point between NSB and scaled proton fitted curves "
+            "within their shared threshold range."
+        )
+    _logger.info(f"Calculated trigger threshold: {trigger_threshold}")
+    return float(trigger_threshold)
 
 
 def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
     """
     Export trigger threshold as a model parameter.
 
-    Determines whether to use asum_threshold or dsum_threshold based on the
-    telescope's default_trigger parameter.
+    Determines whether to use asum_threshold, dsum_threshold, or discriminator_threshold
+    based on the telescope's default_trigger parameter.
 
     Parameters
     ----------
@@ -503,6 +448,11 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
             # dsum_threshold expects int64 in counts
             value = round(trigger_threshold)
             unit = "count"
+        elif default_trigger == "Majority":
+            parameter_name = "discriminator_threshold"
+            # discriminator_threshold expects float64 in mV
+            value = round(trigger_threshold, 2)
+            unit = "mV"
         else:
             _logger.warning(
                 f"Unknown default_trigger '{default_trigger}' for telescope {telescope_name}. "

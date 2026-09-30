@@ -27,7 +27,12 @@ The input files can be generated using `simtools-generate-bias-curve-submissions
 
 ### Notes
 
-- The trigger threshold is calculated as the intersection between the NSB trigger rate curve and the scaled proton trigger rate curve (scaled by `scaling_factor`).
+- The trigger threshold is the intersection of the log-linear fits shown on the plot
+  for NSB and proton rates scaled by `scaling_factor`. Each fit uses its finite,
+  positive rates and requires at least two distinct thresholds. The intersection
+  must fall within the threshold range shared by both fits.
+- Threshold labels in the HDF5 `FILE_INFO` filenames preserve decimal values
+  such as `asum7.2` and `asum7.4` as separate simulation points.
 - The exported model parameter (`asum_threshold` or `dsum_threshold`) is written to the standard model data output directory under `<telescope>/<parameter_name>/`.
 - If no intersection point is found, the application raises an error.
 

@@ -11,7 +11,7 @@ from astropy.table import Table
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
-_THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
+_THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+(?:\.\d+)?)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 
 
@@ -53,7 +53,8 @@ def extract_threshold(file_path):
 
     match = _THRESHOLD_RE.search(simtel_path)
     if match:
-        return int(match.group("threshold"))
+        threshold = float(match.group("threshold"))
+        return int(threshold) if threshold.is_integer() else threshold
 
     _logger.warning(f"Could not extract threshold from FILE_INFO in {file_path}")
     return None
