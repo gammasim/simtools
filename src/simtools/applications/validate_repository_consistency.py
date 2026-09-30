@@ -97,7 +97,11 @@ def _product_file(
     product_data = product.get("data", {})
     model = product_data.get("model", {}) if isinstance(product_data, dict) else {}
     model_name = model.get("name") if isinstance(model, dict) else None
-    if isinstance(model_name, str) and model_name and Path(model_name).name == model_name:
+    if (
+        isinstance(model_name, str)
+        and model_name not in {"", ".", ".."}
+        and Path(model_name).name == model_name
+    ):
         product_files.append(metadata_file.parent / model_name / filename)
 
     for product_file in product_files:
