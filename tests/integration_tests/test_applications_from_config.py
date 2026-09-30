@@ -384,8 +384,12 @@ def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):
     assert validation["reference"] == str(prepared_file)
 
 
-@pytest.mark.parametrize("output_file", ["../outside.json", "/tmp/outside.json"])
-def test_prepare_model_parameter_inputs_rejects_escaping_output_file(output_file):
+@pytest.mark.parametrize("output_file", ["../outside.json", "absolute"])
+def test_prepare_model_parameter_inputs_rejects_escaping_output_file(
+    tmp_test_directory, output_file
+):
     """Reject preparation output files outside the temporary resource directory."""
+    if output_file == "absolute":
+        output_file = str((Path(tmp_test_directory) / "outside.json").resolve())
     with pytest.raises(ValueError, match="must stay within"):
         _validate_preparation_output_file(output_file)
