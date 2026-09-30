@@ -34,6 +34,48 @@ def test_validates_product_references_and_allows_identical_product_ids(tmp_path)
     )
 
 
+def test_validates_product_in_declared_model_directory(tmp_path):
+    (tmp_path / "input").mkdir()
+    output_directory = tmp_path / "output" / "workflow"
+    product_directory = output_directory / "pm_photoelectron_spectrum"
+    product_directory.mkdir(parents=True)
+    (product_directory / "spectrum.ecsv").write_text("data\n", encoding="utf-8")
+    (output_directory / "spectrum.meta.yml").write_text(
+        "cta:\n"
+        "  product:\n"
+        "    filename: spectrum.ecsv\n"
+        "    id: spectrum\n"
+        "    data:\n"
+        "      model:\n"
+        "        name: pm_photoelectron_spectrum\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_repository_consistency.validate_repository_consistency(
+            tmp_path, [Path("output")], Path("input")
+        )
+        == []
+    )
+
+
+def test_malformed_product_data_does_not_crash_validation(tmp_path):
+    input_directory = tmp_path / "input"
+    input_directory.mkdir()
+    (input_directory / "product.ecsv").write_text("data\n", encoding="utf-8")
+    (input_directory / "product.ecsv.meta.yml").write_text(
+        "cta:\n  product:\n    filename: product.ecsv\n    id: product\n    data: malformed\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        validate_repository_consistency.validate_repository_consistency(
+            tmp_path, [Path("input")], Path("input")
+        )
+        == []
+    )
+
+
 def test_rejects_missing_scan_roots(tmp_path):
     errors = validate_repository_consistency.validate_repository_consistency(
         tmp_path, [Path("input")], Path("workflows")
