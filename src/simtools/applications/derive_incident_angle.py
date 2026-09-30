@@ -23,7 +23,7 @@ _ARGUMENTS = (
         action="store_true",
         default=False,
     ),
-    cli.RAY_TRACING_ZENITH_ANGLE,
+    cli.RAY_TRACING_ZENITH_ANGLE(default=0 * u.deg),
     cli.OFF_AXIS_ANGLES,
     cli.SOURCE_DISTANCE,
     cli.NUMBER_OF_PHOTONS,
