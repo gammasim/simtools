@@ -19,6 +19,49 @@ import numpy as np
 _logger = logging.getLogger(__name__)
 
 
+def cleanup_intermediate_files(output_dir, patterns=(), *, files=(), directories=(), exclude=()):
+    """Remove selected intermediate files and then selected empty directories.
+
+    Parameters
+    ----------
+    output_dir : str or pathlib.Path
+        Directory in which to match glob patterns.
+    patterns : iterable of str, optional
+        File patterns relative to output_dir. No patterns are selected by default.
+    files : iterable of pathlib.Path, optional
+        Explicit file paths to remove, independent of output_dir.
+    directories : iterable of pathlib.Path, optional
+        Explicit directories to remove only when empty, deepest first.
+    exclude : iterable of pathlib.Path, optional
+        Paths to preserve even when selected by a pattern or explicit list.
+
+    Returns
+    -------
+    int
+        Number of files removed. Missing files are ignored.
+    """
+    selected = {Path(path) for path in files}
+    for pattern in patterns:
+        selected.update(Path(output_dir).glob(pattern))
+    selected.difference_update(Path(path) for path in exclude)
+    empty_directories = {Path(path) for path in directories} | {
+        path for path in selected if path.is_dir() and not path.is_symlink()
+    }
+    empty_directories.difference_update(Path(path) for path in exclude)
+    removed = 0
+    for path in selected:
+        if path.is_file() or path.is_symlink():
+            path.unlink(missing_ok=True)
+            removed += 1
+            _logger.debug("Removed: %s", path)
+    for directory in sorted(empty_directories, key=lambda path: len(path.parts), reverse=True):
+        if directory.is_dir() and not directory.is_symlink() and not any(directory.iterdir()):
+            directory.rmdir()
+    if removed:
+        _logger.info("Cleanup: removed %s intermediate files", removed)
+    return removed
+
+
 def is_url(url):
     """
     Check if a string is a valid URL.
