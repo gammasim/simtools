@@ -149,14 +149,8 @@ def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, 
     assert shape_type.value == 3
 
 
-def test_get_single_mirror_parameters_ecsv(mirror_template_ecsv):
-    mirrors = mirror_template_ecsv
-    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
-
-
 def test_get_single_mirror_parameters(mirror_template_ecsv):
-    mirrors = mirror_template_ecsv
-    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
+    assert_mirror_parameters(*mirror_template_ecsv.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
 def test_get_single_mirror_parameters_wrong_id(mirror_template_ecsv):

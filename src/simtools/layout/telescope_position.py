@@ -2,6 +2,7 @@
 
 import functools
 import logging
+import math
 
 import astropy.units as u
 import numpy as np
@@ -469,10 +470,8 @@ class TelescopePosition:
             return False
 
         try:
-            return (
-                self.crs[crs_name]["zz"]["value"] is not np.nan
-                and self.crs[crs_name]["zz"]["value"] is not None
-            )
+            altitude = self.crs[crs_name]["zz"]["value"]
+            return altitude is not None and not math.isnan(altitude)
         except KeyError as e:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystemErrorError from e

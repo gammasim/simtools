@@ -147,6 +147,28 @@ def test_group_by_threshold_and_run():
     }
 
 
+def test_group_by_threshold_and_run_rejects_duplicate_runs():
+    with pytest.raises(ValueError, match=r"Duplicate NSB input.*first\.hdf5.*second\.hdf5"):
+        nsb_trigger_calculator.group_by_threshold_and_run(
+            [
+                {
+                    "threshold": 220,
+                    "run": 1,
+                    "triggers": 10,
+                    "events": 100,
+                    "file_path": "first.hdf5",
+                },
+                {
+                    "threshold": 220,
+                    "run": 1,
+                    "triggers": 20,
+                    "events": 100,
+                    "file_path": "second.hdf5",
+                },
+            ]
+        )
+
+
 def test_calculate_statistics_with_multiple_runs():
     stats = nsb_trigger_calculator.calculate_statistics(
         {

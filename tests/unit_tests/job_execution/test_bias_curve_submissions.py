@@ -68,7 +68,7 @@ def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_
     [
         ("AnalogSum", "asum_threshold"),
         ("DigitalSum", "dsum_threshold"),
-        ("Majority", "dsum_threshold"),
+        ("Majority", "discriminator_threshold"),
     ],
 )
 def test_threshold_parameter_is_chosen_from_telescope_model(
@@ -93,6 +93,7 @@ def test_threshold_parameter_is_chosen_from_telescope_model(
             [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
         ),
         ("dsum_threshold", [22, 23, 24, 25, 26, 27, 28, 29, 30]),
+        ("discriminator_threshold", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     ],
 )
 def test_threshold_values_use_parameter_defaults(threshold_param, expected_values):

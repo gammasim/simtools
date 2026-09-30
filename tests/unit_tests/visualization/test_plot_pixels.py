@@ -125,6 +125,7 @@ def test_plot_camera_components_uses_requested_layout_version(mock_save, mock_pl
         site="North",
         array_element_name="LSTN-01",
         parameter_version="2.0.0",
+        model_version="6.0.0",
     )
     assert model_reader.get_parameter_table.call_args_list[0].args[0]["value"] == (
         "historical.ecsv"

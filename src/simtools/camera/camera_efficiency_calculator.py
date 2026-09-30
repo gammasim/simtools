@@ -341,7 +341,22 @@ class CameraEfficiencyCalculator:
         self.skip_correction = skip_correction_to_nsb_spectrum
 
     def calculate(self):
-        """Return the stable wavelength result table used by ``CameraEfficiency``."""
+        """Return wavelength results using the secant airmass approximation.
+
+        The approximation is defined for zenith angles from 0 degrees inclusive to
+        90 degrees exclusive. It is intended for moderate zenith angles; accuracy
+        degrades near the horizon.
+
+        Raises
+        ------
+        ValueError
+            If the zenith angle is non-finite or outside [0, 90) degrees.
+        """
+        if not np.isfinite(self.zenith_angle) or not 0.0 <= self.zenith_angle < 90.0:
+            raise ValueError(
+                "zenith_angle must be finite and in the range [0, 90) degrees for "
+                "the secant airmass approximation."
+            )
         wavelengths = _WAVELENGTHS.copy()
         airmass = 1.0 / np.cos(np.deg2rad(self.zenith_angle))
         optical = self._optical_efficiency(wavelengths)
