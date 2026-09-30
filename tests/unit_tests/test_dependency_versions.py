@@ -118,6 +118,15 @@ def test_catalog_reads_legacy_corsika_fields():
     assert dependency_versions.validate_dependency_catalog(catalog) == catalog
 
 
+def test_legacy_catalog_rejects_invalid_model_release_tag():
+    """Report the release-tag validation error for pre-0.5 catalogs."""
+    catalog = _legacy_catalog()
+    catalog["model-repository"]["default-version"] = "not-a-release-tag"
+
+    with pytest.raises(ValueError, match="Invalid simulation-model release tags"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
 def test_schema_0_5_requires_source_revisions(simtools_root_path):
     """Require immutable source revisions in the current catalog schema."""
     catalog = _load_catalog(simtools_root_path)
