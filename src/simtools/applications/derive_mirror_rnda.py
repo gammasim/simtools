@@ -7,7 +7,7 @@ from pathlib import Path
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
-from simtools.ray_tracing.psf_parameter_optimisation import cleanup_intermediate_files
+from simtools.utils.general import cleanup_intermediate_files
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -99,7 +99,7 @@ def main():
 
     if app_context.args.get("cleanup"):
         output_dir = Path(app_context.args.get("output_path", "."))
-        cleanup_intermediate_files(output_dir)
+        cleanup_intermediate_files(output_dir, patterns=("*.log", "*.lis*", "*.dat"))
 
 
 if __name__ == "__main__":
