@@ -197,7 +197,6 @@ def _numeric_ecsv_column_differences(column, reference_values, generated_values,
         reference_values,
         generated_values,
         rtol=tolerance,
-        atol=0.0,
         equal_nan=True,
     )
     mismatch_indices = np.flatnonzero(~equal)
