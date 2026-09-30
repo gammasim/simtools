@@ -70,7 +70,7 @@ def calculator(mock_models, config_data, tmp_test_directory):
 
 
 def test_initialization(calculator, config_data):
-    assert calculator.zenith_angle_deg == pytest.approx(20)
+    assert calculator.zenith_angle_deg == pytest.approx(0)
     assert calculator.config_data == config_data
     assert calculator.output_dir.is_dir()
     assert calculator.results is None
@@ -145,6 +145,14 @@ def test_mirror_angles_follow_model(mock_models, config_data, tmp_test_directory
     mock_models.tel.get_parameter_value.return_value = mirror_class
     calculator = IncidentAnglesCalculator(config_data, tmp_test_directory)
     assert calculator.calculate_primary_secondary_angles is (mirror_class == 2)
+
+
+@pytest.mark.parametrize(("arguments", "expected"), [([], 0), (["--zenith_angle", "40"], 40)])
+def test_zenith_angle_cli_default_and_override(arguments, expected):
+    from simtools.applications.derive_incident_angle import APPLICATION
+
+    args = APPLICATION.build_parser().parse_args(arguments)
+    assert args.zenith_angle.to_value(u.deg) == pytest.approx(expected)
 
 
 def test_mirror_angle_cli_option_removed():
