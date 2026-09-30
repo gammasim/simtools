@@ -171,7 +171,12 @@ def _read_parameter_dict_from_model_repository(table_config, model_reader=None):
 
 def _select_values_from_table(table, column_name, value):
     """Return a table with only the rows where column_name == value."""
-    return table[np.isclose(table[column_name], value)]
+    column = table[column_name]
+    if getattr(column, "unit", None) is not None:
+        if hasattr(value, "to_value"):
+            value = value.to_value(column.unit)
+        return table[np.isclose(column.value, value)]
+    return table[np.isclose(column, value)]
 
 
 def _filter_config_by_plot_type(config, plot_type):
