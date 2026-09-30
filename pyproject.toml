@@ -20,6 +20,7 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dynamic = [
@@ -152,6 +153,7 @@ scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fo
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
+scripts.simtools-validate-repository-consistency = "simtools.applications.validate_repository_consistency:main"
 scripts.simtools-write-production-metadata = "simtools.applications.write_production_metadata:main"
 scripts.simtools-write-reduced-event-lists = "simtools.applications.write_reduced_event_lists:main"
 scripts.simtools-write-trigger-histograms = "simtools.applications.write_trigger_histograms:main"

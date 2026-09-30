@@ -152,9 +152,8 @@ def get_cosmic_ray_spectrum(primary_particle=None, cr_spectrum_file=None):
     Return the cosmic-ray spectrum to use for trigger rate calculations.
 
     If a YAML spectrum file is provided, the spectrum is loaded from that file.
-    Otherwise, the spectrum is selected based on the primary particle name. If the
-    particle is not found in the default map, a warning is logged and the proton
-    spectrum is used as a fallback.
+    Otherwise, the spectrum is selected based on the primary particle name. An
+    explicit spectrum file is required when the primary particle is not supported.
 
     Parameters
     ----------
@@ -171,17 +170,13 @@ def get_cosmic_ray_spectrum(primary_particle=None, cr_spectrum_file=None):
     if cr_spectrum_file is not None:
         return _load_spectrum_from_file(cr_spectrum_file)
 
-    if primary_particle is not None:
-        spectrum = PARTICLE_SPECTRUM_MAP.get(primary_particle)
-        if spectrum is None:
-            _logger.warning(
-                f"No default spectrum for primary particle '{primary_particle}'. "
-                "Falling back to IRFDOC_PROTON_SPECTRUM."
-            )
-            return IRFDOC_PROTON_SPECTRUM
-        return spectrum
-
-    return IRFDOC_PROTON_SPECTRUM
+    spectrum = PARTICLE_SPECTRUM_MAP.get(primary_particle)
+    if spectrum is None:
+        raise ValueError(
+            f"No default cosmic-ray spectrum is available for primary particle "
+            f"{primary_particle!r}; provide cr_spectrum_file explicitly."
+        )
+    return spectrum
 
 
 def _load_spectrum_from_file(yaml_path):
