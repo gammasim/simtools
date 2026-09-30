@@ -626,8 +626,8 @@ def test_plot_bias_curves_saves_and_closes_figure(
 
     mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
     mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
-    mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
-    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats)
+    mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
     mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
@@ -862,3 +862,18 @@ def test_plot_bias_curves_without_trigger_threshold(
     )
 
     mock_axis.axvline.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "rates"), [([7], [10]), ([7, 7], [10, 20]), ([7, 8], [0, -1])]
+)
+def test_fit_bias_curve_insufficient_points(thresholds, rates):
+    assert plot_tables.fit_bias_curve(thresholds, rates) is None
+
+
+def test_fit_bias_curve_filters_invalid_points():
+    thresholds, coefficients = plot_tables.fit_bias_curve(
+        [7, 7.2, 8, 9, 10, np.inf], [100, 0, 10, np.nan, np.inf, 1]
+    )
+    assert thresholds == pytest.approx([7, 8])
+    assert coefficients == pytest.approx([-1, 9])
