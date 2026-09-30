@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790751455498,
+  "lastUpdate": 1790753403513,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -28342,6 +28342,48 @@ window.BENCHMARK_DATA = {
             "value": 426.1796875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c8304c43163b2c5db8649a876afa70288efb4e8d",
+          "message": "Build-kit cache (#2577)",
+          "timestamp": "2026-09-30T09:16:14+02:00",
+          "tree_id": "7d447014af530380e10f0bdd6aa0540547c053b2",
+          "url": "https://github.com/gammasim/simtools/commit/c8304c43163b2c5db8649a876afa70288efb4e8d"
+        },
+        "date": 1790753388149,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 42.45420690599997,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 41.699999999999996,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 428.00390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
