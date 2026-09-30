@@ -81,6 +81,7 @@ def _metadata_product(metadata_file, relative_metadata):
 
 def _product_file(
     metadata_file,
+    product,
     filename,
     repository,
     tracked,
@@ -92,13 +93,24 @@ def _product_file(
     if not isinstance(filename, str) or not filename or Path(filename).name != filename:
         return None, (f"{relative_metadata}: filename must name a file beside the metadata")
 
-    product_file = metadata_file.parent / filename
-    relative_product = product_file.relative_to(repository)
-    if not product_file.is_file() or (tracked is not None and relative_product not in tracked):
-        return None, (
-            f"{relative_metadata}: product file is missing or untracked: {relative_product}"
-        )
-    return product_file, None
+    product_files = [metadata_file.parent / filename]
+    product_data = product.get("data", {})
+    model = product_data.get("model", {}) if isinstance(product_data, dict) else {}
+    model_name = model.get("name") if isinstance(model, dict) else None
+    if (
+        isinstance(model_name, str)
+        and model_name not in {"", ".", ".."}
+        and Path(model_name).name == model_name
+    ):
+        product_files.append(metadata_file.parent / model_name / filename)
+
+    for product_file in product_files:
+        relative_product = product_file.relative_to(repository)
+        if product_file.is_file() and (tracked is None or relative_product in tracked):
+            return product_file, None
+
+    relative_product = product_files[0].relative_to(repository)
+    return None, (f"{relative_metadata}: product file is missing or untracked: {relative_product}")
 
 
 def _validate_metadata_file(metadata_file, repository, tracked):
@@ -113,6 +125,7 @@ def _validate_metadata_file(metadata_file, repository, tracked):
 
     product_file, error = _product_file(
         metadata_file,
+        product,
         filename,
         repository,
         tracked,
