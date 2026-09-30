@@ -387,8 +387,8 @@ jobs:
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
           test -n "$SIMTOOLS_TESTS_REPOSITORY"
           {
+            echo "ref=$SIMTOOLS_TESTS_REF"
             echo "resource_version=$SIMTOOLS_TESTS_RESOURCE_VERSION"
-            echo "revision=$SIMTOOLS_TESTS_REVISION"
             echo "repository=$SIMTOOLS_TESTS_REPOSITORY"
           } >> "$GITHUB_OUTPUT"
 
@@ -396,7 +396,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
-          ref: ${{ steps.test_resources.outputs.revision }}
+          ref: ${{ steps.test_resources.outputs.ref }}
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.resource_version }}
 
