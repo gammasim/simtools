@@ -314,6 +314,9 @@ class MetadataCollector:
 
         for metadata in input_metadata:
             try:  # wide try..except as for some cases we expect that there is no product metadata
+                if not isinstance(metadata, Mapping):
+                    raise TypeError
+                metadata = dict(metadata)
                 reduced_product_meta = {
                     key: value
                     for key, value in metadata[self.observatory]["product"].items()
