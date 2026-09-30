@@ -164,6 +164,31 @@ plot:
     }
 
 
+def test_resolve_prepared_resource_paths(tmp_test_directory):
+    prepared_resources_path = Path(tmp_test_directory) / "prepared-resources"
+    value = {
+        "input": "${prepared:array_layouts.json}",
+        "validation": {"reference": "${prepared:references/array_layouts.json}"},
+        "plain": "unchanged",
+    }
+
+    resolved = configuration.resolve_prepared_resource_paths(value, prepared_resources_path)
+
+    assert resolved == {
+        "input": str(prepared_resources_path.resolve() / "array_layouts.json"),
+        "validation": {
+            "reference": str(prepared_resources_path.resolve() / "references/array_layouts.json")
+        },
+        "plain": "unchanged",
+    }
+
+
+@pytest.mark.parametrize("path", ["${prepared:/absolute.json}", "${prepared:../outside.json}"])
+def test_resolve_prepared_resource_paths_rejects_invalid_paths(tmp_test_directory, path):
+    with pytest.raises(ValueError, match="Invalid prepared-resource path"):
+        configuration.resolve_prepared_resource_paths(path, tmp_test_directory)
+
+
 def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_string):
     config = {"model_version": "v1.0"}
     model_version = "v2.0"

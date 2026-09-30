@@ -266,6 +266,25 @@ def test_application_workflow_schema_accepts_resource_benchmark_exclusion():
     )
 
 
+def test_application_workflow_schema_accepts_model_parameter_preparation():
+    """Allow model-parameter preparation before an integration-test application."""
+    workflow_config = _output_validation_workflow({"type": "format", "format": "ecsv"})
+    workflow_config["applications"][0]["preparation"] = [
+        {
+            "application": "simtools-get-model-parameter",
+            "configuration": {
+                "parameter": "array_layouts",
+                "site": "North",
+            },
+        }
+    ]
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
 def test_application_workflow_schema_rejects_empty_resource_benchmark_exclusion():
     """Require a non-empty reason for a resource benchmark opt-out."""
     workflow_config = _output_validation_workflow()

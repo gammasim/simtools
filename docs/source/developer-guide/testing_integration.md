@@ -136,6 +136,28 @@ The resource generation and release workflow is documented in
 Use the current versioned resource set from `simtools-tests` for development,
 PR CI, and compatibility checks.
 
+### Prepared model parameters
+
+An integration test can prepare model-parameter inputs in its temporary directory instead of
+storing them in a versioned resource bundle. The `preparation` steps run first and may only use
+`simtools-get-model-parameter`. Refer to their outputs with `${prepared:path/to/file}` in the
+tested application's `configuration` or a validation reference.
+
+```yaml
+preparation:
+- application: simtools-get-model-parameter
+  configuration:
+    parameter: array_layouts
+    parameter_version: 2.0.2
+    site: North
+    output_file: array_layouts-2.0.2.json
+configuration:
+  array_layout_parameter_file: ${prepared:array_layouts-2.0.2.json}
+```
+
+Preparation outputs are isolated per test, are not added to `simtools-tests`, and cannot use
+absolute paths or `..` path segments.
+
 ## Validation
 
 Declare generated artifacts in `test_outputs`. Every declared artifact must

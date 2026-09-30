@@ -352,7 +352,8 @@ jobs:
     name: download test resources
     runs-on: ubuntu-24.04
     env:
-      SIMTOOLS_TESTS_BRANCH: "main"
+      # Temporary branch while obsolete v0.38.0 resources are removed.
+      SIMTOOLS_TESTS_BRANCH: "remove-obsolete-files"
     outputs:
       test_resources_tag: ${{ steps.test_resources.outputs.tag }}
 

@@ -115,6 +115,11 @@ definitions:
               description: "Short summary shown in generated documentation examples."
         configuration:
           "$ref": "#/definitions/configuration"
+        preparation:
+          type: array
+          minItems: 1
+          items:
+            "$ref": "#/definitions/preparation_application"
         integration_tests:
           type: array
           items:
@@ -140,6 +145,19 @@ definitions:
     type: object
     additionalProperties: true
     title: Configuration
+  preparation_application:
+    description: Application run before an integration test to create temporary input resources.
+    type: object
+    additionalProperties: false
+    properties:
+      application:
+        const: simtools-get-model-parameter
+        description: Retrieve a model parameter before the integration test.
+      configuration:
+        "$ref": "#/definitions/configuration"
+    required:
+      - application
+      - configuration
   integration_test:
     description: "List of integration tests."
     type: object

@@ -6,8 +6,15 @@ applications:
     summary: >-
       Validate externally generated array-layout definitions and write them with an updated
       parameter version.
+  preparation:
+  - application: simtools-get-model-parameter
+    configuration:
+      output_file: array_layouts-2.0.2.json
+      parameter: array_layouts
+      parameter_version: 2.0.2
+      site: North
   configuration:
-    array_layouts: ${generated:model_parameters/array_layouts-2.0.2.json}
+    array_layouts: ${prepared:array_layouts-2.0.2.json}
     model_version: 7.0.0
     output_path: simtools-output
     updated_parameter_version: 1.0.98
