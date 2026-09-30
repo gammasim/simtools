@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790758914030,
+  "lastUpdate": 1790781767396,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -28426,6 +28426,48 @@ window.BENCHMARK_DATA = {
             "value": 426.53515625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "94466479+EshitaJoshi@users.noreply.github.com",
+            "name": "Eshita Joshi",
+            "username": "EshitaJoshi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76c0573bdb897eaeefd8af38124caaf22f61ae3e",
+          "message": "Merge pull request #2543 from gammasim/add-new-model-params\n\nIncident angle model parameters",
+          "timestamp": "2026-09-30T17:07:48+02:00",
+          "tree_id": "e845f1126b950b9664ea50eaf594a1c3a85bb197",
+          "url": "https://github.com/gammasim/simtools/commit/76c0573bdb897eaeefd8af38124caaf22f61ae3e"
+        },
+        "date": 1790781751796,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 66.90511700900001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 69.77000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 428.4921875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.7 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
