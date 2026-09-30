@@ -19,7 +19,7 @@ from simtools.visualization.plot_incident_angles import plot_incident_angles
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "keep_photon_files",
-        help="Keep the raw sim_telarray photon lists in the output directory",
+        help="Keep the raw ray tracing photon lists in the output directory",
         action="store_true",
         default=False,
     ),

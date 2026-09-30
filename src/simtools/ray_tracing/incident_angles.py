@@ -30,7 +30,7 @@ class IncidentAnglesCalculator:
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
         ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
-        Zenith defaults to 20 degrees. Off-axis angles use the PSF camera-x convention.
+        Zenith defaults to 0 degrees. Off-axis angles use the PSF camera-x convention.
     output_dir : str or pathlib.Path
         Output directory where logs, scripts, photons files and results are written.
     label : str, optional
@@ -40,7 +40,9 @@ class IncidentAnglesCalculator:
     -----
     Additional options are read from ``config_data`` when present:
     - ``perfect_mirror`` (bool, default False)
-    Mirror angles are calculated automatically for dual-mirror optics.
+    Focal-plane incidence angles are calculated for all telescope models. Primary and
+    secondary mirror incidence angles are additionally calculated
+    only for dual-mirror telescopes.
     """
 
     def __init__(
@@ -52,7 +54,7 @@ class IncidentAnglesCalculator:
         self.logger = logging.getLogger(__name__)
 
         self.config_data = config_data
-        self.zenith_angle_deg = u.Quantity(config_data.get("zenith_angle", 20 * u.deg)).to_value(
+        self.zenith_angle_deg = u.Quantity(config_data.get("zenith_angle", 0 * u.deg)).to_value(
             u.deg
         )
         self.output_dir = Path(output_dir)
