@@ -330,15 +330,12 @@ def _validate_model_and_test_components(catalog, schema_version):
             model_version
         )
     if not valid_model_version:
-        message = (
-            "Invalid simulation-model release tags."
-            if schema_version in {"0.2.0", "0.3.0", "0.4.0"}
-            else (
-                "Invalid simulation-model source ref."
-                if schema_version == "0.5.0"
-                else "Invalid simulation-model repository revision."
-            )
-        )
+        if schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
+            message = "Invalid simulation-model release tags."
+        elif schema_version == "0.5.0":
+            message = "Invalid simulation-model source ref."
+        else:
+            message = "Invalid simulation-model repository revision."
         raise ValueError(message)
     if model.get("repository-url") is not None:
         _validate_source_url(model["repository-url"], "simulation-model repository")
