@@ -291,6 +291,34 @@ def test_emission_altitude_scales_xmax_by_airmass():
     assert _emission_altitude(profile, 2000.0, 1.0) == pytest.approx(0.0)
 
 
+@pytest.mark.parametrize("zenith_angle", [-0.1, 90.0, 100.0, np.nan, np.inf])
+def test_camera_efficiency_rejects_invalid_secant_zenith(zenith_angle):
+    calculator = CameraEfficiencyCalculator(None, None, zenith_angle=zenith_angle)
+
+    with pytest.raises(ValueError, match=r"range \[0, 90\)"):
+        calculator.calculate()
+
+
+def test_camera_efficiency_accepts_zenith_below_horizon(mocker):
+    calculator = CameraEfficiencyCalculator(None, None, zenith_angle=89.9)
+    mocker.patch.object(calculator, "_optical_efficiency", return_value={})
+    mocker.patch("simtools.camera.camera_efficiency_calculator._parameter_table", return_value={})
+    mock_emission = mocker.patch(
+        "simtools.camera.camera_efficiency_calculator._emission_altitude", return_value=1.0
+    )
+    mocker.patch(
+        "simtools.camera.camera_efficiency_calculator._atmospheric_transmission",
+        return_value=np.array([1.0]),
+    )
+    mocker.patch.object(calculator, "_nsb_values", return_value={})
+    mocker.patch.object(calculator, "_result_table", return_value={})
+
+    calculator.calculate()
+
+    assert np.isfinite(mock_emission.call_args.args[2])
+    assert mock_emission.call_args.args[2] > 0
+
+
 def test_emission_altitude_rejects_profile_without_positive_depth():
     profile = Table(
         {
