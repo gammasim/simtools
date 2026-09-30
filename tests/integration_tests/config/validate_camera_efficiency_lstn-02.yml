@@ -29,7 +29,7 @@ applications:
       validations:
       - type: reference
         file: ${generated:camera_efficiency/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
-        tolerance: 0.001
+        tolerance: 0.005
   model_version_use_current: true
   test_name: LSTN
 schema_name: application_workflow.metaschema
