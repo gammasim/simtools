@@ -46,7 +46,7 @@ LST-1 5.0.0
 
 Runtime < 1 min.
 
-Get an example dataset from the DB:
+Get an example dataset from the selected model source:
 
 .. code-block:: console
 
