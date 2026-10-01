@@ -121,6 +121,18 @@ def test_derive_spectrum_norm_spe(spe_spectrum, tmp_test_directory):
     np.testing.assert_allclose(output[:, 2], output[:, 1])
 
 
+def test_derive_spectrum_does_not_exceed_maximum(spe_spectrum, tmp_test_directory):
+    input_file = tmp_test_directory / "prompt.csv"
+    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=1.0, step_size=0.6)
+
+    spe_spectrum._derive_spectrum_norm_spe(input_file, None, None)
+
+    output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
+    np.testing.assert_allclose(output[:, 0], [0.0, 0.6])
+    assert np.all(output[:, 0] <= 1.0)
+
+
 def test_normalize_prompt_spectrum_rejects_invalid_input():
     with pytest.raises(ValueError, match="increasing"):
         SinglePhotonElectronSpectrum._normalize_prompt_spectrum(
@@ -160,6 +172,19 @@ def test_fold_afterpulse_spectrum(spe_spectrum):
     np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0])
     np.testing.assert_allclose(prompt, [0.0, 1.0, 0.0])
     np.testing.assert_allclose(combined, [0.0, 1.0, 0.2])
+
+
+def test_fold_afterpulse_spectrum_reaches_output_maximum(spe_spectrum):
+    spe_spectrum.args_dict.update(max_amplitude=4.0, scale_afterpulse_spectrum=1.0)
+    amplitude, _, combined = spe_spectrum._fold_afterpulse_spectrum(
+        np.array([0.0, 1.0, 2.0]),
+        np.array([0.0, 1.0, 0.0]),
+        np.array([0.0, 1.0, 2.0, 3.0]),
+        np.array([0.0, 0.0, 0.0, 1.0]),
+    )
+
+    np.testing.assert_allclose(amplitude, [0.0, 1.0, 2.0, 3.0, 4.0])
+    assert combined[-1] == pytest.approx(1.0)
 
 
 def test_fold_afterpulse_spectrum_preserves_legacy_prompt_tail(spe_spectrum):

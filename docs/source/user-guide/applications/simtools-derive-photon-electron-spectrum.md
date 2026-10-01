@@ -8,8 +8,8 @@
 
 ```{eval-rst}
 Normalizes single-p.e. amplitude distribution to mean amplitude of 1.0,
-as required by sim_telarray. Allows to fold in afterpulse distribution
-to a prompt spectrum.
+as required by sim_telarray. Allows an afterpulse distribution to be folded
+into a prompt spectrum.
 
 Input files can be in ecsv format (preferred) or in the sim_telarray legacy format.
 

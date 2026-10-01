@@ -159,7 +159,7 @@ class SinglePhotonElectronSpectrum:
 
         output_amplitude = np.arange(
             0.0,
-            self.args_dict["max_amplitude"] + self.args_dict["step_size"] / 2,
+            np.nextafter(self.args_dict["max_amplitude"], np.inf),
             self.args_dict["step_size"],
         )
         output_prompt = self._linear_interpolate(folded_amplitude, folded_prompt, output_amplitude)
@@ -198,8 +198,8 @@ class SinglePhotonElectronSpectrum:
             prompt_maximum = amplitude[-1]
 
         step = (amplitude[-1] - amplitude[0]) / (len(amplitude) - 1)
-        maximum = max(amplitude[-1], afterpulse_amplitude[-1])
-        extra_samples = int((maximum - amplitude[-1]) / step + 0.5)
+        maximum = max(amplitude[-1], afterpulse_amplitude[-1], self.args_dict["max_amplitude"])
+        extra_samples = int(np.ceil((maximum - amplitude[-1]) / step))
         folded_amplitude = amplitude[0] + step * np.arange(len(amplitude) + extra_samples)
         folded_prompt = self._linear_interpolate(amplitude, prompt, folded_amplitude)
         folded_prompt[folded_amplitude > prompt_maximum] = 0.0
