@@ -162,6 +162,28 @@ def test_fold_afterpulse_spectrum(spe_spectrum):
     np.testing.assert_allclose(combined, [0.0, 1.0, 0.2])
 
 
+def test_fold_afterpulse_spectrum_preserves_legacy_prompt_tail(spe_spectrum):
+    spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
+    amplitude = np.array([0.0, 1.0, 2.0])
+    prompt = np.array([0.0, 1.0, 0.5])
+    afterpulse_amplitude = np.array([0.0, 1.0, 2.0, 3.0])
+    afterpulse = np.zeros(4)
+
+    folded_amplitude, folded_prompt, _ = spe_spectrum._fold_afterpulse_spectrum(
+        amplitude,
+        prompt,
+        afterpulse_amplitude,
+        afterpulse,
+        prompt_maximum=2.5,
+    )
+
+    output_amplitude = np.array([2.0, 2.5, 3.0])
+    output_prompt = spe_spectrum._linear_interpolate(
+        folded_amplitude, folded_prompt, output_amplitude
+    )
+    np.testing.assert_allclose(output_prompt, [0.5, 0.25, 0.0])
+
+
 def test_read_input_data(spe_spectrum, tmp_test_directory):
     assert spe_spectrum._read_input_data(None, None, spe_spectrum.prompt_column) is None
 
@@ -169,6 +191,14 @@ def test_read_input_data(spe_spectrum, tmp_test_directory):
     input_file.write_text("0,0.4\n1,0.2\n", encoding="utf-8")
     amplitude, frequency = spe_spectrum._read_input_data(
         input_file, None, spe_spectrum.prompt_column
+    )
+    np.testing.assert_allclose(amplitude, [0.0, 1.0])
+    np.testing.assert_allclose(frequency, [0.4, 0.2])
+
+    afterpulse_file = tmp_test_directory / "afterpulse_spectrum"
+    afterpulse_file.write_text("0.0,0.4\n1.0,0.2\n", encoding="utf-8")
+    amplitude, frequency = spe_spectrum._read_input_data(
+        afterpulse_file, None, spe_spectrum.afterpulse_column
     )
     np.testing.assert_allclose(amplitude, [0.0, 1.0])
     np.testing.assert_allclose(frequency, [0.4, 0.2])

@@ -150,7 +150,10 @@ class SinglePhotonElectronSpectrum:
         else:
             folded_amplitude, folded_prompt, prompt_plus_afterpulse = (
                 self._fold_afterpulse_spectrum(
-                    normalized_amplitude, normalized_prompt, *afterpulse_data
+                    normalized_amplitude,
+                    normalized_prompt,
+                    *afterpulse_data,
+                    prompt_maximum=amplitude[-1],
                 )
             )
 
@@ -184,17 +187,22 @@ class SinglePhotonElectronSpectrum:
         prompt_scale = 1.0 / (integral * amplitude_scale)
         return amplitude * amplitude_scale, prompt * prompt_scale
 
-    def _fold_afterpulse_spectrum(self, amplitude, prompt, afterpulse_amplitude, afterpulse):
+    def _fold_afterpulse_spectrum(
+        self, amplitude, prompt, afterpulse_amplitude, afterpulse, prompt_maximum=None
+    ):
         """Fold an afterpulse probability density into a prompt spectrum."""
         if len(afterpulse_amplitude) < 2 or np.any(np.diff(afterpulse_amplitude) <= 0):
             raise ValueError("Afterpulse amplitudes must contain at least two increasing values.")
+
+        if prompt_maximum is None:
+            prompt_maximum = amplitude[-1]
 
         step = (amplitude[-1] - amplitude[0]) / (len(amplitude) - 1)
         maximum = max(amplitude[-1], afterpulse_amplitude[-1])
         extra_samples = int((maximum - amplitude[-1]) / step + 0.5)
         folded_amplitude = amplitude[0] + step * np.arange(len(amplitude) + extra_samples)
         folded_prompt = self._linear_interpolate(amplitude, prompt, folded_amplitude)
-        folded_prompt[folded_amplitude > amplitude[-1]] = 0.0
+        folded_prompt[folded_amplitude > prompt_maximum] = 0.0
         sampled_afterpulse = np.interp(
             folded_amplitude,
             afterpulse_amplitude,
@@ -256,8 +264,7 @@ class SinglePhotonElectronSpectrum:
             )
 
         input_data = input_file.read_bytes()
-        if frequency_column == self.prompt_column:
-            input_data = input_data.replace(b",", b" ")
+        input_data = input_data.replace(b",", b" ")
         data = np.atleast_2d(np.loadtxt(BytesIO(input_data), comments="#", usecols=(0, 1)))
         return data[:, 0], data[:, 1]
 
