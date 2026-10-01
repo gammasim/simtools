@@ -116,7 +116,7 @@ Use `${static:path/to/file}` for maintained resources,
 `${downloaded:path/to/file}` for externally downloaded resources. Pytest
 resolves these against `--test_resources_path` or the versioned
 `simtools-tests` resource bundle selected by `SIMTOOLS_TESTS_PATH` and
-`SIMTOOLS_TESTS_TAG`. `SIMTOOLS_TESTS_VERSION` remains a compatibility alias.
+`SIMTOOLS_TESTS_RESOURCE_VERSION`.
 
 ## `integration_tests` Blocks
 

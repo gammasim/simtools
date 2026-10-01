@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Simulate the cumulative PSF and compare with data (if available)."""
+"""Simulate the cumulative PSF and compare it with measured data."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -9,7 +9,13 @@ from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 _ARGUMENTS = (
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
-    cli.DATA,
+    cli.ArgumentDefinition(
+        "data",
+        group="application",
+        help="Measured cumulative PSF data file.",
+        type=str,
+        required=True,
+    ),
 )
 
 

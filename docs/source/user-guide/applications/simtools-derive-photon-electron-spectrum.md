@@ -14,10 +14,10 @@ the sim_telarray ``norm_spe`` executable.
 
 Input files can be in ecsv format (preferred) or in the sim_telarray legacy format.
 
-Two output files with identical data are written to the output directory:
+The output directory receives the schema-validated ECSV model parameter and its metadata:
 
 - 'output_file'.ecsv: Single photon electron spectrum in ecsv format (data and metadata).
-- 'output_file'.dat: Single photon electron spectrum in sim_telarray format.
+- 'output_file'.<activity>.meta.yml: Application metadata for the ECSV product.
 
 **Example**
 

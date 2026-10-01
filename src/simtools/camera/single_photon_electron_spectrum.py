@@ -11,9 +11,12 @@ from scipy.optimize import curve_fit
 
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
-from simtools.data_model import validate_data
+from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.io import io_handler
+
+ECSV_SUFFIX = ".ecsv"
 
 
 class SinglePhotonElectronSpectrum:
@@ -27,10 +30,12 @@ class SinglePhotonElectronSpectrum:
     """
 
     prompt_column = "frequency (prompt)"
-    prompt_plus_afterpulse_column = "frequency (prompt+afterpulsing)"
     afterpulse_column = "frequency (afterpulsing)"
+    afterpulse_error_column = "frequency stdev (afterpulsing)"
 
     input_schema = SCHEMA_PATH / "input" / "single_pe_spectrum.schema.yml"
+    output_parameter = "pm_photoelectron_spectrum"
+    output_schema = schema.get_model_parameter_schema_file(output_parameter)
 
     def __init__(self, args_dict):
         """Initialize SinglePhotonElectronSpectrum class."""
@@ -40,15 +45,17 @@ class SinglePhotonElectronSpectrum:
         self.args_dict = args_dict
         # default output is of ecsv format
         self.args_dict["output_file"] = str(
-            Path(self.args_dict["output_file"]).with_suffix(".ecsv")
+            Path(self.args_dict["output_file"]).with_suffix(ECSV_SUFFIX)
         )
         self.io_handler = io_handler.IOHandler()
         self.data = ""  # Single photon electron spectrum data (as string)
-        self.args_dict["metadata_product_data_name"] = "single_pe_spectrum"
+        self.args_dict["metadata_product_data_name"] = self.output_parameter
         self.args_dict["metadata_product_data_url"] = (
             MODEL_PARAMETER_SCHEMA_URL + "/pm_photoelectron_spectrum.schema.yml"
         )
-        self.metadata = MetadataCollector(args_dict=self.args_dict)
+        metadata_args = dict(self.args_dict)
+        metadata_args["output_file"] = Path(self.args_dict["output_file"]).name
+        self.metadata = MetadataCollector(args_dict=metadata_args)
 
     def derive_single_pe_spectrum(self):
         """Derive single photon electron spectrum."""
@@ -66,15 +73,11 @@ class SinglePhotonElectronSpectrum:
         """
         Write single photon electron spectrum plus metadata to disk.
 
-        Includes writing in simtel and simtools (ecsv) formats.
+        Write the generated model-parameter ECSV and its metadata.
 
         """
-        simtel_file = self.io_handler.get_output_directory() / Path(
-            self.args_dict["output_file"]
-        ).with_suffix(".dat")
-        self._logger.debug(f"norm_spe output file: {simtel_file}")
-        with open(simtel_file, "w", encoding="utf-8") as simtel:
-            simtel.write(self.data)
+        output_file = Path(self.args_dict["output_file"])
+        metadata_output_file = Path(self.io_handler.get_output_directory()) / output_file.name
 
         cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove norm_spe row metadata
         table = Table.read(
@@ -83,18 +86,29 @@ class SinglePhotonElectronSpectrum:
             comment="#",
             delimiter="\t",
         )
-        table.rename_columns(
-            ["col1", "col2", "col3"],
-            ["amplitude", self.prompt_column, self.prompt_plus_afterpulse_column],
-        )
+        output_columns = self._get_output_columns()
+        if len(table.colnames) != len(output_columns):
+            raise ValueError(
+                "norm_spe output does not match the pm_photoelectron_spectrum "
+                f"schema: expected {len(output_columns)} columns, got {len(table.colnames)}"
+            )
+        table.rename_columns(table.colnames, output_columns)
 
         writer.ModelDataWriter.write_product_data(
             output_file=self.args_dict["output_file"],
             output_file_format=self.args_dict.get("output_file_format"),
             metadata=self.metadata,
             product_data=table,
-            validate_schema_file=None,
+            validate_schema_file=self.output_schema,
+            metadata_output_file=metadata_output_file.with_suffix(ECSV_SUFFIX),
         )
+
+    @classmethod
+    def _get_output_columns(cls):
+        """Return the ordered norm_spe output columns declared by the output schema."""
+        output_schema = schema.get_model_parameter_schema(cls.output_parameter)
+        serialization = get_simtel_serialization(output_schema)
+        return [*serialization["columns"], *serialization.get("optional_columns", [])]
 
     def _derive_spectrum_norm_spe(
         self, input_spectrum, afterpulse_spectrum, afterpulse_fitted_spectrum
@@ -228,7 +242,8 @@ class SinglePhotonElectronSpectrum:
             return None
         input_file = Path(input_file)
 
-        if input_file.suffix == ".ecsv" or input_table:
+        input_data = ""
+        if input_file.suffix == ECSV_SUFFIX or input_table:
             data_validator = validate_data.DataValidator(
                 schema_file=self.input_schema,
                 data_table=input_table,
@@ -351,7 +366,7 @@ class SinglePhotonElectronSpectrum:
         table = Table.read(afterpulse_spectrum, format="ascii.ecsv")
         x = table["amplitude"]
         y = table[self.afterpulse_column]
-        y_err = table["frequency stdev (afterpulsing)"]
+        y_err = table[self.afterpulse_error_column]
         mask = (x >= fit_min_pe) & (y > 0)
         x_fit, y_fit, y_err_fit = x[mask], y[mask], y_err[mask]
         return x_fit, y_fit, y_err_fit

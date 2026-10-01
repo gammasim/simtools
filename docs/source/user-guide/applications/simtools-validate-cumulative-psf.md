@@ -33,7 +33,7 @@ source_distance (float or quantity, optional)
     Source distance in km.
 zenith_angle (float or quantity, optional)
     Zenith angle in deg.
-data (str, optional)
+data (str, required)
     Name of the data file with the measured cumulative PSF.
 pars (str, optional)
     Yaml file with the new model parameters to replace the default ones.

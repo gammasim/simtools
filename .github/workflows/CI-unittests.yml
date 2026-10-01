@@ -10,6 +10,11 @@ on:
         required: false
         type: string
         default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch'
+        required: false
+        type: string
+        default: 'main'
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -86,6 +91,8 @@ jobs:
         uses: ./.github/actions/setup-simtools-tests
         with:
           python-version: ${{ matrix.python-version }}
+          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
       - name: Unit tests
         shell: bash -l {0}
