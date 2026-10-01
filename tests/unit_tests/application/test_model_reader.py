@@ -68,6 +68,7 @@ def test_create_model_reader_selects_git_source(monkeypatch, mocker, tmp_test_di
     "catalog_model",
     [
         {"git-revision": "a" * 40},
+        {"default-ref": "v1.2.3"},
         {"default-tag": "v1.2.3"},
         {"default-version": "1.2.3"},
     ],
