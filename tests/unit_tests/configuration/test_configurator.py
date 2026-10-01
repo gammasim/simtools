@@ -283,6 +283,25 @@ def test_configure_can_disable_dependency_defaults(configurator):
     configurator._initialize_io_handler = MagicMock()
 
 
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ({"default-ref": "v0.17.2"}, "v0.17.2"),
+        ({"default-ref": "main", "git-revision": "a" * 40}, "a" * 40),
+    ],
+)
+def test_dependency_defaults_select_model_ref(model, expected, mocker):
+    """The parser uses readable model refs and accepts an explicit legacy pin."""
+    mocker.patch(
+        "simtools.configuration.configurator.dependency_versions.load_dependency_catalog",
+        return_value={"model-repository": model},
+    )
+
+    assert Configurator._dependency_defaults({"simulation_models_git_revision": None}) == {
+        "simulation_models_git_revision": expected
+    }
+
+
 def test_arglist_from_dict_preserves_bare_star_argument():
     parser = Configurator().parser
     parser.add_argument_definitions(
