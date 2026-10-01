@@ -18,7 +18,6 @@ on:
     paths:
       - docker/Dockerfile-corsika7
       - docker/validate_corsika7_build.sh
-      - .github/scripts/fetch_with_retries.sh
       - .github/workflows/build-corsika7.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
@@ -112,6 +111,87 @@ jobs:
           opt_patch_repo="corsika-source-work/corsika-opt-patches-repository"
           config_fallback_url="https://github.com/gammasim/corsika7-config.git"
 
+          fetch_repository_ref() {
+            local source_url=$1
+            local source_ref=$2
+            local target=$3
+            local expected_revision=$4
+            local fallback_url=$5
+            local fallback_token=$6
+
+            if [[ ! -d "$target/.git" ]]; then
+              git init --quiet "$target"
+              git -C "$target" remote add origin "$source_url"
+            fi
+
+            active_url=$(git -C "$target" remote get-url origin)
+            if [[ "$active_url" != "$source_url" && "$active_url" != "$fallback_url" ]]; then
+              echo "Unexpected origin URL for $target: $active_url" >&2
+              return 1
+            fi
+
+            fetch_from_url() {
+              local url=$1
+              local token=$2
+              local fetch_ref="$source_ref"
+              local -a git_options=(
+                -C "$target"
+                -c http.connectTimeout=30
+                -c http.lowSpeedLimit=1000
+                -c http.lowSpeedTime=60
+              )
+
+              git -C "$target" remote set-url origin "$url"
+              if [[ -n "$token" ]]; then
+                encoded_credentials=$(printf 'x-access-token:%s' "$token" | base64 --wrap=0)
+                git_options+=( -c "http.extraheader=Authorization: Basic $encoded_credentials" )
+              fi
+              if [[ -n "$expected_revision" ]]; then
+                fetch_ref="$expected_revision"
+              fi
+
+              for attempt in 1 2 3 4 5; do
+                if git "${git_options[@]}" fetch --depth 1 origin "$fetch_ref" && \
+                  git -C "$target" checkout --detach --quiet FETCH_HEAD; then
+                  actual_revision=$(git -C "$target" rev-parse HEAD)
+                  if [[ -n "$expected_revision" && "$actual_revision" != "$expected_revision" ]]; then
+                    echo "Revision mismatch for $target: expected $expected_revision, got $actual_revision" >&2
+                    return 1
+                  fi
+                  printf '%s\n' "$actual_revision"
+                  return 0
+                fi
+                if [[ "$attempt" -lt 5 ]]; then
+                  sleep $((attempt * 15))
+                fi
+              done
+              return 1
+            }
+
+            if [[ "$active_url" == "$fallback_url" ]]; then
+              if [[ -z "$fallback_token" ]]; then
+                echo "Fallback URL selected for $target, but CTAO_GITLAB_MIRROR is empty" >&2
+                return 1
+              fi
+              fetch_from_url "$fallback_url" "$fallback_token"
+              return $?
+            fi
+
+            if fetch_from_url "$source_url" ""; then
+              return 0
+            fi
+            if [[ -z "$fallback_url" ]]; then
+              echo "Failed to fetch $source_ref into $target after 5 attempts" >&2
+              return 1
+            fi
+            if [[ -z "$fallback_token" ]]; then
+              echo "Primary fetch failed for $target; fallback requires CTAO_GITLAB_MIRROR" >&2
+              return 1
+            fi
+            git -C "$target" remote set-url origin "$fallback_url"
+            fetch_from_url "$fallback_url" "$fallback_token"
+          }
+
           while IFS= read -r component; do
             build_id=$(jq -r '.corsika_build_id' <<< "$component")
             source_tag=$(jq -r '.corsika_tag' <<< "$component")
@@ -139,17 +219,16 @@ jobs:
               config_ref="$CORSIKA_CONFIG_BRANCH"
               config_revision_to_fetch=""
             fi
-            config_revision=$(FETCH_FALLBACK_TOKEN="$CTAO_GITLAB_MIRROR" \
-              ./.github/scripts/fetch_with_retries.sh \
+            config_revision=$(fetch_repository_ref \
               "$config_url" "$config_ref" "$config_repo" "$config_revision_to_fetch" \
-              "$config_fallback_url")
+              "$config_fallback_url" "$CTAO_GITLAB_MIRROR")
             rm -rf -- "$source_dir/corsika7-config"
             cp -a "$config_repo" "$source_dir/corsika7-config"
             rm -rf -- "$source_dir/corsika7-config/.git"
             printf '%s\n' "$config_revision" > "$source_dir/corsika_config_revision"
 
-            opt_patch_revision=$(./.github/scripts/fetch_with_retries.sh \
-              "$opt_patch_url" "$opt_patch_tag" "$opt_patch_repo" "$opt_patch_revision")
+            opt_patch_revision=$(fetch_repository_ref \
+              "$opt_patch_url" "$opt_patch_tag" "$opt_patch_repo" "$opt_patch_revision" "" "")
             rm -rf -- "$source_dir/corsika-opt-patches"
             cp -a "$opt_patch_repo" "$source_dir/corsika-opt-patches"
             rm -rf -- "$source_dir/corsika-opt-patches/.git"
