@@ -42,29 +42,26 @@ test (activation mode, optional)
 
 **Example**
 
-LST-1 5.0.0
+LSTN-01 model version 5.0.0, simtools-tests version v0.38.0
 
 Runtime < 1 min.
-
-Get an example dataset from the selected model source:
-
-.. code-block:: console
-
-    simtools-get-file-from-db --file_name PSFcurve_data_v2.txt
 
 Run the application:
 
 .. code-block:: console
+    resource_version = "v0.38.0"
+    simtools-validate-cumulative-psf --site North --telescope LSTN-01  --model_version 5.0.0 --data path-to-simtools-tests/simtools-tests/"${resource_version}"/integration_tests/downloaded/PSFcurve_data_v2.ecsv
 
-    simtools-compare-cumulative-psf --site North --telescope LST-1             --model_version 5.0.0 --data PSFcurve_data_v2.txt
-
-The output is saved in simtools-output/validate_cumulative_psf
+The output is saved in simtools-output/
 
 Expected final print-out message:
 
 .. code-block:: console
 
-    d80 in cm = 3.3662565358159013
+    INFO: Exporting results to simtools-output/results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_cumulative_psf.ecsv
+    INFO: d80 in cm = 3.2975171931376415
+    INFO: Saved plot  to simtools-output/validate_cumulative_psf_LSTN-01_cumulative_PSF.png
+    INFO: Saved plot  to simtools-output/validate_cumulative_psf_LSTN-01_image.png
 ```
 
 ## Command line arguments
