@@ -5,6 +5,16 @@ name: build-simtools-prod
 on:
   workflow_dispatch:
     inputs:
+      simulation_model_branch:
+        description: 'Simulation model branch for image tests'
+        required: false
+        type: string
+        default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch for image tests'
+        required: false
+        type: string
+        default: 'main'
       avx_flag:
         description: "Build only this CPU variant"
         required: false
@@ -120,7 +130,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_build_id }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
@@ -163,6 +173,8 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
       runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'
     secrets:

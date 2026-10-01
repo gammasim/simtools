@@ -98,6 +98,10 @@ below. The command-line option `--simtools_tests_resource_version` selects a
 different resource directory for an individual run. `SIMTOOLS_TESTS_RESOURCE_VERSION`
 is the environment override.
 
+CI checks out the configurable `simtools_tests_branch` and `simulation_model_branch`, both
+defaulting to `main`. These branches are independent of the release refs recorded in the
+dependency catalog; see [CI repository branches](dependency_versions.md#ci-repository-branches).
+
 ```text
 <simtools-tests>/simtools-tests/<resource-version>/integration_tests/
   static/

@@ -18,8 +18,23 @@ on:
         required: false
         type: string
         default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch'
+        required: false
+        type: string
+        default: 'main'
   workflow_call:
     inputs:
+      simulation_model_branch:
+        description: 'Simulation model branch'
+        required: false
+        type: string
+        default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch'
+        required: false
+        type: string
+        default: 'main'
       container_image:
         description: 'Container image to use for tests'
         required: false
@@ -110,13 +125,9 @@ jobs:
             --format github-output)
           CORSIKA_TABLES_REF=$(printf '%s\n' "$CATALOG_OUTPUT" | \
             sed -n 's/^corsika_tables_ref=//p')
-          CORSIKA_TABLES_REVISION=$(printf '%s\n' "$CATALOG_OUTPUT" | \
-            sed -n 's/^corsika_tables_revision=//p')
           test -n "$CORSIKA_TABLES_REF"
-          test -n "$CORSIKA_TABLES_REVISION"
           echo "CORSIKA_TABLES_REF=$CORSIKA_TABLES_REF" >> "$GITHUB_ENV"
-          echo "CORSIKA_TABLES_REVISION=$CORSIKA_TABLES_REVISION" >> "$GITHUB_ENV"
-          echo "version=$CORSIKA_TABLES_REVISION" >> "$GITHUB_OUTPUT"
+          echo "version=$CORSIKA_TABLES_REF" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
@@ -160,15 +171,8 @@ jobs:
                 -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
                 -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
                 -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
-                clone --depth 1 "$repo_url" "$CLONE_DIR"
+                clone --depth 1 --branch "$CORSIKA_TABLES_REF" "$repo_url" "$CLONE_DIR"
               then
-                if ! git -C "$CLONE_DIR" fetch --depth 1 origin "$CORSIKA_TABLES_REVISION" || \
-                  ! git -C "$CLONE_DIR" checkout --detach "$CORSIKA_TABLES_REVISION"
-                then
-                  echo "Could not check out $CORSIKA_TABLES_REVISION from $repo_url."
-                  rm -rf "$CLONE_DIR"
-                  continue
-                fi
                 git lfs install
                 if ! (cd "$CLONE_DIR" && git "${GIT_CLONE_ARGS[@]}" lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
                   echo "Git LFS pull failed for $repo_url."
@@ -177,7 +181,7 @@ jobs:
                 fi
                 rm -rf "$CACHE_DIR"
                 mv "$CLONE_DIR" "$CACHE_DIR"
-                echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES_REF at $CORSIKA_TABLES_REVISION from $repo_url."
+                echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES_REF from $repo_url."
                 CLONE_SUCCESS=true
                 break
               fi
@@ -240,27 +244,9 @@ jobs:
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
-          HEAD_REF: ${{ github.head_ref }}
-          REF_NAME: ${{ github.ref_name }}
-          EVENT_NAME: ${{ github.event_name }}
-          INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
+          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
         run: |
-          BRANCH="main"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
-            BRANCH="$INPUT_BRANCH"
-          fi
-          CURRENT_REF="$REF_NAME"
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            CURRENT_REF="$HEAD_REF"
-          fi
-          if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - using the catalog model revision"
-            if [[ ! "$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION must be a commit revision."
-              exit 1
-            fi
-            BRANCH="$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-          fi
+          git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
@@ -379,15 +365,16 @@ jobs:
           python -m pip install pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
-      - name: Set test resource version
+      - name: Set test resource checkout
         id: test_resources
+        env:
+          BRANCH: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
         run: |
-          test -n "$SIMTOOLS_TESTS_REF"
-          test -n "$SIMTOOLS_TESTS_REVISION"
+          git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
           test -n "$SIMTOOLS_TESTS_REPOSITORY"
           {
-            echo "ref=$SIMTOOLS_TESTS_REF"
+            echo "branch=$BRANCH"
             echo "resource_version=$SIMTOOLS_TESTS_RESOURCE_VERSION"
             echo "repository=$SIMTOOLS_TESTS_REPOSITORY"
           } >> "$GITHUB_OUTPUT"
@@ -396,7 +383,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           repository: ${{ steps.test_resources.outputs.repository }}
-          ref: ${{ steps.test_resources.outputs.ref }}
+          ref: ${{ steps.test_resources.outputs.branch }}
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.resource_version }}
 
