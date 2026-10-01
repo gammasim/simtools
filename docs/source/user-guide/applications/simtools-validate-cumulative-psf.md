@@ -49,6 +49,7 @@ Runtime < 1 min.
 Run the application:
 
 .. code-block:: console
+
     resource_version = "v0.38.0"
     simtools-validate-cumulative-psf --site North --telescope LSTN-01  --model_version 5.0.0 --data path-to-simtools-tests/simtools-tests/"${resource_version}"/integration_tests/downloaded/PSFcurve_data_v2.ecsv
 
