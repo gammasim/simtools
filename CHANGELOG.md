@@ -57,8 +57,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Simplification in simulation models structure for `CORSIKA` and `sim_telarray` parameters. ([#2493](https://github.com/gammasim/simtools/pull/2493))
 - Remove overwrite.yaml files and move overwrite dictionaries into job grid file metadata. ([#2494](https://github.com/gammasim/simtools/pull/2494))
 - Reduce number of trigger to build-CI for `CORSIKA` and `sim_telarray`. ([#2504](https://github.com/gammasim/simtools/pull/2504))
-- Isolate MongoDB routines and support reading simulation models from a fixed Git revision.
-  MongoDB remains the fallback when no filesystem or Git source is configured. ([#2506](https://github.com/gammasim/simtools/pull/2506))
+- Isolate MongoDB routines and support reading simulation models from a fixed Git revision (note! MongodDB now removed). ([#2506](https://github.com/gammasim/simtools/pull/2506))
 - Correct model-table serialization contracts, database asset identity handling, historical camera
   plotting, and generated model-parameter links. ([#2508](https://github.com/gammasim/simtools/pull/2508))
 - Change azimuth of the simulation-prod integration test to a value that is neither North nor South. ([#2510](https://github.com/gammasim/simtools/pull/2510))

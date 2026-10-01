@@ -385,7 +385,7 @@ and run both tools plus the relevant tests before choosing a suppression.
   `by_version` in integration configs where needed.
 - Model-parameter schema changes can affect sim_telarray metadata. If an
   integration failure says a required metadata key is missing, inspect the
-  relevant schema, DB/mock parameter data, and sim_telarray metadata registry
+  relevant schema, mock parameter data, and sim_telarray metadata registry
   before changing the test expectation.
 
 ## Recurring Failure Checks
