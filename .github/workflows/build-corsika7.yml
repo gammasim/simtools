@@ -18,6 +18,7 @@ on:
     paths:
       - docker/Dockerfile-corsika7
       - docker/validate_corsika7_build.sh
+      - .github/scripts/clone_with_retries.sh
       - .github/workflows/build-corsika7.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
@@ -92,6 +93,9 @@ jobs:
     needs: dependency-config
     permissions:
       contents: read
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.dependency-config.outputs.corsika_source_matrix) }}
 
     steps:
       - name: Checkout repository
@@ -99,156 +103,56 @@ jobs:
 
       - name: Prepare CORSIKA sources
         env:
+          CORSIKA_SOURCE_TAG: ${{ matrix.corsika_tag }}
+          CORSIKA_SOURCE_URL: ${{ matrix.corsika_source_url }}
+          CORSIKA_SOURCE_REVISION: ${{ matrix.corsika_source_revision }}
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
+          CORSIKA_CONFIG_TAG: ${{ matrix.corsika_config_tag }}
           CORSIKA_CONFIG_BRANCH: ${{ inputs.corsika_config_branch }}
+          CORSIKA_CONFIG_SOURCE_URL: ${{ matrix.corsika_config_source_url }}
+          CORSIKA_CONFIG_REVISION: ${{ matrix.corsika_config_revision }}
           CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
-          CORSIKA_SOURCE_MATRIX: ${{ needs.dependency-config.outputs.corsika_source_matrix }}
+          CORSIKA_OPT_PATCH_TAG: ${{ matrix.corsika_opt_patch_tag }}
+          CORSIKA_OPT_PATCH_SOURCE_URL: ${{ matrix.corsika_opt_patch_source_url }}
+          CORSIKA_OPT_PATCH_REVISION: ${{ matrix.corsika_opt_patch_revision }}
         run: |
-          set -euo pipefail
-          mkdir -p corsika-source-artifacts corsika-source-work
-
-          config_repo="corsika-source-work/corsika7-config-repository"
-          opt_patch_repo="corsika-source-work/corsika-opt-patches-repository"
           config_fallback_url="https://github.com/gammasim/corsika7-config.git"
+          source_url="https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}"
+          source_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$source_url" "$CORSIKA_SOURCE_TAG" corsika7 "$CORSIKA_SOURCE_REVISION")
+          printf '%s\n' "$source_revision" > corsika_revision
 
-          fetch_repository_ref() {
-            local source_url=$1
-            local source_ref=$2
-            local target=$3
-            local expected_revision=$4
-            local fallback_url=$5
-            local fallback_token=$6
+          config_ref="$CORSIKA_CONFIG_TAG"
+          config_revision="$CORSIKA_CONFIG_REVISION"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            config_ref="$CORSIKA_CONFIG_BRANCH"
+            config_revision=""
+          fi
+          config_fallback_url="https://x-access-token:${CTAO_GITLAB_MIRROR}@${config_fallback_url#https://}"
+          config_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$CORSIKA_CONFIG_SOURCE_URL" "$config_ref" corsika7-config "$config_revision" \
+            "$config_fallback_url")
+          printf '%s\n' "$config_revision" > corsika_config_revision
 
-            if [[ ! -d "$target/.git" ]]; then
-              git init --quiet "$target"
-              git -C "$target" remote add origin "$source_url"
-            fi
+          opt_patch_revision=$(./.github/scripts/clone_with_retries.sh \
+            "$CORSIKA_OPT_PATCH_SOURCE_URL" "$CORSIKA_OPT_PATCH_TAG" corsika-opt-patches \
+            "$CORSIKA_OPT_PATCH_REVISION")
+          printf '%s\n' "$opt_patch_revision" > corsika_opt_patch_revision
 
-            active_url=$(git -C "$target" remote get-url origin)
-            if [[ "$active_url" != "$source_url" && "$active_url" != "$fallback_url" ]]; then
-              echo "Unexpected origin URL for $target: $active_url" >&2
-              return 1
-            fi
-
-            fetch_from_url() {
-              local url=$1
-              local token=$2
-              local fetch_ref="$source_ref"
-              local -a git_options=(
-                -C "$target"
-                -c http.connectTimeout=30
-                -c http.lowSpeedLimit=1000
-                -c http.lowSpeedTime=60
-              )
-
-              git -C "$target" remote set-url origin "$url"
-              if [[ -n "$token" ]]; then
-                encoded_credentials=$(printf 'x-access-token:%s' "$token" | base64 --wrap=0)
-                git_options+=( -c "http.extraheader=Authorization: Basic $encoded_credentials" )
-              fi
-              if [[ -n "$expected_revision" ]]; then
-                fetch_ref="$expected_revision"
-              fi
-
-              for attempt in 1 2 3 4 5; do
-                if git "${git_options[@]}" fetch --depth 1 origin "$fetch_ref" && \
-                  git -C "$target" checkout --detach --quiet FETCH_HEAD; then
-                  actual_revision=$(git -C "$target" rev-parse HEAD)
-                  if [[ -n "$expected_revision" && "$actual_revision" != "$expected_revision" ]]; then
-                    echo "Revision mismatch for $target: expected $expected_revision, got $actual_revision" >&2
-                    return 1
-                  fi
-                  printf '%s\n' "$actual_revision"
-                  return 0
-                fi
-                if [[ "$attempt" -lt 5 ]]; then
-                  sleep $((attempt * 15))
-                fi
-              done
-              return 1
-            }
-
-            if [[ "$active_url" == "$fallback_url" ]]; then
-              if [[ -z "$fallback_token" ]]; then
-                echo "Fallback URL selected for $target, but CTAO_GITLAB_MIRROR is empty" >&2
-                return 1
-              fi
-              fetch_from_url "$fallback_url" "$fallback_token"
-              return $?
-            fi
-
-            if fetch_from_url "$source_url" ""; then
-              return 0
-            fi
-            if [[ -z "$fallback_url" ]]; then
-              echo "Failed to fetch $source_ref into $target after 5 attempts" >&2
-              return 1
-            fi
-            if [[ -z "$fallback_token" ]]; then
-              echo "Primary fetch failed for $target; fallback requires CTAO_GITLAB_MIRROR" >&2
-              return 1
-            fi
-            git -C "$target" remote set-url origin "$fallback_url"
-            fetch_from_url "$fallback_url" "$fallback_token"
-          }
-
-          while IFS= read -r component; do
-            build_id=$(jq -r '.corsika_build_id' <<< "$component")
-            source_tag=$(jq -r '.corsika_tag' <<< "$component")
-            source_url=$(jq -r '.corsika_source_url' <<< "$component")
-            source_revision=$(jq -r '.corsika_source_revision' <<< "$component")
-            config_tag=$(jq -r '.corsika_config_tag' <<< "$component")
-            config_url=$(jq -r '.corsika_config_source_url' <<< "$component")
-            config_revision=$(jq -r '.corsika_config_revision' <<< "$component")
-            opt_patch_tag=$(jq -r '.corsika_opt_patch_tag' <<< "$component")
-            opt_patch_url=$(jq -r '.corsika_opt_patch_source_url' <<< "$component")
-            opt_patch_revision=$(jq -r '.corsika_opt_patch_revision' <<< "$component")
-
-            source_dir="corsika-source-work/$build_id"
-            rm -rf -- "$source_dir"
-            mkdir -p "$source_dir"
-
-            source_url="https://oauth2:${CORSIKA7_TOKEN}@${source_url#https://}"
-            source_revision=$(./.github/scripts/clone_with_retries.sh \
-              "$source_url" "$source_tag" "$source_dir/corsika7" "$source_revision")
-            printf '%s\n' "$source_revision" > "$source_dir/corsika_revision"
-
-            config_ref="$config_tag"
-            config_revision_to_fetch="$config_revision"
-            if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-              config_ref="$CORSIKA_CONFIG_BRANCH"
-              config_revision_to_fetch=""
-            fi
-            config_revision=$(fetch_repository_ref \
-              "$config_url" "$config_ref" "$config_repo" "$config_revision_to_fetch" \
-              "$config_fallback_url" "$CTAO_GITLAB_MIRROR")
-            rm -rf -- "$source_dir/corsika7-config"
-            cp -a "$config_repo" "$source_dir/corsika7-config"
-            rm -rf -- "$source_dir/corsika7-config/.git"
-            printf '%s\n' "$config_revision" > "$source_dir/corsika_config_revision"
-
-            opt_patch_revision=$(fetch_repository_ref \
-              "$opt_patch_url" "$opt_patch_tag" "$opt_patch_repo" "$opt_patch_revision" "" "")
-            rm -rf -- "$source_dir/corsika-opt-patches"
-            cp -a "$opt_patch_repo" "$source_dir/corsika-opt-patches"
-            rm -rf -- "$source_dir/corsika-opt-patches/.git"
-            printf '%s\n' "$opt_patch_revision" > "$source_dir/corsika_opt_patch_revision"
-
-            archive="corsika7-source-${build_id}.tar.gz"
-            tar -czf "corsika-source-artifacts/$archive" \
-              -C "$source_dir" \
-              corsika7 corsika_revision \
-              corsika7-config corsika_config_revision \
-              corsika-opt-patches corsika_opt_patch_revision
-            (cd corsika-source-artifacts && sha256sum "$archive" > "$archive.sha256")
-          done < <(jq -c '.[]' <<< "$CORSIKA_SOURCE_MATRIX")
+          rm -rf corsika7/.git corsika7-config/.git corsika-opt-patches/.git
+          tar -czf corsika7-source.tar.gz \
+            corsika7 corsika_revision \
+            corsika7-config corsika_config_revision \
+            corsika-opt-patches corsika_opt_patch_revision
+          sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
 
       - name: Upload CORSIKA source
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
-          name: corsika7-source
+          name: corsika7-source-${{ matrix.corsika_build_id }}
           path: |
-            corsika-source-artifacts/*
+            corsika7-source.tar.gz
+            corsika7-source.tar.gz.sha256
           retention-days: 1
 
   build-corsika7:
@@ -281,15 +185,14 @@ jobs:
       - name: Download CORSIKA source
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          name: corsika7-source
+          name: corsika7-source-${{ matrix.corsika_build_id }}
           path: corsika-source
 
       - name: Extract CORSIKA source
         run: |
           cd corsika-source
-          archive="corsika7-source-${{ matrix.corsika_build_id }}.tar.gz"
-          sha256sum --check "$archive.sha256"
-          tar -xzf "$archive" -C .
+          sha256sum --check corsika7-source.tar.gz.sha256
+          tar -xzf corsika7-source.tar.gz -C .
 
       - name: Read CORSIKA config revision
         id: corsika_config
