@@ -42,12 +42,18 @@ Images are compatible with ARM and x86_64 CPUs.
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
+| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-II/URQMD; QGSJet-III/URQMD; EPOS/URQMD | [CTAO corsika7-config](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
 The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
+The CORSIKA images include QGSJet-II/URQMD executables for flat and curved atmospheres. Select
+QGSJet-II with `corsika_he_interaction=qgs2` (for example, with
+`--corsika_he_interaction qgs2` when using the simtools command-line applications).
+
 ```{important}
-Container images do not include the interaction tables required by CORSIKA. Follow the instructions in the [CORSIKA documentation](../components/corsika.md#corsika-interaction-tables) to download and install the interaction tables.
+Container images do not include the interaction tables required by CORSIKA. Follow the [CORSIKA
+documentation](../components/corsika.md#corsika-interaction-tables) for the current table set and
+installation instructions.
 ```
 
 ### sim_telarray Images
