@@ -20,7 +20,7 @@ ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
 SOURCE_REF_INVALID_CHARACTERS = re.compile(r"[ ~^:?*\[\\]")
-IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
+IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0"}
 
@@ -34,7 +34,7 @@ def _corsika_build_id(component):
     """Return the CORSIKA build identifier from either catalog schema."""
     if "build-id" in component:
         build_id = component["build-id"]
-        if not isinstance(build_id, str) or re.fullmatch(r"[0-9]+", build_id) is None:
+        if not isinstance(build_id, str) or re.fullmatch(r"\d+", build_id, re.ASCII) is None:
             raise ValueError(f"CORSIKA build ID must contain only digits: {build_id!r}")
         return build_id
     if "version" in component:
@@ -92,7 +92,7 @@ def _simtel_tag(component):
 def _safe_build_id(source_ref, build_id=None):
     """Return an OCI-safe identifier while preserving readable ref fragments."""
     if build_id is None:
-        build_id = re.sub(r"[^A-Za-z0-9_.-]+", "-", source_ref or "").strip("-")
+        build_id = re.sub(r"[^\w.-]+", "-", source_ref or "", flags=re.ASCII).strip("-")
     if not isinstance(build_id, str) or IMAGE_TAG_PATTERN.fullmatch(build_id) is None:
         raise ValueError(
             "sim_telarray build-id must be a valid OCI image tag when its source ref "

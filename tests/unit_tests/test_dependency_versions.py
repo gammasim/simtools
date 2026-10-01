@@ -122,10 +122,31 @@ def test_corsika_build_id_is_derived_without_a_fixed_length():
     assert dependency_versions._corsika_build_id({"tag": "v8.10000"}) == "810000"  # pylint: disable=protected-access
 
 
-def test_corsika_build_id_rejects_non_numeric_explicit_value():
+@pytest.mark.parametrize("build_id", ["latest", "\u0661\u0662", "12\u0663"])
+def test_corsika_build_id_rejects_non_numeric_explicit_value(build_id):
     """Reject explicit CORSIKA build IDs that cannot be used in image names."""
     with pytest.raises(ValueError, match="must contain only digits"):
-        dependency_versions._corsika_build_id({"build-id": "latest"})  # pylint: disable=protected-access
+        dependency_versions._corsika_build_id({"build-id": build_id})  # pylint: disable=protected-access
+
+
+@pytest.mark.parametrize("build_id", ["v2025-11-30-rc", "_build.01", "a" * 128])
+def test_simtel_build_id_accepts_ascii_image_tags(build_id):
+    """Allow ASCII letters, digits, underscores, dots, and hyphens in OCI tags."""
+    assert dependency_versions._simtel_build_id({"source-ref": build_id}) == build_id  # pylint: disable=protected-access
+
+
+@pytest.mark.parametrize("build_id", ["\u00e9build", "build\u00e9", "\u0661", "a" * 129])
+def test_simtel_build_id_rejects_invalid_explicit_image_tags(build_id):
+    """Reject Unicode characters and overlong OCI image identifiers."""
+    with pytest.raises(ValueError, match="valid OCI image tag"):
+        dependency_versions._simtel_build_id(  # pylint: disable=protected-access
+            {"source-ref": "main", "build-id": build_id}
+        )
+
+
+def test_safe_build_id_replaces_unicode_characters():
+    """Sanitize source refs into ASCII image identifiers."""
+    assert dependency_versions._safe_build_id("release/\u00e9build") == "release-build"  # pylint: disable=protected-access
 
 
 def test_simtel_branch_ref_requires_a_safe_build_id():
