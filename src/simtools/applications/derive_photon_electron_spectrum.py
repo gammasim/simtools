@@ -57,12 +57,6 @@ _ARGUMENTS = (
         default=15.0,
         required=False,
     ),
-    cli.ArgumentDefinition(
-        "use_norm_spe",
-        help="Deprecated compatibility option; spectrum normalization is performed by simtools.",
-        action="store_true",
-        required=False,
-    ),
 )
 
 
