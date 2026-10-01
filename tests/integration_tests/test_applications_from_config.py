@@ -92,6 +92,59 @@ def _set_simulation_model_source_configuration(config, simulation_models_path, g
         source_config["simulation_models_git_revision"] = git_revision
 
 
+def _validate_preparation_output_file(output_file):
+    """Reject preparation output files that escape the prepared-resource directory."""
+    if output_file is None:
+        return
+    if not isinstance(output_file, str):
+        raise ValueError("Preparation output_file must be a relative path string.")
+    output_path = Path(output_file)
+    if output_path.is_absolute() or ".." in output_path.parts:
+        raise ValueError(
+            "Preparation output_file must stay within the prepared-resource directory: "
+            f"{output_file!r}."
+        )
+
+
+def _prepare_model_parameter_inputs(
+    config, tmp_test_directory, request, simtools_root_path, simulation_models_path, git_source
+):
+    """Run configured model-parameter retrieval steps for an integration test."""
+    preparation_steps = config.pop("preparation", [])
+    if not preparation_steps:
+        return
+
+    prepared_resources_path = Path(tmp_test_directory) / "prepared-resources"
+    prepared_resources_path.mkdir(parents=True, exist_ok=True)
+    for index, preparation in enumerate(preparation_steps):
+        preparation_config = copy.deepcopy(preparation)
+        preparation_config["test_name"] = f"preparation-{index}"
+        preparation_options = preparation_config["configuration"]
+        _validate_preparation_output_file(preparation_options.get("output_file"))
+        preparation_options["output_path"] = str(prepared_resources_path)
+        _set_simulation_model_source_configuration(
+            preparation_config, simulation_models_path, git_source
+        )
+        command, _ = configuration.configure(preparation_config, tmp_test_directory, request)
+        result = subprocess.run(
+            command,
+            shell=True,
+            input="y\n",
+            capture_output=True,
+            text=True,
+            env={**os.environ, "SIMTOOLS_OFFLINE_IERS": "1"},
+            cwd=simtools_root_path,
+        )
+        message = (
+            f"Preparation command {command!r} failed. stdout:\n{result.stdout}\n"
+            f"stderr:\n{result.stderr}"
+        )
+        assert result.returncode == 0, message
+        assert log_inspector.inspect([result.stdout, result.stderr])
+
+    config.update(configuration.resolve_prepared_resource_paths(config, prepared_resources_path))
+
+
 def pytest_generate_tests(metafunc):
     """Parametrize application tests using the configured test-resources path."""
     if "config" not in metafunc.fixturenames:
@@ -147,6 +200,14 @@ def test_applications_from_config(
     )
     _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
     _set_simulation_model_source_configuration(tmp_config, simulation_models_path, git_source)
+    _prepare_model_parameter_inputs(
+        tmp_config,
+        tmp_test_directory,
+        request,
+        simtools_root_path,
+        simulation_models_path,
+        git_source,
+    )
 
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
@@ -277,3 +338,58 @@ def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker, mon
     assert _get_simulation_model_source(
         {"application": "simtools-simulate-prod"}, request, tmp_test_directory
     ) == (None, None)
+
+
+def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):
+    """Prepare model-parameter files and resolve their temporary references."""
+    config = {
+        "preparation": [
+            {
+                "application": "simtools-get-model-parameter",
+                "configuration": {"parameter": "array_layouts", "site": "North"},
+            }
+        ],
+        "configuration": {"array_layout_parameter_file": "${prepared:array_layouts.json}"},
+        "integration_tests": [
+            {
+                "test_outputs": [
+                    {
+                        "validations": [
+                            {"reference": "${prepared:array_layouts.json}", "type": "reference"}
+                        ]
+                    }
+                ]
+            }
+        ],
+    }
+    request = mocker.MagicMock()
+    mocker.patch.object(configuration, "configure", return_value=("prepare-command", None))
+    result = mocker.MagicMock(returncode=0, stdout="", stderr="")
+    mocker.patch("subprocess.run", return_value=result)
+    mocker.patch.object(log_inspector, "inspect", return_value=True)
+
+    _prepare_model_parameter_inputs(
+        config,
+        tmp_test_directory,
+        request,
+        tmp_test_directory,
+        None,
+        None,
+    )
+
+    prepared_file = tmp_test_directory / "prepared-resources/array_layouts.json"
+    assert "preparation" not in config
+    assert config["configuration"]["array_layout_parameter_file"] == str(prepared_file)
+    validation = config["integration_tests"][0]["test_outputs"][0]["validations"][0]
+    assert validation["reference"] == str(prepared_file)
+
+
+@pytest.mark.parametrize("output_file", ["../outside.json", "absolute"])
+def test_prepare_model_parameter_inputs_rejects_escaping_output_file(
+    tmp_test_directory, output_file
+):
+    """Reject preparation output files outside the temporary resource directory."""
+    if output_file == "absolute":
+        output_file = str((Path(tmp_test_directory) / "outside.json").resolve())
+    with pytest.raises(ValueError, match="must stay within"):
+        _validate_preparation_output_file(output_file)
