@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790843907172,
+  "lastUpdate": 1790845068181,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -28592,6 +28592,48 @@ window.BENCHMARK_DATA = {
             "value": 426.33984375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260920.314.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c28b77d20b5df5dfa2786fe570fbd3d82597feb7",
+          "message": "Add CORSIKA7 QGSJet-II / URQMD executables for flat and curved atmosphere (#2583)\n\n* Select corsika7 config branch for building corsika7 container\n\n* Build qgs2 images\n\n* changelog",
+          "timestamp": "2026-10-01T10:45:10+02:00",
+          "tree_id": "a15441063b8066b29e03a1bcd2f8551303e90bba",
+          "url": "https://github.com/gammasim/simtools/commit/c28b77d20b5df5dfa2786fe570fbd3d82597feb7"
+        },
+        "date": 1790845052534,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 68.578904244,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 71.46,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 426.0625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
