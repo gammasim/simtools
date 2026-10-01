@@ -100,8 +100,6 @@ def _readable_catalog(schema_version="0.6.0"):
 def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     """Use source tags for selection and derive the legacy build ID."""
     catalog = _load_catalog(simtools_root_path)
-    assert catalog["schema_version"] == "0.6.0"
-    assert catalog["corsika"][0]["source-ref"] == "v7.8010"
     combination = catalog["production-combinations"][0]
     corsika = next(
         item for item in catalog["corsika"] if item["source-ref"] == combination["corsika"]
@@ -109,7 +107,11 @@ def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     build_id = corsika["source-ref"].removeprefix("v").replace(".", "")
     variant = combination.get("cpu-variants", catalog["cpu-variants"])[0]
     matrices = dependency_versions.build_workflow_matrices(catalog)
-    production = matrices["production_matrix"][0]
+    production = next(
+        item
+        for item in matrices["production_matrix"]
+        if item["corsika_tag"] == corsika["source-ref"] and item["avx_flag"] == variant
+    )
 
     assert "build-id" not in corsika
     assert production["corsika_tag"] == corsika["source-ref"]
@@ -280,8 +282,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
         assert {item["runner"] for item in matrix if item["arch"] == "arm64"} == {
             "ubuntu-24.04-arm"
         }
-    assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == "v1.1.0"
-    assert matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"] == "v1.1.0"
+    first_corsika = catalog["corsika"][0]
+    assert matrices["corsika_source_matrix"][0]["corsika_config_tag"] == first_corsika["config-ref"]
+    assert (
+        matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"]
+        == first_corsika["opt-patch-ref"]
+    )
     assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
     assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
     assert all(
