@@ -5,9 +5,16 @@ applications:
     title: Validate one model parameter
     summary: >-
       Validate a generated model-parameter file with its bundled schema and filename convention.
+  preparation:
+  - application: simtools-get-model-parameter
+    configuration:
+      output_file: array_layouts-2.0.2.json
+      parameter: array_layouts
+      parameter_version: 2.0.2
+      site: North
   configuration:
     data_type: model_parameter
-    file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
+    file_name: ${prepared:array_layouts-2.0.2.json}
   test_name: json_validate_model_parameter
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0
