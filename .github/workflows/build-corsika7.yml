@@ -91,6 +91,8 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -100,7 +102,7 @@ jobs:
         env:
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
           CORSIKA_CONFIG_BRANCH: ${{ inputs.corsika_config_branch }}
-          CORSIKA_CONFIG_GITHUB_TOKEN: ${{ secrets.CORSIKA7_CONFIG_GITHUB_TOKEN }}
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
           CORSIKA_SOURCE_MATRIX: ${{ needs.dependency-config.outputs.corsika_source_matrix }}
         run: |
           set -euo pipefail
@@ -137,7 +139,7 @@ jobs:
               config_ref="$CORSIKA_CONFIG_BRANCH"
               config_revision_to_fetch=""
             fi
-            config_revision=$(FETCH_FALLBACK_TOKEN="$CORSIKA_CONFIG_GITHUB_TOKEN" \
+            config_revision=$(FETCH_FALLBACK_TOKEN="$CTAO_GITLAB_MIRROR" \
               ./.github/scripts/fetch_with_retries.sh \
               "$config_url" "$config_ref" "$config_repo" "$config_revision_to_fetch" \
               "$config_fallback_url")
