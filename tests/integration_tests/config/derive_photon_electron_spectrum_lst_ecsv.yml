@@ -6,6 +6,16 @@ applications:
     summary: >-
       Combine single-photoelectron and afterpulse measurements to derive an LST camera response
       spectrum.
+  preparation:
+  - application: simtools-get-model-parameter
+    configuration:
+      parameter: pm_photoelectron_spectrum
+      parameter_version: 2.0.0
+      site: North
+      telescope: LSTN-design
+      export_model_file: true
+      export_model_file_as_table: true
+      output_file: reference_spectrum.ecsv
   configuration:
     input_spectrum: ${downloaded:SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv}
     afterpulse_spectrum: ${downloaded:Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv}
@@ -28,10 +38,28 @@ applications:
       file: test_single_pe_lst.ecsv
       validations:
       - type: reference
-        file: ${generated:model_parameters/pm_photoelectron_spectrum-2.1.0.ecsv}
+        file: ${prepared:reference_spectrum.ecsv}
         tolerance: 0.01
-        columns: [amplitude, response, response_with_ap]
+        # The model reference uses a different afterpulse measurement.
+        columns: [amplitude, response]
+      - type: data_schema
+        schema: src/simtools/schemas/model_parameters/pm_photoelectron_spectrum.schema.yml
+      - type: table
+        minimum_rows: 2101
+        columns:
+          amplitude:
+            range:
+              minimum: 0
+              maximum: 42
+          response:
+            range:
+              minimum: 0
+              maximum: 1
+          response_with_ap:
+            range:
+              minimum: 0
+              maximum: 1
   test_name: LST_ecsv
   test_use_case: UC-150-2.1.2
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0
