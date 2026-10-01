@@ -125,9 +125,14 @@ jobs:
             --format github-output)
           CORSIKA_TABLES_REF=$(printf '%s\n' "$CATALOG_OUTPUT" | \
             sed -n 's/^corsika_tables_ref=//p')
+          CORSIKA_TABLES_REVISION=$(printf '%s\n' "$CATALOG_OUTPUT" | \
+            sed -n 's/^corsika_tables_revision=//p')
           test -n "$CORSIKA_TABLES_REF"
-          echo "CORSIKA_TABLES_REF=$CORSIKA_TABLES_REF" >> "$GITHUB_ENV"
-          echo "version=$CORSIKA_TABLES_REF" >> "$GITHUB_OUTPUT"
+          {
+            echo "CORSIKA_TABLES_REF=$CORSIKA_TABLES_REF"
+            echo "CORSIKA_TABLES_REVISION=$CORSIKA_TABLES_REVISION"
+          } >> "$GITHUB_ENV"
+          echo "version=${CORSIKA_TABLES_REVISION:-$CORSIKA_TABLES_REF}" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
@@ -173,6 +178,19 @@ jobs:
                 -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
                 clone --depth 1 --branch "$CORSIKA_TABLES_REF" "$repo_url" "$CLONE_DIR"
               then
+                if [[ -n "$CORSIKA_TABLES_REVISION" ]]; then
+                  if ! git -C "$CLONE_DIR" "${GIT_CLONE_ARGS[@]}" \
+                    -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
+                    -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
+                    -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
+                    fetch --depth 1 origin "$CORSIKA_TABLES_REVISION" || \
+                    ! git -C "$CLONE_DIR" checkout --detach "$CORSIKA_TABLES_REVISION"
+                  then
+                    echo "Could not check out the configured interaction-table revision."
+                    rm -rf "$CLONE_DIR"
+                    continue
+                  fi
+                fi
                 git lfs install
                 if ! (cd "$CLONE_DIR" && git "${GIT_CLONE_ARGS[@]}" lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
                   echo "Git LFS pull failed for $repo_url."

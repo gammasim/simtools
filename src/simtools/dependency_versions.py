@@ -19,7 +19,10 @@ SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
-SOURCE_REF_INVALID_CHARACTERS = re.compile(r"[ ~^:?*\[\\]")
+SOURCE_REF_PATTERN = re.compile(
+    r"^(?![-/.])(?!HEAD$)(?!.*[\x00-\x20\x7f~^:?*\[\\])(?!.*\.\.)(?!.*//)"
+    r"(?!.*@\{)(?!.*(?:/\.|\.lock(?:/|$)))(?!.*[./]$).+$"
+)
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0"}
@@ -346,6 +349,8 @@ def _validate_simtel_components(
         )
         ref_validator(hessio_ref, "hessio")
         ref_validator(stdtools_ref, "stdtools")
+        _safe_build_id(hessio_ref)
+        _safe_build_id(stdtools_ref)
         revision_validator = (
             _validate_revision if require_revisions else _validate_optional_revision
         )
@@ -467,17 +472,7 @@ def _validate_release_tag(value, label):
 
 def _is_valid_source_ref(value):
     """Return whether a Git branch or tag name is safe to use as a source ref."""
-    return (
-        isinstance(value, str)
-        and bool(value)
-        and not value.startswith(("-", "/", "."))
-        and not value.endswith((".", "/"))
-        and ".." not in value
-        and "//" not in value
-        and "@{" not in value
-        and value != "@"
-        and SOURCE_REF_INVALID_CHARACTERS.search(value) is None
-    )
+    return isinstance(value, str) and SOURCE_REF_PATTERN.fullmatch(value) is not None
 
 
 def _validate_source_ref(value, label):

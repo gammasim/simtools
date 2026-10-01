@@ -149,6 +149,25 @@ def test_safe_build_id_replaces_unicode_characters():
     assert dependency_versions._safe_build_id("release/\u00e9build") == "release-build"  # pylint: disable=protected-access
 
 
+@pytest.mark.parametrize(
+    "source_ref", ["topic/.hidden", "topic/main.lock/next", "topic/\x01next", "HEAD"]
+)
+def test_source_ref_rejects_invalid_git_components(source_ref):
+    """Reject invalid Git ref components and control characters."""
+    with pytest.raises(ValueError, match="Invalid source ref"):
+        dependency_versions._validate_source_ref(source_ref, "source")  # pylint: disable=protected-access
+
+
+@pytest.mark.parametrize("component", ["hessio", "stdtools"])
+def test_catalog_rejects_refs_without_a_usable_artifact_identifier(component):
+    """Fail catalog validation when a valid Git ref cannot produce an ASCII artifact ID."""
+    catalog = _readable_catalog()
+    catalog["sim-telarray"][0][f"{component}-ref"] = "\u00e9"
+
+    with pytest.raises(ValueError, match="valid OCI image tag"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
 def test_simtel_branch_ref_requires_a_safe_build_id():
     """Require a separate image identifier for a branch ref containing a slash."""
     with pytest.raises(ValueError, match="require build-id"):
@@ -597,6 +616,11 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema_path = simtools_root_path / "src/simtools/schemas/dependency_versions.schema.yml"
     schemas = list(yaml.safe_load_all(schema_path.read_text(encoding="utf-8")))
     schemas_by_version = {item["schema_version"]: item for item in schemas}
+    for schema_version in dependency_versions.READABLE_REF_SCHEMAS:
+        source_ref_pattern = schemas_by_version[schema_version]["definitions"]["source-ref"][
+            "pattern"
+        ]
+        assert source_ref_pattern == dependency_versions.SOURCE_REF_PATTERN.pattern
     schema = schemas_by_version[catalog["schema_version"]]
 
     jsonschema.validate(catalog, schema)

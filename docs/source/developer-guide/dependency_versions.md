@@ -37,6 +37,13 @@ image names use that identifier. sim_telarray refs that are not already valid OC
 need a safe `build-id`; this keeps the source ref readable without putting `/` into image or
 artifact names. Archive SHA-256 checksums validate downloaded files. Optional OCI image digests
 and Git revisions remain supported for installations that need explicit pins.
+An optional interaction-table `revision` is used by integration CI, with the readable `ref`
+remaining in the catalog. The simulation-model and test-resource branches follow the CI selections
+described below.
+
+Production image tags longer than 128 characters are shortened automatically. The tag retains
+its first 111 characters followed by a 16-character digest of the full tag, keeping long dependency
+identifiers distinct. The exported tag used for image tests is the same tag published by the build.
 
 For a release, update the tags and resource version in the catalog, run CI, and tag simtools.
 The catalog is packaged with simtools; built images retain the observed commits in their manifest.
