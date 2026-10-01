@@ -42,7 +42,7 @@ Images are compatible with ARM and x86_64 CPUs.
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
+| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config/-/releases/v1.1.0) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
 The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
