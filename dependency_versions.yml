@@ -19,11 +19,11 @@ base-image:
   runtime-version: 9.8-minimal
   build-version: "9.8"
 corsika-interaction-tables:
-  ref: v1.0.0
+  ref: v1.1.0
   source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables.git
 model-repository:
   name: CTAO-Simulation-Model
-  default-ref: v0.17.2
+  default-ref: v0.18.0
   repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git
 simtools-tests:
   repository: gammasim/simtools-tests
@@ -38,7 +38,7 @@ production-combinations:
 corsika:
   - source-ref: v7.8010
     source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-ref: v0.1.0
+    config-ref: v1.1.0
     config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
     opt-patch-ref: v1.1.0
     opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git

@@ -7,6 +7,92 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.38.0](https://github.com/gammasim/simtools/releases/tag/v0.38.0) - 2026-10-01
+
+### Bugfixes
+
+- Do not initialize simulation model reader when generating test resources. ([#2525](https://github.com/gammasim/simtools/pull/2525))
+- Ensure that child processes of `simtools-run-application` use the given env file. ([#2530](https://github.com/gammasim/simtools/pull/2530))
+- Bugfix in UTM to ground coordinates transformation for non-telescope array elements: ignore missing telescope axis height for altitude calculation. ([#2533](https://github.com/gammasim/simtools/pull/2533))
+- HTCondor container workers now use safe Python path handling and do not inject the submitting
+  checkout into ``PYTHONPATH``. ([#2544](https://github.com/gammasim/simtools/pull/2544))
+- Fix illuminator simulation error handling. ([#2555](https://github.com/gammasim/simtools/pull/2555))
+- Honor the registered array-element list when generating array configurations. ([#2563](https://github.com/gammasim/simtools/pull/2563))
+- Return a failing exit status when model-production directories differ. ([#2564](https://github.com/gammasim/simtools/pull/2564))
+- Stream standalone reduced-event exports and fail when the input pattern matches no files. ([#2565](https://github.com/gammasim/simtools/pull/2565))
+- Report duplicate threshold/run inputs instead of silently dropping one product. ([#2566](https://github.com/gammasim/simtools/pull/2566))
+- Reject event histogram inputs with mixed exposure metadata or binning. ([#2567](https://github.com/gammasim/simtools/pull/2567))
+- Require measured PSF data before running cumulative-PSF ray tracing. ([#2568](https://github.com/gammasim/simtools/pull/2568))
+- Fail illuminator simulation when the requested selection schedules no pairs. ([#2570](https://github.com/gammasim/simtools/pull/2570))
+- Support CORSIKA output validation without an expected shower count. ([#2571](https://github.com/gammasim/simtools/pull/2571))
+- Convert FADC readout samples to nanoseconds when deriving pulse-shape parameters. ([#2572](https://github.com/gammasim/simtools/pull/2572))
+- Validate zenith angles before applying the camera-efficiency secant airmass model. ([#2574](https://github.com/gammasim/simtools/pull/2574))
+- Reject unknown primary particles during automatic trigger-rate spectrum selection. ([#2575](https://github.com/gammasim/simtools/pull/2575))
+- Verify interaction-table SHA-256 digests when supplied by the manifest. ([#2576](https://github.com/gammasim/simtools/pull/2576))
+- Allow camera-efficiency reference comparisons to tolerate architecture-dependent floating-point differences. ([#2580](https://github.com/gammasim/simtools/pull/2580))
+- Fixes minor issues leading to failures of the simulation models documentation generation in the CI in [simulation-models](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models). ([#2582](https://github.com/gammasim/simtools/pull/2582))
+
+### Documentation
+
+- Improve integration test skill. ([#2521](https://github.com/gammasim/simtools/pull/2521))
+
+### New Features
+
+- Add signal-level production comparison to simtools-compare-productions. ([#2469](https://github.com/gammasim/simtools/pull/2469))
+- Improve simulation production metadata and accessing of production files in file-based systems.
+  Production runs now retain per-process resource records for CORSIKA, multipipe, and sim_telarray. ([#2496](https://github.com/gammasim/simtools/pull/2496))
+- Adds process-level accounting to simulation production execution. ([#2512](https://github.com/gammasim/simtools/pull/2512))
+- Improve metadata collection and validation to include `sim_telarray` and CORSIKA output. ([#2513](https://github.com/gammasim/simtools/pull/2513))
+- Replace the `sim_telarray` `testeff` tool by a simtools implementation. ([#2516](https://github.com/gammasim/simtools/pull/2516))
+- Add functionality to `simtools-compare-productions` to compare and plot required computing resources. ([#2535](https://github.com/gammasim/simtools/pull/2535))
+- Update and cleanup derive_incident_angle to export incident angle model parameters. ([#2543](https://github.com/gammasim/simtools/pull/2543))
+- Warn on DIRAC filename-length overflow in generated runner outputs. ([#2547](https://github.com/gammasim/simtools/pull/2547))
+- Add a service application `simtools-validate-repository-consistency` to be used e.g., in the setting repository to validate complete configuration and metadata files. ([#2559](https://github.com/gammasim/simtools/pull/2559))
+- Add ECSV support for model-parameter setting-workflow outputs and validation. ([#2562](https://github.com/gammasim/simtools/pull/2562))
+- Add CORSIKA7 QGSJet-II / URQMD executables for flat and curved atmosphere (selected by `corsika_he_interaction=qgs2`). ([#2583](https://github.com/gammasim/simtools/pull/2583))
+
+### Maintenance
+
+- Exporting trigger threshold as parameter and updating plotting. ([#2457](https://github.com/gammasim/simtools/pull/2457))
+- Simplification in simulation models structure for `CORSIKA` and `sim_telarray` parameters. ([#2493](https://github.com/gammasim/simtools/pull/2493))
+- Remove overwrite.yaml files and move overwrite dictionaries into job grid file metadata. ([#2494](https://github.com/gammasim/simtools/pull/2494))
+- Reduce number of trigger to build-CI for `CORSIKA` and `sim_telarray`. ([#2504](https://github.com/gammasim/simtools/pull/2504))
+- Isolate MongoDB routines and support reading simulation models from a fixed Git revision.
+  MongoDB remains the fallback when no filesystem or Git source is configured. ([#2506](https://github.com/gammasim/simtools/pull/2506))
+- Correct model-table serialization contracts, database asset identity handling, historical camera
+  plotting, and generated model-parameter links. ([#2508](https://github.com/gammasim/simtools/pull/2508))
+- Change azimuth of the simulation-prod integration test to a value that is neither North nor South. ([#2510](https://github.com/gammasim/simtools/pull/2510))
+- Improve efficiency of CI testing changelogs. ([#2524](https://github.com/gammasim/simtools/pull/2524))
+- Adding integration tests for simtools-derive-bias-curves and removing duplication from documentation. ([#2526](https://github.com/gammasim/simtools/pull/2526))
+- Improve efficiency of several simtools applications by avoiding unjustified simulation model initialization. ([#2528](https://github.com/gammasim/simtools/pull/2528))
+- Remove code and schema related to deprecated `pedestal_events` model parameter. ([#2531](https://github.com/gammasim/simtools/pull/2531))
+- Rename `simtools-db-get-parameter-from-db` to `simtools-get-model-parameter` and
+  `simtools-db-get-array-layouts-from-db` to `simtools-get-array-layout`. ([#2532](https://github.com/gammasim/simtools/pull/2532))
+- Remove conversion application from `sim_telarray` configuration to simtools. ([#2534](https://github.com/gammasim/simtools/pull/2534))
+- Speed up coordinate conversion workflows by loading only the required site parameters and caching dependency metadata.
+  Restrict `SIMTOOLS_TESTS_PATH` handling to integration-test configuration. ([#2536](https://github.com/gammasim/simtools/pull/2536))
+- Improve application startup by minimizing matplotlib imports. ([#2537](https://github.com/gammasim/simtools/pull/2537))
+- Improve efficiency of schema validation CI (x10 speedup). ([#2540](https://github.com/gammasim/simtools/pull/2540))
+- Address warnings issued during container builds. ([#2545](https://github.com/gammasim/simtools/pull/2545))
+- Remove MongoDB-related code. Simulation models are now retrieved from filesystem or Git sources. ([#2548](https://github.com/gammasim/simtools/pull/2548))
+- Improve file naming for trigger histogram writing; resolve model version issue with lists vs string handling. ([#2550](https://github.com/gammasim/simtools/pull/2550))
+- Add GitHub mirror fallback for integration test dependencies. ([#2556](https://github.com/gammasim/simtools/pull/2556))
+- Remove build-kit cache entries from container building workflows. ([#2577](https://github.com/gammasim/simtools/pull/2577))
+- Address linter issues for python 3.14.7. ([#2581](https://github.com/gammasim/simtools/pull/2581))
+- Add a preparation step to the integration tests workflows to provide required simulation model parameter files. ([#2584](https://github.com/gammasim/simtools/pull/2584))
+- Improve dependency catalogue with better readability and complete list of systems.
+  Allow test CI to select simulation-models and simtools-tests branches, defaulting to main independently of release dependency refs.
+  Use readable Git refs in the dependency catalog and record observed commits in build provenance.
+  Validate Git refs and artifact identifiers, honor optional interaction-table revisions, and bound production image tag lengths. ([#2586](https://github.com/gammasim/simtools/pull/2586))
+- Skip no-commit-to-main check when running the software update workflow. ([#2587](https://github.com/gammasim/simtools/pull/2587))
+- Minimize tests and documentation on dependency versions. ([#2588](https://github.com/gammasim/simtools/pull/2588))
+
+### Simulation model
+
+- Update default simulation models tag to `v0.18.0`.
+- Add new model parameter `illuminator_tower_height`. ([#2514](https://github.com/gammasim/simtools/pull/2514))
+
+
 ## [v0.37.0](https://github.com/gammasim/simtools/releases/tag/v0.37.0) - 2026-09-01
 
 ### API Changes
