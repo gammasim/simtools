@@ -18,6 +18,7 @@ on:
     paths:
       - docker/Dockerfile-corsika7
       - docker/validate_corsika7_build.sh
+      - .github/scripts/fetch_with_retries.sh
       - .github/workflows/build-corsika7.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
@@ -52,6 +53,8 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
+    permissions:
+      contents: read
 
     steps:
       - name: download-auxiliary-files
@@ -88,11 +91,6 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        include: ${{ fromJSON(needs.dependency-config.outputs.corsika_source_matrix) }}
 
     steps:
       - name: Checkout repository
@@ -100,52 +98,76 @@ jobs:
 
       - name: Prepare CORSIKA sources
         env:
-          CORSIKA_SOURCE_TAG: ${{ matrix.corsika_tag }}
-          CORSIKA_SOURCE_URL: ${{ matrix.corsika_source_url }}
-          CORSIKA_SOURCE_REVISION: ${{ matrix.corsika_source_revision }}
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
-          CORSIKA_CONFIG_TAG: ${{ matrix.corsika_config_tag }}
           CORSIKA_CONFIG_BRANCH: ${{ inputs.corsika_config_branch }}
-          CORSIKA_CONFIG_SOURCE_URL: ${{ matrix.corsika_config_source_url }}
-          CORSIKA_CONFIG_REVISION: ${{ matrix.corsika_config_revision }}
-          CORSIKA_OPT_PATCH_TAG: ${{ matrix.corsika_opt_patch_tag }}
-          CORSIKA_OPT_PATCH_SOURCE_URL: ${{ matrix.corsika_opt_patch_source_url }}
-          CORSIKA_OPT_PATCH_REVISION: ${{ matrix.corsika_opt_patch_revision }}
+          CORSIKA_CONFIG_GITHUB_TOKEN: ${{ secrets.CORSIKA7_CONFIG_GITHUB_TOKEN }}
+          CORSIKA_SOURCE_MATRIX: ${{ needs.dependency-config.outputs.corsika_source_matrix }}
         run: |
-          source_url="https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}"
-          source_revision=$(./.github/scripts/clone_with_retries.sh \
-            "$source_url" "$CORSIKA_SOURCE_TAG" corsika7 "$CORSIKA_SOURCE_REVISION")
-          printf '%s\n' "$source_revision" > corsika_revision
+          set -euo pipefail
+          mkdir -p corsika-source-artifacts corsika-source-work
 
-          config_ref="$CORSIKA_CONFIG_TAG"
-          config_revision="${CORSIKA_CONFIG_REVISION}"
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            config_ref="$CORSIKA_CONFIG_BRANCH"
-            config_revision=""
-          fi
-          config_revision=$(./.github/scripts/clone_with_retries.sh \
-            "$CORSIKA_CONFIG_SOURCE_URL" "$config_ref" corsika7-config "$config_revision")
-          printf '%s\n' "$config_revision" > corsika_config_revision
+          config_repo="corsika-source-work/corsika7-config-repository"
+          opt_patch_repo="corsika-source-work/corsika-opt-patches-repository"
+          config_fallback_url="https://github.com/gammasim/corsika7-config.git"
 
-          opt_patch_revision=$(./.github/scripts/clone_with_retries.sh \
-            "$CORSIKA_OPT_PATCH_SOURCE_URL" "$CORSIKA_OPT_PATCH_TAG" corsika-opt-patches \
-            "$CORSIKA_OPT_PATCH_REVISION")
-          printf '%s\n' "$opt_patch_revision" > corsika_opt_patch_revision
+          while IFS= read -r component; do
+            build_id=$(jq -r '.corsika_build_id' <<< "$component")
+            source_tag=$(jq -r '.corsika_tag' <<< "$component")
+            source_url=$(jq -r '.corsika_source_url' <<< "$component")
+            source_revision=$(jq -r '.corsika_source_revision' <<< "$component")
+            config_tag=$(jq -r '.corsika_config_tag' <<< "$component")
+            config_url=$(jq -r '.corsika_config_source_url' <<< "$component")
+            config_revision=$(jq -r '.corsika_config_revision' <<< "$component")
+            opt_patch_tag=$(jq -r '.corsika_opt_patch_tag' <<< "$component")
+            opt_patch_url=$(jq -r '.corsika_opt_patch_source_url' <<< "$component")
+            opt_patch_revision=$(jq -r '.corsika_opt_patch_revision' <<< "$component")
 
-          rm -rf corsika7/.git corsika7-config/.git corsika-opt-patches/.git
-          tar -czf corsika7-source.tar.gz \
-            corsika7 corsika_revision \
-            corsika7-config corsika_config_revision \
-            corsika-opt-patches corsika_opt_patch_revision
-          sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
+            source_dir="corsika-source-work/$build_id"
+            rm -rf -- "$source_dir"
+            mkdir -p "$source_dir"
+
+            source_url="https://oauth2:${CORSIKA7_TOKEN}@${source_url#https://}"
+            source_revision=$(./.github/scripts/clone_with_retries.sh \
+              "$source_url" "$source_tag" "$source_dir/corsika7" "$source_revision")
+            printf '%s\n' "$source_revision" > "$source_dir/corsika_revision"
+
+            config_ref="$config_tag"
+            config_revision_to_fetch="$config_revision"
+            if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+              config_ref="$CORSIKA_CONFIG_BRANCH"
+              config_revision_to_fetch=""
+            fi
+            config_revision=$(FETCH_FALLBACK_TOKEN="$CORSIKA_CONFIG_GITHUB_TOKEN" \
+              ./.github/scripts/fetch_with_retries.sh \
+              "$config_url" "$config_ref" "$config_repo" "$config_revision_to_fetch" \
+              "$config_fallback_url")
+            rm -rf -- "$source_dir/corsika7-config"
+            cp -a "$config_repo" "$source_dir/corsika7-config"
+            rm -rf -- "$source_dir/corsika7-config/.git"
+            printf '%s\n' "$config_revision" > "$source_dir/corsika_config_revision"
+
+            opt_patch_revision=$(./.github/scripts/fetch_with_retries.sh \
+              "$opt_patch_url" "$opt_patch_tag" "$opt_patch_repo" "$opt_patch_revision")
+            rm -rf -- "$source_dir/corsika-opt-patches"
+            cp -a "$opt_patch_repo" "$source_dir/corsika-opt-patches"
+            rm -rf -- "$source_dir/corsika-opt-patches/.git"
+            printf '%s\n' "$opt_patch_revision" > "$source_dir/corsika_opt_patch_revision"
+
+            archive="corsika7-source-${build_id}.tar.gz"
+            tar -czf "corsika-source-artifacts/$archive" \
+              -C "$source_dir" \
+              corsika7 corsika_revision \
+              corsika7-config corsika_config_revision \
+              corsika-opt-patches corsika_opt_patch_revision
+            (cd corsika-source-artifacts && sha256sum "$archive" > "$archive.sha256")
+          done < <(jq -c '.[]' <<< "$CORSIKA_SOURCE_MATRIX")
 
       - name: Upload CORSIKA source
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
-          name: corsika7-source-${{ matrix.corsika_build_id }}
+          name: corsika7-source
           path: |
-            corsika7-source.tar.gz
-            corsika7-source.tar.gz.sha256
+            corsika-source-artifacts/*
           retention-days: 1
 
   build-corsika7:
@@ -178,14 +200,15 @@ jobs:
       - name: Download CORSIKA source
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          name: corsika7-source-${{ matrix.corsika_build_id }}
+          name: corsika7-source
           path: corsika-source
 
       - name: Extract CORSIKA source
         run: |
           cd corsika-source
-          sha256sum --check corsika7-source.tar.gz.sha256
-          tar -xzf corsika7-source.tar.gz -C .
+          archive="corsika7-source-${{ matrix.corsika_build_id }}.tar.gz"
+          sha256sum --check "$archive.sha256"
+          tar -xzf "$archive" -C .
 
       - name: Read CORSIKA config revision
         id: corsika_config
