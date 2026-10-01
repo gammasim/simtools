@@ -29,6 +29,8 @@ jobs:
           pip install pylint
 
       - uses: browniebroke/pre-commit-autoupdate-action@d5663279643bd228226e60a4fe4fa9efc30c03eb  # main
+        env:
+          SKIP: no-commit-to-branch
 
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
         if: always()
