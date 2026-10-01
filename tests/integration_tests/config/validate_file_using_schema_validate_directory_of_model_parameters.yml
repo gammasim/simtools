@@ -43,4 +43,4 @@ applications:
     file_directory: ${prepared:.}
   test_name: validate_directory_of_model_parameters
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

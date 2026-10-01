@@ -39,4 +39,4 @@ applications:
         tolerance: 0.01
   test_name: utm_to_ground_json
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

@@ -17,4 +17,4 @@ applications:
     file_name: ${prepared:array_layouts-2.0.2.json}
   test_name: json_validate_model_parameter
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

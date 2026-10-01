@@ -267,8 +267,9 @@ def test_application_workflow_schema_accepts_resource_benchmark_exclusion():
 
 
 def test_application_workflow_schema_accepts_model_parameter_preparation():
-    """Allow model-parameter preparation before an integration-test application."""
+    """Allow model-parameter preparation in the new workflow schema."""
     workflow_config = _output_validation_workflow({"type": "format", "format": "ecsv"})
+    workflow_config["schema_version"] = "0.6.0"
     workflow_config["applications"][0]["preparation"] = [
         {
             "application": "simtools-get-model-parameter",
@@ -358,10 +359,16 @@ def test_application_workflow_schema_rejects_legacy_output_fields():
 
 
 def test_application_workflow_schema_preserves_previous_version():
-    """Load the newest workflow schema first while retaining version 0.4.0."""
+    """Load the newest workflow schema first while retaining earlier versions."""
     schema_file = SCHEMA_PATH / "application_workflow.metaschema.yml"
 
-    assert schema.load_schema(schema_file)["schema_version"] == "0.5.0"
+    assert schema.load_schema(schema_file)["schema_version"] == "0.6.0"
+    previous_schema = schema.load_schema(schema_file, "0.5.0")
+    assert previous_schema["schema_version"] == "0.5.0"
+    assert (
+        "preparation" not in previous_schema["definitions"]["applications"]["items"]["properties"]
+    )
+    assert "preparation_application" not in previous_schema["definitions"]
     assert schema.load_schema(schema_file, "0.4.0")["schema_version"] == "0.4.0"
 
     legacy_workflow = {

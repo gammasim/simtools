@@ -139,7 +139,8 @@ PR CI, and compatibility checks.
 ### Prepared model parameters
 
 An integration test can prepare model-parameter inputs in its temporary directory instead of
-storing them in a versioned resource bundle. The `preparation` steps run first and may only use
+storing them in a versioned resource bundle. Use workflow schema version `0.6.0` for
+`preparation` steps, which run first and may only use
 `simtools-get-model-parameter`. Refer to their outputs with `${prepared:path/to/file}` in the
 tested application's `configuration` or a validation reference.
 

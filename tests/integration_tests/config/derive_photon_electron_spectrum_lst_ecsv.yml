@@ -27,6 +27,10 @@ applications:
     - path_descriptor: output_path
       file: test_single_pe_lst.ecsv
       validations:
+      - type: reference
+        file: ${generated:model_parameters/pm_photoelectron_spectrum-2.1.0.ecsv}
+        tolerance: 0.01
+        columns: [amplitude, response, response_with_ap]
       - type: data_schema
         schema: src/simtools/schemas/model_parameters/pm_photoelectron_spectrum.schema.yml
       - type: table

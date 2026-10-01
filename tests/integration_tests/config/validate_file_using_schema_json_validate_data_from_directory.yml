@@ -44,4 +44,4 @@ applications:
     file_directory: ${prepared:.}
   test_name: json_validate_data_from_directory
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

@@ -30,4 +30,4 @@ applications:
         tolerance: 1.0e-05
   test_name: telescope_parameter_array_element_position_ground
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0
