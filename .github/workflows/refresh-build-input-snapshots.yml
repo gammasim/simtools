@@ -259,6 +259,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           add-paths: dependency_versions.yml
+          labels: no-changelog-needed
           branch: update/build-input-source-revisions
           title: Update build-input source revisions
           commit-message: "chore: update build-input source revisions"
