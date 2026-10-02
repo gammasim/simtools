@@ -30,6 +30,10 @@ def test_main(mocker, tmp_test_directory, execute):
     run = mocker.patch.object(create_setting_workflow, "run_setting_workflow")
     create_setting_workflow.main()
     prepare.assert_called_once_with(context.args, context.model_reader)
+    context.logger.info.assert_any_call(
+        "Add the following to the corresponding production-info file:\n%s",
+        'LSTN-design:\n  min_photons:\n    version: "2.0.1"\n    activity_id: activity',
+    )
     if execute:
         run.assert_called_once_with(config, context.args)
     else:

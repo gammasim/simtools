@@ -171,6 +171,7 @@ def test_run_and_rerun_use_separate_outputs(setting_args, setting_writer, mocker
     assert output == setting_args["output_path"] / "output" / config_file.parent.relative_to(
         setting_args["output_path"] / "input"
     )
+    assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(output)
     assert run.call_args.args[0]["ignore_existing_parameter_version"] is False
     output.mkdir(parents=True)
     sentinel = output / "previous-result.json"

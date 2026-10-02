@@ -53,18 +53,39 @@ def main():
     context = APPLICATION.start()
     config_file = create_setting_workflow(context.args, context.model_reader)
     context.logger.info(f"Prepared workflow: {config_file}")
-    reference = {
-        context.args["instrument"]: {
-            context.args["parameter"]: {
-                "version": context.args["parameter_version"],
+    reference = _production_info_reference(context.args, config_file)
+    context.logger.info("info.yml entry:\n%s", yaml.safe_dump(reference, sort_keys=False))
+    context.logger.info(
+        "Add the following to the corresponding production-info file:\n%s",
+        _production_info_text(reference),
+    )
+    if context.args.get("run"):
+        output = run_setting_workflow(config_file, context.args)
+        context.logger.info(f"Results: {output}")
+
+
+def _production_info_reference(args, config_file):
+    """Return the production-info entry for the prepared setting."""
+    return {
+        args["instrument"]: {
+            args["parameter"]: {
+                "version": args["parameter_version"],
                 "activity_id": config_file.parent.name,
             }
         }
     }
-    context.logger.info("info.yml entry:\n%s", yaml.safe_dump(reference, sort_keys=False))
-    if context.args.get("run"):
-        output = run_setting_workflow(config_file, context.args)
-        context.logger.info(f"Results: {output}")
+
+
+def _production_info_text(reference):
+    """Format a production-info entry with semantic versions quoted."""
+    instrument, parameters = next(iter(reference.items()))
+    parameter, setting = next(iter(parameters.items()))
+    return (
+        f"{instrument}:\n"
+        f"  {parameter}:\n"
+        f'    version: "{setting["version"]}"\n'
+        f"    activity_id: {setting['activity_id']}"
+    )
 
 
 if __name__ == "__main__":

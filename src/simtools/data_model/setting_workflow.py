@@ -235,7 +235,8 @@ def run_setting_workflow(config_file, args):
     """
     config_file = Path(config_file).resolve()
     relative = Path(*config_file.parent.parts[-3:])
-    root = config_file.parents[4]
+    input_root = config_file.parents[3]
+    root = input_root.parent
     output = root / "output" / relative
     rerun = output.exists()
     if rerun:
