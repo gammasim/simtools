@@ -7,7 +7,6 @@ applications:
       Read a simulation-model repository and generate a report of its available production
       configurations.
   configuration:
-    simulation_models_path: ../simulation-models
     output_path: simtools-output/reports/productions/
     output_file: production_version_descriptions.md
   integration_tests:
