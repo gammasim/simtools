@@ -510,6 +510,46 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
     assert matrix[0]["simtel_image"] == f"ghcr.io/gammasim/sim_telarray@{digest}"
 
 
+def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_path):
+    """Use a deterministic private snapshot only when every source is pinned."""
+    catalog = _load_catalog(simtools_root_path)
+    revision = "a" * 40
+    catalog["corsika"][0].update(
+        {
+            "source-revision": revision,
+            "config-revision": revision,
+            "opt-patch-revision": revision,
+        }
+    )
+    catalog["sim-telarray"][0].update(
+        {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
+    )
+
+    matrices = dependency_versions.build_workflow_matrices(catalog)
+
+    assert matrices["corsika_source_matrix"][0]["corsika_source_snapshot"].startswith(
+        "ghcr.io/gammasim/corsika7-build-inputs:78010-"
+    )
+    assert matrices["simtel_matrix"][0]["simtel_source_snapshot"].startswith(
+        "ghcr.io/gammasim/simtel-array-build-inputs:v2025-11-30-rc-"
+    )
+    assert (
+        dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
+            "corsika7-build-inputs", "v78010", (revision, "", revision)
+        )
+        == ""
+    )
+    summary = dependency_versions.dependency_catalog_summary(catalog)
+    assert (
+        summary["default_corsika_source_snapshot"]
+        == matrices["corsika_source_matrix"][0]["corsika_source_snapshot"]
+    )
+    assert (
+        summary["default_simtel_source_snapshot"]
+        == matrices["simtel_matrix"][0]["simtel_source_snapshot"]
+    )
+
+
 def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_path):
     """Test production combinations inherit the catalog CPU variants."""
     catalog = _load_catalog(simtools_root_path)

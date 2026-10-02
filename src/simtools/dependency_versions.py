@@ -7,6 +7,7 @@ import sys
 import tomllib
 from copy import deepcopy
 from functools import cache
+from hashlib import sha256
 from pathlib import Path
 
 import yaml
@@ -26,6 +27,15 @@ SOURCE_REF_PATTERN = re.compile(
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0"}
+SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
+
+
+def _source_snapshot_image(package, build_id, revisions):
+    """Return a private source-snapshot image for fully pinned inputs."""
+    if not all(revisions):
+        return ""
+    digest = sha256("\n".join(revisions).encode("ascii")).hexdigest()[:16]
+    return f"{SOURCE_SNAPSHOT_REGISTRY}/{package}:{build_id}-{digest}"
 
 
 def _corsika_tag(component):
@@ -550,6 +560,15 @@ def build_workflow_matrices(catalog):
             ),
             "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
             "corsika_opt_patch_revision": corsika.get("opt-patch-revision", ""),
+            "corsika_source_snapshot": _source_snapshot_image(
+                "corsika7-build-inputs",
+                _corsika_build_id(corsika),
+                (
+                    corsika.get("source-revision", ""),
+                    corsika.get("config-revision", ""),
+                    corsika.get("opt-patch-revision", ""),
+                ),
+            ),
             "avx_flag": variant,
         }
         for corsika in catalog["corsika"]
@@ -580,6 +599,15 @@ def build_workflow_matrices(catalog):
             ),
             "stdtools_source_url": component["stdtools-source-url"],
             "stdtools_revision": component.get("stdtools-revision", ""),
+            "simtel_source_snapshot": _source_snapshot_image(
+                "simtel-array-build-inputs",
+                _simtel_build_id(component),
+                (
+                    component.get("revision", ""),
+                    component.get("hessio-revision", ""),
+                    component.get("stdtools-revision", ""),
+                ),
+            ),
         }
         for component in catalog["sim-telarray"]
     ]
@@ -598,6 +626,15 @@ def build_workflow_matrices(catalog):
             ),
             "corsika_opt_patch_source_url": component["opt-patch-source-url"],
             "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
+            "corsika_source_snapshot": _source_snapshot_image(
+                "corsika7-build-inputs",
+                _corsika_build_id(component),
+                (
+                    component.get("source-revision", ""),
+                    component.get("config-revision", ""),
+                    component.get("opt-patch-revision", ""),
+                ),
+            ),
         }
         for component in catalog["corsika"]
     ]
@@ -668,8 +705,26 @@ def dependency_catalog_summary(catalog):
         "almalinux_version": base["runtime-version"].removesuffix("-minimal"),
         "autoconf_version": catalog["archives"]["autoconf"]["version"],
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
+        "default_corsika_source_snapshot": _source_snapshot_image(
+            "corsika7-build-inputs",
+            _corsika_build_id(default_corsika),
+            (
+                default_corsika.get("source-revision", ""),
+                default_corsika.get("config-revision", ""),
+                default_corsika.get("opt-patch-revision", ""),
+            ),
+        ),
         "gsl_version": catalog["archives"]["gsl"]["version"],
         "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
+        "default_simtel_source_snapshot": _source_snapshot_image(
+            "simtel-array-build-inputs",
+            _simtel_build_id(default_simtel),
+            (
+                default_simtel.get("revision", ""),
+                default_simtel.get("hessio-revision", ""),
+                default_simtel.get("stdtools-revision", ""),
+            ),
+        ),
         "corsika_tables_ref": _dependency_tag(
             catalog["corsika-interaction-tables"], "ref", "tag", "version"
         ),

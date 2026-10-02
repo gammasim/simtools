@@ -29,6 +29,7 @@ jobs:
       build_base_image: ${{ steps.config.outputs.build_base_image }}
       gsl_version: ${{ steps.config.outputs.gsl_version }}
       gsl_sha256: ${{ steps.config.outputs.gsl_sha256 }}
+      default_simtel_source_snapshot: ${{ steps.config.outputs.default_simtel_source_snapshot }}
       simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
       simtel_build_matrix: ${{ steps.config.outputs.simtel_build_matrix }}
     steps:
@@ -42,9 +43,32 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
+    permissions:
+      contents: read
+      packages: read
 
     steps:
+      - name: Log in to the Container registry
+        if: needs.dependency-config.outputs.default_simtel_source_snapshot != ''
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore GSL from the source snapshot
+        if: needs.dependency-config.outputs.default_simtel_source_snapshot != ''
+        env:
+          SOURCE_SNAPSHOT: ${{ needs.dependency-config.outputs.default_simtel_source_snapshot }}
+        run: |
+          set -euo pipefail
+          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          trap 'docker rm -f "$container_id"' EXIT
+          docker cp "$container_id:/input/gsl.tar.gz" gsl.tar.gz
+          echo "Restored GSL from $SOURCE_SNAPSHOT."
+
       - name: download-auxiliary-files
+        if: needs.dependency-config.outputs.default_simtel_source_snapshot == ''
         env:
           CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
           GSL_VERSION: ${{ needs.dependency-config.outputs.gsl_version }}
@@ -78,6 +102,9 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
+    permissions:
+      contents: read
+      packages: read
     strategy:
       matrix:
         include: ${{ fromJSON(needs.dependency-config.outputs.simtel_matrix) }}
@@ -86,7 +113,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
+      - name: Log in to the Container registry
+        if: matrix.simtel_source_snapshot != ''
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore sim_telarray sources from the source snapshot
+        if: matrix.simtel_source_snapshot != ''
+        env:
+          SOURCE_SNAPSHOT: ${{ matrix.simtel_source_snapshot }}
+        run: |
+          set -euo pipefail
+          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          trap 'docker rm -f "$container_id"' EXIT
+          docker cp "$container_id:/input/simtel-source.tar.gz" simtel-source.tar.gz
+          docker cp "$container_id:/input/simtel-source.tar.gz.sha256" simtel-source.tar.gz.sha256
+          echo "Restored sim_telarray sources from $SOURCE_SNAPSHOT."
+
       - name: Prepare sim_telarray sources
+        if: matrix.simtel_source_snapshot == ''
         env:
           SIMTEL_TAG: ${{ matrix.simtel_tag }}
           SIMTEL_SOURCE_URL: ${{ matrix.simtel_source_url }}

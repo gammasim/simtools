@@ -1,0 +1,236 @@
+---
+name: Refresh build-input snapshots
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions: {}
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  dependency-config:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      autoconf_version: ${{ steps.config.outputs.autoconf_version }}
+      autoconf_sha256: ${{ steps.config.outputs.autoconf_sha256 }}
+      gsl_version: ${{ steps.config.outputs.gsl_version }}
+      gsl_sha256: ${{ steps.config.outputs.gsl_sha256 }}
+      corsika_source_matrix: ${{ steps.config.outputs.corsika_source_matrix }}
+      simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - id: config
+        run: |
+          python -m pip install packaging pyyaml
+          python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+
+  refresh:
+    needs: dependency-config
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+    env:
+      AUTOCONF_VERSION: ${{ needs.dependency-config.outputs.autoconf_version }}
+      AUTOCONF_SHA256: ${{ needs.dependency-config.outputs.autoconf_sha256 }}
+      GSL_VERSION: ${{ needs.dependency-config.outputs.gsl_version }}
+      GSL_SHA256: ${{ needs.dependency-config.outputs.gsl_sha256 }}
+      CORSIKA_MATRIX: ${{ needs.dependency-config.outputs.corsika_source_matrix }}
+      SIMTEL_MATRIX: ${{ needs.dependency-config.outputs.simtel_matrix }}
+      CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
+      SIMTELARRAY_TOKEN: ${{ secrets.SIMTELARRAY_CTAO_GITLAB }}
+      HESSIO_TOKEN: ${{ secrets.HESSIO_CTAO_GITLAB }}
+      STDTOOLS_TOKEN: ${{ secrets.STDTOOLS_CTAO_GITLAB }}
+      CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Refresh private source snapshots
+        run: |
+          set -euo pipefail
+          snapshot_tag() {
+            local package=$1 build_id=$2 first=$3 second=$4 third=$5
+            local digest
+            digest=$(printf '%s\n%s\n%s' "$first" "$second" "$third" | sha256sum | cut -c1-16)
+            printf 'ghcr.io/gammasim/%s:%s-%s\n' "$package" "$build_id" "$digest"
+          }
+          clone_ctao_source() {
+            local source_url=$1 source_ref=$2 target=$3 token=$4 expected_revision=${5:-}
+            local mirror_url="https://github.com/gammasim/${target}.git"
+            mirror_url="https://x-access-token:${CTAO_GITLAB_MIRROR}@${mirror_url#https://}"
+            local primary_url=$source_url
+            if [[ -n "$token" ]]; then
+              primary_url="https://oauth2:${token}@${source_url#https://}"
+            fi
+            ./.github/scripts/clone_with_retries.sh \
+              "$primary_url" "$source_ref" "$target" "$expected_revision" "$mirror_url"
+          }
+          resolve_revision() {
+            local source_url=$1 source_ref=$2
+            local output=""
+            for attempt in 1 2 3 4 5; do
+              output=$(git -c http.connectTimeout=30 ls-remote "$source_url" "$source_ref" || true)
+              if [[ -n "$output" ]]; then
+                awk 'NR == 1 { first = $1 } /\^\{\}$/ { peeled = $1 } END { print peeled ? peeled : first }' \
+                  <<< "$output"
+                return
+              fi
+              sleep $((attempt * 15))
+            done
+            echo "Could not resolve $source_ref from $source_url" >&2
+            return 1
+          }
+          download_archive() {
+            local url=$1 filename=$2 checksum=$3
+            curl -L --fail --proto '=https' --proto-redir '=https' \
+              --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
+              "$url" -o "input/$filename"
+            echo "$checksum  input/$filename" | sha256sum --check --strict
+          }
+          build_snapshot() {
+            local image=$1
+            if docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
+              echo "Snapshot already exists: $image"
+              return
+            fi
+            docker buildx build --file docker/Dockerfile-build-inputs --tag "$image" --push .
+          }
+
+          printf '{"corsika":{},"sim-telarray":{}}\n' > source-updates.json
+          mkdir input
+          autoconf_downloaded=false
+          gsl_downloaded=false
+          while IFS= read -r component; do
+            build_id=$(jq -r '.corsika_build_id' <<< "$component")
+            source_ref=$(jq -r '.corsika_tag' <<< "$component")
+            source_url=$(jq -r '.corsika_source_url' <<< "$component")
+            current_source_revision=$(jq -r '.corsika_source_revision' <<< "$component")
+            config_ref=$(jq -r '.corsika_config_tag' <<< "$component")
+            config_url=$(jq -r '.corsika_config_source_url' <<< "$component")
+            current_config_revision=$(jq -r '.corsika_config_revision' <<< "$component")
+            patch_ref=$(jq -r '.corsika_opt_patch_tag' <<< "$component")
+            patch_url=$(jq -r '.corsika_opt_patch_source_url' <<< "$component")
+            current_patch_revision=$(jq -r '.corsika_opt_patch_revision' <<< "$component")
+            source_url="https://oauth2:${CORSIKA7_TOKEN}@${source_url#https://}"
+            source_revision=$(resolve_revision "$source_url" "$source_ref")
+            config_revision=$(resolve_revision "$config_url" "$config_ref")
+            patch_revision=$(resolve_revision "$patch_url" "$patch_ref")
+            image=$(snapshot_tag corsika7-build-inputs "$build_id" \
+              "$source_revision" "$config_revision" "$patch_revision")
+            if [[ "$source_revision" == "$current_source_revision" && \
+              "$config_revision" == "$current_config_revision" && \
+              "$patch_revision" == "$current_patch_revision" ]] && \
+              docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
+              echo "CORSIKA inputs are unchanged: $source_ref"
+              continue
+            fi
+            ./.github/scripts/clone_with_retries.sh \
+              "$source_url" "$source_ref" corsika7 "$source_revision"
+            clone_ctao_source "$config_url" "$config_ref" corsika7-config "" "$config_revision"
+            clone_ctao_source "$patch_url" "$patch_ref" corsika-opt-patches "" "$patch_revision"
+            if [[ "$autoconf_downloaded" == false ]]; then
+              download_archive \
+                "https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz" \
+                autoconf.tar.gz "$AUTOCONF_SHA256"
+              autoconf_downloaded=true
+            fi
+            printf '%s\n' "$source_revision" > corsika_revision
+            printf '%s\n' "$config_revision" > corsika_config_revision
+            printf '%s\n' "$patch_revision" > corsika_opt_patch_revision
+            rm -rf corsika7/.git corsika7-config/.git corsika-opt-patches/.git
+            tar -czf input/corsika7-source.tar.gz \
+              corsika7 corsika_revision corsika7-config corsika_config_revision \
+              corsika-opt-patches corsika_opt_patch_revision
+            sha256sum input/corsika7-source.tar.gz > input/corsika7-source.tar.gz.sha256
+            build_snapshot "$image"
+            jq --arg ref "$source_ref" --arg source "$source_revision" \
+              --arg config "$config_revision" --arg patch "$patch_revision" \
+              '.corsika[$ref] = {"source-revision": $source, "config-revision": $config, "opt-patch-revision": $patch}' \
+              source-updates.json > source-updates.tmp
+            mv source-updates.tmp source-updates.json
+            rm -rf corsika7 corsika7-config corsika-opt-patches corsika_revision \
+              corsika_config_revision corsika_opt_patch_revision input/corsika7-source.tar.gz \
+              input/corsika7-source.tar.gz.sha256
+          done < <(jq -c '.[]' <<< "$CORSIKA_MATRIX")
+
+          while IFS= read -r component; do
+            build_id=$(jq -r '.simtel_build_id' <<< "$component")
+            source_ref=$(jq -r '.simtel_tag' <<< "$component")
+            source_url=$(jq -r '.simtel_source_url' <<< "$component")
+            current_simtel_revision=$(jq -r '.simtel_revision' <<< "$component")
+            hessio_ref=$(jq -r '.hessio_tag' <<< "$component")
+            hessio_url=$(jq -r '.hessio_source_url' <<< "$component")
+            current_hessio_revision=$(jq -r '.hessio_revision' <<< "$component")
+            stdtools_ref=$(jq -r '.stdtools_tag' <<< "$component")
+            stdtools_url=$(jq -r '.stdtools_source_url' <<< "$component")
+            current_stdtools_revision=$(jq -r '.stdtools_revision' <<< "$component")
+            simtel_url="https://oauth2:${SIMTELARRAY_TOKEN}@${source_url#https://}"
+            hessio_authenticated_url="https://oauth2:${HESSIO_TOKEN}@${hessio_url#https://}"
+            stdtools_authenticated_url="https://oauth2:${STDTOOLS_TOKEN}@${stdtools_url#https://}"
+            simtel_revision=$(resolve_revision "$simtel_url" "$source_ref")
+            hessio_revision=$(resolve_revision "$hessio_authenticated_url" "$hessio_ref")
+            stdtools_revision=$(resolve_revision "$stdtools_authenticated_url" "$stdtools_ref")
+            image=$(snapshot_tag simtel-array-build-inputs "$build_id" \
+              "$simtel_revision" "$hessio_revision" "$stdtools_revision")
+            if [[ "$simtel_revision" == "$current_simtel_revision" && \
+              "$hessio_revision" == "$current_hessio_revision" && \
+              "$stdtools_revision" == "$current_stdtools_revision" ]] && \
+              docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
+              echo "sim_telarray inputs are unchanged: $source_ref"
+              continue
+            fi
+            clone_ctao_source "$source_url" "$source_ref" sim_telarray "$SIMTELARRAY_TOKEN" "$simtel_revision"
+            clone_ctao_source "$hessio_url" "$hessio_ref" hessio "$HESSIO_TOKEN" "$hessio_revision"
+            clone_ctao_source "$stdtools_url" "$stdtools_ref" stdtools "$STDTOOLS_TOKEN" "$stdtools_revision"
+            if [[ "$gsl_downloaded" == false ]]; then
+              download_archive "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" \
+                gsl.tar.gz "$GSL_SHA256"
+              gsl_downloaded=true
+            fi
+            printf '%s\n' "$simtel_revision" > simtel_revision
+            printf '%s\n' "$hessio_revision" > hessio_revision
+            printf '%s\n' "$stdtools_revision" > stdtools_revision
+            rm -rf sim_telarray/.git hessio/.git stdtools/.git
+            tar -czf input/simtel-source.tar.gz \
+              sim_telarray simtel_revision hessio hessio_revision stdtools stdtools_revision
+            sha256sum input/simtel-source.tar.gz > input/simtel-source.tar.gz.sha256
+            build_snapshot "$image"
+            jq --arg ref "$source_ref" --arg simtel "$simtel_revision" \
+              --arg hessio "$hessio_revision" --arg stdtools "$stdtools_revision" \
+              '."sim-telarray"[$ref] = {"revision": $simtel, "hessio-revision": $hessio, "stdtools-revision": $stdtools}' \
+              source-updates.json > source-updates.tmp
+            mv source-updates.tmp source-updates.json
+            rm -rf sim_telarray hessio stdtools simtel_revision hessio_revision stdtools_revision \
+              input/simtel-source.tar.gz input/simtel-source.tar.gz.sha256
+          done < <(jq -c '.[]' <<< "$SIMTEL_MATRIX")
+
+      - name: Update the dependency catalog
+        run: ./.github/scripts/update_dependency_source_revisions.py dependency_versions.yml source-updates.json
+
+      - name: Create a reviewable catalog update
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update/build-input-source-revisions
+          title: Update build-input source revisions
+          commit-message: "chore: update build-input source revisions"
+          body: |
+            Updates resolved source commits after publishing the matching private GHCR snapshots.
+            Merging this PR makes normal CORSIKA and sim_telarray builds consume those snapshots.
