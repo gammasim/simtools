@@ -2,7 +2,6 @@
 
 import logging
 import re
-import tempfile
 from io import BytesIO
 from pathlib import Path
 
@@ -11,13 +10,11 @@ from astropy.table import Table
 from scipy.optimize import curve_fit
 
 import simtools.data_model.model_data_writer as writer
-from simtools import settings
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.io import io_handler
-from simtools.job_execution import job_manager
 
 ECSV_SUFFIX = ".ecsv"
 
@@ -66,15 +63,10 @@ class SinglePhotonElectronSpectrum:
             self.fit_afterpulse_spectrum() if self.args_dict.get("fit_afterpulse") else None
         )
 
-        if self.args_dict.get("use_norm_spe"):
-            return self._derive_spectrum_norm_spe(
-                input_spectrum=self.args_dict["input_spectrum"],
-                afterpulse_spectrum=self.args_dict.get("afterpulse_spectrum"),
-                afterpulse_fitted_spectrum=afterpulse_fitted_spectrum,
-            )
-
-        raise NotImplementedError(
-            "Derivation of single photon electron spectrum using a simtool is not yet implemented."
+        return self._derive_spectrum(
+            input_spectrum=self.args_dict["input_spectrum"],
+            afterpulse_spectrum=self.args_dict.get("afterpulse_spectrum"),
+            afterpulse_fitted_spectrum=afterpulse_fitted_spectrum,
         )
 
     def write_single_pe_spectrum(self):
@@ -87,7 +79,7 @@ class SinglePhotonElectronSpectrum:
         output_file = Path(self.args_dict["output_file"])
         metadata_output_file = Path(self.io_handler.get_output_directory()) / output_file.name
 
-        cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove norm_spe row metadata
+        cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove row metadata
         table = Table.read(
             BytesIO(cleaned_data.encode("utf-8")),
             format="ascii.no_header",
@@ -97,7 +89,7 @@ class SinglePhotonElectronSpectrum:
         output_columns = self._get_output_columns()
         if len(table.colnames) != len(output_columns):
             raise ValueError(
-                "norm_spe output does not match the pm_photoelectron_spectrum "
+                "Spectrum output does not match the pm_photoelectron_spectrum "
                 f"schema: expected {len(output_columns)} columns, got {len(table.colnames)}"
             )
         table.rename_columns(table.colnames, output_columns)
@@ -113,16 +105,14 @@ class SinglePhotonElectronSpectrum:
 
     @classmethod
     def _get_output_columns(cls):
-        """Return the ordered norm_spe output columns declared by the output schema."""
+        """Return the ordered output columns declared by the output schema."""
         output_schema = schema.get_model_parameter_schema(cls.output_parameter)
         serialization = get_simtel_serialization(output_schema)
         return [*serialization["columns"], *serialization.get("optional_columns", [])]
 
-    def _derive_spectrum_norm_spe(
-        self, input_spectrum, afterpulse_spectrum, afterpulse_fitted_spectrum
-    ):
+    def _derive_spectrum(self, input_spectrum, afterpulse_spectrum, afterpulse_fitted_spectrum):
         """
-        Derive single photon electron spectrum using sim_telarray tool 'norm_spe'.
+        Derive a normalized single photon electron spectrum.
 
         Parameters
         ----------
@@ -137,57 +127,112 @@ class SinglePhotonElectronSpectrum:
         Returns
         -------
         int
-            Return code of the executed command
-
-        Raises
-        ------
-        job_manager.JobExecutionError
-            If the command execution fails.
+            Zero when the spectrum was derived successfully.
         """
-        tmp_input_file = self._get_input_data(
+        amplitude, prompt = self._read_input_data(
             input_file=input_spectrum,
             input_table=None,
             frequency_column=self.prompt_column,
         )
-        tmp_ap_file = self._get_input_data(
+        normalized_amplitude, normalized_prompt = self._normalize_prompt_spectrum(amplitude, prompt)
+        afterpulse_data = self._read_input_data(
             input_file=afterpulse_spectrum,
             input_table=afterpulse_fitted_spectrum,
             frequency_column=self.afterpulse_column,
         )
 
-        command = [
-            f"{settings.config.sim_telarray_path}/bin/norm_spe",
-            "-r",
-            f"{self.args_dict['step_size']},{self.args_dict['max_amplitude']}",
-        ]
-        if tmp_ap_file:
-            command.extend(["-a", f"{tmp_ap_file.name}"])
-            command.extend(["-s", f"{self.args_dict['scale_afterpulse_spectrum']}"])
-            command.extend(["-t", f"{self.args_dict['afterpulse_amplitude_range'][0]}"])
-        command.append(tmp_input_file.name)
+        if afterpulse_data is None:
+            folded_amplitude = normalized_amplitude
+            folded_prompt = normalized_prompt
+            prompt_plus_afterpulse = normalized_prompt
+        else:
+            folded_amplitude, folded_prompt, prompt_plus_afterpulse = (
+                self._fold_afterpulse_spectrum(
+                    normalized_amplitude,
+                    normalized_prompt,
+                    *afterpulse_data,
+                    prompt_maximum=amplitude[-1],
+                )
+            )
 
-        self._logger.info(f"Running norm_spe command: {' '.join(command)}")
-        try:
-            result = job_manager.submit(command)
-        except job_manager.JobExecutionError as exc:
-            self._logger.error(f"Error running norm_spe: {exc}")
-            raise exc
-        finally:
-            for tmp_file in [tmp_input_file, tmp_ap_file]:
-                try:
-                    Path(tmp_file.name).unlink()
-                except AttributeError, FileNotFoundError:
-                    pass
+        output_amplitude = np.arange(
+            0.0,
+            np.nextafter(self.args_dict["max_amplitude"], np.inf),
+            self.args_dict["step_size"],
+        )
+        output_prompt = self._linear_interpolate(folded_amplitude, folded_prompt, output_amplitude)
+        output_combined = self._linear_interpolate(
+            folded_amplitude, prompt_plus_afterpulse, output_amplitude
+        )
+        self.data = self._format_spectrum(output_amplitude, output_prompt, output_combined)
+        return 0
 
-        self.data = result.stdout
-        return result.returncode
+    @staticmethod
+    def _normalize_prompt_spectrum(amplitude, prompt):
+        """Normalize prompt amplitudes to a mean of one photoelectron."""
+        if len(amplitude) < 2 or np.any(np.diff(amplitude) <= 0):
+            raise ValueError("Amplitude values must contain at least two increasing values.")
 
-    def _get_input_data(self, input_file, input_table, frequency_column):
+        integral = np.trapezoid(prompt, amplitude)
+        interval_width = np.diff(amplitude)
+        interval_midpoint = (amplitude[1:] + amplitude[:-1]) / 2
+        interval_frequency = (prompt[1:] + prompt[:-1]) / 2
+        first_moment = np.sum(interval_midpoint * interval_width * interval_frequency)
+        if integral <= 0 or first_moment <= 0:
+            raise ValueError("Cannot normalize a spectrum with non-positive integral or mean.")
+
+        amplitude_scale = integral / first_moment
+        prompt_scale = 1.0 / (integral * amplitude_scale)
+        return amplitude * amplitude_scale, prompt * prompt_scale
+
+    def _fold_afterpulse_spectrum(
+        self, amplitude, prompt, afterpulse_amplitude, afterpulse, prompt_maximum=None
+    ):
+        """Fold an afterpulse probability density into a prompt spectrum."""
+        if len(afterpulse_amplitude) < 2 or np.any(np.diff(afterpulse_amplitude) <= 0):
+            raise ValueError("Afterpulse amplitudes must contain at least two increasing values.")
+
+        if prompt_maximum is None:
+            prompt_maximum = amplitude[-1]
+
+        step = (amplitude[-1] - amplitude[0]) / (len(amplitude) - 1)
+        maximum = max(amplitude[-1], afterpulse_amplitude[-1], self.args_dict["max_amplitude"])
+        extra_samples = int(np.ceil((maximum - amplitude[-1]) / step))
+        folded_amplitude = amplitude[0] + step * np.arange(len(amplitude) + extra_samples)
+        folded_prompt = self._linear_interpolate(amplitude, prompt, folded_amplitude)
+        folded_prompt[folded_amplitude > prompt_maximum] = 0.0
+        sampled_afterpulse = np.interp(
+            folded_amplitude,
+            afterpulse_amplitude,
+            afterpulse,
+            left=0.0,
+            right=0.0,
+        )
+        afterpulse_scale = self.args_dict["scale_afterpulse_spectrum"]
+        combined = (
+            folded_prompt
+            + step
+            * np.convolve(folded_prompt, afterpulse_scale * sampled_afterpulse)[
+                : len(folded_prompt)
+            ]
+        )
+        return folded_amplitude, folded_prompt, combined
+
+    @staticmethod
+    def _linear_interpolate(amplitude, frequency, output_amplitude):
+        """Linearly interpolate, using the end value outside the input range."""
+        return np.interp(output_amplitude, amplitude, frequency)
+
+    @staticmethod
+    def _format_spectrum(amplitude, prompt, prompt_plus_afterpulse):
+        """Format a spectrum for sim_telarray's three-column table format."""
+        rows = zip(amplitude, prompt, prompt_plus_afterpulse, strict=True)
+        return "".join(f"{x:8.6f}\t{y:<12.5g}\t{z:<12.5g}\n" for x, y, z in rows)
+
+    def _read_input_data(self, input_file, input_table, frequency_column):
         """
-        Return input data in the format required by the norm_spe tool as temporary file.
+        Read input data for spectrum normalization.
 
-        The norm_spe tool requires the data to be space separated values of the amplitude spectrum,
-        with two columns: amplitude and frequency.
         Input is validated using the single_pe_spectrum schema (legacy input is not validated).
 
         Parameters
@@ -211,18 +256,15 @@ class SinglePhotonElectronSpectrum:
                 data_file=input_file if input_table is None else None,
             )
             table = data_validator.validate_and_transform()
-            input_data = "\n".join(f"{row['amplitude']} {row[frequency_column]}" for row in table)
-        else:  # legacy format
-            with open(input_file, encoding="utf-8") as f:
-                input_data = (
-                    f.read().replace(",", " ")
-                    if frequency_column == self.prompt_column
-                    else f.read()
-                )
+            return (
+                np.asarray(table["amplitude"], dtype=float),
+                np.asarray(table[frequency_column], dtype=float),
+            )
 
-        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
-            tmpfile.write(input_data)
-        return tmpfile
+        input_data = input_file.read_bytes()
+        input_data = input_data.replace(b",", b" ")
+        data = np.atleast_2d(np.loadtxt(BytesIO(input_data), comments="#", usecols=(0, 1)))
+        return data[:, 0], data[:, 1]
 
     def fit_afterpulse_spectrum(self):
         """

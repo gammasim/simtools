@@ -26,7 +26,6 @@ applications:
     afterpulse_amplitude_range:
     - 4
     - 42
-    use_norm_spe: true
     telescope: LSTN-01
     site: North
     log_level: DEBUG
