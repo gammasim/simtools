@@ -67,19 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Restore Autoconf from the source snapshot
-        if: needs.dependency-config.outputs.default_corsika_source_snapshot != ''
-        env:
-          SOURCE_SNAPSHOT: ${{ needs.dependency-config.outputs.default_corsika_source_snapshot }}
-        run: |
-          set -euo pipefail
-          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
-          trap 'docker rm -f "$container_id"' EXIT
-          docker cp "$container_id:/input/autoconf.tar.gz" autoconf.tar.gz
-          echo "Restored Autoconf from $SOURCE_SNAPSHOT."
-
       - name: download-auxiliary-files
-        if: needs.dependency-config.outputs.default_corsika_source_snapshot == ''
         env:
           CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
           AUTOCONF_VERSION: ${{ needs.dependency-config.outputs.autoconf_version }}
