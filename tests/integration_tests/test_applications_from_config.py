@@ -56,12 +56,27 @@ def _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_so
 
 def _get_model_source_arguments(application):
     """Return the model-source argument names accepted by an application."""
+    return {argument.name for argument in _get_application_arguments(application)}
+
+
+def _get_application_arguments(application):
+    """Return the command-line arguments accepted by an application."""
     module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
     try:
         definition = importlib.import_module(module_name).APPLICATION
     except ImportError, AttributeError:
-        return set()
-    return {argument.name for argument in definition.all_arguments}
+        return ()
+    return definition.all_arguments
+
+
+def _requires_local_simulation_model_source(config, simulation_models_path):
+    """Return whether a workflow needs a filesystem simulation-model repository."""
+    if simulation_models_path or config["configuration"].get("simulation_models_path"):
+        return False
+    return any(
+        argument.name == "simulation_models_path" and argument.kwargs.get("required")
+        for argument in _get_application_arguments(config["application"])
+    )
 
 
 def _set_simulation_model_source_configuration(config, simulation_models_path, git_source):
@@ -199,6 +214,8 @@ def test_applications_from_config(
     simulation_models_path, git_source = _get_simulation_model_source(
         tmp_config, request, simtools_root_path
     )
+    if _requires_local_simulation_model_source(tmp_config, simulation_models_path):
+        pytest.skip("No local simulation-model repository is configured")
     _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
     _set_simulation_model_source_configuration(tmp_config, simulation_models_path, git_source)
     _prepare_model_parameter_inputs(
@@ -362,6 +379,29 @@ def test_set_simulation_model_source_configuration_skips_unsupported_source():
     _set_simulation_model_source_configuration(config, None, (Path("/models.git"), "HEAD"))
 
     assert config["configuration"] == {"output_file": "production_version_descriptions.md"}
+
+
+def test_requires_local_simulation_model_source_for_required_path_argument():
+    """Recognize workflows that cannot run without a local model repository."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+
+    assert _requires_local_simulation_model_source(config, None)
+
+
+def test_local_simulation_model_source_is_not_required_when_configured():
+    """Allow workflows that supply their required local repository explicitly."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {
+            "output_file": "production_version_descriptions.md",
+            "simulation_models_path": "models",
+        },
+    }
+
+    assert not _requires_local_simulation_model_source(config, None)
 
 
 def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):
