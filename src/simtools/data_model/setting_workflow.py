@@ -54,6 +54,7 @@ def create_setting_workflow(args, model_reader=None):
     args["model_parameter_schema_version"] = parameter["model_parameter_schema_version"]
     args["activity_id"] = general.get_uuid()
     config = _workflow_config(args)
+    runtime = _runtime_configuration(args)
     metadata = _input_metadata(args)
     root = Path(args.get("output_path") or Path.cwd()).resolve()
     directory = root / "input" / args["instrument"] / args["parameter"]
@@ -71,6 +72,7 @@ def create_setting_workflow(args, model_reader=None):
     config_file.parent.mkdir(parents=True, exist_ok=False)
     ascii_handler.write_data_to_file(config, config_file, sort_keys=False)
     ascii_handler.write_data_to_file(metadata, config_file.with_name("input.meta.yml"))
+    _write_runtime_file(runtime, config_file.parent)
     return config_file
 
 
@@ -131,16 +133,29 @@ def _workflow_config(args):
         "schema_name": "application_workflow.metaschema",
         "schema_version": "0.5.0",
     }
-    if args.get("workflow_runtime_file"):
-        runtime = ascii_handler.collect_data_from_file(args["workflow_runtime_file"])
-        schema.validate_dict_using_schema(
-            runtime, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
-        )
-        config["runtime_environment"] = runtime["runtime_environment"]
     schema.validate_dict_using_schema(
         config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml", offline=True
     )
     return config
+
+
+def _runtime_configuration(args):
+    """Return the validated runtime configuration selected for a new workflow."""
+    runtime_file = args.get("workflow_runtime_file")
+    if runtime_file is None:
+        return None
+    runtime = ascii_handler.collect_data_from_file(runtime_file)
+    schema.validate_dict_using_schema(
+        runtime, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+    )
+    return runtime
+
+
+def _write_runtime_file(runtime, workflow_directory):
+    """Copy a validated runtime configuration into a new workflow directory."""
+    if runtime is None:
+        return
+    ascii_handler.write_data_to_file(runtime, workflow_directory / "runtime.yml", sort_keys=False)
 
 
 def _input_metadata(args):
@@ -247,8 +262,14 @@ def run_setting_workflow(config_file, args):
         "ignore_runtime_environment": args.get("ignore_runtime_environment", False),
         "ignore_existing_parameter_version": rerun,
     }
+    runtime_file = config_file.with_name("runtime.yml")
+    run_time = None
+    if runtime_file.is_file() and not runner_args["ignore_runtime_environment"]:
+        runtime_environment, run_time = simtools_runner.prepare_runtime_environment(runtime_file)
+        runner_args["runtime_environment"] = runtime_environment
     simtools_runner.run_applications(
         runner_args,
+        run_time=run_time,
         replacements={_INPUT_PATH: str(config_file.parent), _OUTPUT_PATH: str(output)},
     )
     return output
