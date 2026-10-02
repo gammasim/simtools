@@ -3,7 +3,7 @@
 This file gives repo-wide instructions for AI agents working on simtools.
 
 simtools is a Python toolkit for CTAO Monte Carlo production support: model
-parameter handling, MongoDB access, CORSIKA and sim_telarray configuration,
+parameter handling, model-source access, CORSIKA and sim_telarray configuration,
 application workflows, validation, reporting, and plotting.
 
 In general, do not pretend you are a human developer. You are a tool, you don't think.
@@ -126,7 +126,7 @@ Unit-test rules:
 - Keep file-format compatibility and resource-heavy checks in integration tests.
 - Use `tmp_test_directory` for file I/O. Do not introduce hardcoded `/tmp`,
   `tempfile`, or absolute temporary paths in tests.
-- Mock databases, network calls, file I/O, CORSIKA, and sim_telarray in unit
+- Mock model sources, network calls, file I/O, CORSIKA, and sim_telarray in unit
   tests unless the test is explicitly marked for external resources.
 - Use `pytest.approx()` for floats and
   `astropy.tests.helper.assert_quantity_allclose` for quantities.
@@ -183,8 +183,8 @@ pytest -v --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-Integration tests often require `.env` MongoDB settings and installed CORSIKA /
-sim_telarray. Unit tests should not.
+Integration tests often require a configured simulation-model source and installed
+CORSIKA / sim_telarray. Unit tests should not.
 
 ## Documentation
 
@@ -385,7 +385,7 @@ and run both tools plus the relevant tests before choosing a suppression.
   `by_version` in integration configs where needed.
 - Model-parameter schema changes can affect sim_telarray metadata. If an
   integration failure says a required metadata key is missing, inspect the
-  relevant schema, DB/mock parameter data, and sim_telarray metadata registry
+  relevant schema, mock parameter data, and sim_telarray metadata registry
   before changing the test expectation.
 
 ## Recurring Failure Checks

@@ -106,7 +106,7 @@ To the components guide
 ```
 :::
 
-:::{grid-item-card} {fas}`database;pst-color-primary` Data Model
+:::{grid-item-card} {fas}`diagram-project;pst-color-primary` Data Model
 :link: data-model/index
 :link-type: doc
 :class-card: sd-d-flex-column
