@@ -95,7 +95,8 @@ jobs:
             for repository_url in "$source_url" "$fallback_url"; do
               [[ -z "$repository_url" ]] && continue
               for attempt in 1 2 3 4 5; do
-                output=$(git -c http.connectTimeout=30 ls-remote "$repository_url" "$source_ref" || true)
+                output=$(git -c http.connectTimeout=30 ls-remote "$repository_url" \
+                  "$source_ref" "${source_ref}^{}" || true)
                 if [[ -n "$output" ]]; then
                   awk 'NR == 1 { first = $1 } /\^\{\}$/ { peeled = $1 } END { print peeled ? peeled : first }' \
                     <<< "$output"
