@@ -41,17 +41,31 @@ jobs:
   download-auxiliary-files:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
+    needs: dependency-config
 
     steps:
       - name: download-auxiliary-files
         env:
           CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
+          GSL_VERSION: ${{ needs.dependency-config.outputs.gsl_version }}
+          GSL_SHA256: ${{ needs.dependency-config.outputs.gsl_sha256 }}
         run: |
-          curl -L --fail --proto '=https' --proto-redir '=https' \
+          if curl -L --fail --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-delay 10 --retry-connrefused \
             --connect-timeout 30 \
-           "${CLOUD_URL}/${CLOUD_GSL}/download" \
-           -o gsl.tar.gz
+            "${CLOUD_URL}/${CLOUD_GSL}/download" \
+            -o gsl.tar.gz && \
+            echo "${GSL_SHA256}  gsl.tar.gz" | sha256sum --check --strict; then
+            echo "Downloaded GSL from the DESY cloud backup."
+          else
+            echo "DESY cloud download failed; trying the GNU GSL download area."
+            curl -L --fail --proto '=https' --proto-redir '=https' \
+              --retry 5 --retry-delay 10 --retry-connrefused \
+              --connect-timeout 30 \
+              "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" \
+              -o gsl.tar.gz
+            echo "${GSL_SHA256}  gsl.tar.gz" | sha256sum --check --strict
+          fi
       - name: upload-auxiliary-files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
