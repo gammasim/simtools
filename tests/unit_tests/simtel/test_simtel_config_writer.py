@@ -385,7 +385,7 @@ def test_segmented_dual_mirror_telescope_does_not_write_mirror_list(
     )
 
     assert result["mirror_class"] == 2
-    assert "mirror_list" not in result
+    assert result["mirror_list"] is None
     assert [call.kwargs["parameter_name"] for call in convert.call_args_list] == [
         "mirror_class",
         "primary_mirror_segmentation",
@@ -532,20 +532,17 @@ def test_write_tel_config_file_orders_generated_parameters_and_metadata(
 
     simtel_config_writer.write_telescope_config_file(
         config_file,
-        {
-            "fadc_pulse_shape": {"value": "pulse.dat"},
-            "stars": {"value": None},
-        },
+        {"fadc_pulse_shape": {"value": "pulse.dat"}},
         telescope_name="MSTS-03",
     )
 
     lines = config_file.read_text(encoding="utf-8").splitlines()
     parameter_lines = [line for line in lines if " = " in line and not line.startswith("%")]
-    assert parameter_lines[:2] == [
+    assert parameter_lines[:3] == [
         "camera_config_file = camera-MSTS-03.dat",
         "fadc_pulse_shape = pulse.dat",
+        "stars = none",
     ]
-    assert "stars = none" not in lines
     assert "metaparam telescope add camera_config_file" in lines
     assert "metaparam telescope add fadc_pulse_shape" in lines
 

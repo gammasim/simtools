@@ -167,6 +167,7 @@ class SimtelConfigWriter:
             ):
                 continue
             if par == "mirror_list" and uses_segmented_dual_mirror_geometry(parameters):
+                simtel_par["mirror_list"] = None
                 continue
             simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 self._get_sim_telarray_config_parameter_name(par),
@@ -176,8 +177,10 @@ class SimtelConfigWriter:
                 parameter_name=par,
                 parameter_data=value,
             )
-            if simtel_name and simtel_value is not None:
+            if simtel_name:
                 simtel_par[simtel_name] = simtel_value
+        if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
+            simtel_par["stars"] = None
 
         return dict(
             sorted(self._get_flasher_parameters_for_sim_telarray(parameters, simtel_par).items())
@@ -758,7 +761,7 @@ class SimtelConfigWriter:
                 parameter_name=par,
                 parameter_data=value,
             )
-            if simtel_name is not None and simtel_value is not None:
+            if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
         for meta in self._get_sim_telarray_metadata(
             "site", site_parameters, None, additional_metadata
