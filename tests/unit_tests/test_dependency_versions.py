@@ -550,6 +550,66 @@ def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_
     )
 
 
+def test_update_dependency_source_revisions_preserves_catalog_layout(tmp_test_directory):
+    """Insert and replace resolved source revisions without reformatting the catalog."""
+    catalog_path = tmp_test_directory / "dependency_versions.yml"
+    catalog_path.write_text(
+        """schema_version: 0.6.0
+corsika:
+  - source-ref: v7.8010
+    source-url: https://example.org/corsika.git
+    config-source-url: https://example.org/config.git
+    opt-patch-source-url: https://example.org/patches.git
+sim-telarray:
+  - source-ref: v2025-11-30-rc
+    source-url: https://example.org/simtel.git
+    hessio-source-url: https://example.org/hessio.git
+    stdtools-source-url: https://example.org/stdtools.git
+""",
+        encoding="utf-8",
+    )
+    updates = {
+        "corsika": {
+            "v7.8010": {
+                "source-revision": "a" * 40,
+                "config-revision": "b" * 40,
+                "opt-patch-revision": "c" * 40,
+            }
+        },
+        "sim-telarray": {
+            "v2025-11-30-rc": {
+                "revision": "d" * 40,
+                "hessio-revision": "e" * 40,
+                "stdtools-revision": "f" * 40,
+            }
+        },
+    }
+
+    dependency_versions.update_dependency_source_revisions(catalog_path, updates)
+    updates["corsika"]["v7.8010"]["source-revision"] = "1" * 40
+    dependency_versions.update_dependency_source_revisions(catalog_path, updates)
+
+    text = catalog_path.read_text(encoding="utf-8")
+    assert text.count("source-revision:") == 1
+    assert f"source-revision: {'1' * 40}" in text
+    assert f"config-revision: {'b' * 40}" in text
+    assert f"opt-patch-revision: {'c' * 40}" in text
+    assert f"revision: {'d' * 40}" in text
+    assert f"hessio-revision: {'e' * 40}" in text
+    assert f"stdtools-revision: {'f' * 40}" in text
+
+
+def test_update_dependency_source_revisions_requires_catalog_sections(tmp_test_directory):
+    """Reject an incomplete catalog rather than writing partial source revisions."""
+    catalog_path = tmp_test_directory / "dependency_versions.yml"
+    catalog_path.write_text("corsika:\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Missing dependency catalog section: sim-telarray"):
+        dependency_versions.update_dependency_source_revisions(
+            catalog_path, {"corsika": {}, "sim-telarray": {}}
+        )
+
+
 def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_path):
     """Test production combinations inherit the catalog CPU variants."""
     catalog = _load_catalog(simtools_root_path)
