@@ -1,0 +1,24 @@
+{
+  "corsika": {
+    "v7.8010": {
+      "source-revision": "6b720388124871f8e07741e40e3446a7375efe78",
+      "config-revision": "755d445ba63223706ff54ca2333f7e2f18296d53",
+      "opt-patch-revision": "e481fdf9eaa45c2f1846823f5d3d68ea24cf3a47",
+      "source-snapshot-digest": "sha256:076552b20edebf8a7c003c786a1f1fc23b3f9ade9a8c6c5e864f02608d818526"
+    },
+    "v7.8050": {
+      "source-revision": "509b9ffaf1c1a2d88a4d9eeb298099e764d41b2a",
+      "config-revision": "47e6d1f35310a9b32ba838f0c247609da2e619b3",
+      "opt-patch-revision": "8b516bc33f6a364d9e9dade34b183d551babc144",
+      "source-snapshot-digest": "sha256:9546f345e28451ebf1aae1e8db9011957f3a523347ef946cea9b1f9016d6bf05"
+    }
+  },
+  "sim-telarray": {
+    "v2025-11-30-rc": {
+      "revision": "6de7bb5ce0d6b309fed959eee4fb071f55c91018",
+      "hessio-revision": "b97b807b804aad29ecfeb54a57c54fc7c4fb0820",
+      "stdtools-revision": "9c109a4e2398e30dc014a24cf2b6bc15b61290e7",
+      "source-snapshot-digest": "sha256:557f9f329898e0cee0d11c2a6c00aa43e093636b79b07f18b0ef57f0f565267a"
+    }
+  }
+}
