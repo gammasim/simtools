@@ -71,7 +71,10 @@ def _get_application_arguments(application):
 
 def _requires_local_simulation_model_source(config, simulation_models_path):
     """Return whether a workflow needs a filesystem simulation-model repository."""
-    if simulation_models_path or config["configuration"].get("simulation_models_path"):
+    source_config = config.get("configuration")
+    if source_config is None:
+        return False
+    if simulation_models_path or source_config.get("simulation_models_path"):
         return False
     return any(
         argument.name == "simulation_models_path" and argument.kwargs.get("required")
@@ -400,6 +403,13 @@ def test_local_simulation_model_source_is_not_required_when_configured():
             "simulation_models_path": "models",
         },
     }
+
+    assert not _requires_local_simulation_model_source(config, None)
+
+
+def test_local_simulation_model_source_is_not_required_without_configuration():
+    """Allow automatic no-configuration checks to run application help."""
+    config = {"application": "simtools-docs-produce-production-summary"}
 
     assert not _requires_local_simulation_model_source(config, None)
 
