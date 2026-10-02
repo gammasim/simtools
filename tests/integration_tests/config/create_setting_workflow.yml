@@ -1,0 +1,24 @@
+---
+applications:
+- application: simtools-create-setting-workflow
+  configuration:
+    instrument: LSTN-design
+    parameter: min_photons
+    parameter_version: 99.0.1
+    value: 121
+    description: Example photon threshold for workflow creation
+    output_path: setting-repository
+    run: true
+    disable_log_file: true
+  docs:
+    title: Create and run a simple parameter-setting workflow
+    summary: Generate the input configuration and metadata, then submit a photon threshold.
+  integration_tests:
+  - test_outputs:
+    - file: input/LSTN-design/min_photons
+      path_descriptor: output_path
+    - file: output/LSTN-design/min_photons
+      path_descriptor: output_path
+  test_name: create_and_run
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

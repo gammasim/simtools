@@ -21,6 +21,22 @@ from simtools.data_model import schema
 logger = logging.getLogger()
 
 
+def test_associated_data_keeps_required_data_description(mocker):
+    collector = metadata_collector.MetadataCollector.__new__(metadata_collector.MetadataCollector)
+    collector.observatory = "cta"
+    collector.args_dict = {}
+    collector._logger = logger
+    data = {"category": "SIM", "level": "R1", "model": {"name": "setting", "version": "1.0.0"}}
+    collector.input_metadata = [
+        {"cta": {"product": {"id": "input-id", "format": "yaml", "data": data}}}
+    ]
+    mocker.patch.object(collector, "_append_context_note_from_value_table")
+    mocker.patch.object(collector, "_fill_application_configuration")
+    context = {"associated_data": []}
+    collector._fill_context_meta(context)
+    assert context["associated_data"] == [{"id": "input-id", "format": "yaml", "data": data}]
+
+
 def test_get_data_model_schema_file_name():
     # from args_dict / command line
     args_dict = {"no_schema": "schema_file.yml"}
