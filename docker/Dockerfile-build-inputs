@@ -1,5 +1,5 @@
 FROM scratch
 
-COPY input/ /input/
+COPY . /input/
 
 USER 65532:65532

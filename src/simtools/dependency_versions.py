@@ -25,13 +25,13 @@ SOURCE_REF_PATTERN = re.compile(
 )
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
-READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0"}
+READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0", "0.7.0"}
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 
 
-def _source_snapshot_image(package, digest):
+def _source_snapshot_image(package, digest, revisions):
     """Return an immutable private source-snapshot image reference."""
-    if not digest:
+    if not digest or not all(revisions):
         return ""
     return f"{SOURCE_SNAPSHOT_REGISTRY}/{package}@{digest}"
 
@@ -357,6 +357,11 @@ def _validate_corsika_components(
         _validate_optional_digest(
             component.get("source-snapshot-digest"), "CORSIKA source snapshot"
         )
+        if component.get("source-snapshot-digest") and not all(
+            component.get(key)
+            for key in ("source-revision", "config-revision", "opt-patch-revision")
+        ):
+            raise ValueError("CORSIKA source snapshot requires all source revisions")
         for variant, digest in component.get("image-digests", {}).items():
             _validate_optional_digest(digest, f"CORSIKA {source_tag} {variant}")
 
@@ -391,6 +396,10 @@ def _validate_simtel_components(
         _validate_optional_digest(
             component.get("source-snapshot-digest"), "sim_telarray source snapshot"
         )
+        if component.get("source-snapshot-digest") and not all(
+            component.get(key) for key in ("revision", "hessio-revision", "stdtools-revision")
+        ):
+            raise ValueError("sim_telarray source snapshot requires all source revisions")
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
 
 
@@ -586,7 +595,13 @@ def build_workflow_matrices(catalog):
             "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
             "corsika_opt_patch_revision": corsika.get("opt-patch-revision", ""),
             "corsika_source_snapshot": _source_snapshot_image(
-                "corsika7-build-inputs", corsika.get("source-snapshot-digest", "")
+                "corsika7-build-inputs",
+                corsika.get("source-snapshot-digest", ""),
+                (
+                    corsika.get("source-revision", ""),
+                    corsika.get("config-revision", ""),
+                    corsika.get("opt-patch-revision", ""),
+                ),
             ),
             "avx_flag": variant,
         }
@@ -619,7 +634,13 @@ def build_workflow_matrices(catalog):
             "stdtools_source_url": component["stdtools-source-url"],
             "stdtools_revision": component.get("stdtools-revision", ""),
             "simtel_source_snapshot": _source_snapshot_image(
-                "simtel-array-build-inputs", component.get("source-snapshot-digest", "")
+                "simtel-array-build-inputs",
+                component.get("source-snapshot-digest", ""),
+                (
+                    component.get("revision", ""),
+                    component.get("hessio-revision", ""),
+                    component.get("stdtools-revision", ""),
+                ),
             ),
         }
         for component in catalog["sim-telarray"]
@@ -640,7 +661,13 @@ def build_workflow_matrices(catalog):
             "corsika_opt_patch_source_url": component["opt-patch-source-url"],
             "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
             "corsika_source_snapshot": _source_snapshot_image(
-                "corsika7-build-inputs", component.get("source-snapshot-digest", "")
+                "corsika7-build-inputs",
+                component.get("source-snapshot-digest", ""),
+                (
+                    component.get("source-revision", ""),
+                    component.get("config-revision", ""),
+                    component.get("opt-patch-revision", ""),
+                ),
             ),
         }
         for component in catalog["corsika"]
@@ -713,12 +740,24 @@ def dependency_catalog_summary(catalog):
         "autoconf_version": catalog["archives"]["autoconf"]["version"],
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "default_corsika_source_snapshot": _source_snapshot_image(
-            "corsika7-build-inputs", default_corsika.get("source-snapshot-digest", "")
+            "corsika7-build-inputs",
+            default_corsika.get("source-snapshot-digest", ""),
+            (
+                default_corsika.get("source-revision", ""),
+                default_corsika.get("config-revision", ""),
+                default_corsika.get("opt-patch-revision", ""),
+            ),
         ),
         "gsl_version": catalog["archives"]["gsl"]["version"],
         "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
         "default_simtel_source_snapshot": _source_snapshot_image(
-            "simtel-array-build-inputs", default_simtel.get("source-snapshot-digest", "")
+            "simtel-array-build-inputs",
+            default_simtel.get("source-snapshot-digest", ""),
+            (
+                default_simtel.get("revision", ""),
+                default_simtel.get("hessio-revision", ""),
+                default_simtel.get("stdtools-revision", ""),
+            ),
         ),
         "corsika_tables_ref": _dependency_tag(
             catalog["corsika-interaction-tables"], "ref", "tag", "version"

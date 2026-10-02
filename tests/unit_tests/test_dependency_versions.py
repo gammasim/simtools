@@ -365,6 +365,18 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid Git revision",
         ),
         (
+            lambda data: data["corsika"][0].update(
+                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            ),
+            "requires all source revisions",
+        ),
+        (
+            lambda data: data["sim-telarray"][0].update(
+                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            ),
+            "requires all source revisions",
+        ),
+        (
             lambda data: data["model-repository"].update({"default-ref": "bad ref"}),
             "source ref",
         ),
@@ -537,7 +549,13 @@ def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_
     )
     assert (
         dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
-            "corsika7-build-inputs", ""
+            "corsika7-build-inputs", "", (revision, revision, revision)
+        )
+        == ""
+    )
+    assert (
+        dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
+            "corsika7-build-inputs", digest, (revision, "", revision)
         )
         == ""
     )
@@ -742,6 +760,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.4.0",
         "0.5.0",
         "0.6.0",
+        "0.7.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]

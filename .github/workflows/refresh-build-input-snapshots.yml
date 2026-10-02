@@ -109,13 +109,15 @@ jobs:
           }
           download_archive() {
             local primary_url=$1 fallback_url=$2 filename=$3 checksum=$4
-            if ! curl -L --fail --proto '=https' --proto-redir '=https' \
+            if curl -L --fail --proto '=https' --proto-redir '=https' \
               --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
-              "$primary_url" -o "input/$filename"; then
-              curl -L --fail --proto '=https' --proto-redir '=https' \
-                --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
-                "$fallback_url" -o "input/$filename"
+              "$primary_url" -o "input/$filename" && \
+              echo "$checksum  input/$filename" | sha256sum --check --strict; then
+              return
             fi
+            curl -L --fail --proto '=https' --proto-redir '=https' \
+              --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
+              "$fallback_url" -o "input/$filename"
             echo "$checksum  input/$filename" | sha256sum --check --strict
           }
           build_snapshot() {
@@ -123,7 +125,7 @@ jobs:
             if docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
               echo "Snapshot already exists: $image" >&2
             else
-              docker buildx build --file docker/Dockerfile-build-inputs --tag "$image" --push . >&2
+              docker buildx build --file docker/Dockerfile-build-inputs --tag "$image" --push input >&2
             fi
             docker buildx imagetools inspect --format '{{.Manifest.Digest}}' "$image"
           }
@@ -240,8 +242,16 @@ jobs:
               input/simtel-source.tar.gz input/simtel-source.tar.gz.sha256
           done < <(jq -c '.[]' <<< "$SIMTEL_MATRIX")
 
+      - name: Install catalog update dependencies
+        run: python -m pip install packaging pyyaml
+
       - name: Update the dependency catalog
-        run: python src/simtools/applications/dependency_versions.py --update-source-revisions source-updates.json
+        run: |
+          if jq -e '.corsika == {} and ."sim-telarray" == {}' source-updates.json >/dev/null; then
+            echo "No source revisions changed."
+            exit 0
+          fi
+          python src/simtools/applications/dependency_versions.py --update-source-revisions source-updates.json
 
       - name: Create a reviewable catalog update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
