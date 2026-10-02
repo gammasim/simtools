@@ -63,7 +63,7 @@ class SinglePhotonElectronSpectrum:
             self.fit_afterpulse_spectrum() if self.args_dict.get("fit_afterpulse") else None
         )
 
-        return self._derive_spectrum_norm_spe(
+        return self._derive_spectrum(
             input_spectrum=self.args_dict["input_spectrum"],
             afterpulse_spectrum=self.args_dict.get("afterpulse_spectrum"),
             afterpulse_fitted_spectrum=afterpulse_fitted_spectrum,
@@ -79,7 +79,7 @@ class SinglePhotonElectronSpectrum:
         output_file = Path(self.args_dict["output_file"])
         metadata_output_file = Path(self.io_handler.get_output_directory()) / output_file.name
 
-        cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove norm_spe row metadata
+        cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove row metadata
         table = Table.read(
             BytesIO(cleaned_data.encode("utf-8")),
             format="ascii.no_header",
@@ -89,7 +89,7 @@ class SinglePhotonElectronSpectrum:
         output_columns = self._get_output_columns()
         if len(table.colnames) != len(output_columns):
             raise ValueError(
-                "norm_spe output does not match the pm_photoelectron_spectrum "
+                "Spectrum output does not match the pm_photoelectron_spectrum "
                 f"schema: expected {len(output_columns)} columns, got {len(table.colnames)}"
             )
         table.rename_columns(table.colnames, output_columns)
@@ -105,14 +105,12 @@ class SinglePhotonElectronSpectrum:
 
     @classmethod
     def _get_output_columns(cls):
-        """Return the ordered norm_spe output columns declared by the output schema."""
+        """Return the ordered output columns declared by the output schema."""
         output_schema = schema.get_model_parameter_schema(cls.output_parameter)
         serialization = get_simtel_serialization(output_schema)
         return [*serialization["columns"], *serialization.get("optional_columns", [])]
 
-    def _derive_spectrum_norm_spe(
-        self, input_spectrum, afterpulse_spectrum, afterpulse_fitted_spectrum
-    ):
+    def _derive_spectrum(self, input_spectrum, afterpulse_spectrum, afterpulse_fitted_spectrum):
         """
         Derive a normalized single photon electron spectrum.
 

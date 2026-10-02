@@ -50,18 +50,13 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
     assert tmp_spe_spectrum.metadata == mock_metadata_collector_instance
 
 
-@patch(
-    "simtools.camera.single_photon_electron_spectrum."
-    "SinglePhotonElectronSpectrum._derive_spectrum_norm_spe"
-)
-def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
-    spe_spectrum.derive_single_pe_spectrum()
+def test_derive_single_pe_spectrum(spe_spectrum, tmp_test_directory):
+    input_file = tmp_test_directory / "prompt.csv"
+    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    spe_spectrum.args_dict["input_spectrum"] = input_file
 
-    mock_derive_spectrum_norm_spe.assert_called_once_with(
-        input_spectrum=spe_spectrum.args_dict["input_spectrum"],
-        afterpulse_spectrum=spe_spectrum.args_dict.get("afterpulse_spectrum"),
-        afterpulse_fitted_spectrum=None,
-    )
+    assert spe_spectrum.derive_single_pe_spectrum() == 0
+    assert spe_spectrum.data
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
@@ -101,19 +96,19 @@ def test_get_output_columns_uses_model_parameter_schema(spe_spectrum):
     assert spe_spectrum._get_output_columns() == ["amplitude", "response", "response_with_ap"]
 
 
-def test_write_single_pe_spectrum_rejects_unexpected_norm_spe_columns(spe_spectrum):
+def test_write_single_pe_spectrum_rejects_unexpected_spectrum_columns(spe_spectrum):
     spe_spectrum.data = "0.0\t0.4694\n"
 
     with pytest.raises(ValueError, match="expected 3 columns, got 2"):
         spe_spectrum.write_single_pe_spectrum()
 
 
-def test_derive_spectrum_norm_spe(spe_spectrum, tmp_test_directory):
+def test_derive_spectrum(spe_spectrum, tmp_test_directory):
     input_file = tmp_test_directory / "prompt.csv"
     input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
     spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=2.0)
 
-    assert spe_spectrum._derive_spectrum_norm_spe(input_file, None, None) == 0
+    assert spe_spectrum.derive_single_pe_spectrum() == 0
 
     output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
     np.testing.assert_allclose(output[:, 0], np.arange(0.0, 2.1, 0.1))
@@ -126,7 +121,7 @@ def test_derive_spectrum_does_not_exceed_maximum(spe_spectrum, tmp_test_director
     input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
     spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=1.0, step_size=0.6)
 
-    spe_spectrum._derive_spectrum_norm_spe(input_file, None, None)
+    spe_spectrum.derive_single_pe_spectrum()
 
     output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
     np.testing.assert_allclose(output[:, 0], [0.0, 0.6])
@@ -144,7 +139,7 @@ def test_normalize_prompt_spectrum_rejects_invalid_input():
         )
 
 
-def test_normalize_prompt_spectrum_uses_norm_spe_first_moment():
+def test_normalize_prompt_spectrum_uses_first_moment():
     amplitude, prompt = SinglePhotonElectronSpectrum._normalize_prompt_spectrum(
         np.array([0.0, 1.0, 3.0]), np.array([1.0, 4.0, 2.0])
     )
