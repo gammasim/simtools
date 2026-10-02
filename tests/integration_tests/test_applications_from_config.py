@@ -67,18 +67,19 @@ def _get_model_source_arguments(application):
 def _set_simulation_model_source_configuration(config, simulation_models_path, git_source):
     """Replace a workflow's configured source with the selected test source.
 
-    The model-source options are only written to workflows of applications using
-    the standard model-source arguments. Applications defining
-    ``simulation_models_path`` as an application-specific argument are not
-    modified; they read the selected source from the environment variables set
-    by ``_set_simulation_model_source_env``.
+    A source is only written when the application accepts its corresponding
+    command-line option. This also supports applications that accept a local
+    repository path directly without using the standard Git-source arguments.
     """
     if not simulation_models_path and not git_source:
         return
     source_config = config.get("configuration")
     if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
         return
-    if "simulation_models_git_path" not in _get_model_source_arguments(config["application"]):
+    model_source_arguments = _get_model_source_arguments(config["application"])
+    if simulation_models_path and "simulation_models_path" not in model_source_arguments:
+        return
+    if git_source and "simulation_models_git_path" not in model_source_arguments:
         return
     source_config.pop("simulation_models_path", None)
     source_config.pop("simulation_models_git_path", None)
@@ -338,6 +339,29 @@ def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker, mon
     assert _get_simulation_model_source(
         {"application": "simtools-simulate-prod"}, request, tmp_test_directory
     ) == (None, None)
+
+
+def test_set_simulation_model_source_configuration_uses_local_path_argument():
+    """Configure applications that accept only a local model repository path."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+    model_path = Path("/models")
+    _set_simulation_model_source_configuration(config, model_path, None)
+
+    assert config["configuration"]["simulation_models_path"] == str(model_path)
+
+
+def test_set_simulation_model_source_configuration_skips_unsupported_source():
+    """Leave workflows unchanged when an application cannot accept the selected source."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+    _set_simulation_model_source_configuration(config, None, (Path("/models.git"), "HEAD"))
+
+    assert config["configuration"] == {"output_file": "production_version_descriptions.md"}
 
 
 def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):
