@@ -56,7 +56,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Restore GSL from the source snapshot
+        if: needs.dependency-config.outputs.default_simtel_source_snapshot != ''
+        env:
+          SOURCE_SNAPSHOT: ${{ needs.dependency-config.outputs.default_simtel_source_snapshot }}
+        run: |
+          set -euo pipefail
+          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
+          trap 'docker rm -f "$container_id"' EXIT
+          docker cp "$container_id:/input/gsl.tar.gz" gsl.tar.gz
+          echo "Restored GSL from $SOURCE_SNAPSHOT."
+
       - name: download-auxiliary-files
+        if: needs.dependency-config.outputs.default_simtel_source_snapshot == ''
         env:
           CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
           GSL_VERSION: ${{ needs.dependency-config.outputs.gsl_version }}
