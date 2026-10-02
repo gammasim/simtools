@@ -148,8 +148,10 @@ class Configurator:
         if not {"simulation_models_git_revision"} & parser_defaults.keys():
             return {}
         catalog = dependency_versions.load_dependency_catalog()
-        model = catalog["model-repository"]
-        return {"simulation_models_git_revision": model.get("git-revision")}
+        environment = dependency_versions.dependency_catalog_environment(catalog)
+        return {
+            "simulation_models_git_revision": environment["SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"]
+        }
 
     @staticmethod
     def _option_value(arg_list, option_name):

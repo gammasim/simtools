@@ -3,7 +3,7 @@
 This file gives repo-wide instructions for AI agents working on simtools.
 
 simtools is a Python toolkit for CTAO Monte Carlo production support: model
-parameter handling, MongoDB access, CORSIKA and sim_telarray configuration,
+parameter handling, model-source access, CORSIKA and sim_telarray configuration,
 application workflows, validation, reporting, and plotting.
 
 In general, do not pretend you are a human developer. You are a tool, you don't think.
@@ -58,8 +58,16 @@ If you are unsure, ask for clarification. Try to shut up.
 - Use semantic model versions without a leading `v` in new configs.
 - Do not add type hints to function signatures unless the surrounding module
   already deliberately uses them.
-- Keep cognitive complexity below 15; extract private helpers before adding
-  deeply nested logic.
+- Keep cognitive complexity below both configured limits: flake8-cognitive-
+  complexity is capped at 15 and Ruff's mccabe check is capped at 12. Extract
+  small private helpers before adding branches to an already complex function.
+- Do not add nested conditional expressions, implicit adjacent string literals
+  inside collections, redundant subclass/base exception entries, unused
+  function parameters, or duplicated long string literals. These patterns are
+  repeatedly rejected by Ruff, pylint, or SonarQube. Use an explicit branch,
+  explicit string construction, a single appropriate exception type, a
+  meaningful parameter (or the repository's accepted ignored-parameter form),
+  and a named constant respectively.
 - Keep code and docs ASCII-only unless an existing file clearly requires
   another character set.
 
@@ -118,12 +126,20 @@ Unit-test rules:
 - Keep file-format compatibility and resource-heavy checks in integration tests.
 - Use `tmp_test_directory` for file I/O. Do not introduce hardcoded `/tmp`,
   `tempfile`, or absolute temporary paths in tests.
-- Mock databases, network calls, file I/O, CORSIKA, and sim_telarray in unit
+- Mock model sources, network calls, file I/O, CORSIKA, and sim_telarray in unit
   tests unless the test is explicitly marked for external resources.
 - Use `pytest.approx()` for floats and
   `astropy.tests.helper.assert_quantity_allclose` for quantities.
+- Aim for 90--95% line and branch coverage for changed non-application code;
+  SonarQube checks coverage on new code. Add tests for meaningful success,
+  failure, and boundary branches instead of padding coverage with tests that
+  have no independent oracle.
 - Warnings are treated as errors; fix deprecations instead of filtering them
   unless there is a clear project-wide reason.
+- Run tests against this checkout, not an installed or editable copy from a
+  different worktree. Before diagnosing an import-dependent failure, verify
+  `python -c "import simtools; print(simtools.__file__)"`; when using Conda,
+  prepend this checkout's `src` with `env PYTHONPATH="$PWD/src"`.
 
 ## Integration Tests
 
@@ -139,8 +155,8 @@ Important mechanics:
 - Generated paths such as `output_path`, `grid_output_path`, and
   `pack_for_grid_register` should be relative; the harness rewrites them into
   `tmp_test_directory`.
-- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_TAG`, or use
-  `--simtools_tests_tag`, to select a tagged `simtools-tests` resource
+- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION`, or use
+  `--simtools_tests_resource_version`, to select a versioned `simtools-tests` resource
   bundle when `SIMTOOLS_TEST_RESOURCES` or `--test_resources_path` is not
   provided.
 - Use `${static:path/to/file}` for maintained resources and
@@ -167,8 +183,8 @@ pytest -v --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-Integration tests often require `.env` MongoDB settings and installed CORSIKA /
-sim_telarray. Unit tests should not.
+Integration tests often require a configured simulation-model source and installed
+CORSIKA / sim_telarray. Unit tests should not.
 
 ## Documentation
 
@@ -194,32 +210,63 @@ work.
 Docs validation:
 
 ```bash
-cd docs
-make clean
-make html
-make linkcheck
+conda run -n simtools-dev env PYTHONPATH="$PWD/src" make -C docs clean html linkcheck
 ```
+
+The `docs/Makefile` enables `-W -n --keep-going`, so treat every Sphinx
+warning as a failure. The build imports the checkout's applications for CLI
+help and autodoc; the explicit `PYTHONPATH` is required when an installed
+simtools package may otherwise win. Check the import location before a build
+if the traceback mentions missing attributes, stale code, or a syntax error in
+`site-packages`.
+
+When adding or changing documentation:
+
+- Keep application modules to a one-line synopsis and put operational detail,
+  examples, inputs, outputs, and CLI explanation in the application's MyST
+  page. Do not duplicate the same description in the module docstring and the
+  page.
+- Add every new application page to the applications toctree and every new
+  library module to the relevant API-reference page. A file existing under
+  `docs/source/` is not enough; `toc.not_included` is a documentation failure.
+- Use the exact module path expected by neighboring `automodule` entries (for
+  example, `model_repository.reader`), not only a basename. Ensure the path is
+  importable from the checkout and that public docstring parameters, returns,
+  and types match the actual signature.
+- Resolve new Sphinx cross-reference warnings at their source. Do not add a
+  broad `nitpick_ignore` or `suppress_warnings` entry to hide an unresolved
+  reference.
 
 Before handing off a change that adds, removes, or moves a library module, run
 the API coverage check as well. Every reported module must be added to the
 appropriate API reference page with an `automodule` entry for its complete
-`simtools.*` import path:
+module path, matching the import style already used by that API page:
 
 ```bash
-FULLY_DOCUMENTED="TRUE"
-MODULES=$(find src/simtools \
-  \( -path "src/simtools/applications" -o -path "src/simtools/_*" \) -prune \
-  -o -type f -name "*.py" ! -name "__init__.py" -print)
-for module_path in $MODULES; do
-    module=$(basename "$module_path" .py)
-    if ! grep -q "$module" docs/source/api-reference/*.md; then
-        echo "Undocumented module: $module"
-        FULLY_DOCUMENTED="FALSE"
-    fi
-done
-if [[ "$FULLY_DOCUMENTED" = "FALSE" ]]; then
-    exit 1
-fi
+python - <<'PY'
+from pathlib import Path
+
+src_root = Path("src/simtools")
+api_text = "\n".join(
+    path.read_text(encoding="utf-8")
+    for path in Path("docs/source/api-reference").glob("*.md")
+)
+missing = []
+for path in src_root.rglob("*.py"):
+    relative = path.relative_to(src_root)
+    if (
+        path.name in {"__init__.py", "_version.py"}
+        or relative.parts[0] == "applications"
+        or relative.parts[0].startswith("_")
+    ):
+        continue
+    module = ".".join(relative.with_suffix("").parts)
+    candidates = (module, f"simtools.{module}")
+    if not any(f".. automodule:: {candidate}" in api_text for candidate in candidates):
+        missing.append(module)
+if missing:
+    raise SystemExit("Undocumented modules:\n" + "\n".join(sorted(missing)))
+PY
 ```
 
 ## Adding Code
@@ -272,14 +319,62 @@ yamllint, towncrier, and shellcheck.
 Useful commands:
 
 ```bash
-ruff check --fix
-ruff format
-pylint src/simtools/path/to/module.py
 pre-commit run --all-files
+pre-commit run --files path/to/changed.py
+ruff check path/to/changed.py
+ruff format --check path/to/changed.py
+flake8 --select=CCR001 --max-cognitive-complexity=15 path/to/changed.py
+pylint -rn -sn --init-hook="import sys; sys.path.insert(0, 'src')" \
+  src/simtools/path/to/module.py
+git diff --check
 ```
 
-Pylint excludes tests. Do not satisfy pylint by adding broad disables when a
-small refactor or better naming fixes the issue.
+Use the same Python environment and checkout for all commands. If a tool is
+missing, use the `simtools-dev` environment and set `PYTHONPATH` to this
+checkout's `src`; do not silently lint an installed package. `ruff check --fix`
+and pre-commit may modify files: inspect the diff and rerun the complete
+pre-commit suite after automatic fixes. A focused check is useful during
+iteration, but the final check must match CI (`pre-commit run --all-files`).
+
+Pylint excludes tests. Do not satisfy pylint, Ruff, flake8, or SonarQube with
+broad disables or generated boilerplate when a small refactor, a correct
+import path, or a better name fixes the problem. In particular, keep helper
+functions simple enough for both the Ruff and flake8 complexity limits, and
+keep line length at 100 characters.
+
+## SonarQube And Workflow Quality
+
+Treat SonarQube findings as defects to prevent during implementation, not as
+post-merge clean-up. Before changing a workflow, run actionlint, yamllint, and
+shellcheck through pre-commit and inspect the complete workflow diff. Apply
+these rules:
+
+- Pin every external GitHub Action to a full commit SHA; a tag, branch, or
+  floating reference triggers the security-hotspot check.
+- Never expand `${{ secrets.* }}` directly in a `run:` block. Pass secrets in
+  the step's `env` and reference the environment variable in the shell. Keep
+  shell expansions quoted, use `set -euo pipefail` where appropriate, and pass
+  scanner or command arguments as an array when possible.
+- Keep default workflow permissions restrictive (`permissions: {}` when
+  possible) and declare required permissions at the job that uses them. Do not
+  put a read permission only at workflow level when SonarQube expects a
+  job-level declaration.
+- Remove unused callback or fixture parameters. If an API requires a
+  parameter, use the repository's accepted ignored-parameter naming and verify
+  both pylint and SonarQube before handoff.
+- Do not use nested ternaries; spell out the branch. Use `\d` instead of
+  `[0-9]` in regular expressions where equivalent, define constants for
+  repeated literals, and do not catch a subclass together with its base class.
+- Use SHA-256 for file or configuration digests unless a non-security use of a
+  different algorithm is explicitly justified in code. A digest used for
+  integrity or trust must not rely on SHA-1.
+- Keep new-code coverage near 90--95% and inspect the coverage report for
+  uncovered conditions, not just the total percentage. SonarQube's new-code
+  metric can fail even when the repository-wide percentage looks healthy.
+
+Do not assume Ruff and SonarQube are interchangeable. When their suggestions
+appear to conflict, preserve clear behavior, make the transformation explicit,
+and run both tools plus the relevant tests before choosing a suppression.
 
 ## Domain Conventions
 
@@ -290,7 +385,7 @@ small refactor or better naming fixes the issue.
   `by_version` in integration configs where needed.
 - Model-parameter schema changes can affect sim_telarray metadata. If an
   integration failure says a required metadata key is missing, inspect the
-  relevant schema, DB/mock parameter data, and sim_telarray metadata registry
+  relevant schema, mock parameter data, and sim_telarray metadata registry
   before changing the test expectation.
 
 ## Recurring Failure Checks
@@ -308,12 +403,23 @@ These issues have appeared repeatedly in local Codex logs and CI snippets:
   `failed`, `runtime warning`, or `segmentation fault` text in stdout/stderr.
 - Warnings-as-errors failures: update deprecated APIs, for example matplotlib
   colormap handling, rather than suppressing the warning locally.
-- Pylint duplicate-code or complexity failures: extract a helper only when it
-  improves readability and matches local patterns.
+- Pylint unused-argument/import/no-member failures: first confirm that pylint
+  is analyzing this checkout with the `src` init hook; then fix the import or
+  remove/rename the unused argument. Do not add a broad pylint disable.
+- Ruff and flake8 complexity failures: split the function at a meaningful
+  responsibility boundary and rerun both complexity checks; do not merely
+  move branches or add a suppression.
+- SonarQube workflow findings: use full action SHAs, step-level secret `env`,
+  and job-level permissions as described above. Review every workflow touched
+  by a shared CI change.
+- SonarQube maintainability findings: avoid nested conditional expressions,
+  duplicate literals, unused parameters, redundant exception classes, and
+  unclear comprehension rewrites.
 - `Undocumented module` CI failures: add the missing API reference entry.
 - The API documentation check scans every non-application, non-private
   `src/simtools/**/*.py` module by basename. When adding or moving a module,
   ensure that its basename is present in the appropriate
   `docs/source/api-reference/*.md` page, with an `automodule` directive for
-  the complete import path. Resolve every `Undocumented module: <name>` result;
-  do not silence the check or rely on a partial documentation build.
+  the complete module path (not merely a coincidental basename match). Resolve
+  every `Undocumented module: <name>` result; do not silence the check or rely
+  on a partial documentation build.

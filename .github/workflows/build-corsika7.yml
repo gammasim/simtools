@@ -8,10 +8,17 @@ name: build-corsika7
 
 on:
   workflow_dispatch:
+    inputs:
+      corsika_config_branch:
+        description: "corsika7-config branch to use for this build (default: main)."
+        required: false
+        default: main  # This defines the default branch for manually triggered builds.
+        type: string
   pull_request:
     paths:
       - docker/Dockerfile-corsika7
       - docker/validate_corsika7_build.sh
+      - .github/scripts/clone_with_retries.sh
       - .github/workflows/build-corsika7.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
@@ -46,6 +53,8 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     needs: dependency-config
+    permissions:
+      contents: read
 
     steps:
       - name: download-auxiliary-files
@@ -99,23 +108,40 @@ jobs:
           CORSIKA_SOURCE_REVISION: ${{ matrix.corsika_source_revision }}
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
           CORSIKA_CONFIG_TAG: ${{ matrix.corsika_config_tag }}
+          CORSIKA_CONFIG_BRANCH: ${{ inputs.corsika_config_branch }}
           CORSIKA_CONFIG_SOURCE_URL: ${{ matrix.corsika_config_source_url }}
           CORSIKA_CONFIG_REVISION: ${{ matrix.corsika_config_revision }}
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
+          GITHUB_MIRROR_BASE_URL: https://github.com/gammasim
           CORSIKA_OPT_PATCH_TAG: ${{ matrix.corsika_opt_patch_tag }}
           CORSIKA_OPT_PATCH_SOURCE_URL: ${{ matrix.corsika_opt_patch_source_url }}
           CORSIKA_OPT_PATCH_REVISION: ${{ matrix.corsika_opt_patch_revision }}
         run: |
+          set -euo pipefail
+          clone_with_mirror() {
+            local source_url=$1 source_ref=$2 target=$3 expected_revision=$4
+            local mirror_url="${GITHUB_MIRROR_BASE_URL%/}/${target}.git"
+            mirror_url="https://x-access-token:${CTAO_GITLAB_MIRROR}@${mirror_url#https://}"
+            ./.github/scripts/clone_with_retries.sh \
+              "$source_url" "$source_ref" "$target" "$expected_revision" "$mirror_url"
+          }
+
           source_url="https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}"
           source_revision=$(./.github/scripts/clone_with_retries.sh \
             "$source_url" "$CORSIKA_SOURCE_TAG" corsika7 "$CORSIKA_SOURCE_REVISION")
           printf '%s\n' "$source_revision" > corsika_revision
 
-          config_revision=$(./.github/scripts/clone_with_retries.sh \
-            "$CORSIKA_CONFIG_SOURCE_URL" "$CORSIKA_CONFIG_TAG" corsika7-config \
-            "$CORSIKA_CONFIG_REVISION")
+          config_ref="$CORSIKA_CONFIG_TAG"
+          config_revision="$CORSIKA_CONFIG_REVISION"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            config_ref="$CORSIKA_CONFIG_BRANCH"
+            config_revision=""
+          fi
+          config_revision=$(clone_with_mirror \
+            "$CORSIKA_CONFIG_SOURCE_URL" "$config_ref" corsika7-config "$config_revision")
           printf '%s\n' "$config_revision" > corsika_config_revision
 
-          opt_patch_revision=$(./.github/scripts/clone_with_retries.sh \
+          opt_patch_revision=$(clone_with_mirror \
             "$CORSIKA_OPT_PATCH_SOURCE_URL" "$CORSIKA_OPT_PATCH_TAG" corsika-opt-patches \
             "$CORSIKA_OPT_PATCH_REVISION")
           printf '%s\n' "$opt_patch_revision" > corsika_opt_patch_revision
@@ -175,6 +201,10 @@ jobs:
           sha256sum --check corsika7-source.tar.gz.sha256
           tar -xzf corsika7-source.tar.gz -C .
 
+      - name: Read CORSIKA config revision
+        id: corsika_config
+        run: echo "revision=$(cat corsika-source/corsika_config_revision)" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
 
@@ -211,9 +241,9 @@ jobs:
             CORSIKA_SOURCE_TAG=${{ matrix.corsika_tag }}
             CORSIKA_SOURCE_REVISION=${{ matrix.corsika_source_revision }}
             CORSIKA_SOURCE_URL=${{ matrix.corsika_source_url }}
-            CORSIKA_CONFIG_TAG=${{ matrix.corsika_config_tag }}
+            CORSIKA_CONFIG_TAG=${{ inputs.corsika_config_branch || matrix.corsika_config_tag }}
             CORSIKA_CONFIG_SOURCE_URL=${{ matrix.corsika_config_source_url }}
-            CORSIKA_CONFIG_REVISION=${{ matrix.corsika_config_revision }}
+            CORSIKA_CONFIG_REVISION=${{ steps.corsika_config.outputs.revision }}
             CORSIKA_OPT_PATCH_TAG=${{ matrix.corsika_opt_patch_tag }}
             CORSIKA_OPT_PATCH_SOURCE_URL=${{ matrix.corsika_opt_patch_source_url }}
             CORSIKA_OPT_PATCH_REVISION=${{ matrix.corsika_opt_patch_revision }}

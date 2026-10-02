@@ -68,7 +68,7 @@ def load_data(datafile):
 
 def validate_cumulative_psf(app_context):
     """
-    Simulate PSF measurements and compare cumulative PSF with measured data if provided.
+    Simulate PSF measurements and compare cumulative PSF with measured data.
 
     Parameters
     ----------
@@ -78,10 +78,12 @@ def validate_cumulative_psf(app_context):
     Raises
     ------
     ValueError
-        If no radius data is available to compute the cumulative PSF.
+        If measured PSF data is not provided.
     """
     args_dict = app_context.args
     io_handler = app_context.io_handler
+    if not args_dict.get("data"):
+        raise ValueError("Measured PSF data is required to compute the cumulative PSF.")
     label = args_dict.get("label") or Path("validate_cumulative_psf").stem
 
     tel_model, site_model, _ = initialize_simulation_models(
@@ -108,16 +110,10 @@ def validate_cumulative_psf(app_context):
     logger.info(f"d80 in cm = {image.get_psf()}")
 
     data_to_plot = OrderedDict()
-    radius = None
-    if args_dict.get("data", None):
-        data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
-        data_to_plot["measured"] = load_data(data_file)
-        radius = data_to_plot["measured"]["Radius [cm]"]
-
-    if radius is not None:
-        data_to_plot[r"sim$\_$telarray"] = image.get_cumulative_data(radius * u.cm)
-    else:
-        raise ValueError("Radius data is not available. Cannot compute cumulative PSF.")
+    data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
+    data_to_plot["measured"] = load_data(data_file)
+    radius = data_to_plot["measured"]["Radius [cm]"]
+    data_to_plot[r"sim$\_$telarray"] = image.get_cumulative_data(radius * u.cm)
 
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
