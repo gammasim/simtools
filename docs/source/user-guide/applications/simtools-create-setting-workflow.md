@@ -1,5 +1,11 @@
 # simtools-create-setting-workflow
 
+```{eval-rst}
+.. automodule:: simtools.applications.create_setting_workflow
+   :members:
+   :exclude-members: main
+```
+
 Prepare a simple model-parameter setting from a value, version, instrument, and scientific
 description. Run from the parameter-setting repository, or select its root with `--output_path`.
 
