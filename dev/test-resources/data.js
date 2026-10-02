@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790944840231,
+  "lastUpdate": 1790945310224,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -28882,6 +28882,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 425.75,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "888e8a30e16fc2e6ec052bd2f631fb3f3d34f019",
+          "message": "Reduce external build dependencies with private source snapshots (#2596)\n\n* gsl from remote\n\n* correct docum for build CIs\n\n* add build dependency graph\n\n* Reduce external CI build dependencies by caching pinned CORSIKA7 and sim_telarray inputs in private GHCR snapshots.\n\n* consistent code settings\n\n* simplify\n\n* fixed snapshots\n\n* sonar\n\n* fix: address build input snapshot review findings\n\n* fix: restrict build input image contents",
+          "timestamp": "2026-10-02T14:28:52+02:00",
+          "tree_id": "a34e3788c1c2c0a96b3ce811799db8b8d10dfd07",
+          "url": "https://github.com/gammasim/simtools/commit/888e8a30e16fc2e6ec052bd2f631fb3f3d34f019"
+        },
+        "date": 1790945295729,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 67.878369855,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 71.02,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 425.78125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
           }
