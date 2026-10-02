@@ -4,6 +4,33 @@ Pre-built OCI images are available from the
 [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 The GitHub Actions workflows in `.github/workflows/build-*.yml` are the reference image builds.
 
+## Build dependency graph
+
+```text
+dependency_versions.yml
+        |
+        +-- dependency-config ---------------------------------------+
+        |                                                           |
+        v                                                           v
+  CORSIKA source, config, patches, autoconf                 sim_telarray, hessio,
+  (source job, archive job)                                 stdtools, GSL
+        |                                                           |
+        +-- GitHub Actions artifacts ----------------+--------------+
+                                                    |
+                                                    v
+                         CORSIKA and sim_telarray image builds (per architecture)
+                                                    |
+                                                    v
+                                      GHCR scientific component images
+                                                    |
+                         +--------------------------+--------------------------+
+                         v                                                     v
+              simtools production image                                  simtools dev image
+                         |
+                         v
+              reusable integration-test workflow
+```
+
 All scientific build versions come from `dependency_versions.yml`; see
 [Dependency versions and provenance](dependency_versions.md). Dockerfiles provide fallback values
 for standalone local builds, while the workflows pass the values generated from the catalog.
