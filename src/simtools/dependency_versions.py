@@ -54,7 +54,9 @@ def update_dependency_source_revisions(catalog_path, updates):
         components = {component["source-ref"]: component for component in catalog[section]}
         for source_ref, values in updates[section].items():
             components[source_ref].update(values)
-    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False), encoding="utf-8")
+    catalog_path.write_text(
+        yaml.safe_dump(catalog, sort_keys=False, explicit_start=True), encoding="utf-8"
+    )
 
 
 def _corsika_tag(component):
