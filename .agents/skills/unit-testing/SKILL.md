@@ -70,7 +70,7 @@ covered and should drive the next tests you add.
 6. Do not make ordinary unit tests depend on checked-in, downloaded, or
    external files. Generate the smallest valid input in `tmp_test_directory`
    when file parsing or writing is the behavior under test.
-7. Mock external dependencies such as databases, network calls, file I/O,
+7. Mock external dependencies such as model sources, network calls, file I/O,
    and installed simulation software.
 8. Use `pytest.approx()` for floats and
    `astropy.tests.helper.assert_quantity_allclose` for quantities.
@@ -82,9 +82,6 @@ covered and should drive the next tests you add.
   paths for most unit tests.
 - Shared fixtures in `tests/conftest.py` provide `test_resources_path` and
   `simtools_root_path`.
-- Relevant markers:
-  - `uses_model_database`
-  - `db_unit_test`
 
 ## Commands
 
