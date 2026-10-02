@@ -1,5 +1,6 @@
 FROM scratch
 
-COPY . /input/
+COPY *.tar.gz /input/
+COPY *.sha256 /input/
 
 USER 65532:65532
