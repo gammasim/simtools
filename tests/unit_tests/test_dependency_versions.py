@@ -288,8 +288,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
         matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"]
         == first_corsika["opt-patch-ref"]
     )
-    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
-    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -365,14 +369,16 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid Git revision",
         ),
         (
-            lambda data: data["corsika"][0].update(
-                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            lambda data: (
+                data["corsika"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["corsika"][0].pop("config-revision", None),
             ),
             "requires all source revisions",
         ),
         (
-            lambda data: data["sim-telarray"][0].update(
-                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            lambda data: (
+                data["sim-telarray"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["sim-telarray"][0].pop("hessio-revision", None),
             ),
             "requires all source revisions",
         ),
