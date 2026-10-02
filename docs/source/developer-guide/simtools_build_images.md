@@ -12,8 +12,8 @@ dependency_versions.yml
         +-- weekly refresh: compare remote commits, build snapshots, open review PR
         |                                                           |
         v                                                           v
-  private CORSIKA input snapshot                            private sim_telarray input snapshot
-  (source, patches, Autoconf)                               (source, dependencies, GSL)
+  private CORSIKA source snapshot                           private sim_telarray source snapshot
+  (source and patches)                                      (source and dependencies)
         |                                                           |
         +---------------- GitHub Actions artifacts ----------------+
                                                     |
@@ -44,13 +44,16 @@ simtools-dependency-versions --format github-output
 
 `docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. The workflow prepares
 the CORSIKA source, configuration, and optimization-patch trees before the Docker build and
-provides them with the `autoconf.tar.gz` archive. Once the catalog contains an immutable source
-snapshot digest, these inputs are restored from private GHCR instead of fetched from remote sites.
+provides them with the separately downloaded `autoconf.tar.gz` archive. Once the catalog contains
+an immutable source snapshot digest, the source inputs are restored from private GHCR instead of
+fetched from remote sites. The archive remains outside the snapshot and uses its verified download
+fallback.
 
 `docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio, and stdtools releases.
 The workflow prepares those source trees before the Docker build and provides them with the
-`gsl.tar.gz` archive. Once the catalog contains an immutable source snapshot digest, these inputs
-are restored from private GHCR instead of fetched from remote sites.
+separately downloaded `gsl.tar.gz` archive. Once the catalog contains an immutable source snapshot
+digest, the source inputs are restored from private GHCR instead of fetched from remote sites. The
+archive remains outside the snapshot and uses its verified download fallback.
 
 Use the workflow-generated matrix values as build arguments. This ensures that a local build uses
 the same base-image tags, source releases and flags as CI. Add optional digests and revisions to

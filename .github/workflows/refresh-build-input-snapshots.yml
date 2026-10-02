@@ -17,10 +17,6 @@ jobs:
     permissions:
       contents: read
     outputs:
-      autoconf_version: ${{ steps.config.outputs.autoconf_version }}
-      autoconf_sha256: ${{ steps.config.outputs.autoconf_sha256 }}
-      gsl_version: ${{ steps.config.outputs.gsl_version }}
-      gsl_sha256: ${{ steps.config.outputs.gsl_sha256 }}
       corsika_source_matrix: ${{ steps.config.outputs.corsika_source_matrix }}
       simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
     steps:
@@ -38,10 +34,6 @@ jobs:
       packages: write
       pull-requests: write
     env:
-      AUTOCONF_VERSION: ${{ needs.dependency-config.outputs.autoconf_version }}
-      AUTOCONF_SHA256: ${{ needs.dependency-config.outputs.autoconf_sha256 }}
-      GSL_VERSION: ${{ needs.dependency-config.outputs.gsl_version }}
-      GSL_SHA256: ${{ needs.dependency-config.outputs.gsl_sha256 }}
       CORSIKA_MATRIX: ${{ needs.dependency-config.outputs.corsika_source_matrix }}
       SIMTEL_MATRIX: ${{ needs.dependency-config.outputs.simtel_matrix }}
       CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
@@ -49,8 +41,6 @@ jobs:
       HESSIO_TOKEN: ${{ secrets.HESSIO_CTAO_GITLAB }}
       STDTOOLS_TOKEN: ${{ secrets.STDTOOLS_CTAO_GITLAB }}
       CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
-      CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
-      CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
@@ -68,9 +58,9 @@ jobs:
         run: |
           set -euo pipefail
           snapshot_tag() {
-            local package=$1 build_id=$2 first=$3 second=$4 third=$5 archive=$6
+            local package=$1 build_id=$2 first=$3 second=$4 third=$5
             local digest
-            digest=$(printf '%s\n%s\n%s\n%s' "$first" "$second" "$third" "$archive" | sha256sum | cut -c1-16)
+            digest=$(printf '%s\n%s\n%s' "$first" "$second" "$third" | sha256sum | cut -c1-16)
             printf 'ghcr.io/gammasim/%s:%s-%s\n' "$package" "$build_id" "$digest"
           }
           clone_ctao_source() {
@@ -108,19 +98,6 @@ jobs:
             echo "Could not resolve $source_ref from $source_url" >&2
             return 1
           }
-          download_archive() {
-            local primary_url=$1 fallback_url=$2 filename=$3 checksum=$4
-            if curl -L --fail --proto '=https' --proto-redir '=https' \
-              --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
-              "$primary_url" -o "input/$filename" && \
-              echo "$checksum  input/$filename" | sha256sum --check --strict; then
-              return
-            fi
-            curl -L --fail --proto '=https' --proto-redir '=https' \
-              --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
-              "$fallback_url" -o "input/$filename"
-            echo "$checksum  input/$filename" | sha256sum --check --strict
-          }
           build_snapshot() {
             local image=$1
             if docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
@@ -133,8 +110,6 @@ jobs:
 
           printf '{"corsika":{},"sim-telarray":{}}\n' > source-updates.json
           mkdir input
-          autoconf_downloaded=false
-          gsl_downloaded=false
           while IFS= read -r component; do
             build_id=$(jq -r '.corsika_build_id' <<< "$component")
             source_ref=$(jq -r '.corsika_tag' <<< "$component")
@@ -151,8 +126,7 @@ jobs:
             config_revision=$(resolve_revision "$config_url" "$config_ref" "$(mirror_url corsika7-config)")
             patch_revision=$(resolve_revision "$patch_url" "$patch_ref" "$(mirror_url corsika-opt-patches)")
             image=$(snapshot_tag corsika7-build-inputs "$build_id" \
-              "$source_revision" "$config_revision" "$patch_revision" \
-              "${AUTOCONF_VERSION}:${AUTOCONF_SHA256}")
+              "$source_revision" "$config_revision" "$patch_revision")
             if [[ "$source_revision" == "$current_source_revision" && \
               "$config_revision" == "$current_config_revision" && \
               "$patch_revision" == "$current_patch_revision" ]] && \
@@ -164,13 +138,6 @@ jobs:
               "$source_url" "$source_ref" corsika7 "$source_revision"
             clone_ctao_source "$config_url" "$config_ref" corsika7-config "" "$config_revision"
             clone_ctao_source "$patch_url" "$patch_ref" corsika-opt-patches "" "$patch_revision"
-            if [[ "$autoconf_downloaded" == false ]]; then
-              download_archive \
-                "https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz" \
-                "https://syncandshare.desy.de/index.php/s/${CLOUD_AUTOCONF}/download" \
-                autoconf.tar.gz "$AUTOCONF_SHA256"
-              autoconf_downloaded=true
-            fi
             printf '%s\n' "$source_revision" > corsika_revision
             printf '%s\n' "$config_revision" > corsika_config_revision
             printf '%s\n' "$patch_revision" > corsika_opt_patch_revision
@@ -208,8 +175,7 @@ jobs:
             hessio_revision=$(resolve_revision "$hessio_authenticated_url" "$hessio_ref" "$(mirror_url hessio)")
             stdtools_revision=$(resolve_revision "$stdtools_authenticated_url" "$stdtools_ref" "$(mirror_url stdtools)")
             image=$(snapshot_tag simtel-array-build-inputs "$build_id" \
-              "$simtel_revision" "$hessio_revision" "$stdtools_revision" \
-              "${GSL_VERSION}:${GSL_SHA256}")
+              "$simtel_revision" "$hessio_revision" "$stdtools_revision")
             if [[ "$simtel_revision" == "$current_simtel_revision" && \
               "$hessio_revision" == "$current_hessio_revision" && \
               "$stdtools_revision" == "$current_stdtools_revision" ]] && \
@@ -220,12 +186,6 @@ jobs:
             clone_ctao_source "$source_url" "$source_ref" sim_telarray "$SIMTELARRAY_TOKEN" "$simtel_revision"
             clone_ctao_source "$hessio_url" "$hessio_ref" hessio "$HESSIO_TOKEN" "$hessio_revision"
             clone_ctao_source "$stdtools_url" "$stdtools_ref" stdtools "$STDTOOLS_TOKEN" "$stdtools_revision"
-            if [[ "$gsl_downloaded" == false ]]; then
-              download_archive "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" \
-                "https://syncandshare.desy.de/index.php/s/${CLOUD_GSL}/download" \
-                gsl.tar.gz "$GSL_SHA256"
-              gsl_downloaded=true
-            fi
             printf '%s\n' "$simtel_revision" > simtel_revision
             printf '%s\n' "$hessio_revision" > hessio_revision
             printf '%s\n' "$stdtools_revision" > stdtools_revision
