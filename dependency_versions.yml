@@ -1,23 +1,22 @@
----
 schema_version: 0.7.0
-python: "3.14"
-apptainer: "1.5.0"
+python: '3.14'
+apptainer: 1.5.0
 cpu-variants:
-  - generic
-  - avx2
-  - avx512f
-  - sse4
+- generic
+- avx2
+- avx512f
+- sse4
 archives:
   autoconf:
-    version: "2.71"
+    version: '2.71'
     sha256: 431075ad0bf529ef13cb41e9042c542381103e80015686222b8a9d4abef42a1c
   gsl:
-    version: "2.8"
+    version: '2.8'
     sha256: 6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
 base-image:
   name: docker.io/library/almalinux
   runtime-version: 9.8-minimal
-  build-version: "9.8"
+  build-version: '9.8'
 corsika-interaction-tables:
   ref: v1.1.0
   source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables.git
@@ -31,27 +30,39 @@ simtools-tests:
   ref: main
   resource-version: v0.38.0
 production-combinations:
-  - corsika: v7.8010
-    sim-telarray: v2025-11-30-rc
-  - corsika: v7.8050
-    sim-telarray: v2025-11-30-rc
+- corsika: v7.8010
+  sim-telarray: v2025-11-30-rc
+- corsika: v7.8050
+  sim-telarray: v2025-11-30-rc
 corsika:
-  - source-ref: v7.8010
-    source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-ref: v1.1.0
-    config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-ref: v1.1.0
-    opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
-  - source-ref: v7.8050
-    source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
-    config-ref: v1.0.0
-    config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
-    opt-patch-ref: v1.2.0
-    opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+- source-ref: v7.8010
+  source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
+  config-ref: v1.1.0
+  config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
+  opt-patch-ref: v1.1.0
+  opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+  source-revision: 6b720388124871f8e07741e40e3446a7375efe78
+  config-revision: 755d445ba63223706ff54ca2333f7e2f18296d53
+  opt-patch-revision: e481fdf9eaa45c2f1846823f5d3d68ea24cf3a47
+  source-snapshot-digest: sha256:076552b20edebf8a7c003c786a1f1fc23b3f9ade9a8c6c5e864f02608d818526
+- source-ref: v7.8050
+  source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
+  config-ref: v1.0.0
+  config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
+  opt-patch-ref: v1.2.0
+  opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+  source-revision: 509b9ffaf1c1a2d88a4d9eeb298099e764d41b2a
+  config-revision: 47e6d1f35310a9b32ba838f0c247609da2e619b3
+  opt-patch-revision: 8b516bc33f6a364d9e9dade34b183d551babc144
+  source-snapshot-digest: sha256:9546f345e28451ebf1aae1e8db9011957f3a523347ef946cea9b1f9016d6bf05
 sim-telarray:
-  - source-ref: v2025-11-30-rc
-    source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
-    hessio-ref: v2025-12-01-rc
-    hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
-    stdtools-ref: v2025-06-16-rc
-    stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git
+- source-ref: v2025-11-30-rc
+  source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
+  hessio-ref: v2025-12-01-rc
+  hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
+  stdtools-ref: v2025-06-16-rc
+  stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git
+  revision: 6de7bb5ce0d6b309fed959eee4fb071f55c91018
+  hessio-revision: b97b807b804aad29ecfeb54a57c54fc7c4fb0820
+  stdtools-revision: 9c109a4e2398e30dc014a24cf2b6bc15b61290e7
+  source-snapshot-digest: sha256:557f9f329898e0cee0d11c2a6c00aa43e093636b79b07f18b0ef57f0f565267a
