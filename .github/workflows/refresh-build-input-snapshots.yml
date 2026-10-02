@@ -49,6 +49,8 @@ jobs:
       HESSIO_TOKEN: ${{ secrets.HESSIO_CTAO_GITLAB }}
       STDTOOLS_TOKEN: ${{ secrets.STDTOOLS_CTAO_GITLAB }}
       CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
+      CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
+      CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
@@ -82,35 +84,48 @@ jobs:
             ./.github/scripts/clone_with_retries.sh \
               "$primary_url" "$source_ref" "$target" "$expected_revision" "$mirror_url"
           }
+          mirror_url() {
+            local target=$1
+            printf 'https://x-access-token:%s@github.com/gammasim/%s.git\n' \
+              "$CTAO_GITLAB_MIRROR" "$target"
+          }
           resolve_revision() {
-            local source_url=$1 source_ref=$2
+            local source_url=$1 source_ref=$2 fallback_url=${3:-}
             local output=""
-            for attempt in 1 2 3 4 5; do
-              output=$(git -c http.connectTimeout=30 ls-remote "$source_url" "$source_ref" || true)
-              if [[ -n "$output" ]]; then
-                awk 'NR == 1 { first = $1 } /\^\{\}$/ { peeled = $1 } END { print peeled ? peeled : first }' \
-                  <<< "$output"
-                return
-              fi
-              sleep $((attempt * 15))
+            for repository_url in "$source_url" "$fallback_url"; do
+              [[ -z "$repository_url" ]] && continue
+              for attempt in 1 2 3 4 5; do
+                output=$(git -c http.connectTimeout=30 ls-remote "$repository_url" "$source_ref" || true)
+                if [[ -n "$output" ]]; then
+                  awk 'NR == 1 { first = $1 } /\^\{\}$/ { peeled = $1 } END { print peeled ? peeled : first }' \
+                    <<< "$output"
+                  return
+                fi
+                sleep $((attempt * 15))
+              done
             done
             echo "Could not resolve $source_ref from $source_url" >&2
             return 1
           }
           download_archive() {
-            local url=$1 filename=$2 checksum=$3
-            curl -L --fail --proto '=https' --proto-redir '=https' \
+            local primary_url=$1 fallback_url=$2 filename=$3 checksum=$4
+            if ! curl -L --fail --proto '=https' --proto-redir '=https' \
               --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
-              "$url" -o "input/$filename"
+              "$primary_url" -o "input/$filename"; then
+              curl -L --fail --proto '=https' --proto-redir '=https' \
+                --retry 5 --retry-delay 10 --retry-connrefused --connect-timeout 30 \
+                "$fallback_url" -o "input/$filename"
+            fi
             echo "$checksum  input/$filename" | sha256sum --check --strict
           }
           build_snapshot() {
             local image=$1
             if docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
-              echo "Snapshot already exists: $image"
-              return
+              echo "Snapshot already exists: $image" >&2
+            else
+              docker buildx build --file docker/Dockerfile-build-inputs --tag "$image" --push . >&2
             fi
-            docker buildx build --file docker/Dockerfile-build-inputs --tag "$image" --push .
+            docker buildx imagetools inspect --format '{{.Manifest.Digest}}' "$image"
           }
 
           printf '{"corsika":{},"sim-telarray":{}}\n' > source-updates.json
@@ -130,8 +145,8 @@ jobs:
             current_patch_revision=$(jq -r '.corsika_opt_patch_revision' <<< "$component")
             source_url="https://oauth2:${CORSIKA7_TOKEN}@${source_url#https://}"
             source_revision=$(resolve_revision "$source_url" "$source_ref")
-            config_revision=$(resolve_revision "$config_url" "$config_ref")
-            patch_revision=$(resolve_revision "$patch_url" "$patch_ref")
+            config_revision=$(resolve_revision "$config_url" "$config_ref" "$(mirror_url corsika7-config)")
+            patch_revision=$(resolve_revision "$patch_url" "$patch_ref" "$(mirror_url corsika-opt-patches)")
             image=$(snapshot_tag corsika7-build-inputs "$build_id" \
               "$source_revision" "$config_revision" "$patch_revision")
             if [[ "$source_revision" == "$current_source_revision" && \
@@ -148,6 +163,7 @@ jobs:
             if [[ "$autoconf_downloaded" == false ]]; then
               download_archive \
                 "https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz" \
+                "https://syncandshare.desy.de/index.php/s/${CLOUD_AUTOCONF}/download" \
                 autoconf.tar.gz "$AUTOCONF_SHA256"
               autoconf_downloaded=true
             fi
@@ -159,10 +175,10 @@ jobs:
               corsika7 corsika_revision corsika7-config corsika_config_revision \
               corsika-opt-patches corsika_opt_patch_revision
             sha256sum input/corsika7-source.tar.gz > input/corsika7-source.tar.gz.sha256
-            build_snapshot "$image"
+            snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg source "$source_revision" \
-              --arg config "$config_revision" --arg patch "$patch_revision" \
-              '.corsika[$ref] = {"source-revision": $source, "config-revision": $config, "opt-patch-revision": $patch}' \
+              --arg config "$config_revision" --arg patch "$patch_revision" --arg digest "$snapshot_digest" \
+              '.corsika[$ref] = {"source-revision": $source, "config-revision": $config, "opt-patch-revision": $patch, "source-snapshot-digest": $digest}' \
               source-updates.json > source-updates.tmp
             mv source-updates.tmp source-updates.json
             rm -rf corsika7 corsika7-config corsika-opt-patches corsika_revision \
@@ -184,9 +200,9 @@ jobs:
             simtel_url="https://oauth2:${SIMTELARRAY_TOKEN}@${source_url#https://}"
             hessio_authenticated_url="https://oauth2:${HESSIO_TOKEN}@${hessio_url#https://}"
             stdtools_authenticated_url="https://oauth2:${STDTOOLS_TOKEN}@${stdtools_url#https://}"
-            simtel_revision=$(resolve_revision "$simtel_url" "$source_ref")
-            hessio_revision=$(resolve_revision "$hessio_authenticated_url" "$hessio_ref")
-            stdtools_revision=$(resolve_revision "$stdtools_authenticated_url" "$stdtools_ref")
+            simtel_revision=$(resolve_revision "$simtel_url" "$source_ref" "$(mirror_url sim_telarray)")
+            hessio_revision=$(resolve_revision "$hessio_authenticated_url" "$hessio_ref" "$(mirror_url hessio)")
+            stdtools_revision=$(resolve_revision "$stdtools_authenticated_url" "$stdtools_ref" "$(mirror_url stdtools)")
             image=$(snapshot_tag simtel-array-build-inputs "$build_id" \
               "$simtel_revision" "$hessio_revision" "$stdtools_revision")
             if [[ "$simtel_revision" == "$current_simtel_revision" && \
@@ -201,6 +217,7 @@ jobs:
             clone_ctao_source "$stdtools_url" "$stdtools_ref" stdtools "$STDTOOLS_TOKEN" "$stdtools_revision"
             if [[ "$gsl_downloaded" == false ]]; then
               download_archive "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" \
+                "https://syncandshare.desy.de/index.php/s/${CLOUD_GSL}/download" \
                 gsl.tar.gz "$GSL_SHA256"
               gsl_downloaded=true
             fi
@@ -211,10 +228,10 @@ jobs:
             tar -czf input/simtel-source.tar.gz \
               sim_telarray simtel_revision hessio hessio_revision stdtools stdtools_revision
             sha256sum input/simtel-source.tar.gz > input/simtel-source.tar.gz.sha256
-            build_snapshot "$image"
+            snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg simtel "$simtel_revision" \
-              --arg hessio "$hessio_revision" --arg stdtools "$stdtools_revision" \
-              '."sim-telarray"[$ref] = {"revision": $simtel, "hessio-revision": $hessio, "stdtools-revision": $stdtools}' \
+              --arg hessio "$hessio_revision" --arg stdtools "$stdtools_revision" --arg digest "$snapshot_digest" \
+              '."sim-telarray"[$ref] = {"revision": $simtel, "hessio-revision": $hessio, "stdtools-revision": $stdtools, "source-snapshot-digest": $digest}' \
               source-updates.json > source-updates.tmp
             mv source-updates.tmp source-updates.json
             rm -rf sim_telarray hessio stdtools simtel_revision hessio_revision stdtools_revision \

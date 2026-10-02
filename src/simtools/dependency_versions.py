@@ -7,7 +7,6 @@ import sys
 import tomllib
 from copy import deepcopy
 from functools import cache
-from hashlib import sha256
 from pathlib import Path
 
 import yaml
@@ -28,114 +27,34 @@ IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0"}
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
-SOURCE_URL_KEYS = {
-    "source-url: ",
-    "config-source-url: ",
-    "opt-patch-source-url: ",
-    "hessio-source-url: ",
-    "stdtools-source-url: ",
-}
 
 
-def _source_snapshot_image(package, build_id, revisions):
-    """Return a private source-snapshot image for fully pinned inputs."""
-    if not all(revisions):
+def _source_snapshot_image(package, digest):
+    """Return an immutable private source-snapshot image reference."""
+    if not digest:
         return ""
-    digest = sha256("\n".join(revisions).encode("ascii")).hexdigest()[:16]
-    return f"{SOURCE_SNAPSHOT_REGISTRY}/{package}:{build_id}-{digest}"
+    return f"{SOURCE_SNAPSHOT_REGISTRY}/{package}@{digest}"
 
 
 def update_dependency_source_revisions(catalog_path, updates):
-    """Update source revisions in a dependency catalog without reformatting it.
+    """Update resolved source revisions and snapshot digests in a dependency catalog.
 
     Parameters
     ----------
     catalog_path : pathlib.Path
         Dependency catalog to update.
     updates : dict
-        Resolved source revisions keyed by component source reference.
-
-    Raises
-    ------
-    ValueError
-        If a required CORSIKA or sim_telarray section is missing.
+        Resolved source revisions and immutable snapshot digests keyed by source reference.
     """
     catalog_path = Path(catalog_path)
-    lines = catalog_path.read_text(encoding="utf-8").splitlines(keepends=True)
-    before_simtel, simtel_and_after = _update_dependency_component(
-        lines, updates["corsika"], "corsika"
-    )
-    simtel, after = _update_dependency_component(
-        simtel_and_after, updates["sim-telarray"], "sim-telarray"
-    )
-    catalog_path.write_text("".join([*before_simtel, *simtel, *after]), encoding="utf-8")
-
-
-def _update_dependency_component(lines, updates, section):
-    """Insert or replace revision keys for one dependency-catalog section."""
-    updated, remaining = _split_catalog_section(lines, section)
-    current_ref = None
-    index = 0
-    while index < len(remaining):
-        line = remaining[index]
-        if _is_next_catalog_section(line):
-            return updated, remaining[index:]
-        updated.append(line)
-        stripped = line.strip()
-        if stripped.startswith("- source-ref: "):
-            current_ref = stripped.removeprefix("- source-ref: ")
-        revision_line, skipped = _source_revision_update(
-            remaining, index, current_ref, updates, section
-        )
-        if revision_line:
-            updated.append(revision_line)
-            index += skipped
-        index += 1
-    return updated, []
-
-
-def _split_catalog_section(lines, section):
-    """Return lines before and starting at a top-level catalog section."""
-    for index, line in enumerate(lines):
-        if line.startswith(f"{section}:"):
-            return lines[: index + 1], lines[index + 1 :]
-    raise ValueError(f"Missing dependency catalog section: {section}")
-
-
-def _source_revision_update(lines, index, current_ref, updates, section):
-    """Return a revision line and existing-line count for the current URL line."""
-    source_url_key = _source_url_key(lines[index].strip())
-    component_updates = updates.get(current_ref, {})
-    if source_url_key is None:
-        return "", 0
-    revision_key = _source_revision_key(source_url_key, section)
-    value = component_updates.get(revision_key)
-    if value is None:
-        return "", 0
-    revision_line = f"    {revision_key}: {value}\n"
-    next_line = lines[index + 1] if index + 1 < len(lines) else ""
-    skip_existing = int(next_line.startswith(f"    {revision_key}: "))
-    return revision_line, skip_existing
-
-
-def _source_url_key(stripped):
-    """Return the matching source URL key, if the line declares one."""
-    for key in SOURCE_URL_KEYS:
-        if stripped.startswith(key):
-            return key
-    return None
-
-
-def _source_revision_key(source_url_key, section):
-    """Return the revision field stored below a source URL field."""
-    if source_url_key == "source-url: ":
-        return "source-revision" if section == "corsika" else "revision"
-    return source_url_key.removesuffix("source-url: ") + "revision"
-
-
-def _is_next_catalog_section(line):
-    """Return whether a line starts the next top-level YAML section."""
-    return bool(line) and not line.startswith(" ")
+    catalog = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    for section in ("corsika", "sim-telarray"):
+        if not catalog.get(section):
+            raise ValueError(f"Missing dependency catalog section: {section}")
+        components = {component["source-ref"]: component for component in catalog[section]}
+        for source_ref, values in updates[section].items():
+            components[source_ref].update(values)
+    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False), encoding="utf-8")
 
 
 def _corsika_tag(component):
@@ -435,6 +354,9 @@ def _validate_corsika_components(
         revision_validator(component.get("source-revision"), "CORSIKA source")
         revision_validator(component.get("config-revision"), "CORSIKA configuration")
         revision_validator(component.get("opt-patch-revision"), "CORSIKA optimization patch")
+        _validate_optional_digest(
+            component.get("source-snapshot-digest"), "CORSIKA source snapshot"
+        )
         for variant, digest in component.get("image-digests", {}).items():
             _validate_optional_digest(digest, f"CORSIKA {source_tag} {variant}")
 
@@ -466,6 +388,9 @@ def _validate_simtel_components(
         )
         for key in ("revision", "hessio-revision", "stdtools-revision"):
             revision_validator(component.get(key), key)
+        _validate_optional_digest(
+            component.get("source-snapshot-digest"), "sim_telarray source snapshot"
+        )
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
 
 
@@ -661,13 +586,7 @@ def build_workflow_matrices(catalog):
             "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
             "corsika_opt_patch_revision": corsika.get("opt-patch-revision", ""),
             "corsika_source_snapshot": _source_snapshot_image(
-                "corsika7-build-inputs",
-                _corsika_build_id(corsika),
-                (
-                    corsika.get("source-revision", ""),
-                    corsika.get("config-revision", ""),
-                    corsika.get("opt-patch-revision", ""),
-                ),
+                "corsika7-build-inputs", corsika.get("source-snapshot-digest", "")
             ),
             "avx_flag": variant,
         }
@@ -700,13 +619,7 @@ def build_workflow_matrices(catalog):
             "stdtools_source_url": component["stdtools-source-url"],
             "stdtools_revision": component.get("stdtools-revision", ""),
             "simtel_source_snapshot": _source_snapshot_image(
-                "simtel-array-build-inputs",
-                _simtel_build_id(component),
-                (
-                    component.get("revision", ""),
-                    component.get("hessio-revision", ""),
-                    component.get("stdtools-revision", ""),
-                ),
+                "simtel-array-build-inputs", component.get("source-snapshot-digest", "")
             ),
         }
         for component in catalog["sim-telarray"]
@@ -727,13 +640,7 @@ def build_workflow_matrices(catalog):
             "corsika_opt_patch_source_url": component["opt-patch-source-url"],
             "corsika_opt_patch_revision": component.get("opt-patch-revision", ""),
             "corsika_source_snapshot": _source_snapshot_image(
-                "corsika7-build-inputs",
-                _corsika_build_id(component),
-                (
-                    component.get("source-revision", ""),
-                    component.get("config-revision", ""),
-                    component.get("opt-patch-revision", ""),
-                ),
+                "corsika7-build-inputs", component.get("source-snapshot-digest", "")
             ),
         }
         for component in catalog["corsika"]
@@ -806,24 +713,12 @@ def dependency_catalog_summary(catalog):
         "autoconf_version": catalog["archives"]["autoconf"]["version"],
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "default_corsika_source_snapshot": _source_snapshot_image(
-            "corsika7-build-inputs",
-            _corsika_build_id(default_corsika),
-            (
-                default_corsika.get("source-revision", ""),
-                default_corsika.get("config-revision", ""),
-                default_corsika.get("opt-patch-revision", ""),
-            ),
+            "corsika7-build-inputs", default_corsika.get("source-snapshot-digest", "")
         ),
         "gsl_version": catalog["archives"]["gsl"]["version"],
         "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
         "default_simtel_source_snapshot": _source_snapshot_image(
-            "simtel-array-build-inputs",
-            _simtel_build_id(default_simtel),
-            (
-                default_simtel.get("revision", ""),
-                default_simtel.get("hessio-revision", ""),
-                default_simtel.get("stdtools-revision", ""),
-            ),
+            "simtel-array-build-inputs", default_simtel.get("source-snapshot-digest", "")
         ),
         "corsika_tables_ref": _dependency_tag(
             catalog["corsika-interaction-tables"], "ref", "tag", "version"

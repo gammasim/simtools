@@ -492,7 +492,6 @@ def test_validate_dependency_catalog_accepts_valid_revisions(simtools_root_path)
     catalog["sim-telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
-
     assert dependency_versions.validate_dependency_catalog(catalog) is catalog
 
 
@@ -524,18 +523,21 @@ def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_
     catalog["sim-telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
+    digest = "sha256:" + "b" * 64
+    catalog["corsika"][0]["source-snapshot-digest"] = digest
+    catalog["sim-telarray"][0]["source-snapshot-digest"] = digest
 
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
-    assert matrices["corsika_source_matrix"][0]["corsika_source_snapshot"].startswith(
-        "ghcr.io/gammasim/corsika7-build-inputs:78010-"
+    assert matrices["corsika_source_matrix"][0]["corsika_source_snapshot"] == (
+        f"ghcr.io/gammasim/corsika7-build-inputs@{digest}"
     )
-    assert matrices["simtel_matrix"][0]["simtel_source_snapshot"].startswith(
-        "ghcr.io/gammasim/simtel-array-build-inputs:v2025-11-30-rc-"
+    assert matrices["simtel_matrix"][0]["simtel_source_snapshot"] == (
+        f"ghcr.io/gammasim/simtel-array-build-inputs@{digest}"
     )
     assert (
         dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
-            "corsika7-build-inputs", "v78010", (revision, "", revision)
+            "corsika7-build-inputs", ""
         )
         == ""
     )
@@ -550,8 +552,8 @@ def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_
     )
 
 
-def test_update_dependency_source_revisions_preserves_catalog_layout(tmp_test_directory):
-    """Insert and replace resolved source revisions without reformatting the catalog."""
+def test_update_dependency_source_revisions_writes_structured_catalog(tmp_test_directory):
+    """Write source revisions and snapshot digests through the YAML catalog structure."""
     catalog_path = tmp_test_directory / "dependency_versions.yml"
     catalog_path.write_text(
         """schema_version: 0.6.0
@@ -574,6 +576,7 @@ sim-telarray:
                 "source-revision": "a" * 40,
                 "config-revision": "b" * 40,
                 "opt-patch-revision": "c" * 40,
+                "source-snapshot-digest": "sha256:" + "1" * 64,
             }
         },
         "sim-telarray": {
@@ -581,6 +584,7 @@ sim-telarray:
                 "revision": "d" * 40,
                 "hessio-revision": "e" * 40,
                 "stdtools-revision": "f" * 40,
+                "source-snapshot-digest": "sha256:" + "2" * 64,
             }
         },
     }
@@ -589,20 +593,21 @@ sim-telarray:
     updates["corsika"]["v7.8010"]["source-revision"] = "1" * 40
     dependency_versions.update_dependency_source_revisions(catalog_path, updates)
 
-    text = catalog_path.read_text(encoding="utf-8")
-    assert text.count("source-revision:") == 1
-    assert f"source-revision: {'1' * 40}" in text
-    assert f"config-revision: {'b' * 40}" in text
-    assert f"opt-patch-revision: {'c' * 40}" in text
-    assert f"revision: {'d' * 40}" in text
-    assert f"hessio-revision: {'e' * 40}" in text
-    assert f"stdtools-revision: {'f' * 40}" in text
+    updated = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    assert updated["corsika"][0]["source-revision"] == "1" * 40
+    assert updated["corsika"][0]["config-revision"] == "b" * 40
+    assert updated["corsika"][0]["opt-patch-revision"] == "c" * 40
+    assert updated["corsika"][0]["source-snapshot-digest"] == "sha256:" + "1" * 64
+    assert updated["sim-telarray"][0]["revision"] == "d" * 40
+    assert updated["sim-telarray"][0]["hessio-revision"] == "e" * 40
+    assert updated["sim-telarray"][0]["stdtools-revision"] == "f" * 40
+    assert updated["sim-telarray"][0]["source-snapshot-digest"] == "sha256:" + "2" * 64
 
 
 def test_update_dependency_source_revisions_requires_catalog_sections(tmp_test_directory):
     """Reject an incomplete catalog rather than writing partial source revisions."""
     catalog_path = tmp_test_directory / "dependency_versions.yml"
-    catalog_path.write_text("corsika:\n", encoding="utf-8")
+    catalog_path.write_text("corsika:\n  - source-ref: v7.8010\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="Missing dependency catalog section: sim-telarray"):
         dependency_versions.update_dependency_source_revisions(

@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       corsika_config_branch:
-        description: "corsika7-config branch to use for this build (default: main)."
+        description: "Optional corsika7-config branch override. Leave empty to use the catalog snapshot."
         required: false
-        default: main  # This defines the default branch for manually triggered builds.
+        default: ""
         type: string
   pull_request:
     paths:
@@ -125,7 +125,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Log in to the Container registry
-        if: matrix.corsika_source_snapshot != '' && github.event_name != 'workflow_dispatch'
+        if: matrix.corsika_source_snapshot != '' && inputs.corsika_config_branch == ''
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -133,7 +133,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore CORSIKA sources from the source snapshot
-        if: matrix.corsika_source_snapshot != '' && github.event_name != 'workflow_dispatch'
+        if: matrix.corsika_source_snapshot != '' && inputs.corsika_config_branch == ''
         env:
           SOURCE_SNAPSHOT: ${{ matrix.corsika_source_snapshot }}
         run: |
@@ -145,7 +145,7 @@ jobs:
           echo "Restored CORSIKA sources from $SOURCE_SNAPSHOT."
 
       - name: Prepare CORSIKA sources
-        if: matrix.corsika_source_snapshot == '' || github.event_name == 'workflow_dispatch'
+        if: matrix.corsika_source_snapshot == '' || inputs.corsika_config_branch != ''
         env:
           CORSIKA_SOURCE_TAG: ${{ matrix.corsika_tag }}
           CORSIKA_SOURCE_URL: ${{ matrix.corsika_source_url }}
@@ -177,7 +177,7 @@ jobs:
 
           config_ref="$CORSIKA_CONFIG_TAG"
           config_revision="$CORSIKA_CONFIG_REVISION"
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+          if [[ -n "$CORSIKA_CONFIG_BRANCH" ]]; then
             config_ref="$CORSIKA_CONFIG_BRANCH"
             config_revision=""
           fi

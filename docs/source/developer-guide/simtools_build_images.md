@@ -9,13 +9,13 @@ The GitHub Actions workflows in `.github/workflows/build-*.yml` are the referenc
 ```text
 dependency_versions.yml
         |
-        +-- dependency-config ---------------------------------------+
+        +-- weekly refresh: compare remote commits, build snapshots, open review PR
         |                                                           |
         v                                                           v
-  CORSIKA source, config, patches, autoconf                 sim_telarray, hessio,
-  (source job, archive job)                                 stdtools, GSL
+  private CORSIKA input snapshot                            private sim_telarray input snapshot
+  (source, patches, Autoconf)                               (source, dependencies, GSL)
         |                                                           |
-        +-- GitHub Actions artifacts ----------------+--------------+
+        +---------------- GitHub Actions artifacts ----------------+
                                                     |
                                                     v
                          CORSIKA and sim_telarray image builds (per architecture)
@@ -44,14 +44,13 @@ simtools-dependency-versions --format github-output
 
 `docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. The workflow prepares
 the CORSIKA source, configuration, and optimization-patch trees before the Docker build and
-provides them with the `autoconf.tar.gz` archive. The Dockerfile checks the recorded revisions
-against the catalog values and includes them in the build provenance. It does not require GitLab
-credentials.
+provides them with the `autoconf.tar.gz` archive. Once the catalog contains an immutable source
+snapshot digest, these inputs are restored from private GHCR instead of fetched from remote sites.
 
 `docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio, and stdtools releases.
 The workflow prepares those source trees before the Docker build and provides them with the
-`gsl.tar.gz` archive. The Dockerfile verifies the prepared source revisions and records them in the
-build provenance. It does not require GitLab credentials.
+`gsl.tar.gz` archive. Once the catalog contains an immutable source snapshot digest, these inputs
+are restored from private GHCR instead of fetched from remote sites.
 
 Use the workflow-generated matrix values as build arguments. This ensures that a local build uses
 the same base-image tags, source releases and flags as CI. Add optional digests and revisions to

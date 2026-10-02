@@ -333,6 +333,7 @@ definitions:
       opt-patch-ref: {"$ref": "#/definitions/source-ref"}
       opt-patch-source-url: {type: string, pattern: "^https://"}
       opt-patch-revision: {"$ref": "#/definitions/revision"}
+      source-snapshot-digest: {"$ref": "#/definitions/sha256"}
       image-digests:
         type: object
         additionalProperties: {"$ref": "#/definitions/sha256"}
@@ -351,6 +352,7 @@ definitions:
       stdtools-ref: {"$ref": "#/definitions/source-ref"}
       stdtools-source-url: {type: string, pattern: "^https://"}
       stdtools-revision: {"$ref": "#/definitions/revision"}
+      source-snapshot-digest: {"$ref": "#/definitions/sha256"}
       image-digest: {"$ref": "#/definitions/sha256"}
 ---
 "$schema": http://json-schema.org/draft-06/schema#
