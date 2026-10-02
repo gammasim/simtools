@@ -574,7 +574,8 @@ def test_update_dependency_source_revisions_writes_structured_catalog(tmp_test_d
     """Write source revisions and snapshot digests through the YAML catalog structure."""
     catalog_path = tmp_test_directory / "dependency_versions.yml"
     catalog_path.write_text(
-        """schema_version: 0.6.0
+        """---
+schema_version: 0.6.0
 corsika:
   - source-ref: v7.8010
     source-url: https://example.org/corsika.git
@@ -611,7 +612,9 @@ sim-telarray:
     updates["corsika"]["v7.8010"]["source-revision"] = "1" * 40
     dependency_versions.update_dependency_source_revisions(catalog_path, updates)
 
-    updated = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    catalog_text = catalog_path.read_text(encoding="utf-8")
+    assert catalog_text.startswith("---\n")
+    updated = yaml.safe_load(catalog_text)
     assert updated["corsika"][0]["source-revision"] == "1" * 40
     assert updated["corsika"][0]["config-revision"] == "b" * 40
     assert updated["corsika"][0]["opt-patch-revision"] == "c" * 40
