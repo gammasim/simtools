@@ -678,6 +678,9 @@ def read_runtime_environment(runtime_environment):
     engine = runtime_environment.get("container_engine", "docker")
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
+    if Path(engine).name == "apptainer":
+        return _read_apptainer_runtime_environment(runtime_environment, engine)
+
     cmd = [engine, "run", "--rm"]
 
     if options := runtime_environment.get("options"):
@@ -693,6 +696,20 @@ def read_runtime_environment(runtime_environment):
     cmd.append(runtime_environment["image"])
     _pull_image(engine, runtime_environment["image"])
 
+    return cmd
+
+
+def _read_apptainer_runtime_environment(runtime_environment, engine):
+    """Build an Apptainer execution command from a runtime configuration."""
+    image = runtime_environment["image"]
+    cmd = [engine, "exec"]
+    for option in runtime_environment.get("options", []):
+        cmd.extend(option.split())
+    if environment_file := runtime_environment.get("environment_file"):
+        cmd.extend(["--env-file", environment_file])
+    if runtime_environment.get("network"):
+        raise ValueError("Apptainer runtime environments do not support the network option.")
+    cmd.append(image)
     return cmd
 
 

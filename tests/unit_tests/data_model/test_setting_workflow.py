@@ -1,6 +1,7 @@
 """Tests for preparing and reusing parameter-setting inputs."""
 
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -141,16 +142,14 @@ def test_repository_version_collision_leaves_no_workflow(setting_args, setting_w
     assert not setting_args["output_path"].exists()
 
 
-def test_runtime_and_source_are_embedded(setting_args, setting_writer, tmp_test_directory):
+def test_runtime_and_source_are_preserved(setting_args, setting_writer, tmp_test_directory):
     runtime_file = tmp_test_directory / "runtime.yml"
     runtime = {"runtime_environment": {"image": "example@sha256:123", "container_engine": "podman"}}
     ascii_handler.write_data_to_file(runtime, runtime_file)
     setting_args.update(workflow_runtime_file=runtime_file, source_url="https://example.org/data")
     config_file = setting_workflow.create_setting_workflow(setting_args)
-    assert (
-        ascii_handler.collect_data_from_file(config_file)["runtime_environment"]
-        == runtime["runtime_environment"]
-    )
+    assert "runtime_environment" not in ascii_handler.collect_data_from_file(config_file)
+    assert ascii_handler.collect_data_from_file(config_file.with_name("runtime.yml")) == runtime
     metadata = ascii_handler.collect_data_from_file(config_file.with_name("input.meta.yml"))
     assert metadata["cta"]["product"]["description"].endswith("Source: https://example.org/data")
 
@@ -181,3 +180,24 @@ def test_run_and_rerun_use_separate_outputs(setting_args, setting_writer, mocker
     assert run.call_args.args[0]["ignore_existing_parameter_version"] is True
     assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(rerun_output)
     assert sentinel.read_text(encoding="utf-8") == "previous result"
+
+
+def test_run_uses_workflow_runtime_file(setting_args, setting_writer, mocker):
+    runtime_file = Path(str(setting_args["output_path"])).parent / "runtime.yml"
+    ascii_handler.write_data_to_file(
+        {"runtime_environment": {"image": "example@sha256:123"}}, runtime_file
+    )
+    setting_args["workflow_runtime_file"] = runtime_file
+    config_file = setting_workflow.create_setting_workflow(setting_args)
+    prepare = mocker.patch.object(
+        setting_workflow.simtools_runner,
+        "prepare_runtime_environment",
+        return_value=({"image": "example@sha256:123"}, ["runtime"]),
+    )
+    run = mocker.patch.object(setting_workflow.simtools_runner, "run_applications")
+
+    setting_workflow.run_setting_workflow(config_file, {})
+
+    prepare.assert_called_once_with(config_file.with_name("runtime.yml"))
+    assert run.call_args.args[0]["runtime_environment"] == {"image": "example@sha256:123"}
+    assert run.call_args.kwargs["run_time"] == ["runtime"]
