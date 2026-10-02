@@ -28,9 +28,10 @@ Identical inputs reuse their workflow; conflicting values, descriptions, contact
 definitions require a new parameter version. Reruns preserve previous outputs and write under
 `output/INSTRUMENT/PARAMETER/ACTIVITY/reruns/EXECUTION_ID/`.
 
-An optional `--runtime_environment_file runtime.yml` embeds the runtime definition in
-`config.yml`, without starting a container during preparation. Paths in that definition
-retain their existing meaning; make them available when running from the repository root.
+An optional `--runtime_environment_file runtime.yml` copies the validated runtime definition into
+the new workflow as `runtime.yml`, without starting a container during preparation. When `--run`
+is used, the generated runtime file is selected automatically. Use an image digest for OCI images
+and ensure paths in the definition are available from the repository root.
 File and structured parameters use the existing derivation/submission applications.
 
 ## Command line arguments
