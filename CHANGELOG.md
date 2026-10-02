@@ -7,6 +7,18 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.38.1](https://github.com/gammasim/simtools/releases/tag/v0.38.1) - 2026-10-02
+
+### Bugfixes
+
+- Fix absolute path references for simulation model path in two integration tests. ([#2595](https://github.com/gammasim/simtools/pull/2595))
+
+### Maintenance
+
+- Improve robustness of CORSIKA7 build against CTAO GitLab failures. ([#2590](https://github.com/gammasim/simtools/pull/2590))
+- Remove remaining database terminology from documentation and unit-test fixtures after the model-source migration. ([#2591](https://github.com/gammasim/simtools/pull/2591))
+
+
 ## [v0.38.0](https://github.com/gammasim/simtools/releases/tag/v0.38.0) - 2026-10-01
 
 ### Bugfixes
