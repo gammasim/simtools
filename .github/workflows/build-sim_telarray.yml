@@ -62,7 +62,7 @@ jobs:
           SOURCE_SNAPSHOT: ${{ needs.dependency-config.outputs.default_simtel_source_snapshot }}
         run: |
           set -euo pipefail
-          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/gsl.tar.gz" gsl.tar.gz
           echo "Restored GSL from $SOURCE_SNAPSHOT."
@@ -127,7 +127,7 @@ jobs:
           SOURCE_SNAPSHOT: ${{ matrix.simtel_source_snapshot }}
         run: |
           set -euo pipefail
-          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/simtel-source.tar.gz" simtel-source.tar.gz
           docker cp "$container_id:/input/simtel-source.tar.gz.sha256" simtel-source.tar.gz.sha256

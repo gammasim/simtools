@@ -68,9 +68,9 @@ jobs:
         run: |
           set -euo pipefail
           snapshot_tag() {
-            local package=$1 build_id=$2 first=$3 second=$4 third=$5
+            local package=$1 build_id=$2 first=$3 second=$4 third=$5 archive=$6
             local digest
-            digest=$(printf '%s\n%s\n%s' "$first" "$second" "$third" | sha256sum | cut -c1-16)
+            digest=$(printf '%s\n%s\n%s\n%s' "$first" "$second" "$third" "$archive" | sha256sum | cut -c1-16)
             printf 'ghcr.io/gammasim/%s:%s-%s\n' "$package" "$build_id" "$digest"
           }
           clone_ctao_source() {
@@ -148,7 +148,8 @@ jobs:
             config_revision=$(resolve_revision "$config_url" "$config_ref" "$(mirror_url corsika7-config)")
             patch_revision=$(resolve_revision "$patch_url" "$patch_ref" "$(mirror_url corsika-opt-patches)")
             image=$(snapshot_tag corsika7-build-inputs "$build_id" \
-              "$source_revision" "$config_revision" "$patch_revision")
+              "$source_revision" "$config_revision" "$patch_revision" \
+              "${AUTOCONF_VERSION}:${AUTOCONF_SHA256}")
             if [[ "$source_revision" == "$current_source_revision" && \
               "$config_revision" == "$current_config_revision" && \
               "$patch_revision" == "$current_patch_revision" ]] && \
@@ -204,7 +205,8 @@ jobs:
             hessio_revision=$(resolve_revision "$hessio_authenticated_url" "$hessio_ref" "$(mirror_url hessio)")
             stdtools_revision=$(resolve_revision "$stdtools_authenticated_url" "$stdtools_ref" "$(mirror_url stdtools)")
             image=$(snapshot_tag simtel-array-build-inputs "$build_id" \
-              "$simtel_revision" "$hessio_revision" "$stdtools_revision")
+              "$simtel_revision" "$hessio_revision" "$stdtools_revision" \
+              "${GSL_VERSION}:${GSL_SHA256}")
             if [[ "$simtel_revision" == "$current_simtel_revision" && \
               "$hessio_revision" == "$current_hessio_revision" && \
               "$stdtools_revision" == "$current_stdtools_revision" ]] && \

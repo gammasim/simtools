@@ -73,7 +73,7 @@ jobs:
           SOURCE_SNAPSHOT: ${{ needs.dependency-config.outputs.default_corsika_source_snapshot }}
         run: |
           set -euo pipefail
-          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/autoconf.tar.gz" autoconf.tar.gz
           echo "Restored Autoconf from $SOURCE_SNAPSHOT."
@@ -138,7 +138,7 @@ jobs:
           SOURCE_SNAPSHOT: ${{ matrix.corsika_source_snapshot }}
         run: |
           set -euo pipefail
-          container_id=$(docker create "$SOURCE_SNAPSHOT")
+          container_id=$(docker create "$SOURCE_SNAPSHOT" true)
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/corsika7-source.tar.gz" corsika7-source.tar.gz
           docker cp "$container_id:/input/corsika7-source.tar.gz.sha256" corsika7-source.tar.gz.sha256
