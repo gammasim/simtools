@@ -320,7 +320,8 @@ class MetadataCollector:
                 reduced_product_meta = {
                     key: value
                     for key, value in metadata[self.observatory]["product"].items()
-                    if key in {"description", "id", "creation_time", "valid", "format", "filename"}
+                    if key
+                    in {"description", "id", "creation_time", "valid", "format", "filename", "data"}
                 }
                 if metadata[self.observatory].get("activity", {}).get("name"):
                     reduced_product_meta["activity_name"] = metadata[self.observatory][

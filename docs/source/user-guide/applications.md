@@ -59,6 +59,7 @@ finite choices declared by argparse.
 
 simtools-compare-productions <applications/simtools-compare-productions>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
+simtools-create-setting-workflow <applications/simtools-create-setting-workflow>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
 simtools-derive-bias-curves <applications/simtools-derive-bias-curves>

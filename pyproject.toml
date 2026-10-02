@@ -81,6 +81,7 @@ scripts.simtools-compare-productions = "simtools.applications.compare_production
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """
+scripts.simtools-create-setting-workflow = "simtools.applications.create_setting_workflow:main"
 scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
 scripts.simtools-derive-bias-curves = "simtools.applications.derive_bias_curves:main"
