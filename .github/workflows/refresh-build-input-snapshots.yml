@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
@@ -95,7 +95,8 @@ jobs:
             for repository_url in "$source_url" "$fallback_url"; do
               [[ -z "$repository_url" ]] && continue
               for attempt in 1 2 3 4 5; do
-                output=$(git -c http.connectTimeout=30 ls-remote "$repository_url" "$source_ref" || true)
+                output=$(git -c http.connectTimeout=30 ls-remote "$repository_url" \
+                  "$source_ref" "${source_ref}^{}" || true)
                 if [[ -n "$output" ]]; then
                   awk 'NR == 1 { first = $1 } /\^\{\}$/ { peeled = $1 } END { print peeled ? peeled : first }' \
                     <<< "$output"
