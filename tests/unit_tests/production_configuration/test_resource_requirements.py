@@ -1,11 +1,14 @@
 """Tests for production resource requirement collection."""
 
 import json
+import sys
 from pathlib import Path
 
 import h5py
 import pytest
+from astropy.table import Table
 
+from simtools.job_execution import process_accounting
 from simtools.production_configuration import resource_requirements
 from simtools.production_configuration.production_file_selection import ProductionManifest
 
@@ -203,3 +206,64 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
         "candidate",
     }
     assert result["table_file"].is_file()
+
+
+@pytest.mark.parametrize("missing_record", [False, True])
+def test_computing_comparison_from_recorded_processes(tmp_test_directory, missing_record):
+    productions = {}
+    for label, output_size in (("baseline", 10), ("candidate", 20)):
+        manifest = _manifest(Path(tmp_test_directory) / label)
+        manifest.data.update(
+            schema_name="simulate_prod_job_metadata",
+            schema_version="1.0.0",
+            product_type="simulate_prod_job",
+            status="complete",
+            catalog_metadata={},
+            statistics={"simulated_events": 10, "triggered_events": 5},
+        )
+        manifest.data["configuration"].update(
+            simulation_software="corsika_sim_telarray",
+            view_cone_min={"value": 0.0, "unit": "deg"},
+            view_cone_max={"value": 0.0, "unit": "deg"},
+            core_scatter_max={"value": 100.0, "unit": "m"},
+            cores_per_shower=1,
+            model_parameter_overrides={},
+            atmosphere={},
+        )
+        output_files = [
+            str(manifest.directory / files[0]) for files in manifest.data["files"].values()
+        ]
+        record = next((manifest.directory / "sim_telarray").rglob("*.resources.json"))
+        command = (
+            "from pathlib import Path; "
+            f"[Path(path).write_bytes(b'x' * {output_size}) for path in {output_files!r}]"
+        )
+        assert (
+            process_accounting.run_and_record(
+                [sys.executable, "-c", command], record, "sim_telarray", 1, model_version="7.0.0"
+            )
+            == 0
+        )
+        if missing_record and label == "candidate":
+            next((manifest.directory / "corsika").rglob("*.resources.json")).unlink()
+        manifest.path.write_text(json.dumps(manifest.data), encoding="utf-8")
+        productions[f"{label}_path"] = manifest.directory.parent
+
+    result = resource_requirements.write_resource_requirements(
+        productions, Path(tmp_test_directory), lambda *_args, **_kwargs: []
+    )
+
+    table = Table.read(result["table_file"], format="ascii.ecsv")
+    for label, storage in (("baseline", 30), ("candidate", 60)):
+        row = table[(table["production_label"] == label) & (table["role"] == "sim_telarray")][0]
+        assert row["sim_telarray_storage_bytes"] == storage
+        assert row["sim_telarray_storage_bytes_per_event"] == pytest.approx(storage / 10)
+        assert row["sim_telarray_storage_bytes_per_triggered_event"] == pytest.approx(storage / 5)
+        assert row["wall_time_seconds"] > 0
+    assert len(table) == (3 if missing_record else 4)
+    assert len(result["diagnostics"]) == int(missing_record)
+    report = result["report_file"].read_text(encoding="utf-8")
+    assert "baseline" in report
+    assert "candidate" in report
+    if missing_record:
+        assert result["diagnostics"][0]["role"] == "corsika"
