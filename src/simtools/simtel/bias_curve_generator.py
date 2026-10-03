@@ -164,7 +164,7 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
     """Group proton HDF5 files by threshold and run extracted from file names."""
     threshold_files = {}
 
-    for hdf5_file in proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}"):
+    for hdf5_file in sorted(proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}")):
         if "proton" not in hdf5_file.name.lower():
             continue
 
@@ -178,7 +178,13 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
             )
             continue
 
-        threshold_files.setdefault(threshold, {})[run] = hdf5_file
+        run_files = threshold_files.setdefault(threshold, {})
+        if run in run_files:
+            raise ValueError(
+                f"Duplicate proton input for threshold {threshold}, run {run}: "
+                f"{run_files[run]} and {hdf5_file}"
+            )
+        run_files[run] = hdf5_file
 
     return threshold_files
 

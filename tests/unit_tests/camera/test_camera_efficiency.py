@@ -206,6 +206,46 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
     assert camera_efficiency_lst._has_results is True
 
 
+def test_analyze_requires_simulation_results(camera_efficiency_lst):
+    with pytest.raises(RuntimeError, match="must be simulated before it can be analyzed"):
+        camera_efficiency_lst.analyze(export=False, force=True)
+
+
+def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker):
+    parameter_names = (
+        "wl eff eff_atm qe ref masts filt pixel atm_trans cher nsb atm_corr "
+        "nsb_site nsb_site_eff nsb_be nsb_be_eff"
+    ).split()
+    row = dict.fromkeys(parameter_names, 1.0)
+    row.update(
+        wl=400.0,
+        qe=0.5,
+        ref=0.5,
+        masts=0.5,
+        filt=0.5,
+        pixel=0.5,
+        atm_trans=2.0,
+        nsb_be=3.0,
+    )
+    camera_efficiency_lst._calculated_results = [row]
+    mocker.patch.object(camera_efficiency_lst, "calc_nsb_rate", return_value=(0.0, None))
+    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value="summary")
+
+    camera_efficiency_lst.analyze(export=False, force=True)
+
+    results = camera_efficiency_lst._results[0]
+    assert results["C1"] == pytest.approx(2.0)
+    assert results["C2"] == pytest.approx(0.5)
+    assert results["C3"] == pytest.approx(0.125)
+    assert results["C4"] == pytest.approx(0.0625)
+    assert results["C4x"] == pytest.approx(0.25)
+    assert results["N1"] == pytest.approx(3.0)
+    assert results["N2"] == pytest.approx(0.75)
+    assert results["N3"] == pytest.approx(0.1875)
+    assert results["N4"] == pytest.approx(0.09375)
+    assert results["N4x"] == pytest.approx(0.375)
+
+
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.calc_nsb_rate()
