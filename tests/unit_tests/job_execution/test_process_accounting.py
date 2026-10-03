@@ -153,3 +153,31 @@ def test_main_runs_requested_command(mocker):
     run_and_record.assert_called_once_with(
         ["run"], "x", "corsika", "1", model_version=None, log_file=None, input_file=None
     )
+
+
+@pytest.mark.parametrize("streams", [("stdout",), ("stderr",), ("stdout", "stderr")])
+def test_combined_log_retains_large_concurrent_streams(tmp_test_directory, streams):
+    log_file = tmp_test_directory / "simulation.log.gz"
+    output_file = tmp_test_directory / "resources.json"
+    command = (
+        "import os, threading; "
+        "threads = [threading.Thread(target=lambda fd=fd, byte=byte: "
+        "[os.write(fd, byte * 4096) for _ in range(256)]) "
+        f"for fd, byte in [(1, b'O'), (2, b'E')] if "
+        f"{{1: 'stdout', 2: 'stderr'}}[fd] in {streams!r}]; "
+        "[thread.start() for thread in threads]; "
+        "[thread.join() for thread in threads]; raise SystemExit(7)"
+    )
+
+    return_code = process_accounting.run_and_record(
+        [sys.executable, "-c", command], output_file, "sim_telarray", 1, log_file=log_file
+    )
+
+    assert return_code == 7
+    assert json.loads(output_file.read_text(encoding="utf-8"))["return_code"] == 7
+    with gzip.open(log_file, "rb") as handle:
+        output = handle.read()
+    for stream, byte in (("stdout", b"O"), ("stderr", b"E")):
+        expected_bytes = 1024 * 1024 if stream in streams else 0
+        assert output.count(byte) == expected_bytes
+    assert len(output) == len(streams) * 1024 * 1024

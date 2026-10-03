@@ -262,6 +262,7 @@ class SimulatorLightEmission(SimtelRunner):
         iact_output = self.runner_service.get_file_name(file_type="iact_output")
         return [
             "#!/usr/bin/env bash\n",
+            "set -e -o pipefail\n",
             f"{self._make_light_emission_command(iact_output)}\n\n",
             (
                 f"[ -s '{iact_output}' ] || "

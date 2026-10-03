@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import gzip
+import subprocess
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
@@ -1811,3 +1813,36 @@ def test_get_available_wavelengths_from_config_missing_keys():
 
     with pytest.raises(ValueError, match="Missing required configuration keys"):
         SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_version)
+
+
+@pytest.mark.parametrize("failing_stage", ["emission", "simtel"])
+def test_run_command_preserves_pipeline_failure(
+    simulator_instance, tmp_test_directory, mocker, failing_stage
+):
+    iact_file = Path(tmp_test_directory) / "photons.iact"
+    iact_file.write_bytes(b"photon stream")
+    log_file = tmp_test_directory / "diagnostics.log.gz"
+    simulator_instance.runner_service.get_file_name.return_value = iact_file
+    failing_command = f"(echo diagnostic >&2; exit 7) 2>&1 | gzip > '{log_file}'"
+    mocker.patch.object(
+        simulator_instance,
+        "_make_light_emission_command",
+        return_value=failing_command if failing_stage == "emission" else "true",
+    )
+    mocker.patch.object(
+        simulator_instance,
+        "_make_simtel_script",
+        return_value=failing_command if failing_stage == "simtel" else "true",
+    )
+
+    result = subprocess.run(
+        ["bash", "-c", "".join(simulator_instance.make_run_command())],
+        capture_output=True,
+        check=False,
+        timeout=10,
+    )
+
+    assert result.returncode == 7
+    assert iact_file.read_bytes() == b"photon stream"
+    with gzip.open(log_file, "rt", encoding="utf-8") as handle:
+        assert handle.read() == "diagnostic\n"
