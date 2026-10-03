@@ -172,7 +172,7 @@ class CorsikaSimtelRunner:
                 run_number,
                 model_version=self.base_corsika_config.array_model.model_version,
             )
-            file.write(shlex.join(accounting_command) + " || echo 'Fan-out failed'")
+            file.write(shlex.join(accounting_command))
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 

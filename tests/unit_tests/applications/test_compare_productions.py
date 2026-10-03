@@ -266,7 +266,7 @@ def test_application_parses_productions_without_select(monkeypatch):
         ],
     )
 
-    args, _ = compare_productions.APPLICATION._parse()
+    args = compare_productions.APPLICATION._parse()
 
     assert args["select"] == []
 

@@ -1,6 +1,5 @@
 """Tests for source-neutral simulation-model reading."""
 
-import ast
 import json
 import subprocess
 import sys
@@ -132,23 +131,11 @@ def test_reader_reads_global_parameter_by_version(model_repository):
     assert parameter["iobuf_maximum"]["value"] == pytest.approx(1000.0)
 
 
-def test_reader_factory_selects_filesystem_without_database(model_repository, mocker):
-    """A configured repository path takes precedence over database setup."""
-    database_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
-
+def test_reader_factory_selects_filesystem(model_repository):
+    """A configured repository path selects the filesystem source."""
     reader = create_model_reader(simulation_models_path=model_repository)
 
     assert reader.source_name == str(model_repository.resolve())
-    database_handler.assert_not_called()
-
-
-def test_reader_factory_adapts_database_handler():
-    """An explicitly supplied database handler can back the same reader API."""
-    database_handler = Mock(model_source_name="simulation-model-db")
-
-    reader = create_model_reader(database_handler=database_handler)
-
-    assert reader.source_name == "simulation-model-db"
 
 
 def test_production_file_index_includes_patch_history(model_repository):
@@ -179,6 +166,58 @@ def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
 
     other_source = FileSystemModelSource(model_repository)
     assert other_source._parameters == {}
+
+
+def test_filesystem_source_does_not_parse_ecsv_before_copying(
+    model_repository, mocker, tmp_test_directory
+):
+    source = FileSystemModelSource(model_repository)
+    source_file = model_repository / "simulation-models/model_parameters/example.ecsv"
+    source_file.write_text("# example\n", encoding="utf-8")
+    validate_table = mocker.patch.object(source, "get_parameter_table")
+
+    result = source._copy_model_file(
+        {"parameter": "example"}, source_file, Path(tmp_test_directory)
+    )
+
+    assert result == "copied from filesystem"
+    validate_table.assert_not_called()
+
+
+def test_filesystem_source_qualifies_colliding_assets(model_repository, tmp_test_directory):
+    source = FileSystemModelSource(model_repository)
+    first_source = (
+        model_repository / "simulation-models/model_parameters/first/camera_filter/shared.dat"
+    )
+    second_source = (
+        model_repository / "simulation-models/model_parameters/second/camera_filter/shared.dat"
+    )
+    first_source.parent.mkdir(parents=True)
+    second_source.parent.mkdir(parents=True)
+    first_source.write_text("first\n", encoding="utf-8")
+    second_source.write_text("second\n", encoding="utf-8")
+    destination = Path(tmp_test_directory) / "exported"
+    first_parameter = {
+        "file": True,
+        "instrument": "first",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+    second_parameter = {
+        "file": True,
+        "instrument": "second",
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "value": "shared.dat",
+    }
+
+    source._copy_model_file(first_parameter, first_source, destination)
+    source._copy_model_file(second_parameter, second_source, destination)
+
+    assert second_parameter["value"] == "shared-second.dat"
+    assert (destination / "shared-second.dat").read_text(encoding="utf-8") == "second\n"
+    assert source.resolve_parameter_asset(second_parameter) == second_source.resolve()
 
 
 def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
@@ -224,7 +263,7 @@ def test_filesystem_source_caches_versions_and_validates_tables(model_repository
     ],
 )
 def test_filesystem_source_resolves_parameter_scopes(query, collection, expected_instrument):
-    """Filesystem queries use the same scopes as the database source."""
+    """Filesystem queries use the same scopes as the model repository source."""
     assert FileSystemModelSource._get_parameter_instrument(query, collection) == expected_instrument
 
 
@@ -283,10 +322,10 @@ def test_filesystem_source_matches_parameter_filters(data, instrument, site, mat
 def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     model_repository, tmp_test_directory
 ):
-    """Referenced files are copied once and cannot escape the Files directory."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    (files_path / "nested/model.dat").parent.mkdir(parents=True)
-    (files_path / "nested/model.dat").write_bytes(b"model")
+    """Referenced files are copied once and cannot escape the parameter directory."""
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "nested/model.dat").parent.mkdir(parents=True)
+    (parameters_path / "nested/model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -296,7 +335,7 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
     assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
         "nested/model.dat": "file exists"
     }
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.export_model_files(file_names="../model.dat", dest=destination)
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.export_model_files(file_names="missing.dat", dest=destination)
@@ -306,9 +345,8 @@ def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
 
 def test_filesystem_source_exports_parameter_file_values(model_repository, tmp_test_directory):
     """File-valued parameters are selected when file names are omitted."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    (files_path / "model.dat").write_bytes(b"model")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    (parameters_path / "model.dat").write_bytes(b"model")
     destination = Path(tmp_test_directory) / "exported"
     source = FileSystemModelSource(model_repository)
 
@@ -322,28 +360,26 @@ def test_filesystem_source_reads_ecsv_and_rejects_missing_file(
     model_repository, tmp_test_directory
 ):
     """ECSV model files are exposed as Astropy tables."""
-    files_path = model_repository / "simulation-models/model_parameters/Files"
-    files_path.mkdir(parents=True, exist_ok=True)
-    Table({"value": [1, 2]}).write(files_path / "values.ecsv", format="ascii.ecsv")
+    parameters_path = model_repository / "simulation-models/model_parameters"
+    Table({"value": [1, 2]}).write(parameters_path / "values.ecsv", format="ascii.ecsv")
     source = FileSystemModelSource(model_repository)
 
     assert source.get_ecsv_file_as_astropy_table("values.ecsv")["value"].tolist() == [1, 2]
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         source.get_ecsv_file_as_astropy_table("missing.ecsv")
-    with pytest.raises(ValueError, match="escapes model Files"):
+    with pytest.raises(ValueError, match="escapes parameter"):
         source.get_ecsv_file_as_astropy_table("../values.ecsv")
 
 
-def test_model_repository_import_does_not_load_database_modules():
-    """Filesystem reading has no database or MongoDB import dependency."""
+def test_model_repository_import_has_no_external_source_dependency():
+    """Filesystem reading has no external source dependency."""
     result = subprocess.run(
         [
             sys.executable,
             "-c",
             (
                 "import sys; import simtools.model_repository.reader; "
-                "raise SystemExit(any(name == 'simtools.db' or name.startswith('simtools.db.') "
-                "or name.startswith('pymongo') or name.startswith('gridfs') for name in sys.modules))"
+                "raise SystemExit(any(name.startswith('simtools.model_source') for name in sys.modules))"
             ),
         ],
         check=False,
@@ -354,8 +390,8 @@ def test_model_repository_import_does_not_load_database_modules():
     assert result.returncode == 0, result.stderr
 
 
-def test_path_first_startup_does_not_import_mongodb(tmp_test_directory):
-    """A filesystem reader can start when MongoDB dependencies are unavailable."""
+def test_path_first_startup_has_no_optional_source_dependency(tmp_test_directory):
+    """A filesystem reader starts without optional source dependencies."""
     repository = Path(tmp_test_directory)
     (repository / "simulation-models/productions").mkdir(parents=True)
     (repository / "simulation-models/model_parameters").mkdir(parents=True)
@@ -369,7 +405,7 @@ def test_path_first_startup_does_not_import_mongodb(tmp_test_directory):
                 import sys
 
                 real_import = builtins.__import__
-                blocked = ("pymongo", "gridfs", "bson", "simtools.db")
+                blocked = ("simtools.model_source",)
 
                 def guarded(name, *args, **kwargs):
                     if any(name == item or name.startswith(item + ".") for item in blocked):
@@ -390,102 +426,6 @@ def test_path_first_startup_does_not_import_mongodb(tmp_test_directory):
     )
 
     assert result.returncode == 0, result.stderr
-
-
-def test_normal_runtime_modules_do_not_construct_database_handlers(simtools_root_path):
-    """Database construction remains confined to the source-selection and DB packages."""
-    allowed_source_selection = {
-        simtools_root_path / "src/simtools/application/model_reader.py",
-        simtools_root_path / "src/simtools/db/model_source.py",
-        simtools_root_path / "src/simtools/db/mongo_db.py",
-        simtools_root_path / "src/simtools/corsika/corsika_config.py",
-    }
-    violations = [
-        str(path)
-        for path in _normal_runtime_files(simtools_root_path)
-        if path.name != "model_reader.py"
-        for _ in _boundary_violations(path, allowed_source_selection)
-    ]
-    assert violations == []
-
-
-def _normal_runtime_files(simtools_root_path):
-    """Yield Python files in modules that must remain database-independent."""
-    roots = (
-        "model",
-        "simulator.py",
-        "layout",
-        "reporting",
-        "visualization",
-        "data_model",
-        "configuration",
-        "application",
-        "testing",
-        "simtel",
-        "corsika",
-    )
-    for root_name in roots:
-        root = simtools_root_path / "src/simtools" / root_name
-        yield from root.rglob("*.py") if root.is_dir() else (root,)
-
-
-def _boundary_violations(path, allowed_source_selection):
-    """Return source-boundary violations found in one runtime module."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    nodes = list(ast.walk(tree))
-    checks = (
-        (
-            path not in allowed_source_selection and _contains_database_handler_call(nodes),
-            "DatabaseHandler construction",
-        ),
-        (
-            path not in allowed_source_selection and _contains_database_import(nodes),
-            "database import",
-        ),
-        (
-            path not in allowed_source_selection and _contains_mongodb_literal(nodes),
-            "MongoDB source literal",
-        ),
-        (
-            path not in allowed_source_selection and _contains_mongodb_adapter(nodes),
-            "MongoDB source adapter",
-        ),
-    )
-    return [message for present, message in checks if present]
-
-
-def _contains_database_handler_call(nodes):
-    """Return whether AST nodes construct a database handler."""
-    return any(
-        isinstance(node, ast.Call) and _called_name(node) == "DatabaseHandler" for node in nodes
-    )
-
-
-def _contains_database_import(nodes):
-    """Return whether AST nodes import the database package."""
-    return any(
-        isinstance(node, (ast.Import, ast.ImportFrom)) and "simtools.db" in ast.unparse(node)
-        for node in nodes
-    )
-
-
-def _contains_mongodb_literal(nodes):
-    """Return whether AST nodes contain the MongoDB source selector."""
-    return any(isinstance(node, ast.Constant) and node.value == "mongodb" for node in nodes)
-
-
-def _contains_mongodb_adapter(nodes):
-    """Return whether AST nodes reference the MongoDB source adapter."""
-    return any(isinstance(node, ast.Name) and node.id == "MongoDBModelSource" for node in nodes)
-
-
-def _called_name(node):
-    """Return the simple name of a called function."""
-    if isinstance(node.func, ast.Name):
-        return node.func.id
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr
-    return None
 
 
 def test_reader_facade_routes_source_operations_and_branches():
@@ -529,6 +469,47 @@ def test_reader_facade_routes_source_operations_and_branches():
     assert reader.is_configured() is True
 
 
+def test_reader_caches_exported_ecsv_table_access():
+    """Repeated table exports reuse the source-neutral table cache."""
+    source = Mock(source_name="mock")
+    source.export_model_files.return_value = {"table-LSTN-design.ecsv": "copied"}
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    first = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+    second = reader._read_exported_parameter_table("camera_filter", parameter, Path("ignored.ecsv"))
+
+    assert first == second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_returns_defensive_table_record_copies():
+    """Mutating table records does not corrupt the reader cache."""
+    source = Mock(source_name="mock")
+    source.get_parameter_table.return_value = Table({"wavelength": [300.0]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_filter",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "table.ecsv",
+    }
+
+    records = reader.get_parameter_table_records(parameter)
+    records[0]["wavelength"] = 999.0
+
+    assert reader.get_parameter_table_records(parameter) == [{"wavelength": 300.0}]
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
 def test_reader_facade_covers_all_version_and_export_paths(mocker):
     """Cover the source-independent convenience methods."""
     source = Mock(source_name="mock")
@@ -542,29 +523,126 @@ def test_reader_facade_covers_all_version_and_export_paths(mocker):
     }
 
     reader.get_model_parameter = Mock(return_value={"p": {"type": "dict", "value": {"x": [1]}}})
-    row_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.row_data_to_astropy_table",
-        return_value="table",
-    )
-    assert reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True) == "table"
-    row_table.assert_called_once_with({"x": [1]})
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True)
     assert reader.export_model_file("p", "North", "LSTN-01") is None
+
+    reader.get_model_parameter.return_value = {"p": {"value": "p.ecsv"}}
+    reader.export_model_files = Mock()
+    source.get_parameter_table.return_value = "ecsv-table"
+    assert (
+        reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
+        == "ecsv-table"
+    )
 
     reader.get_model_parameter.return_value = {"p": {"value": "p.dat"}}
     with pytest.raises(ValueError, match="Destination path is required"):
         reader.export_model_file("p", "North", "LSTN-01")
-    reader.export_model_files = Mock()
     assert reader.export_model_file("p", "North", "LSTN-01", dest="output") is None
-    read_table = mocker.patch(
-        "simtools.model_repository.reader.simtel_table_reader.read_simtel_table",
-        return_value="file-table",
-    )
-    assert (
+    with pytest.raises(ValueError, match="not an ECSV model table"):
         reader.export_model_file("p", "North", "LSTN-01", export_file_as_table=True, dest="output")
-        == "file-table"
+    assert reader.export_model_files.call_count == 3
+
+
+def test_reader_caches_table_records(mocker):
+    """Repeated camera-table record access does not rebuild row dictionaries."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table_records(parameter)
+    second = reader.get_parameter_table_records(parameter)
+
+    assert first == second
+    assert first is not second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_caches_parameter_tables():
+    """Repeated table access uses the parsed table from the reader cache."""
+    source = Mock()
+    source.get_parameter_table.return_value = Table({"pixel_id": [1, 2]})
+    reader = SimulationModelReader(source)
+    parameter = {
+        "parameter": "camera_pixel_layout",
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": "layout.ecsv",
+    }
+
+    first = reader.get_parameter_table(parameter)
+    second = reader.get_parameter_table(parameter)
+
+    assert first["pixel_id"].tolist() == second["pixel_id"].tolist()
+    assert first is not second
+    source.get_parameter_table.assert_called_once_with(parameter)
+
+
+def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
+    """Structured JSON parameters are not converted to ECSV tables."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={
+            "pulse": {
+                "parameter": "pulse",
+                "type": "dict",
+                "value": {
+                    "columns": ["time", "amplitude"],
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": [[1.0, 2.0]],
+                },
+            }
+        }
     )
-    assert reader.export_model_files.call_count == 2
-    read_table.assert_called_once_with("p", Path("output") / "p.dat")
+
+    with pytest.raises(ValueError, match="not ECSV tables"):
+        reader.export_parameter_data(
+            parameter="pulse",
+            site="North",
+            array_element_name="LSTN-01",
+            output_file="pulse.json",
+            export_model_file_as_table=True,
+            dest=tmp_test_directory,
+        )
+
+
+def test_reader_exports_file_parameter_and_table(tmp_test_directory):
+    """File-backed ECSV parameters support the original file and ECSV outputs."""
+    source = Mock()
+    reader = SimulationModelReader(source)
+    reader.get_model_parameter = Mock(
+        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.ecsv"}}
+    )
+    source.export_model_files.return_value = {"mirror.ecsv": "copied"}
+    source_file = Path(tmp_test_directory) / "mirror.ecsv"
+    source_file.write_text("model", encoding="utf-8")
+    table = Table({"wavelength": [300.0]})
+    source.get_parameter_table.return_value = table
+
+    output_files = reader.export_parameter_data(
+        parameter="mirror",
+        site="North",
+        array_element_name="LSTN-01",
+        output_file="mirror-copy.ecsv",
+        export_model_file=True,
+        export_model_file_as_table=True,
+        dest=tmp_test_directory,
+    )
+
+    assert output_files == [
+        Path(tmp_test_directory) / "mirror-copy.ecsv",
+    ]
+    assert output_files[0].is_file()
+    assert Table.read(output_files[0], format="ascii.ecsv")["wavelength"][0] == pytest.approx(300.0)
 
 
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):

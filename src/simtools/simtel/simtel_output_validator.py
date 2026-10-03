@@ -2,13 +2,16 @@
 
 import logging
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
-from simtools.simtel import simtel_table_reader, simtel_validate_metadata
+from simtools.simtel import simtel_validate_metadata
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
@@ -185,7 +188,7 @@ def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
     any
         Extracted parameter value.
     """
-    if parameter_type not in ("string", "dict", "boolean"):
+    if parameter_type not in ("string", "file", "dict", "boolean"):
         value, _ = _extract_sim_telarray_value(metadata[sim_telarray_name], parameter_type)
         return value
 
@@ -277,12 +280,12 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             continue
 
         parameter_type = model.parameters[param]["type"]
-        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         model_value = model.parameters[param]["value"]
-        value = _resolve_dict_parameter_metadata_value(
-            value, model_value, parameter_type, param, model
-        )
-
+        if param == "mirror_list" and uses_segmented_dual_mirror_geometry(model.parameters):
+            model_value = "none"
+        elif parameter_type == "file":
+            model_value = _resolve_file_parameter_value(model_value, param, model)
+        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         error = _check_parameter_validity(
             param, value, model_value, parameter_type, allow_for_changes
         )
@@ -292,23 +295,22 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
     return invalid_parameter_list
 
 
-def _resolve_dict_parameter_metadata_value(value, model_value, parameter_type, param, model):
-    """Resolve table-file metadata for dict parameters before comparison."""
-    if parameter_type != "dict":
-        return value
+def _resolve_file_parameter_value(model_value, parameter_name, model):
+    """Resolve the generated sim_telarray filename for an ECSV file parameter."""
+    if not isinstance(model_value, str) or not model_value.lower().endswith(".ecsv"):
+        return model_value
 
-    if not isinstance(value, str) or not isinstance(model_value, dict):
-        return value
+    parameter_data = getattr(model, "parameters", {}).get(parameter_name, {})
+    shared_name = get_simtel_table_file_name(parameter_data)
+    if shared_name is not None:
+        return shared_name
 
-    try:
-        return simtel_table_reader.resolve_dict_parameter_value(
-            value,
-            param,
-            data_path=model.config_file_directory,
-        )
-    except (FileNotFoundError, ValueError, TypeError) as exc:
-        _logger.debug(f"Unable to resolve dict-valued sim_telarray metadata for {param}: {exc}")
-        return value
+    model_name = getattr(model, "name", None)
+    config_file_path = getattr(model, "config_file_path", None)
+    if isinstance(model_name, str) and isinstance(config_file_path, (str, Path)):
+        return f"{parameter_name}-{Path(config_file_path).stem}.dat"
+
+    return model_value
 
 
 def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
@@ -402,7 +404,7 @@ def is_equal(value1, value2, value_type):
     if value1 is None or value2 is None:
         if value1 in ("none", None) and value2 in ("none", None):
             return True
-    if value_type == "string":
+    if value_type in ("string", "file"):
         return str(value1).strip() == str(value2).strip()
     if value_type == "dict":
         return value1 == value2
@@ -541,6 +543,44 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
         return True
 
     item_to_check = _item_to_check_from_sim_telarray(file, expected_sim_telarray_output)
+    return _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
+
+
+def assert_expected_sim_telarray_output_and_event_type(
+    file, expected_sim_telarray_output, event_type="shower"
+):
+    """Validate expected event values and type during one file traversal.
+
+    Parameters
+    ----------
+    file : Path
+        Sim_telarray output file.
+    expected_sim_telarray_output : dict or None
+        Expected event values and optional event type.
+    event_type : str, optional
+        Expected event type, by default ``"shower"``.
+
+    Returns
+    -------
+    bool
+        ``True`` when all requested event checks pass.
+    """
+    event_types = set()
+    item_to_check = _item_to_check_from_sim_telarray(
+        file,
+        expected_sim_telarray_output or {},
+        event_types=event_types,
+    )
+    output_valid = _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
+    event_type_valid = _assert_event_type_in_set(event_types, event_type, file)
+    return output_valid and event_type_valid
+
+
+def _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output):
+    """Check extracted sim_telarray event values against configured ranges."""
+    if expected_sim_telarray_output is None:
+        return True
+
     _logger.debug(
         "Extracted event numbers from sim_telarray file: "
         f"telescope events: {item_to_check['n_telescope_events']}, "
@@ -590,7 +630,7 @@ def _process_telescope_events(event, item_to_check):
         item_to_check["n_telescope_events"] += 1
 
 
-def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
+def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output, event_types=None):
     """Read the relevant items from the sim_telarray file for checking against expected output."""
     item_to_check = defaultdict(list)
     for key in ("n_telescope_events", "n_calibration_events"):
@@ -598,6 +638,8 @@ def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
     with SimTelFile(file) as f:
         for event in f:
             _process_trigger_time(event, item_to_check, expected_sim_telarray_output)
+            if event_types is not None:
+                event_types.add(event["type"])
             if event["type"] == "calibration":
                 item_to_check["n_calibration_events"] += 1
             else:
@@ -649,13 +691,24 @@ def assert_events_of_type(file, event_type="shower"):
         Expected event type (e.g., "shower", "flasher", etc.).
 
     """
-    expected_event_type = "data"
-    if event_type in ("pedestal", "direct_injection"):
-        expected_event_type = "calibration"
+    expected_event_type = _simtel_event_type(event_type)
     with SimTelFile(file) as f:
         for event in f:
             if event["type"] == expected_event_type:
                 return True
+
+    return _assert_event_type_in_set(set(), event_type, file)
+
+
+def _simtel_event_type(event_type):
+    """Return the eventio type corresponding to a sim_telarray event type."""
+    return "calibration" if event_type in ("pedestal", "direct_injection") else "data"
+
+
+def _assert_event_type_in_set(event_types, event_type, file):
+    """Check whether an expected sim_telarray event type was observed."""
+    if _simtel_event_type(event_type) in event_types:
+        return True
 
     _logger.error(f"No events of type {event_type} found in sim_telarray file {file}")
     return False

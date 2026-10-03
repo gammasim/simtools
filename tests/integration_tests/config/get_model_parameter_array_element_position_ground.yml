@@ -4,6 +4,14 @@ applications:
   docs:
     title: Export an MST ground position
     summary: Retrieve the North-site ground position of MSTN-09 as a versioned model parameter.
+  preparation:
+  - application: simtools-get-model-parameter
+    configuration:
+      output_file: array_element_position_ground-2.0.0.json
+      parameter: array_element_position_ground
+      parameter_version: 2.0.0
+      site: North
+      telescope: MSTN-09
   configuration:
     log_level: DEBUG
     model_version: 6.0.2
@@ -18,9 +26,8 @@ applications:
       file: test.json
       validations:
       - type: reference
-        file: ${generated:model_parameters/array_element_position_ground-2.0.0.json}
+        file: ${prepared:array_element_position_ground-2.0.0.json}
         tolerance: 1.0e-05
-  requires_mongodb: true
   test_name: telescope_parameter_array_element_position_ground
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

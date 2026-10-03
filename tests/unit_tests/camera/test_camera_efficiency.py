@@ -90,6 +90,47 @@ def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
+def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
+    telescope_model = MagicMock(site="North", name="LSTN-01")
+    site_model = MagicMock()
+    initialize_models = mocker.patch(
+        "simtools.camera.camera_efficiency.initialize_simulation_models"
+    )
+
+    camera_efficiency = CameraEfficiency(
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
+        telescope_model=telescope_model,
+        site_model=site_model,
+    )
+
+    assert camera_efficiency.telescope_model is telescope_model
+    assert camera_efficiency.site_model is site_model
+    initialize_models.assert_not_called()
+
+
+@pytest.mark.parametrize("provided_model", ["telescope_model", "site_model"])
+def test_init_reuses_each_supplied_simulation_model(config_data_lst, mocker, provided_model):
+    initialized_telescope_model = MagicMock(site="North", name="LSTN-01")
+    initialized_site_model = MagicMock()
+    initialize_models = mocker.patch(
+        "simtools.camera.camera_efficiency.initialize_simulation_models",
+        return_value=(initialized_telescope_model, initialized_site_model, None),
+    )
+    supplied_model = MagicMock()
+
+    camera_efficiency = CameraEfficiency(
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
+        **{provided_model: supplied_model},
+    )
+
+    assert getattr(camera_efficiency, provided_model) is supplied_model
+    initialize_models.assert_called_once()
+
+
 def test_simulate(camera_efficiency_lst, caplog, mocker):
     export_correction = mocker.patch.object(
         camera_efficiency_lst.telescope_model,
@@ -163,6 +204,46 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.analyze()
     assert camera_efficiency_lst._has_results is True
+
+
+def test_analyze_requires_simulation_results(camera_efficiency_lst):
+    with pytest.raises(RuntimeError, match="must be simulated before it can be analyzed"):
+        camera_efficiency_lst.analyze(export=False, force=True)
+
+
+def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker):
+    parameter_names = (
+        "wl eff eff_atm qe ref masts filt pixel atm_trans cher nsb atm_corr "
+        "nsb_site nsb_site_eff nsb_be nsb_be_eff"
+    ).split()
+    row = dict.fromkeys(parameter_names, 1.0)
+    row.update(
+        wl=400.0,
+        qe=0.5,
+        ref=0.5,
+        masts=0.5,
+        filt=0.5,
+        pixel=0.5,
+        atm_trans=2.0,
+        nsb_be=3.0,
+    )
+    camera_efficiency_lst._calculated_results = [row]
+    mocker.patch.object(camera_efficiency_lst, "calc_nsb_rate", return_value=(0.0, None))
+    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value="summary")
+
+    camera_efficiency_lst.analyze(export=False, force=True)
+
+    results = camera_efficiency_lst._results[0]
+    assert results["C1"] == pytest.approx(2.0)
+    assert results["C2"] == pytest.approx(0.5)
+    assert results["C3"] == pytest.approx(0.125)
+    assert results["C4"] == pytest.approx(0.0625)
+    assert results["C4x"] == pytest.approx(0.25)
+    assert results["N1"] == pytest.approx(3.0)
+    assert results["N2"] == pytest.approx(0.75)
+    assert results["N3"] == pytest.approx(0.1875)
+    assert results["N4"] == pytest.approx(0.09375)
+    assert results["N4x"] == pytest.approx(0.375)
 
 
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
@@ -240,6 +321,44 @@ def test_get_x_max_for_efficiency_type_muon(camera_efficiency_lst, mocker, caplo
     assert "Using X-max for muon efficiency" in caplog.text
 
 
+def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficiency_lst, mocker):
+    camera_efficiency_lst.efficiency_type = "muon"
+    mock_atmo = mocker.MagicMock()
+    mock_atmo.interpolate.return_value = 850.5
+    mocker.patch(
+        "simtools.camera.camera_efficiency.AtmosphereProfile",
+        return_value=mock_atmo,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value_with_unit",
+        return_value=5 * u.km,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value",
+        return_value="atmospheric_profile-1.0.0.ecsv",
+    )
+    export_file = mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "export_model_parameter_as_simtel_file",
+    )
+
+    x_max = camera_efficiency_lst._get_x_max_for_efficiency_type()
+
+    expected_file = (
+        f"atmospheric_profile-"
+        f"{Path(camera_efficiency_lst.telescope_model.config_file_path).stem}.dat"
+    )
+    export_file.assert_called_once_with(
+        "atmospheric_profile",
+        camera_efficiency_lst.telescope_model.config_file_directory,
+        table_format="plain",
+        output_name=expected_file,
+    )
+    assert x_max == pytest.approx(850.5)
+
+
 def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
     camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
     mocker.patch.object(
@@ -301,6 +420,6 @@ def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
 
 def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.config["nsb_spectrum"] = "custom_spectrum.fits"
+    camera_efficiency_lst.config["nsb_spectrum"] = "/resource/path/custom_spectrum.fits"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["nsb"] == "custom_spectrum.fits"

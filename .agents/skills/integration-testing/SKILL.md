@@ -22,15 +22,10 @@ Follow `AGENTS.md` and
 
 ## Model Source and Environment
 
-Integration tests can read simulation models from filesystem, Git, or MongoDB. To use
-filesystem or Git sources, pass `--simulation_models_path`, or pass
-`--simulation_models_git_path` and `--simulation_models_git_revision`. When set,
-these sources take precedence over MongoDB settings; filesystem and Git sources
-cannot be configured together.
-
-MongoDB is only needed for workflows marked `requires_mongodb: true` and
-`simtools-db-*` applications. Such workflows are skipped when no MongoDB
-configuration is available.
+Integration tests read simulation models from a filesystem checkout or a fixed Git
+revision. Pass `--simulation_models_path`, or pass
+`--simulation_models_git_path` and `--simulation_models_git_revision`. Filesystem
+and Git sources cannot be configured together.
 
 On DESY working-group servers, run integration tests in the published simtools
 Apptainer development environment. From the repository checkout, start the
@@ -91,8 +86,6 @@ Optional keys beside `application`, `configuration`, `integration_tests`, and
 
 - `model_version_use_current: true`: run only when the CLI `--model_version`
   matches the config model version.
-- `requires_mongodb: true`: mark a workflow that requires MongoDB access.
-- `skip_for_production_db: true`: skip DB-writing tests on production DBs.
 - `skip_integration_test: <reason>`: temporary explicit skip with reason.
 - `test_use_case: UC-...`: add use-case pytest marker.
 - `test_requirement: REQ-...`: add requirement pytest marker.
@@ -116,7 +109,7 @@ Use `${static:path/to/file}` for maintained resources,
 `${downloaded:path/to/file}` for externally downloaded resources. Pytest
 resolves these against `--test_resources_path` or the versioned
 `simtools-tests` resource bundle selected by `SIMTOOLS_TESTS_PATH` and
-`SIMTOOLS_TESTS_TAG`. `SIMTOOLS_TESTS_VERSION` remains a compatibility alias.
+`SIMTOOLS_TESTS_RESOURCE_VERSION`.
 
 ## `integration_tests` Blocks
 
@@ -171,7 +164,7 @@ pytest -v --test_resources_path /full/path/to/resources \
 ## Debug Checklist
 
 1. Confirm the selected filesystem or Git model source and model version are
-   available. For MongoDB-only workflows, confirm `.env` contains credentials.
+   available.
 2. Confirm expected files use the post-rewrite temp paths via `output_path` or
    `pack_for_grid_register`.
 3. Prefer filename existence checks first, then add reference or physics-range

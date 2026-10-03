@@ -15,7 +15,7 @@ from simtools.io import io_handler
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
 
-SECRET_ENV_VAR_NAMES = ["SIMTOOLS_DB_API_PW"]
+SECRET_ENV_VAR_NAMES = []
 SECRET_KEY_PATTERNS = [
     r"(?:password|passwd|pwd|secret|token|api[_-]?key|auth)",
 ]
@@ -161,7 +161,6 @@ class ApplicationContext:
     """Container for common application context elements."""
 
     args: dict
-    db_config: dict
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
     model_reader: object | None
@@ -170,7 +169,6 @@ class ApplicationContext:
 
 def _initialize_runtime(
     args_dict,
-    db_config,
     setup_io_handler=True,
     resolve_sim_software_executables=True,
     validate_simulation_dependencies=False,
@@ -182,8 +180,6 @@ def _initialize_runtime(
     ----------
     args_dict : dict
         Parsed application configuration.
-    db_config : dict
-        Database configuration.
     setup_io_handler : bool, optional
         Whether to initialize and return an IOHandler instance. Default is True.
     resolve_sim_software_executables : bool, optional
@@ -199,15 +195,14 @@ def _initialize_runtime(
     Returns
     -------
     ApplicationContext
-        Container holding parsed arguments, database configuration, logger, and optional IO
-        handler and model-reader instances.
+        Container holding parsed arguments, logger, and optional IO handler and
+        model-reader instances.
 
     """
     _configure_iers_from_env()
 
     config.load(
         args_dict,
-        db_config,
         resolve_sim_software_executables=resolve_sim_software_executables,
     )
     if validate_simulation_dependencies and not args_dict.get(
@@ -235,7 +230,6 @@ def _initialize_runtime(
 
     return ApplicationContext(
         args=args_dict,
-        db_config=db_config,
         logger=logger,
         io_handler=io_handler_instance,
         model_reader=model_reader,
@@ -308,8 +302,6 @@ def _version_info(args_dict, io_handler_instance, logger):
 
     logger.info(
         f"simtools: {version.__version__} "
-        f"DB: {dependencies.get_database_tag_or_name(tag=False)} "
-        f"{dependencies.get_database_tag_or_name()} "
         f"CORSIKA: {build_options.get('corsika_build_id')} "
         f"sim_telarray: {build_options.get('simtel_tag')}"
     )

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import os
 import shutil
 from pathlib import Path
 from unittest import mock
@@ -213,6 +214,59 @@ def test_read_application_configuration_applies_replacements(monkeypatch, tmp_te
     assert configurations[0]["configuration"]["output_path"] == str(
         tmp_test_directory / "generated"
     )
+
+
+def test_read_application_configuration_resolves_collection_path(monkeypatch):
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        lambda _: {
+            "applications": [
+                {
+                    "application": "app",
+                    "configuration": {"output_path": "output/__SETTING_WORKFLOW__/"},
+                }
+            ],
+            "collection": {
+                "output_path": "output/__SETTING_WORKFLOW__/collection/",
+                "files": ["result.ecsv"],
+            },
+        },
+    )
+
+    _, _, _, _, collection = simtools_runner._read_application_configuration(
+        "input/LSTN-01/fadc_pulse_shape/019d7d43-84d0-70a3-873e-8d6ab0636895/config.yml",
+        steps=None,
+        workflow_activity_id=None,
+    )
+
+    assert collection["output_path"] == (
+        "output/LSTN-01/fadc_pulse_shape/019d7d43-84d0-70a3-873e-8d6ab0636895/collection/"
+    )
+
+
+def test_model_source_options_only_reach_model_aware_applications():
+    source_options = {
+        "simulation_models_path": "/models",
+        "simulation_models_git_path": "/models.git",
+        "simulation_models_git_revision": "main",
+    }
+    derive_configuration = {}
+    submit_configuration = {}
+
+    simtools_runner._apply_model_source_options(
+        "simtools-derive-photon-electron-spectrum",
+        derive_configuration,
+        source_options,
+    )
+    simtools_runner._apply_model_source_options(
+        "simtools-submit-model-parameter-from-external",
+        submit_configuration,
+        source_options,
+    )
+
+    assert derive_configuration == {}
+    assert submit_configuration == source_options
 
 
 def test_read_application_configuration_selected_steps(
@@ -547,6 +601,68 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
     assert copied_file.read_text(encoding="utf-8") == "test-data"
 
 
+def test_run_applications_copies_collection_file_to_destination_name(
+    monkeypatch, tmp_test_directory
+):
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output"
+    source_output.mkdir(parents=True, exist_ok=True)
+    source_file = source_output / "input-name.ecsv"
+    source_file.write_text("test-data", encoding="utf-8")
+    source_mtime = 1_000_000_000
+    os.utime(source_file, (source_mtime, source_mtime))
+
+    collection_output = tmp_path / "collection"
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+            },
+        }
+    ]
+    _patch_run_applications_dependencies(
+        monkeypatch,
+        mock_configurations,
+        tmp_path / "simtools.log",
+        {
+            "output_path": str(collection_output),
+            "files": [{"source": "input-name.ecsv", "destination": "model.ecsv"}],
+        },
+    )
+
+    simtools_runner.run_applications(_runner_args())
+
+    copied_file = collection_output / "model.ecsv"
+    assert copied_file.read_text(encoding="utf-8") == "test-data"
+    assert copied_file.stat().st_mtime > source_mtime
+
+
+@pytest.mark.parametrize("destination", ["../outside.ecsv", None, "nested/out.ecsv"])
+def test_copy_collection_files_rejects_destination_paths(tmp_test_directory, destination):
+    source_output = Path(str(tmp_test_directory)) / "app_output"
+    source_output.mkdir()
+    (source_output / "input.ecsv").write_text("test-data", encoding="utf-8")
+    collection_output = Path(str(tmp_test_directory)) / "collection"
+    if destination is None:
+        destination = str(Path(str(tmp_test_directory)) / "outside.ecsv")
+
+    with pytest.raises(ValueError, match="non-empty filename"):
+        simtools_runner._copy_collection_files(
+            [
+                {
+                    "configuration": {"output_path": str(source_output)},
+                }
+            ],
+            {
+                "output_path": str(collection_output),
+                "files": [{"source": "input.ecsv", "destination": destination}],
+            },
+        )
+
+
 def test_run_applications_copies_collection_files_from_grid_output_path(
     monkeypatch, tmp_test_directory
 ):
@@ -717,7 +833,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
         "ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-"
         "bernlohr-1.68-prod6-baseline-qgs2-no_opt:20250715-152108"
     )
-    common_network = "simtools-mongo-network"
+    common_network = "simtools-test-network"
     common_env_file = "./.env"
     common_container_engine = "podman"
     common_options = ["--arch", "amd64"]
@@ -770,6 +886,37 @@ def test_read_runtime_environment_with_minimal_options(monkeypatch):
     assert result == expected_command
 
 
+def test_read_runtime_environment_with_apptainer_options(monkeypatch):
+    runtime_environment = {
+        "image": "simtools.sif",
+        "container_engine": "apptainer",
+        "environment_file": "runtime.env",
+        "options": ["--bind /models:/models", "--containall"],
+    }
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="apptainer"))
+
+    result = simtools_runner.read_runtime_environment(runtime_environment)
+
+    assert result == [
+        "apptainer",
+        "exec",
+        "--bind",
+        "/models:/models",
+        "--containall",
+        "--env-file",
+        "runtime.env",
+        "simtools.sif",
+    ]
+
+
+def test_read_runtime_environment_rejects_apptainer_network(monkeypatch):
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="apptainer"))
+    with pytest.raises(ValueError, match="do not support the network option"):
+        simtools_runner.read_runtime_environment(
+            {"image": "simtools.sif", "container_engine": "apptainer", "network": "host"}
+        )
+
+
 def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
     runtime_file = Path(tmp_test_directory) / "runtime.yml"
     runtime_file.write_text(
@@ -778,7 +925,7 @@ def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
                 "runtime_environment:",
                 "  container_engine: podman",
                 "  image: test-image",
-                "  network: simtools-mongo-network",
+                "  network: simtools-test-network",
                 "  environment_file: .env",
                 "  options:",
                 '    - "--arch amd64"',
@@ -798,7 +945,7 @@ def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
     assert runtime_environment == {
         "container_engine": "podman",
         "image": "test-image",
-        "network": "simtools-mongo-network",
+        "network": "simtools-test-network",
         "environment_file": ".env",
         "options": ["--arch amd64"],
     }
@@ -1049,6 +1196,23 @@ def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_dir
     )
 
     assert (collection_output / "energy_z20.png").read_text(encoding="utf-8") == "b"
+
+
+def test_copy_collection_files_does_not_copy_file_modes(tmp_test_directory, mocker):
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "source"
+    collection_output = tmp_path / "collection"
+    source_output.mkdir()
+    source_file = source_output / "result.ecsv"
+    source_file.write_text("data", encoding="utf-8")
+    copyfile = mocker.patch.object(simtools_runner.shutil, "copyfile")
+
+    simtools_runner._copy_collection_files(
+        [{"configuration": {"output_path": str(source_output)}}],
+        {"output_path": str(collection_output), "files": ["result.ecsv"]},
+    )
+
+    copyfile.assert_called_once_with(source_file, collection_output / "result.ecsv")
 
 
 def test_copy_collection_files_list_format(tmp_test_directory):

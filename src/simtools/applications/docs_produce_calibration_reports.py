@@ -11,13 +11,13 @@ _ARGUMENTS = (cli.ALL_MODEL_VERSIONS,)
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
 )
 
 

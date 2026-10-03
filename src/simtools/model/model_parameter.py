@@ -5,17 +5,18 @@ import logging
 import shutil
 from copy import copy, deepcopy
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.data_model import schema
+from simtools.data_model.json_validation import validate_finite_json_values
+from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
-from simtools.model import legacy_model_parameter
-from simtools.simtel import simtel_table_reader
+from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.simtel import table_serializers
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
 
@@ -28,7 +29,7 @@ class ModelParameter:
     """
     Base class for simulation model parameters.
 
-    Provides methods to read and manipulate parameters from DB and to write
+    Provides methods to read and manipulate parameters from the model repository and to write
     sim_telarray configuration files.
 
     Parameters
@@ -41,15 +42,17 @@ class ModelParameter:
         Array element name (e.g., LSTN-01, LSTN-design, ILLN-01).
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
-        as stored under collection in the DB.
+        as stored under collection in the model repository.
     label: str
         Instance label. Used for output file naming.
     overwrite_model_parameter_dict: dict, optional
-        Dictionary to overwrite model parameters from DB with provided values.
+        Dictionary to overwrite model parameters from the model repository with provided values.
         Instance label. Important for output file naming.
     ignore_software_version: bool
         If True, ignore software version checks for deprecated parameters.
         Useful for documentation generation.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
     parameter_names: iterable of str, optional
         If supplied, load only these model parameters.
     load_simulation_software_parameters: bool
@@ -66,6 +69,7 @@ class ModelParameter:
         overwrite_model_parameter_dict=None,
         ignore_software_version=False,
         model_reader=None,
+        model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
     ):
@@ -79,8 +83,10 @@ class ModelParameter:
         self.label = label
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
-        self._parameter_names = None if parameter_names is None else frozenset(parameter_names)
-        self._load_simulation_software_parameters = load_simulation_software_parameters
+        self._model_loading_options = {
+            "parameter_names": None if parameter_names is None else frozenset(parameter_names),
+            "load_simulation_software_parameters": load_simulation_software_parameters,
+        }
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
@@ -94,28 +100,29 @@ class ModelParameter:
             if self.name is not None
             else None
         )
-        self._config_file_directory = None
+        self._config_file_directory = Path(model_directory) if model_directory is not None else None
         self._config_file_path = None
         self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None
         self._is_exported_model_files_up_to_date = False
+        self._serialized_simtel_tables = {}
 
-        self._load_parameters_from_db()
+        self._load_parameters_from_repository()
 
         self.simtel_config_writer = None
 
     @property
-    def db(self):
+    def model_source(self):
         """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
-    @db.setter
-    def db(self, reader):
+    @model_source.setter
+    def model_source(self, reader):
         self.model_reader = reader
 
     def _get_parameter_dict(self, par_name):
         """
-        Get model parameter dictionary for a specific parameter as stored in the DB.
+        Get model parameter dictionary for a specific parameter as stored in the model repository.
 
         No conversion to values are applied for the use in simtools
         (e.g., no conversion from the string representation of lists
@@ -129,7 +136,7 @@ class ModelParameter:
         Returns
         -------
         dict
-            Dictionary with complete DB entry for the given parameter.
+            Dictionary with complete model repository entry for the given parameter.
 
         Raises
         ------
@@ -148,7 +155,7 @@ class ModelParameter:
         Get the value of a model parameter.
 
         List of values stored in strings are returns as lists, so that no knowledge
-        of the database structure is needed when accessing the model parameters.
+        of the model repository structure is needed when accessing the model parameters.
 
         Parameters
         ----------
@@ -226,9 +233,19 @@ class ModelParameter:
             )
             return _value  # if unit is NoneType
 
+    def get_parameter_table(self, par_name):
+        """Return the validated ECSV table associated with a model parameter."""
+        parameter_data = self._get_parameter_dict(par_name)
+        try:
+            return self.model_reader.get_parameter_table(parameter_data)
+        except ValueError as exc:
+            raise InvalidModelParameterError(
+                f"Parameter {par_name} does not reference a valid ECSV table: {exc}"
+            ) from exc
+
     def get_parameter_type(self, par_name):
         """
-        Get the type of existing parameter of the model (value of 'type' field of DB entry).
+        Get the type of an existing model parameter (the ``type`` field).
 
         Parameters
         ----------
@@ -248,7 +265,7 @@ class ModelParameter:
 
     def get_parameter_file_flag(self, par_name):
         """
-        Get value of parameter file flag of this database entry (boolean 'file' field of DB entry).
+        Get the file flag of an existing model parameter (the ``file`` field).
 
         Parameters
         ----------
@@ -314,7 +331,7 @@ class ModelParameter:
         return self._simulation_config_parameters.get(simulation_software)
 
     def _load_simulation_software_parameter(self):
-        """Read simulation software parameters from DB."""
+        """Read simulation software parameters from the model repository."""
         for simulation_software in self._simulation_config_parameters:
             self._load_simulation_software_parameter_for_software(simulation_software)
 
@@ -326,7 +343,7 @@ class ModelParameter:
             ).copy()
 
             self._simulation_config_parameters[simulation_software] = (
-                self.db.get_simulation_configuration_parameters(
+                self.model_source.get_simulation_configuration_parameters(
                     site=self.site,
                     array_element_name=self.name,
                     model_version=self.model_version,
@@ -415,11 +432,11 @@ class ModelParameter:
 
         return filtered_parameter_changes
 
-    def _load_parameters_from_db(self):
+    def _load_parameters_from_repository(self):
         """
-        Read parameters from Database.
+        Read parameters from the model repository.
 
-        This is the main function to load the model parameters from the DB.
+        This is the main function to load the model parameters from the model repository.
         """
         if self.model_reader is None:
             return
@@ -427,142 +444,116 @@ class ModelParameter:
         if not (self.name or self.site):
             return
 
-        self._load_parameters_from_db_core()
+        self._load_parameters_from_repository_core()
         ignore_collections = self._determine_ignore_collections()
         self._apply_overrides_with_ignore_collections(ignore_collections)
 
-    def _load_parameters_from_db_core(self):
-        """Core logic to load parameters from the database."""
+    def _load_parameters_from_repository_core(self):
+        """Load the model parameters from the selected reader."""
         self.parameters = deepcopy(
-            self.db.get_model_parameters(
+            self.model_reader.get_model_parameters(
                 self.site,
                 self.name,
                 self.collection,
                 self.model_version,
-                parameter_names=self._parameter_names,
+                parameter_names=self._model_loading_options["parameter_names"],
             )
         )
 
     def _determine_ignore_collections(self):
-        """Determine if we should ignore any collections when applying overrides."""
-        ignore_collections = ("configuration_sim_telarray", "configuration_corsika")
+        """Determine which simulation configuration collections to skip."""
+        ignored = ("configuration_sim_telarray", "configuration_corsika")
         if not self.overwrite_model_parameter_dict:
-            return ignore_collections
-
-        if self._has_overrides_for_collections(ignore_collections):
+            return ignored
+        if self._has_overrides_for_collections(ignored):
             return None
         if self._has_overrides_for_collections(("configuration_sim_telarray",)):
             return ("configuration_corsika",)
         if self._has_overrides_for_collections(("configuration_corsika",)):
             return ("configuration_sim_telarray",)
-        return ignore_collections
+        return ignored
 
-    def _has_overrides_for_collections(self, ignore_collections):
-        """Check if overrides exist for the given collections."""
-        if self._has_flat_overrides_for_collections(ignore_collections):
-            return True
-        return self._has_nested_overrides_for_collections(ignore_collections)
+    def _has_overrides_for_collections(self, ignored_collections):
+        """Return whether overrides target any of the ignored collections."""
+        return self._has_flat_overrides_for_collections(
+            ignored_collections
+        ) or self._has_nested_overrides_for_collections(ignored_collections)
 
-    def _has_flat_overrides_for_collections(self, ignore_collections):
-        """Check if flat overrides exist for the given collections."""
-        for par_name in self.overwrite_model_parameter_dict.keys():
+    def _has_flat_overrides_for_collections(self, ignored_collections):
+        """Return whether flat overrides target an ignored collection."""
+        for parameter_name in self.overwrite_model_parameter_dict:
             try:
-                collection_name = names.get_collection_name_from_parameter_name(par_name)
-                if collection_name in ignore_collections:
+                if (
+                    names.get_collection_name_from_parameter_name(parameter_name)
+                    in ignored_collections
+                ):
                     return True
             except KeyError:
                 return True
         return False
 
-    def _has_nested_overrides_for_collections(self, ignore_collections):
-        """Check if nested overrides exist for the given collections."""
-        for params in self.overwrite_model_parameter_dict.values():
-            if not isinstance(params, dict):
+    def _has_nested_overrides_for_collections(self, ignored_collections):
+        """Return whether nested overrides target an ignored collection."""
+        for parameters in self.overwrite_model_parameter_dict.values():
+            if not isinstance(parameters, dict):
                 continue
-            for par_name in params.keys():
+            for parameter_name in parameters:
                 try:
-                    collection_name = names.get_collection_name_from_parameter_name(par_name)
-                    if collection_name in ignore_collections:
+                    if (
+                        names.get_collection_name_from_parameter_name(parameter_name)
+                        in ignored_collections
+                    ):
                         return True
                 except KeyError:
                     return True
         return False
 
-    def _apply_overrides_with_ignore_collections(self, ignore_collections):
-        """Apply overrides with the determined ignore collections."""
+    def _apply_overrides_with_ignore_collections(self, ignored_collections):
+        """Apply model overrides and load simulation-software parameters."""
         filtered_overwrites = self._filter_overwrites_for_target(
-            self.overwrite_model_parameter_dict, ignore_collections
+            self.overwrite_model_parameter_dict, ignored_collections
         )
-        self.overwrite_parameters(filtered_overwrites, ignore_collection=ignore_collections)
-        self._check_model_parameter_versions(
-            self.parameters,
-            self.ignore_software_version,
-            parameter_names=self._parameter_names,
-            value_resolver=self._resolve_legacy_table_parameter_value,
-        )
-
-        if self._load_simulation_software_parameters:
+        self.overwrite_parameters(filtered_overwrites, ignore_collection=ignored_collections)
+        self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
+        if self._model_loading_options["load_simulation_software_parameters"]:
             self._load_simulation_software_parameter()
 
-    def _filter_overwrites_for_target(self, overwrites, ignore_collections):
-        """Filter overwrite dictionary to only include parameters that exist in the target model."""
-        if not overwrites or ignore_collections is None:
+    def _filter_overwrites_for_target(self, overwrites, ignored_collections):
+        """Filter overrides to parameters applicable to this model target."""
+        if not overwrites or ignored_collections is None:
             return overwrites
 
         filtered = {}
-        for key, params in overwrites.items():
-            if not isinstance(params, dict):
-                continue
-
-            filtered_params = {}
-            for par_name, par_value in params.items():
-                try:
-                    collection_name = names.get_collection_name_from_parameter_name(par_name)
-                    if collection_name not in ignore_collections:
-                        filtered_params[par_name] = par_value
-                except KeyError:
-                    # Parameter not found in registry, include it (might be a new parameter)
-                    filtered_params[par_name] = par_value
-
-            if filtered_params:
-                filtered[key] = filtered_params
-
+        for target, parameters in overwrites.items():
+            filtered_parameters = self._filter_overwrite_parameters(parameters, ignored_collections)
+            if filtered_parameters:
+                filtered[target] = filtered_parameters
         return filtered
 
-    def _resolve_legacy_table_parameter_value(self, parameter_name, value):
-        """Resolve a legacy stored table value to canonical row-oriented data.
+    @staticmethod
+    def _filter_overwrite_parameters(parameters, ignored_collections):
+        """Return applicable parameters from one model-target override mapping."""
+        if not isinstance(parameters, dict):
+            return None
 
-        This method is passed into ``legacy_model_parameter.update_parameter``
-        as ``value_resolver``. Legacy handlers use it when an old parameter
-        stores a table indirectly, e.g. as a GridFS-backed file name, and needs
-        to be normalized to the current in-memory ``{"columns", "rows"}``
-        representation.
-        """
-        with TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            self.model_reader.export_model_files(file_names=[value], dest=temp_path)
-            return simtel_table_reader.resolve_dict_parameter_value(
-                value,
-                parameter_name,
-                data_path=temp_path,
-            )
+        filtered = {}
+        for parameter_name, value in parameters.items():
+            try:
+                collection = names.get_collection_name_from_parameter_name(parameter_name)
+            except KeyError:
+                filtered[parameter_name] = value
+            else:
+                if collection not in ignored_collections:
+                    filtered[parameter_name] = value
+        return filtered
 
     @staticmethod
-    def _check_model_parameter_versions(
-        parameters,
-        ignore_software_version,
-        software_name=None,
-        value_resolver=None,
-        parameter_names=None,
-    ):
+    def _check_model_parameter_versions(parameters, ignore_software_version, software_name=None):
         """
         Ensure parameters follow the latest schema and are compatible with installed software.
 
         Compares software versions listed in schema files with the installed software versions
         (e.g., sim_telarray, CORSIKA).
-
-        For outdated model parameter schemas, legacy update functions are called to update
-        the parameters to the latest schema version.
 
         Parameters
         ----------
@@ -572,44 +563,18 @@ class ModelParameter:
             If True, ignore software version checks for deprecated parameters.
         software_name: str
             Name of the software for which the parameters are checked.
-        parameter_names: iterable of str, optional
-            If supplied, load only the schemas for these parameters.
-        value_resolver: callable
-            Optional callback used by legacy updates to normalize parameter
-            values from older storage formats to the latest in-memory format.
-            It must accept ``(parameter_name, value)`` and return the
-            normalized value.
         """
-        parameter_schema = names.model_parameters() if parameter_names is None else {}
-        if parameter_names is not None:
-            for parameter_name in parameter_names:
-                try:
-                    parameter_schema[parameter_name] = schema.get_model_parameter_schema(
-                        parameter_name
-                    )
-                except FileNotFoundError:
-                    continue
-
-        _legacy_updates = {}
         for par_name, par_data in parameters.items():
-            if par_name in parameter_schema:
+            validate_finite_json_values(par_data.get("value"))
+            if par_name in (parameter_schema := names.model_parameters()):
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,
                     ignore_software_version=ignore_software_version,
                 )
-                _latest_schema_version = parameter_schema[par_name]["schema_version"]
-                if par_data["model_parameter_schema_version"] != _latest_schema_version:
-                    _legacy_updates.update(
-                        legacy_model_parameter.update_parameter(
-                            par_name,
-                            parameters,
-                            _latest_schema_version,
-                            value_resolver=value_resolver,
-                        )
-                    )
-
-        legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
+                schema_version = par_data.get("model_parameter_schema_version")
+                if schema_version is None:
+                    raise ValueError(f"Parameter '{par_name}' has no schema version")
 
     def overwrite_model_parameter(
         self,
@@ -622,11 +587,11 @@ class ModelParameter:
         """
         Overwrite the parameter dictionary for a specific parameter in the model.
 
-        This function does not modify the DB, it affects only the current instance of
+        This function does not modify the model repository, it affects only the current instance of
         the model parameter dictionary.
 
         If the parameter version is given only, the parameter dictionary is updated
-        from the database for the given version.
+        from the model repository for the given version.
 
         Parameters
         ----------
@@ -652,7 +617,7 @@ class ModelParameter:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
         if value is None and parameter_version:
-            self._overwrite_model_parameter_from_db(
+            self._overwrite_model_parameter_from_repository(
                 par_name,
                 parameter_version,
                 parameter_store=target_parameters,
@@ -759,8 +724,10 @@ class ModelParameter:
         par_dict.setdefault("unit", schema_unit)
         return par_dict
 
-    def _overwrite_model_parameter_from_db(self, par_name, parameter_version, parameter_store=None):
-        """Overwrite model parameter from DB for a specific version."""
+    def _overwrite_model_parameter_from_repository(
+        self, par_name, parameter_version, parameter_store=None
+    ):
+        """Overwrite model parameter from the model repository for a specific version."""
         target_parameters = self.parameters if parameter_store is None else parameter_store
         _para_dict = self.model_reader.get_model_parameter(
             parameter=par_name,
@@ -823,7 +790,7 @@ class ModelParameter:
         parameter_store=None,
     ):
         """
-        Overwrite multiple parameters in memory (no DB update).
+        Overwrite multiple parameters in memory (no model repository update).
 
         Parameters
         ----------
@@ -983,7 +950,7 @@ class ModelParameter:
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
-        Export model files from the database into the config file directory.
+        Export model files from the model repository into the config file directory.
 
         Parameters
         ----------
@@ -998,45 +965,17 @@ class ModelParameter:
                 f"Model files for {self.name} are already exported to {self.config_file_directory}"
             )
             return
-        # Removing parameter files added manually (which are not in DB)
-        pars_from_db = copy(self.parameters)
+        # Removing parameter files added manually (which are not in the model repository)
+        parameters_copy = copy(self.parameters)
         if self._added_parameter_files is not None:
             for par in self._added_parameter_files:
-                pars_from_db.pop(par)
+                parameters_copy.pop(par)
 
         self.model_reader.export_model_files(
-            parameters=pars_from_db,
+            parameters=parameters_copy,
             dest=destination_path or self.config_file_directory,
         )
         self._is_exported_model_files_up_to_date = True
-
-    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
-        """Export the reference NSB atmosphere used for altitude correction.
-
-        The sim_telarray NSB correction uses a reference atmosphere in addition
-        to the site's ``atmospheric_transmission`` parameter.  The reference
-        file is a simulation-software parameter, so it is not included in the
-        ordinary model-parameter export.
-
-        Parameters
-        ----------
-        model_directory: Path
-            Directory to which the reference atmosphere is exported.
-        """
-        parameters = self.get_simulation_software_parameters("sim_telarray") or {}
-        correction = parameters.get("correct_nsb_spectrum_to_telescope_altitude")
-        if correction is None:
-            return
-
-        self.model_reader.export_model_files(
-            parameters={
-                "nsb_spectrum_at_2200m": {
-                    "value": correction["value"],
-                    "file": True,
-                }
-            },
-            dest=model_directory,
-        )
 
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
@@ -1051,6 +990,12 @@ class ModelParameter:
         """
         self._merge_sim_telarray_parameters()
         self.export_model_files(update_if_necessary=True)
+        if "correct_nsb_spectrum_to_telescope_altitude" in self._simulation_config_parameters.get(
+            "sim_telarray", {}
+        ):
+            self.export_nsb_spectrum_to_telescope_altitude_correction_file(
+                model_directory=self.config_file_directory
+            )
         self._add_additional_models(additional_models)
 
         # Ensure the writer label matches the config file naming label
@@ -1105,11 +1050,95 @@ class ModelParameter:
     def _load_simtel_config_writer(self, label=None):
         """Load the SimtelConfigWriter object."""
         desired_label = self.label if label is None else label
-        if label is not None or self.simtel_config_writer is None:
+        if self.simtel_config_writer is None or desired_label != self.simtel_config_writer.label:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
                 telescope_design_model=self.design_model,
                 model_version=self.model_version,
                 label=desired_label,
+                model_reader=self.model_reader,
             )
+
+    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
+        """
+        Export the NSB correction table and its native source file.
+
+        Camera-efficiency calculations correct the NSB spectrum from the original altitude used in
+        the Benn & Ellison model to the telescope altitude. The correction table is a
+        simulation-software parameter and is not included in the ordinary model-parameter export.
+        This method exports both the source file and the native table used by the calculation.
+
+        Parameters
+        ----------
+        model_directory: Path
+            Model directory to export the file to.
+        """
+        parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
+        correction_parameters = self._simulation_config_parameters.get("sim_telarray", {})
+        if parameter_name not in correction_parameters:
+            return
+        parameter = deepcopy(correction_parameters[parameter_name])
+        parameter["parameter"] = parameter_name
+        parameter.setdefault("parameter_version", Path(parameter["value"]).stem.rsplit("-", 1)[-1])
+        parameter.setdefault("instrument", self.design_model or self.name)
+        parameter.setdefault("site", self.site)
+        parameter["file"] = True
+        self.model_reader.export_model_files(
+            parameters={parameter_name: parameter},
+            dest=model_directory,
+        )
+
+        self._export_ecsv_as_simtel_table(
+            parameter_name,
+            parameter,
+            model_directory,
+            table_format="atmospheric_transmission",
+        )
+
+    def _export_ecsv_as_simtel_table(
+        self, parameter_name, parameter, model_directory, table_format, output_name=None
+    ):
+        """Export an ECSV model asset in the native sim_telarray table format."""
+        if Path(parameter["value"]).suffix.lower() != ".ecsv":
+            return None
+
+        schema_data = schema.get_model_parameter_schema(
+            parameter_name, parameter.get("model_parameter_schema_version")
+        )
+        contract = get_simtel_serialization(schema_data)
+        contract["table_format"] = table_format
+        generated_output_name = get_simtel_table_file_name(parameter)
+        shared_output = generated_output_name is not None and (
+            output_name is None or output_name == generated_output_name
+        )
+        output_name = output_name or generated_output_name
+        output_name = output_name or f"{parameter_name}-{self.name}.dat"
+        output_path = Path(model_directory) / output_name
+        cache_key = repr((parameter_name, parameter, table_format, output_name))
+        if output_path.is_file() and (
+            shared_output or self._serialized_simtel_tables.get(output_path) == cache_key
+        ):
+            return output_path.name
+        table = self.model_reader.get_parameter_table(parameter)
+        result = table_serializers.write_simtel_table(
+            table,
+            model_directory,
+            contract=contract,
+            output_name=output_name,
+        )
+        self._serialized_simtel_tables[output_path] = cache_key
+        return result
+
+    def export_model_parameter_as_simtel_file(
+        self, parameter_name, model_directory, table_format, output_name
+    ):
+        """Export an ECSV model parameter in the native sim_telarray format."""
+        parameter = self.parameters[parameter_name].copy()
+        return self._export_ecsv_as_simtel_table(
+            parameter_name,
+            parameter,
+            model_directory,
+            table_format=table_format,
+            output_name=output_name,
+        )

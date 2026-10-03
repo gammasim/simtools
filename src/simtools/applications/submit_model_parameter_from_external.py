@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 """Submit a model parameter value and corresponding metadata through the command line."""
 
+import json
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import instrument
-from simtools.simtel import simtel_table_reader
+from simtools.data_model.json_validation import validate_finite_json_values
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -39,14 +40,8 @@ _ARGUMENTS = (
         nargs="+",
     ),
     cli.ArgumentDefinition(
-        "value_data_path",
-        help="Directory containing files referenced by table-valued parameters.",
-        type=Path,
-        default=None,
-    ),
-    cli.ArgumentDefinition(
         "check_parameter_version",
-        help="Check if the parameter version exists in the database",
+        help="Check if the parameter version exists in the model repository",
         action="store_true",
     ),
 )
@@ -54,12 +49,12 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    database=True,
     initialize_output=True,
 )
 
@@ -76,11 +71,11 @@ def main():
     )
 
     if parameter_type == "dict":
-        value = simtel_table_reader.resolve_dict_parameter_value(
-            value,
-            app_context.args["parameter"],
-            app_context.args.get("value_data_path"),
-        )
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Structured model-parameter values must be valid JSON") from exc
+        validate_finite_json_values(value)
 
     if app_context.args.get("output_path"):
         output_path = app_context.io_handler.get_output_directory(
@@ -99,7 +94,7 @@ def main():
         ),
         output_path=output_path,
         metadata_input_dict=app_context.args,
-        check_db_for_existing_parameter=app_context.args.get("check_parameter_version", False),
+        check_for_existing_parameter=app_context.args.get("check_parameter_version", False),
         model_parameter_schema_version=model_parameter_schema_version,
     )
 

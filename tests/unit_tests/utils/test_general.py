@@ -24,6 +24,55 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 test_data = "Test data"
 
 
+def test_cleanup_intermediate_files(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    for name in ("run.log", "run.lis.gz", "input.dat", "result.ecsv"):
+        (root / name).write_text("data", encoding="utf-8")
+    nested = root / "nested"
+    nested.mkdir()
+    (nested / "keep.log").write_text("data", encoding="utf-8")
+    empty = root / "empty" / "child"
+    empty.mkdir(parents=True)
+    assert (
+        gen.cleanup_intermediate_files(
+            root,
+            patterns=("*.log", "*.lis*", "*.dat"),
+            files=(root / "run.log", root / "missing"),
+            directories=(empty.parent, empty, nested),
+        )
+        == 3
+    )
+    assert (root / "result.ecsv").exists()
+    assert (nested / "keep.log").exists()
+    assert not empty.parent.exists()
+    assert gen.cleanup_intermediate_files(root) == 0
+
+
+def test_cleanup_explicit_files_and_symlinks(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    target = root / "retained"
+    target.mkdir()
+    (target / "keep.dat").write_text("data", encoding="utf-8")
+    link = root / "link"
+    link.symlink_to(target, target_is_directory=True)
+    gen.cleanup_intermediate_files(root, directories=(link,))
+    assert link.is_symlink()
+    assert gen.cleanup_intermediate_files(root, files=(link,)) == 1
+    assert (target / "keep.dat").exists()
+
+
+def test_cleanup_preserves_excluded_paths(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    keep = root / "keep.dat"
+    keep.write_text("existing", encoding="utf-8")
+    nested = root / "generated" / "nested"
+    nested.mkdir(parents=True)
+    (nested / "remove.dat").write_text("generated", encoding="utf-8")
+    assert gen.cleanup_intermediate_files(root, patterns=("**/*",), exclude=(keep,)) == 1
+    assert keep.read_text(encoding="utf-8") == "existing"
+    assert not nested.parent.exists()
+
+
 def test_get_file_age(tmp_test_directory) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
     with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
@@ -287,7 +336,7 @@ def test_convert_string_to_list():
         bla_bla,
         "bla blaa",
     ]
-    # import for list of dimensionless entries in database
+    # import for list of dimensionless entries in model repository
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
 
@@ -674,8 +723,8 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
 
     # Verify tarfile.open was called correctly
     mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
-    mock_tar.add.assert_any_call(file1, arcname="file1.txt")
-    mock_tar.add.assert_any_call(file2, arcname="file2.txt")
+    mock_tar.add.assert_any_call(file1, arcname="file1.txt", recursive=False)
+    mock_tar.add.assert_any_call(file2, arcname="file2.txt", recursive=False)
 
     # Test sub_dir option
     mock_tarfile_open.reset_mock()
@@ -683,8 +732,8 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     with patch_is_file, patch_resolve:
         gen.pack_tar_file(tar_file_name, [file1, file2], sub_dir="subdir")
     mock_tarfile_open.assert_called_once_with(tar_file_name, "w:gz")
-    mock_tar.add.assert_any_call(file1, arcname="subdir/file1.txt")
-    mock_tar.add.assert_any_call(file2, arcname="subdir/file2.txt")
+    mock_tar.add.assert_any_call(file1, arcname="subdir/file1.txt", recursive=False)
+    mock_tar.add.assert_any_call(file2, arcname="subdir/file2.txt", recursive=False)
 
     with pytest.raises(ValueError, match="Unsafe file path"):
         gen.pack_tar_file(tar_file_name, ["unsafe_file"])

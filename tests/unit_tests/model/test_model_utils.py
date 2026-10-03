@@ -66,6 +66,27 @@ def test_initialize_simulation_models_with_calibration_device(mocker):
     assert calibration_model == mock_cal_model.return_value
 
 
+def test_initialize_simulation_models_uses_custom_model_directory(mocker):
+    """Pass a custom generated-model directory to every initialized model."""
+    mock_tel_model = mocker.patch("simtools.model.model_utils.TelescopeModel")
+    mock_site_model = mocker.patch("simtools.model.model_utils.SiteModel")
+    mock_cal_model = mocker.patch("simtools.model.model_utils.CalibrationModel")
+    mock_tel_model.return_value.get_calibration_device_name.return_value = "ILLS-01"
+
+    model_utils.initialize_simulation_models(
+        label="test_label",
+        site="South",
+        telescope_name="MSTS-01",
+        model_version="test_version",
+        model_directory="output/model/test_version/ILLS-01_MSTS-01_355nm",
+    )
+
+    for model in mock_tel_model, mock_site_model, mock_cal_model:
+        assert model.call_args.kwargs["model_directory"] == (
+            "output/model/test_version/ILLS-01_MSTS-01_355nm"
+        )
+
+
 def test_read_overwrite_model_parameter_dict_with_file(mocker):
     mock_collect = mocker.patch("simtools.model.model_utils.ascii_handler.collect_data_from_file")
     mock_collect.return_value = {"changes": {"param1": "value1"}}

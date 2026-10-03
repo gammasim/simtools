@@ -21,3 +21,18 @@ def test_standalone_parser_accepts_environment_format(monkeypatch, mocker, capsy
     dependency_versions._main_standalone()
 
     assert capsys.readouterr().out == "ok"
+
+
+def test_standalone_parser_updates_source_revisions(monkeypatch, mocker, tmp_test_directory):
+    """Test the standalone parser delegates catalog source-revision updates."""
+    updates_path = tmp_test_directory / "source-updates.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["simtools-dependency-versions", "--update-source-revisions", str(updates_path)],
+    )
+    update = mocker.patch.object(dependency_versions, "_update_source_revisions")
+
+    dependency_versions._main_standalone()
+
+    update.assert_called_once_with(updates_path)

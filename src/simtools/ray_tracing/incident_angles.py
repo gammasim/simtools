@@ -29,7 +29,8 @@ class IncidentAnglesCalculator:
     ----------
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
-        ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
+        ``zenith_angle``, ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
+        Zenith defaults to 0 degrees. Off-axis angles use the PSF camera-x convention.
     output_dir : str or pathlib.Path
         Output directory where logs, scripts, photons files and results are written.
     label : str, optional
@@ -39,11 +40,10 @@ class IncidentAnglesCalculator:
     -----
     Additional options are read from ``config_data`` when present:
     - ``perfect_mirror`` (bool, default False)
-    - ``calculate_primary_secondary_angles`` (bool, default True)
+    Focal-plane incidence angles are calculated for all telescope models. Primary and
+    secondary mirror incidence angles are additionally calculated
+    only for dual-mirror telescopes.
     """
-
-    # Use fixed zenith angle (degrees) for incident-angle simulations.
-    ZENITH_ANGLE_DEG = 0
 
     def __init__(
         self,
@@ -54,19 +54,32 @@ class IncidentAnglesCalculator:
         self.logger = logging.getLogger(__name__)
 
         self.config_data = config_data
+        self.zenith_angle_deg = u.Quantity(config_data.get("zenith_angle", 0 * u.deg)).to_value(
+            u.deg
+        )
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
         cfg = config_data
         self.perfect_mirror = cfg.get("perfect_mirror", False)
-        self.calculate_primary_secondary_angles = cfg.get(
-            "calculate_primary_secondary_angles", True
-        )
         self.results = None
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir = self.output_dir / "logs"
         self.scripts_dir = self.output_dir / "scripts"
         self.photons_dir = self.output_dir / "photons_files"
+        self.model_dir = self.output_dir / "model" / f"incident_angles_{self.label}"
+        self._intermediate_files = set()
+        self.cleanup_options = {
+            "patterns": (f"{self.model_dir.relative_to(self.output_dir)}/**/*",),
+            "files": self._intermediate_files,
+            "directories": (
+                self.model_dir,
+                self.model_dir.parent,
+                self.scripts_dir,
+                self.photons_dir,
+            ),
+            "exclude": set(self.model_dir.rglob("*")),
+        }
         self.results_dir = self.output_dir / "incident_angles"
         for d in (self.logs_dir, self.scripts_dir, self.photons_dir, self.results_dir):
             d.mkdir(parents=True, exist_ok=True)
@@ -81,6 +94,10 @@ class IncidentAnglesCalculator:
             site=config_data["site"],
             telescope_name=config_data["telescope"],
             model_version=config_data["model_version"],
+            model_directory=self.model_dir,
+        )
+        self.calculate_primary_secondary_angles = (
+            self.telescope_model.get_parameter_value("mirror_class") == 2
         )
 
     def _label_suffix(self):
@@ -109,6 +126,9 @@ class IncidentAnglesCalculator:
 
         photons_file, stars_file, log_file = self._prepare_psf_io_files()
         run_script = self._write_run_script(photons_file, stars_file, log_file)
+        self._intermediate_files.update((run_script, stars_file))
+        if not self.config_data.get("keep_photon_files", False):
+            self._intermediate_files.add(photons_file)
         self._run_script(run_script, log_file)
 
         data = self._compute_incidence_angles_from_imaging_list(photons_file)
@@ -170,7 +190,7 @@ class IncidentAnglesCalculator:
         """
         suffix = self._label_suffix()
         photons_file = self.photons_dir / f"incident_angles_photons_{suffix}.lis"
-        stars_file = self.photons_dir / f"incident_angles_stars_{suffix}.lis"
+        stars_file = self.scripts_dir / f"incident_angles_stars_{suffix}.lis"
         log_file = self.logs_dir / f"incident_angles_{suffix}.log"
 
         if photons_file.exists():
@@ -184,7 +204,7 @@ class IncidentAnglesCalculator:
             pf.write("# Imaging list for Incident Angle simulations\n")
             pf.write(f"#{'=' * 50}\n")
             pf.write(f"# config_file = {self.telescope_model.config_file_path}\n")
-            pf.write(f"# zenith_angle [deg] = {self.ZENITH_ANGLE_DEG}\n")
+            pf.write(f"# zenith_angle [deg] = {self.zenith_angle_deg}\n")
             pf.write(
                 f"# off_axis_angle [deg] = {self.config_data['off_axis_angle'].to_value(u.deg)}\n"
             )
@@ -192,7 +212,7 @@ class IncidentAnglesCalculator:
             pf.write(f"# source_distance [km] = {distance_km}\n")
 
         with stars_file.open("w", encoding="utf-8") as sf:
-            zen = self.ZENITH_ANGLE_DEG
+            zen = self.zenith_angle_deg
             distance_km = self._source_distance_km()
             sf.write(f"0. {90.0 - zen} 1.0 {distance_km}\n")
 
@@ -220,8 +240,9 @@ class IncidentAnglesCalculator:
         """
         script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
 
-        theta = self.ZENITH_ANGLE_DEG
         off = float(self.config_data["off_axis_angle"].to_value(u.deg))
+        # Match the PSF camera-x convention (x points downwards).
+        theta = self.zenith_angle_deg - off
         star_photons = self.config_data["number_of_photons"]
 
         def cfg(par, val):
@@ -245,9 +266,9 @@ class IncidentAnglesCalculator:
             cfg("IMAGING_LIST", str(photons_file)),
             cfg("stars", str(stars_file)),
             cfg("altitude", self.site_model.get_parameter_value("corsika_observation_level")),
-            cfg("telescope_theta", theta + off),
+            cfg("telescope_theta", theta),
             cfg("star_photons", star_photons),
-            cfg("telescope_phi", 0),
+            cfg("telescope_phi", 0.0),
             cfg("camera_transmission", 1.0),
             cfg("nightsky_background", "all:0."),
             cfg("trigger_current_limit", "1e10"),
@@ -291,9 +312,8 @@ class IncidentAnglesCalculator:
         """Compute incidence angles from an imaging list file.
 
         Column positions may differ between telescope types and sim_telarray versions.
-        Header lines (``# Column N: ...``) are parsed to find indices; otherwise
-        legacy positions (1-based) are used: focal=26, primary=32, secondary=36,
-        primary X/Y = 29/30, secondary X/Y=33/34.
+        Header lines (``# Column N: ...``) are required to identify the physical
+        angle definitions. Missing required headers raise ValueError.
 
         Parameters
         ----------
@@ -334,7 +354,9 @@ class IncidentAnglesCalculator:
                 secondary_hit_y_m,
             )
 
-        result = {"angle_incidence_focal_deg": focal}
+        result = {
+            "angle_incidence_focal_deg": focal,
+        }
         if self.calculate_primary_secondary_angles:
             result["angle_incidence_primary_deg"] = primary
             result["angle_incidence_secondary_deg"] = secondary
@@ -362,7 +384,7 @@ class IncidentAnglesCalculator:
         dict[str, int]
             0-based indices for the required columns.
         """
-        indices = self._default_column_indices()
+        indices = {}
 
         col_pat = re.compile(r"^\s*#\s*Column\s+(\d{1,4})\s*:(.*)$", re.IGNORECASE)
         with photons_file.open("r", encoding="utf-8") as fh:
@@ -377,33 +399,15 @@ class IncidentAnglesCalculator:
                 desc = m.group(2).strip().lower()
                 self._update_indices_from_header_desc(desc, num, indices)
 
-        return indices
-
-    def _default_column_indices(self):
-        """Return default 0-based indices matching SST-like photon files.
-
-        Fallbacks (1-based): focal=26, primary=32, secondary=36,
-        primary X/Y=29/30, secondary X/Y=33/34.
-
-        Returns
-        -------
-        dict[str, int]
-            Default index mapping. When primary/secondary angles are disabled,
-            only ``'focal'`` is included.
-        """
-        idx = {"focal": 25}
+        required = {"focal"}
         if self.calculate_primary_secondary_angles:
-            idx.update(
-                {
-                    "primary": 31,
-                    "secondary": 35,
-                    "prim_x": 28,
-                    "prim_y": 29,
-                    "sec_x": 32,
-                    "sec_y": 33,
-                }
-            )
-        return idx
+            required.add("primary")
+            if self.telescope_model.get_parameter_value("mirror_class") == 2:
+                required.add("secondary")
+        missing = required - indices.keys()
+        if missing:
+            raise ValueError(f"Missing imaging-list column headers: {sorted(missing)}")
+        return indices
 
     def _update_indices_from_header_desc(self, desc, num, indices):
         """Update indices dict in-place based on a header description and column number.
@@ -417,20 +421,20 @@ class IncidentAnglesCalculator:
         indices : dict[str, int]
             Mapping to update in-place.
         """
-        # Angles
+        # Use the same optical-axis angle for diagnostics and filter export.
         if "angle of incidence" in desc:
-            if "focal surface" in desc:
+            if "focal surface" in desc and "optical axis" in desc:
                 indices["focal"] = num - 1
                 return
-            if self.calculate_primary_secondary_angles:
-                if "primary mirror" in desc:
-                    indices["primary"] = num - 1
-                    return
-                if "secondary mirror" in desc:
-                    indices["secondary"] = num - 1
+        if not self.calculate_primary_secondary_angles:
+            return
+        if "angle of incidence" in desc:
+            for mirror in ("primary", "secondary"):
+                if f"{mirror} mirror" in desc:
+                    indices[mirror] = num - 1
                     return
         # Reflection points (X/Y)
-        if not self.calculate_primary_secondary_angles or "reflection point" not in desc:
+        if "reflection point" not in desc:
             return
         self._set_reflection_index_if_match(desc, num, indices)
 
@@ -665,37 +669,6 @@ class IncidentAnglesCalculator:
         if secondary_hit_y_m is not None:
             secondary_hit_y_m.append(y_m)
 
-    @staticmethod
-    def _match_header_column(col_pat, raw):
-        """Parse a header line for a known angle column.
-
-        Parameters
-        ----------
-        col_pat : Pattern[str]
-            Compiled regular expression matching ``# Column N`` prefix.
-        raw : str
-            Raw header line.
-
-        Returns
-        -------
-        tuple[str, int] | None
-            ``(kind, column_number)`` when recognized, otherwise ``None``.
-        """
-        s = raw.strip()
-        if s and ":" in s:
-            prefix, desc = s.split(":", 1)
-            m = col_pat.match(prefix)
-            if m:
-                num = int(m.group(1))
-                desc = desc.strip().lower()
-                if "angle of incidence at focal surface" in desc and "optical axis" in desc:
-                    return "focal", num
-                if re.search(r"angle of incidence\s+on(to)?\s+primary mirror", desc):
-                    return "primary", num
-                if re.search(r"angle of incidence\s+on(to)?\s+secondary mirror", desc):
-                    return "secondary", num
-        return None
-
     def _save_results(self):
         """Save the results to an ECSV file with metadata."""
         if self.results is None or len(self.results) == 0:
@@ -707,8 +680,10 @@ class IncidentAnglesCalculator:
         bin_centers, hist = self._calculate_histogram(data, bins=1000)
 
         output_table = QTable()
-        output_table["Incidence angle"] = bin_centers * u.deg
-        output_table["Fraction"] = hist
+        output_table["incidence_angle"] = bin_centers * u.deg
+        output_table["fraction"] = hist
+        output_table.meta["normalization"] = "probability density per degree"
+        output_table.meta["bin_width_deg"] = 0.09
 
         output_table.write(output_file, format="ascii.ecsv", overwrite=True)
 
@@ -718,59 +693,86 @@ class IncidentAnglesCalculator:
         )
 
     def save_model_parameters(self, results_by_offset):
-        """
-        Write model parameters dictionary (json) + astropy table with incident angles.
+        """Write incident-angle model-parameter tables and their JSON metadata.
+
+        Export the filter distribution and enabled mirror distributions. Both mirror
+        parameters are exported only for dual-mirror optics. Densities describe unweighted rays
+        completing the optical path, without requiring a camera pixel hit.
+
+        Files are placed under a telescope-named subdirectory to match repository convention.
 
         Parameters
         ----------
         results_by_offset : dict
             Dictionary with results for each offset.
         """
-        # Combine results from all offsets
         tables = [res for res in results_by_offset.values() if res is not None and len(res) > 0]
         if not tables:
             self.logger.warning("No results to write model parameters.")
             return
 
         combined_table = vstack(tables)
+        telescope = self.config_data["telescope"]
+        param_version = (
+            self.config_data.get("parameter_version") or self.config_data["model_version"]
+        )
+        param_dir = self.output_dir / telescope
+        param_dir.mkdir(parents=True, exist_ok=True)
 
-        parameter_mapping = {
-            "camera_filter_incidence_angle": "angle_incidence_focal",
-            "primary_mirror_incidence_angle": "angle_incidence_primary",
-            "secondary_mirror_incidence_angle": "angle_incidence_secondary",
-        }
+        parameters = {"camera_filter_photon_incident_angle": "angle_incidence_focal"}
+        mirror_class = self.telescope_model.get_parameter_value("mirror_class")
+        if mirror_class == 2:
+            parameters["primary_mirror_incidence_angle"] = "angle_incidence_primary"
+            parameters["secondary_mirror_incidence_angle"] = "angle_incidence_secondary"
 
-        for param_name, col_name in parameter_mapping.items():
+        for param_name, col_name in parameters.items():
             if col_name not in combined_table.colnames:
-                continue
+                raise ValueError(f"Missing incidence-angle column for {param_name}: {col_name}")
 
             data = combined_table[col_name].to(u.deg).value
-            # Create histogram
-            bin_centers, hist = self._calculate_histogram(data, bins=100)
+            data = data[np.isfinite(data)]
+            if len(data) == 0:
+                raise ValueError(f"No finite incidence angles for {param_name}")
 
-            table = QTable()
-            table["Incidence angle"] = bin_centers * u.deg
-            table["Fraction"] = hist
-
+            table = self._build_incidence_distribution_table(data)
+            table.meta["off_axis_angles_deg"] = [float(offset) for offset in results_by_offset]
+            table.meta["zenith_angle_deg"] = float(self.zenith_angle_deg)
+            if param_name == "camera_filter_photon_incident_angle":
+                table.meta["angle_reference"] = "optical axis at focal surface"
+            else:
+                table.meta["angle_reference"] = "local mirror surface normal"
+            ecsv_file = f"{param_name}.ecsv"
             ModelDataWriter.write_product_data(
-                output_file=self.output_dir / f"{param_name}.ecsv",
+                output_file=param_dir / ecsv_file,
                 product_data=table,
                 metadata=MetadataCollector(args_dict=self.config_data),
             )
-
             ModelDataWriter.write_model_parameter(
                 parameter_name=param_name,
-                value=f"{param_name}.ecsv",
-                instrument=self.config_data["telescope"],
-                parameter_version=self.config_data["model_version"],
+                value=ecsv_file,
+                instrument=telescope,
+                parameter_version=param_version,
                 output_file=f"{param_name}.json",
-                output_path=self.output_dir,
+                output_path=param_dir,
                 metadata_input_dict=self.config_data,
             )
 
-    def _calculate_histogram(self, data, bins=100):
+    @staticmethod
+    def _build_incidence_distribution_table(data):
+        """Build an angle probability-density table for model-parameter export."""
+        bin_centers, hist = IncidentAnglesCalculator._calculate_histogram(data, bins=100)
+        table = QTable()
+        table["incidence_angle"] = bin_centers * u.deg
+        table["fraction"] = hist
+        table.meta["normalization"] = "probability density per degree"
+        table.meta["bin_width_deg"] = 0.9
+        table.meta["sampling"] = "unweighted rays completing the telescope optical path"
+        return table
+
+    @staticmethod
+    def _calculate_histogram(data, bins=100):
         """
-        Calculate normalized histogram (density).
+        Calculate the probability density of finite incidence angles in [0, 90] degrees.
 
         Parameters
         ----------
@@ -782,8 +784,15 @@ class IncidentAnglesCalculator:
         Returns
         -------
         tuple
-            Bin centers and histogram values (density).
+            Bin centers in degrees and probability densities per degree, whose
+            sum multiplied by the bin width in degrees equals one.
         """
-        hist, bin_edges = np.histogram(data, bins=bins, density=True)
+        data = np.asarray(data)
+        data = data[np.isfinite(data)]
+        if len(data) == 0:
+            return np.array([]), np.array([])
+        if np.any((data < 0) | (data > 90)):
+            raise ValueError("Incidence angles must be between 0 and 90 degrees.")
+        hist, bin_edges = np.histogram(data, bins=bins, range=(0.0, 90.0), density=True)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         return bin_centers, hist

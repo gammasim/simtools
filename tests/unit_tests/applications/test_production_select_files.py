@@ -68,6 +68,6 @@ def test_application_parser_does_not_require_output_file(monkeypatch):
         ["production_select_files.py", "--production_path", "production"],
     )
 
-    args, _ = production_select_files.APPLICATION._parse()
+    args = production_select_files.APPLICATION._parse()
 
     assert args["output_file"] is None

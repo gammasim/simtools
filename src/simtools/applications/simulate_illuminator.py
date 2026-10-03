@@ -86,6 +86,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         *cli.BACKEND_ARGUMENTS,
@@ -96,7 +97,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
-    database=True,
     validate_simulation_dependencies=True,
 )
 
@@ -140,10 +140,22 @@ def main():
         telescopes=telescopes,
     )
 
-    if not results and not simulate_all:
+    failed_results = [result for result in results if not result["success"]]
+    if failed_results:
+        failures = "; ".join(
+            f"{result['illuminator']} -> {result['telescope']}: {result['error']}"
+            for result in failed_results
+        )
+        sys.exit(f"error: illuminator simulation failed: {failures}")
+
+    if not results:
+        visibility_count = simulator.visibility.n_valid_pairs
+        light_source_filter = light_source or "all"
+        telescope_filter = telescope or "all"
         sys.exit(
-            "error: no valid illuminator-telescope pairs found for the requested "
-            "--light_source/--telescope combination."
+            "error: no illuminator-telescope pairs were scheduled for "
+            f"light_source={light_source_filter}, telescope={telescope_filter}; "
+            f"the visibility table contains {visibility_count} valid pairs."
         )
 
 

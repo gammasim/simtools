@@ -95,6 +95,18 @@ def test_group_hdf5_files_by_threshold_and_run(tmp_path):
     assert grouped == {220: {1: valid}}
 
 
+def test_group_hdf5_files_by_threshold_and_run_rejects_duplicates(tmp_path):
+    first = tmp_path / "a" / "proton_run000001_asum220.reduced_event_data.hdf5"
+    second = tmp_path / "b" / "proton_run000001_asum220.reduced_event_data.hdf5"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    _write_file_info_hdf5(first, "proton_run000001_asum220.simtel.zst")
+    _write_file_info_hdf5(second, "proton_run000001_asum220.simtel.zst")
+
+    with pytest.raises(ValueError, match=r"Duplicate proton input.*a.*b"):
+        bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
+
+
 def test_extract_proton_rates_raises_when_no_files(tmp_path):
     args = _base_args(tmp_path)
 
@@ -421,7 +433,7 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "count"
-        assert call_kwargs["check_db_for_existing_parameter"] is False
+        assert call_kwargs["check_for_existing_parameter"] is False
 
 
 def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
@@ -454,7 +466,7 @@ def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "mV"
-        assert call_kwargs["check_db_for_existing_parameter"] is False
+        assert call_kwargs["check_for_existing_parameter"] is False
 
 
 def test_export_trigger_threshold_handles_missing_telescope(tmp_path):

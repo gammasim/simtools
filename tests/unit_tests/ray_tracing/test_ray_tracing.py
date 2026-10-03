@@ -447,6 +447,59 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     assert not photons_file.exists()
 
 
+def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, mocker):
+    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, 0.0)]
+    mock_create_simulator = mocker.patch.object(
+        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock(), mocker.Mock()]
+    )
+    mock_run_simulator = mocker.patch.object(ray_tracing_lst, "_run_simulator")
+
+    ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
+
+    assert mock_create_simulator.call_count == 2
+    assert mock_run_simulator.call_count == 2
+
+
+@pytest.mark.parametrize(("max_workers", "expected_workers"), [(None, 8), (3, 3)])
+def test_ray_tracing_simulate_limits_full_telescope_workers(
+    ray_tracing_lst, mocker, max_workers, expected_workers
+):
+    ray_tracing_lst.off_axis_angle = [(float(index), 0.0) for index in range(10)]
+    mocker.patch.object(
+        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock() for _ in range(10)]
+    )
+    mocker.patch.object(ray_tracing_lst, "_run_simulator")
+    executor = mocker.patch("simtools.ray_tracing.ray_tracing.ThreadPoolExecutor")
+    executor.return_value.__enter__.return_value.map.return_value = []
+
+    if max_workers is None:
+        ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
+    else:
+        ray_tracing_lst.simulate(
+            test=True, force=True, compress_photons=False, max_workers=max_workers
+        )
+
+    executor.assert_called_once_with(max_workers=expected_workers)
+
+
+def test_ray_tracing_simulate_rejects_non_positive_worker_count(ray_tracing_lst):
+    with pytest.raises(ValueError, match="max_workers must be a positive integer"):
+        ray_tracing_lst.simulate(max_workers=0)
+
+
+def test_ray_tracing_simulate_propagates_full_telescope_worker_failure(ray_tracing_lst, mocker):
+    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, 0.0)]
+    mocker.patch.object(
+        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock(), mocker.Mock()]
+    )
+    mocker.patch.object(
+        ray_tracing_lst, "_run_simulator", side_effect=RuntimeError("worker failed")
+    )
+
+    with pytest.raises(RuntimeError, match="worker failed"):
+        ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
+
+
 def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
     mock_psf_image = mocker.patch("simtools.ray_tracing.ray_tracing.PSFImage")
     mock_psf_image_instance = mock_psf_image.return_value

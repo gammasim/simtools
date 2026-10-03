@@ -3,7 +3,7 @@ Simtools dependencies version management.
 
 This modules provides two main functionalities:
 
-- retrieve the versions of simtools dependencies (e.g., databases, sim_telarray, CORSIKA)
+- retrieve the versions of simtools dependencies (e.g., model repositories, sim_telarray, CORSIKA)
 - provide space for future implementations of version management
 
 """
@@ -16,6 +16,7 @@ import platform
 import re
 import subprocess
 import tomllib
+from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
 
@@ -187,7 +188,11 @@ def _validate_table_entries(entries, table_path):
 
 
 def _validate_table_entry(entry, table_path):
-    """Return an error for one manifest table entry, if any."""
+    """Check one manifest entry's file presence, size, and optional SHA-256 digest.
+
+    Entries without a digest receive an installation sanity check only; their content
+    is not verified.
+    """
     if not isinstance(entry, dict):
         return "invalid manifest table entry"
     path_value = entry.get("path")
@@ -196,21 +201,52 @@ def _validate_table_entry(entry, table_path):
         return f"invalid manifest table path: {path_value!r}"
     if not isinstance(expected_size, int) or expected_size < 0:
         return f"invalid manifest table size for {path_value}"
-    return _validate_table_file(table_path / path_value, expected_size)
+    expected_digest = entry.get("sha256")
+    if expected_digest is not None and (
+        not isinstance(expected_digest, str)
+        or len(expected_digest) != 64
+        or any(character not in "0123456789abcdefABCDEF" for character in expected_digest)
+    ):
+        return f"invalid SHA-256 digest for {path_value}"
+    return _validate_table_file(table_path / path_value, expected_size, expected_digest)
 
 
-def _validate_table_file(table_file, expected_size):
-    """Return an error for one installed interaction-table file, if any."""
+def _validate_table_file(table_file, expected_size, expected_sha256=None):
+    """Check file accessibility and size, and verify SHA-256 when supplied."""
+    error = None
     if not table_file.is_file():
-        return f"missing file: {table_file}"
-    if not os.access(table_file, os.R_OK):
-        return f"file is not readable: {table_file}"
-    if _is_git_lfs_pointer(table_file):
-        return f"Git LFS pointer is not hydrated: {table_file}"
-    actual_size = table_file.stat().st_size
-    if actual_size != expected_size:
-        return f"size mismatch for {table_file}: {actual_size} != {expected_size}"
-    return None
+        error = f"missing file: {table_file}"
+    elif not os.access(table_file, os.R_OK):
+        error = f"file is not readable: {table_file}"
+    elif _is_git_lfs_pointer(table_file):
+        error = f"Git LFS pointer is not hydrated: {table_file}"
+    else:
+        actual_size = table_file.stat().st_size
+        if actual_size != expected_size:
+            error = f"size mismatch for {table_file}: {actual_size} != {expected_size}"
+        elif expected_sha256 is not None:
+            try:
+                stat = table_file.stat()
+                actual_sha256 = _sha256_file(
+                    str(table_file.resolve()), actual_size, stat.st_mtime_ns
+                )
+            except OSError as exc:
+                error = f"cannot read file for SHA-256 verification: {table_file}: {exc}"
+            else:
+                if actual_sha256 != expected_sha256.lower():
+                    error = f"SHA-256 mismatch for {table_file}"
+    return error
+
+
+@lru_cache(maxsize=128)
+def _sha256_file(file_path, file_size, modified_time_ns):
+    """Return a cached digest keyed by path and file stat data."""
+    del file_size, modified_time_ns
+    digest = hashlib.sha256()
+    with Path(file_path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _is_git_lfs_pointer(path):
@@ -265,8 +301,6 @@ def get_version_string(run_time=None, include_software_versions=True):
     return (
         f"simtools version: {__version__}\n"
         f"Model source: {_get_model_source_info()}\n"
-        f"Database name: {get_database_tag_or_name(tag=False)}\n"
-        f"Database release tag: {get_database_tag_or_name()}\n"
         f"sim_telarray version: {simtel_version}\n"
         f"sim_telarray exe: {simtel_exe if simtel_exe else 'None'}\n"
         f"CORSIKA version: {corsika_version}\n"
@@ -391,11 +425,7 @@ def get_direct_python_dependency_versions():
         except InvalidRequirement:
             continue
         marker = parsed_requirement.marker
-        if (
-            marker is not None
-            and "extra" in str(marker)
-            and not marker.evaluate({"extra": "mongodb"})
-        ):
+        if marker is not None and "extra" in str(marker) and not marker.evaluate({"extra": ""}):
             continue
         name = parsed_requirement.name.lower().replace("_", "-")
         installed_version = _distribution_version(name)
@@ -592,28 +622,6 @@ def get_software_version(software):
         raise ValueError(f"Unknown software: {software}") from exc
 
 
-def get_database_tag_or_name(tag=True):
-    """
-    Get the release tag or name of the simulation model database used.
-
-    Parameters
-    ----------
-    tag : bool
-        If True, return the release tag of the database. If False, return the name.
-
-    Returns
-    -------
-    str
-        Release tag or name of the simulation model database used.
-
-    """
-    if tag:
-        return settings.config.db_config and settings.config.db_config.get(
-            "db_simulation_model_tag"
-        )
-    return settings.config.db_config and settings.config.db_config.get("db_simulation_model")
-
-
 def _get_model_source_info():
     """Return the configured model-source selection for provenance output."""
     model_reader = getattr(settings.config, "model_reader", None)
@@ -621,11 +629,6 @@ def _get_model_source_info():
     if isinstance(source_config, dict):
         return dict(source_config)
     return None
-
-
-def get_database_version_or_name(version=True):
-    """Return the database release tag or name using the deprecated interface."""
-    return get_database_tag_or_name(tag=version)
 
 
 def get_sim_telarray_version(run_time=None):
@@ -819,8 +822,6 @@ def export_build_info(output_file, run_time=None):
     except FileNotFoundError:
         build_options = {}
     manifest = get_dependency_manifest(run_time)
-    database_name = get_database_tag_or_name(tag=False)
-    database_tag = get_database_tag_or_name()
     model_source = _get_model_source_info()
     build_info = {
         "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
@@ -829,16 +830,11 @@ def export_build_info(output_file, run_time=None):
             canonical_manifest_bytes(manifest)
         ).hexdigest(),
         "runtime": {
-            "database_name": database_name,
-            "database_tag": database_tag,
             "model_source": model_source,
         },
         "build_options": build_options,
-        # Compatibility fields retained for existing consumers.
         **build_options,
         "simtools": __version__,
-        "database_name": database_name,
-        "database_tag": database_tag,
         "model_source": model_source,
     }
     ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))

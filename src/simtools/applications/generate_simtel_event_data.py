@@ -44,6 +44,16 @@ APPLICATION = ApplicationDefinition.for_module(
 )
 
 
+def _collect_table_samples(tables, tables_to_print, print_limit):
+    """Retain the first rows needed for optional dataset information output."""
+    if print_limit <= 0:
+        return
+    for table in tables:
+        table_name = table.meta["EXTNAME"]
+        if table_name not in tables_to_print and len(table) > 0:
+            tables_to_print[table_name] = table[:print_limit]
+
+
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
@@ -52,8 +62,7 @@ def main():
     input_pattern = Path(app_context.args["simtel_file"])
     files = list(input_pattern.parent.glob(input_pattern.name))
     if not files:
-        app_context.logger.warning("No matching input files found.")
-        return
+        raise FileNotFoundError(f"No matching input files found for '{input_pattern}'.")
 
     output_filepath = io_handler.IOHandler().get_output_file(app_context.args["output_file"])
     if output_filepath.suffix.lower() not in (".hdf5", ".h5"):
@@ -62,13 +71,22 @@ def main():
             "Only HDF5 files with suffix '.hdf5' or '.h5' are supported."
         )
     generator = EventDataWriter(files, app_context.args["max_files"])
-    tables = generator.process_files()
+
+    tables_to_print = {}
+    print_limit = app_context.args["print_dataset_information"]
+
+    def iter_table_chunks():
+        """Yield streaming output chunks and retain only bounded print samples."""
+        for tables in generator.iter_table_chunks():
+            _collect_table_samples(tables, tables_to_print, print_limit)
+            yield tables
+
     table_handler.write_tables(
-        tables,
+        iter_table_chunks(),
         output_filepath,
         overwrite_existing=True,
         file_type="HDF5",
-        metadata_documents={
+        metadata_documents=lambda: {
             "METADATA": build_standard_metadata(app_context.args, output_filepath),
             "SIMULATION_METADATA": build_simulation_metadata(
                 generator.get_simulation_input_metadata()
@@ -76,8 +94,8 @@ def main():
         },
     )
 
-    if app_context.args["print_dataset_information"] > 0:
-        for table in tables:
+    if print_limit > 0:
+        for table in tables_to_print.values():
             table.pprint(max_lines=app_context.args["print_dataset_information"], max_width=-1)
 
 

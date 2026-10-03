@@ -11,7 +11,7 @@ from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
-from simtools.data_model import schema
+from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 from simtools.version import is_valid_semantic_version
@@ -948,18 +948,17 @@ class DataValidator:
         ValueError
             if schema version is not found in schema file
         """
-        schema_data = ascii_handler.collect_data_from_file(file_name=schema_file)
-        entries = schema_data if isinstance(schema_data, list) else [schema_data]
-
-        for entry in entries:
-            if not schema_version or entry.get("schema_version") == schema_version:
-                try:
-                    return entry["data"]
-                except KeyError as exc:
-                    raise KeyError(f"Error reading validation schema from {schema_file}") from exc
-        raise ValueError(
-            f"Schema version {schema_version} not found in schema file {schema_file}. "
-        )
+        if schema_file is None:
+            raise TypeError("No validation schema file provided")
+        schema_data = schema_loader.load_schema(schema_file, schema_version or "latest")
+        if schema_version and schema_data.get("schema_version") != schema_version:
+            raise ValueError(
+                f"Schema version {schema_version} not found in schema file {schema_file}. "
+            )
+        try:
+            return schema_data["data"]
+        except KeyError as exc:
+            raise KeyError(f"Error reading validation schema from {schema_file}") from exc
 
     def _get_data_description(self, column_name=None, status_test=False):
         """

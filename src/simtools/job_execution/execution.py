@@ -164,7 +164,6 @@ def map_ordered(
 ):
     """Apply ``function`` to items and return values in input order."""
     runtime_args = dict(config.args) if backend != "local" else None
-    runtime_db_config = dict(config.db_config) if backend != "local" else None
     model_source_config = (
         dict(config.model_reader.source_config)
         if backend != "local" and config.model_reader is not None
@@ -179,7 +178,6 @@ def map_ordered(
             initializer=initializer if backend != "local" else None,
             initargs=tuple(initargs) if backend != "local" else (),
             runtime_args=runtime_args,
-            runtime_db_config=runtime_db_config,
             model_source_config=model_source_config,
         )
         for index, item in enumerate(items)

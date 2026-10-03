@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Plot tabular data read from file or from model parameter database."""
+"""Plot tabular data read from file or from model parameter repository."""
 
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
@@ -32,6 +32,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
         cli.OVERWRITE_MODEL_PARAMETERS,
@@ -39,7 +40,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    database=True,
     usage=(
         "simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name"
     ),

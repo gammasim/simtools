@@ -6,17 +6,24 @@
 
 # pylint: skip-file
 import tomllib
+from importlib import import_module
 from pathlib import Path
 from sys import path
 
 import yaml
 
-import simtools.version
-
 path[:0] = [
     str(Path(p).resolve())
-    for p in ["../../src/simtools", "../../src/simtools/applications", "../..", "./_ext"]
+    for p in [
+        "../../src",
+        "../../src/simtools",
+        "../../src/simtools/applications",
+        "../..",
+        "./_ext",
+    ]
 ]
+
+simtools_version = import_module("simtools.version")
 
 
 def get_authors_from_citation_file():
@@ -61,7 +68,7 @@ myst_substitutions = {
 }
 
 # The short X.Y version
-version = str(simtools.version.__version__)
+version = str(simtools_version.__version__)
 # The full version, including alpha/beta/rc tags
 release = version
 

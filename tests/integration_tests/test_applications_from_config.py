@@ -13,45 +13,10 @@ import pytest
 from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
-_MONGODB_ENVIRONMENT = (
-    "SIMTOOLS_DB_SERVER",
-    "SIMTOOLS_DB_API_USER",
-    "SIMTOOLS_DB_API_PW",
-    "SIMTOOLS_DB_API_PORT",
-    "SIMTOOLS_DB_SIMULATION_MODEL",
-)
-_MONGODB_MODEL_TAG_ENVIRONMENT = (
-    "SIMTOOLS_DB_SIMULATION_MODEL_TAG",
-    "SIMTOOLS_DB_SIMULATION_MODEL_VERSION",
-)
-
-
-def _is_mongodb_application(config):
-    """Return whether an integration application requires MongoDB."""
-    return config.get("requires_mongodb") or config["application"].startswith("simtools-db-")
-
-
-def _has_mongodb_configuration(configuration=None):
-    """Return whether required MongoDB settings are available to the application."""
-    configuration = configuration or {}
-    values = []
-    for variable in _MONGODB_ENVIRONMENT:
-        configuration_name = variable.removeprefix("SIMTOOLS_").lower()
-        value = configuration.get(configuration_name) or os.environ.get(variable)
-        values.append(value)
-    model_tag = configuration.get("db_simulation_model_tag") or configuration.get(
-        "db_simulation_model_version"
-    )
-    if not model_tag:
-        for variable in _MONGODB_MODEL_TAG_ENVIRONMENT:
-            model_tag = os.environ.get(variable)
-            if model_tag:
-                break
-    return all(values) and bool(model_tag)
 
 
 def _get_simulation_model_source(config, request, simtools_root_path):
-    """Return the configured model source or skip MongoDB-only applications."""
+    """Return the configured simulation-model repository source."""
     simulation_models_path = request.config.getoption("simulation_models_path", default=None)
     git_path = request.config.getoption("simulation_models_git_path", default=None)
     git_revision = request.config.getoption("simulation_models_git_revision", default=None)
@@ -61,9 +26,6 @@ def _get_simulation_model_source(config, request, simtools_root_path):
         git_revision = os.environ.get("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
     if not simulation_models_path and not git_path:
         return None, None
-    if _is_mongodb_application(config):
-        pytest.skip(f"{config['application']} requires MongoDB")
-
     if simulation_models_path:
         simulation_models_path = Path(simulation_models_path)
         if not simulation_models_path.is_absolute():
@@ -94,29 +56,48 @@ def _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_so
 
 def _get_model_source_arguments(application):
     """Return the model-source argument names accepted by an application."""
+    return {argument.name for argument in _get_application_arguments(application)}
+
+
+def _get_application_arguments(application):
+    """Return the command-line arguments accepted by an application."""
     module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
     try:
         definition = importlib.import_module(module_name).APPLICATION
     except ImportError, AttributeError:
-        return set()
-    return {argument.name for argument in definition.all_arguments}
+        return ()
+    return definition.all_arguments
+
+
+def _requires_local_simulation_model_source(config, simulation_models_path):
+    """Return whether a workflow needs a filesystem simulation-model repository."""
+    source_config = config.get("configuration")
+    if source_config is None:
+        return False
+    if simulation_models_path or source_config.get("simulation_models_path"):
+        return False
+    return any(
+        argument.name == "simulation_models_path" and argument.kwargs.get("required")
+        for argument in _get_application_arguments(config["application"])
+    )
 
 
 def _set_simulation_model_source_configuration(config, simulation_models_path, git_source):
     """Replace a workflow's configured source with the selected test source.
 
-    The model-source options are only written to workflows of applications using
-    the standard model-source arguments. Applications defining
-    ``simulation_models_path`` as an application-specific argument are not
-    modified; they read the selected source from the environment variables set
-    by ``_set_simulation_model_source_env``.
+    A source is only written when the application accepts its corresponding
+    command-line option. This also supports applications that accept a local
+    repository path directly without using the standard Git-source arguments.
     """
     if not simulation_models_path and not git_source:
         return
     source_config = config.get("configuration")
     if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
         return
-    if "simulation_models_git_path" not in _get_model_source_arguments(config["application"]):
+    model_source_arguments = _get_model_source_arguments(config["application"])
+    if simulation_models_path and "simulation_models_path" not in model_source_arguments:
+        return
+    if git_source and "simulation_models_git_path" not in model_source_arguments:
         return
     source_config.pop("simulation_models_path", None)
     source_config.pop("simulation_models_git_path", None)
@@ -128,6 +109,59 @@ def _set_simulation_model_source_configuration(config, simulation_models_path, g
     source_config["simulation_models_git_path"] = str(git_path)
     if git_revision:
         source_config["simulation_models_git_revision"] = git_revision
+
+
+def _validate_preparation_output_file(output_file):
+    """Reject preparation output files that escape the prepared-resource directory."""
+    if output_file is None:
+        return
+    if not isinstance(output_file, str):
+        raise ValueError("Preparation output_file must be a relative path string.")
+    output_path = Path(output_file)
+    if output_path.is_absolute() or ".." in output_path.parts:
+        raise ValueError(
+            "Preparation output_file must stay within the prepared-resource directory: "
+            f"{output_file!r}."
+        )
+
+
+def _prepare_model_parameter_inputs(
+    config, tmp_test_directory, request, simtools_root_path, simulation_models_path, git_source
+):
+    """Run configured model-parameter retrieval steps for an integration test."""
+    preparation_steps = config.pop("preparation", [])
+    if not preparation_steps:
+        return
+
+    prepared_resources_path = Path(tmp_test_directory) / "prepared-resources"
+    prepared_resources_path.mkdir(parents=True, exist_ok=True)
+    for index, preparation in enumerate(preparation_steps):
+        preparation_config = copy.deepcopy(preparation)
+        preparation_config["test_name"] = f"preparation-{index}"
+        preparation_options = preparation_config["configuration"]
+        _validate_preparation_output_file(preparation_options.get("output_file"))
+        preparation_options["output_path"] = str(prepared_resources_path)
+        _set_simulation_model_source_configuration(
+            preparation_config, simulation_models_path, git_source
+        )
+        command, _ = configuration.configure(preparation_config, tmp_test_directory, request)
+        result = subprocess.run(
+            command,
+            shell=True,
+            input="y\n",
+            capture_output=True,
+            text=True,
+            env={**os.environ, "SIMTOOLS_OFFLINE_IERS": "1"},
+            cwd=simtools_root_path,
+        )
+        message = (
+            f"Preparation command {command!r} failed. stdout:\n{result.stdout}\n"
+            f"stderr:\n{result.stderr}"
+        )
+        assert result.returncode == 0, message
+        assert log_inspector.inspect([result.stdout, result.stderr])
+
+    config.update(configuration.resolve_prepared_resource_paths(config, prepared_resources_path))
 
 
 def pytest_generate_tests(metafunc):
@@ -180,16 +214,21 @@ def test_applications_from_config(
 
     if tmp_config.get("skip_integration_test"):
         pytest.skip(tmp_config["skip_integration_test"])
-    if _is_mongodb_application(tmp_config) and not _has_mongodb_configuration(
-        tmp_config.get("configuration")
-    ):
-        pytest.skip(f"{tmp_config['application']} requires MongoDB configuration")
-
     simulation_models_path, git_source = _get_simulation_model_source(
         tmp_config, request, simtools_root_path
     )
+    if _requires_local_simulation_model_source(tmp_config, simulation_models_path):
+        pytest.skip("No local simulation-model repository is configured")
     _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
     _set_simulation_model_source_configuration(tmp_config, simulation_models_path, git_source)
+    _prepare_model_parameter_inputs(
+        tmp_config,
+        tmp_test_directory,
+        request,
+        simtools_root_path,
+        simulation_models_path,
+        git_source,
+    )
 
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
@@ -200,7 +239,7 @@ def test_applications_from_config(
         cmd, config_file_model_version = configuration.configure(
             tmp_config, tmp_test_directory, request
         )
-    except (configuration.ProductionDBError, configuration.VersionError) as exc:
+    except configuration.VersionError as exc:
         pytest.skip(str(exc))
 
     logger.info(f"Running application: {cmd}")
@@ -274,6 +313,7 @@ def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mo
     """Use the Git source configured in .env when no command-line option is given."""
     request = mocker.MagicMock()
     request.config.getoption.return_value = None
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_PATH", "../simulation-models.git")
     monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "6.0.2")
 
@@ -309,38 +349,6 @@ def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker):
     )
 
 
-def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
-    """Skip MongoDB-only applications when filesystem model access is selected."""
-    request = mocker.MagicMock()
-    request.config.getoption.return_value = "../simulation-models"
-    config = {"application": "simtools-mongodb-operation", "requires_mongodb": True}
-
-    with pytest.raises(pytest.skip.Exception, match="simtools-mongodb-operation requires MongoDB"):
-        _get_simulation_model_source(config, request, tmp_test_directory)
-
-
-def test_database_application_is_skipped_without_database_configuration(
-    tmp_test_directory, mocker, monkeypatch
-):
-    """Avoid launching DB applications when the test environment has no DB settings."""
-    request = mocker.MagicMock()
-    request.config.getoption.return_value = None
-    for variable in _MONGODB_ENVIRONMENT:
-        monkeypatch.delenv(variable, raising=False)
-
-    with pytest.raises(
-        pytest.skip.Exception,
-        match="simtools-db-get-file-from-db requires MongoDB configuration",
-    ):
-        test_applications_from_config(
-            tmp_test_directory,
-            {"application": "simtools-db-get-file-from-db"},
-            request,
-            tmp_test_directory,
-            monkeypatch,
-        )
-
-
 def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker, monkeypatch):
     """Leave integration tests unchanged when no filesystem path is configured."""
     request = mocker.MagicMock()
@@ -351,3 +359,111 @@ def test_get_simulation_model_source_is_optional(tmp_test_directory, mocker, mon
     assert _get_simulation_model_source(
         {"application": "simtools-simulate-prod"}, request, tmp_test_directory
     ) == (None, None)
+
+
+def test_set_simulation_model_source_configuration_uses_local_path_argument():
+    """Configure applications that accept only a local model repository path."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+    model_path = Path("/models")
+    _set_simulation_model_source_configuration(config, model_path, None)
+
+    assert config["configuration"]["simulation_models_path"] == str(model_path)
+
+
+def test_set_simulation_model_source_configuration_skips_unsupported_source():
+    """Leave workflows unchanged when an application cannot accept the selected source."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+    _set_simulation_model_source_configuration(config, None, (Path("/models.git"), "HEAD"))
+
+    assert config["configuration"] == {"output_file": "production_version_descriptions.md"}
+
+
+def test_requires_local_simulation_model_source_for_required_path_argument():
+    """Recognize workflows that cannot run without a local model repository."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {"output_file": "production_version_descriptions.md"},
+    }
+
+    assert _requires_local_simulation_model_source(config, None)
+
+
+def test_local_simulation_model_source_is_not_required_when_configured():
+    """Allow workflows that supply their required local repository explicitly."""
+    config = {
+        "application": "simtools-docs-produce-production-summary",
+        "configuration": {
+            "output_file": "production_version_descriptions.md",
+            "simulation_models_path": "models",
+        },
+    }
+
+    assert not _requires_local_simulation_model_source(config, None)
+
+
+def test_local_simulation_model_source_is_not_required_without_configuration():
+    """Allow automatic no-configuration checks to run application help."""
+    config = {"application": "simtools-docs-produce-production-summary"}
+
+    assert not _requires_local_simulation_model_source(config, None)
+
+
+def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):
+    """Prepare model-parameter files and resolve their temporary references."""
+    config = {
+        "preparation": [
+            {
+                "application": "simtools-get-model-parameter",
+                "configuration": {"parameter": "array_layouts", "site": "North"},
+            }
+        ],
+        "configuration": {"array_layout_parameter_file": "${prepared:array_layouts.json}"},
+        "integration_tests": [
+            {
+                "test_outputs": [
+                    {
+                        "validations": [
+                            {"reference": "${prepared:array_layouts.json}", "type": "reference"}
+                        ]
+                    }
+                ]
+            }
+        ],
+    }
+    request = mocker.MagicMock()
+    mocker.patch.object(configuration, "configure", return_value=("prepare-command", None))
+    result = mocker.MagicMock(returncode=0, stdout="", stderr="")
+    mocker.patch("subprocess.run", return_value=result)
+    mocker.patch.object(log_inspector, "inspect", return_value=True)
+
+    _prepare_model_parameter_inputs(
+        config,
+        tmp_test_directory,
+        request,
+        tmp_test_directory,
+        None,
+        None,
+    )
+
+    prepared_file = tmp_test_directory / "prepared-resources/array_layouts.json"
+    assert "preparation" not in config
+    assert config["configuration"]["array_layout_parameter_file"] == str(prepared_file)
+    validation = config["integration_tests"][0]["test_outputs"][0]["validations"][0]
+    assert validation["reference"] == str(prepared_file)
+
+
+@pytest.mark.parametrize("output_file", ["../outside.json", "absolute"])
+def test_prepare_model_parameter_inputs_rejects_escaping_output_file(
+    tmp_test_directory, output_file
+):
+    """Reject preparation output files outside the temporary resource directory."""
+    if output_file == "absolute":
+        output_file = str((Path(tmp_test_directory) / "outside.json").resolve())
+    with pytest.raises(ValueError, match="must stay within"):
+        _validate_preparation_output_file(output_file)

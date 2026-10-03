@@ -21,7 +21,6 @@ data:
     default: 0
     allowed_range:
       min: 0
-
 instrument:
   class: Calibration
 activity:

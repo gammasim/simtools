@@ -49,6 +49,17 @@ def test_get_model_parameter_schema_file():
         schema.get_model_parameter_schema_file("not_a_parameter")
 
 
+def test_camera_pixel_types_schema_has_explicit_lightguide_reference():
+    current = schema.get_model_parameter_schema("camera_pixel_types", "0.3.0")
+    previous = schema.get_model_parameter_schema("camera_pixel_types", "0.2.0")
+
+    current_properties = current["data"][0]["json_schema"]["items"]["properties"]
+    previous_properties = previous["data"][0]["json_schema"]["items"]["properties"]
+
+    assert "lightguide_angle_parameter" in current_properties
+    assert "lightguide_angle_parameter" not in previous_properties
+
+
 def test_get_model_parameter_schema_returns_independent_copies():
     schema_loader.clear_cache()
     schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
@@ -71,6 +82,31 @@ def test_validate_sim_telarray_meta_parameter_registry_schema():
 
     assert "generated_meta_parameters" in registry
     assert "model_parameters" not in registry
+
+
+def test_model_parameter_metaschema_accepts_serialization_missing_value():
+    parameter_schema = schema.get_model_parameter_schema("atmospheric_transmission", "0.3.0")
+
+    schema.validate_dict_using_schema(
+        parameter_schema,
+        schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
+        offline=True,
+        ignore_software_version=True,
+    )
+
+
+def test_model_parameter_metaschema_accepts_serialization_description(caplog):
+    parameter_schema = schema.get_model_parameter_schema("camera_filter", "0.3.0")
+
+    with caplog.at_level(logging.WARNING):
+        schema.validate_dict_using_schema(
+            parameter_schema,
+            schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
+            offline=True,
+            ignore_software_version=True,
+        )
+
+    assert "does not match" not in caplog.text
 
 
 def test_get_parameter_type_and_unit_from_schema():
@@ -230,6 +266,26 @@ def test_application_workflow_schema_accepts_resource_benchmark_exclusion():
     )
 
 
+def test_application_workflow_schema_accepts_model_parameter_preparation():
+    """Allow model-parameter preparation in the new workflow schema."""
+    workflow_config = _output_validation_workflow({"type": "format", "format": "ecsv"})
+    workflow_config["schema_version"] = "0.6.0"
+    workflow_config["applications"][0]["preparation"] = [
+        {
+            "application": "simtools-get-model-parameter",
+            "configuration": {
+                "parameter": "array_layouts",
+                "site": "North",
+            },
+        }
+    ]
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
 def test_application_workflow_schema_rejects_empty_resource_benchmark_exclusion():
     """Require a non-empty reason for a resource benchmark opt-out."""
     workflow_config = _output_validation_workflow()
@@ -303,10 +359,16 @@ def test_application_workflow_schema_rejects_legacy_output_fields():
 
 
 def test_application_workflow_schema_preserves_previous_version():
-    """Load the newest workflow schema first while retaining version 0.4.0."""
+    """Load the newest workflow schema first while retaining earlier versions."""
     schema_file = SCHEMA_PATH / "application_workflow.metaschema.yml"
 
-    assert schema.load_schema(schema_file)["schema_version"] == "0.5.0"
+    assert schema.load_schema(schema_file)["schema_version"] == "0.6.0"
+    previous_schema = schema.load_schema(schema_file, "0.5.0")
+    assert previous_schema["schema_version"] == "0.5.0"
+    assert (
+        "preparation" not in previous_schema["definitions"]["applications"]["items"]["properties"]
+    )
+    assert "preparation_application" not in previous_schema["definitions"]
     assert schema.load_schema(schema_file, "0.4.0")["schema_version"] == "0.4.0"
 
     legacy_workflow = {

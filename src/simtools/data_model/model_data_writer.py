@@ -9,7 +9,8 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools import settings
 from simtools.application.model_reader import require_model_reader
-from simtools.data_model import row_table_utils, schema, validate_data
+from simtools.data_model import schema, validate_data
+from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import names, value_conversion
@@ -57,6 +58,7 @@ class ModelDataWriter:
         product_data=None,
         output_file_format="ascii.ecsv",
         validate_schema_file=None,
+        metadata_output_file=None,
     ):
         """
         Write model data and metadata (as static method).
@@ -73,6 +75,9 @@ class ModelDataWriter:
             Format of output file.
         validate_schema_file: str
             Schema file used in validation of output data.
+        metadata_output_file: str or Path, optional
+            Separate output path for application metadata. If omitted, metadata is
+            written next to the product data.
         """
         writer = ModelDataWriter(
             output_file=output_file,
@@ -84,7 +89,11 @@ class ModelDataWriter:
                 product_data_table=product_data,
                 validate_schema_file=validate_schema_file,
             )
-        writer.write_data(metadata=metadata, product_data=product_data)
+        writer.write_data(
+            metadata=metadata,
+            product_data=product_data,
+            metadata_output_file=metadata_output_file,
+        )
 
     @staticmethod
     def write_model_parameter(
@@ -97,11 +106,11 @@ class ModelDataWriter:
         metadata_input_dict=None,
         unit=None,
         model_parameter_schema_version=None,
-        check_db_for_existing_parameter=True,
+        check_for_existing_parameter=True,
         model_reader=None,
     ):
         """
-        Generate DB-style model parameter dict and write it to json file.
+        Generate model repository-style model parameter dict and write it to json file.
 
         Parameters
         ----------
@@ -123,8 +132,8 @@ class ModelDataWriter:
             Unit of the parameter value (if applicable and value is not of type astropy Quantity).
         model_parameter_schema_version: str, None
             Version of the model parameter schema (if None, use schema version from schema dict).
-        check_db_for_existing_parameter: bool
-            If True, check if parameter with same version exists in DB before writing.
+        check_for_existing_parameter: bool
+            If True, check whether the parameter version exists before writing.
         model_reader: object, optional
             Reader used for the existing-parameter check.
 
@@ -139,10 +148,10 @@ class ModelDataWriter:
             output_path=output_path,
             model_reader=model_reader,
         )
-        if check_db_for_existing_parameter and not settings.config.args.get(
+        if check_for_existing_parameter and not settings.config.args.get(
             "ignore_existing_parameter_version", False
         ):
-            writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
+            writer.check_for_existing_parameter(parameter_name, instrument, parameter_version)
 
         output_file = writer.io_handler.get_output_file(
             output_file, output_path_label=writer.output_label
@@ -177,9 +186,9 @@ class ModelDataWriter:
             metadata.write(output_file)
         return _json_dict
 
-    def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
+    def check_for_existing_parameter(self, parameter_name, instrument, parameter_version):
         """
-        Check if a parameter with the same version exists in the simulation model database.
+        Check if a parameter with the same version exists in the model repository.
 
         Parameters
         ----------
@@ -193,7 +202,7 @@ class ModelDataWriter:
         Raises
         ------
         ValueError
-            If parameter with the same version exists in the database.
+            If parameter with the same version exists in the model repository.
         """
         model_reader = require_model_reader(self.model_reader)
         if not model_reader.is_configured():
@@ -257,6 +266,7 @@ class ModelDataWriter:
 
         if unit is None:
             value, unit = value_conversion.split_value_and_unit(value)
+        validate_finite_json_values(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
@@ -360,35 +370,6 @@ class ModelDataWriter:
             else parameter_types
         )
 
-    def parameter_uses_row_table_schema(self, parameter_name, model_parameter_schema_version=None):
-        """Return True if selected schema defines row-oriented table dict payload.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Name of the model parameter.
-        model_parameter_schema_version: str or None
-            Explicit model-parameter schema version to use. If None, the newest
-            available schema version is selected.
-
-        Returns
-        -------
-        bool
-            True when a dict-typed schema entry requires the row-table keys
-            ``columns``, ``rows`` and ``column_units``.
-        """
-        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
-
-        for data_entry in schema_dict.get("data", []):
-            if data_entry.get("type") != "dict":
-                continue
-
-            json_schema = data_entry.get("json_schema", {})
-            if row_table_utils.is_row_table_schema(json_schema):
-                return True
-
-        return False
-
     def _get_parameter_type(self):
         """
         Return parameter type(s) from the currently loaded schema.
@@ -482,7 +463,7 @@ class ModelDataWriter:
 
         return validated
 
-    def write_data(self, product_data=None, metadata=None):
+    def write_data(self, product_data=None, metadata=None, metadata_output_file=None):
         """
         Write model data and metadata.
 
@@ -492,6 +473,9 @@ class ModelDataWriter:
             Model data to be written
         metadata: MetadataCollector object
             Metadata to be written.
+        metadata_output_file: str or Path, optional
+            Separate output path for application metadata. If omitted, metadata is
+            written next to the product data.
 
         Raises
         ------
@@ -517,7 +501,10 @@ class ModelDataWriter:
             self._logger.error(f"Error writing model data to {self.output_file}.")
             raise
         if metadata is not None:
-            metadata.write(self.output_file, add_activity_name=True)
+            metadata.write(
+                metadata_output_file or self.output_file,
+                add_activity_name=True,
+            )
 
     def write_model_parameter_dict_json(self, file_name, data_dict):
         """

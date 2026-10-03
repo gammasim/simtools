@@ -16,9 +16,10 @@ from simtools.model.model_utils import (
     initialize_simulation_models,
     read_overwrite_model_parameter_dict,
 )
+from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.simtel import simtel_output_validator, simtel_table_writer
+from simtools.simtel import simtel_file_writer, simtel_output_validator
 from simtools.utils import general
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -116,6 +117,8 @@ class SimulatorLightEmission(SimtelRunner):
             "model_version": light_emission_config.get("model_version"),
         }
         model_kwargs["model_reader"] = self.model_reader
+        if light_emission_config.get("model_directory") is not None:
+            model_kwargs["model_directory"] = light_emission_config["model_directory"]
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(**model_kwargs)
         )
@@ -527,9 +530,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
-        config_directory = self.io_handler.get_model_configuration_directory(
-            model_version=self.site_model.model_version
-        )
+        config_directory = self.telescope_model.config_file_directory
         obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
 
         app = self._get_light_emission_application_name()
@@ -666,6 +667,13 @@ class SimulatorLightEmission(SimtelRunner):
             "-DNUM_TELESCOPES=1",
         ]
 
+        atmospheric_transmission = self.site_model.get_parameter_value("atmospheric_transmission")
+        if str(atmospheric_transmission).lower().endswith(".ecsv"):
+            parameter_data = self.site_model.parameters.get("atmospheric_transmission", {})
+            atmospheric_transmission = get_simtel_table_file_name(parameter_data) or (
+                f"atmospheric_transmission-{Path(self.telescope_model.config_file_path).stem}.dat"
+            )
+
         options = [
             (
                 "altitude",
@@ -675,7 +683,7 @@ class SimulatorLightEmission(SimtelRunner):
             ),
             (
                 "atmospheric_transmission",
-                self.site_model.get_parameter_value("atmospheric_transmission"),
+                atmospheric_transmission,
             ),
             ("TRIGGER_TELESCOPES", "1"),
             ("TELTRIG_MIN_SIGSUM", "2"),
@@ -738,7 +746,7 @@ class SimulatorLightEmission(SimtelRunner):
             .to(u.deg)
             .value
         )
-        path = simtel_table_writer.write_angular_distribution_table_lambertian(
+        path = simtel_file_writer.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
             max_angle_deg=max_angle_deg,
             n_samples=100,
@@ -807,7 +815,7 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = self.io_handler.get_output_directory("light_emission") / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
+                simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
                     width_ns=width_ns,
                     exp_decay_ns=exp_ns,

@@ -48,6 +48,26 @@ def test_focal_length():
         Camera(telescope_name="test_camera", camera_config_file="test_config", focal_length=-1)
 
 
+def test_from_configuration_reads_resolved_components():
+    camera = Camera.from_configuration(
+        "test_camera",
+        {
+            "rotate": 0.0,
+            "pixel_types": [{"funnel_shape": 2, "funnel_diameter_cm": 0.5}],
+            "pixels": [
+                {"pixel_id": 0, "x_cm": 0.0, "y_cm": 0.0, "enabled": 1},
+                {"pixel_id": 1, "x_cm": 1.0, "y_cm": 0.0, "enabled": 0},
+            ],
+        },
+        10.0,
+    )
+
+    assert camera.get_pixel_shape() == 2
+    assert camera.get_pixel_diameter() == pytest.approx(0.5)
+    assert camera.get_number_of_pixels() == 2
+    assert camera.pixels["pix_on"] == [True, False]
+
+
 def test_find_neighbors_square():
     x_pos = np.array([0, 0, 1, 1])
     y_pos = np.array([0, 1, 0, 1])

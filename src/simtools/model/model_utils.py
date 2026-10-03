@@ -21,6 +21,7 @@ def initialize_simulation_models(
     calibration_device_name=None,
     calibration_device_type=None,
     model_reader=None,
+    model_directory=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -39,6 +40,8 @@ def initialize_simulation_models(
         Name of the calibration device.
     calibration_device_type: str, optional
         Type of the calibration device.
+    model_directory: pathlib.Path or str, optional
+        Directory for generated model assets and sim_telarray configuration files.
 
     Returns
     -------
@@ -53,6 +56,8 @@ def initialize_simulation_models(
         "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
         "model_reader": require_model_reader(model_reader),
     }
+    if model_directory is not None:
+        common["model_directory"] = model_directory
 
     tel_model = TelescopeModel(telescope_name=telescope_name, **common)
     site_model = SiteModel(**common)

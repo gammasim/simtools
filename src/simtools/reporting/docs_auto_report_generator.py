@@ -31,12 +31,12 @@ class ReportGenerator:
         self.output_path = output_path
 
     @property
-    def db(self):
+    def model_source(self):
         """Return the selected reader under the historical attribute name."""
         return self.model_reader
 
-    @db.setter
-    def db(self, reader):
+    @model_source.setter
+    def model_source(self, reader):
         self.model_reader = reader
 
     def _read_parameters(self, args, output_path):
@@ -241,7 +241,7 @@ class ReportGenerator:
         """Generate simulation configuration reports for one or all model versions.
 
         If --all_model_versions is set, produce reports for every model version in
-        the DB; otherwise produce reports only for the configured model_version.
+        the model repository; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
             self.model_reader.get_model_versions()
@@ -263,7 +263,7 @@ class ReportGenerator:
 
         Mirrors the pattern used by other auto_generate_* methods: if
         --all_model_versions is set, produce reports for every model version in
-        the DB; otherwise produce reports only for the configured model_version.
+        the model repository; otherwise produce reports only for the configured model_version.
         """
         model_versions = (
             self.model_reader.get_model_versions()
@@ -280,7 +280,7 @@ class ReportGenerator:
                 self._read_parameters(self.args, output_path).produce_calibration_reports()
                 logger.info(f"Calibration reports for (v{version}) produced: {output_path}")
             except ValueError as err:
-                # Some model versions do not have calibration_devices in the DB;
+                # Some model versions do not have calibration_devices in the model repository;
                 msg = str(err)
                 if _is_missing_calibration_devices_error(msg):
                     logger.info(

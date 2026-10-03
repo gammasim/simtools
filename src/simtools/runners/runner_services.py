@@ -6,6 +6,7 @@ from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler
 
 _logger = logging.getLogger(__name__)
+_DIRAC_MAX_FILENAME_LENGTH = 128
 
 
 FILES_AND_PATHS = {
@@ -88,6 +89,27 @@ FILES_AND_PATHS = {
         "sub_dir_type": "sub",
     },
 }
+
+
+def warn_if_file_name_exceeds_dirac_limit(file_name, file_type):
+    """Warn when a generated file name exceeds the current DIRAC limit.
+
+    Parameters
+    ----------
+    file_name : str
+        Final file name without its directory path.
+    file_type : str
+        Internal simtools file type used to generate the file name.
+    """
+    if len(file_name) <= _DIRAC_MAX_FILENAME_LENGTH:
+        return
+    _logger.warning(
+        "Generated %s file name exceeds DIRAC filename limit (%s > %s): %s",
+        file_type,
+        len(file_name),
+        _DIRAC_MAX_FILENAME_LENGTH,
+        file_name,
+    )
 
 
 def validate_corsika_run_number(run_number):
@@ -308,7 +330,9 @@ class RunnerServices:
             dir_path = self._get_sub_directory(run_number, self.directory)
         else:
             dir_path = self.directory
-        return dir_path / f"{file_name}{desc['suffix']}"
+        output_file_name = f"{file_name}{desc['suffix']}"
+        warn_if_file_name_exceeds_dirac_limit(output_file_name, file_type)
+        return dir_path / output_file_name
 
     @staticmethod
     def _get_run_number_string(run_number):

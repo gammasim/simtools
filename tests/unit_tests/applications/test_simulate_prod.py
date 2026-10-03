@@ -59,7 +59,7 @@ def job_grid_file(tmp_test_directory):
 
 def _parse_with_args(monkeypatch, args):
     monkeypatch.setattr(sys, "argv", ["simulate_prod.py", *map(str, args)])
-    return app.APPLICATION._parse()[0]
+    return app.APPLICATION._parse()
 
 
 def _job_grid_args(job_grid_file, *extra_args):

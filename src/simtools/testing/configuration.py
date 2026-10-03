@@ -1,7 +1,7 @@
 """Integration test configuration."""
 
 import logging
-import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -11,14 +11,11 @@ import simtools.version as simtools_version
 from simtools.io import ascii_handler, io_handler
 
 _logger = logging.getLogger(__name__)
+_PREPARED_RESOURCE_PATTERN = re.compile(r"\$\{prepared:([^}]+)\}")
 
 
 class VersionError(Exception):
     """Raise if model version requested is not supported."""
-
-
-class ProductionDBError(Exception):
-    """Raise if production db is used."""
 
 
 def get_list_of_test_configurations(config_files, test_resources_path=None):
@@ -92,6 +89,46 @@ def _read_configs_from_files(config_files, test_resources_path=None):
 def resolve_test_resource_paths(value, test_resources_path=None):
     """Resolve test-resource references recursively."""
     return io_handler.resolve_test_resource_paths(value, test_resources_path=test_resources_path)
+
+
+def resolve_prepared_resource_paths(value, prepared_resources_path):
+    """Resolve per-test prepared-resource references recursively.
+
+    Parameters
+    ----------
+    value : object
+        Configuration value, mapping, or sequence to resolve.
+    prepared_resources_path : str or pathlib.Path
+        Directory containing files created by integration-test preparation steps.
+
+    Returns
+    -------
+    object
+        Configuration with ``${prepared:...}`` references replaced by absolute paths.
+
+    Raises
+    ------
+    ValueError
+        If a prepared-resource reference escapes its preparation directory.
+    """
+    prepared_resources_path = Path(prepared_resources_path).resolve()
+    if isinstance(value, dict):
+        return {
+            key: resolve_prepared_resource_paths(item, prepared_resources_path)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [resolve_prepared_resource_paths(item, prepared_resources_path) for item in value]
+    if not isinstance(value, str):
+        return value
+
+    def _resolve(match):
+        relative_path = Path(match.group(1))
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise ValueError(f"Invalid prepared-resource path: {relative_path.as_posix()}")
+        return str(prepared_resources_path / relative_path)
+
+    return _PREPARED_RESOURCE_PATTERN.sub(_resolve, value)
 
 
 def _copy_resolved_resource_config_files(config, output_path, test_resources_path):
@@ -173,7 +210,6 @@ def configure(config, tmp_test_directory, request):
 
     if "configuration" in config:
         _skip_test_for_model_version(config, model_version_requested)
-        _skip_test_for_production_db(config)
 
         config_file, config_string, config_file_model_version = _prepare_test_options(
             config["configuration"],
@@ -215,18 +251,6 @@ def _skip_test_for_model_version(config, model_version_requested):
         raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
         )
-
-
-def _skip_test_for_production_db(config):
-    """Skip test if production db is used."""
-    if not config.get("skip_for_production_db"):
-        return
-
-    if "db.zeuthen.desy.de" in os.getenv("SIMTOOLS_DB_SERVER", ""):
-        raise ProductionDBError("Production database used for this test")
-
-    if "simpipe" in os.getenv("SIMTOOLS_DB_API_USER", ""):
-        raise ProductionDBError("Production database used for this test")
 
 
 def _prepare_test_options(config, output_path, model_version=None, test_resources_path=None):

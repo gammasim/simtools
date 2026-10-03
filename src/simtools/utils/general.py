@@ -19,6 +19,49 @@ import numpy as np
 _logger = logging.getLogger(__name__)
 
 
+def cleanup_intermediate_files(output_dir, patterns=(), *, files=(), directories=(), exclude=()):
+    """Remove selected intermediate files and then selected empty directories.
+
+    Parameters
+    ----------
+    output_dir : str or pathlib.Path
+        Directory in which to match glob patterns.
+    patterns : iterable of str, optional
+        File patterns relative to output_dir. No patterns are selected by default.
+    files : iterable of pathlib.Path, optional
+        Explicit file paths to remove, independent of output_dir.
+    directories : iterable of pathlib.Path, optional
+        Explicit directories to remove only when empty, deepest first.
+    exclude : iterable of pathlib.Path, optional
+        Paths to preserve even when selected by a pattern or explicit list.
+
+    Returns
+    -------
+    int
+        Number of files removed. Missing files are ignored.
+    """
+    selected = {Path(path) for path in files}
+    for pattern in patterns:
+        selected.update(Path(output_dir).glob(pattern))
+    selected.difference_update(Path(path) for path in exclude)
+    empty_directories = {Path(path) for path in directories} | {
+        path for path in selected if path.is_dir() and not path.is_symlink()
+    }
+    empty_directories.difference_update(Path(path) for path in exclude)
+    removed = 0
+    for path in selected:
+        if path.is_file() or path.is_symlink():
+            path.unlink(missing_ok=True)
+            removed += 1
+            _logger.debug("Removed: %s", path)
+    for directory in sorted(empty_directories, key=lambda path: len(path.parts), reverse=True):
+        if directory.is_dir() and not directory.is_symlink() and not any(directory.iterdir()):
+            directory.rmdir()
+    if removed:
+        _logger.info("Cleanup: removed %s intermediate files", removed)
+    return removed
+
+
 def is_url(url):
     """
     Check if a string is a valid URL.
@@ -437,7 +480,7 @@ def is_safe_tar_member(member_name):
     return True
 
 
-def pack_tar_file(tar_file_name, file_list, sub_dir=None):
+def pack_tar_file(tar_file_name, file_list, sub_dir=None, compression_level=None):
     """
     Pack files into a tar.gz archive.
 
@@ -449,6 +492,8 @@ def pack_tar_file(tar_file_name, file_list, sub_dir=None):
         List of files to include in the archive.
     sub_dir: str, optional
         Subdirectory within the archive to place the files.
+    compression_level: int, optional
+        Gzip compression level. If omitted, use the tarfile module default.
     """
     file_list = [Path(f) for f in file_list]
     base = Path(os.path.commonpath([f.resolve() for f in file_list]))
@@ -457,10 +502,13 @@ def pack_tar_file(tar_file_name, file_list, sub_dir=None):
         if not f.is_file() or not f.resolve().is_relative_to(base_resolved):
             raise ValueError(f"Unsafe file path: {f}")
 
-    with tarfile.open(tar_file_name, "w:gz") as tar:
+    open_kwargs = {} if compression_level is None else {"compresslevel": compression_level}
+    # This is archive creation, not expansion of untrusted archive input. The files are validated
+    # above and added non-recursively to bound the operation to the requested members.
+    with tarfile.open(tar_file_name, "w:gz", **open_kwargs) as tar:  # NOSONAR
         for file in file_list:
             arc_name = Path(sub_dir) / file.name if sub_dir else file.name
-            tar.add(file, arcname=str(arc_name))
+            tar.add(file, arcname=str(arc_name), recursive=False)
 
 
 def get_log_excerpt(log_file, n_last_lines=30):
@@ -663,7 +711,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     Validate data type of value or type object against a reference data type.
 
     Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).
-    Take into account 'file' type as used in the model parameter database.
+    Take into account 'file' type as used in the model parameter repository.
 
     Parameters
     ----------

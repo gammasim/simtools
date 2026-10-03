@@ -142,7 +142,8 @@ def validate_dict_using_schema(
         _logger.warning(f"No schema provided for validation of {data}")
         return None
     if json_schema is None:
-        json_schema = load_schema(schema_file, get_schema_version_from_data(data))
+        schema_version = data.get("meta_schema_version") or get_schema_version_from_data(data)
+        json_schema = load_schema(schema_file, schema_version)
 
     validate_deprecation_and_version(data, ignore_software_version=ignore_software_version)
 

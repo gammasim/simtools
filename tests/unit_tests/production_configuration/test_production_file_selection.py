@@ -371,7 +371,11 @@ def test_discover_product_manifests_filters_invalid_and_other_products(tmp_test_
     }
     mocker.patch(
         "simtools.production_configuration.production_file_selection.ascii_handler.collect_data_from_file",
-        side_effect=lambda path: data[Path(path).name],
+        side_effect=lambda file_name: data[Path(file_name).name],
+    )
+    mocker.patch(
+        "simtools.production_configuration.production_file_selection._get_registered_manifest_schema_versions",
+        return_value={"1.0.0"},
     )
     mocker.patch(
         "simtools.production_configuration.production_file_selection._get_registered_manifest_schema_versions",
