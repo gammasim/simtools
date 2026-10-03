@@ -42,9 +42,6 @@ _ARGUMENTS = (
         type=Path,
         help="Run only the selected workflow config file from integration_tests/config_files.",
     ),
-    cli.SIMULATION_MODELS_PATH,
-    cli.SIMULATION_MODELS_GIT_PATH,
-    cli.SIMULATION_MODELS_GIT_REVISION,
 )
 
 

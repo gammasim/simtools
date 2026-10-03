@@ -3,6 +3,7 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
+from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.trigger_patch_mapping import run_trigger_patch_mapping
@@ -50,10 +51,10 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION,
+        cli.MODEL_VERSION(required=True, nargs=None),
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.SITE,
-        cli.TELESCOPE,
+        cli.SITE(required=True),
+        cli.TELESCOPE(required=True),
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
@@ -65,6 +66,7 @@ def run(app_context):
     """Generate trigger-patch mapping files for the requested telescope model."""
     args = app_context.args
     output_directory = app_context.io_handler.get_output_directory()
+    overrides = read_overwrite_model_parameter_dict(args.get("overwrite_model_parameters"))
     telescope = TelescopeModel(
         site=args["site"],
         telescope_name=args["telescope"],
@@ -72,6 +74,7 @@ def run(app_context):
         label="plot_trigger_patches",
         model_reader=app_context.model_reader,
         model_directory=output_directory,
+        overwrite_model_parameter_dict=overrides,
     )
     site = SiteModel(
         site=args["site"],
@@ -79,6 +82,7 @@ def run(app_context):
         label="plot_trigger_patches",
         model_reader=app_context.model_reader,
         model_directory=output_directory,
+        overwrite_model_parameter_dict=overrides,
     )
     files = run_trigger_patch_mapping(
         telescope,

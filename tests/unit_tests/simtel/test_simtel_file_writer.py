@@ -599,6 +599,38 @@ def test_camera_validation_rejects_empty_trigger_group():
         simtel_file_writer._validate_camera_components(configuration)
 
 
+@pytest.mark.parametrize(
+    ("kind", "required", "presum", "expected"),
+    [
+        ("majority", False, False, "MajorityTrigger 1 of 0"),
+        ("majority", True, False, "MajorityTrigger 1 of +0"),
+        ("majority", False, True, "MajorityTrigger 1 of 0[1]"),
+        ("digitalsum", False, True, "DigitalSumTrigger 1 of 0[1]"),
+        ("analogsum", False, False, "AnalogSumTrigger 1 of 0"),
+    ],
+)
+def test_camera_serializes_supported_trigger_tokens(
+    tmp_test_directory, kind, required, presum, expected
+):
+    configuration = _camera_configuration()
+    configuration["triggers"] = [
+        {"group_id": 0, "kind": kind, "use_default_multiplicity": False, "multiplicity": 1}
+    ]
+    configuration["trigger_members"] = [
+        {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": required}
+    ]
+    if presum:
+        pixel = deepcopy(configuration["pixels"][0])
+        pixel["pixel_id"] = 1
+        configuration["pixels"].append(pixel)
+        configuration["trigger_members"].append(
+            {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 1, "required": False}
+        )
+    output = Path(tmp_test_directory) / "camera.dat"
+    simtel_file_writer.write_camera_file(configuration, output)
+    assert output.read_text(encoding="utf-8").splitlines()[-1] == expected
+
+
 def test_camera_helpers_validate_names_and_module_ids():
     with pytest.raises(ValueError, match="Unsafe lightguide"):
         simtel_file_writer._safe_basename("nested/angle.dat", "lightguide")

@@ -1,0 +1,41 @@
+---
+applications:
+- application: simtools-plot-trigger-patches
+  docs:
+    title: Inspect LST trigger mapping with sim_telarray
+    summary: >-
+      Generate LED combinations from the exported LST camera and inspect their
+      sim_telarray camera displays in PostScript.
+  configuration:
+    site: North
+    telescope: LSTN-01
+    model_version: 7.0.0
+    output_path: simtools-output
+    required_pixels: 1
+    events_per_combination: 1
+    run_number: 1
+  integration_tests:
+  - test_outputs:
+    - file: trigger-patches-LSTN-01-run1.ps
+      path_descriptor: output_path
+      validations:
+      - type: log
+        expected:
+          pattern:
+          - "%%Page:"
+    - file: trigger-patches-LSTN-01-run1.simtel.gz
+      path_descriptor: output_path
+    - file: trigger-patches-LSTN-01-run1.iact.gz
+      path_descriptor: output_path
+    - file: trigger-patches-LSTN-01-run1.pixled.stdout.log
+      path_descriptor: output_path
+      validations:
+      - type: log
+        expected:
+          pattern:
+          - "Generated "
+          - " events."
+  model_version_use_current: true
+  test_name: lst_mapping
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

@@ -1,13 +1,17 @@
 """Generate sim_telarray trigger-patch displays with ``pixled``."""
 
+import os
+import shlex
+import shutil
 from dataclasses import dataclass
+from numbers import Integral
 from pathlib import Path
 
 import astropy.units as u
 
 from simtools import settings
 from simtools.job_execution import job_manager
-from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.runners.simtel_runner import SIM_TELARRAY_ENV
 
 
 @dataclass(frozen=True)
@@ -85,14 +89,28 @@ def run_trigger_patch_mapping(
         If a numeric option is not positive or the PostScript name is unsafe.
     FileNotFoundError
         If a required sim_telarray executable or generated camera file is absent.
+    PermissionError
+        If a required program cannot be executed.
+    simtools.job_execution.job_manager.JobExecutionError
+        If a program fails or does not produce a nonempty output file.
     """
     _validate_options(required_pixels, photons_per_pixel, events_per_combination, run_number)
-    output_directory = Path(output_directory)
+    output_directory = Path(output_directory).resolve()
     output_directory.mkdir(parents=True, exist_ok=True)
     prefix = f"trigger-patches-{telescope_model.name}-run{run_number}"
     postscript_file = _output_file(output_directory, output_name or f"{prefix}.ps")
+    pixled, simtel, read_cta = _executables()
+    camera_file = _export_camera_file(telescope_model, site_model)
+    if camera_file.parent != output_directory:
+        retained_camera = output_directory / f"{prefix}.camera.dat"
+        shutil.copyfile(camera_file, retained_camera)
+        camera_file = retained_camera
+    atmospheric_transmission = _configuration_value(
+        telescope_model.config_file_path, "atmospheric_transmission"
+    )
+    altitude = site_model.get_parameter_value_with_unit("corsika_observation_level").to_value(u.m)
     files = TriggerPatchMappingFiles(
-        camera_file=_export_camera_file(telescope_model, site_model),
+        camera_file=camera_file,
         iact_file=output_directory / f"{prefix}.iact.gz",
         simtel_file=output_directory / f"{prefix}.simtel.gz",
         postscript_file=postscript_file,
@@ -102,7 +120,6 @@ def run_trigger_patch_mapping(
             for stream in ("stdout", "stderr")
         ),
     )
-    pixled, simtel, read_cta = _executables()
     _run_pixled(
         pixled,
         files,
@@ -111,16 +128,20 @@ def run_trigger_patch_mapping(
         photons_per_pixel,
         events_per_combination,
         run_number,
+        altitude,
     )
-    _run_simtel(simtel, telescope_model, site_model, files)
+    _run_simtel(simtel, telescope_model, files, altitude, atmospheric_transmission)
     _run_read_cta(read_cta, files)
     return files
 
 
 def _validate_options(*values):
-    """Reject non-positive numeric options."""
-    if any(int(value) < 1 for value in values):
-        raise ValueError("Trigger-patch mapping numeric options must be positive")
+    """Reject values outside pixled's positive integer range."""
+    if any(
+        isinstance(value, bool) or not isinstance(value, Integral) or not 1 <= value <= 2147483647
+        for value in values
+    ):
+        raise ValueError("Trigger-patch mapping numeric options must be positive 32-bit integers")
 
 
 def _output_file(directory, name):
@@ -134,15 +155,24 @@ def _output_file(directory, name):
 def _export_camera_file(telescope_model, site_model):
     """Export the telescope configuration and return its camera file."""
     telescope_model.write_sim_telarray_config_file(additional_models=site_model)
-    config_file = Path(telescope_model.config_file_path)
+    config_file = Path(telescope_model.config_file_path).resolve()
+    camera_file = config_file.parent / _configuration_value(config_file, "camera_config_file")
+    if not camera_file.is_file():
+        raise FileNotFoundError(f"Generated camera file not found: {camera_file}")
+    return camera_file
+
+
+def _configuration_value(config_file, parameter):
+    """Read a filename from the exported configuration without guessing its name."""
+    config_file = Path(config_file)
     for line in config_file.read_text(encoding="utf-8").splitlines():
         key, separator, value = line.partition("=")
-        if separator and key.strip() == "camera_config_file":
-            camera_file = config_file.parent / value.strip().strip('"')
-            if camera_file.is_file():
-                return camera_file
-            raise FileNotFoundError(f"Generated camera file not found: {camera_file}")
-    raise ValueError(f"No camera_config_file defined in generated config: {config_file}")
+        if separator and key.strip().lower() == parameter:
+            tokens = shlex.split(value, comments=True)
+            if len(tokens) == 1:
+                return tokens[0]
+            raise ValueError(f"Invalid {parameter} in generated config: {config_file}")
+    raise ValueError(f"No {parameter} defined in generated config: {config_file}")
 
 
 def _executables():
@@ -156,6 +186,8 @@ def _executables():
     for path in paths:
         if not path.is_file():
             raise FileNotFoundError(f"Required sim_telarray executable not found: {path}")
+        if not os.access(path, os.X_OK):
+            raise PermissionError(f"Required sim_telarray program is not executable: {path}")
     return paths
 
 
@@ -167,6 +199,7 @@ def _run_pixled(
     photons_per_pixel,
     events_per_combination,
     run_number,
+    altitude,
 ):
     """Generate LED events from all trigger lines."""
     command = [
@@ -182,23 +215,23 @@ def _run_pixled(
         str(events_per_combination),
         "--run",
         str(run_number),
+        "--altitude",
+        str(altitude),
         "-o",
         str(files.iact_file),
     ]
     if include_presum_slaves:
         command.append("--slaves")
-    _submit(command, files.log_files[0:2])
+    _submit(command, files.log_files[0:2], files.iact_file, files)
 
 
-def _run_simtel(executable, telescope_model, site_model, files):
+def _run_simtel(executable, telescope_model, files, altitude, atmospheric_transmission):
     """Process the LED event stream through sim_telarray."""
-    atmospheric_transmission = _atmospheric_transmission(site_model, telescope_model)
-    altitude = site_model.get_parameter_value_with_unit("corsika_observation_level").to_value(u.m)
     command = [
         str(executable),
         "-c",
-        str(telescope_model.config_file_path),
-        f"-I{telescope_model.config_file_directory}",
+        str(Path(telescope_model.config_file_path).resolve()),
+        f"-I{Path(telescope_model.config_file_directory).resolve()}",
         "-DNUM_TELESCOPES=1",
         "-C",
         "Bypass_Optics=2",
@@ -214,23 +247,11 @@ def _run_simtel(executable, telescope_model, site_model, files):
         "telescope_theta=0",
         "-C",
         "telescope_phi=0",
-        "-C",
-        f"input_file={files.iact_file}",
-        "-C",
-        f"output_file={files.simtel_file}",
+        "-r",
+        str(files.simtel_file),
+        str(files.iact_file),
     ]
-    _submit(command, files.log_files[2:4])
-
-
-def _atmospheric_transmission(site_model, telescope_model):
-    """Return the exported sim_telarray atmosphere filename."""
-    value = site_model.get_parameter_value("atmospheric_transmission")
-    if not str(value).lower().endswith(".ecsv"):
-        return value
-    parameter = site_model.parameters.get("atmospheric_transmission", {})
-    return get_simtel_table_file_name(parameter) or (
-        f"atmospheric_transmission-{Path(telescope_model.config_file_path).stem}.dat"
-    )
+    _submit(command, files.log_files[2:4], files.simtel_file, files)
 
 
 def _run_read_cta(executable, files):
@@ -238,9 +259,24 @@ def _run_read_cta(executable, files):
     _submit(
         [str(executable), "-p", str(files.postscript_file), str(files.simtel_file)],
         files.log_files[4:6],
+        files.postscript_file,
+        files,
     )
 
 
-def _submit(command, log_files):
+def _submit(command, log_files, output_file, files):
     """Submit one command with explicit standard-output and standard-error logs."""
-    job_manager.submit(command, out_file=log_files[0], err_file=log_files[1])
+    try:
+        output_file.unlink(missing_ok=True)
+        job_manager.submit(
+            command, out_file=log_files[0], err_file=log_files[1], env=SIM_TELARRAY_ENV
+        )
+        if not output_file.is_file() or output_file.stat().st_size == 0:
+            raise job_manager.JobExecutionError(f"Missing or empty output: {output_file}")
+    except (job_manager.JobExecutionError, OSError) as exc:
+        raise job_manager.JobExecutionError(
+            f"Trigger-patch step {Path(command[0]).name} failed: {exc}. "
+            f"Camera: {files.camera_file}; IACT: {files.iact_file}; "
+            f"simtel: {files.simtel_file}; PostScript: {files.postscript_file}; "
+            f"logs: {log_files[0]}, {log_files[1]}"
+        ) from exc
