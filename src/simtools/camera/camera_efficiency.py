@@ -212,36 +212,37 @@ class CameraEfficiency:
         if self._calculated_results is None:
             raise RuntimeError("Camera efficiency must be simulated before it can be analyzed.")
         for row in self._calculated_results:
-            numbers = [row[name] for name in eff_pars[:16]]
-            for index, name in enumerate(eff_pars[:16]):
-                _results[name].append(numbers[index])
-            c1_value = numbers[8] * (400 / numbers[0]) ** 2
-            c2_value = c1_value * numbers[4] * numbers[5]
-            c3_value = c2_value * numbers[6] * numbers[7]
-            c4_value = c3_value * numbers[3]
-            _results["C1"].append(c1_value)
-            _results["C2"].append(c2_value)
-            _results["C3"].append(c3_value)
-            _results["C4"].append(c4_value)
-            _results["C4x"].append(c1_value * numbers[3] * numbers[6] * numbers[7])
-            n1_value = numbers[14]
-            n2_value = n1_value * numbers[4] * numbers[5]
-            n3_value = n2_value * numbers[6] * numbers[7]
-            n4_value = n3_value * numbers[3]
-            _results["N1"].append(n1_value)
-            _results["N2"].append(n2_value)
-            _results["N3"].append(n3_value)
-            _results["N4"].append(n4_value)
-            _results["N4x"].append(n1_value * numbers[3] * numbers[6] * numbers[7])
+            for name in eff_pars[:16]:
+                _results[name].append(row[name])
+            mirror_throughput = row["ref"] * row["masts"]
+            camera_throughput = row["filt"] * row["pixel"]
+            quantum_efficiency = row["qe"]
+            cherenkov_at_ground = row["atm_trans"] * (400 / row["wl"]) ** 2
+            cherenkov_after_mirrors = cherenkov_at_ground * mirror_throughput
+            cherenkov_at_photodetector = cherenkov_after_mirrors * camera_throughput
+            cherenkov_detected = cherenkov_at_photodetector * quantum_efficiency
+            # Preserve the serialized spectral-stage names used by existing consumers.
+            _results["C1"].append(cherenkov_at_ground)
+            _results["C2"].append(cherenkov_after_mirrors)
+            _results["C3"].append(cherenkov_at_photodetector)
+            _results["C4"].append(cherenkov_detected)
+            _results["C4x"].append(cherenkov_at_ground * quantum_efficiency * camera_throughput)
+            nsb_before_correction = row["nsb_be"]
+            nsb_after_mirrors = nsb_before_correction * mirror_throughput
+            nsb_at_photodetector = nsb_after_mirrors * camera_throughput
+            nsb_detected = nsb_at_photodetector * quantum_efficiency
+            _results["N1"].append(nsb_before_correction)
+            _results["N2"].append(nsb_after_mirrors)
+            _results["N3"].append(nsb_at_photodetector)
+            _results["N4"].append(nsb_detected)
+            _results["N4x"].append(nsb_before_correction * quantum_efficiency * camera_throughput)
 
         self._results = Table(_results)
         self._has_results = True
 
         self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions = self.calc_nsb_rate()
 
-        print("\33[40;37;1m")
         self._logger.info(f"\n{self.results_summary()}")
-        print("\033[0m")
 
         if export:
             self.export_results()

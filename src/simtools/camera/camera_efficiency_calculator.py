@@ -566,9 +566,13 @@ class CameraEfficiencyCalculator:
             else np.zeros(len(x))
         )
         focal_length = float(self.telescope_model.get_telescope_effective_focal_length("m", True))
-        fd = self._curvature_radius()
+        curvature_radius = self._curvature_radius()
         radius = np.hypot(x, y)
-        z = np.where(np.isclose(z, 0.0), fd - np.sqrt(np.maximum(0.0, fd**2 - radius**2)), z)
+        z = np.where(
+            np.isclose(z, 0.0),
+            curvature_radius - np.sqrt(np.maximum(0.0, curvature_radius**2 - radius**2)),
+            z,
+        )
         theta = 0.5 * np.arctan2(radius, focal_length - z)
         area = (
             np.where(
