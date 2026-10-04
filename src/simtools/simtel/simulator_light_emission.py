@@ -1,7 +1,6 @@
 """Light emission simulation (e.g. illuminators or flashers)."""
 
 import logging
-import shutil
 from pathlib import Path
 
 import astropy.units as u
@@ -19,9 +18,9 @@ from simtools.model.model_utils import (
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.simtel import simtel_file_writer, simtel_output_validator
+from simtools.simtel import simtel_output_validator
+from simtools.simulation.configuration import get_light_source_writer
 from simtools.utils import general
-from simtools.utils.geometry import fiducial_radius_from_shape
 
 
 class SimulatorLightEmission(SimtelRunner):
@@ -89,6 +88,7 @@ class SimulatorLightEmission(SimtelRunner):
     def __init__(self, light_emission_config, telescope=None, label=None, model_reader=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
+        self.configuration_writers = {}
         self.model_reader = require_model_reader(model_reader)
         self.io_handler = io_handler.IOHandler()
         telescope = telescope or light_emission_config.get("telescope")
@@ -216,7 +216,7 @@ class SimulatorLightEmission(SimtelRunner):
             "Invalid number_of_events list length. Use one value or one value per photon intensity."
         )
 
-    def _build_flasher_event_and_photon_sequences(self):
+    def build_flasher_event_and_photon_sequences(self):
         """Build ff-1m-compatible events/photons sequences."""
         photons_int = general.parse_typed_sequence(
             self.light_emission_config.get("flasher_photons"), int
@@ -262,7 +262,7 @@ class SimulatorLightEmission(SimtelRunner):
         iact_output = self.runner_service.get_file_name(file_type="iact_output")
         return [
             "#!/usr/bin/env bash\n",
-            f"{self._make_light_emission_command(iact_output)}\n\n",
+            f"{get_light_source_writer(self).make_command(iact_output)}\n\n",
             (
                 f"[ -s '{iact_output}' ] || "
                 f"{{ echo 'LightEmission did not produce IACT file' >&2; exit 1; }}\n\n"
@@ -270,20 +270,6 @@ class SimulatorLightEmission(SimtelRunner):
             f"{self._make_simtel_script()}\n\n",
             f"rm -f '{iact_output}'\n\n",
         ]
-
-    def _get_light_emission_application_name(self):
-        """
-        Return the LightEmission application and mode from type.
-
-        Returns
-        -------
-        str
-            app_name
-        """
-        if self.light_emission_config["light_source_type"] == "flat_fielding":
-            return "ff-1m"
-        # default to illuminator xyzls, mode from setup
-        return "xyzls"
 
     def _get_telescope_pointing(self):
         """
@@ -305,7 +291,7 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_emission_config.get("light_source_position") is not None:
             self._logger.info("Using fixed (vertical up) telescope pointing.")
             return 0.0, 0.0
-        illuminator_position = self._get_illuminator_position()
+        illuminator_position = self.get_illuminator_position()
         _, angles = self._calibration_pointing_direction(*illuminator_position)
         return angles[0], angles[1]
 
@@ -417,7 +403,7 @@ class SimulatorLightEmission(SimtelRunner):
             corrected_position[2] * u.m,
         )
 
-    def _write_telescope_position_file(self, illuminator_position=None):
+    def write_telescope_position_file(self, illuminator_position=None):
         """
         Write the telescope positions to a telescope_position file.
 
@@ -429,7 +415,7 @@ class SimulatorLightEmission(SimtelRunner):
             The path to the generated telescope_position file.
         """
         if illuminator_position is None:
-            illuminator_position = self._get_illuminator_position()
+            illuminator_position = self.get_illuminator_position()
         x_cal, y_cal, z_cal = illuminator_position
         x_tel, y_tel, z_tel = self._get_telescope_position_ground_with_axis_offset(
             x_cal=x_cal,
@@ -441,8 +427,10 @@ class SimulatorLightEmission(SimtelRunner):
         radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
 
-        tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
-        cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
+        tel = self.get_file_name_token(self.light_emission_config.get("telescope") or "telescope")
+        cal = self.get_file_name_token(
+            self.light_emission_config.get("light_source") or "calibration"
+        )
         telescope_position_file = (
             self.io_handler.get_output_directory("light_emission")
             / f"telescope_position_{tel}_{cal}.dat"
@@ -450,7 +438,7 @@ class SimulatorLightEmission(SimtelRunner):
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file
 
-    def _get_illuminator_position(self):
+    def get_illuminator_position(self):
         """Return the illuminator emission position in ground coordinates."""
         pos = self.light_emission_config.get("light_source_position")
         if pos is not None:
@@ -464,18 +452,18 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return x_pos, y_pos, z_pos + tower_height
 
-    def _get_illuminator_pointing_vector(self, pos=None):
+    def get_illuminator_pointing_vector(self, pos=None):
         """Return illuminator pointing vector; prefer explicit config if available."""
         pointing_vector = self.light_emission_config.get("light_source_pointing")
         if pointing_vector is not None:
             return pointing_vector
         if pos is None:
-            pos = self._get_illuminator_position()
+            pos = self.get_illuminator_position()
         x_cal, y_cal, z_cal = pos
         return self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
 
     @staticmethod
-    def _should_use_telpos_file(pointing_vector):
+    def uses_telescope_position_file(pointing_vector):
         """Decide whether to use telpos file based on pointing vector.
 
         Rule: do not use telpos only if pointing is (0, 0, -1) (within tolerance).
@@ -489,164 +477,10 @@ class SimulatorLightEmission(SimtelRunner):
         is_default_down = np.allclose(vec[:3], [0.0, 0.0, -1.0], atol=1e-6)
         return not is_default_down
 
-    def _prepare_flasher_atmosphere_files(self, config_directory, model_id=1):
-        """
-        Prepare canonical atmosphere aliases for ff-1m and return model id.
-
-        The ff-1m tool requires atmosphere files atmprof1.dat or atm_profile_model_1.dat and
-        as configuration parameter the atmosphere id ('--atmosphere id').
-
-        """
-        src_path = config_directory / self.site_model.get_parameter_value("atmospheric_profile")
-        self._logger.debug(f"Using atmosphere profile: {src_path}")
-
-        for name in (f"atmprof{model_id}.dat", f"atm_profile_model_{model_id}.dat"):
-            dst = config_directory / name
-            try:
-                if dst.exists() or dst.is_symlink():
-                    dst.unlink()
-                try:
-                    dst.symlink_to(src_path)
-                except OSError:
-                    shutil.copy2(src_path, dst)
-            except OSError as copy_err:
-                self._logger.warning(f"Failed to create atmosphere alias {dst.name}: {copy_err}")
-        return model_id
-
-    def _make_light_emission_command(self, iact_output):
-        """
-        Create the light emission command to run the light emission package.
-
-        Require the specified pre-compiled light emission package application
-        in the sim_telarray/LightEmission/ path.
-
-        Parameters
-        ----------
-        iact_output: str or Path
-            The output iact file path.
-
-        Returns
-        -------
-        str
-            The commands to run the Light Emission package
-        """
-        config_directory = self.telescope_model.config_file_directory
-        obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
-
-        app = self._get_light_emission_application_name()
-        cmd = [
-            str(settings.config.sim_telarray_path / "LightEmission" / app),
-            *self._get_site_command(app, config_directory, obs_level),
-            *self._get_light_source_command(),
-        ]
-
-        if self.light_emission_config["light_source_type"] == "illuminator":
-            cmd += [
-                "-A",
-                (
-                    f"{config_directory}/"
-                    f"{self.telescope_model.get_parameter_value('atmospheric_profile')}"
-                ),
-            ]
-
-        cmd += ["-o", str(iact_output)]
-        log_file = self.runner_service.get_file_name(file_type="light_emission_log")
-        return " ".join(cmd) + f" 2>&1 | gzip > {log_file}\n"
-
-    def _get_site_command(self, app_name, config_directory, corsika_observation_level):
-        """Return site command with altitude, atmosphere and telescope_position handling."""
-        if app_name in ("ff-1m",):
-            atmo_id = self._prepare_flasher_atmosphere_files(config_directory)
-            return [
-                "-I.",
-                f"-I{settings.config.sim_telarray_path / 'cfg'}",
-                f"-I{config_directory}",
-                f"--altitude {corsika_observation_level.to(u.m).value}",
-                f"--atmosphere {atmo_id}",
-            ]
-        # default path (not used for flasher now, but kept for completeness)
-        cmd = [f"-h  {corsika_observation_level.to(u.m).value} "]
-
-        if self.light_emission_config.get("light_source_type") == "illuminator":
-            illuminator_position = self._get_illuminator_position()
-            pointing_vector = self._get_illuminator_pointing_vector(illuminator_position)
-            if self._should_use_telpos_file(pointing_vector):
-                self._logger.info(
-                    "Using telescope position file for illuminator setup "
-                    f"(pointing={pointing_vector})."
-                )
-                cmd.append(
-                    f"--telpos-file {self._write_telescope_position_file(illuminator_position)}"
-                )
-        return cmd
-
-    def _get_light_source_command(self):
-        """Return light-source specific command options."""
-        if self.light_emission_config["light_source_type"] == "flat_fielding":
-            return self._add_flasher_command_options()
-        if self.light_emission_config["light_source_type"] == "illuminator":
-            return self._add_illuminator_command_options()
-        raise ValueError(
-            f"Unknown light_source_type '{self.light_emission_config['light_source_type']}'"
-        )
-
-    def _add_flasher_command_options(self):
-        """Add flasher options for all telescope types (ff-1m style)."""
-        events, photons = self._build_flasher_event_and_photon_sequences()
-        flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
-        camera_diam_cm = (
-            self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
-            .to(u.cm)
-            .value
-        )
-        camera_shape = self.telescope_model.get_parameter_value("camera_body_shape")
-        camera_radius = fiducial_radius_from_shape(camera_diam_cm, camera_shape)
-        flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
-            "flasher_wavelength"
-        )
-        dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
-        angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
-
-        pulse_arg = self._get_pulse_shape_argument_for_sim_telarray()
-
-        return [
-            f"--events {','.join(str(event) for event in events)}",
-            f"--photons {','.join(str(photon) for photon in photons)}",
-            f"--bunchsize {self.calibration_model.get_parameter_value('flasher_bunch_size')}",
-            f"--xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}",
-            f"--distance {dist_cm}",
-            f"--camera-radius {camera_radius}",
-            f"--spectrum {int(flasher_wavelength.to(u.nm).value)}",
-            f"--lightpulse {pulse_arg}",
-            f"--angular-distribution {angular_distribution}",
-        ]
-
     @staticmethod
-    def _sanitize_name(value):
+    def get_file_name_token(value):
+        """Return a filename token for a light source or telescope name."""
         return "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
-
-    def _add_illuminator_command_options(self):
-        """Get illuminator-specific command options for light emission script."""
-        pos = self._get_illuminator_position()
-        x_cal, y_cal, z_cal = pos
-        pointing_vector = self._get_illuminator_pointing_vector(pos)
-        flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
-            "flasher_wavelength"
-        )
-        angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
-
-        pulse_arg = self._get_pulse_shape_argument_for_sim_telarray()
-
-        return [
-            f"-x {x_cal.to(u.cm).value}",
-            f"-y {y_cal.to(u.cm).value}",
-            f"-z {z_cal.to(u.cm).value}",
-            f"-d {','.join(map(str, pointing_vector))}",
-            f"-n {self.light_emission_config['flasher_photons']}",
-            f"-s {int(flasher_wavelength.to(u.nm).value)}",
-            f"-p {pulse_arg}",
-            f"-a {angular_distribution}",
-        ]
 
     def _make_simtel_script(self):
         """
@@ -730,136 +564,6 @@ class SimulatorLightEmission(SimtelRunner):
             u.m
         )
         return focal_length - flasher_z
-
-    def _generate_lambertian_angular_distribution_table(self):
-        """Generate Lambertian angular distribution table and return path.
-
-        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..max_angle_deg.
-        """
-        tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
-        cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
-        fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
-        max_angle_deg = (
-            self.calibration_model.get_parameter_value_with_unit(
-                "flasher_angular_distribution_width"
-            )
-            .to(u.deg)
-            .value
-        )
-        path = simtel_file_writer.write_angular_distribution_table_lambertian(
-            file_path=self.io_handler.get_output_directory("light_emission") / fname,
-            max_angle_deg=max_angle_deg,
-            n_samples=100,
-        )
-        return str(path)
-
-    def _get_angular_distribution_string_for_sim_telarray(self):
-        """
-        Get the angular distribution string for sim_telarray.
-
-        Returns
-        -------
-        str
-            The angular distribution string.
-        """
-        opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
-        option_string = str(opt).lower() if opt is not None else ""
-        if option_string == "lambertian":
-            try:
-                return self._generate_lambertian_angular_distribution_table()
-            except (OSError, ValueError) as err:
-                self._logger.warning(
-                    f"Failed to write Lambertian angular distribution table: {err};"
-                    f" using token instead."
-                )
-                return option_string
-
-        if option_string == "isotropic":
-            return option_string
-
-        width = self.calibration_model.get_parameter_value_with_unit(
-            "flasher_angular_distribution_width"
-        )
-        return f"{option_string}:{width.to(u.deg).value}" if width is not None else option_string
-
-    def _get_pulse_shape_argument_for_sim_telarray(self):
-        """
-        Get the pulse shape argument for sim_telarray.
-
-        For Gauss-Exponential shapes, writes a DAT file and returns the file path.
-        For other shapes, returns a string token representation.
-
-        Returns
-        -------
-        str
-            The pulse shape argument (either a file path or a token string).
-        """
-        pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        shape_name = pulse_shape_value[0]
-        width_ns = pulse_shape_value[1]
-        exp_ns = pulse_shape_value[2]
-
-        # Handle Gauss-Exponential by writing a DAT file
-        if shape_name == "Gauss-Exponential":
-            if width_ns <= 0 or exp_ns <= 0:
-                raise ValueError(
-                    "Gauss-Exponential pulse shape requires positive width"
-                    " and exponential decay values"
-                )
-            try:
-                tel = self.light_emission_config.get("telescope") or "telescope"
-                cal = self.light_emission_config.get("light_source") or "calibration"
-                fname = (
-                    f"flasher_pulse_shape_{self._sanitize_name(tel)}_{self._sanitize_name(cal)}.dat"
-                )
-                table_path = self.io_handler.get_output_directory("light_emission") / fname
-                fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
-
-                simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
-                    file_path=table_path,
-                    width_ns=width_ns,
-                    exp_decay_ns=exp_ns,
-                    fadc_sum_bins=fadc_bins,
-                    time_margin_ns=5.0,
-                )
-                return str(table_path)
-            except (ValueError, OSError) as err:
-                self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
-                return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
-
-        # For other shapes, return token string
-        return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
-
-    def _get_pulse_shape_string_token(self, shape_name, width_ns, exp_ns):
-        """
-        Get the pulse shape string token for sim_telarray.
-
-        Parameters
-        ----------
-        shape_name : str
-            Name of the pulse shape.
-        width_ns : float
-            Width parameter in nanoseconds.
-        exp_ns : float
-            Exponential decay parameter in nanoseconds.
-
-        Returns
-        -------
-        str
-            The pulse shape token string.
-        """
-        shape = shape_name.lower()
-        # Map internal shapes to sim_telarray expected tokens
-        shape_token_map = {
-            "tophat": "simple",
-        }
-        shape_out = shape_token_map.get(shape, shape)
-
-        if shape_out in ("gauss", "simple") and width_ns is not None:
-            return f"{shape_out}:{float(width_ns)}"
-        if shape_out == "exponential" and exp_ns is not None:
-            return f"{shape_out}:{float(exp_ns)}"
-        return shape_out
 
     def validate_simulations(self):
         """Validate that the simulations were successful."""

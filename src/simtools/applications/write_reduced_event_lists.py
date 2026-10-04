@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
-"""Write reduced event lists from sim_telarray output files.
-
-This application supports the ``local`` (default) and ``htcondor`` execution backends.
-"""
+"""Write reduced event lists from simulation files."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -15,13 +12,13 @@ _ARGUMENTS = (
         exclusive_group="input group",
         exclusive_group_required=True,
         nargs="+",
-        help="sim_telarray output file(s) to process (e.g., '*.simtel.zst').",
+        help="Simulation file(s) to process (e.g., '*.simtel.zst').",
     ),
     cli.ArgumentDefinition(
         "input_file_list",
         exclusive_group="input group",
         exclusive_group_required=True,
-        help="Text file containing one sim_telarray output file per line.",
+        help="Text file containing one simulation file per line.",
     ),
     cli.ArgumentDefinition(
         "input_file_list_pattern",
@@ -57,6 +54,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        cli.SIMULATION_FILE_FORMAT,
         *cli.BACKEND_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
@@ -70,6 +68,7 @@ def main():
 
     Simulator.write_reduced_event_lists(
         input_files=app_context.args["input_files"],
+        file_format=app_context.args["simulation_file_format"],
         input_file_list=app_context.args["input_file_list"],
         files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
         max_workers=app_context.args["max_workers"],

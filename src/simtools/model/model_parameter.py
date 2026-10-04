@@ -12,12 +12,9 @@ import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
-from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.data_model.validate_data import DataValidator
 from simtools.io import io_handler
-from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.simtel import table_serializers
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names, value_conversion
 
 
@@ -105,11 +102,10 @@ class ModelParameter:
         self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None
         self._is_exported_model_files_up_to_date = False
-        self._serialized_simtel_tables = {}
 
         self._load_parameters_from_repository()
 
-        self.simtel_config_writer = None
+        self.configuration_writers = {}
 
     @property
     def model_source(self):
@@ -977,6 +973,29 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
+    def write_config_file(
+        self, simulation_software="sim_telarray", additional_models=None, label=None
+    ):
+        """Write model configuration for the selected simulation software.
+
+        Parameters
+        ----------
+        simulation_software : str
+            Registered configuration format.
+        additional_models : ModelParameter or dict, optional
+            Additional calibration or site models.
+        label : str, optional
+            File naming label.
+
+        Returns
+        -------
+        pathlib.Path
+            Written native configuration file.
+        """
+        return get_model_writer(self, simulation_software).write_config_file(
+            additional_models=additional_models, label=label
+        )
+
     def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
         Write the sim_telarray configuration file.
@@ -988,50 +1007,9 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        self._merge_sim_telarray_parameters()
-        self.export_model_files(update_if_necessary=True)
-        if "correct_nsb_spectrum_to_telescope_altitude" in self._simulation_config_parameters.get(
-            "sim_telarray", {}
-        ):
-            self.export_nsb_spectrum_to_telescope_altitude_correction_file(
-                model_directory=self.config_file_directory
-            )
-        self._add_additional_models(additional_models)
-
-        # Ensure the writer label matches the config file naming label
-        self._load_simtel_config_writer(label=label if label is not None else self.label)
-        self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self.config_file_path,
-            parameters=self.parameters,
+        return get_model_writer(self).write_sim_telarray_config_file(
+            additional_models=additional_models, label=label
         )
-
-    def _merge_sim_telarray_parameters(self):
-        """Merge sim_telarray parameters into self.parameters."""
-        sim_telarray_params = self._simulation_config_parameters.get("sim_telarray", {})
-        for par_name, par_value in sim_telarray_params.items():
-            self.parameters[par_name] = par_value
-
-    def _add_additional_models(self, additional_models):
-        """Add additional models to the current model parameters."""
-        if additional_models is None:
-            return
-
-        if isinstance(additional_models, dict):
-            for additional_model in additional_models.values():
-                self._add_additional_models(additional_model)
-            return
-
-        self.parameters.update(additional_models.parameters)
-        self.parameters.update(
-            {
-                name: parameter
-                for name, parameter in (
-                    additional_models.get_simulation_software_parameters("sim_telarray") or {}
-                ).items()
-                if names.is_global_sim_telarray_parameter(name)
-            }
-        )
-        additional_models.export_model_files(self.config_file_directory, update_if_necessary=True)
 
     @property
     def config_file_directory(self):
@@ -1047,19 +1025,6 @@ class ModelParameter:
             self._set_config_file_directory_and_name()
         return self._config_file_path
 
-    def _load_simtel_config_writer(self, label=None):
-        """Load the SimtelConfigWriter object."""
-        desired_label = self.label if label is None else label
-        if self.simtel_config_writer is None or desired_label != self.simtel_config_writer.label:
-            self.simtel_config_writer = SimtelConfigWriter(
-                site=self.site,
-                telescope_model_name=self.name,
-                telescope_design_model=self.design_model,
-                model_version=self.model_version,
-                label=desired_label,
-                model_reader=self.model_reader,
-            )
-
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
         """
         Export the NSB correction table and its native source file.
@@ -1074,71 +1039,17 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
-        parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
-        correction_parameters = self._simulation_config_parameters.get("sim_telarray", {})
-        if parameter_name not in correction_parameters:
-            return
-        parameter = deepcopy(correction_parameters[parameter_name])
-        parameter["parameter"] = parameter_name
-        parameter.setdefault("parameter_version", Path(parameter["value"]).stem.rsplit("-", 1)[-1])
-        parameter.setdefault("instrument", self.design_model or self.name)
-        parameter.setdefault("site", self.site)
-        parameter["file"] = True
-        self.model_reader.export_model_files(
-            parameters={parameter_name: parameter},
-            dest=model_directory,
+        return get_model_writer(self).export_nsb_spectrum_to_telescope_altitude_correction_file(
+            model_directory=model_directory
         )
-
-        self._export_ecsv_as_simtel_table(
-            parameter_name,
-            parameter,
-            model_directory,
-            table_format="atmospheric_transmission",
-        )
-
-    def _export_ecsv_as_simtel_table(
-        self, parameter_name, parameter, model_directory, table_format, output_name=None
-    ):
-        """Export an ECSV model asset in the native sim_telarray table format."""
-        if Path(parameter["value"]).suffix.lower() != ".ecsv":
-            return None
-
-        schema_data = schema.get_model_parameter_schema(
-            parameter_name, parameter.get("model_parameter_schema_version")
-        )
-        contract = get_simtel_serialization(schema_data)
-        contract["table_format"] = table_format
-        generated_output_name = get_simtel_table_file_name(parameter)
-        shared_output = generated_output_name is not None and (
-            output_name is None or output_name == generated_output_name
-        )
-        output_name = output_name or generated_output_name
-        output_name = output_name or f"{parameter_name}-{self.name}.dat"
-        output_path = Path(model_directory) / output_name
-        cache_key = repr((parameter_name, parameter, table_format, output_name))
-        if output_path.is_file() and (
-            shared_output or self._serialized_simtel_tables.get(output_path) == cache_key
-        ):
-            return output_path.name
-        table = self.model_reader.get_parameter_table(parameter)
-        result = table_serializers.write_simtel_table(
-            table,
-            model_directory,
-            contract=contract,
-            output_name=output_name,
-        )
-        self._serialized_simtel_tables[output_path] = cache_key
-        return result
 
     def export_model_parameter_as_simtel_file(
         self, parameter_name, model_directory, table_format, output_name
     ):
         """Export an ECSV model parameter in the native sim_telarray format."""
-        parameter = self.parameters[parameter_name].copy()
-        return self._export_ecsv_as_simtel_table(
-            parameter_name,
-            parameter,
-            model_directory,
+        return get_model_writer(self).export_model_parameter_as_simtel_file(
+            parameter_name=parameter_name,
+            model_directory=model_directory,
             table_format=table_format,
             output_name=output_name,
         )

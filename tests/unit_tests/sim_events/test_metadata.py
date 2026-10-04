@@ -146,3 +146,20 @@ def test_validate_simulation_metadata_rejects_model_arrays_when_unavailable():
 def test_validate_simulation_metadata_rejects_invalid_documents(metadata, message):
     with pytest.raises(ValueError, match=message):
         validate_simulation_metadata(metadata)
+
+
+@pytest.mark.parametrize(
+    ("sources", "expected"),
+    [
+        ([], "sim_telarray"),
+        ([{}, {}], "sim_telarray"),
+        ([{"simulation_software": "corsika"}], "corsika"),
+        ([{"simulation_software": "example"}], "example"),
+        ([{"simulation_software": "corsika"}, {}], "mixed"),
+    ],
+)
+def test_simulation_software_is_supplied_by_input_reader(sources, expected):
+    metadata = build_simulation_metadata(sources)
+    assert metadata["provenance"]["simulation_software"]["name"] == expected
+    explicit = build_simulation_metadata(sources, simulation_software="explicit")
+    assert explicit["provenance"]["simulation_software"]["name"] == "explicit"

@@ -12,7 +12,7 @@ from simtools.model.camera import Camera
 from simtools.model.mirrors import Mirrors
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.utils import names
+from simtools.simulation.configuration import get_model_writer
 
 
 class TelescopeModel(ModelParameter):
@@ -64,7 +64,6 @@ class TelescopeModel(ModelParameter):
 
         self._logger = logging.getLogger(__name__)
 
-        self._single_mirror_list_file_paths = None
         self._mirrors = None
         self._camera = None
 
@@ -93,26 +92,8 @@ class TelescopeModel(ModelParameter):
         set_focal_length_to_zero: bool
             Set the focal length to zero if True.
         """
-        if mirror_number > self.mirrors.number_of_mirrors:
-            logging.error("mirror_number > number_of_mirrors")
-            return
-
-        file_name = names.simtel_single_mirror_list_file_name(
-            self.site, self.name, self.model_version, mirror_number, self.label
-        )
-        if self._single_mirror_list_file_paths is None:
-            self._single_mirror_list_file_paths = {}
-        self._single_mirror_list_file_paths[mirror_number] = self.config_file_directory.joinpath(
-            file_name
-        )
-
-        # Using SimtelConfigWriter
-        self._load_simtel_config_writer()
-        self.simtel_config_writer.write_single_mirror_list_file(
-            mirror_number,
-            self.mirrors,
-            self._single_mirror_list_file_paths[mirror_number],
-            set_focal_length_to_zero,
+        return get_model_writer(self).export_single_mirror_list_file(
+            mirror_number=mirror_number, set_focal_length_to_zero=set_focal_length_to_zero
         )
 
     def get_single_mirror_list_file(
@@ -133,8 +114,9 @@ class TelescopeModel(ModelParameter):
         Path
             Path of the single mirror list file.
         """
-        self.export_single_mirror_list_file(mirror_number, set_focal_length_to_zero)
-        return self._single_mirror_list_file_paths[mirror_number]
+        return get_model_writer(self).get_single_mirror_list_file(
+            mirror_number, set_focal_length_to_zero
+        )
 
     def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""

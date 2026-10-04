@@ -2,8 +2,8 @@
 
 import logging
 
-from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler
+from simtools.simulation.parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)
 _DIRAC_MAX_FILENAME_LENGTH = 128
@@ -154,11 +154,12 @@ class RunnerServices:
         Label.
     """
 
-    def __init__(self, config, run_type, label=None):
+    def __init__(self, config, run_type, label=None, array_model=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
-        self.config = config
+        self.array_model = array_model or getattr(config, "array_model", None)
+        self.config = getattr(config, "simulation_parameters", config)
         self.run_type = run_type
         self.directory = self.load_data_directory()
 
@@ -217,8 +218,8 @@ class RunnerServices:
         str
             Base name for the simulation files.
         """
-        if isinstance(self.config, CorsikaConfig):
-            return self._get_file_base_name_from_corsika_config(run_number, is_multi_pipe)
+        if isinstance(self.config, SimulationParameters):
+            return self._get_file_base_name_from_simulation_parameters(run_number, is_multi_pipe)
         if isinstance(self.config, dict):
             return self._get_file_base_name_from_core_config()
         raise ValueError(f"Invalid configuration type: {type(self.config)}")
@@ -248,15 +249,17 @@ class RunnerServices:
         ]
         return "".join(parts)
 
-    def _get_file_base_name_from_corsika_config(self, run_number, is_multi_pipe=False):
-        """Get file base name from CORSIKA configuration."""
-        zenith = self.config.get_config_parameter("THETAP")[0]
-        vc_high = self.config.get_config_parameter("VIEWCONE")[1]
+    def _get_file_base_name_from_simulation_parameters(self, run_number, is_multi_pipe=False):
+        """Get file base name from physical simulation settings."""
+        zenith = self.config.zenith_min
+        vc_high = self.config.viewcone_max
 
         if self.config.run_mode is not None and self.config.run_mode != "":
             primary_name = self.config.run_mode
         else:
-            primary_name = self.config.primary_particle.name
+            primary_name = (
+                self.config.primary_particle.name if self.config.primary_particle else None
+            )
             if primary_name == "gamma" and vc_high > 0:
                 primary_name = "gamma_diffuse"
 
@@ -268,13 +271,9 @@ class RunnerServices:
             prefix
             + f"za{round(zenith):02}deg_"
             + f"azm{round(self.config.azimuth_angle):03}deg_"
-            + f"{self.config.array_model.site}_"
-            + (
-                f"{self.config.array_model.layout_name}_"
-                if self.config.array_model.layout_name
-                else ""
-            )
-            + (self.config.array_model.model_version if not is_multi_pipe else "")
+            + f"{self.array_model.site}_"
+            + (f"{self.array_model.layout_name}_" if self.array_model.layout_name else "")
+            + (self.array_model.model_version if not is_multi_pipe else "")
             + file_label
         )
 
@@ -367,10 +366,10 @@ class RunnerServices:
         dict
             run time and number of simulated events
         """
-        if isinstance(self.config, CorsikaConfig):
+        if isinstance(self.config, SimulationParameters):
             return {
                 "runtime": runtime,
-                "n_events": int(self.config.get_config_parameter("NSHOW")),
+                "n_events": int(self.config.shower_events),
             }
         self._logger.warning("Number of events cannot be determined from non-CORSIKA config.")
         return {"runtime": runtime, "n_events": None}

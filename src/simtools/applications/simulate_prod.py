@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
 _ARGUMENTS = (
+    cli.SIMULATION_FILE_FORMAT,
     cli.ArgumentDefinition(
         "list_available_corsika_models",
         help="List interaction-model variants available in the CORSIKA installation and exit.",

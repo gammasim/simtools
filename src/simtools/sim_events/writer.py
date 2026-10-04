@@ -6,25 +6,8 @@ from dataclasses import dataclass
 import astropy.units as u
 import numpy as np
 from astropy.table import Table, vstack
-from eventio import EventIOFile, iact
-from eventio.simtel import (
-    ArrayEvent,
-    MCEvent,
-    MCRunHeader,
-    MCShower,
-    RunHeader,
-    TrackingPosition,
-    TriggerInformation,
-)
 
-from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.sim_events.file_info import get_corsika_run_and_event_headers
-from simtools.simtel.simtel_io_metadata import (
-    get_sim_telarray_telescope_id_to_telescope_name_mapping,
-    read_sim_telarray_metadata,
-)
-from simtools.utils.geometry import calculate_circular_mean
-from simtools.utils.names import get_common_identifier_from_array_element_name
+from simtools.sim_events.formats.registry import get_reader
 
 
 @dataclass
@@ -93,12 +76,15 @@ class EventDataWriter:
         List of input file paths to process.
     max_files : int, optional
         Maximum number of files to process. By default, process all input files.
+    file_format : str
+        Registered simulation-file format, by default "eventio".
     """
 
-    def __init__(self, input_files, max_files=None):
+    def __init__(self, input_files, max_files=None, file_format="eventio"):
         """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
+        self.file_format = file_format
         try:
             number_of_input_files = len(input_files)
         except TypeError as exc:
@@ -109,15 +95,10 @@ class EventDataWriter:
             number_of_input_files if max_files is None else min(max_files, number_of_input_files)
         )
 
-        self.n_use = None
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
         self.input_metadata = []
-        self.telescope_id_to_name = {}
-        self._current_run_header = {}
-        self._current_mc_run_header = {}
-        self._current_simtel_metadata = ({}, {})
         self._reset_data()
 
     def _reset_data(self):
@@ -125,10 +106,6 @@ class EventDataWriter:
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
-        self.telescope_id_to_name = {}
-        self._current_run_header = {}
-        self._current_mc_run_header = {}
-        self._current_simtel_metadata = ({}, {})
 
     def process_files(self):
         """
@@ -156,72 +133,23 @@ class EventDataWriter:
         for file_id, file in enumerate(self.input_files[: self.max_files]):
             self._logger.info(f"Processing file {file_id + 1}/{self.max_files}: {file}")
             self._reset_data()
-            run_info = {}
-            shower_rows = trigger_rows = 0
-
-            with EventIOFile(file) as eventio_file:
-                for eventio_object in eventio_file:
-                    shower_table, flushed_shower_rows = self._flush_shower_chunk_if_full(
-                        eventio_object, chunk_size
-                    )
-                    if shower_table is not None:
-                        shower_rows += flushed_shower_rows
-                        yield [shower_table]
-
-                    self._process_eventio_object(eventio_object, file_id, file, run_info)
-
-                    trigger_table, flushed_trigger_rows = self._flush_trigger_chunk_if_full(
-                        chunk_size
-                    )
-                    if trigger_table is not None:
-                        trigger_rows += flushed_trigger_rows
-                        yield [trigger_table]
-
-            tables = self._finalize_file_chunk_tables(
-                file_id=file_id,
-                file_name=file,
-                run_info=run_info,
-                shower_rows=shower_rows,
-                trigger_rows=trigger_rows,
-            )
-            self._record_input_metadata(file_id, file, run_info or None)
+            reader = get_reader(file, self.file_format)
+            counts = dict.fromkeys(TableSchemas.schemas, 0)
+            data = {
+                "SHOWERS": self.shower_data,
+                "TRIGGERS": self.trigger_data,
+                "FILE_INFO": self.file_info,
+            }
+            for table_name, row in reader.iter_records(file_id=file_id):
+                data[table_name].append(row)
+                counts[table_name] += 1
+                if table_name != "FILE_INFO" and len(data[table_name]) >= chunk_size:
+                    yield [self._create_chunk(table_name, data[table_name])]
+                    data[table_name].clear()
+            self._validate_file_chunk_data(file, counts["SHOWERS"], counts["TRIGGERS"])
+            self.input_metadata.append(reader.read_metadata())
+            yield [self._create_chunk(name, rows) for name, rows in data.items() if rows]
             self._reset_data()
-            yield tables
-
-    def _flush_shower_chunk_if_full(self, eventio_object, chunk_size):
-        """Flush shower rows when the chunk-size boundary is reached."""
-        if not isinstance(eventio_object, MCShower | iact.EventHeader):
-            return None, 0
-        if len(self.shower_data) < chunk_size:
-            return None, 0
-
-        n_rows = len(self.shower_data)
-        table = self._create_chunk("SHOWERS", self.shower_data)
-        self.shower_data = []
-        return table, n_rows
-
-    def _flush_trigger_chunk_if_full(self, chunk_size):
-        """Flush trigger rows when the chunk-size boundary is reached."""
-        if len(self.trigger_data) < chunk_size:
-            return None, 0
-
-        n_rows = len(self.trigger_data)
-        table = self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True)
-        self.trigger_data = []
-        return table, n_rows
-
-    def _finalize_file_chunk_tables(self, file_id, file_name, run_info, shower_rows, trigger_rows):
-        """Finalize one file and return output tables for remaining records."""
-        self._process_file_info(file_id, file_name, run_info or None)
-        shower_rows += len(self.shower_data)
-        trigger_rows += len(self.trigger_data)
-        self._validate_file_chunk_data(file_name, shower_rows, trigger_rows)
-
-        tables = [self._create_chunk("SHOWERS", self.shower_data)]
-        if self.trigger_data:
-            tables.append(self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True))
-        tables.append(self._create_chunk("FILE_INFO", self.file_info))
-        return tables
 
     def _validate_file_chunk_data(self, file_name, shower_rows, trigger_rows):
         """Validate per-file row counts before writing final chunk tables."""
@@ -286,34 +214,6 @@ class EventDataWriter:
             if unit is not None:
                 table[col].unit = unit
 
-    def _process_eventio_object(self, eventio_object, file_id, file, run_info):
-        """Process one EventIO object and update accumulated records."""
-        if isinstance(eventio_object, RunHeader):
-            self._current_run_header = eventio_object.parse()
-            run_info.update(self._current_run_header)
-            self._current_simtel_metadata = read_sim_telarray_metadata(file)
-            self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
-                file
-            )
-        elif isinstance(eventio_object, MCRunHeader):
-            self._current_mc_run_header = self._process_mc_run_header(eventio_object)
-            run_info.update(self._current_mc_run_header)
-            if not self.telescope_id_to_name:
-                self._current_simtel_metadata = read_sim_telarray_metadata(file)
-                self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
-                    file
-                )
-        elif isinstance(eventio_object, MCShower):
-            shower = self._process_mc_shower(eventio_object, file_id)
-            if shower.get("primary_id") is not None:
-                run_info.setdefault("primary_id", shower["primary_id"])
-        elif isinstance(eventio_object, MCEvent):
-            self._process_mc_event(eventio_object)
-        elif isinstance(eventio_object, ArrayEvent):
-            self._process_array_event(eventio_object, file_id)
-        elif isinstance(eventio_object, iact.EventHeader):
-            self._process_mc_shower_from_iact(eventio_object, file_id)
-
     @staticmethod
     def _validate_records(file, table_name, records, schema, allow_empty=False):
         """Validate row presence and required values for one output table."""
@@ -343,324 +243,6 @@ class EventDataWriter:
                 f"{', '.join(fields)}. Examples: {examples}."
             )
 
-    def _process_mc_run_header(self, eventio_object):
-        """Process MC run header (sim_telarray file)."""
-        mc_head = eventio_object.parse()
-        self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
-        self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
-        return mc_head
-
-    def _record_input_metadata(self, file_id, file, run_info):
-        """Retain rich provenance for one processed input file."""
-        run_info = run_info or {}
-        global_metadata, telescope_metadata = self._current_simtel_metadata
-        telescope_metadata = {
-            str(telescope_id): {
-                "telescope_name": self.telescope_id_to_name.get(telescope_id),
-                "values": metadata,
-            }
-            for telescope_id, metadata in telescope_metadata.items()
-        }
-        self.input_metadata.append(
-            {
-                "file_id": file_id,
-                "file_name": str(file),
-                "run_number": run_info.get("run", run_info.get("run_number")),
-                "run_header": self._current_run_header,
-                "mc_run_header": self._current_mc_run_header,
-                "sim_telarray_global_metadata": global_metadata,
-                "sim_telarray_telescope_metadata": telescope_metadata,
-            }
-        )
-
     def get_simulation_input_metadata(self):
         """Return rich provenance records for processed input files."""
         return list(self.input_metadata)
-
-    def _process_file_info(self, file_id, file, run_info=None):
-        """Process file information and append to file info list."""
-        run_number = (
-            run_info.get("run", run_info.get("run_number"))
-            if run_info
-            else self._get_corsika_run_number(file)
-        )
-        run_number = 0 if run_number is None else run_number
-        if run_info:  # sim_telarray file
-            corsika7_id = PrimaryParticle(
-                particle_id_type="eventio_id",
-                particle_id=run_info.get("primary_id", 1),
-            ).corsika7_id
-            nsb = self.get_nsb_level_from_sim_telarray_metadata(file)
-
-            e_min, e_max = run_info["E_range"]
-            view_cone_min, view_cone_max = run_info["viewcone"]
-            core_min, core_max = run_info["core_range"]
-            azimuth, el = np.degrees(run_info["direction"])
-            zenith = 90.0 - el
-            spectral_index = self._extract_spectral_index(run_info=run_info)
-        else:  # CORSIKA IACT file
-            run_header, event_header = get_corsika_run_and_event_headers(file)
-            corsika7_id = int(event_header["particle_id"])
-            e_min = event_header["energy_min"]
-            e_max = event_header["energy_max"]
-            zenith = np.degrees(event_header["zenith"])
-            # Rotate to geographic north
-            azimuth = np.degrees(
-                event_header["azimuth"] - event_header["angle_array_x_magnetic_north"]
-            )
-            view_cone_min = event_header["viewcone_inner_angle"]
-            view_cone_max = event_header["viewcone_outer_angle"]
-            core_min = 0.0
-            core_max = run_header["x_scatter"] / 1.0e2  # cm to m
-            nsb = 0.0
-            spectral_index = self._extract_spectral_index(event_header=event_header)
-
-        self.file_info.append(
-            {
-                "file_name": str(file),
-                "file_id": file_id,
-                "run_number": run_number,
-                "particle_id": corsika7_id,
-                "spectral_index": spectral_index,
-                "energy_min": e_min,
-                "energy_max": e_max,
-                "viewcone_min": view_cone_min,
-                "viewcone_max": view_cone_max,
-                "core_scatter_min": core_min,
-                "core_scatter_max": core_max,
-                "zenith": zenith,
-                "azimuth": azimuth,
-                "nsb_level": nsb,
-            }
-        )
-
-    @staticmethod
-    def _get_corsika_run_number(file):
-        """Return the run number from a CORSIKA header when available."""
-        try:
-            run_header, event_header = get_corsika_run_and_event_headers(file)
-            return event_header.get("run_number", run_header.get("run_number"))
-        except KeyError, TypeError:
-            return None
-
-    @staticmethod
-    def _extract_spectral_index(run_info=None, event_header=None):
-        """Extract the original simulated spectral index from available headers."""
-        for source in (run_info, event_header):
-            if source is None:
-                continue
-            for key in ("energy_spectrum_slope", "spectral_index", "eslope"):
-                value = source.get(key)
-                if value is not None:
-                    return float(value)
-        return np.nan
-
-    def _process_mc_shower(self, eventio_object, file_id):
-        """
-        Process MC shower from sim_telarray file and update shower event list.
-
-        Duplicated entries 'self.n_use' times to match the number simulated events with
-        different core positions.
-        """
-        shower = eventio_object.parse()
-
-        self.shower_data.extend(
-            {
-                "shower_id": shower["shower"],
-                "event_id": None,  # filled in _process_mc_event
-                "file_id": file_id,
-                "simulated_energy": shower["energy"],
-                "x_core": None,  # filled in _process_mc_event
-                "y_core": None,  # filled in _process_mc_event
-                "shower_azimuth": np.degrees(shower["azimuth"]),
-                "shower_altitude": np.degrees(shower["altitude"]),
-                "area_weight": None,  # filled in _process_mc_event
-            }
-            for _ in range(self.n_use)
-        )
-        return shower
-
-    def _process_mc_shower_from_iact(self, eventio_object, file_id):
-        """
-        Process MC shower from IACT file and update shower event list.
-
-        Duplicated entries 'self.n_use' times to match the number simulated events with
-        different core positions.
-        """
-        shower_header = eventio_object.parse()
-        self.n_use = int(shower_header["n_reuse"])
-
-        self.shower_data.extend(
-            {
-                "shower_id": shower_header["event_number"],
-                "event_id": shower_header["event_number"] * 100 + i,
-                "file_id": file_id,
-                "simulated_energy": shower_header["total_energy"],
-                "x_core": shower_header["reuse_x"][i] / 1.0e2,
-                "y_core": shower_header["reuse_y"][i] / 1.0e2,
-                "shower_azimuth": np.degrees(shower_header["azimuth"]),
-                "shower_altitude": 90.0 - np.degrees(shower_header["zenith"]),
-                "area_weight": 1.0,
-            }
-            for i in range(self.n_use)
-        )
-
-    def _process_mc_event(self, eventio_object):
-        """
-        Process MC event and update shower event list.
-
-        Expected to be called n_use times after _process_shower.
-        """
-        event = eventio_object.parse()
-
-        shower_data_index = len(self.shower_data) - self.n_use + event["event_id"] % 100
-
-        try:
-            if self.shower_data[shower_data_index]["shower_id"] != event["shower_num"]:
-                raise IndexError
-        except IndexError as exc:
-            raise IndexError(
-                f"Inconsistent shower and MC event data for shower id {event['shower_num']}"
-            ) from exc
-
-        self.shower_data[shower_data_index].update(
-            {
-                "event_id": event["event_id"],
-                "x_core": event["xcore"],
-                "y_core": event["ycore"],
-                "area_weight": event["aweight"],
-            }
-        )
-
-    def _process_array_event(self, eventio_object, file_id):
-        """Process array event and update triggered event list."""
-        altitudes = []
-        azimuths = []
-        telescopes = []
-
-        for obj in eventio_object:
-            if isinstance(obj, TriggerInformation):
-                trigger_info = obj.parse()
-                telescopes = (
-                    trigger_info["triggered_telescopes"]
-                    if len(trigger_info["triggered_telescopes"]) > 0
-                    else []
-                )
-            if isinstance(obj, TrackingPosition):
-                tracking_position = obj.parse()
-                altitudes.append(np.degrees(tracking_position["altitude_raw"]))
-                azimuths.append(np.degrees(tracking_position["azimuth_raw"]))
-
-        if len(telescopes) > 0 and altitudes:
-            self._fill_array_event(
-                self._map_telescope_names(telescopes),
-                altitudes,
-                azimuths,
-                eventio_object.event_id,
-                file_id,
-            )
-
-    def _fill_array_event(self, telescopes, altitudes, azimuths, event_id, file_id):
-        """Add array event triggered events with tracking positions."""
-        self.trigger_data.append(
-            {
-                "shower_id": self.shower_data[-1]["shower_id"],
-                "event_id": event_id,
-                "file_id": file_id,
-                "array_altitude": float(np.mean(altitudes)),
-                "array_azimuth": float(np.degrees(calculate_circular_mean(np.deg2rad(azimuths)))),
-                "telescope_list": ",".join(map(str, telescopes)),
-                "telescope_list_common_id": ",".join(
-                    [
-                        str(get_common_identifier_from_array_element_name(tel, 0))
-                        for tel in telescopes
-                    ]
-                ),
-            }
-        )
-
-    def _map_telescope_names(self, telescope_ids):
-        """
-        Map sim_telarray telescopes IDs to CTAO array element names.
-
-        Parameters
-        ----------
-        telescope_ids : list
-            List of telescope IDs.
-
-        Returns
-        -------
-        list
-            List of telescope names corresponding to the IDs.
-        """
-        return [
-            self.telescope_id_to_name.get(tel_id, f"Unknown_{tel_id}") for tel_id in telescope_ids
-        ]
-
-    def get_nsb_level_from_sim_telarray_metadata(self, file):
-        """
-        Return NSB level from sim_telarray metadata.
-
-        Falls back to preliminary NSB level if not found.
-
-        Parameters
-        ----------
-        file : Path
-            Path to the sim_telarray file.
-
-        Returns
-        -------
-        float
-            NSB level.
-        """
-        metadata, _ = read_sim_telarray_metadata(file)
-        nsb_integrated_flux = metadata.get("nsb_integrated_flux")
-        if nsb_integrated_flux is not None:
-            try:
-                return float(nsb_integrated_flux)
-            except TypeError, ValueError:
-                self._logger.warning(
-                    f"Invalid nsb_integrated_flux value '{nsb_integrated_flux}' for {file}"
-                )
-
-        return self._get_nsb_level_from_file_name(str(file))
-
-    def _get_nsb_level_from_file_name(self, file):
-        """
-        Return NSB level from file name.
-
-        Hardwired values are used for "dark", "half", "full", and "moon" NSB levels.
-        "moon" is treated as equivalent to "half" (0.835).
-        Allows to read legacy sim_telarray files without 'nsb_integrated_flux'
-        metadata field.
-
-        Parameters
-        ----------
-        file : str
-            File name to extract NSB level from.
-
-        Returns
-        -------
-        float
-            NSB level extracted from file name.
-
-        Raises
-        ------
-        ValueError
-            If no NSB level keyword is found in the file name.
-        """
-        nsb_levels = {"dark": 0.24, "half": 0.835, "full": 1.2}
-        nsb_levels["moon"] = nsb_levels["half"]  # moon uses same level as half
-
-        for key, value in nsb_levels.items():
-            try:
-                if key in file.lower():
-                    self._logger.warning(f"NSB level set to hardwired value of {value} for {file}")
-                    return value
-            except AttributeError as exc:
-                raise AttributeError("Invalid file name.") from exc
-
-        raise ValueError(
-            f"Cannot determine NSB level for '{file}': not found in metadata and "
-            f"no recognised keyword ('dark', 'half', 'full', 'moon') in file name."
-        )

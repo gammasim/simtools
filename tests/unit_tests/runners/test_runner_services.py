@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import simtools.runners.runner_services as runner_services
+from simtools.corsika.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 
@@ -93,11 +94,8 @@ def test_get_file_basename(runner_service, file_base_name, model_version):
         f"run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
-    _runner_service_copy.config.primary_particle = {
-        "primary_id_type": "common_name",
-        "primary": "gamma",
-    }
-    _runner_service_copy.config.config["USER_INPUT"]["VIEWCONE"] = [0, 5]
+    _runner_service_copy.config.primary_particle = PrimaryParticle("common_name", "gamma")
+    _runner_service_copy.config.viewcone_max = 5
     assert _runner_service_copy._get_file_basename(1) == (
         f"gamma_diffuse_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )

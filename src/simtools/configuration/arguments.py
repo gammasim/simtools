@@ -549,6 +549,13 @@ SIMULATION_SOFTWARE = _argument(
     default=defaults.SIMULATION_SOFTWARE_DEFAULT,
 )
 
+SIMULATION_FILE_FORMAT = _argument(
+    "simulation_file_format",
+    _SIMULATION_CONFIGURATION_GROUP,
+    help="Simulation input format. Current IACT and sim_telarray files use 'eventio'.",
+    default="eventio",
+)
+
 PRIMARY = _argument(
     "primary",
     _SIMULATION_CONFIGURATION_GROUP,

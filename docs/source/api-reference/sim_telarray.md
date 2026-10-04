@@ -151,3 +151,13 @@ incomplete contracts and invalid matrix grids before creating a configuration.
 .. automodule:: simtel.pulse_shapes
    :members:
 ```
+
+## Native configuration and file formats
+
+```{eval-rst}
+.. automodule:: simtel.model_writer
+   :members:
+
+.. automodule:: simtel.light_emission_config_writer
+   :members:
+```

@@ -1,17 +1,9 @@
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import h5py
 import numpy as np
 import pytest
-from eventio.simtel import (
-    ArrayEvent,
-    MCEvent,
-    MCRunHeader,
-    MCShower,
-    TrackingPosition,
-    TriggerInformation,
-)
 
 from simtools.io import table_handler
 from simtools.sim_events.writer import EventDataWriter
@@ -37,7 +29,7 @@ def lookup_table_generator(mock_eventio_file):
 def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
     mock_get_mapping = mocker.patch(
-        "simtools.sim_events.writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
+        "simtools.sim_events.formats.eventio_reader.get_sim_telarray_telescope_id_to_telescope_name_mapping"
     )
     mock_get_mapping.return_value = {
         1: "LSTN-01",
@@ -51,62 +43,11 @@ def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
 @pytest.fixture
 def mock_read_sim_telarray_metadata(mocker):
     """Mock the read_sim_telarray_metadata function."""
-    mock_metadata = mocker.patch("simtools.sim_events.writer.read_sim_telarray_metadata")
+    mock_metadata = mocker.patch(
+        "simtools.sim_events.formats.eventio_reader.read_sim_telarray_metadata"
+    )
     mock_metadata.return_value = {"nsb_integrated_flux": 22.24}, {}
     return mock_metadata
-
-
-def create_mc_run_header():
-    """Create mock MC run header."""
-    mock_header = MagicMock(spec=MCRunHeader)
-    mock_header.parse.return_value = {
-        "run": 123,
-        "n_use": 2,  # Important: Must be >= 1
-        "direction": [0.0, 70.0 / 57.3],
-        "E_range": [0.003, 330.0],
-        "energy_spectrum_slope": -2.0,
-        "viewcone": [0.0, 10.0],
-        "core_range": [0.0, 1000.0],
-    }
-    return mock_header
-
-
-def create_mc_shower(shower_id=1):
-    """Create mock MC shower."""
-    mock_shower = MagicMock(spec=MCShower)
-    mock_shower.parse.return_value = {
-        "energy": 1.0,
-        "azimuth": 0.1,
-        "altitude": 0.1,
-        "shower": shower_id,  # Must match shower_num in mc_event
-        "primary_id": 1,
-    }
-    return mock_shower
-
-
-def create_mc_event(shower_num=1, event_id=42):
-    """Create mock MC event."""
-    mock_event = MagicMock(spec=MCEvent)
-    mock_event.parse.return_value = {
-        "shower_num": shower_num,  # Must match shower in mc_shower
-        "event_id": event_id,
-        "xcore": 0.1,
-        "ycore": 0.1,
-        "aweight": 1.0,
-    }
-    return mock_event
-
-
-def create_array_event():
-    """Create mock array event."""
-    mock_event = MagicMock(spec=ArrayEvent)
-    mock_trigger = MagicMock(spec=TriggerInformation)
-    mock_trigger.parse.return_value = {"triggered_telescopes": [1, 2, 3]}
-    mock_tracking = MagicMock(spec=TrackingPosition)
-    mock_tracking.parse.return_value = {"altitude_raw": 0.5, "azimuth_raw": 1.2}
-    mock_event.__iter__.return_value = [mock_trigger, mock_tracking]
-    mock_event.event_id = 42
-    return mock_event
 
 
 def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope_list_list):
@@ -125,20 +66,21 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
     assert len(reduced_data.col("shower_altitude")) > 0
 
 
-@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
+@patch("simtools.sim_events.formats.eventio_reader.EventIOFile", autospec=True)
 def test_process_files(
     mock_eventio_class,
     lookup_table_generator,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
+    eventio_objects,
 ):
     # Create sequence that matches EventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
-        create_mc_run_header(),
-        create_mc_shower(shower_id=1),  # First shower
-        create_mc_event(shower_num=1, event_id=0),  # First event of shower 1
-        create_mc_event(shower_num=1, event_id=1),  # Second event of shower 1
-        create_array_event(),  # Array event matching shower 1
+        eventio_objects["run_header"](),
+        eventio_objects["shower"](shower_id=1),  # First shower
+        eventio_objects["event"](shower_num=1, event_id=0),  # First event of shower 1
+        eventio_objects["event"](shower_num=1, event_id=1),  # Second event of shower 1
+        eventio_objects["array_event"](),  # Array event matching shower 1
     ]
 
     tables = lookup_table_generator.process_files()
@@ -185,19 +127,20 @@ def test_chunked_output_matches_non_chunked_output(
     lookup_table_generator,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
+    eventio_objects,
     mocker,
     tmp_test_directory,
 ):
     input_file = lookup_table_generator.input_files[0]
     reference_file = Path(tmp_test_directory) / "reference.hdf5"
     chunked_file = Path(tmp_test_directory) / "chunked.hdf5"
-    eventio_file = mocker.patch("simtools.sim_events.writer.EventIOFile")
+    eventio_file = mocker.patch("simtools.sim_events.formats.eventio_reader.EventIOFile")
     eventio_file.return_value.__enter__.return_value = [
-        create_mc_run_header(),
-        create_mc_shower(shower_id=1),
-        create_mc_event(shower_num=1, event_id=0),
-        create_mc_event(shower_num=1, event_id=1),
-        create_array_event(),
+        eventio_objects["run_header"](),
+        eventio_objects["shower"](shower_id=1),
+        eventio_objects["event"](shower_num=1, event_id=0),
+        eventio_objects["event"](shower_num=1, event_id=1),
+        eventio_objects["array_event"](),
     ]
 
     reference_tables = EventDataWriter([input_file]).process_files()
@@ -246,221 +189,98 @@ def test_create_chunk_rejects_unset_shower_fields(lookup_table_generator):
         lookup_table_generator._create_chunk("SHOWERS", [shower])
 
 
-def test_process_array_event(lookup_table_generator):
-    mock_array_event = MagicMock(spec=ArrayEvent)
-    mock_array_event.event_id = 42
+@pytest.fixture
+def example_reader(monkeypatch):
+    """A second format supplying known physical values without eventio objects."""
+    from types import SimpleNamespace
 
-    mock_trigger = MagicMock(spec=TriggerInformation)
-    mock_trigger.parse.return_value = {"triggered_telescopes": [1, 2, 3]}
-    mock_tracking = MagicMock(spec=TrackingPosition)
-    mock_tracking.parse.return_value = {"altitude_raw": 0.5, "azimuth_raw": 1.2}
+    from simtools.sim_events.formats import registry
 
-    mock_array_event.__iter__.return_value = [mock_trigger, mock_tracking]
+    shower = {
+        "shower_id": 9,
+        "event_id": 901,
+        "simulated_energy": 2.5,
+        "x_core": 10.0,
+        "y_core": -20.0,
+        "shower_azimuth": 180.0,
+        "shower_altitude": 70.0,
+        "area_weight": 0.5,
+    }
+    run = {
+        "file_name": "input.example",
+        "run_number": 7,
+        "particle_id": 1,
+        "spectral_index": -2.0,
+        "energy_min": 1.0,
+        "energy_max": 10.0,
+        "viewcone_min": 0.0,
+        "viewcone_max": 5.0,
+        "core_scatter_min": 0.0,
+        "core_scatter_max": 200.0,
+        "zenith": 20.0,
+        "azimuth": 180.0,
+        "nsb_level": 0.24,
+    }
+    monkeypatch.setattr(registry, "_READERS", registry._READERS.copy())
 
-    lookup_table_generator.shower_data.append({"shower_id": 1, "event_id": 42, "file_id": 0})
-
-    with patch.object(
-        lookup_table_generator, "_map_telescope_names", return_value=one_two_three.split(",")
-    ):
-        lookup_table_generator._process_array_event(mock_array_event, 0)
-
-    assert len(lookup_table_generator.trigger_data) == 1
-    trigger_event = lookup_table_generator.trigger_data[0]
-    assert trigger_event["shower_id"] == 1
-    assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == one_two_three
-
-
-def test_process_array_event_empty(lookup_table_generator):
-    mock_array_event = MagicMock(spec=ArrayEvent)
-    mock_array_event.__iter__.return_value = []
-
-    # Initial length of trigger data
-    initial_len = len(lookup_table_generator.trigger_data)
-    lookup_table_generator._process_array_event(mock_array_event, 0)
-
-    # Verify no data was added
-    assert len(lookup_table_generator.trigger_data) == initial_len
-
-
-def test_get_nsb_level_from_file_name(lookup_table_generator):
-    assert lookup_table_generator._get_nsb_level_from_file_name(
-        "dark_file.simtel.zst"
-    ) == pytest.approx(0.24)
-
-    assert lookup_table_generator._get_nsb_level_from_file_name(
-        "half_nsb_file.simtel.zst"
-    ) == pytest.approx(0.835)
-
-    assert lookup_table_generator._get_nsb_level_from_file_name(
-        "gamma_full_moon_file.simtel.zst"
-    ) == pytest.approx(1.2)
-
-    assert lookup_table_generator._get_nsb_level_from_file_name(
-        "DARK_FILE.simtel.zst"
-    ) == pytest.approx(0.24)
-
-    assert lookup_table_generator._get_nsb_level_from_file_name(
-        "gamma_run_moon+magic.simtel.zst"
-    ) == pytest.approx(0.835)
-
-
-def test_get_nsb_level_from_file_name_unknown(lookup_table_generator):
-    with pytest.raises(ValueError, match="Cannot determine NSB level"):
-        lookup_table_generator._get_nsb_level_from_file_name("file.simtel.zst")
-
-
-def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
-    with pytest.raises(AttributeError, match=r"Invalid file name."):
-        lookup_table_generator._get_nsb_level_from_file_name(None)
-
-
-def test_get_nsb_level_from_metadata_invalid_value_falls_back(
-    mocker, lookup_table_generator, caplog
-):
-    mocker.patch(
-        "simtools.sim_events.writer.read_sim_telarray_metadata",
-        return_value=({"nsb_integrated_flux": "not-a-number"}, {}),
-    )
-    fallback = mocker.patch.object(
-        lookup_table_generator,
-        "_get_nsb_level_from_file_name",
-        return_value=0.24,
-    )
-
-    with caplog.at_level("WARNING"):
-        nsb = lookup_table_generator.get_nsb_level_from_sim_telarray_metadata(
-            "dummy_dark.simtel.zst"
+    def factory(file):
+        return SimpleNamespace(
+            iter_records=lambda file_id: iter(
+                [
+                    ("SHOWERS", {**shower, "file_id": file_id}),
+                    ("FILE_INFO", {**run, "file_name": str(file), "file_id": file_id}),
+                ]
+            ),
+            read_metadata=lambda: {"software": "example", "file_name": str(file)},
         )
 
-    fallback.assert_called_once_with("dummy_dark.simtel.zst")
-    assert "Invalid nsb_integrated_flux value 'not-a-number'" in caplog.text
-    assert nsb == pytest.approx(0.24)
+    registry.register_reader("example", factory)
+    return factory
 
 
-def test_process_mc_event(lookup_table_generator):
-    lookup_table_generator.n_use = 2
-    lookup_table_generator.shower_data = [
-        {"shower_id": 1, "event_id": None},
-        {"shower_id": 1, "event_id": None},
+def test_second_format_preserves_common_tables(example_reader):
+    generator = EventDataWriter(["first.example", "second.example"], file_format="example")
+    tables = generator.process_files()
+    showers, triggers, files = tables
+    assert list(showers["file_id"]) == [0, 1]
+    assert list(showers["shower_id"]) == [9, 9]
+    assert list(showers["simulated_energy"]) == pytest.approx([2.5, 2.5])
+    assert str(showers["simulated_energy"].unit) == "TeV"
+    assert list(showers["x_core"]) == pytest.approx([10, 10])
+    assert str(showers["x_core"].unit) == "m"
+    assert len(triggers) == 0
+    assert list(files["run_number"]) == [7, 7]
+    assert list(files["file_name"]) == ["first.example", "second.example"]
+    assert generator.get_simulation_input_metadata() == [
+        {"software": "example", "file_name": "first.example"},
+        {"software": "example", "file_name": "second.example"},
     ]
 
-    mock_event = MagicMock(spec=MCEvent)
-    mock_event.parse.return_value = {
-        "event_id": 1001,
-        "shower_num": 1,
-        "xcore": 100.0,
-        "ycore": 200.0,
-        "aweight": 1.5,
-    }
 
-    lookup_table_generator._process_mc_event(mock_event)
-
-    updated_event = lookup_table_generator.shower_data[1]  # event_id is 10001
-    assert updated_event["event_id"] == 1001
-    assert updated_event["x_core"] == pytest.approx(100.0)
-    assert updated_event["y_core"] == pytest.approx(200.0)
-    assert updated_event["area_weight"] == pytest.approx(1.5)
-
-
-def test_process_mc_event_inconsistent_shower(lookup_table_generator):
-    lookup_table_generator.n_use = 2
-    lookup_table_generator.shower_data = [
-        {"shower_id": 1, "event_id": None},
-        {"shower_id": 1, "event_id": None},
-    ]
-
-    # Create mock MC event with mismatched shower number
-    mock_event = MagicMock(spec=MCEvent)
-    mock_event.parse.return_value = {
-        "event_id": 1001,
-        "shower_num": 2,  # Different from shower_id in data
-        "xcore": 100.0,
-        "ycore": 200.0,
-        "aweight": 1.5,
-    }
-
-    with pytest.raises(IndexError, match="Inconsistent shower and MC event data for shower id 2"):
-        lookup_table_generator._process_mc_event(mock_event)
-
-    mock_event.parse.return_value = {
-        "event_id": 109999,
-        "shower_num": 2,  # Different from shower_id in data
-        "xcore": 100.0,
-        "ycore": 200.0,
-        "aweight": 1.5,
-    }
-
-    with pytest.raises(IndexError, match="Inconsistent shower and MC event data for shower id 2"):
-        lookup_table_generator._process_mc_event(mock_event)
-
-
-def test_process_mc_shower_from_iact_simple(lookup_table_generator):
-    mock_eventio_object = MagicMock()
-    mock_eventio_object.parse.return_value = {
-        "n_reuse": 2,
-        "event_number": 7,
-        "total_energy": 42.0,
-        "reuse_x": [100.0, 200.0],
-        "reuse_y": [300.0, 400.0],
-        "azimuth": 0.1,
-        "zenith": 0.2,
-    }
-
-    lookup_table_generator._process_mc_shower_from_iact(mock_eventio_object, 1)
-
-    assert len(lookup_table_generator.shower_data) == 2
-    assert lookup_table_generator.shower_data[0]["shower_id"] == 7
-    assert lookup_table_generator.shower_data[0]["event_id"] == 700
-    assert lookup_table_generator.shower_data[1]["event_id"] == 701
-    assert lookup_table_generator.shower_data[0]["simulated_energy"] == pytest.approx(42.0)
-    assert lookup_table_generator.shower_data[0]["x_core"] == pytest.approx(1.0)
-    assert lookup_table_generator.shower_data[1]["x_core"] == pytest.approx(2.0)
-    assert lookup_table_generator.shower_data[0]["y_core"] == pytest.approx(3.0)
-    assert lookup_table_generator.shower_data[1]["y_core"] == pytest.approx(4.0)
-    assert lookup_table_generator.shower_data[0]["file_id"] == 1
-    assert lookup_table_generator.shower_data[1]["file_id"] == 1
-    assert lookup_table_generator.shower_data[0]["area_weight"] == pytest.approx(1.0)
-    assert lookup_table_generator.shower_data[1]["area_weight"] == pytest.approx(1.0)
-
-
-def test_process_file_info_else(monkeypatch, tmp_path):
-    file_path = tmp_path / "test.iact"
-    file_path.touch()
-
-    fake_run_header = {"x_scatter": 10000.0}
-    fake_event_header = {
-        "particle_id": 3,
-        "energy_spectrum_slope": -2.3,
-        "energy_min": 0.5,
-        "energy_max": 5.0,
-        "zenith": 0.5,
-        "azimuth": 1.0,
-        "angle_array_x_magnetic_north": 0.1,
-        "viewcone_inner_angle": 0.1,
-        "viewcone_outer_angle": 0.2,
-    }
-
-    monkeypatch.setattr(
-        "simtools.sim_events.writer.get_corsika_run_and_event_headers",
-        lambda f: (fake_run_header, fake_event_header),
+def test_selected_format_chunk_size(example_reader):
+    generator = EventDataWriter(["input.example"], file_format="example")
+    chunks = list(generator.iter_table_chunks(chunk_size=1))
+    assert all(len(table) <= 1 for chunk in chunks for table in chunk)
+    assert (
+        sum(len(table) for chunk in chunks for table in chunk if table.meta["EXTNAME"] == "SHOWERS")
+        == 1
     )
+    assert generator.shower_data == generator.file_info == []
 
-    writer = EventDataWriter([str(file_path)])
-    writer._process_file_info(1, str(file_path))
 
-    assert len(writer.file_info) == 1
-    info = writer.file_info[0]
-    assert info["file_name"] == str(file_path)
-    assert info["file_id"] == 1
-    assert info["particle_id"] == 3
-    assert info["spectral_index"] == pytest.approx(-2.3)
-    assert info["energy_min"] == pytest.approx(0.5)
-    assert info["energy_max"] == pytest.approx(5.0)
-    assert info["viewcone_min"] == pytest.approx(0.1)
-    assert info["viewcone_max"] == pytest.approx(0.2)
-    assert info["core_scatter_min"] == pytest.approx(0.0)
-    assert info["core_scatter_max"] == pytest.approx(100.0)
-    assert info["zenith"] == pytest.approx(28.64788975654116)
-    assert info["azimuth"] == pytest.approx(np.rad2deg(1.0 - 0.1))
-    assert info["nsb_level"] == pytest.approx(0.0)
+@pytest.mark.parametrize("chunk_size", [0, -1])
+def test_invalid_chunk_size(chunk_size):
+    with pytest.raises(ValueError, match="chunk_size must be greater"):
+        list(EventDataWriter([]).iter_table_chunks(chunk_size))
+
+
+@pytest.mark.parametrize("rows", [[], [("FILE_INFO", {})], [("SHOWERS", create_test_data())]])
+def test_reader_with_incomplete_file(rows, mocker):
+    from types import SimpleNamespace
+
+    mocker.patch(
+        "simtools.sim_events.writer.get_reader",
+        return_value=SimpleNamespace(iter_records=lambda file_id: iter(rows)),
+    )
+    with pytest.raises(ValueError, match="Incomplete reduced event data"):
+        EventDataWriter(["input"]).process_files()

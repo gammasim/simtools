@@ -21,7 +21,7 @@ def test_get_corsika_run_number_with_run_header(mocker):
     mc_run_header.parse.return_value = {"n_use": 5}
     mc_shower = mock.MagicMock(spec=MCShower)
     mc_shower.parse.return_value = {"primary_id": 1}
-    eventio_file = mocker.patch("simtools.sim_events.file_info.EventIOFile")
+    eventio_file = mocker.patch("simtools.sim_events.formats.eventio_reader.EventIOFile")
     eventio_file.return_value.__enter__.return_value = [run_header, mc_run_header, mc_shower]
 
     assert get_corsika_run_number("synthetic.simtel.zst") == 10
@@ -31,7 +31,7 @@ def test_get_simulated_events(mocker):
     events = [SimpleNamespace(header=SimpleNamespace(type=2020)) for _ in range(2)] + [
         SimpleNamespace(header=SimpleNamespace(type=2021)) for _ in range(3)
     ]
-    eventio_file = mocker.patch("simtools.sim_events.file_info.EventIOFile")
+    eventio_file = mocker.patch("simtools.sim_events.formats.eventio_reader.EventIOFile")
     eventio_file.return_value.__enter__.return_value = events
 
     n_showers, n_events = get_simulated_events("synthetic.simtel.zst")
@@ -41,7 +41,7 @@ def test_get_simulated_events(mocker):
 
 def test_get_simulated_events_corsika_iact(mocker):
     events = [SimpleNamespace(header=SimpleNamespace(type=1202)) for _ in range(2)]
-    eventio_file = mocker.patch("simtools.sim_events.file_info.EventIOFile")
+    eventio_file = mocker.patch("simtools.sim_events.formats.eventio_reader.EventIOFile")
     eventio_file.return_value.__enter__.return_value = events
 
     n_showers, n_events = get_simulated_events("synthetic.corsika.zst")
@@ -54,7 +54,7 @@ def test_get_corsika_run_and_event_headers(mocker):
     run_header.parse.return_value = np.array((7,), dtype=[("run_number", "i4")])
     event_header = mock.MagicMock(spec=iact.EventHeader)
     event_header.parse.return_value = np.array((1,), dtype=[("event_number", "i4")])
-    eventio_file = mocker.patch("simtools.sim_events.file_info.EventIOFile")
+    eventio_file = mocker.patch("simtools.sim_events.formats.eventio_reader.EventIOFile")
     eventio_file.return_value.__enter__.return_value = [run_header, event_header]
 
     parsed_run_header, parsed_event_header = get_corsika_run_and_event_headers(
