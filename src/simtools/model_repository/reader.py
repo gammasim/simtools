@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from astropy.table import Table
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from simtools import settings
 from simtools.data_model import schema
@@ -22,6 +22,14 @@ from simtools.model_repository.git_model import GitModelSource
 from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
+
+
+def _production_version_sort_key(path):
+    """Return a stable sort key for a production directory."""
+    try:
+        return (0, Version(path.parent.name))
+    except InvalidVersion:
+        return (1, path.parent.name)
 
 
 class FileSystemModelSource:
@@ -73,6 +81,21 @@ class FileSystemModelSource:
             versions = [path.name for path in self.productions_path.iterdir() if path.is_dir()]
             self._model_versions = sorted(versions, key=Version)
         return list(self._model_versions)
+
+    def get_production_descriptions(self):
+        """Return model-version descriptions from production info files."""
+        info_files = sorted(
+            set(self.productions_path.glob("*/info.yaml"))
+            | set(self.productions_path.glob("*/info.yml")),
+            key=_production_version_sort_key,
+        )
+        descriptions = []
+        for info_file in info_files:
+            info = ascii_handler.collect_data_from_file(info_file)
+            description = str(info.get("description", "")).replace("\n", " ").strip()
+            model_version = str(info.get("model_version", info_file.parent.name))
+            descriptions.append((model_version, description))
+        return descriptions
 
     def read_production_table(self, collection_name, model_version):
         """Return an aggregated production table for a collection and version."""
@@ -365,6 +388,10 @@ class SimulationModelReader:
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
         return self._source.get_model_versions(collection_name)
+
+    def get_production_descriptions(self):
+        """Return model-version descriptions from the selected source."""
+        return self._source.get_production_descriptions()
 
     def read_production_table(self, collection_name, model_version):
         """Read a production table."""

@@ -6,24 +6,36 @@ from pathlib import Path
 import pytest
 from astropy.table import Table
 
+from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import get_simtel_serialization
-from simtools.model_repository.reader import SimulationModelReader
 from simtools.simtel import segmentation, table_serializers
 from simtools.testing import options
 from simtools.utils import names
 
 
-def _model_path(request, simtools_root_path):
-    """Return the configured local simulation-model repository, if any."""
+def _model_source_configuration(request, simtools_root_path):
+    """Return the configured filesystem or Git model source."""
     configured = options.get_mirrored_option(request.config, "simulation_models_path")
-    path = (
-        Path(configured)
-        if configured
-        else Path(simtools_root_path).parent / "simulation-models-dev1"
-    )
-    return path if path.is_absolute() else Path(simtools_root_path) / path
+    if configured:
+        path = Path(configured)
+        path = path if path.is_absolute() else Path(simtools_root_path) / path
+        return {"simulation_models_path": path}
+
+    git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
+    if git_path:
+        git_path = Path(git_path)
+        git_path = git_path if git_path.is_absolute() else Path(simtools_root_path) / git_path
+        return {
+            "simulation_models_git_path": git_path,
+            "simulation_models_git_revision": options.get_mirrored_option(
+                request.config, "simulation_models_git_revision"
+            ),
+        }
+
+    path = Path(simtools_root_path).parent / "simulation-models"
+    return {"simulation_models_path": path} if path.is_dir() else None
 
 
 def _simtel_contract(parameter_data):
@@ -143,12 +155,12 @@ def _serialize_production_assets(reader, destination):
 def test_production_model_parameter_assets_are_canonical(
     request, simtools_root_path, tmp_test_directory
 ):
-    """Validate and serialize every local production model asset deterministically."""
-    model_path = _model_path(request, simtools_root_path)
-    if not model_path.is_dir():
-        pytest.skip("No local simulation-model repository is configured")
+    """Validate and serialize every configured production model asset deterministically."""
+    source_configuration = _model_source_configuration(request, simtools_root_path)
+    if source_configuration is None:
+        pytest.skip("No simulation-model repository is configured")
 
-    reader = SimulationModelReader.from_files(model_path)
+    reader = create_model_reader_from_configuration(source_configuration)
     destination = Path(tmp_test_directory) / "model-assets"
     destination.mkdir()
     _serialize_production_assets(reader, destination)

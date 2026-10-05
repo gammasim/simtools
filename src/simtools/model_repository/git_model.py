@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 from time import perf_counter
 
 from astropy.table import Table
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from simtools.data_model import schema
 from simtools.data_model.table_asset import validate_table_asset
@@ -71,6 +71,30 @@ class GitModelSource:
             }
             self._model_versions = sorted(versions, key=Version)
         return list(self._model_versions)
+
+    def get_production_descriptions(self):
+        """Return model-version descriptions from production info blobs."""
+        info_files = []
+        for path in self._object_store.iter_files(self.commit, _PRODUCTIONS_PATH.as_posix()):
+            info_path = PurePosixPath(path)
+            if info_path.name in {"info.yaml", "info.yml"}:
+                info_files.append(info_path)
+
+        def sort_key(path):
+            try:
+                return (0, Version(path.parent.name))
+            except InvalidVersion:
+                return (1, path.parent.name)
+
+        descriptions = []
+        for info_path in sorted(info_files, key=sort_key):
+            info = ascii_handler.collect_data_from_bytes(
+                self._object_store.read_blob(self.commit, info_path.as_posix()), info_path
+            )
+            description = str(info.get("description", "")).replace("\n", " ").strip()
+            model_version = str(info.get("model_version", info_path.parent.name))
+            descriptions.append((model_version, description))
+        return descriptions
 
     def _warm_model_version(self, model_version):
         """Warm all production and referenced parameter data for a model version."""

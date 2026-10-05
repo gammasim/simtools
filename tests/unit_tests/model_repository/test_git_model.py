@@ -77,6 +77,19 @@ def test_git_source_exposes_metadata_and_reports_missing_tables(tmp_test_directo
         source.read_production_table("sites", "1.0.0")
 
 
+def test_git_source_reads_production_descriptions(tmp_test_directory):
+    """Production summaries can read info files directly from Git blobs."""
+    objects = {
+        "simulation-models/productions/1.0.0/info.yml": b"description: Prod1\n",
+        "simulation-models/productions/2.0.0/info.yaml": b"description: Prod2\n",
+    }
+    source = GitModelSource(
+        Path(str(tmp_test_directory)) / "models.git", "v1", object_store=MemoryObjectStore(objects)
+    )
+
+    assert source.get_production_descriptions() == [("1.0.0", "Prod1"), ("2.0.0", "Prod2")]
+
+
 def test_git_source_reads_patch_history_and_ignores_non_json_files(tmp_test_directory):
     """Patch production documents are combined in version order."""
     objects = {
