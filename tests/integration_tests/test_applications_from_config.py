@@ -21,6 +21,9 @@ def _get_simulation_model_source(config, request, simtools_root_path):
     git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
     git_revision = options.get_mirrored_option(request.config, "simulation_models_git_revision")
     if not simulation_models_path and not git_path:
+        default_path = Path(simtools_root_path).parent / "simulation-models"
+        if default_path.is_dir():
+            return default_path.resolve(), None
         return None, None
     if simulation_models_path:
         simulation_models_path = Path(simulation_models_path)
