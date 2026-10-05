@@ -1,7 +1,6 @@
 """Repository-level validation for the canonical model-parameter assets."""
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -12,13 +11,13 @@ from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.reader import SimulationModelReader
 from simtools.simtel import segmentation, table_serializers
+from simtools.testing import options
 from simtools.utils import names
 
 
 def _model_path(request, simtools_root_path):
     """Return the configured local simulation-model repository, if any."""
-    configured = request.config.getoption("simulation_models_path", default=None)
-    configured = configured or os.environ.get("SIMTOOLS_SIMULATION_MODELS_PATH")
+    configured = options.get_mirrored_option(request.config, "simulation_models_path")
     path = (
         Path(configured)
         if configured
