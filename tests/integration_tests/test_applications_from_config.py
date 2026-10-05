@@ -17,13 +17,9 @@ logger = logging.getLogger()
 
 def _get_simulation_model_source(config, request, simtools_root_path):
     """Return the configured simulation-model repository source."""
-    simulation_models_path = options.get_mirrored_option(
-        request.config, "simulation_models_path"
-    )
+    simulation_models_path = options.get_mirrored_option(request.config, "simulation_models_path")
     git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
-    git_revision = options.get_mirrored_option(
-        request.config, "simulation_models_git_revision"
-    )
+    git_revision = options.get_mirrored_option(request.config, "simulation_models_git_revision")
     if not simulation_models_path and not git_path:
         return None, None
     if simulation_models_path:
