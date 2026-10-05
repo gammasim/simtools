@@ -1,7 +1,7 @@
 # Science tests
 
-Science tests are explicit, longer-running campaigns for physics performance, production behavior,
-and resource comparisons. Typically, science tests are executed for each release of simtools.
+Science tests compare simulated event distributions and computing requirements against a reference
+production. They typically run for each release of simtools.
 
 ## Definitions
 
@@ -9,7 +9,7 @@ Science-test definitions live in the [simtools-tests](https://github.com/gammasi
 
 ```text
 science-test-template/
-  catalogue.yml                  test IDs, dependencies, gates, and sites
+  catalogue.yml                  test names, prerequisites, and sites
   workflows/                     production, derivation, and comparison workflows
   profiles/                      local and HTCondor settings
   acceptance/                    required products and acceptance rules
@@ -19,12 +19,13 @@ simtools-tests/<release>/science_tests/
   context.example.yml            external paths; copy outside Git
   sites/*.yml                    site layout and required tests
   acceptance/overrides.yml       must remain empty
-  reports/                       small reports and collection inventories
+  reports/                       comparison reports and lists of collected files
 ```
 
 The catalogue is reusable. Release files select the catalogue and sites; site files provide the
 array layout and required tests. The external context provides the release label and absolute
-candidate, baseline, and reference roots. Workflows use the application-workflow schema, while
+candidate, baseline, and reference directories. The candidate is the production being tested;
+the baseline is the production used for comparison. Workflows use the application-workflow schema;
 the runner supplies site and report placeholders.
 
 The template is discovered beside the release bundle or selected with `--template_dir`. A release
@@ -41,7 +42,7 @@ __SCIENCE_BASELINE_ROOT__: /data/science/baseline
 __SCIENCE_REFERENCE_ROOT__: /data/science/reference-inputs
 ```
 
-The roots must be absolute; candidate and baseline must differ.
+Use absolute directory paths and separate candidate and baseline directories.
 
 First validate the complete selection:
 
@@ -67,43 +68,45 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
 
-Use repeatable `--site` and `--test` options to select a subset; dependencies are added
+Repeat `--site` and `--test` to select sites and tests; prerequisite tests are included
 automatically. Dry runs validate workflows and profiles without submitting jobs or writing reports,
-but do not check external products.
+but do not check whether simulation outputs exist.
 
-Production consumers require a completed `submission.json` with non-empty job IDs, matching
+Tests using simulation outputs require a completed `submission.json` with non-empty job IDs, matching
 expected-output entries, and existing output files. Existing submissions are never resubmitted
-automatically. Failed or incomplete dependencies block downstream tests.
+automatically. Failed or incomplete prerequisite tests prevent dependent tests from running.
 
 ## Products and results
 
 `acceptance/expected-products.yml` declares required non-empty products. `thresholds.yml` defines
-named rules with JSON metrics and optional limits. Missing or invalid products/metrics are
-`incomplete`; valid values outside a limit are `fail`. Advisory rules produce `warn` after checks
+named rules with measurements read from JSON files and optional limits. Missing or invalid files
+or measurements are `incomplete`; valid values outside a limit are `fail`. Advisory rules produce
+`warn` after checks
 pass and still require scientific review. Only all-required `pass` results qualify a release.
 
 Reports are written under the release `reports/` directory; large production data remains external.
-The summary retains every required site/test, including `not_run`, `blocked`, and `incomplete`
-entries. Retained results are reused only when the release, catalogue, sites, context, acceptance
-rules, workflows, and profiles have the same fingerprint. Rerunning upstream evidence invalidates
-dependent results.
+The summary includes every required test at each site, including tests that did not run or could
+not complete. Results are reused only when the release, catalogue, site settings, context,
+acceptance rules, workflows, and profiles are unchanged. Rerunning a prerequisite test requires
+its dependent comparisons to be repeated.
 
 | Status | Meaning |
 | --- | --- |
 | `planned` | Dry-run selection only. |
-| `not_run` | Not executed or retained evidence was invalidated. |
-| `blocked` | A dependency failed or was incomplete. |
-| `incomplete` | Execution or required evidence failed. |
+| `not_run` | Not executed or needs to be repeated. |
+| `blocked` | A prerequisite test failed or was incomplete. |
+| `incomplete` | Execution failed or required outputs were missing or invalid. |
 | `fail` | A valid measurement violated a configured limit. |
-| `warn` | Checks passed; advisory review remains. |
+| `warn` | Checks passed; scientific review is required. |
 | `pass` | Required products and configured checks passed. |
 
 ## Scope
 
-The documented scope is the gamma-ray campaign. Automatic change-driven selection,
-telescope-equivalence evidence, broader simulation-chain comparisons, waiver handling, baseline
-promotion, and scientific approval workflows are outside that scope. A successful run does not
-imply physics approval or baseline acceptance.
+The documented scope is gamma-ray simulations. Automatic test selection based on configuration
+changes, combining results from equivalent telescopes, broader simulation-chain comparisons,
+exceptions to acceptance limits, selecting new reference productions, and formal scientific
+approval are outside that scope. A successful run does not imply physics approval or acceptance
+of a reference production.
 
 For implementation details, see [simtools-run-application](../user-guide/applications/simtools-run-application.md),
 [simtools-compare-productions](../user-guide/applications/simtools-compare-productions.md), and

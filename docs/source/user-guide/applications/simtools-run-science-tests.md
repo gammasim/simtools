@@ -6,9 +6,9 @@
    :exclude-members: main
 ```
 
-Run named workflows from the shared science-test catalogue with an explicit release
-bundle and external context. See [Science tests](../../developer-guide/testing_science.md)
-for the file layout, production gates, and result interpretation.
+Run selected science tests using a release configuration and a separate file containing production
+paths. See [Science tests](../../developer-guide/testing_science.md) for configuration files,
+production requirements, and result interpretation.
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
