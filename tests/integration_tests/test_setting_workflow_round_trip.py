@@ -1,7 +1,6 @@
 """Check workflow creation, submission, conflicts, and reruns through the CLI."""
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +10,7 @@ import pytest
 from simtools.constants import METADATA_JSON_SCHEMA, MODEL_PARAMETER_METASCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.testing import options
 
 
 @pytest.mark.parametrize(
@@ -20,8 +20,7 @@ from simtools.io import ascii_handler
 def test_setting_workflow_round_trip(
     tmp_test_directory, simtools_root_path, request, parameter, value, expected, unit
 ):
-    model_path = request.config.getoption("simulation_models_path", default=None)
-    model_path = model_path or os.environ.get("SIMTOOLS_SIMULATION_MODELS_PATH")
+    model_path = options.get_mirrored_option(request.config, "simulation_models_path")
     model_path = Path(model_path or simtools_root_path.parent / "simulation-models")
     if not model_path.is_absolute():
         model_path = simtools_root_path / model_path
