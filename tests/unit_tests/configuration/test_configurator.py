@@ -125,7 +125,6 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
 
 def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
     monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
     config_dict = {
         "applications": [
             {

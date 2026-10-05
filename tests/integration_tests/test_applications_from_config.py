@@ -10,20 +10,16 @@ from pathlib import Path
 
 import pytest
 
-from simtools.testing import configuration, helpers, log_inspector, validate_output
+from simtools.testing import configuration, helpers, log_inspector, options, validate_output
 
 logger = logging.getLogger()
 
 
 def _get_simulation_model_source(config, request, simtools_root_path):
     """Return the configured simulation-model repository source."""
-    simulation_models_path = request.config.getoption("simulation_models_path", default=None)
-    git_path = request.config.getoption("simulation_models_git_path", default=None)
-    git_revision = request.config.getoption("simulation_models_git_revision", default=None)
-    if not simulation_models_path and not git_path:
-        simulation_models_path = os.environ.get("SIMTOOLS_SIMULATION_MODELS_PATH")
-        git_path = os.environ.get("SIMTOOLS_SIMULATION_MODELS_GIT_PATH")
-        git_revision = os.environ.get("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION")
+    simulation_models_path = options.get_mirrored_option(request.config, "simulation_models_path")
+    git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
+    git_revision = options.get_mirrored_option(request.config, "simulation_models_git_revision")
     if not simulation_models_path and not git_path:
         return None, None
     if simulation_models_path:
@@ -172,8 +168,7 @@ def pytest_generate_tests(metafunc):
     config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
     test_configs, test_ids = configuration.get_list_of_test_configurations(
         config_files,
-        test_resources_path=metafunc.config.getoption("test_resources_path", default=None)
-        or os.environ.get("SIMTOOLS_TEST_RESOURCES"),
+        test_resources_path=metafunc.config.getoption("test_resources_path", default=None),
     )
     test_parameters = []
     for config, test_id in zip(test_configs, test_ids):
