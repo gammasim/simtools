@@ -4,6 +4,13 @@
 
 Support modules for running simtools, CORSIKA, and sim_telarray.
 
+## Science workflows
+
+```{eval-rst}
+.. automodule:: science_tests
+   :members:
+```
+
 ## simtools_runner
 
 (simtools-runner-1)=

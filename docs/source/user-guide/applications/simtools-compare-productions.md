@@ -21,11 +21,17 @@ The application supports event-level and signal-level comparisons. Trigger-histo
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
+Metadata-based event comparisons also write `comparison_inventory.json` with relative pair
+directories, a matched-pair count, and a pairing-error count. Partial comparisons still produce
+the matched plots and log a warning; release acceptance must reject a non-zero pairing-error count.
+
 For production resource requirements, use `--comparison_level computing` with a production root in
 `--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
 resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
 process role), a
-grouped `resource_requirements.md` report, and time, memory, and storage plots. Storage plots
+grouped `resource_requirements.md` report, a `resource_requirements.json` summary with counts and
+invalid-record diagnostics, and time, memory, and storage plots. Aggregate statistics include
+mean, median, standard deviation, extrema, and 5th/95th percentiles. Storage plots
 include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
 event output, reduced event data, and sim_telarray histograms when those files are available.
 Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a

@@ -155,10 +155,24 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
 
     assert result["table_file"].is_file()
     assert result["report_file"].is_file()
+    metrics = json.loads(result["json_file"].read_text(encoding="utf-8"))
+    assert metrics["resource_row_count"] == 2
+    assert metrics["diagnostic_count"] == 0
+    assert metrics["summary"][0]["peak_rss_bytes_p05"] == pytest.approx(1000)
+    assert metrics["summary"][0]["peak_rss_bytes_p95"] == pytest.approx(1000)
     report = result["report_file"].read_text(encoding="utf-8")
     assert "Storage" in report
-    assert all(f"{statistic}=" in report for statistic in ("mean", "median", "std", "min", "max"))
+    assert all(
+        f"{statistic}=" in report
+        for statistic in ("mean", "median", "std", "min", "max", "p05", "p95")
+    )
     plotter.assert_called_once()
+
+
+def test_resource_percentiles_are_interpolated():
+    metrics = resource_requirements._metric_statistics("wall", [{"wall": v} for v in (0, 10, 20)])
+    assert metrics["wall_p05"] == pytest.approx(1)
+    assert metrics["wall_p95"] == pytest.approx(19)
 
 
 def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test_directory):

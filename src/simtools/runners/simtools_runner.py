@@ -30,6 +30,40 @@ _MODEL_SOURCE_OPTIONS = (
 )
 
 
+def prepare_workflow(args_dict, replacements=None):
+    """Resolve a workflow and its backend configuration without executing it.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Runner arguments, including config_file and optional steps and overrides.
+    replacements : dict or None
+        Placeholder values; the configuration directory is supplied automatically.
+
+    Returns
+    -------
+    tuple
+        Applications, runtime environment, log path, activity ID, and collection.
+    """
+    replacements = dict(replacements or {})
+    replacements.setdefault(
+        "__CONFIG_DIRECTORY__", str(Path(args_dict["config_file"]).resolve().parent)
+    )
+    configurations, runtime, log_file, activity, collection = _read_application_configuration(
+        args_dict["config_file"],
+        args_dict.get("steps"),
+        args_dict.get("activity_id"),
+        replacements=replacements,
+    )
+    _resolve_nested_configuration_files(configurations, replacements)
+    if args_dict.get("runtime_environment") is not None:
+        runtime = args_dict["runtime_environment"]
+    if args_dict.get("log_file") is not None:
+        log_file = args_dict["log_file"]
+    _validate_resolved_configuration(configurations, runtime, collection)
+    return configurations, runtime, log_file, activity, collection
+
+
 def run_applications(args_dict, run_time=None, replacements=None):
     """
     Run simtools applications step-by-step as defined in a configuration file.
@@ -49,34 +83,19 @@ def run_applications(args_dict, run_time=None, replacements=None):
         The configuration directory is added automatically as
         __CONFIG_DIRECTORY__ when not supplied.
     """
-    replacements = dict(replacements or {})
-    replacements.setdefault(
-        "__CONFIG_DIRECTORY__",
-        str(Path(args_dict["config_file"]).resolve().parent),
-    )
     (
         configurations,
         runtime_environment,
         log_file,
         workflow_activity_id,
         collection_config,
-    ) = _read_application_configuration(
-        args_dict["config_file"],
-        args_dict.get("steps"),
-        args_dict.get("activity_id"),
-        replacements=replacements,
-    )
-    _resolve_nested_configuration_files(configurations, replacements)
-    if args_dict.get("log_file") is not None:
-        log_file = args_dict["log_file"]
-    if args_dict.get("runtime_environment") is not None:
-        runtime_environment = args_dict["runtime_environment"]
-    _validate_resolved_configuration(configurations, runtime_environment, collection_config)
+    ) = prepare_workflow(args_dict, replacements=replacements)
     _write_resolved_workflow(
         args_dict["config_file"],
         configurations,
         runtime_environment,
         collection_config,
+        provenance_path=args_dict.get("provenance_path"),
     )
 
     workflow_start = datetime.now(UTC)
@@ -199,6 +218,7 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
                     source_directories,
                     collection_output_path,
                     overwrite_files=overwrite_files,
+                    preserve_relative_paths=entry.get("preserve_relative_paths", False),
                 )
             )
         if entry.get("write_inventory"):
@@ -209,7 +229,9 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
             inventory_path.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
 
 
-def _copy_pattern_files(pattern, source_directories, destination, overwrite_files=False):
+def _copy_pattern_files(
+    pattern, source_directories, destination, overwrite_files=False, preserve_relative_paths=False
+):
     """Copy all files matching *pattern* from source directories into *destination*.
 
     Parameters
@@ -222,6 +244,8 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
         Target directory (must already exist).
     overwrite_files : bool
         If True, overwrite existing destination files.
+    preserve_relative_paths : bool
+        Preserve each matched file's path relative to its source directory.
 
     Raises
     ------
@@ -244,21 +268,33 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
         )
 
     for source_file in source_files:
-        dest = destination / (destination_name or source_file.name)
+        relative_path = _collection_relative_path(source_file, source_directories)
+        name = relative_path if preserve_relative_paths else source_file.name
+        dest = destination / (destination_name or name)
         if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
             raise FileExistsError(
                 f"Filename collision in collection: '{source_file.name}' would be "
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
             )
-        shutil.copyfile(source_file, dest)
+        if dest.resolve() != source_file.resolve():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source_file, dest)
         inventory.append(
             {
-                "source": str(source_file),
+                "source": str(relative_path),
                 "destination": str(dest.relative_to(destination)),
                 "sha256": _sha256(source_file),
             }
         )
     return inventory
+
+
+def _collection_relative_path(source_file, source_directories):
+    """Return a portable path within the matching collection source root."""
+    for root in source_directories:
+        if source_file.resolve().is_relative_to(root.resolve()):
+            return source_file.resolve().relative_to(root.resolve())
+    raise ValueError(f"Collection source is outside its declared roots: {source_file}")
 
 
 def _sha256(path):
@@ -577,14 +613,17 @@ def _resolve_nested_configuration_files(configurations, replacements):
         if not isinstance(backend_config, (str, Path)):
             continue
         backend_path = Path(backend_config)
+        if not backend_path.is_absolute():
+            backend_path = Path(replacements["__CONFIG_DIRECTORY__"]) / backend_path
         if not backend_path.is_file():
-            continue
+            raise FileNotFoundError(f"Backend configuration not found: {backend_path}")
         backend_values = ascii_handler.collect_data_from_file(backend_path)
-        if isinstance(backend_values, dict):
-            app_configuration["backend_config"] = gen.replace_placeholders_recursively(
-                backend_values,
-                replacements,
-            )
+        if not isinstance(backend_values, dict):
+            raise ValueError(f"Backend configuration must contain a mapping: {backend_path}")
+        app_configuration["backend_config"] = gen.replace_placeholders_recursively(
+            backend_values,
+            replacements,
+        )
 
 
 def _iter_placeholder_matches(value):
@@ -599,8 +638,10 @@ def _iter_placeholder_matches(value):
             yield from _iter_placeholder_matches(item)
 
 
-def _write_resolved_workflow(configuration_file, configurations, runtime_environment, collection):
-    """Write the resolved workflow next to its first application output."""
+def _write_resolved_workflow(
+    configuration_file, configurations, runtime_environment, collection, provenance_path=None
+):
+    """Write execution provenance at an explicit path or below the first output."""
     output_path = next(
         (
             config.get("configuration", {}).get("output_path")
@@ -609,9 +650,13 @@ def _write_resolved_workflow(configuration_file, configurations, runtime_environ
         ),
         None,
     )
-    if output_path is None:
+    if output_path is None and provenance_path is None:
         return
-    provenance_path = Path(output_path) / "provenance" / "resolved-workflow.yml"
+    provenance_path = (
+        Path(provenance_path)
+        if provenance_path
+        else Path(output_path) / "provenance" / "resolved-workflow.yml"
+    )
     provenance_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "configuration_file": Path(configuration_file).name,

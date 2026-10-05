@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import hashlib
+import json
 import logging
 import os
 import shutil
@@ -19,6 +21,100 @@ DUMMY_CONFIG_FILE = "dummy.yml"
 TEST_WORKDIR = "/workdir/external/"
 TEST_FILE1 = "file1.txt"
 TEST_FILE2 = "file2.txt"
+
+
+def test_collection_preserves_pair_paths_and_checksums(tmp_test_directory):
+    source = Path(tmp_test_directory) / "source"
+    destination = Path(tmp_test_directory) / "collected"
+    for pair in ("pair-a", "pair-b"):
+        path = source / pair / "statistics.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(pair, encoding="utf-8")
+    simtools_runner._copy_collection_files(
+        [{"configuration": {"output_path": str(source)}}],
+        {
+            "output_path": str(destination),
+            "files": ["**/statistics.json"],
+            "preserve_relative_paths": True,
+            "write_inventory": True,
+        },
+    )
+    inventory = json.loads((destination / "inventory.json").read_text())
+    assert {item["destination"] for item in inventory} == {
+        "pair-a/statistics.json",
+        "pair-b/statistics.json",
+    }
+    for item in inventory:
+        content = (destination / item["destination"]).read_bytes()
+        assert item["sha256"] == hashlib.sha256(content).hexdigest()
+        assert not Path(item["source"]).is_absolute()
+
+
+def test_collection_in_place_writes_inventory(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    (root / "result.txt").write_text("evidence", encoding="utf-8")
+    simtools_runner._copy_collection_files(
+        [{"configuration": {"output_path": str(root)}}],
+        {
+            "output_path": str(root),
+            "files": ["result.txt"],
+            "write_inventory": True,
+        },
+    )
+    assert json.loads((root / "inventory.json").read_text())[0]["destination"] == "result.txt"
+
+
+def test_prepare_workflow_preserves_empty_runtime_override(mocker):
+    mocker.patch.object(
+        simtools_runner,
+        "_read_application_configuration",
+        return_value=(
+            [],
+            {"image": "container-image"},
+            Path("workflow.log"),
+            "activity",
+            None,
+        ),
+    )
+    _, runtime, *_ = simtools_runner.prepare_workflow(
+        {"config_file": "workflow.yml", "runtime_environment": {}}
+    )
+    assert runtime == {}
+
+
+def test_prepare_workflow_resolves_nested_profile_without_writes(tmp_test_directory):
+    import yaml
+
+    root = Path(tmp_test_directory)
+    workflow = root / "workflow.yml"
+    profile = root / "backend.yml"
+    profile.write_text("container_image: __CANDIDATE__/image.sif\n", encoding="utf-8")
+    workflow.write_text(
+        yaml.safe_dump(
+            {
+                "applications": [
+                    {
+                        "application": "simtools-simulate-prod",
+                        "configuration": {
+                            "output_path": "__CANDIDATE__/output",
+                            "backend_config": "backend.yml",
+                        },
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    candidate = root / "candidate"
+    configurations, *_ = simtools_runner.prepare_workflow(
+        {"config_file": str(workflow)}, replacements={"__CANDIDATE__": str(candidate)}
+    )
+    assert configurations[0]["configuration"]["backend_config"] == {
+        "container_image": str(candidate / "image.sif"),
+    }
+    assert not candidate.exists()
+    with pytest.raises(ValueError, match="Unresolved workflow placeholder"):
+        simtools_runner.prepare_workflow({"config_file": str(workflow)})
 
 
 @pytest.fixture

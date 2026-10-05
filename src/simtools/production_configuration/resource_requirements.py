@@ -17,6 +17,7 @@ from simtools.production_configuration.production_file_selection import (
 )
 
 _ROLES = ("corsika", "sim_telarray")
+_SUMMARY_STATISTICS = ("mean", "median", "std", "min", "max", "p05", "p95")
 _OUTPUT_TYPES = (
     "corsika",
     "sim_telarray",
@@ -88,7 +89,7 @@ def write_resource_requirements(args_dict, output_directory, plotter):
     Returns
     -------
     dict
-        Paths of the ECSV, Markdown, and plot outputs plus diagnostics.
+        Paths of the ECSV, JSON, Markdown, and plot outputs plus diagnostics.
     """
     output_directory = Path(output_directory)
     baseline_label = args_dict.get("baseline_label") or "baseline"
@@ -111,11 +112,28 @@ def write_resource_requirements(args_dict, output_directory, plotter):
     table_file = output_directory / "resource_requirements.ecsv"
     resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
     summary = summarize_resource_requirements(rows)
+    json_file = output_directory / "resource_requirements.json"
+    json_file.write_text(
+        json.dumps(
+            {
+                "format_version": 1,
+                "resource_row_count": len(rows),
+                "diagnostic_count": len(diagnostics),
+                "summary": summary,
+                "diagnostics": diagnostics,
+            },
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     report_file = output_directory / "resource_requirements.md"
     write_markdown_report(summary, diagnostics, report_file)
     plot_files = plotter(rows, output_directory, figure_format=args_dict.get("figure_format"))
     return {
         "table_file": table_file,
+        "json_file": json_file,
         "report_file": report_file,
         "plot_files": plot_files,
         "diagnostics": diagnostics,
@@ -193,15 +211,15 @@ def _metric_statistics(metric, rows):
     """Return aggregate statistics for one metric."""
     values = [row[metric] for row in rows if row[metric] is not None]
     if not values:
-        return {
-            f"{metric}_{statistic}": None for statistic in ("mean", "median", "std", "min", "max")
-        }
+        return {f"{metric}_{statistic}": None for statistic in _SUMMARY_STATISTICS}
     return {
         f"{metric}_mean": float(np.mean(values)),
         f"{metric}_median": float(np.median(values)),
         f"{metric}_std": float(np.std(values)),
         f"{metric}_min": float(np.min(values)),
         f"{metric}_max": float(np.max(values)),
+        f"{metric}_p05": float(np.percentile(values, 5)),
+        f"{metric}_p95": float(np.percentile(values, 95)),
     }
 
 
@@ -493,9 +511,7 @@ def _format_value(value):
 
 def _format_statistic(summary, metric):
     """Format all aggregate statistics for one metric in the Markdown report."""
-    statistics = {
-        name: summary[f"{metric}_{name}"] for name in ("mean", "median", "std", "min", "max")
-    }
+    statistics = {name: summary[f"{metric}_{name}"] for name in _SUMMARY_STATISTICS}
     if statistics["median"] is None:
         return "-"
     return "; ".join(f"{name}={value:.6g}" for name, value in statistics.items())

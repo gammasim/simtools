@@ -1,5 +1,6 @@
 """Compare trigger-histogram products from simulation productions."""
 
+import json
 import logging
 from collections import Counter
 from pathlib import Path
@@ -70,6 +71,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         for _, production_descriptors in descriptor_pairs
     ]
     stem_counts = Counter(output_stems)
+    pair_directories = []
     for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
         pair_output_directory = _metadata_pair_output_directory(
             output_directory,
@@ -83,6 +85,21 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
             pair_output_directory,
             array_layout_names,
         )
+        pair_directories.append(pair_output_directory.relative_to(output_directory).as_posix())
+    output_directory.mkdir(parents=True, exist_ok=True)
+    (output_directory / "comparison_inventory.json").write_text(
+        json.dumps(
+            {
+                "format_version": 1,
+                "matched_pair_count": len(pair_directories),
+                "pairing_error_count": int(pairing_error is not None),
+                "pairs": pair_directories,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
 

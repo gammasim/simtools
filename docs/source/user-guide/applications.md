@@ -102,6 +102,7 @@ simtools-production-generate-grid <applications/simtools-production-generate-gri
 simtools-production-select-files <applications/simtools-production-select-files>
 simtools-resources-test-generate <applications/simtools-resources-test-generate>
 simtools-run-application <applications/simtools-run-application>
+simtools-run-science-tests <applications/simtools-run-science-tests>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
 simtools-simulate-pedestals <applications/simtools-simulate-pedestals>
