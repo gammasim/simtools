@@ -31,7 +31,8 @@ def _model_source_configuration(request, simtools_root_path):
             "simulation_models_git_path": git_path,
             "simulation_models_git_revision": options.get_mirrored_option(
                 request.config, "simulation_models_git_revision"
-            ),
+            )
+            or "HEAD",
         }
 
     path = Path(simtools_root_path).parent / "simulation-models"

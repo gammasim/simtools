@@ -2,9 +2,8 @@
 
 from pathlib import Path
 
-from packaging.version import InvalidVersion, Version
-
 from simtools.io import ascii_handler
+from simtools.model_repository import files
 
 
 def collect_production_descriptions(data_path=None, model_reader=None):
@@ -29,25 +28,10 @@ def collect_production_descriptions(data_path=None, model_reader=None):
 
     productions_path = Path(data_path) / "simulation-models" / "productions"
 
-    def _version_sort_key(path):
-        try:
-            return (0, Version(path.parent.name))
-        except InvalidVersion:
-            return (1, path.parent.name)
-
-    info_files = sorted(
-        set(productions_path.glob("*/info.yaml")) | set(productions_path.glob("*/info.yml")),
-        key=_version_sort_key,
+    info_files = set(productions_path.glob("*/info.yaml")) | set(
+        productions_path.glob("*/info.yml")
     )
-
-    descriptions = []
-    for info_file in info_files:
-        info = ascii_handler.collect_data_from_file(info_file)
-        description = str(info.get("description", "")).replace("\n", " ").strip()
-        model_version = str(info.get("model_version", info_file.parent.name))
-        descriptions.append((model_version, description))
-
-    return descriptions
+    return files.collect_production_descriptions(info_files, ascii_handler.collect_data_from_file)
 
 
 def write_production_summary_markdown(data_path=None, output_file=None, model_reader=None):
