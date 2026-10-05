@@ -21,7 +21,7 @@ def _model_source_configuration(request, simtools_root_path):
     if configured:
         path = Path(configured)
         path = path if path.is_absolute() else Path(simtools_root_path) / path
-        return {"simulation_models_path": path}
+        return {"simulation_models_path": path} if path.is_dir() else None
 
     git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
     if git_path:

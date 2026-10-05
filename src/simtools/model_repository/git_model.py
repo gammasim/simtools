@@ -77,7 +77,10 @@ class GitModelSource:
         info_files = []
         for path in self._object_store.iter_files(self.commit, _PRODUCTIONS_PATH.as_posix()):
             info_path = PurePosixPath(path)
-            if info_path.name in {"info.yaml", "info.yml"}:
+            if info_path.parent.parent == _PRODUCTIONS_PATH and info_path.name in {
+                "info.yaml",
+                "info.yml",
+            }:
                 info_files.append(info_path)
 
         def read_info(info_path):

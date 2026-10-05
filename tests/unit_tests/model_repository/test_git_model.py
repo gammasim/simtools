@@ -82,6 +82,7 @@ def test_git_source_reads_production_descriptions(tmp_test_directory):
     objects = {
         "simulation-models/productions/1.0.0/info.yml": b"description: Prod1\n",
         "simulation-models/productions/2.0.0/info.yaml": b"description: Prod2\n",
+        "simulation-models/productions/2.0.0/nested/info.yml": b"description: Nested\n",
     }
     source = GitModelSource(
         Path(str(tmp_test_directory)) / "models.git", "v1", object_store=MemoryObjectStore(objects)
