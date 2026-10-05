@@ -35,7 +35,7 @@ def test_run_test_dry_run_validates_resolved_workflow(tmp_test_directory):
     result = science_tests._run_test(
         release_dir,
         template_dir,
-        {"__SCIENCE_CANDIDATE_ROOT__": str(root / "candidate")},
+        {"__SCIENCE_CANDIDATE_PATH__": str(root / "candidate")},
         "north",
         {"array_layout_name": "CTAO-North-Alpha"},
         "example",
@@ -102,11 +102,11 @@ def campaign(tmp_test_directory):
             "applications": [
                 {
                     "application": "simtools-compare-productions",
-                    "configuration": {"output_path": "__SCIENCE_REPORT_ROOT__"},
+                    "configuration": {"output_path": "__SCIENCE_REPORT_PATH__"},
                 }
             ],
             "collection": {
-                "output_path": "__SCIENCE_COLLECTION_ROOT__",
+                "output_path": "__SCIENCE_COLLECTION_PATH__",
                 "files": ["metrics.json"],
                 "write_inventory": True,
                 "preserve_relative_paths": True,
@@ -117,8 +117,8 @@ def campaign(tmp_test_directory):
         template / "acceptance" / "expected-products.yml",
         {
             "tests": {
-                "derive": ["__SCIENCE_REPORT_ROOT__/metrics.json"],
-                "compare": ["__SCIENCE_REPORT_ROOT__/metrics.json"],
+                "derive": ["__SCIENCE_REPORT_PATH__/metrics.json"],
+                "compare": ["__SCIENCE_REPORT_PATH__/metrics.json"],
             }
         },
     )
@@ -130,7 +130,7 @@ def campaign(tmp_test_directory):
                     "mode": "advisory",
                     "metrics": [
                         {
-                            "file": "__SCIENCE_REPORT_ROOT__/metrics.json",
+                            "file": "__SCIENCE_REPORT_PATH__/metrics.json",
                             "key": "count",
                             "minimum": 2,
                         }
@@ -144,7 +144,7 @@ def campaign(tmp_test_directory):
         context,
         {
             key: str(root / name)
-            for key, name in zip(science_tests._ROOT_KEYS, ("candidate", "baseline", "reference"))
+            for key, name in zip(science_tests._PATH_KEYS, ("candidate", "baseline", "reference"))
         },
     )
     return {"release_dir": release, "template_dir": template, "context_file": context}
@@ -158,13 +158,13 @@ def successful_workflow(monkeypatch):
         from simtools.runners.simtools_runner import _copy_collection_files
 
         calls.append(replacements["__SCIENCE_SITE_KEY__"])
-        output = Path(replacements["__SCIENCE_REPORT_ROOT__"])
+        output = Path(replacements["__SCIENCE_REPORT_PATH__"])
         output.mkdir(parents=True)
         (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
         _copy_collection_files(
             [{"configuration": {"output_path": str(output)}}],
             {
-                "output_path": replacements["__SCIENCE_COLLECTION_ROOT__"],
+                "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
                 "files": ["metrics.json"],
                 "write_inventory": True,
             },
@@ -280,7 +280,7 @@ def test_completed_production_gate(tmp_test_directory):
     }
     submission.write_text(json.dumps(payload), encoding="utf-8")
     definition = {"requires_completed_production": True}
-    replacements = {"__SCIENCE_CANDIDATE_SITE_ROOT__": str(root)}
+    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
     with pytest.raises(ValueError, match="not completed"):
         science_tests._check_inputs(definition, replacements)
     payload["metadata"]["state"] = "completed"
@@ -386,7 +386,7 @@ def test_acceptance_failure_has_completed_execution(campaign, successful_workflo
                     "mode": "blocking",
                     "metrics": [
                         {
-                            "file": "__SCIENCE_REPORT_ROOT__/metrics.json",
+                            "file": "__SCIENCE_REPORT_PATH__/metrics.json",
                             "key": "count",
                             "maximum": 2,
                         }
@@ -421,7 +421,7 @@ def test_existing_submission_prevents_resubmission(tmp_test_directory):
     (root / "submission.json").write_text("{}", encoding="utf-8")
     with pytest.raises(ValueError, match="do not resubmit"):
         science_tests._check_inputs(
-            {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_ROOT__": str(root)}
+            {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
         )
 
 
@@ -452,10 +452,10 @@ def test_invalid_workflow_and_context(tmp_test_directory):
 
 def test_site_cannot_override_context_root(tmp_test_directory):
     root = Path(tmp_test_directory)
-    context = {"__SCIENCE_CANDIDATE_ROOT__": str(root)}
+    context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
     suite = {
         "array_layout_name": "CTAO-North-Alpha",
-        "replacements": {"__SCIENCE_CANDIDATE_ROOT__": "other"},
+        "replacements": {"__SCIENCE_CANDIDATE_PATH__": "other"},
     }
     with pytest.raises(ValueError, match="reserved context key"):
         science_tests._site_replacements(context, "north", suite, root)
@@ -472,7 +472,7 @@ def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
     _write_yaml(path, catalogue)
     products = campaign["template_dir"] / "acceptance/expected-products.yml"
     contracts = yaml.safe_load(products.read_text())
-    contracts["tests"]["grid"] = ["__SCIENCE_REPORT_ROOT__/metrics.json"]
+    contracts["tests"]["grid"] = ["__SCIENCE_REPORT_PATH__/metrics.json"]
     _write_yaml(products, contracts)
     summary = science_tests.run_release(**campaign, sites=["north"], tests=["grid"], dry_run=True)
     assert next(r for r in summary["results"] if r["id"] == "grid.north")["status"] == "planned"

@@ -19,10 +19,10 @@ from simtools.runners.simtools_runner import prepare_workflow, run_applications
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
 
 _VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
-_ROOT_KEYS = (
-    "__SCIENCE_CANDIDATE_ROOT__",
-    "__SCIENCE_BASELINE_ROOT__",
-    "__SCIENCE_REFERENCE_ROOT__",
+_PATH_KEYS = (
+    "__SCIENCE_CANDIDATE_PATH__",
+    "__SCIENCE_BASELINE_PATH__",
+    "__PRODUCTION_CONFIGURATION_PATH__",
 )
 
 
@@ -31,18 +31,18 @@ class _AcceptanceError(ValueError):
 
 
 def _validate_release_context(release, context):
-    """Validate explicit external roots and a consistent release identity."""
+    """Validate explicit directory paths and a consistent release identity."""
     label = release.get("release_label")
     if not isinstance(label, str) or not _VALID_NAME.fullmatch(label):
         raise ValueError("release_label must be a non-empty filename-safe label.")
     if context.get("__SCIENCE_RELEASE_LABEL__") != label:
         raise ValueError("Context and release labels differ.")
-    for key in _ROOT_KEYS:
+    for key in _PATH_KEYS:
         value = context.get(key)
         if not isinstance(value, str) or not Path(value).is_absolute() or "__" in value:
             raise ValueError(f"Context requires an absolute path for {key}.")
-    if Path(context[_ROOT_KEYS[0]]).resolve() == Path(context[_ROOT_KEYS[1]]).resolve():
-        raise ValueError("Candidate and baseline roots must differ.")
+    if Path(context[_PATH_KEYS[0]]).resolve() == Path(context[_PATH_KEYS[1]]).resolve():
+        raise ValueError("Candidate and baseline paths must differ.")
 
 
 def _select(requested, available, kind):
@@ -136,14 +136,14 @@ def _check_inputs(definition, replacements):
     for pattern in definition.get("requires", []):
         _matched_files(replace_placeholders_recursively(pattern, replacements))
     if definition.get("produces_production"):
-        root = Path(replacements["__SCIENCE_CANDIDATE_SITE_ROOT__"])
+        root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
         if any(root.rglob("submission.json")):
             raise ValueError(
                 "Candidate already has a submission; do not resubmit. "
-                "Resume it through the existing execution API or use a new candidate root."
+                "Resume it through the existing execution API or use a new candidate path."
             )
     if definition.get("requires_completed_production"):
-        root = Path(replacements["__SCIENCE_CANDIDATE_SITE_ROOT__"])
+        root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
         for path in _matched_files(str(root / "**" / "submission.json")):
             _check_completed_submission(path)
 
@@ -356,7 +356,7 @@ def run_release(
     release_dir : str or pathlib.Path
         Directory containing release.yml and required site suites.
     context_file : str or pathlib.Path or None
-        External candidate, baseline, reference roots and release label.
+        Candidate, baseline, production-configuration paths and release label.
     template_dir : str or pathlib.Path or None
         Shared template; discovered above the release directory by default.
     sites, tests : iterable of str or None
@@ -453,7 +453,7 @@ def _run_test(
     run_id = run_id or get_uuid()
     report_root = release_dir / "reports" / "runs" / run_id / site / test_id
     work = (
-        Path(context["__SCIENCE_CANDIDATE_ROOT__"])
+        Path(context["__SCIENCE_CANDIDATE_PATH__"])
         / "work"
         / "science-tests"
         / run_id
@@ -495,7 +495,7 @@ def _run_test(
         "baseline": definition.get("baseline"),
         "candidate": context.get("__SCIENCE_RELEASE_LABEL__"),
         "execution_provenance": work.relative_to(
-            Path(context["__SCIENCE_CANDIDATE_ROOT__"])
+            Path(context["__SCIENCE_CANDIDATE_PATH__"])
         ).as_posix(),
         "report": None,
         "run_id": run_id,
@@ -551,18 +551,18 @@ def _write_test_report(work, report_root, release_dir, result):
 def _site_replacements(context, site, site_config, work):
     """Build placeholder values without requiring site-specific workflows."""
     site_label = site_config.get("site_label", site.title())
-    candidate_root = Path(context.get("__SCIENCE_CANDIDATE_ROOT__", ""))
-    baseline_root = Path(context.get("__SCIENCE_BASELINE_ROOT__", ""))
+    candidate_root = Path(context.get("__SCIENCE_CANDIDATE_PATH__", ""))
+    baseline_root = Path(context.get("__SCIENCE_BASELINE_PATH__", ""))
     replacements = dict(context)
     replacements.update(
         {
             "__SCIENCE_SITE_KEY__": site,
             "__SCIENCE_SITE__": site_label,
             "__SCIENCE_ARRAY_LAYOUT__": site_config["array_layout_name"],
-            "__SCIENCE_CANDIDATE_SITE_ROOT__": str(candidate_root / site),
-            "__SCIENCE_BASELINE_SITE_ROOT__": str(baseline_root / site),
-            "__SCIENCE_REPORT_ROOT__": str(work / "output"),
-            "__SCIENCE_COLLECTION_ROOT__": str(work / "collected"),
+            "__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate_root / site),
+            "__SCIENCE_BASELINE_SITE_PATH__": str(baseline_root / site),
+            "__SCIENCE_REPORT_PATH__": str(work / "output"),
+            "__SCIENCE_COLLECTION_PATH__": str(work / "collected"),
         }
     )
     for key, value in site_config.get("replacements", {}).items():

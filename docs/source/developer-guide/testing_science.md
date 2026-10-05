@@ -24,7 +24,7 @@ simtools-tests/<release>/science_tests/
 
 The catalogue is reusable. Release files select the catalogue and sites; site files provide the
 array layout and required tests. The external context provides the release label and absolute
-candidate, baseline, and reference directories. The candidate is the production being tested;
+candidate, baseline, and production-configuration directories. The candidate is the production being tested;
 the baseline is the production used for comparison. Workflows use the application-workflow schema;
 the runner supplies site and report placeholders.
 
@@ -37,9 +37,9 @@ Copy the release context example outside Git and set values such as:
 
 ```yaml
 __SCIENCE_RELEASE_LABEL__: <release-label>
-__SCIENCE_CANDIDATE_ROOT__: /data/science/candidate
-__SCIENCE_BASELINE_ROOT__: /data/science/baseline
-__SCIENCE_REFERENCE_ROOT__: /data/science/reference-inputs
+__SCIENCE_CANDIDATE_PATH__: /data/science/candidate
+__SCIENCE_BASELINE_PATH__: /data/science/baseline
+__PRODUCTION_CONFIGURATION_PATH__: /data/production-configuration/data
 ```
 
 Use absolute directory paths and separate candidate and baseline directories.
