@@ -656,12 +656,10 @@ def _relative_path(path, root):
 
 
 def _load_context(context_file):
+    """Load the optional science-test context mapping."""
     if context_file is None:
         return {}
-    context = _load_yaml(Path(context_file))
-    if not isinstance(context, dict):
-        raise ValueError("Science-test context must contain a mapping.")
-    return context
+    return _load_yaml(Path(context_file))
 
 
 def _load_yaml(path):

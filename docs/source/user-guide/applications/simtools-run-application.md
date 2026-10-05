@@ -84,8 +84,8 @@ Pass a YAML mapping with `--context_file` and override individual entries using 
 Unresolved placeholders fail before execution. Resolved execution configuration is saved under
 the first application output directory's `provenance/` directory.
 
-With application-workflow schema 0.7.0, a collection entry can set `write_inventory: true` to
-write relative source/destination paths and SHA-256 checksums to `inventory.json`. Set
+Collection entries can set `write_inventory: true` to write relative source/destination paths and
+SHA-256 checksums to `inventory.json`. Set
 `preserve_relative_paths: true` to retain comparison-pair subdirectories rather than flattening
 filenames. Literal filenames must match uniquely; use explicit glob patterns for multiple pairs.
 In-place collection records the file without copying it onto itself.
