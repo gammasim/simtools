@@ -292,9 +292,7 @@ def _prepare_test_options(config, output_path, model_version=None, test_resource
     if model_version and "model_version" in config:
         config.update({"model_version": model_version})
 
-    for key in ["output_path", "grid_output_path"]:
-        if key in config:
-            config[key] = str(Path(output_path).joinpath(config[key]))
+    _relocate_output_paths(config, output_path)
 
     _copy_resolved_resource_config_files(config, output_path, test_resources_path)
 
@@ -302,6 +300,21 @@ def _prepare_test_options(config, output_path, model_version=None, test_resource
     ascii_handler.write_data_to_file(data=config, output_file=tmp_config_file, sort_keys=False)
 
     return tmp_config_file, None, config_file_model_version
+
+
+def _relocate_output_paths(config, output_path):
+    """Relocate configured output directories and paths beneath them together."""
+    output_roots = [
+        Path(config[key]) for key in ("output_path", "grid_output_path") if key in config
+    ]
+    for key, value in config.items():
+        if not isinstance(value, str | Path):
+            continue
+        path = Path(value)
+        if path.is_absolute():
+            continue
+        if any(path.is_relative_to(root) for root in output_roots):
+            config[key] = str(Path(output_path) / path)
 
 
 def get_application_command(app, config_file=None, config_string=None):
