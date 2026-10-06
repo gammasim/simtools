@@ -202,6 +202,34 @@ def test_resolve_prepared_resource_paths_rejects_invalid_paths(tmp_test_director
         configuration.resolve_prepared_resource_paths(path, tmp_test_directory)
 
 
+def test_prepare_test_options_relocates_output_paths(tmp_test_directory):
+    config = {
+        "output_path": "results",
+        "grid_output_path": "grid",
+        "figure_file": "results/plots",
+        "nsb_table_file": "results/nsb.ecsv",
+        "proton_table_file": "results/proton.ecsv",
+        "custom_output": "grid/job.tar",
+        "input_file": "inputs/data.ecsv",
+    }
+    expected = {
+        key: str(tmp_test_directory / value) if key != "input_file" else value
+        for key, value in config.items()
+    }
+    unchanged = {
+        "test": True,
+        "scaling_factor": 1.35,
+        "prepared_file": str(tmp_test_directory / "prepared-resources/input.ecsv"),
+    }
+    config.update(unchanged)
+    expected.update(unchanged)
+
+    config_file, _, _ = configuration._prepare_test_options(config, tmp_test_directory)
+
+    assert config == expected
+    assert yaml.safe_load(config_file.read_text(encoding="utf-8")) == expected
+
+
 def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_string):
     config = {"model_version": "v1.0"}
     model_version = "v2.0"
