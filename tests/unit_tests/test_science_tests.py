@@ -1,4 +1,5 @@
 import json
+import logging
 import shutil
 from pathlib import Path
 
@@ -582,3 +583,65 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
     elif not produces_production:
         expected = {"container_engine": "apptainer", "image": "/images/shared.sif"}
     assert captured == [expected]
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_science_test_output(campaign, successful_workflow, caplog, dry_run):
+    with caplog.at_level(logging.INFO):
+        science_tests.run_release(**campaign, sites=["north"], dry_run=dry_run)
+    action = "Planned" if dry_run else "Running"
+    assert caplog.messages.count(f"{action} science test: derive.north") == 1
+    assert caplog.messages.count(f"{action} science test: compare.north") == 1
+    assert caplog.messages.count("  Runtime: host (no container)") == 2
+    assert len([message for message in caplog.messages if message.startswith("  Output:")]) == 2
+    assert not any("Setting workflow output path" in message for message in caplog.messages)
+
+
+@pytest.mark.parametrize(
+    ("runtime", "ignored", "expected"),
+    [
+        (None, False, "host (no container)"),
+        (
+            {"container_engine": "apptainer", "image": "/images/test.sif"},
+            True,
+            "host (no container)",
+        ),
+        (
+            {"container_engine": "apptainer", "image": "/images/test.sif"},
+            False,
+            "apptainer (image: /images/test.sif)",
+        ),
+        ({"image": "test:latest"}, False, "docker (image: test:latest)"),
+    ],
+)
+def test_runtime_description(runtime, ignored, expected):
+    assert science_tests._runtime_description(runtime, ignored) == expected
+
+
+@pytest.mark.parametrize("sites", [["north"], ["North"], ["NORTH"], ["nOrTh"], ["North", "NORTH"]])
+def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites):
+    summary = science_tests.run_release(**campaign, sites=sites)
+    assert successful_workflow == ["north", "north"]
+    assert {
+        result["site"] for result in summary["results"] if result["execution"] == "completed"
+    } == {"north"}
+
+
+@pytest.mark.parametrize("sites", [["SOUTH"], ["sOuTh"]])
+def test_south_selection_is_case_insensitive(campaign, sites):
+    summary = science_tests.run_release(**campaign, sites=sites, dry_run=True)
+    assert {result["site"] for result in summary["results"] if result["status"] == "planned"} == {
+        "south"
+    }
+
+
+def test_test_names_remain_case_sensitive(campaign, successful_workflow):
+    with pytest.raises(ValueError, match="Invalid test selection"):
+        science_tests.run_release(**campaign, sites=["North"], tests=["COMPARE"])
+    assert successful_workflow == []
+
+
+def test_unknown_mixed_case_site_is_rejected(campaign, successful_workflow):
+    with pytest.raises(ValueError, match="Invalid site selection"):
+        science_tests.run_release(**campaign, sites=["Unknown"])
+    assert successful_workflow == []

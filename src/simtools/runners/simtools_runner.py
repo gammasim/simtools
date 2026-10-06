@@ -581,7 +581,7 @@ def _read_application_configuration(
     else:
         first_app_output = configurations[0].get("configuration", {}).get("output_path")
         log_path = Path(first_app_output) if first_app_output else derived_output_path
-    logger.info(f"Setting workflow output path to {log_path}")
+    logger.debug(f"Setting workflow output path to {log_path}")
 
     return (
         configurations,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 import re
 import shutil
@@ -17,6 +18,8 @@ from simtools.io import ascii_handler
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners.simtools_runner import prepare_workflow, run_applications
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
+
+logger = logging.getLogger(__name__)
 
 _VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 _PATH_KEYS = (
@@ -49,7 +52,10 @@ def _validate_release_context(release, context):
 
 
 def _select(requested, available, kind):
-    """Reject empty or unknown selections while removing duplicates."""
+    """Validate selections, matching science-test sites without regard to case."""
+    if kind == "site" and requested is not None:
+        site_names = {site.casefold(): site for site in available}
+        requested = [site_names.get(site.casefold(), site) for site in requested]
     selected = list(dict.fromkeys(requested if requested is not None else available))
     if not selected or set(selected) - set(available):
         raise ValueError(f"Invalid {kind} selection: {selected}; available: {sorted(available)}")
@@ -104,6 +110,7 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
     results = []
     for args, planned in prepared:
         if dry_run:
+            _log_test_execution(planned, "Planned")
             results.append(planned)
             continue
         dependencies = {f"{name}.{planned['site']}" for name in args[-1].get("depends_on", [])}
@@ -117,10 +124,25 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
                 }
             )
         else:
+            _log_test_execution(planned, "Running")
             results.append(
                 _run_test(*args, dry_run=False, run_id=run_id, application_args=application_args)
             )
     return results
+
+
+def _log_test_execution(result, action):
+    """Show the test, site, runtime, and application output paths once."""
+    logger.info("%s science test: %s", action, result["id"])
+    logger.info("  Runtime: %s", result["runtime"])
+    logger.info("  Output: %s", ", ".join(result["output_paths"]))
+
+
+def _runtime_description(runtime, ignored):
+    """Describe the effective runtime without starting a container."""
+    if ignored or runtime is None:
+        return "host (no container)"
+    return f"{runtime.get('container_engine', 'docker')} (image: {runtime['image']})"
 
 
 def _matched_files(pattern):
@@ -526,7 +548,7 @@ def _run_test(
         "provenance_path": str(work / "provenance" / "resolved-workflow.yml"),
     }
     args.setdefault("runtime_environment", resolved.get("runtime_environment"))
-    prepare_workflow(args, replacements=replacements)
+    configurations, runtime, *_ = prepare_workflow(args, replacements=replacements)
 
     result = {
         "id": f"{test_id}.{site}",
@@ -540,6 +562,10 @@ def _run_test(
         ).as_posix(),
         "report": None,
         "run_id": run_id,
+        "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
+        "output_paths": list(
+            dict.fromkeys(str(config["configuration"]["output_path"]) for config in configurations)
+        ),
         "execution": "planned" if dry_run else "completed",
         "status": "planned" if dry_run else "pass",
     }
