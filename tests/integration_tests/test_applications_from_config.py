@@ -73,6 +73,8 @@ def _requires_simulation_model_source(config, simulation_models_path, git_source
     source_config = config.get("configuration")
     if source_config is None:
         return False
+    if source_config.get("help") or source_config.get("version"):
+        return False
     if simulation_models_path or source_config.get("simulation_models_path"):
         return False
     arguments = _get_application_arguments(config["application"])
@@ -295,13 +297,16 @@ def test_get_simulation_model_source_from_filesystem(tmp_test_directory, mocker)
     assert git_source is None
 
 
-def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
+@pytest.mark.parametrize("revision", ["HEAD", "main", "feature/model-update", "6.0.2"])
+def test_get_simulation_model_source_from_git(tmp_test_directory, mocker, monkeypatch, revision):
     """Resolve Git source options and preserve their requested revision."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "environment-branch")
     request = mocker.MagicMock()
     options = {
         "simulation_models_path": None,
         "simulation_models_git_path": "../simulation-models.git",
-        "simulation_models_git_revision": "HEAD",
+        "simulation_models_git_revision": revision,
     }
     request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
 
@@ -310,7 +315,10 @@ def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
     )
 
     assert path is None
-    assert git_source == ((Path(tmp_test_directory) / "../simulation-models.git").resolve(), "HEAD")
+    assert git_source == (
+        (Path(tmp_test_directory) / "../simulation-models.git").resolve(),
+        revision,
+    )
 
 
 def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mocker, monkeypatch):
@@ -332,8 +340,10 @@ def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mo
     )
 
 
-def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker):
+def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker, monkeypatch):
     """Use the selected checkout tip when no Git revision is configured."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
     request = mocker.MagicMock()
     options = {
         "simulation_models_path": None,
@@ -438,6 +448,17 @@ def test_local_simulation_model_source_is_not_required_when_configured():
 def test_local_simulation_model_source_is_not_required_without_configuration():
     """Allow automatic no-configuration checks to run application help."""
     config = {"application": "simtools-docs-produce-production-summary"}
+
+    assert not _requires_simulation_model_source(config, None, None)
+
+
+@pytest.mark.parametrize("option", ["help", "version"])
+def test_model_source_is_not_required_for_cli_information(option):
+    """Run CLI information checks without a model repository."""
+    config = {
+        "application": "simtools-maintain-simulation-model-write-array-element-positions",
+        "configuration": {option: True},
+    }
 
     assert not _requires_simulation_model_source(config, None, None)
 
