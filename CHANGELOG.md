@@ -7,7 +7,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
-## [0.38.3](https://github.com/gammasim/simtools/releases/tag/0.38.3) - 2026-10-06
+## [v0.38.3](https://github.com/gammasim/simtools/releases/tag/v0.38.3) - 2026-10-06
 
 ### Bugfixes
 
