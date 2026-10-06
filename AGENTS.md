@@ -190,6 +190,13 @@ CORSIKA / sim_telarray. Unit tests should not.
 Use the documentation skill for docs, API reference, changelog, and docstring
 work.
 
+- Keep documentation concise and actionable: state what the reader needs to
+  know or do. Omit background, implementation narration, and repeated facts.
+- For small behavior changes, update the relevant sentence or example in an
+  existing section. Add a section only when it covers a distinct user task.
+- Document public behavior and useful overrides; keep internal helper names,
+  lookup algorithms, and incidental edge cases in code and tests unless users
+  need them to configure or troubleshoot the software.
 - Documentation pages are preferred in MyST Markdown.
 - Application autodoc pages are small RST files in
   `docs/source/user-guide/applications/`.
