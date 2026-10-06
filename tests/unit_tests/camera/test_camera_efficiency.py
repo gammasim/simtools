@@ -57,16 +57,16 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
 
     wavelength = np.arange(200.0, 1001.0)
     efficiencies = {
-        "C1": 2.0,
-        "C2": 2.0 * 0.75 * 1.25,
-        "C3": 2.0 * 0.5,
-        "C4": 2.0 * 0.3,
-        "C4x": 2.0 * 0.4,
-        "N1": 3.0,
-        "N2": 3.0 * 0.9,
-        "N3": 3.0 * 0.4,
-        "N4": 3.0 * 0.2,
-        "N4x": 3.0 * 0.25,
+        "cherenkov_at_ground": 2.0,
+        "cherenkov_after_mirrors": 2.0 * 0.75 * 1.25,
+        "cherenkov_at_photodetector": 2.0 * 0.5,
+        "cherenkov_detected": 2.0 * 0.3,
+        "cherenkov_detected_without_mirrors": 2.0 * 0.4,
+        "nsb_before_correction": 3.0,
+        "nsb_after_mirrors": 3.0 * 0.9,
+        "nsb_at_photodetector": 3.0 * 0.4,
+        "nsb_detected": 3.0 * 0.2,
+        "nsb_detected_without_mirrors": 3.0 * 0.25,
     }
     result_table = Table(
         {
@@ -211,7 +211,7 @@ def test_analyze_requires_simulation_results(camera_efficiency_lst):
         camera_efficiency_lst.analyze(export=False, force=True)
 
 
-def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker):
+def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker, tmp_test_directory):
     parameter_names = (
         "wl eff eff_atm qe ref masts filt pixel atm_trans cher nsb atm_corr "
         "nsb_site nsb_site_eff nsb_be nsb_be_eff"
@@ -220,43 +220,59 @@ def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker):
     row.update(
         wl=400.0,
         qe=0.5,
-        ref=0.8,
-        masts=0.9,
-        filt=0.7,
-        pixel=0.6,
+        ref=0.5,
+        masts=0.5,
+        filt=0.5,
+        pixel=0.5,
         atm_trans=2.0,
         nsb_be=3.0,
     )
     camera_efficiency_lst._calculated_results = [row]
     mocker.patch.object(camera_efficiency_lst, "calc_nsb_rate", return_value=(0.0, None))
-    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value="summary")
+    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value={})
+    output_file = Path(tmp_test_directory) / "camera_efficiency.ecsv"
+    camera_efficiency_lst._file["results"] = output_file
 
-    camera_efficiency_lst.analyze(export=False, force=True)
+    camera_efficiency_lst.analyze(export=True, force=True)
+    exported_results = Table.read(output_file, format="ascii.ecsv")
+    assert exported_results.colnames == camera_efficiency_lst._results.colnames
+    for column in exported_results.colnames:
+        assert exported_results[column].description
+        assert exported_results[column].description == (
+            camera_efficiency_lst._results[column].description
+        )
+        assert exported_results[column][0] == pytest.approx(
+            camera_efficiency_lst._results[column][0]
+        )
 
+    assert exported_results["qe"].description == "Photodetector quantum efficiency."
+    assert exported_results["nsb_after_mirrors"].description == (
+        "Input NSB spectrum after mirror reflection and shadowing."
+    )
     results = camera_efficiency_lst._results[0]
     assert camera_efficiency_lst._results.colnames == [
         *parameter_names,
-        "C1",
-        "C2",
-        "C3",
-        "C4",
-        "C4x",
-        "N1",
-        "N2",
-        "N3",
-        "N4",
-        "N4x",
+        "cherenkov_at_ground",
+        "cherenkov_after_mirrors",
+        "cherenkov_at_photodetector",
+        "cherenkov_detected",
+        "cherenkov_detected_without_mirrors",
+        "nsb_before_correction",
+        "nsb_after_mirrors",
+        "nsb_at_photodetector",
+        "nsb_detected",
+        "nsb_detected_without_mirrors",
     ]
-    assert results["C1"] == pytest.approx(2.0)
-    assert results["C2"] == pytest.approx(1.44)
-    assert results["C3"] == pytest.approx(0.6048)
-    assert results["C4"] == pytest.approx(0.3024)
-    assert results["C4x"] == pytest.approx(0.42)
-    assert results["N1"] == pytest.approx(3.0)
-    assert results["N2"] == pytest.approx(2.16)
-    assert results["N3"] == pytest.approx(0.9072)
-    assert results["N4"] == pytest.approx(0.4536)
-    assert results["N4x"] == pytest.approx(0.63)
+    assert results["cherenkov_at_ground"] == pytest.approx(2.0)
+    assert results["cherenkov_after_mirrors"] == pytest.approx(0.5)
+    assert results["cherenkov_at_photodetector"] == pytest.approx(0.125)
+    assert results["cherenkov_detected"] == pytest.approx(0.0625)
+    assert results["cherenkov_detected_without_mirrors"] == pytest.approx(0.25)
+    assert results["nsb_before_correction"] == pytest.approx(3.0)
+    assert results["nsb_after_mirrors"] == pytest.approx(0.75)
+    assert results["nsb_at_photodetector"] == pytest.approx(0.1875)
+    assert results["nsb_detected"] == pytest.approx(0.09375)
+    assert results["nsb_detected_without_mirrors"] == pytest.approx(0.375)
 
 
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
@@ -267,9 +283,10 @@ def test_results_summary(camera_efficiency_lst, prepare_results_file):
     assert "meta" in summary
 
 
-def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file):
+@pytest.mark.parametrize("efficiency_type", ["shower", "muon", "nsb"])
+def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file, efficiency_type):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.efficiency_type = "nsb"
+    camera_efficiency_lst.efficiency_type = efficiency_type
     plot_table_mock = mocker.patch("simtools.visualization.visualize.plot_table")
     camera_efficiency_lst.plot_efficiency()
     plot_table_mock.assert_called_once()

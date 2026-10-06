@@ -11,7 +11,10 @@ from astropy.table import Table
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
 from simtools.atmosphere import AtmosphereProfile
-from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
+from simtools.camera.camera_efficiency_calculator import (
+    RESULT_COLUMN_DESCRIPTIONS,
+    CameraEfficiencyCalculator,
+)
 from simtools.io import ascii_handler, io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
@@ -19,6 +22,20 @@ from simtools.utils import names
 from simtools.visualization import visualize
 
 ECSV_SUFFIX = ".ecsv"
+
+
+_SPECTRAL_STAGE_DESCRIPTIONS = {
+    "cherenkov_at_ground": "Cherenkov spectrum at ground, normalized at emission to 400 nm.",
+    "cherenkov_after_mirrors": "Cherenkov spectrum after mirror reflection and shadowing.",
+    "cherenkov_at_photodetector": "Cherenkov spectrum after the camera filter and lightguide.",
+    "cherenkov_detected": "Cherenkov spectrum after all optical and quantum efficiencies.",
+    "cherenkov_detected_without_mirrors": "Detected Cherenkov spectrum excluding mirror losses.",
+    "nsb_before_correction": "NSB photon spectrum before altitude and airmass corrections.",
+    "nsb_after_mirrors": "NSB spectrum after mirror reflection and shadowing.",
+    "nsb_at_photodetector": "NSB spectrum after mirrors, camera filter, and lightguide.",
+    "nsb_detected": "NSB spectrum after all optical and quantum efficiencies.",
+    "nsb_detected_without_mirrors": "NSB spectrum excluding mirror losses.",
+}
 
 
 class CameraEfficiency:
@@ -195,16 +212,6 @@ class CameraEfficiency:
             "nsb_site_eff",
             "nsb_be",
             "nsb_be_eff",
-            "C1",
-            "C2",
-            "C3",
-            "C4",
-            "C4x",
-            "N1",
-            "N2",
-            "N3",
-            "N4",
-            "N4x",
         ]
 
         _results = defaultdict(list)
@@ -212,7 +219,7 @@ class CameraEfficiency:
         if self._calculated_results is None:
             raise RuntimeError("Camera efficiency must be simulated before it can be analyzed.")
         for row in self._calculated_results:
-            for name in eff_pars[:16]:
+            for name in eff_pars:
                 _results[name].append(row[name])
             mirror_throughput = row["ref"] * row["masts"]
             camera_throughput = row["filt"] * row["pixel"]
@@ -221,23 +228,29 @@ class CameraEfficiency:
             cherenkov_after_mirrors = cherenkov_at_ground * mirror_throughput
             cherenkov_at_photodetector = cherenkov_after_mirrors * camera_throughput
             cherenkov_detected = cherenkov_at_photodetector * quantum_efficiency
-            # Preserve the serialized spectral-stage names used by existing consumers.
-            _results["C1"].append(cherenkov_at_ground)
-            _results["C2"].append(cherenkov_after_mirrors)
-            _results["C3"].append(cherenkov_at_photodetector)
-            _results["C4"].append(cherenkov_detected)
-            _results["C4x"].append(cherenkov_at_ground * quantum_efficiency * camera_throughput)
+            _results["cherenkov_at_ground"].append(cherenkov_at_ground)
+            _results["cherenkov_after_mirrors"].append(cherenkov_after_mirrors)
+            _results["cherenkov_at_photodetector"].append(cherenkov_at_photodetector)
+            _results["cherenkov_detected"].append(cherenkov_detected)
+            _results["cherenkov_detected_without_mirrors"].append(
+                cherenkov_at_ground * quantum_efficiency * camera_throughput
+            )
             nsb_before_correction = row["nsb_be"]
             nsb_after_mirrors = nsb_before_correction * mirror_throughput
             nsb_at_photodetector = nsb_after_mirrors * camera_throughput
             nsb_detected = nsb_at_photodetector * quantum_efficiency
-            _results["N1"].append(nsb_before_correction)
-            _results["N2"].append(nsb_after_mirrors)
-            _results["N3"].append(nsb_at_photodetector)
-            _results["N4"].append(nsb_detected)
-            _results["N4x"].append(nsb_before_correction * quantum_efficiency * camera_throughput)
+            _results["nsb_before_correction"].append(nsb_before_correction)
+            _results["nsb_after_mirrors"].append(nsb_after_mirrors)
+            _results["nsb_at_photodetector"].append(nsb_at_photodetector)
+            _results["nsb_detected"].append(nsb_detected)
+            _results["nsb_detected_without_mirrors"].append(
+                nsb_before_correction * quantum_efficiency * camera_throughput
+            )
 
         self._results = Table(_results)
+        descriptions = RESULT_COLUMN_DESCRIPTIONS | _SPECTRAL_STAGE_DESCRIPTIONS
+        for name in self._results.colnames:
+            self._results[name].description = descriptions[name]
         self._has_results = True
 
         self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions = self.calc_nsb_rate()
@@ -347,11 +360,13 @@ class CameraEfficiency:
         tel_efficiency: float
             Telescope efficiency
         """
-        # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
+        # Sum(cherenkov_at_ground) from 300 - 550 nm:
+        c1_reduced_wl = self._results["cherenkov_at_ground"][
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
+        ]
         c1_sum = np.sum(c1_reduced_wl)
-        # Sum(C4) from 200 - 999 nm:
-        c4_sum = np.sum(self._results["C4"])
+        # Sum(cherenkov_detected) from 200 - 999 nm:
+        c4_sum = np.sum(self._results["cherenkov_detected"])
         masts_factor = self._results["masts"][0]
         fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
@@ -366,11 +381,13 @@ class CameraEfficiency:
         cam_efficiency: float
             Wavelength-averaged camera efficiency
         """
-        # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
+        # Sum(cherenkov_at_ground) from 300 - 550 nm:
+        c1_reduced_wl = self._results["cherenkov_at_ground"][
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
+        ]
         c1_sum = np.sum(c1_reduced_wl)
-        # Sum(C4x) from 300 - 550 nm:
-        c4x_reduced_wl = self._results["C4x"][
+        # Sum(cherenkov_detected_without_mirrors) from 300 - 550 nm:
+        c4x_reduced_wl = self._results["cherenkov_detected_without_mirrors"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c4x_sum = np.sum(c4x_reduced_wl)
@@ -393,11 +410,13 @@ class CameraEfficiency:
         Float
             Telescope total efficiency including gaps
         """
-        # Sum(N1) from 300 - 550 nm:
-        n1_reduced_wl = self._results["N1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
+        # Sum(nsb_before_correction) from 300 - 550 nm:
+        n1_reduced_wl = self._results["nsb_before_correction"][
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
+        ]
         n1_sum = np.sum(n1_reduced_wl)
-        # Sum(N4) from 200 - 999 nm:
-        n4_sum = np.sum(self._results["N4"])
+        # Sum(nsb_detected) from 200 - 999 nm:
+        n4_sum = np.sum(self._results["nsb_detected"])
         masts_factor = self._results["masts"][0]
         fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
@@ -422,13 +441,13 @@ class CameraEfficiency:
             Fraction of light in the given wavelength range compared to total efficiency.
 
         """
-        # Sum(C4) from lamba_min to lambda_max nm:
-        c4_reduced_wl = self._results["C4"][
+        # Sum(cherenkov_detected) from lamba_min to lambda_max nm:
+        c4_reduced_wl = self._results["cherenkov_detected"][
             [lambda_min < wl_now < lambda_max for wl_now in self._results["wl"]]
         ]
         c4_sum = np.sum(c4_reduced_wl)
-        # Sum(C4) from 200 - 999 nm:
-        c4_sum_total = np.sum(self._results["C4"])
+        # Sum(cherenkov_detected) from 200 - 999 nm:
+        c4_sum_total = np.sum(self._results["cherenkov_detected"])
         # (no need to apply masts or fill factors as in calc_tel_efficiency, they cancel out)
 
         self._logger.info(
@@ -447,11 +466,15 @@ class CameraEfficiency:
         Float
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
-        # Sum(C1) from 300 - 550 nm:
-        c1_reduced_wl = self._results["C1"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
+        # Sum(cherenkov_at_ground) from 300 - 550 nm:
+        c1_reduced_wl = self._results["cherenkov_at_ground"][
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
+        ]
         c1_sum = np.sum(c1_reduced_wl)
-        # Sum(C2) from 300 - 550 nm:
-        c2_reduced_wl = self._results["C2"][[299 < wl_now < 551 for wl_now in self._results["wl"]]]
+        # Sum(cherenkov_after_mirrors) from 300 - 550 nm:
+        c2_reduced_wl = self._results["cherenkov_after_mirrors"][
+            [299 < wl_now < 551 for wl_now in self._results["wl"]]
+        ]
         c2_sum = np.sum(c2_reduced_wl)
         return c2_sum / c1_sum / self._results["masts"][0]
 
@@ -475,7 +498,7 @@ class CameraEfficiency:
             (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)
         """
         self.nsb_pixel_pe_per_ns = (
-            np.sum(self._results["N4"])
+            np.sum(self._results["nsb_detected"])
             * self.telescope_model.camera.get_pixel_active_solid_angle()
             * self.telescope_model.get_on_axis_eff_optical_area().to("m2").value
             / self.telescope_model.get_parameter_value("telescope_transmission")[0]
@@ -487,11 +510,11 @@ class CameraEfficiency:
         )
 
         # (integral is in ph./(m^2 ns sr) ) over wavelength_range
-        n1_reduced_wl = self._results["N1"][
+        n1_reduced_wl = self._results["nsb_before_correction"][
             [wavelength_range[0] <= wl_now <= wavelength_range[1] for wl_now in self._results["wl"]]
         ]
         n1_sum = np.sum(n1_reduced_wl)
-        n1_integral_edges = self._results["N1"][
+        n1_integral_edges = self._results["nsb_before_correction"][
             [wl_now in [wavelength_range[0], wavelength_range[1]] for wl_now in self._results["wl"]]
         ]
         n1_integral_edges_sum = np.sum(n1_integral_edges)
@@ -519,17 +542,20 @@ class CameraEfficiency:
         """
         self._logger.info(f"Plotting {self.efficiency_type} efficiency vs wavelength")
 
-        _col_type = "C" if self.efficiency_type in ("shower", "muon") else "N"
+        if self.efficiency_type in ("shower", "muon"):
+            spectrum = "cherenkov"
+            initial_column = "cherenkov_at_ground"
+        else:
+            spectrum = "nsb"
+            initial_column = "nsb_before_correction"
 
         column_titles = {
             "wl": "Wavelength [nm]",
-            f"{_col_type}1": rf"{_col_type}1: Cherenkov light on ground",
-            f"{_col_type}2": rf"{_col_type}2: {_col_type}1 $\times$ ref. $\times$ masts",
-            f"{_col_type}3": rf"{_col_type}3: {_col_type}2 $\times$ filter $\times$ lightguide",
-            f"{_col_type}4": rf"{_col_type}4: {_col_type}3 $\times$ q.e.",
-            f"{_col_type}4x": (
-                rf"{_col_type}4x: {_col_type}1 $\times$ filter $\times$ lightguide $\times$ q.e."
-            ),
+            initial_column: initial_column.replace("_", " "),
+            f"{spectrum}_after_mirrors": "After mirrors",
+            f"{spectrum}_at_photodetector": "At photodetector",
+            f"{spectrum}_detected": "Detected",
+            f"{spectrum}_detected_without_mirrors": "Detected without mirrors",
         }
 
         table_to_plot = Table([self._results[col_now] for col_now in column_titles])
