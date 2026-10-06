@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791272349266,
+  "lastUpdate": 1791273346836,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29336,6 +29336,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 426.84375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a5f3e3f91d9b30b4def47841e16eaad0a9eeb2f",
+          "message": "Fix schema resolution for integration tests with installed simtools (#2608)\n\n* consistent simulation models path\n\n* changelog\n\n* simplification\n\n* copilot review\n\n* improve test\n\n* one more test path\n\n* fix output path for array element writer\n\n* changelog\n\n* Fix schema-path path resolve.",
+          "timestamp": "2026-10-06T09:39:37+02:00",
+          "tree_id": "032a1ac59a763c116a0d27e757edcf942a61871a",
+          "url": "https://github.com/gammasim/simtools/commit/6a5f3e3f91d9b30b4def47841e16eaad0a9eeb2f"
+        },
+        "date": 1791273330761,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 68.86014976399998,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 71.94999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 426.73828125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
           }
