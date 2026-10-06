@@ -2,7 +2,7 @@
 
 {% block htmltitle %}
   {% if pagename == root_doc %}
-    <title>{{ title|striptags|e }}</title>
+    <title>{{ docstitle|striptags|e }}</title>
   {% else %}
     {{ super() }}
   {% endif %}

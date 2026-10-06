@@ -11,8 +11,6 @@ sphinx:
 html_theme.sidebar_secondary.remove: true
 ---
 
-# simtools
-
 ```{image} ../_static/simtools_logo.png
 :align: center
 :alt: simtools logo
