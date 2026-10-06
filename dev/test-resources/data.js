@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791291534415,
+  "lastUpdate": 1791304093750,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29464,6 +29464,48 @@ window.BENCHMARK_DATA = {
             "value": 426.92578125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "755edeab103c0fcd3f304fbed40a85714eca6409",
+          "message": "Camera efficiency column names (#2611)\n\n* Use named camera-efficiency spectral stages\n\n* Improved column names\n\n* legacy columns\n\n* remove legacy\n\n* naming\n\n* changelog\n\n* Remove legacy stuff",
+          "timestamp": "2026-10-06T18:13:44+02:00",
+          "tree_id": "63468b6e8c4e4e3f897803b50eac71b72041391a",
+          "url": "https://github.com/gammasim/simtools/commit/755edeab103c0fcd3f304fbed40a85714eca6409"
+        },
+        "date": 1791304078758,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 70.65984089700001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 73.33999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 425.984375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
