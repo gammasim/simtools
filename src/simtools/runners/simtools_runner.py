@@ -807,10 +807,6 @@ def _set_input_output_directories(path):
         setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
     except ValueError:
         setting_workflow = str(path.parent) if path.parent != Path() else path.stem
-        logger.info(
-            "Could not derive setting workflow from 'input' anchor; "
-            f"using fallback '{setting_workflow}'"
-        )
 
     output_path = Path("simtools-output") / Path(setting_workflow)
     return output_path, setting_workflow
