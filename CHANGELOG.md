@@ -7,6 +7,14 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.38.3](https://github.com/gammasim/simtools/releases/tag/v0.38.3) - 2026-10-06
+
+### Bugfixes
+
+- Prefer the dependency catalogue bundled with simtools over a host working-directory catalogue, keeping container defaults consistent with the installed software. Explicit catalogue overrides remain supported. ([#2610](https://github.com/gammasim/simtools/pull/2610))
+- Fix inconsistency in setting output paths between integration test output and validation steps. ([#2612](https://github.com/gammasim/simtools/pull/2612))
+
+
 ## [v0.38.2](https://github.com/gammasim/simtools/releases/tag/v0.38.2) - 2026-10-06
 
 ### Bugfixes
