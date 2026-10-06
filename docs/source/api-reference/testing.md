@@ -45,6 +45,16 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
+(optionsmodule)=
+
+## options
+
+```{eval-rst}
+.. automodule:: testing.options
+   :members:
+
+```
+
 (validate_outputmodule)=
 
 ## validate_output

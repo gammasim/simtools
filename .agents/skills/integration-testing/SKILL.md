@@ -107,9 +107,10 @@ array_layout_name:
 Use `${static:path/to/file}` for maintained resources,
 `${generated:path/to/file}` for generated resources, and
 `${downloaded:path/to/file}` for externally downloaded resources. Pytest
-resolves these against `--test_resources_path` or the versioned
-`simtools-tests` resource bundle selected by `SIMTOOLS_TESTS_PATH` and
-`SIMTOOLS_TESTS_RESOURCE_VERSION`.
+resolves these against the versioned `simtools-tests` resource bundle selected
+by `--simtools_tests_path` and `--simtools_tests_resource_version`, or their
+`SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION` environment
+variables.
 
 ## `integration_tests` Blocks
 
@@ -157,7 +158,8 @@ pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
-pytest -v --test_resources_path /full/path/to/resources \
+pytest -v --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
+  --simtools_tests_resource_version <version> \
   tests/integration_tests/test_applications_from_config.py
 ```
 

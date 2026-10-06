@@ -8,14 +8,14 @@ applications:
   configuration:
     array_element_positions_file: ${static:telescope_positions-North-utm.ecsv}
     coordinate_system: utm
-    simulation_models_path: simtools-output
+    output_path: simtools-output
     parameter_version: 0.1.0
   integration_tests:
   - test_outputs:
-    - path_descriptor: simulation_models_path
+    - path_descriptor: output_path
       file: array_element_position_utm.json
       output_sub_path: LSTN-04
-    - path_descriptor: simulation_models_path
+    - path_descriptor: output_path
       file: array_element_position_utm.json
       output_sub_path: MSTN-15
   test_name: utm

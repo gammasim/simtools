@@ -20,7 +20,7 @@ applications:
       file: corsika_simulation_limits.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/corsika_limits_table.schema.yml
+        schema: corsika_limits_table.schema.yml
       - type: table
         minimum_rows: 1
         columns:

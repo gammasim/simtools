@@ -288,8 +288,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
         matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"]
         == first_corsika["opt-patch-ref"]
     )
-    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
-    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -365,14 +369,16 @@ def test_env_template_matches_catalog(simtools_root_path):
             "Invalid Git revision",
         ),
         (
-            lambda data: data["corsika"][0].update(
-                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            lambda data: (
+                data["corsika"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["corsika"][0].pop("config-revision", None),
             ),
             "requires all source revisions",
         ),
         (
-            lambda data: data["sim-telarray"][0].update(
-                {"source-snapshot-digest": "sha256:" + "a" * 64}
+            lambda data: (
+                data["sim-telarray"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["sim-telarray"][0].pop("hessio-revision", None),
             ),
             "requires all source revisions",
         ),
@@ -574,7 +580,8 @@ def test_update_dependency_source_revisions_writes_structured_catalog(tmp_test_d
     """Write source revisions and snapshot digests through the YAML catalog structure."""
     catalog_path = tmp_test_directory / "dependency_versions.yml"
     catalog_path.write_text(
-        """schema_version: 0.6.0
+        """---
+schema_version: 0.6.0
 corsika:
   - source-ref: v7.8010
     source-url: https://example.org/corsika.git
@@ -611,7 +618,9 @@ sim-telarray:
     updates["corsika"]["v7.8010"]["source-revision"] = "1" * 40
     dependency_versions.update_dependency_source_revisions(catalog_path, updates)
 
-    updated = yaml.safe_load(catalog_path.read_text(encoding="utf-8"))
+    catalog_text = catalog_path.read_text(encoding="utf-8")
+    assert catalog_text.startswith("---\n")
+    updated = yaml.safe_load(catalog_text)
     assert updated["corsika"][0]["source-revision"] == "1" * 40
     assert updated["corsika"][0]["config-revision"] == "b" * 40
     assert updated["corsika"][0]["opt-patch-revision"] == "c" * 40
@@ -805,3 +814,49 @@ def test_catalog_optional_test_revision(revision):
             dependency_versions.dependency_catalog_environment(catalog)["SIMTOOLS_TESTS_REVISION"]
             == revision
         )
+
+
+@pytest.mark.parametrize("source_catalog", [False, True])
+def test_default_catalog_prefers_running_installation(
+    monkeypatch, tmp_test_directory, source_catalog
+):
+    root = Path(tmp_test_directory)
+    host = root / "host"
+    host.mkdir()
+    (host / "dependency_versions.yml").write_text("schema_version: host\n")
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package.parent.mkdir(parents=True)
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(host)
+    installed = root / "env" / "simtools" / "dependency_versions.yml"
+    installed.parent.mkdir(parents=True)
+    installed.write_text("schema_version: installed\n")
+    expected = installed
+    if source_catalog:
+        expected = root / "installation" / "dependency_versions.yml"
+        expected.write_text("schema_version: source\n")
+    assert dependency_versions.find_dependency_versions() == expected
+    assert dependency_versions.find_dependency_versions(host) == host / "dependency_versions.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(host / "dependency_versions.yml"))
+    assert dependency_versions.find_dependency_versions() == host / "dependency_versions.yml"
+
+
+def test_missing_catalog_override_does_not_fall_back(monkeypatch, tmp_test_directory):
+    missing = Path(tmp_test_directory) / "missing.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(missing))
+    with pytest.raises(FileNotFoundError, match="Configured dependency catalog does not exist"):
+        dependency_versions.find_dependency_versions()
+
+
+def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_directory):
+    root = Path(tmp_test_directory)
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(root)
+    catalog = root / "dependency_versions.yml"
+    catalog.write_text("schema_version: working-directory\n")
+    assert dependency_versions.find_dependency_versions() == catalog
