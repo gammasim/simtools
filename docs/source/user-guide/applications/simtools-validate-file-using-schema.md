@@ -1,5 +1,11 @@
 # simtools-validate-file-using-schema
 
+For `--schema_file`, use a local file path, a URL, or a name relative to the
+schemas bundled with simtools, such as `model_parameters/num_gains.schema.yml`.
+Bundled schemas work from any working directory without a source checkout.
+An existing local file takes precedence over a bundled schema with the same
+relative name; absolute paths always refer to the specified file.
+
 ```{eval-rst}
 .. automodule:: simtools.applications.validate_file_using_schema
    :members:

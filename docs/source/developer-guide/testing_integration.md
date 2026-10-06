@@ -176,7 +176,10 @@ worker counts, and version-specific expectations.
 
 Each output owns its location and validation rules. Product schemas validate
 stable structure such as columns, types, and units. Table and metadata rules
-describe expectations specific to the tested workflow.
+describe expectations specific to the tested workflow. For `data_schema`, use a
+local schema path, URL, or a name relative to the schemas bundled with simtools.
+Schema resolution uses the same loader as applications and does not require a
+source checkout.
 
 ```yaml
 test_outputs:
@@ -184,7 +187,7 @@ test_outputs:
   path_descriptor: output_path
   validations:
   - type: data_schema
-    schema: src/simtools/schemas/job_grid_density.schema.yml
+    schema: job_grid_density.schema.yml
   - type: table
     minimum_rows: 1
     unique_columns: [run_number]

@@ -38,7 +38,7 @@ def validate_reference(artifact, rule, _context):
 
 def validate_data_schema(artifact, rule, _context):
     """Validate a tabular output against a simtools data schema."""
-    table.validate_data_schema(artifact.path, reference.resolve_path(rule["schema"]))
+    table.validate_data_schema(artifact.path, rule["schema"])
 
 
 def validate_table(artifact, rule, _context):
