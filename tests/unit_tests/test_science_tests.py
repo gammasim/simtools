@@ -2,6 +2,7 @@ import json
 import shutil
 from pathlib import Path
 
+import jsonschema
 import pytest
 import yaml
 
@@ -295,10 +296,9 @@ def test_completed_production_gate(tmp_test_directory):
     ("release", "context", "message"),
     [
         ({"release_label": "../invalid"}, {}, "release_label"),
-        ({"release_label": "candidate"}, {"__SCIENCE_RELEASE_LABEL__": "other"}, "labels differ"),
         (
             {"release_label": "candidate"},
-            {"__SCIENCE_RELEASE_LABEL__": "candidate"},
+            {},
             "absolute path",
         ),
     ],
@@ -335,10 +335,16 @@ def test_invalid_required_sites(campaign, required):
         science_tests.run_release(**campaign, dry_run=True)
 
 
-def test_configuration_change_invalidates_old_results(campaign, successful_workflow):
+@pytest.mark.parametrize("configuration_file", ["workflow.yml", "run_time.yml"])
+def test_configuration_change_invalidates_old_results(
+    campaign, successful_workflow, configuration_file
+):
     science_tests.run_release(**campaign, sites=["north"])
-    path = campaign["template_dir"] / "workflow.yml"
-    path.write_text(path.read_text() + "# changed workflow\n", encoding="utf-8")
+    path = campaign["template_dir"] / configuration_file
+    if configuration_file == "run_time.yml":
+        _write_yaml(path, {"runtime_environment": {"image": "test"}})
+    else:
+        path.write_text(path.read_text() + "# changed workflow\n", encoding="utf-8")
     summary = science_tests.run_release(**campaign, sites=["south"])
     assert next(r for r in summary["results"] if r["id"] == "compare.north")["status"] == "not_run"
 
@@ -497,3 +503,82 @@ def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
 def test_malformed_acceptance_rules_fail_preflight(rule):
     with pytest.raises(ValueError, match=r"acceptance|Acceptance"):
         science_tests._validate_rule(rule, "comparison")
+
+
+@pytest.mark.parametrize("present", [False, True])
+def test_shared_runtime_environment(tmp_test_directory, present):
+    template = Path(tmp_test_directory)
+    if present:
+        _write_yaml(
+            template / "run_time.yml",
+            {
+                "runtime_environment": {
+                    "container_engine": "apptainer",
+                    "image": "__SCIENCE_CONTAINER_IMAGE_PATH__",
+                    "environment_file": "__CONFIG_DIRECTORY__/profiles/htcondor.env",
+                },
+            },
+        )
+    runtime = science_tests._shared_runtime_environment(
+        template,
+        {
+            "__SCIENCE_CONTAINER_IMAGE_PATH__": "/images/simtools.sif",
+            "__CONFIG_DIRECTORY__": "/other/workflow",
+        },
+    )
+    if present:
+        assert runtime == {
+            "container_engine": "apptainer",
+            "image": "/images/simtools.sif",
+            "environment_file": str(template / "profiles/htcondor.env"),
+        }
+    else:
+        assert runtime is None
+
+
+def test_shared_runtime_environment_invalid(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(template / "run_time.yml", {"runtime_environment": {"image": ""}})
+    with pytest.raises(jsonschema.ValidationError):
+        science_tests._shared_runtime_environment(template, {})
+
+
+@pytest.mark.parametrize(
+    ("produces_production", "inline"), [(False, False), (True, False), (False, True)]
+)
+def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production, inline):
+    template = campaign["template_dir"]
+    shared = {"container_engine": "apptainer", "image": "__SCIENCE_CONTAINER_IMAGE_PATH__"}
+    _write_yaml(template / "run_time.yml", {"runtime_environment": shared})
+    if inline:
+        workflow = science_tests._load_yaml(template / "workflow.yml")
+        workflow["runtime_environment"] = {"container_engine": "apptainer", "image": "inline.sif"}
+        _write_yaml(template / "workflow.yml", workflow)
+    captured = []
+    prepare = science_tests.prepare_workflow
+
+    def capture(args, replacements):
+        result = prepare(args, replacements=replacements)
+        captured.append(result[1])
+        return result
+
+    monkeypatch.setattr(science_tests, "prepare_workflow", capture)
+    science_tests._run_test(
+        campaign["release_dir"],
+        template,
+        {
+            "__SCIENCE_CANDIDATE_PATH__": str(template / "candidate"),
+            "__SCIENCE_CONTAINER_IMAGE_PATH__": "/images/shared.sif",
+        },
+        "north",
+        {"array_layout_name": "CTAO-North-Alpha"},
+        "example",
+        {"workflow": "workflow.yml", "produces_production": produces_production},
+        dry_run=True,
+    )
+    expected = None
+    if inline:
+        expected = {"container_engine": "apptainer", "image": "inline.sif"}
+    elif not produces_production:
+        expected = {"container_engine": "apptainer", "image": "/images/shared.sif"}
+    assert captured == [expected]

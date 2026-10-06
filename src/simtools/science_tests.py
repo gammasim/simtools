@@ -11,7 +11,7 @@ import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.job_execution.job_manager import JobExecutionError
@@ -24,6 +24,11 @@ _PATH_KEYS = (
     "__SCIENCE_BASELINE_PATH__",
     "__PRODUCTION_CONFIGURATION_PATH__",
 )
+_MODEL_SOURCE_KEYS = (
+    "simulation_models_path",
+    "simulation_models_git_path",
+    "simulation_models_git_revision",
+)
 
 
 class _AcceptanceError(ValueError):
@@ -31,12 +36,10 @@ class _AcceptanceError(ValueError):
 
 
 def _validate_release_context(release, context):
-    """Validate explicit directory paths and a consistent release identity."""
+    """Validate the release label and external directory paths."""
     label = release.get("release_label")
     if not isinstance(label, str) or not _VALID_NAME.fullmatch(label):
         raise ValueError("release_label must be a non-empty filename-safe label.")
-    if context.get("__SCIENCE_RELEASE_LABEL__") != label:
-        raise ValueError("Context and release labels differ.")
     for key in _PATH_KEYS:
         value = context.get(key)
         if not isinstance(value, str) or not Path(value).is_absolute() or "__" in value:
@@ -254,18 +257,31 @@ def _invalidate_dependents(records, results, catalogue):
 
 
 def _campaign_signature(
-    release_dir, template_dir, release, catalogue, context, suites, products, rules
+    release_dir,
+    template_dir,
+    release,
+    catalogue,
+    context,
+    suites,
+    products,
+    rules,
+    model_source,
 ):
     """Identify definitions and external context without publishing absolute paths."""
-    payload = [release, catalogue, context, suites, products, rules]
+    payload = [release, catalogue, context, suites, products, rules, model_source]
     for definition in catalogue.values():
         payload.append(
             _resolve_workflow(template_dir, release_dir, definition["workflow"]).read_text(
                 encoding="utf-8"
             )
         )
+    runtime_file = template_dir / "run_time.yml"
+    if runtime_file.is_file():
+        payload.append(runtime_file.read_text(encoding="utf-8"))
     for profile in sorted((template_dir / "profiles").glob("*.yml")):
         payload.append(profile.read_text(encoding="utf-8"))
+    for environment_file in sorted((template_dir / "profiles").glob("*.env")):
+        payload.append(environment_file.read_text(encoding="utf-8"))
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 
@@ -303,6 +319,7 @@ def _test_definition(test_id, catalogue, acceptance, release):
         "rule": rule,
         "expected_changes": release.get("expected_changes", []),
         "baseline": release.get("baseline"),
+        "release_label": release.get("release_label"),
     }
 
 
@@ -387,13 +404,17 @@ def run_release(
     context = _load_context(context_file)
     if not context:
         raise ValueError("A context_file is required for a science-test run.")
-    if release.get("release_label"):
-        context.setdefault("__SCIENCE_RELEASE_LABEL__", release["release_label"])
     _validate_release_context(release, context)
+    context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
     suites = _load_suites(release_dir, release, catalogue)
     requested_sites = _select(sites, suites, "site")
     requested_tests = _select(tests, catalogue, "test") if tests is not None else None
     acceptance = _load_acceptance(release_dir, template_dir)
+    model_source = {
+        key: str(application_args[key])
+        for key in _MODEL_SOURCE_KEYS
+        if application_args and application_args.get(key) is not None
+    }
     signature = _campaign_signature(
         release_dir,
         template_dir,
@@ -403,6 +424,7 @@ def run_release(
         suites,
         acceptance["products"],
         acceptance["rules"],
+        model_source,
     )
     prepared = []
     run_id = get_uuid()
@@ -437,6 +459,20 @@ def run_release(
     return summary
 
 
+def _shared_runtime_environment(template_dir, replacements):
+    """Load shared runtime settings with paths relative to the runtime file."""
+    runtime_file = template_dir / "run_time.yml"
+    if not runtime_file.is_file():
+        return None
+    runtime_replacements = dict(replacements)
+    runtime_replacements["__CONFIG_DIRECTORY__"] = str(runtime_file.parent.resolve())
+    configuration = replace_placeholders_recursively(_load_yaml(runtime_file), runtime_replacements)
+    schema.validate_dict_using_schema(
+        configuration, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+    )
+    return configuration["runtime_environment"]
+
+
 def _run_test(
     release_dir,
     template_dir,
@@ -467,6 +503,10 @@ def _run_test(
         _load_yaml(workflow),
         replacements,
     )
+    if not definition.get("produces_production") and "runtime_environment" not in resolved:
+        runtime = _shared_runtime_environment(template_dir, replacements)
+        if runtime is not None:
+            resolved["runtime_environment"] = runtime
     for application in resolved.get("applications", []):
         allowed = application.get("configuration", {}).get("compare_by", [])
         if set(allowed) - set(definition.get("expected_changes", [])):
@@ -485,6 +525,7 @@ def _run_test(
         "log_file": str(work / "execution.log"),
         "provenance_path": str(work / "provenance" / "resolved-workflow.yml"),
     }
+    args.setdefault("runtime_environment", resolved.get("runtime_environment"))
     prepare_workflow(args, replacements=replacements)
 
     result = {
@@ -493,7 +534,7 @@ def _run_test(
         "site": site,
         "workflow": _relative_path(workflow, template_dir),
         "baseline": definition.get("baseline"),
-        "candidate": context.get("__SCIENCE_RELEASE_LABEL__"),
+        "candidate": definition.get("release_label"),
         "execution_provenance": work.relative_to(
             Path(context["__SCIENCE_CANDIDATE_PATH__"])
         ).as_posix(),

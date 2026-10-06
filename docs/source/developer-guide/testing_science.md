@@ -11,6 +11,7 @@ Science-test definitions live in the [simtools-tests](https://github.com/gammasi
 science-test-template/
   catalogue.yml                  test names, prerequisites, and sites
   workflows/                     production, derivation, and comparison workflows
+  run_time.yml                   shared container runtime
   profiles/                      local and HTCondor settings
   acceptance/                    required products and acceptance rules
 
@@ -23,20 +24,27 @@ simtools-tests/<release>/science_tests/
 ```
 
 The catalogue is reusable. Release files select the catalogue and sites; site files provide the
-array layout and required tests. The external context provides the release label and absolute
-candidate, baseline, and production-configuration directories. The candidate is the production being tested;
+array layout and required tests. The release file provides the release label. The external context
+provides absolute candidate, baseline, and production-configuration directories. The candidate is
+the production being tested;
 the baseline is the production used for comparison. Workflows use the application-workflow schema;
 the runner supplies site and report placeholders.
 
 The template is discovered beside the release bundle or selected with `--template_dir`. A release
 may override a workflow at the same relative path, but must provide an explicit catalogue.
 
+The runner loads `run_time.yml` from the template directory for grid generation, derivation, and
+comparison workflows. Its `runtime_environment` mapping uses the standalone runtime schema.
+Placeholders are resolved from the campaign context; `__CONFIG_DIRECTORY__` refers to the directory
+containing `run_time.yml`. Inline workflow runtime settings take precedence. Production submission
+runs on the host, with containers configured in the HTCondor profile. Runtime settings are included
+in the campaign signature.
+
 ## Run a campaign
 
 Copy the release context example outside Git and set values such as:
 
 ```yaml
-__SCIENCE_RELEASE_LABEL__: <release-label>
 __SCIENCE_CANDIDATE_PATH__: /data/science/candidate
 __SCIENCE_BASELINE_PATH__: /data/science/baseline
 __PRODUCTION_CONFIGURATION_PATH__: /data/production-configuration/data
@@ -71,6 +79,9 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
 Repeat `--site` and `--test` to select sites and tests; prerequisite tests are included
 automatically. Dry runs validate workflows and profiles without submitting jobs or writing reports,
 but do not check whether simulation outputs exist.
+
+Pass `--simulation_models_git_path` and `--simulation_models_git_revision` on each runner command
+to select the model repository used by its workflows.
 
 Tests using simulation outputs require a completed `submission.json` with non-empty job IDs, matching
 expected-output entries, and existing output files. Existing submissions are never resubmitted
