@@ -6,7 +6,7 @@ applications:
     summary: Check an ECSV input file against an explicit simtools schema.
   configuration:
     file_name: tests/resources/static/MLTdata-preproduction.ecsv
-    schema_file: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
+    schema_file: input/MST_mirror_2f_measurements.schema.yml
   test_name: ecsv_validate_data
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

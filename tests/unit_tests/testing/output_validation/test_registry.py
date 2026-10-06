@@ -106,13 +106,12 @@ def test_registry_delegates_table_and_schema_validators(mocker):
     schema = mocker.patch.object(registry.table, "validate_data_schema")
     table = mocker.patch.object(registry.table, "validate_table")
     metadata = mocker.patch.object(registry.table, "validate_metadata")
-    mocker.patch.object(registry.reference, "resolve_path", return_value=Path("schema.yml"))
 
     registry.validate_data_schema(artifact, {"schema": "schema.yml"}, {})
     registry.validate_table(artifact, {"minimum_rows": 1}, {})
     registry.validate_metadata(artifact, {"required_keys": ["summary"]}, {})
 
-    schema.assert_called_once_with(artifact.path, Path("schema.yml"))
+    schema.assert_called_once_with(artifact.path, "schema.yml")
     table.assert_called_once_with(artifact.path, {"minimum_rows": 1})
     metadata.assert_called_once_with(artifact.path, {"required_keys": ["summary"]})
 
