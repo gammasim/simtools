@@ -361,16 +361,16 @@ class CameraEfficiency:
             Telescope efficiency
         """
         # Sum(cherenkov_at_ground) from 300 - 550 nm:
-        c1_reduced_wl = self._results["cherenkov_at_ground"][
+        cherenkov_at_ground_band = self._results["cherenkov_at_ground"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1_sum = np.sum(c1_reduced_wl)
+        cherenkov_at_ground_sum = np.sum(cherenkov_at_ground_band)
         # Sum(cherenkov_detected) from 200 - 999 nm:
-        c4_sum = np.sum(self._results["cherenkov_detected"])
+        cherenkov_detected_sum = np.sum(self._results["cherenkov_detected"])
         masts_factor = self._results["masts"][0]
         fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
-        return fill_factor * (c4_sum / (masts_factor * c1_sum))
+        return fill_factor * (cherenkov_detected_sum / (masts_factor * cherenkov_at_ground_sum))
 
     def calc_camera_efficiency(self):
         """
@@ -382,18 +382,18 @@ class CameraEfficiency:
             Wavelength-averaged camera efficiency
         """
         # Sum(cherenkov_at_ground) from 300 - 550 nm:
-        c1_reduced_wl = self._results["cherenkov_at_ground"][
+        cherenkov_at_ground_band = self._results["cherenkov_at_ground"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1_sum = np.sum(c1_reduced_wl)
+        cherenkov_at_ground_sum = np.sum(cherenkov_at_ground_band)
         # Sum(cherenkov_detected_without_mirrors) from 300 - 550 nm:
-        c4x_reduced_wl = self._results["cherenkov_detected_without_mirrors"][
+        cherenkov_without_mirrors_band = self._results["cherenkov_detected_without_mirrors"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c4x_sum = np.sum(c4x_reduced_wl)
+        cherenkov_without_mirrors_sum = np.sum(cherenkov_without_mirrors_band)
         fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
-        cam_efficiency_no_gaps = c4x_sum / c1_sum
+        cam_efficiency_no_gaps = cherenkov_without_mirrors_sum / cherenkov_at_ground_sum
         return cam_efficiency_no_gaps * fill_factor
 
     def calc_tot_efficiency(self, tel_efficiency):
@@ -411,16 +411,18 @@ class CameraEfficiency:
             Telescope total efficiency including gaps
         """
         # Sum(nsb_before_correction) from 300 - 550 nm:
-        n1_reduced_wl = self._results["nsb_before_correction"][
+        nsb_before_correction_band = self._results["nsb_before_correction"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        n1_sum = np.sum(n1_reduced_wl)
+        nsb_before_correction_sum = np.sum(nsb_before_correction_band)
         # Sum(nsb_detected) from 200 - 999 nm:
-        n4_sum = np.sum(self._results["nsb_detected"])
+        nsb_detected_sum = np.sum(self._results["nsb_detected"])
         masts_factor = self._results["masts"][0]
         fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
-        tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
+        tel_efficiency_nsb = fill_factor * (
+            nsb_detected_sum / (masts_factor * nsb_before_correction_sum)
+        )
 
         return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
@@ -442,20 +444,20 @@ class CameraEfficiency:
 
         """
         # Sum(cherenkov_detected) from lamba_min to lambda_max nm:
-        c4_reduced_wl = self._results["cherenkov_detected"][
+        cherenkov_detected_band = self._results["cherenkov_detected"][
             [lambda_min < wl_now < lambda_max for wl_now in self._results["wl"]]
         ]
-        c4_sum = np.sum(c4_reduced_wl)
+        cherenkov_detected_sum = np.sum(cherenkov_detected_band)
         # Sum(cherenkov_detected) from 200 - 999 nm:
-        c4_sum_total = np.sum(self._results["cherenkov_detected"])
+        cherenkov_detected_total = np.sum(self._results["cherenkov_detected"])
         # (no need to apply masts or fill factors as in calc_tel_efficiency, they cancel out)
 
         self._logger.info(
             f"Fraction of light in the wavelength range {lambda_min}-{lambda_max} nm: "
-            f"{c4_sum / c4_sum_total:.4f}"
+            f"{cherenkov_detected_sum / cherenkov_detected_total:.4f}"
         )
 
-        return c4_sum / c4_sum_total
+        return cherenkov_detected_sum / cherenkov_detected_total
 
     def calc_reflectivity(self):
         """
@@ -467,16 +469,16 @@ class CameraEfficiency:
             Cherenkov spectrum weighted reflectivity (300-550 nm)
         """
         # Sum(cherenkov_at_ground) from 300 - 550 nm:
-        c1_reduced_wl = self._results["cherenkov_at_ground"][
+        cherenkov_at_ground_band = self._results["cherenkov_at_ground"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c1_sum = np.sum(c1_reduced_wl)
+        cherenkov_at_ground_sum = np.sum(cherenkov_at_ground_band)
         # Sum(cherenkov_after_mirrors) from 300 - 550 nm:
-        c2_reduced_wl = self._results["cherenkov_after_mirrors"][
+        cherenkov_after_mirrors_band = self._results["cherenkov_after_mirrors"][
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
-        c2_sum = np.sum(c2_reduced_wl)
-        return c2_sum / c1_sum / self._results["masts"][0]
+        cherenkov_after_mirrors_sum = np.sum(cherenkov_after_mirrors_band)
+        return cherenkov_after_mirrors_sum / cherenkov_at_ground_sum / self._results["masts"][0]
 
     def calc_nsb_rate(self, wavelength_range=(300 * u.nm, 650 * u.nm)):
         """
@@ -510,15 +512,15 @@ class CameraEfficiency:
         )
 
         # (integral is in ph./(m^2 ns sr) ) over wavelength_range
-        n1_reduced_wl = self._results["nsb_before_correction"][
+        nsb_before_correction_band = self._results["nsb_before_correction"][
             [wavelength_range[0] <= wl_now <= wavelength_range[1] for wl_now in self._results["wl"]]
         ]
-        n1_sum = np.sum(n1_reduced_wl)
-        n1_integral_edges = self._results["nsb_before_correction"][
+        nsb_before_correction_sum = np.sum(nsb_before_correction_band)
+        nsb_before_correction_edges = self._results["nsb_before_correction"][
             [wl_now in [wavelength_range[0], wavelength_range[1]] for wl_now in self._results["wl"]]
         ]
-        n1_integral_edges_sum = np.sum(n1_integral_edges)
-        nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
+        nsb_before_correction_edges_sum = np.sum(nsb_before_correction_edges)
+        nsb_integral = 0.0001 * (nsb_before_correction_sum - 0.5 * nsb_before_correction_edges_sum)
         self.nsb_rate_ref_conditions = (
             self.nsb_pixel_pe_per_ns
             * self.site_model.get_parameter_value("nsb_reference_value")
