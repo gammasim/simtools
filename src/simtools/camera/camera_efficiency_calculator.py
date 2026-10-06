@@ -12,6 +12,26 @@ _WAVELENGTHS = np.arange(200.0, 1001.0)
 _NSB_CORRECTION_PARAMETER = "correct_nsb_spectrum_to_telescope_altitude"
 
 
+RESULT_COLUMN_DESCRIPTIONS = {
+    "wl": "Wavelength in nm.",
+    "eff": "Total optical detection efficiency without atmospheric transmission.",
+    "eff_atm": "Total optical detection efficiency including atmospheric transmission.",
+    "qe": "Photodetector quantum efficiency.",
+    "ref": "Combined mirror reflectivity.",
+    "masts": "Telescope transmission including structural shadowing.",
+    "filt": "Camera filter transmission.",
+    "pixel": "Lightguide collection efficiency.",
+    "atm_trans": "Atmospheric transmission from the emission depth to the telescope.",
+    "cher": "Detected Cherenkov spectrum normalized to the emission spectrum at 400 nm.",
+    "nsb": "Detected differential NSB rate per pixel.",
+    "atm_corr": "NSB spectrum correction factor for telescope altitude.",
+    "nsb_site": "NSB photon spectrum corrected for telescope altitude and airmass.",
+    "nsb_site_eff": "Site-corrected NSB photon spectrum times optical detection efficiency.",
+    "nsb_be": "Input NSB photon spectrum before altitude and airmass corrections.",
+    "nsb_be_eff": "Input NSB photon spectrum times optical detection efficiency.",
+}
+
+
 def _column_values(table, name, unit=None):
     """Return a table column as floating point values in the requested unit."""
     column = table[name]
@@ -522,6 +542,8 @@ class CameraEfficiencyCalculator:
                 "nsb_be_eff",
             ),
         )
+        for name in table.colnames:
+            table[name].description = RESULT_COLUMN_DESCRIPTIONS[name]
         table.meta.update(
             {
                 "mirror_area": optical["mirror_area"],
@@ -566,9 +588,13 @@ class CameraEfficiencyCalculator:
             else np.zeros(len(x))
         )
         focal_length = float(self.telescope_model.get_telescope_effective_focal_length("m", True))
-        fd = self._curvature_radius()
+        curvature_radius = self._curvature_radius()
         radius = np.hypot(x, y)
-        z = np.where(np.isclose(z, 0.0), fd - np.sqrt(np.maximum(0.0, fd**2 - radius**2)), z)
+        z = np.where(
+            np.isclose(z, 0.0),
+            curvature_radius - np.sqrt(np.maximum(0.0, curvature_radius**2 - radius**2)),
+            z,
+        )
         theta = 0.5 * np.arctan2(radius, focal_length - z)
         area = (
             np.where(
