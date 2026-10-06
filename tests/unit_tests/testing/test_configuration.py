@@ -216,6 +216,13 @@ def test_prepare_test_options_relocates_output_paths(tmp_test_directory):
         key: str(tmp_test_directory / value) if key != "input_file" else value
         for key, value in config.items()
     }
+    unchanged = {
+        "test": True,
+        "scaling_factor": 1.35,
+        "prepared_file": str(tmp_test_directory / "prepared-resources/input.ecsv"),
+    }
+    config.update(unchanged)
+    expected.update(unchanged)
 
     config_file, _, _ = configuration._prepare_test_options(config, tmp_test_directory)
 
