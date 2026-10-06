@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtools.applications.validate_repository_consistency &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../../_static/documentation_options.js?v=0c220d4e"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtools/applications/validate_repository_consistency';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.38.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools.applications.validate_repository_consistency</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtools.applications.validate_repository_consistency</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">"""Validate cross-file invariants in a simtools data repository."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pygit2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application.definition</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApplicationDefinition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">arguments</span> <span class="k">as</span> <span class="n">cli</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+
+<span class="n">_DEFAULT_METADATA_ROOTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"input"</span><span class="p">),</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"output"</span><span class="p">))</span>
+<span class="n">_SKIP_MARKER</span> <span class="o">=</span> <span class="s2">"SKIP_WORKFLOW_CI"</span>
+<span class="n">_SUBMIT_APPLICATION</span> <span class="o">=</span> <span class="s2">"simtools-submit-model-parameter-from-external"</span>
+<span class="n">_HASH_CHUNK_SIZE</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+
+
+<span class="n">APPLICATION</span> <span class="o">=</span> <span class="n">ApplicationDefinition</span><span class="o">.</span><span class="n">for_module</span><span class="p">(</span>
+    <span class="vm">__name__</span><span class="p">,</span>
+    <span class="n">arguments</span><span class="o">=</span><span class="p">(</span>
+        <span class="n">cli</span><span class="o">.</span><span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="s2">"repository"</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">Path</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">"Root directory of the data repository."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cli</span><span class="o">.</span><span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="s2">"metadata_roots"</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">_DEFAULT_METADATA_ROOTS</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">"Directories containing metadata and referenced products."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cli</span><span class="o">.</span><span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="s2">"workflow_root"</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"input"</span><span class="p">),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">"Directory containing workflow configuration files."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cli</span><span class="o">.</span><span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="s2">"require_git_tracking"</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">"Require metadata and product files to be tracked by Git."</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">setup_io_handler</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">resolve_sim_software_executables</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">initialize_model_reader</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tracked_files</span><span class="p">(</span><span class="n">repository</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return paths tracked by the Git index."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">git_repository</span> <span class="o">=</span> <span class="n">pygit2</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repository</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">pygit2</span><span class="o">.</span><span class="n">GitError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not a readable Git repository: </span><span class="si">{</span><span class="n">repository</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">Path</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">git_repository</span><span class="o">.</span><span class="n">index</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_file_digest</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a SHA-256 digest without reading the entire file into memory."""</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">chunk</span> <span class="o">:=</span> <span class="n">file_handle</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">_HASH_CHUNK_SIZE</span><span class="p">):</span>
+            <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_metadata_product</span><span class="p">(</span><span class="n">metadata_file</span><span class="p">,</span> <span class="n">relative_metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Read the product section from one metadata file."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">metadata_file</span><span class="p">)[</span><span class="s2">"cta"</span><span class="p">][</span><span class="s2">"product"</span><span class="p">]</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">product</span><span class="p">[</span><span class="s2">"filename"</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_metadata</span><span class="si">}</span><span class="s2">: cannot read cta.product.filename: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">product</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_product_file</span><span class="p">(</span>
+    <span class="n">metadata_file</span><span class="p">,</span>
+    <span class="n">product</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">,</span>
+    <span class="n">repository</span><span class="p">,</span>
+    <span class="n">tracked</span><span class="p">,</span>
+    <span class="n">relative_metadata</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the valid product file named by a metadata document."""</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">filename</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_metadata</span><span class="si">}</span><span class="s2">: filename must name a file beside the metadata"</span><span class="p">)</span>
+
+    <span class="n">product_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">metadata_file</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">filename</span><span class="p">]</span>
+    <span class="n">product_data</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"data"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">product_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">product_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"."</span><span class="p">,</span> <span class="s2">".."</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">model_name</span>
+    <span class="p">):</span>
+        <span class="n">product_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metadata_file</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">model_name</span> <span class="o">/</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">product_file</span> <span class="ow">in</span> <span class="n">product_files</span><span class="p">:</span>
+        <span class="n">relative_product</span> <span class="o">=</span> <span class="n">product_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">product_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">tracked</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">relative_product</span> <span class="ow">in</span> <span class="n">tracked</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">product_file</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">relative_product</span> <span class="o">=</span> <span class="n">product_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_metadata</span><span class="si">}</span><span class="s2">: product file is missing or untracked: </span><span class="si">{</span><span class="n">relative_product</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_metadata_file</span><span class="p">(</span><span class="n">metadata_file</span><span class="p">,</span> <span class="n">repository</span><span class="p">,</span> <span class="n">tracked</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate one metadata file and return its product identifier record."""</span>
+    <span class="n">relative_metadata</span> <span class="o">=</span> <span class="n">metadata_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">tracked</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">relative_metadata</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracked</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_metadata</span><span class="si">}</span><span class="s2">: metadata file is untracked"</span><span class="p">)</span>
+    <span class="n">product</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">_metadata_product</span><span class="p">(</span><span class="n">metadata_file</span><span class="p">,</span> <span class="n">relative_metadata</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="n">errors</span><span class="p">,</span> <span class="n">error</span><span class="p">],</span> <span class="kc">None</span>
+
+    <span class="n">product_file</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">_product_file</span><span class="p">(</span>
+        <span class="n">metadata_file</span><span class="p">,</span>
+        <span class="n">product</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="n">repository</span><span class="p">,</span>
+        <span class="n">tracked</span><span class="p">,</span>
+        <span class="n">relative_metadata</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="n">errors</span><span class="p">,</span> <span class="n">error</span><span class="p">],</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">product_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">errors</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">product_id</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">product_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">errors</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">_file_digest</span><span class="p">(</span><span class="n">product_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">product_id</span><span class="p">),</span> <span class="n">relative_metadata</span><span class="p">,</span> <span class="n">digest</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_metadata_references</span><span class="p">(</span>
+    <span class="n">repository</span><span class="p">,</span>
+    <span class="n">metadata_roots</span><span class="p">,</span>
+    <span class="n">require_git_tracking</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate metadata product references and product identifier contents."""</span>
+    <span class="n">tracked</span> <span class="o">=</span> <span class="n">_tracked_files</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span> <span class="k">if</span> <span class="n">require_git_tracking</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">metadata_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">path</span>
+        <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">metadata_roots</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">repository</span> <span class="o">/</span> <span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span><span class="n">repository</span> <span class="o">/</span> <span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.meta.yml"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">products_by_id</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">metadata_file</span> <span class="ow">in</span> <span class="n">metadata_files</span><span class="p">:</span>
+        <span class="n">file_errors</span><span class="p">,</span> <span class="n">record</span> <span class="o">=</span> <span class="n">_validate_metadata_file</span><span class="p">(</span>
+            <span class="n">metadata_file</span><span class="p">,</span>
+            <span class="n">repository</span><span class="p">,</span>
+            <span class="n">tracked</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">file_errors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">product_id</span><span class="p">,</span> <span class="n">metadata_path</span><span class="p">,</span> <span class="n">digest</span> <span class="o">=</span> <span class="n">record</span>
+            <span class="n">products_by_id</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">product_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">metadata_path</span><span class="p">,</span> <span class="n">digest</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">product_id</span><span class="p">,</span> <span class="n">records</span> <span class="ow">in</span> <span class="n">products_by_id</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">digest</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">digest</span> <span class="ow">in</span> <span class="n">records</span><span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">metadata_file</span><span class="p">)</span> <span class="k">for</span> <span class="n">metadata_file</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"product ID </span><span class="si">{</span><span class="n">product_id</span><span class="si">}</span><span class="s2"> identifies different file contents: </span><span class="si">{</span><span class="n">locations</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_missing_scan_roots</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">metadata_roots</span><span class="p">,</span> <span class="n">workflow_root</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return errors for configured scan roots that are not directories."""</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[(</span><span class="n">root</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">)</span> <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">metadata_roots</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">workflow_root</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata_roots</span><span class="p">:</span>
+        <span class="n">roots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">workflow_root</span><span class="p">,</span> <span class="s2">"workflow"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> scan directory does not exist"</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">roots</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">repository</span> <span class="o">/</span> <span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_submission_key</span><span class="p">(</span><span class="n">application</span><span class="p">,</span> <span class="n">relative_config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the submitted parameter version key for one application."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">application</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">application</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"application"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">_SUBMIT_APPLICATION</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">configuration</span> <span class="o">=</span> <span class="n">application</span><span class="p">[</span><span class="s2">"configuration"</span><span class="p">]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">configuration</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"instrument"</span><span class="p">,</span> <span class="s2">"parameter"</span><span class="p">,</span> <span class="s2">"parameter_version"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_config</span><span class="si">}</span><span class="s2">: submit application is missing configuration fields"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skip_workflow_errors</span><span class="p">(</span><span class="n">skip_file</span><span class="p">,</span> <span class="n">repository</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether a workflow is skipped and marker validation errors."""</span>
+    <span class="k">if</span> <span class="n">skip_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="n">skip_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reason</span> <span class="ow">or</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">reason</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">skip_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span><span class="si">}</span><span class="s2">: provide a single-line reason"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workflow_applications</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">relative_config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Read and validate the applications list from one workflow file."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">applications</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)[</span><span class="s2">"applications"</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_config</span><span class="si">}</span><span class="s2">: cannot read applications: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">applications</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_config</span><span class="si">}</span><span class="s2">: applications must be a list"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">applications</span><span class="p">,</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workflow_submission_keys</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">repository</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return submitted parameter version keys from one active workflow."""</span>
+    <span class="n">relative_config</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
+    <span class="n">skipped</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">_skip_workflow_errors</span><span class="p">(</span><span class="n">config_file</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">_SKIP_MARKER</span><span class="p">,</span> <span class="n">repository</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">skipped</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="n">errors</span>
+
+    <span class="n">applications</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">_workflow_applications</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">relative_config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="n">errors</span>
+
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">applications</span><span class="p">:</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">_submission_key</span><span class="p">(</span><span class="n">application</span><span class="p">,</span> <span class="n">relative_config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">keys</span><span class="p">,</span> <span class="n">errors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_active_workflow_error</span><span class="p">(</span><span class="n">active_versions</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">relative_config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Record one active workflow version or return its duplicate error."""</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="n">active_versions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">previous</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">active_versions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">relative_config</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">relative_config</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">previous</span><span class="si">}</span><span class="s2">: active workflows share "</span>
+        <span class="sa">f</span><span class="s2">"(instrument, parameter, parameter_version) </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_workflow_policy</span><span class="p">(</span>
+    <span class="n">repository</span><span class="p">,</span>
+    <span class="n">workflow_root</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate workflow skip markers and version uniqueness."""</span>
+    <span class="n">workflow_directory</span> <span class="o">=</span> <span class="n">repository</span> <span class="o">/</span> <span class="n">workflow_root</span>
+    <span class="n">config_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">workflow_directory</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">config_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">workflow_directory</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"config.yml"</span><span class="p">))</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">active_versions</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">config_file</span> <span class="ow">in</span> <span class="n">config_files</span><span class="p">:</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">workflow_errors</span> <span class="o">=</span> <span class="n">_workflow_submission_keys</span><span class="p">(</span>
+            <span class="n">config_file</span><span class="p">,</span>
+            <span class="n">repository</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">workflow_errors</span><span class="p">)</span>
+        <span class="n">relative_config</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="o">:=</span> <span class="n">_active_workflow_error</span><span class="p">(</span>
+                <span class="n">active_versions</span><span class="p">,</span>
+                <span class="n">key</span><span class="p">,</span>
+                <span class="n">relative_config</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="validate_repository_consistency">
+<a class="viewcode-back" href="../../../user-guide/applications/simtools-validate-repository-consistency.html#simtools.applications.validate_repository_consistency.validate_repository_consistency">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_repository_consistency</span><span class="p">(</span>
+    <span class="n">repository</span><span class="p">,</span> <span class="n">metadata_roots</span><span class="p">,</span> <span class="n">workflow_root</span><span class="p">,</span> <span class="n">require_git_tracking</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return validation errors for one data repository."""</span>
+    <span class="n">repository</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repository</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">metadata_roots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">metadata_roots</span><span class="p">)</span>
+    <span class="n">workflow_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workflow_root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="o">*</span><span class="n">_missing_scan_roots</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">metadata_roots</span><span class="p">,</span> <span class="n">workflow_root</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">_validate_metadata_references</span><span class="p">(</span>
+            <span class="n">repository</span><span class="p">,</span>
+            <span class="n">metadata_roots</span><span class="p">,</span>
+            <span class="n">require_git_tracking</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="o">*</span><span class="n">_validate_workflow_policy</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">workflow_root</span><span class="p">),</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Validate repository-wide metadata and workflow invariants."""</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">APPLICATION</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">validate_repository_consistency</span><span class="p">(</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">"repository"</span><span class="p">],</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">"metadata_roots"</span><span class="p">],</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">"workflow_root"</span><span class="p">],</span>
+        <span class="n">require_git_tracking</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"require_git_tracking"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Repository metadata references and workflow invariants are valid"</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data_model.setting_workflow &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../_static/documentation_options.js?v=0c220d4e"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/data_model/setting_workflow';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.38.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">data_model.setting_workflow</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for data_model.setting_workflow</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Create and execute versioned workflows for simple model-parameter settings."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">METADATA_JSON_SCHEMA</span><span class="p">,</span> <span class="n">RUN_TIME_ENVIRONMENT_SCHEMA</span><span class="p">,</span> <span class="n">SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelDataWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners</span><span class="w"> </span><span class="kn">import</span> <span class="n">simtools_runner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span><span class="p">,</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_valid_semantic_version</span>
+
+<span class="n">_SUBMIT_APPLICATION</span> <span class="o">=</span> <span class="s2">"simtools-submit-model-parameter-from-external"</span>
+<span class="n">_INPUT_PATH</span> <span class="o">=</span> <span class="s2">"input/__SETTING_WORKFLOW__"</span>
+<span class="n">_OUTPUT_PATH</span> <span class="o">=</span> <span class="s2">"output/__SETTING_WORKFLOW__"</span>
+
+
+<div class="viewcode-block" id="create_setting_workflow">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.setting_workflow.create_setting_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_setting_workflow</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">model_reader</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create validated input files, or reuse an identical setting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args : dict</span>
+<span class="sd">        Parameter, instrument, value, parameter_version, description, and optional</span>
+<span class="sd">        site, source_url, workflow_runtime_file, output_path (repository root),</span>
+<span class="sd">        model_parameter_schema_version, and standard contact arguments.</span>
+<span class="sd">    model_reader : object, optional</span>
+<span class="sd">        Reader used to check for an already submitted parameter version.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        Path to the prepared workflow configuration.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If inputs are invalid or this version has conflicting input files.</span>
+<span class="sd">    """</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">])</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">".."</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"parameter must be a model parameter name, without path separators."</span><span class="p">)</span>
+    <span class="n">args</span><span class="p">[</span><span class="s2">"site"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_setting_site</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_semantic_version</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">"parameter_version"</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"parameter_version must be a semantic version without a leading 'v'."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A scientific description is required."</span><span class="p">)</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">ModelDataWriter</span><span class="p">(</span><span class="n">model_reader</span><span class="o">=</span><span class="n">model_reader</span><span class="p">)</span>
+    <span class="n">parameter</span> <span class="o">=</span> <span class="n">_validated_parameter</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="n">args</span><span class="p">[</span><span class="s2">"model_parameter_schema_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span><span class="p">[</span><span class="s2">"model_parameter_schema_version"</span><span class="p">]</span>
+    <span class="n">args</span><span class="p">[</span><span class="s2">"activity_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">get_uuid</span><span class="p">()</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">_workflow_config</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">runtime</span> <span class="o">=</span> <span class="n">_runtime_configuration</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">_input_metadata</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"output_path"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">())</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"input"</span> <span class="o">/</span> <span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">]</span> <span class="o">/</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">]</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">_existing_setting</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_check_matching_inputs</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">existing</span>
+
+    <span class="n">writer</span><span class="o">.</span><span class="n">check_for_existing_parameter</span><span class="p">(</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter_version"</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">activity_id</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"activity_id"</span><span class="p">]</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="s2">"cta"</span><span class="p">][</span><span class="s2">"activity"</span><span class="p">][</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">activity_id</span>
+    <span class="n">config_file</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="n">activity_id</span> <span class="o">/</span> <span class="s2">"config.yml"</span>
+    <span class="n">config_file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">config_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"input.meta.yml"</span><span class="p">))</span>
+    <span class="n">_write_runtime_file</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">config_file</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config_file</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_setting_site</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Infer an unambiguous site and reject a conflicting explicit site."""</span>
+    <span class="n">inferred</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">])</span>
+    <span class="n">supplied</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"site"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">supplied</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">supplied</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">supplied</span><span class="p">)</span>
+        <span class="n">allowed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_list</span><span class="p">(</span><span class="n">inferred</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">supplied</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Site </span><span class="si">{</span><span class="n">supplied</span><span class="si">}</span><span class="s2"> does not match instrument </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="s1">'instrument'</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">supplied</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inferred</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Specify --site for instrument </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="s1">'instrument'</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inferred</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validated_parameter</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate simple values through the existing model data writer."""</span>
+    <span class="n">parameter_type</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_parameter_type_for_schema</span><span class="p">(</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">],</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_parameter_schema_version"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">parameter_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"file"</span><span class="p">,</span> <span class="s2">"dict"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Use an existing derivation workflow for file or structured parameters."</span><span class="p">)</span>
+    <span class="n">parameter</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_validated_parameter_dict</span><span class="p">(</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">],</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span>
+        <span class="n">instrument</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">],</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s2">"parameter_version"</span><span class="p">],</span>
+        <span class="n">model_parameter_schema_version</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_parameter_schema_version"</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">to_builtin</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workflow_config</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build a portable workflow using the existing submission application."""</span>
+    <span class="n">configuration</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">"instrument"</span><span class="p">,</span>
+            <span class="s2">"site"</span><span class="p">,</span>
+            <span class="s2">"parameter"</span><span class="p">,</span>
+            <span class="s2">"parameter_version"</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">,</span>
+            <span class="s2">"model_parameter_schema_version"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"input_meta"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_INPUT_PATH</span><span class="si">}</span><span class="s2">/input.meta.yml"</span><span class="p">],</span>
+            <span class="s2">"output_path"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_OUTPUT_PATH</span><span class="si">}</span><span class="s2">/"</span><span class="p">,</span>
+            <span class="s2">"check_parameter_version"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"applications"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"application"</span><span class="p">:</span> <span class="n">_SUBMIT_APPLICATION</span><span class="p">,</span> <span class="s2">"configuration"</span><span class="p">:</span> <span class="n">configuration</span><span class="p">}],</span>
+        <span class="s2">"schema_name"</span><span class="p">:</span> <span class="s2">"application_workflow.metaschema"</span><span class="p">,</span>
+        <span class="s2">"schema_version"</span><span class="p">:</span> <span class="s2">"0.5.0"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">"application_workflow.metaschema.yml"</span><span class="p">,</span> <span class="n">offline</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_runtime_configuration</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the validated runtime configuration selected for a new workflow."""</span>
+    <span class="n">runtime_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"workflow_runtime_file"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">runtime_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">runtime</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">runtime_file</span><span class="p">)</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
+        <span class="n">runtime</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">RUN_TIME_ENVIRONMENT_SCHEMA</span><span class="p">,</span> <span class="n">offline</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">runtime</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_runtime_file</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">workflow_directory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Copy a validated runtime configuration into a new workflow directory."""</span>
+    <span class="k">if</span> <span class="n">runtime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">workflow_directory</span> <span class="o">/</span> <span class="s2">"runtime.yml"</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_input_metadata</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Collect technical metadata and add the supplied scientific description."""</span>
+    <span class="n">metadata_args</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"user_"</span><span class="p">)}</span>
+    <span class="n">metadata_args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"instrument"</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="s2">"instrument"</span><span class="p">],</span>
+            <span class="s2">"site"</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="s2">"site"</span><span class="p">],</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"setting_workflow"</span><span class="p">,</span>
+            <span class="s2">"activity_id"</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="s2">"activity_id"</span><span class="p">],</span>
+            <span class="s2">"output_file"</span><span class="p">:</span> <span class="s2">"config.yml"</span><span class="p">,</span>
+            <span class="s2">"output_file_format"</span><span class="p">:</span> <span class="s2">"yaml"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span><span class="n">metadata_args</span><span class="p">)</span><span class="o">.</span><span class="n">get_top_level_metadata</span><span class="p">()</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="s2">"cta"</span><span class="p">][</span><span class="s2">"product"</span><span class="p">][</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_url"</span><span class="p">):</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s2">"cta"</span><span class="p">][</span><span class="s2">"product"</span><span class="p">][</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" Source: </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="s1">'source_url'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="s2">"cta"</span><span class="p">][</span><span class="s2">"product"</span><span class="p">][</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"model"</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter"</span><span class="p">],</span> <span class="s2">"version"</span><span class="p">:</span> <span class="n">args</span><span class="p">[</span><span class="s2">"parameter_version"</span><span class="p">]}</span>
+    <span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">to_builtin</span><span class="p">(</span><span class="n">general</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="n">METADATA_JSON_SCHEMA</span><span class="p">,</span> <span class="n">offline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">metadata</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_existing_setting</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Find a unique workflow already submitting this parameter version."""</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">config_file</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*/config.yml"</span><span class="p">)):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applications"</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">configuration</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"configuration"</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"application"</span><span class="p">)</span> <span class="o">==</span> <span class="n">_SUBMIT_APPLICATION</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">configuration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="n">args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"instrument"</span><span class="p">,</span> <span class="s2">"parameter"</span><span class="p">,</span> <span class="s2">"parameter_version"</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+                <span class="k">break</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Multiple workflows already set version </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="s1">'parameter_version'</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">matches</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_matching_inputs</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reuse only unchanged configuration and scientific/contact metadata."""</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="n">comparison</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="n">existing</span><span class="p">[</span><span class="s2">"applications"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"configuration"</span><span class="p">]</span>
+    <span class="c1"># Compare validated values so equivalent units and numeric spellings can be reused.</span>
+    <span class="n">previous_parameter</span> <span class="o">=</span> <span class="n">_validated_parameter</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">previous</span><span class="p">)</span>
+    <span class="n">previous</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">previous_parameter</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span>
+    <span class="n">comparison</span><span class="p">[</span><span class="s2">"applications"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"configuration"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span>
+    <span class="n">existing_metadata</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span>
+        <span class="n">config_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"input.meta.yml"</span><span class="p">)</span>
+    <span class="p">)[</span><span class="s2">"cta"</span><span class="p">]</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">"cta"</span><span class="p">]</span>
+    <span class="n">same_metadata</span> <span class="o">=</span> <span class="n">_setting_metadata</span><span class="p">(</span><span class="n">existing_metadata</span><span class="p">)</span> <span class="o">==</span> <span class="n">_setting_metadata</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="o">!=</span> <span class="n">comparison</span> <span class="ow">or</span> <span class="n">previous_parameter</span> <span class="o">!=</span> <span class="n">parameter</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">same_metadata</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Conflicting inputs in </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2">. Use a new parameter version; "</span>
+            <span class="s2">"existing files are preserved."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_setting_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare inputs without regenerated execution IDs, times, and software details."""</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"start"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">,</span> <span class="s2">"software"</span><span class="p">):</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"creation_time"</span><span class="p">):</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"product"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"context"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"application_configuration"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">metadata</span>
+
+
+<div class="viewcode-block" id="run_setting_workflow">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.setting_workflow.run_setting_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_setting_workflow</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Execute a prepared setting, keeping previous outputs intact.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config_file : pathlib.Path</span>
+<span class="sd">        Configuration returned by create_setting_workflow.</span>
+<span class="sd">    args : dict</span>
+<span class="sd">        Runner options, including model-source options and ignore_runtime_environment.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        Output directory used by this execution.</span>
+<span class="sd">    """</span>
+    <span class="n">config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">relative</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="o">*</span><span class="n">config_file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+    <span class="n">input_root</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">input_root</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"output"</span> <span class="o">/</span> <span class="n">relative</span>
+    <span class="n">rerun</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">rerun</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span> <span class="o">/</span> <span class="s2">"reruns"</span> <span class="o">/</span> <span class="n">general</span><span class="o">.</span><span class="n">get_uuid</span><span class="p">()</span>
+    <span class="n">runner_args</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">args</span><span class="p">,</span>
+        <span class="s2">"config_file"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">),</span>
+        <span class="s2">"ignore_runtime_environment"</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ignore_runtime_environment"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">"ignore_existing_parameter_version"</span><span class="p">:</span> <span class="n">rerun</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">runtime_file</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"runtime.yml"</span><span class="p">)</span>
+    <span class="n">run_time</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">runtime_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">runner_args</span><span class="p">[</span><span class="s2">"ignore_runtime_environment"</span><span class="p">]:</span>
+        <span class="n">runtime_environment</span><span class="p">,</span> <span class="n">run_time</span> <span class="o">=</span> <span class="n">simtools_runner</span><span class="o">.</span><span class="n">prepare_runtime_environment</span><span class="p">(</span><span class="n">runtime_file</span><span class="p">)</span>
+        <span class="n">runner_args</span><span class="p">[</span><span class="s2">"runtime_environment"</span><span class="p">]</span> <span class="o">=</span> <span class="n">runtime_environment</span>
+    <span class="n">simtools_runner</span><span class="o">.</span><span class="n">run_applications</span><span class="p">(</span>
+        <span class="n">runner_args</span><span class="p">,</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">replacements</span><span class="o">=</span><span class="p">{</span><span class="n">_INPUT_PATH</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="o">.</span><span class="n">parent</span><span class="p">),</span> <span class="n">_OUTPUT_PATH</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)},</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.plot_resource_requirements &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../_static/documentation_options.js?v=0c220d4e"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/plot_resource_requirements';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.38.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">visualization.plot_resource_requirements</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.plot_resource_requirements</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Plot normalized CORSIKA and sim_telarray resource requirements."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">colormaps</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.matplotlib_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.visualize</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_figure</span>
+
+<span class="n">_ROLE_STYLE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"sim_telarray"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"s"</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+    <span class="s2">"corsika"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"o"</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="n">_BYTES_PER_MEGABYTE</span> <span class="o">=</span> <span class="mi">1_000_000</span>
+<span class="n">_BYTES_PER_GIGABYTE</span> <span class="o">=</span> <span class="mi">1_000_000_000</span>
+<span class="n">_RESOURCE_CHANGE_WARNING_FACTOR</span> <span class="o">=</span> <span class="mf">1.25</span>
+<span class="n">_RESOURCE_CHANGE_MAJOR_FACTOR</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">_RATIO_CONFIGURATION_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"primary"</span><span class="p">,</span> <span class="s2">"site"</span><span class="p">,</span> <span class="s2">"array_layout_name"</span><span class="p">,</span> <span class="s2">"model_version"</span><span class="p">)</span>
+<span class="n">_BYTE_PLOT_COLUMNS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"peak_rss_bytes"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_storage_bytes_per_event"</span><span class="p">,</span>
+        <span class="s2">"corsika_output_bytes_per_event"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_output_bytes_per_event"</span><span class="p">,</span>
+        <span class="s2">"reduced_event_data_bytes_per_event"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_histogram_bytes_per_event"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_storage_bytes_per_triggered_event"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_output_bytes_per_triggered_event"</span><span class="p">,</span>
+        <span class="s2">"reduced_event_data_bytes_per_triggered_event"</span><span class="p">,</span>
+        <span class="s2">"sim_telarray_histogram_bytes_per_triggered_event"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_resource_requirements.plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">figure_format</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Write resource plots versus energy.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rows : iterable[dict]</span>
+<span class="sd">        Normalized process rows returned by the resource collector.</span>
+<span class="sd">    output_path : str or pathlib.Path</span>
+<span class="sd">        Destination directory for the figures.</span>
+<span class="sd">    figure_format : iterable[str], optional</span>
+<span class="sd">        File formats passed to :func:`visualization.visualize.save_figure`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[pathlib.Path]</span>
+<span class="sd">        Base paths of the written figures.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Byte-based quantities are plotted in MB or GB, selected from the largest</span>
+<span class="sd">    value in each plot, using decimal units. The input rows and resource table</span>
+<span class="sd">    retain byte values. When both baseline and candidate rows are present,</span>
+<span class="sd">    additional plots show candidate-to-baseline ratios for matching primary,</span>
+<span class="sd">    site, layout, and model-version configurations.</span>
+<span class="sd">    """</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"wall_time_seconds_per_event"</span><span class="p">,</span> <span class="s2">"Wall time (s/event)"</span><span class="p">,</span> <span class="s2">"resource_wall_time"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"cpu_time_seconds_per_event"</span><span class="p">,</span> <span class="s2">"CPU time (s/event)"</span><span class="p">,</span> <span class="s2">"resource_cpu_time"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"peak_rss_bytes"</span><span class="p">,</span> <span class="s2">"Peak RSS"</span><span class="p">,</span> <span class="s2">"resource_peak_rss"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_storage_bytes_per_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray storage"</span><span class="p">,</span>
+            <span class="s2">"resource_storage"</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"corsika_output_bytes_per_event"</span><span class="p">,</span>
+            <span class="s2">"CORSIKA output"</span><span class="p">,</span>
+            <span class="s2">"resource_corsika_output"</span><span class="p">,</span>
+            <span class="s2">"corsika"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_output_bytes_per_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray output"</span><span class="p">,</span>
+            <span class="s2">"resource_sim_telarray_output"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"reduced_event_data_bytes_per_event"</span><span class="p">,</span>
+            <span class="s2">"reduced event data"</span><span class="p">,</span>
+            <span class="s2">"resource_reduced_event_data"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_histogram_bytes_per_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray histogram"</span><span class="p">,</span>
+            <span class="s2">"resource_sim_telarray_histogram"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"wall_time_seconds_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"Wall time (s/triggered event)"</span><span class="p">,</span>
+            <span class="s2">"resource_wall_time_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"cpu_time_seconds_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"CPU time (s/triggered event)"</span><span class="p">,</span>
+            <span class="s2">"resource_cpu_time_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_storage_bytes_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray storage"</span><span class="p">,</span>
+            <span class="s2">"resource_storage_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_output_bytes_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray output"</span><span class="p">,</span>
+            <span class="s2">"resource_sim_telarray_output_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"reduced_event_data_bytes_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"reduced event data"</span><span class="p">,</span>
+            <span class="s2">"resource_reduced_event_data_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">"sim_telarray_histogram_bytes_per_triggered_event"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray histogram"</span><span class="p">,</span>
+            <span class="s2">"resource_sim_telarray_histogram_triggered"</span><span class="p">,</span>
+            <span class="s2">"sim_telarray"</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">output_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">required_role</span> <span class="ow">in</span> <span class="n">plots</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">row</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+            <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"energy_midpoint_gev"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s2">"energy_midpoint_gev"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">required_role</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">row</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="o">==</span> <span class="n">required_role</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">column</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"sim_telarray_storage"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"sim_telarray"</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">available</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">plot_label</span><span class="p">,</span> <span class="n">value_scale</span> <span class="o">=</span> <span class="n">_byte_plot_label</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
+        <span class="n">zenith_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zenith_angle_deg"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">available</span><span class="p">})</span>
+        <span class="n">zenith_colors</span> <span class="o">=</span> <span class="n">_zenith_colors</span><span class="p">(</span><span class="n">zenith_values</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">row</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">available</span><span class="p">}):</span>
+            <span class="n">role_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">available</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="o">==</span> <span class="n">role</span><span class="p">]</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="n">_plot_role</span><span class="p">(</span>
+                <span class="n">axis</span><span class="p">,</span>
+                <span class="n">role_rows</span><span class="p">,</span>
+                <span class="n">column</span><span class="p">,</span>
+                <span class="n">zenith_colors</span><span class="p">,</span>
+                <span class="n">value_scale</span><span class="o">=</span><span class="n">value_scale</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="n">_resource_y_scale</span><span class="p">(</span><span class="n">role_rows</span><span class="p">,</span> <span class="n">column</span><span class="p">))</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Energy midpoint (GeV)"</span><span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">plot_label</span><span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">plot_label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">figure_format</span><span class="o">=</span><span class="n">figure_format</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">output_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+            <span class="n">comparison_labels</span> <span class="o">=</span> <span class="n">_comparison_display_labels</span><span class="p">(</span><span class="n">role_rows</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">comparison_labels</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">{</span><span class="s2">"baseline"</span><span class="p">,</span> <span class="s2">"candidate"</span><span class="p">}:</span>
+                <span class="n">ratio_series</span> <span class="o">=</span> <span class="n">_ratio_series</span><span class="p">(</span><span class="n">role_rows</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ratio_series</span><span class="p">:</span>
+                    <span class="n">ratio_fig</span><span class="p">,</span> <span class="n">ratio_axis</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+                    <span class="n">_plot_ratio</span><span class="p">(</span><span class="n">ratio_axis</span><span class="p">,</span> <span class="n">ratio_series</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">zenith_colors</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Energy midpoint (GeV)"</span><span class="p">)</span>
+                    <span class="n">baseline_label</span> <span class="o">=</span> <span class="n">comparison_labels</span><span class="p">[</span><span class="s2">"baseline"</span><span class="p">]</span>
+                    <span class="n">candidate_label</span> <span class="o">=</span> <span class="n">comparison_labels</span><span class="p">[</span><span class="s2">"candidate"</span><span class="p">]</span>
+                    <span class="n">ratio_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">candidate_label</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">baseline_label</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="n">_warn_on_large_changes</span><span class="p">(</span><span class="n">ratio_series</span><span class="p">,</span> <span class="n">plot_label</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">ratio_label</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ratio_label</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">plot_label</span><span class="si">}</span><span class="s2"> ratio: </span><span class="si">{</span><span class="n">ratio_label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+                    <span class="n">ratio_axis</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+                    <span class="n">ratio_output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">_ratio_</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="n">save_figure</span><span class="p">(</span>
+                        <span class="n">ratio_fig</span><span class="p">,</span>
+                        <span class="n">ratio_output_file</span><span class="p">,</span>
+                        <span class="n">figure_format</span><span class="o">=</span><span class="n">figure_format</span><span class="p">,</span>
+                        <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                        <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">output_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ratio_output_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output_files</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resource_y_scale</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a y-axis scale that can represent all selected resource values."""</span>
+    <span class="k">return</span> <span class="s2">"linear"</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">column</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"log"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_byte_plot_label</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a human-readable byte label and its scale factor."""</span>
+    <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_BYTE_PLOT_COLUMNS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">label</span><span class="p">,</span> <span class="mf">1.0</span>
+    <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">column</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">maximum</span> <span class="o">&gt;=</span> <span class="n">_BYTES_PER_GIGABYTE</span><span class="p">:</span>
+        <span class="n">unit</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="s2">"GB"</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">_BYTES_PER_GIGABYTE</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">unit</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="s2">"MB"</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">_BYTES_PER_MEGABYTE</span>
+    <span class="k">if</span> <span class="n">column</span> <span class="o">==</span> <span class="s2">"peak_rss_bytes"</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">elif</span> <span class="n">column</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"_per_triggered_event"</span><span class="p">):</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">"/triggered event"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">"/event"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">unit</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">scale</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ratio_series</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return candidate-to-baseline ratios grouped by configuration, zenith, and energy."""</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">production</span> <span class="o">=</span> <span class="n">_comparison_role</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">production</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"baseline"</span><span class="p">,</span> <span class="s2">"candidate"</span><span class="p">}:</span>
+            <span class="k">continue</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">production</span><span class="p">,</span>
+            <span class="n">_ratio_configuration_key</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zenith_angle_deg"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">"energy_midpoint_gev"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">column</span><span class="p">]))</span>
+
+    <span class="n">series</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">configuration_zenith_values</span> <span class="o">=</span> <span class="p">{(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span> <span class="ow">in</span> <span class="n">configuration_zenith_values</span><span class="p">:</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="n">_statistics_by_energy</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="s2">"baseline"</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">_statistics_by_energy</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="s2">"candidate"</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">candidate</span><span class="p">)):</span>
+            <span class="n">baseline_mean</span><span class="p">,</span> <span class="n">baseline_rms</span><span class="p">,</span> <span class="n">baseline_count</span> <span class="o">=</span> <span class="n">baseline</span><span class="p">[</span><span class="n">energy</span><span class="p">]</span>
+            <span class="n">candidate_mean</span><span class="p">,</span> <span class="n">candidate_rms</span><span class="p">,</span> <span class="n">candidate_count</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="n">energy</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">baseline_mean</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">candidate_mean</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">candidate_mean</span> <span class="o">/</span> <span class="n">baseline_mean</span>
+            <span class="n">baseline_error</span> <span class="o">=</span> <span class="n">baseline_rms</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">baseline_count</span><span class="p">)</span>
+            <span class="n">candidate_error</span> <span class="o">=</span> <span class="n">candidate_rms</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">candidate_count</span><span class="p">)</span>
+            <span class="n">ratio_error</span> <span class="o">=</span> <span class="n">ratio</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">candidate_error</span> <span class="o">/</span> <span class="n">candidate_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline_error</span> <span class="o">/</span> <span class="n">baseline_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">energy</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">ratio_error</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">points</span><span class="p">:</span>
+            <span class="n">series</span><span class="p">[(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)]</span> <span class="o">=</span> <span class="n">points</span>
+    <span class="k">return</span> <span class="n">series</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ratio_configuration_key</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return configuration dimensions used to match ratio series."""</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="s2">"unknown"</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">_RATIO_CONFIGURATION_COLUMNS</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_comparison_role</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the stable baseline/candidate role for a resource row."""</span>
+    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"comparison_role"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_label"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_comparison_display_labels</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return display labels for baseline and candidate rows."""</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">comparison_role</span> <span class="o">=</span> <span class="n">_comparison_role</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comparison_role</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"baseline"</span><span class="p">,</span> <span class="s2">"candidate"</span><span class="p">}:</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">comparison_role</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_label"</span><span class="p">,</span> <span class="n">comparison_role</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">labels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_on_large_changes</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">plot_label</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">ratio_label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Warn once for the largest substantial candidate-to-baseline change."""</span>
+    <span class="n">varying_dimensions</span> <span class="o">=</span> <span class="n">_ratio_varying_dimensions</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">),</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">energy</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">points</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">ratio</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">ratio</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">_RESOURCE_CHANGE_WARNING_FACTOR</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">ratio</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">changes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">item</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">ratio</span><span class="p">)</span>
+    <span class="n">severity</span> <span class="o">=</span> <span class="s2">"Major"</span> <span class="k">if</span> <span class="n">factor</span> <span class="o">&gt;=</span> <span class="n">_RESOURCE_CHANGE_MAJOR_FACTOR</span> <span class="k">else</span> <span class="s2">"Large"</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="s2">"increase"</span> <span class="k">if</span> <span class="n">ratio</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"decrease"</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">_ratio_series_label</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">varying_dimensions</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">"</span><span class="si">%s</span><span class="s2"> resource change in </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2"> at </span><span class="si">%s</span><span class="s2"> and energy </span><span class="si">%.6g</span><span class="s2"> GeV: </span><span class="si">%s</span><span class="s2"> shows a </span><span class="si">%.3g</span><span class="s2">-fold </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">severity</span><span class="p">,</span>
+        <span class="n">plot_label</span><span class="p">,</span>
+        <span class="n">role</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">,</span>
+        <span class="n">energy</span><span class="p">,</span>
+        <span class="n">ratio_label</span><span class="p">,</span>
+        <span class="n">factor</span><span class="p">,</span>
+        <span class="n">direction</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_statistics_by_energy</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">production</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return means, RMS spreads, and sample counts keyed by energy."""</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">energy</span><span class="p">:</span> <span class="n">samples</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sample_configuration</span><span class="p">,</span> <span class="n">sample_zenith</span><span class="p">,</span> <span class="n">energy</span><span class="p">),</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">label</span> <span class="o">==</span> <span class="n">production</span>
+            <span class="ow">and</span> <span class="n">sample_configuration</span> <span class="o">==</span> <span class="n">configuration</span>
+            <span class="ow">and</span> <span class="n">sample_zenith</span> <span class="o">==</span> <span class="n">zenith</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">energy</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">)),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">energy</span><span class="p">,</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">grouped</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_ratio</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">zenith_colors</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot candidate-to-baseline ratios with propagated mean errors."""</span>
+    <span class="n">varying_dimensions</span> <span class="o">=</span> <span class="n">_ratio_varying_dimensions</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">series_index</span><span class="p">,</span> <span class="p">((</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">),</span> <span class="n">points</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
+        <span class="n">energies</span><span class="p">,</span> <span class="n">ratios</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">points</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="n">_ROLE_STYLE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+            <span class="n">energies</span><span class="p">,</span>
+            <span class="n">ratios</span><span class="p">,</span>
+            <span class="n">yerr</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
+            <span class="n">fmt</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"marker"</span><span class="p">,</span> <span class="s2">"o"</span><span class="p">),</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">_ratio_series_label</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">varying_dimensions</span><span class="p">),</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">zenith_colors</span><span class="p">[</span><span class="n">zenith</span><span class="p">],</span>
+            <span class="n">markerfacecolor</span><span class="o">=</span><span class="n">zenith_colors</span><span class="p">[</span><span class="n">zenith</span><span class="p">],</span>
+            <span class="n">markeredgecolor</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">"--"</span><span class="p">,</span> <span class="s2">":"</span><span class="p">,</span> <span class="s2">"-."</span><span class="p">)[</span><span class="n">series_index</span> <span class="o">%</span> <span class="mi">4</span><span class="p">],</span>
+            <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">capsize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zorder"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">bound</span>
+        <span class="k">for</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">points</span>
+        <span class="k">for</span> <span class="n">bound</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ratio</span> <span class="o">-</span> <span class="n">error</span><span class="p">,</span> <span class="n">ratio</span> <span class="o">+</span> <span class="n">error</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">bounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="n">margin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lower</span> <span class="o">-</span> <span class="n">margin</span><span class="p">),</span> <span class="n">upper</span> <span class="o">+</span> <span class="n">margin</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">"linear"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ratio_varying_dimensions</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return configuration dimensions that differ between ratio series."""</span>
+    <span class="n">configurations</span> <span class="o">=</span> <span class="p">{</span><span class="n">configuration</span> <span class="k">for</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">series</span><span class="p">}</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">index</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_RATIO_CONFIGURATION_COLUMNS</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">configuration</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">configuration</span> <span class="ow">in</span> <span class="n">configurations</span><span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ratio_series_label</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">varying_dimensions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a compact label for a configuration-matched ratio series."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">varying_dimensions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"za=</span><span class="si">{</span><span class="n">zenith</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg"</span>
+    <span class="n">configuration_label</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_RATIO_CONFIGURATION_COLUMNS</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">configuration</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">varying_dimensions</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">configuration_label</span><span class="si">}</span><span class="s2">; za=</span><span class="si">{</span><span class="n">zenith</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_role</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">zenith_colors</span><span class="p">,</span> <span class="n">value_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot individual samples and averages for one process role."""</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="p">(</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_label"</span><span class="p">,</span> <span class="s2">"production"</span><span class="p">),</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_version"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"simtools_version"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">)),</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_id"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zenith_angle_deg"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"role"</span><span class="p">]</span>
+    <span class="n">show_production_labels</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_label"</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+    <span class="n">has_baseline</span> <span class="o">=</span> <span class="s2">"baseline"</span> <span class="ow">in</span> <span class="p">{</span><span class="n">_comparison_role</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
+    <span class="n">seen_series</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">series_index</span><span class="p">,</span> <span class="p">(</span><span class="n">production</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">production_id</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+        <span class="n">series_rows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">row</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_label"</span><span class="p">,</span> <span class="s2">"production"</span><span class="p">),</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model_version"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"simtools_version"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">)),</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"production_id"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zenith_angle_deg"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="o">==</span> <span class="p">(</span><span class="n">production</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">production_id</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">zenith_colors</span><span class="p">[</span><span class="n">zenith</span><span class="p">]</span>
+        <span class="n">series_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">production</span><span class="p">,</span> <span class="n">zenith</span><span class="p">)</span>
+        <span class="n">comparison_role</span> <span class="o">=</span> <span class="n">_comparison_role</span><span class="p">(</span><span class="n">series_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">series_key</span> <span class="ow">in</span> <span class="n">seen_series</span> <span class="ow">or</span> <span class="p">(</span><span class="n">has_baseline</span> <span class="ow">and</span> <span class="n">comparison_role</span> <span class="o">!=</span> <span class="s2">"baseline"</span><span class="p">):</span>
+            <span class="n">legend_label</span> <span class="o">=</span> <span class="s2">"_nolegend_"</span>
+        <span class="k">elif</span> <span class="n">has_baseline</span><span class="p">:</span>
+            <span class="n">legend_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"za=</span><span class="si">{</span><span class="n">zenith</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg"</span>
+        <span class="k">elif</span> <span class="n">show_production_labels</span><span class="p">:</span>
+            <span class="n">legend_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">production</span><span class="si">}</span><span class="s2">: za=</span><span class="si">{</span><span class="n">zenith</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">legend_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"za=</span><span class="si">{</span><span class="n">zenith</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg"</span>
+        <span class="n">seen_series</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">series_key</span><span class="p">)</span>
+        <span class="n">_plot_averages</span><span class="p">(</span>
+            <span class="n">axis</span><span class="p">,</span>
+            <span class="n">series_rows</span><span class="p">,</span>
+            <span class="n">column</span><span class="p">,</span>
+            <span class="n">role</span><span class="p">,</span>
+            <span class="n">color</span><span class="p">,</span>
+            <span class="n">legend_label</span><span class="p">,</span>
+            <span class="n">series_index</span><span class="p">,</span>
+            <span class="n">value_scale</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_averages</span><span class="p">(</span>
+    <span class="n">axis</span><span class="p">,</span>
+    <span class="n">rows</span><span class="p">,</span>
+    <span class="n">column</span><span class="p">,</span>
+    <span class="n">role</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">,</span>
+    <span class="n">legend_label</span><span class="p">,</span>
+    <span class="n">series_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">value_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Overlay one mean and RMS error bar for each energy in a series."""</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">grouped</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"energy_midpoint_gev"</span><span class="p">],</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">*</span> <span class="n">value_scale</span><span class="p">)</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="n">_ROLE_STYLE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">energies</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grouped</span><span class="p">)</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grouped</span><span class="p">[</span><span class="n">energy</span><span class="p">]))</span> <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">energies</span><span class="p">]</span>
+    <span class="n">rms</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">values</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grouped</span><span class="p">[</span><span class="n">energy</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">energies</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+        <span class="n">energies</span><span class="p">,</span>
+        <span class="n">means</span><span class="p">,</span>
+        <span class="n">yerr</span><span class="o">=</span><span class="n">rms</span><span class="p">,</span>
+        <span class="n">fmt</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"marker"</span><span class="p">,</span> <span class="s2">"o"</span><span class="p">),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">legend_label</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">markerfacecolor</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">markeredgecolor</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">"--"</span><span class="p">,</span> <span class="s2">":"</span><span class="p">,</span> <span class="s2">"-."</span><span class="p">)[</span><span class="n">series_index</span> <span class="o">%</span> <span class="mi">4</span><span class="p">],</span>
+        <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">capsize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">zorder</span><span class="o">=</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zorder"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_zenith_colors</span><span class="p">(</span><span class="n">zenith_values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return stable colors for the zenith values present in one plot."""</span>
+    <span class="n">colormap</span> <span class="o">=</span> <span class="n">colormaps</span><span class="p">[</span><span class="s2">"viridis"</span><span class="p">]</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">zenith_values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">zenith</span><span class="p">:</span> <span class="n">colormap</span><span class="p">(</span><span class="n">index</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">zenith</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">zenith_values</span><span class="p">)}</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
