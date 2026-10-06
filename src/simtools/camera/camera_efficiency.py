@@ -25,7 +25,9 @@ ECSV_SUFFIX = ".ecsv"
 
 
 _SPECTRAL_STAGE_DESCRIPTIONS = {
-    "cherenkov_at_ground": "Cherenkov spectrum at ground, normalized at emission to 400 nm.",
+    "cherenkov_at_ground": (
+        "Cherenkov spectrum at ground, relative to the emission spectrum at 400 nm."
+    ),
     "cherenkov_after_mirrors": "Cherenkov spectrum after mirror reflection and shadowing.",
     "cherenkov_at_photodetector": "Cherenkov spectrum after the camera filter and lightguide.",
     "cherenkov_detected": "Cherenkov spectrum after all optical and quantum efficiencies.",
