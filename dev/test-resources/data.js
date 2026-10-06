@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791273346836,
+  "lastUpdate": 1791278402687,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29378,6 +29378,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 426.73828125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e8d1712d06b328ba86190822ba3023d3ae9dd0e5",
+          "message": "Fix priority of reading dependency catalogue in containers. (#2610)",
+          "timestamp": "2026-10-06T11:03:42+02:00",
+          "tree_id": "4a0c5ed848784af00d8e5310d4f28c7236672c22",
+          "url": "https://github.com/gammasim/simtools/commit/e8d1712d06b328ba86190822ba3023d3ae9dd0e5"
+        },
+        "date": 1791278388118,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 69.86462600200001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 72.69,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 427.70703125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
           }
