@@ -509,15 +509,8 @@ def _run_test(
     application_args=None,
 ):
     run_id = run_id or get_uuid()
-    report_root = release_dir / "reports" / "runs" / run_id / site / test_id
-    work = (
-        Path(context["__SCIENCE_CANDIDATE_PATH__"])
-        / "work"
-        / "science-tests"
-        / run_id
-        / site
-        / test_id
-    )
+    report_root = release_dir / "reports" / site / test_id
+    work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / "work" / "science-tests" / site / test_id
     workflow = _resolve_workflow(template_dir, release_dir, definition["workflow"])
     replacements = _site_replacements(context, site, site_config, work)
     replacements["__CONFIG_DIRECTORY__"] = str(workflow.parent.resolve())
@@ -573,6 +566,7 @@ def _run_test(
         return result
 
     try:
+        _clear_test_directory(work)
         _check_inputs(definition, replacements)
         run_applications(args, replacements=replacements)
         if definition.get("produces_production"):
@@ -595,8 +589,15 @@ def _run_test(
     return result
 
 
+def _clear_test_directory(path):
+    """Remove artifacts from the previous execution of this named test."""
+    if path.exists():
+        shutil.rmtree(path)
+
+
 def _write_test_report(work, report_root, release_dir, result):
     """Publish a small report even when execution or acceptance fails."""
+    _clear_test_directory(report_root)
     source = work / "collected"
     if source.exists():
         shutil.copytree(source, report_root)
@@ -610,6 +611,7 @@ def _write_test_report(work, report_root, release_dir, result):
     )
     (report_root / "summary.md").write_text(
         f"# {result['id']}\n\nStatus: {result['status']}\n\n"
+        f"Run ID: {result['run_id']}\n\n"
         f"Baseline: {result['baseline']}; candidate: {result['candidate']}\n\n{reason}\n",
         encoding="utf-8",
     )

@@ -645,3 +645,29 @@ def test_unknown_mixed_case_site_is_rejected(campaign, successful_workflow):
     with pytest.raises(ValueError, match="Invalid site selection"):
         science_tests.run_release(**campaign, sites=["Unknown"])
     assert successful_workflow == []
+
+
+def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
+    args = {**campaign, "sites": ["north"], "tests": ["derive"]}
+    science_tests.run_release(**args)
+    report = campaign["release_dir"] / "reports/north/derive"
+    previous = json.loads((report / "result.json").read_text())
+    assert previous["execution_provenance"] == "work/science-tests/north/derive"
+    context = science_tests._load_yaml(campaign["context_file"])
+    work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / previous["execution_provenance"]
+    stale = [report / "stale.txt", work / "output/stale.txt"]
+    for path in stale:
+        path.touch()
+    science_tests.run_release(**args, dry_run=True)
+    assert all(path.exists() for path in stale)
+    assert json.loads((report / "result.json").read_text()) == previous
+    science_tests.run_release(**args)
+    current = json.loads((report / "result.json").read_text())
+    assert current["run_id"] != previous["run_id"]
+    assert current["run_id"] in (report / "summary.md").read_text()
+    assert not any(path.exists() for path in stale)
+    monkeypatch.setattr(science_tests, "run_applications", lambda *args, **kwargs: None)
+    with pytest.raises(RuntimeError, match="Science tests failed"):
+        science_tests.run_release(**args)
+    assert json.loads((report / "result.json").read_text())["status"] == "incomplete"
+    assert not (report / "metrics.json").exists()
