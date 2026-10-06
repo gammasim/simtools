@@ -158,14 +158,12 @@ Important mechanics:
 - Generated paths such as `output_path`, `grid_output_path`, and
   `pack_for_grid_register` should be relative; the harness rewrites them into
   `tmp_test_directory`.
-- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION`, or use
-  `--simtools_tests_resource_version`, to select a versioned `simtools-tests` resource
-  bundle when `SIMTOOLS_TEST_RESOURCES` or `--test_resources_path` is not
-  provided.
+- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION`, or use the
+  corresponding `--simtools_tests_path` and `--simtools_tests_resource_version` options,
+  to select a versioned `simtools-tests` resource bundle.
 - Use `${static:path/to/file}` for maintained resources and
   `${generated:path/to/file}` for generated resources. Pytest resolves these
-  against `--test_resources_path`, defaulting to `SIMTOOLS_TEST_RESOURCES` or
-  `--test_resources_path`.
+  against the selected `SIMTOOLS_TESTS_PATH` and resource version.
 - Put `expected_sim_telarray_output` and `expected_sim_telarray_metadata`
   directly on the relevant `test_output_files` item.
 - Use `test_simtel_cfg_files` for version-specific sim_telarray cfg
@@ -182,7 +180,8 @@ pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
-pytest -v --test_resources_path /full/path/to/resources \
+pytest -v --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
+  --simtools_tests_resource_version v0.38.0 \
   tests/integration_tests/test_applications_from_config.py
 ```
 
@@ -194,6 +193,13 @@ CORSIKA / sim_telarray. Unit tests should not.
 Use the documentation skill for docs, API reference, changelog, and docstring
 work.
 
+- Keep documentation concise and actionable: state what the reader needs to
+  know or do. Omit background, implementation narration, and repeated facts.
+- For small behavior changes, update the relevant sentence or example in an
+  existing section. Add a section only when it covers a distinct user task.
+- Document public behavior and useful overrides; keep internal helper names,
+  lookup algorithms, and incidental edge cases in code and tests unless users
+  need them to configure or troubleshoot the software.
 - Documentation pages are preferred in MyST Markdown.
 - Application autodoc pages are small RST files in
   `docs/source/user-guide/applications/`.
