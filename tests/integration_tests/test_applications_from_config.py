@@ -21,6 +21,9 @@ def _get_simulation_model_source(config, request, simtools_root_path):
     git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
     git_revision = options.get_mirrored_option(request.config, "simulation_models_git_revision")
     if not simulation_models_path and not git_path:
+        default_path = Path(simtools_root_path).parent / "simulation-models"
+        if default_path.is_dir():
+            return default_path.resolve(), None
         return None, None
     if simulation_models_path:
         simulation_models_path = Path(simulation_models_path)
@@ -65,16 +68,24 @@ def _get_application_arguments(application):
     return definition.all_arguments
 
 
-def _requires_local_simulation_model_source(config, simulation_models_path):
-    """Return whether a workflow needs a filesystem simulation-model repository."""
+def _requires_simulation_model_source(config, simulation_models_path, git_source):
+    """Return whether a workflow needs an unavailable simulation-model source."""
     source_config = config.get("configuration")
     if source_config is None:
         return False
+    if source_config.get("help") or source_config.get("version"):
+        return False
     if simulation_models_path or source_config.get("simulation_models_path"):
         return False
-    return any(
+    arguments = _get_application_arguments(config["application"])
+    requires_local_source = any(
         argument.name == "simulation_models_path" and argument.kwargs.get("required")
-        for argument in _get_application_arguments(config["application"])
+        for argument in arguments
+    )
+    if git_source or source_config.get("simulation_models_git_path"):
+        return requires_local_source
+    return requires_local_source or any(
+        argument.name == "simulation_models_git_path" for argument in arguments
     )
 
 
@@ -212,8 +223,8 @@ def test_applications_from_config(
     simulation_models_path, git_source = _get_simulation_model_source(
         tmp_config, request, simtools_root_path
     )
-    if _requires_local_simulation_model_source(tmp_config, simulation_models_path):
-        pytest.skip("No local simulation-model repository is configured")
+    if _requires_simulation_model_source(tmp_config, simulation_models_path, git_source):
+        pytest.skip("No simulation-model repository is configured")
     _set_simulation_model_source_env(monkeypatch, simulation_models_path, git_source)
     _set_simulation_model_source_configuration(tmp_config, simulation_models_path, git_source)
     _prepare_model_parameter_inputs(
@@ -286,13 +297,16 @@ def test_get_simulation_model_source_from_filesystem(tmp_test_directory, mocker)
     assert git_source is None
 
 
-def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
+@pytest.mark.parametrize("revision", ["HEAD", "main", "feature/model-update", "6.0.2"])
+def test_get_simulation_model_source_from_git(tmp_test_directory, mocker, monkeypatch, revision):
     """Resolve Git source options and preserve their requested revision."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", "environment-branch")
     request = mocker.MagicMock()
     options = {
         "simulation_models_path": None,
         "simulation_models_git_path": "../simulation-models.git",
-        "simulation_models_git_revision": "HEAD",
+        "simulation_models_git_revision": revision,
     }
     request.config.getoption.side_effect = lambda option, default=None: options.get(option, default)
 
@@ -301,7 +315,10 @@ def test_get_simulation_model_source_from_git(tmp_test_directory, mocker):
     )
 
     assert path is None
-    assert git_source == ((Path(tmp_test_directory) / "../simulation-models.git").resolve(), "HEAD")
+    assert git_source == (
+        (Path(tmp_test_directory) / "../simulation-models.git").resolve(),
+        revision,
+    )
 
 
 def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mocker, monkeypatch):
@@ -323,8 +340,10 @@ def test_get_simulation_model_source_from_git_environment(tmp_test_directory, mo
     )
 
 
-def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker):
+def test_git_model_source_defaults_to_checkout_head(tmp_test_directory, mocker, monkeypatch):
     """Use the selected checkout tip when no Git revision is configured."""
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_SIMULATION_MODELS_GIT_REVISION", raising=False)
     request = mocker.MagicMock()
     options = {
         "simulation_models_path": None,
@@ -368,25 +387,49 @@ def test_set_simulation_model_source_configuration_uses_local_path_argument():
     assert config["configuration"]["simulation_models_path"] == str(model_path)
 
 
-def test_set_simulation_model_source_configuration_skips_unsupported_source():
-    """Leave workflows unchanged when an application cannot accept the selected source."""
+def test_set_simulation_model_source_configuration_uses_git_source():
+    """Configure applications that use the common model reader with a Git source."""
     config = {
         "application": "simtools-docs-produce-production-summary",
         "configuration": {"output_file": "production_version_descriptions.md"},
     }
     _set_simulation_model_source_configuration(config, None, (Path("/models.git"), "HEAD"))
 
-    assert config["configuration"] == {"output_file": "production_version_descriptions.md"}
+    assert config["configuration"] == {
+        "output_file": "production_version_descriptions.md",
+        "simulation_models_git_path": "/models.git",
+        "simulation_models_git_revision": "HEAD",
+    }
 
 
-def test_requires_local_simulation_model_source_for_required_path_argument():
-    """Recognize workflows that cannot run without a local model repository."""
+def test_requires_simulation_model_source_for_path_only_application():
+    """Recognize workflows that still require a filesystem model repository."""
+    config = {
+        "application": "simtools-maintain-simulation-model-verify-production-tables",
+        "configuration": {},
+    }
+
+    assert _requires_simulation_model_source(config, None, None)
+
+
+def test_requires_simulation_model_source_for_reader_application():
+    """Skip reader-backed applications when no model source is selected."""
     config = {
         "application": "simtools-docs-produce-production-summary",
         "configuration": {"output_file": "production_version_descriptions.md"},
     }
 
-    assert _requires_local_simulation_model_source(config, None)
+    assert _requires_simulation_model_source(config, None, None)
+
+
+def test_git_source_is_incompatible_with_required_filesystem_argument():
+    """Skip path-only applications when integration selects a Git source."""
+    config = {
+        "application": "simtools-maintain-simulation-model-verify-production-tables",
+        "configuration": {},
+    }
+
+    assert _requires_simulation_model_source(config, None, (Path("/models.git"), "HEAD"))
 
 
 def test_local_simulation_model_source_is_not_required_when_configured():
@@ -399,14 +442,25 @@ def test_local_simulation_model_source_is_not_required_when_configured():
         },
     }
 
-    assert not _requires_local_simulation_model_source(config, None)
+    assert not _requires_simulation_model_source(config, None, None)
 
 
 def test_local_simulation_model_source_is_not_required_without_configuration():
     """Allow automatic no-configuration checks to run application help."""
     config = {"application": "simtools-docs-produce-production-summary"}
 
-    assert not _requires_local_simulation_model_source(config, None)
+    assert not _requires_simulation_model_source(config, None, None)
+
+
+@pytest.mark.parametrize("option", ["help", "version"])
+def test_model_source_is_not_required_for_cli_information(option):
+    """Run CLI information checks without a model repository."""
+    config = {
+        "application": "simtools-maintain-simulation-model-write-array-element-positions",
+        "configuration": {option: True},
+    }
+
+    assert not _requires_simulation_model_source(config, None, None)
 
 
 def test_prepare_model_parameter_inputs(tmp_test_directory, mocker):

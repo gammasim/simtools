@@ -20,11 +20,8 @@ from simtools.testing import options
 def test_setting_workflow_round_trip(
     tmp_test_directory, simtools_root_path, request, parameter, value, expected, unit
 ):
-    model_path = options.get_mirrored_option(request.config, "simulation_models_path")
-    model_path = Path(model_path or simtools_root_path.parent / "simulation-models")
-    if not model_path.is_absolute():
-        model_path = simtools_root_path / model_path
-    if not model_path.is_dir():
+    model_source = _model_source_arguments(request, simtools_root_path)
+    if model_source is None:
         pytest.skip("A simulation-models checkout is required.")
     root = Path(tmp_test_directory) / "settings"
     command = [
@@ -45,8 +42,7 @@ def test_setting_workflow_round_trip(
         "https://example.org/measurement",
         "--output_path",
         str(root),
-        "--simulation_models_path",
-        str(model_path.resolve()),
+        *model_source,
         "--disable_log_file",
     ]
     subprocess.run(command, capture_output=True, text=True, check=True)
@@ -86,3 +82,35 @@ def test_setting_workflow_round_trip(
     assert conflict.returncode != 0
     assert "Conflicting inputs" in conflict.stderr
     assert (config_file.read_bytes(), metadata_file.read_bytes()) == original_inputs
+
+
+def _model_source_arguments(request, simtools_root_path):
+    """Return CLI arguments for the configured filesystem or Git model source."""
+    model_path = options.get_mirrored_option(request.config, "simulation_models_path")
+    if model_path:
+        model_path = Path(model_path)
+        if not model_path.is_absolute():
+            model_path = Path(simtools_root_path) / model_path
+        return (
+            ["--simulation_models_path", str(model_path.resolve())] if model_path.is_dir() else None
+        )
+
+    git_path = options.get_mirrored_option(request.config, "simulation_models_git_path")
+    if git_path:
+        git_path = Path(git_path)
+        if not git_path.is_absolute():
+            git_path = Path(simtools_root_path) / git_path
+        git_revision = (
+            options.get_mirrored_option(request.config, "simulation_models_git_revision") or "HEAD"
+        )
+        return [
+            "--simulation_models_git_path",
+            str(git_path.resolve()),
+            "--simulation_models_git_revision",
+            git_revision,
+        ]
+
+    model_path = Path(simtools_root_path).parent / "simulation-models"
+    if model_path.is_dir():
+        return ["--simulation_models_path", str(model_path.resolve())]
+    return None
