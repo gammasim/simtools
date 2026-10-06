@@ -38,6 +38,20 @@ _SPECTRAL_STAGE_DESCRIPTIONS = {
 }
 
 
+_LEGACY_SPECTRAL_COLUMNS = {
+    "C1": "cherenkov_at_ground",
+    "C2": "cherenkov_after_mirrors",
+    "C3": "cherenkov_at_photodetector",
+    "C4": "cherenkov_detected",
+    "C4x": "cherenkov_detected_without_mirrors",
+    "N1": "nsb_before_correction",
+    "N2": "nsb_after_mirrors",
+    "N3": "nsb_at_photodetector",
+    "N4": "nsb_detected",
+    "N4x": "nsb_detected_without_mirrors",
+}
+
+
 class CameraEfficiency:
     """
     Camera efficiency simulations and analysis.
@@ -349,6 +363,13 @@ class CameraEfficiency:
     def _read_results(self):
         """Read existing results file and store it in _results."""
         self._results = Table.read(self._file["results"], format=f"ascii{ECSV_SUFFIX}")
+        for old_name, name in _LEGACY_SPECTRAL_COLUMNS.items():
+            if old_name in self._results.colnames and name not in self._results.colnames:
+                self._results.rename_column(old_name, name)
+        descriptions = RESULT_COLUMN_DESCRIPTIONS | _SPECTRAL_STAGE_DESCRIPTIONS
+        for name in self._results.colnames:
+            if not self._results[name].description:
+                self._results[name].description = descriptions.get(name)
         self._has_results = True
 
     def calc_tel_efficiency(self):

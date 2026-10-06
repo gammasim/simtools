@@ -154,6 +154,25 @@ def test_read_results(camera_efficiency_lst, prepare_results_file):
     assert camera_efficiency_lst._has_results is True
 
 
+@pytest.mark.parametrize("legacy", [False, True])
+def test_read_results_column_compatibility(camera_efficiency_lst, prepare_results_file, legacy):
+    path = camera_efficiency_lst._file["results"]
+    expected = Table.read(path, format="ascii.ecsv")
+    table = expected.copy()
+    table["wl"].description = "Custom wavelength description."
+    if legacy:
+        table.rename_columns(table.colnames[1:11], "C1 C2 C3 C4 C4x N1 N2 N3 N4 N4x".split())
+    table.write(path, format="ascii.ecsv", overwrite=True)
+    camera_efficiency_lst._read_results()
+    result = camera_efficiency_lst._results
+    assert result.colnames == expected.colnames
+    assert all(result[name].description for name in result.colnames)
+    assert result["wl"].description == "Custom wavelength description."
+    for name in result.colnames:
+        np.testing.assert_array_equal(result[name], expected[name])
+    assert Table.read(path, format="ascii.ecsv").colnames == table.colnames
+
+
 def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(0.32)
@@ -247,7 +266,7 @@ def test_analyze_calculates_derived_efficiencies(camera_efficiency_lst, mocker, 
 
     assert exported_results["qe"].description == "Photodetector quantum efficiency."
     assert exported_results["nsb_after_mirrors"].description == (
-        "Input NSB spectrum after mirror reflection and shadowing."
+        "NSB spectrum after mirror reflection and shadowing."
     )
     results = camera_efficiency_lst._results[0]
     assert camera_efficiency_lst._results.colnames == [
