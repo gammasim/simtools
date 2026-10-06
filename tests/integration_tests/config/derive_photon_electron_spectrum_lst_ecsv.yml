@@ -43,7 +43,7 @@ applications:
         # The model reference uses a different afterpulse measurement.
         columns: [amplitude, response]
       - type: data_schema
-        schema: src/simtools/schemas/model_parameters/pm_photoelectron_spectrum.schema.yml
+        schema: model_parameters/pm_photoelectron_spectrum.schema.yml
       - type: table
         minimum_rows: 2101
         columns:
