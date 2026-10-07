@@ -14,7 +14,9 @@ Use this skill for integration test configuration files under
 applications from YAML and validate their outputs.
 
 Follow `AGENTS.md` and
-`docs/source/developer-guide/testing.md`. For exact mechanics, inspect
+`docs/source/developer-guide/testing_integration.md`. This skill owns integration-specific
+instructions; use the guide for repository-wide conventions and environment selection.
+For exact mechanics, inspect
 `tests/integration_tests/test_applications_from_config.py`,
 `tests/integration_tests/conftest.py`, `tests/conftest.py`,
 `src/simtools/testing/`, and
@@ -46,6 +48,11 @@ Pin a published image tag instead of `latest` for reproducible runs.
 
 ## Config Shape
 
+Use the latest version in `src/simtools/schemas/application_workflow.metaschema.yml`
+for new configs (currently `0.6.0`). Preserve older versions unless migration is
+part of the task. Versions `0.5.0` and `0.6.0` use `test_outputs` and `validations`;
+legacy `test_output_files` and `test_simtel_cfg_files` belong to `0.4.0` only.
+
 ```yaml
 ---
 applications:
@@ -63,7 +70,7 @@ applications:
       path_descriptor: output_path
   test_name: short_descriptive_case
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.6.0
 ```
 
 Rules:
@@ -74,15 +81,12 @@ Rules:
 4. Keep generated path settings such as `output_path`, `grid_output_path`, and
    `pack_for_grid_register` relative; the harness rewrites them into a
    temporary test directory.
-5. Use realistic CTAO names and conventions: `North`/`South`, `LSTN-01`,
-   `MSTS-05`, semantic model versions without a leading `v`.
-6. Add `test: true`, small event counts, `n_workers: 1`, or short ranges when
+5. Add `test: true`, small event counts, `n_workers: 1`, or short ranges when
    the application supports them.
 
 ## Application-Level Options
 
-Optional keys beside `application`, `configuration`, `integration_tests`, and
-`test_name`:
+Optional application-level keys beside `application` and `configuration`:
 
 - `model_version_use_current: true`: run only when the CLI `--model_version`
   matches the config model version.
@@ -92,6 +96,9 @@ Optional keys beside `application`, `configuration`, `integration_tests`, and
 - `xfail_network_error: true`: xfail only recognized network failures.
 - `docs.title` / `docs.summary`: metadata for generated documentation
   examples.
+- `preparation`: schema `0.6.0` steps using `simtools-get-model-parameter` to
+  create temporary inputs. Reference these with `${prepared:path/to/file}` in
+  the application configuration.
 
 Use `configuration.<option>.by_version` for version-dependent CLI values:
 
@@ -110,7 +117,9 @@ Use `${static:path/to/file}` for maintained resources,
 resolves these against the versioned `simtools-tests` resource bundle selected
 by `--simtools_tests_path` and `--simtools_tests_resource_version`, or their
 `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION` environment
-variables.
+variables. The default resource version comes from `dependency_versions.yml`.
+Keep maintained resources in the versioned bundle rather than using raw
+`tests/resources/...` paths.
 
 ## `integration_tests` Blocks
 
@@ -138,14 +147,15 @@ integration_tests:
 
 Validation keys:
 
-- `test_outputs`: a list of generated artifacts. Each has `file`, an optional
-  `path_descriptor`, and optional `output_sub_path`.
+- `test_outputs`: a list of generated artifacts. Each requires `file` and
+  `path_descriptor`; `output_sub_path` is optional.
 - `validations`: explicit validators. Available types are `format`,
   `reference`, `data_schema`, `table`, `metadata`, `hdf5_datasets`,
   `hdf5_product`, `log`, `simtel`, `simtel_config`, and `model_parameter`.
 - `reference`: compare JSON, YAML, or ECSV references. ECSV comparison can
   select `columns`, specify `key_columns`, include `metadata`, and filter rows.
-- `simtel`: validate event type and event ranges. `simtel_config` compares
+- `simtel`: validate event type, event ranges, and sim_telarray metadata.
+  `metadata` checks required keys and relations. `simtel_config` compares
   generated sim_telarray configuration files.
 - `log`: validate expected and forbidden log patterns.
 
@@ -175,3 +185,6 @@ pytest -v --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
    `model_version_use_current`, and version-specific expected filenames.
 5. Keep generated files deterministic by fixing seeds, run numbers, labels,
    event counts, and worker counts.
+6. If sim_telarray files are missing, inspect the application log path printed in
+   stderr before changing filenames. For log-validation failures, inspect stdout
+   and stderr for actual errors, exceptions, tracebacks, warnings, or crashes.

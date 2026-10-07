@@ -10,96 +10,108 @@ description: >-
 
 # Documentation Writing for simtools
 
-Follow `AGENTS.md` for repository-wide rules. This skill
-adds a focused documentation workflow and completion checklist.
+Follow `AGENTS.md` for repository-wide conventions, environment selection, and linting.
+This skill owns documentation-specific instructions. See
+`docs/source/developer-guide/documentation.md` for the Sphinx extensions.
 
-## Core requirements
+## Scope and writing
 
-1. Public functions, classes, and methods must have docstrings.
-2. Use NumPy-style docstrings with relevant sections:
-   - `Parameters`
-   - `Returns`
-   - `Raises`
-   - `Examples`
-   Include only sections that apply to the documented object.
-3. Keep language concise, concrete, and user-focused.
-4. Keep line length at 100 characters.
-5. Use ASCII text in docs and docstrings.
-6. Write documentation pages in MyST Markdown unless an RST file is required
-   for application autodoc pages.
+- Update the user guide for user-facing behavior, the API reference for new or
+  moved library modules, and application pages for CLI changes.
+- Keep documentation concise and actionable. For small changes, update the relevant
+  sentence or example; add a section only for a distinct user task.
+- Document public behavior and useful overrides. Keep internal helper names and
+  lookup details in code and tests unless users need them to troubleshoot.
+- Public functions, classes, and methods need NumPy-style docstrings with only
+  relevant `Parameters`, `Returns`, `Raises`, and `Examples` sections. Match the
+  signature, return values, and units. Do not add development plans to the docs.
+- Write pages in MyST Markdown; use `eval-rst` fences for Sphinx directives.
 
-## Standard workflow
+## Application pages
 
-1. Identify the scope:
-   - User-facing behavior change: update user guide page(s).
-   - New or changed library module: update API reference.
-   - New CLI app: add an application page and toctree entry.
-2. Update docstrings in the changed Python files first.
-3. Update or add Sphinx documentation pages in `docs/source/`.
-4. Add or update the API reference entry for any new module.
-5. Add a changelog fragment if the task is part of a PR workflow.
-6. Build docs locally and run link checks.
+1. Add `docs/source/user-guide/applications/simtools-<app-name>.md` and an entry
+   in `docs/source/user-guide/applications.md` in alphabetical order.
+2. Keep the application module docstring to a one-line synopsis. Put inputs,
+   outputs, operational details, and examples in the page.
+3. Include one autodoc directive, following neighboring pages:
 
-## Required file updates by scenario
+   ````markdown
+   ```{eval-rst}
+   .. automodule:: simtools.applications.<module_name>
+      :members:
+      :exclude-members: main
+   ```
+   ````
 
-### New application in `src/simtools/applications/`
+4. Generate CLI help with `simtools-cli-help` using `:application: <module_name>`.
+   Use `:no-heading:` when the page already supplies the heading; adjust
+   `:hide-groups:` or `:show-groups:` only when needed.
+5. Render tested examples with `simtools-integration-example` using
+   `:file: <config.yml>`. Both custom directives go inside `eval-rst` fences.
 
-1. Add `docs/source/user-guide/applications/simtools-<app-name>.rst`.
-2. Add an entry in `docs/source/user-guide/applications.md` in alphabetical
-   order.
-3. Ensure the page matches existing application pages: one `.. automodule::`
-   directive with `:members:` and usually `:exclude-members: main`.
-4. Prefer generated CLI documentation over duplicated command-line help text
-   in docstrings.
+## Library API reference
 
-### New library module in `src/simtools/` (outside `applications/`)
+Add new or moved library modules to the relevant `docs/source/api-reference/*.md`
+page with `.. automodule:: <module.path>` and `:members:` inside an `eval-rst` fence.
+Use the complete import path and match neighboring entries, for example
+`model_repository.reader`.
 
-1. Add an API reference entry in the relevant
-   `docs/source/api-reference/*.md` file.
-2. Use `.. automodule:: <module.path>` with `:members:`.
-3. Ensure the new page/section is included by the API reference index where
-   needed.
+Include every new page in its toctree. A file existing under `docs/source/` is not
+sufficient; `toc.not_included` is a documentation failure. Resolve cross-reference
+warnings at their source rather than adding broad `nitpick_ignore` or
+`suppress_warnings` entries.
 
-### Pull request changelog
+## Changelog fragments
 
-1. Add a short changelog fragment to `docs/changes/<pr-number>.<type>.md`.
-2. Allowed types: `feature`, `bugfix`, `api`, `doc`, `maintenance`, `model`.
-3. Use PR number (not issue number) in the filename.
+For PR work, add a concise fragment to `docs/changes/<pr-number>.<type>.md`.
+Use the PR number, not the issue number. Supported types are `feature`, `bugfix`,
+`api`, `doc`, `maintenance`, and `model`.
 
-## Writing guidance
+## Validation
 
-1. Prefer task-based descriptions: what users do, required inputs, expected
-   outputs.
-2. Keep examples realistic and aligned with integration test configs under
-   `tests/integration_tests/config/` when possible.
-3. Do not duplicate implementation details that can drift; link concepts to
-   stable CLI options and public APIs.
-4. When documenting parameters with units, state expected units clearly and
-   consistently.
-
-## Validation checklist
-
-Run after documentation edits:
+For changes to Sphinx pages or docstrings, run from the checkout in the selected
+Python environment:
 
 ```bash
-cd docs
-make html
-make linkcheck
+env PYTHONPATH="$PWD/src" make -C docs clean html linkcheck
 ```
 
-Run repository checks when docstrings or code-adjacent docs changed:
+For Conda, prefix the command with `conda run -n simtools-dev`.
+`docs/Makefile` enables `-W -n --keep-going`; treat every Sphinx warning as a failure.
+The build imports applications for CLI help and autodoc, so `PYTHONPATH` must point
+at this checkout. If a traceback references stale code or `site-packages`, verify
+`simtools.__file__` before diagnosing the docs.
+
+Run the repository lint checks specified in `AGENTS.md`.
+
+Before handing off a change that adds, removes, or moves a library module, run
+the API coverage check as well. Every reported module must be added to the
+appropriate API reference page with an `automodule` entry for its complete
+module path, matching the import style already used by that API page:
 
 ```bash
-pre-commit run --all-files
+python - <<'PY'
+from pathlib import Path
+
+src_root = Path("src/simtools")
+api_text = "\n".join(
+    path.read_text(encoding="utf-8")
+    for path in Path("docs/source/api-reference").glob("*.md")
+)
+missing = []
+for path in src_root.rglob("*.py"):
+    relative = path.relative_to(src_root)
+    if (
+        path.name in {"__init__.py", "_version.py"}
+        or relative.parts[0] == "applications"
+        or relative.parts[0].startswith("_")
+    ):
+        continue
+    module = ".".join(relative.with_suffix("").parts)
+    candidates = (module, f"simtools.{module}")
+    if not any(f".. automodule:: {candidate}" in api_text for candidate in candidates):
+        missing.append(module)
+if missing:
+    raise SystemExit("Undocumented modules:\n" + "\n".join(sorted(missing)))
+PY
 ```
-
-## Done criteria
-
-A documentation task is complete when:
-
-1. All changed public APIs have correct NumPy-style docstrings.
-2. User-guide and API reference pages are updated for the change.
-3. Required toctree/index entries are present.
-4. Changelog fragment is added when applicable.
-5. `make html` and `make linkcheck` pass locally.
-6. `pre-commit run --all-files` is clean for changed files.
