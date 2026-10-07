@@ -34,7 +34,7 @@ class PSFImage:
     focal_length: float
         Focal length of the system in cm. If not given, PSF can only be computed in cm.
     total_scattered_area: float
-        Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
+        Scatter area of all photons in m^2. If not given, effective area cannot be computed.
     containment_fraction: float
         Containment fraction for PSF calculation.
     """
@@ -57,6 +57,9 @@ class PSFImage:
         self.photon_pos_x = []
         self.photon_pos_y = []
         self.photon_r = []
+        self.photon_weights = None
+        self._radial_weight_cdf = None
+        self.optical_detection_fraction = None
         self.centroid_x = None
         self.centroid_y = None
         self.centroid_x_error = 0.0
@@ -109,10 +112,9 @@ class PSFImage:
     def read_obdeect_arrival_file(self, photon_file):
         """Read a validated ``obdeect-arrival-v1`` CSV file.
 
-        The current PSF implementation is count based.  It therefore accepts
-        only equal source weights; weighted arrival analysis needs a separate
-        weighted-containment implementation and must not silently produce an
-        unweighted result.
+        Centroids and radial containment use arriving optical weights. Effective
+        area requires the declared launch area in ``total_scattered_area``;
+        the dimensionless optical detection fraction remains available separately.
         """
         try:
             from obdeect.result_contract import (  # pylint: disable=import-outside-toplevel
@@ -130,36 +132,43 @@ class PSFImage:
 
         if not arrivals:
             raise RuntimeError(f"No arrivals in obdeect file {photon_file}")
-        weights = np.asarray([arrival.source_weight for arrival in arrivals], dtype=float)
-        if not np.allclose(weights, weights[0], rtol=0.0, atol=1.0e-12):
-            raise ValueError(
-                "obdeect arrival weights are not uniform; weighted PSF analysis is not supported"
-            )
-        detected = [arrival for arrival in arrivals if arrival.detected]
-        if not detected:
-            raise RuntimeError(f"No detected photons in obdeect file {photon_file}")
-
+        input_weight = sum(arrival.source_weight for arrival in arrivals)
+        detected = [
+            arrival for arrival in arrivals if arrival.detected and arrival.optical_weight > 0
+        ]
+        if input_weight <= 0 or not detected:
+            raise RuntimeError(f"No positive optical weight in obdeect file {photon_file}")
         self._total_photons = len(arrivals)
-        self._number_of_detected_photons = len(detected)
-        # The reference contract has no telescope-area field.  Keep the
-        # detection fraction here; callers can replace it with a calibrated
-        # area through ``set_effective_area``.
-        self._total_area = 1.0
-        self._effective_area = self._number_of_detected_photons / self._total_photons
+        self._number_of_detected_photons = sum(arrival.detected for arrival in arrivals)
+        self.photon_weights = np.asarray([arrival.optical_weight for arrival in detected])
+        arriving_weight = self.photon_weights.sum()
+        self.optical_detection_fraction = arriving_weight / input_weight
+        self._effective_area = None
+        if self._total_area is not None:
+            if not np.isfinite(self._total_area) or self._total_area <= 0:
+                raise ValueError("total_scattered_area must be finite and positive")
+            self._effective_area = self._total_area * self.optical_detection_fraction
         self.photon_pos_x = np.asarray([arrival.focal_x_m * 100.0 for arrival in detected])
         self.photon_pos_y = np.asarray([arrival.focal_y_m * 100.0 for arrival in detected])
-        if not self._is_photon_positions_ok():
-            raise RuntimeError(f"Invalid detected focal positions in {photon_file}")
-        self.centroid_x = np.mean(self.photon_pos_x)
-        self.centroid_y = np.mean(self.photon_pos_y)
-        self.centroid_x_error = self._compute_centroid_standard_error(self.photon_pos_x)
-        self.centroid_y_error = self._compute_centroid_standard_error(self.photon_pos_y)
-        self.photon_r = np.sort(
-            np.sqrt(
-                (self.photon_pos_x - self.centroid_x) ** 2
-                + (self.photon_pos_y - self.centroid_y) ** 2
-            )
-        )
+        self.centroid_x = np.average(self.photon_pos_x, weights=self.photon_weights)
+        self.centroid_y = np.average(self.photon_pos_y, weights=self.photon_weights)
+        self.centroid_x_error = self._weighted_centroid_error(self.photon_pos_x)
+        self.centroid_y_error = self._weighted_centroid_error(self.photon_pos_y)
+        radii = np.hypot(self.photon_pos_x - self.centroid_x, self.photon_pos_y - self.centroid_y)
+        order = np.argsort(radii, kind="stable")
+        self.photon_r = radii[order]
+        self._radial_weight_cdf = np.cumsum(self.photon_weights[order])
+        self._stored_psf.clear()
+
+    def _weighted_centroid_error(self, positions):
+        """Use effective sample size for the weighted centroid's standard error."""
+        weights = self.photon_weights
+        effective_count = weights.sum() ** 2 / np.sum(weights**2)
+        if effective_count <= 1:
+            return 0.0
+        mean = np.average(positions, weights=weights)
+        variance = np.average((positions - mean) ** 2, weights=weights)
+        return float(np.sqrt(variance / (effective_count - 1)))
 
     def _process_simtel_file_using_rx(self, photon_file):
         """
@@ -170,6 +179,9 @@ class PSFImage:
         photons_file: str
             Name of sim_telarray file with photon list.
         """
+        self.photon_weights = None
+        self._radial_weight_cdf = None
+        self.optical_detection_fraction = None
         rx_command = [
             f"{settings.config.sim_telarray_path}/bin/rx",
             "-f",
@@ -237,6 +249,9 @@ class PSFImage:
         """
         self._logger.info(f"Reading sim_telarray photon file {photons_file}")
         self._total_photons = 0
+        self.photon_weights = None
+        self._radial_weight_cdf = None
+        self._stored_psf.clear()
         file_open_function = gzip.open if Path(photons_file).suffix == ".gz" else open
 
         # Local variables avoid repeated attribute lookups in the tight parsing loop.
@@ -448,7 +463,13 @@ class PSFImage:
         fraction: float
             Fraction of photons within the containing radius
         """
-        self._stored_psf[fraction] = self._find_psf(fraction)
+        if not 0 < fraction <= 1:
+            raise ValueError("containment fraction must be in (0, 1]")
+        if self._radial_weight_cdf is not None:
+            index = np.searchsorted(self._radial_weight_cdf, fraction * self._radial_weight_cdf[-1])
+            self._stored_psf[fraction] = 2 * self.photon_r[min(index, len(self.photon_r) - 1)]
+        else:
+            self._stored_psf[fraction] = self._find_psf(fraction)
 
     def _find_psf(self, fraction):
         """
@@ -567,6 +588,9 @@ class PSFImage:
 
     def _sum_photons_in_radius(self, radius):
         """Return number of photons inside radius using binary search on sorted radial distances."""
+        if self._radial_weight_cdf is not None:
+            count = np.searchsorted(self.photon_r, radius, side="right")
+            return self._radial_weight_cdf[count - 1] if count else 0.0
         return np.searchsorted(self.photon_r, radius)
 
     def get_image_data(self, centralized=True):
@@ -617,6 +641,8 @@ class PSFImage:
             psf_ls="--",
         )
         kwargs_for_image = collect_kwargs("image", kwargs)
+        if self.photon_weights is not None:
+            kwargs_for_image["weights"] = self.photon_weights
         kwargs_for_psf = collect_kwargs("psf", kwargs)
 
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
@@ -654,10 +680,10 @@ class PSFImage:
         else:
             fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(fraction), 30))
-        intensity = [
-            self._sum_photons_in_radius(rad) / self._number_of_detected_photons
-            for rad in radius_all
-        ]
+        normalization = self._number_of_detected_photons
+        if self._radial_weight_cdf is not None:
+            normalization = self._radial_weight_cdf[-1]
+        intensity = [self._sum_photons_in_radius(rad) / normalization for rad in radius_all]
         d_type = {
             "names": (self.__PSF_RADIUS, self.__PSF_CUMULATIVE),
             "formats": ("f8", "f8"),

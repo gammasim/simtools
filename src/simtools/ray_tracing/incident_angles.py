@@ -59,7 +59,9 @@ class IncidentAnglesCalculator:
             u.deg
         )
         self.output_dir = Path(output_dir)
-        self.label = label or f"incident_angles_{config_data.get('telescope', 'obdeect_scene')}"
+        self.label = (
+            label or f"incident_angles_{config_data.get('telescope', 'obdeect_optical_model')}"
+        )
         cfg = config_data
         self.perfect_mirror = cfg.get("perfect_mirror", False)
         self.results = None
@@ -162,9 +164,11 @@ class IncidentAnglesCalculator:
             read_arrivals,
         )
 
-        scene_file = self.config_data.get("obdeect_scene_file")
-        if not scene_file:
-            raise ValueError("obdeect_scene_file is required for model-derived ray tracing")
+        optical_model_file = self.config_data.get(
+            "obdeect_optical_model_file"
+        ) or settings.config.args.get("obdeect_optical_model_file")
+        if not optical_model_file:
+            raise ValueError("obdeect_optical_model_file is required for model-derived ray tracing")
         output_file = self.results_dir / f"arrivals_{self._label_suffix()}.csv"
         distance_m = self._source_distance_km() * 1000.0
         off_axis = self.config_data.get("off_axis_angle", 0.0 * u.deg)
@@ -174,7 +178,7 @@ class IncidentAnglesCalculator:
         command = [
             str(settings.config.obdeect_exe),
         ]
-        command.extend(["--scene-file", str(Path(scene_file).expanduser())])
+        command.extend(["--optical-model", str(Path(optical_model_file).expanduser())])
         command.extend(
             [
                 "--photons",

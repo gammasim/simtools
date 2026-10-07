@@ -170,11 +170,11 @@ class _Config:
 
     @property
     def obdeect_exe(self):
-        """Path to the packaged or explicitly overridden obdeect executable."""
+        """Path to the packaged obdeect executable."""
         try:
             from obdeect import executable_path  # pylint: disable=import-outside-toplevel
 
-            return executable_path(self._obdeect_exe)
+            return executable_path(self._obdeect_exe or "obdeect-simtools-raytrace")
         except ModuleNotFoundError as exc:
             raise FileNotFoundError(
                 "obdeect-dev is not installed; install gammasimtools[obdeect]"

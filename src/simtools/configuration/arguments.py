@@ -188,7 +188,28 @@ OBDEECT_EXECUTABLE = _argument(
     default="obdeect-simtools-raytrace",
 )
 
-RAY_TRACING_ARGUMENTS = (RAY_TRACING_BACKEND, OBDEECT_EXECUTABLE)
+OBDEECT_OPTICAL_MODEL_FILE = _argument(
+    "obdeect_optical_model_file",
+    "ray tracing configuration",
+    help="Compiled optical-model JSON required when selecting the obdeect backend.",
+    type=str,
+    default=None,
+)
+
+OBDEECT_LAUNCH_AREA_M2 = _argument(
+    "obdeect_launch_area_m2",
+    "ray tracing configuration",
+    help="Declared photon launch area in square metres for obdeect effective-area analysis.",
+    type=float,
+    default=None,
+)
+
+RAY_TRACING_ARGUMENTS = (
+    RAY_TRACING_BACKEND,
+    OBDEECT_EXECUTABLE,
+    OBDEECT_OPTICAL_MODEL_FILE,
+    OBDEECT_LAUNCH_AREA_M2,
+)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 

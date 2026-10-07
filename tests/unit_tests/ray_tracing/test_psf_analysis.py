@@ -250,30 +250,72 @@ def test_reading_obdeect_arrival_file(tmp_test_directory):
         encoding="utf-8",
     )
 
-    image = PSFImage(focal_length=1000.0, containment_fraction=0.8)
+    image = PSFImage(focal_length=1000.0, containment_fraction=0.8, total_scattered_area=20)
     image.process_photon_list(arrival_file, use_rx=False)
 
     assert image._total_photons == 2
     assert image._number_of_detected_photons == 1
     assert image.photon_pos_x.tolist() == pytest.approx([1.0])
     assert image.photon_pos_y.tolist() == pytest.approx([2.0])
-    assert image.get_effective_area() == pytest.approx(0.5)
+    assert image.get_effective_area() == pytest.approx(10.0)
 
 
-def test_obdeect_weighted_arrivals_are_rejected(tmp_test_directory):
-    arrival_file = tmp_test_directory / "weighted.csv"
+def _write_weighted_arrivals(root, source_weights, throughput, lost_weight=0):
+    arrival_file = Path(root) / "weighted.csv"
     header = (
         "contract_version,photon_id,source_kind,wavelength_nm,emission_time_ns,"
-        "source_weight,throughput,status,point_count,path_length_m,x0_m,y0_m,z0_m\n"
+        "source_weight,throughput,status,point_count,path_length_m,"
+        "x0_m,y0_m,z0_m,x1_m,y1_m,z1_m\n"
     )
-    arrival_file.write_text(
-        header
-        + "obdeect-arrival-v1,0,star,400,0,1,1,detected,1,1,0,0,0\n"
-        + "obdeect-arrival-v1,1,star,400,0,2,1,detected,1,1,0,0,0\n",
-        encoding="utf-8",
+    rows = [
+        f"obdeect-arrival-v1,{index},star,400,0,{weight},{response},detected,2,1,"
+        f"0,0,1,{position},0,2\n"
+        for index, (weight, response, position) in enumerate(
+            zip(source_weights, throughput, (0, 0.04), strict=True)
+        )
+    ]
+    rows.append(f"obdeect-arrival-v1,2,star,400,0,{lost_weight},0,missed_primary,1,0,0,0,1,,,\n")
+    arrival_file.write_text(header + "".join(rows))
+    return arrival_file
+
+
+@pytest.mark.parametrize(
+    ("source_weights", "throughput", "lost_weight", "fraction"),
+    [([1, 3], [1, 1], 2, 4 / 6), ([1, 12], [1, 0.25], 7, 4 / 20)],
+)
+def test_obdeect_weighted_centroid_containment_and_area(
+    tmp_test_directory, source_weights, throughput, lost_weight, fraction
+):
+    """Identical optical weights must yield identical images despite source sampling."""
+    arrival_file = _write_weighted_arrivals(
+        tmp_test_directory, source_weights, throughput, lost_weight
     )
-    with pytest.raises(ValueError, match="weighted PSF"):
-        PSFImage(focal_length=1000.0).process_photon_list(arrival_file, use_rx=False)
+    image = PSFImage(focal_length=1000, total_scattered_area=200)
+    image.process_photon_list(arrival_file, use_rx=False)
+    assert image.centroid_x == pytest.approx(3)
+    assert image.centroid_y == pytest.approx(0)
+    assert image.get_psf(0.75) == pytest.approx(2)
+    assert image.get_psf(0.8) == pytest.approx(6)
+    cumulative = image.get_cumulative_data([0, 1, 2, 3])
+    assert cumulative["Cumulative PSF"].tolist() == pytest.approx([0, 0.75, 0.75, 1])
+    assert image.optical_detection_fraction == pytest.approx(fraction)
+    assert image.get_effective_area() == pytest.approx(200 * fraction)
+
+
+def test_obdeect_variable_throughput_changes_psf(tmp_test_directory):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 1], [1, 0.5])
+    image = PSFImage()
+    image.process_photon_list(arrival_file, use_rx=False)
+    assert image.centroid_x == pytest.approx(4 / 3)
+    assert image.get_psf(0.8) == pytest.approx(16 / 3)
+    assert image.get_effective_area() is None
+    assert image.optical_detection_fraction == pytest.approx(0.75)
+
+
+def test_zero_response_detections_do_not_define_psf(tmp_test_directory):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 1], [0, 0])
+    with pytest.raises(RuntimeError, match="No positive optical weight"):
+        PSFImage().process_photon_list(arrival_file, use_rx=False)
 
 
 def test_process_simtel_file_using_rx_success(
@@ -514,3 +556,33 @@ def test_plot_image_writes_file(monkeypatch, tmp_test_directory):
     out_file = tmp_test_directory / "img.png"
     image.plot_image(centralized=False, file_name=str(out_file))
     assert out_file.exists()
+
+
+@pytest.mark.parametrize("area", [0, -1, np.inf, np.nan])
+def test_obdeect_effective_area_requires_valid_declared_area(tmp_test_directory, area):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 1], [1, 1])
+    with pytest.raises(ValueError, match="total_scattered_area"):
+        PSFImage(total_scattered_area=area).process_photon_list(arrival_file, use_rx=False)
+
+
+@pytest.mark.parametrize("fraction", [0, -1, 1.01])
+def test_weighted_containment_rejects_invalid_fraction(tmp_test_directory, fraction):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 3], [1, 1])
+    image = PSFImage()
+    image.process_photon_list(arrival_file, use_rx=False)
+    with pytest.raises(ValueError, match="containment fraction"):
+        image.get_psf(fraction)
+
+
+def test_weighted_psf_histogram_preserves_optical_weight(tmp_test_directory):
+    from matplotlib import pyplot as plt
+
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 3], [1, 1])
+    image = PSFImage()
+    image.process_photon_list(arrival_file, use_rx=False)
+    figure, axes = plt.subplots()
+    try:
+        image.plot_image(image_bins=2)
+        assert np.sum(axes.collections[0].get_array()) == pytest.approx(4)
+    finally:
+        plt.close(figure)

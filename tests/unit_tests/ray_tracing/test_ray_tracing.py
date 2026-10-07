@@ -519,6 +519,7 @@ def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
     mock_psf_image.assert_called_once_with(
         focal_length=focal_length,
         containment_fraction=containment_fraction,
+        total_scattered_area=None,
     )
     mock_process_photon_list.assert_called_once_with(test_photons_file, use_rx)
     assert image == mock_psf_image_instance

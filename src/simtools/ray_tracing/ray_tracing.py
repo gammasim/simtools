@@ -455,6 +455,9 @@ class RayTracing:
                 telescope_model=self.telescope_model,
                 label=self.label,
                 config_data={
+                    "obdeect_optical_model_file": settings.config.args.get(
+                        "obdeect_optical_model_file"
+                    ),
                     "off_axis_x": off_x,
                     "off_axis_y": off_y,
                     "source_distance": mirror_data["source_distance"] * u.km,
@@ -760,7 +763,16 @@ class RayTracing:
         PSFImage
             PSF image object.
         """
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
+        launch_area_m2 = None
+        if settings.config.ray_tracing_backend == "obdeect":
+            launch_area_m2 = settings.config.args.get("obdeect_launch_area_m2")
+            if launch_area_m2 is not None:
+                launch_area_m2 = float(launch_area_m2)
+        image = PSFImage(
+            focal_length=focal_length,
+            containment_fraction=containment_fraction,
+            total_scattered_area=launch_area_m2,
+        )
         image.process_photon_list(
             photons_file,
             use_rx if settings.config.ray_tracing_backend == "sim_telarray" else False,
@@ -832,13 +844,16 @@ class RayTracing:
                 )
             eff_focal_length_error = radius_error / tan_theta
 
+        effective_area = image.get_effective_area(tel_transmission)
+        if effective_area is None:
+            effective_area = np.nan
         return (
             off_x * u.deg,
             off_y * u.deg,
             theta_offset * u.deg,
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
-            image.get_effective_area(tel_transmission) * u.m * u.m,
+            effective_area * u.m * u.m,
             centroid_x_error * u.cm,
             centroid_y_error * u.cm,
             eff_focal_length,

@@ -1,4 +1,4 @@
-"""Runner for the packaged obdeect reference and model-scene ray tracers."""
+"""Runner for the packaged obdeect optical ray tracer."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from simtools import settings
 class SimulatorObdeect:
     """Run ``obdeect-simtools-raytrace`` for one ray-tracing configuration.
 
-    It runs a provenance-bound scene exported by
-    ``obdeect.scene_compiler.write_native_scene``.
+    It runs a provenance-bound optical model exported by
+    ``obdeect.optical_model_compiler``.
     """
 
     def __init__(
@@ -38,8 +38,10 @@ class SimulatorObdeect:
             raise ValueError("number_of_photons must be positive")
         if self.output_file is None:
             raise ValueError("output_file is required for obdeect simulations")
-        if not self.config.get("obdeect_scene_file"):
-            raise ValueError("obdeect_scene_file is required for model-derived ray tracing")
+        if not self.config.get("obdeect_optical_model_file"):
+            raise ValueError("obdeect_optical_model_file is required for model-derived ray tracing")
+        if not Path(self.config["obdeect_optical_model_file"]).expanduser().is_file():
+            raise FileNotFoundError("obdeect_optical_model_file does not exist")
         if self.config.get("single_mirror_mode", False):
             raise ValueError("single_mirror_mode is not supported by the reference obdeect CLI")
 
@@ -54,8 +56,8 @@ class SimulatorObdeect:
         """Build the packaged native command line."""
         distance_m = self._value(self.config.get("source_distance", 10.0), u.km) * 1000.0
         command = [str(settings.config.obdeect_exe)]
-        scene_file = self.config.get("obdeect_scene_file")
-        command.extend(["--scene-file", str(Path(scene_file).expanduser())])
+        optical_model_file = self.config.get("obdeect_optical_model_file")
+        command.extend(["--optical-model", str(Path(optical_model_file).expanduser())])
         command.extend(
             [
                 "--source",

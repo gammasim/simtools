@@ -58,7 +58,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     initialize_output=True,
 )
