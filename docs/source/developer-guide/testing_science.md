@@ -84,8 +84,15 @@ Pass `--simulation_models_git_path` and `--simulation_models_git_revision` on ea
 to select the model repository used by its workflows.
 
 Tests using simulation outputs require a completed `submission.json` with non-empty job IDs, matching
-expected-output entries, and existing output files. Existing submissions are never resubmitted
-automatically. Failed or incomplete prerequisite tests prevent dependent tests from running.
+expected-output entries, and existing output files. Existing submissions block resubmission.
+Add `--overwrite` with `--allow_production` to archive and retry failed production after HTCondor
+confirms every job has ended. Active jobs, unknown states, and successful submissions cannot be
+overwritten. Dry runs do not archive or submit jobs. Failed or incomplete prerequisite tests prevent
+dependent tests from running.
+
+Production submission returns once jobs are queued (`submitted`). Run
+`--test production.gamma.collect` to check them later: it returns `pending` while jobs remain queued
+and validates results when they finish. Comparison tests collect production before running.
 
 ## Products and results
 

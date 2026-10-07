@@ -375,7 +375,7 @@ def test_two_checkouts_have_portable_equivalent_plans(campaign, tmp_test_directo
 
 def test_missing_product_is_recorded(campaign, monkeypatch):
     monkeypatch.setattr(science_tests, "run_applications", lambda *args, **kwargs: None)
-    with pytest.raises(RuntimeError, match="Science tests failed"):
+    with pytest.raises(RuntimeError, match="Missing or empty required product"):
         science_tests.run_release(**campaign, sites=["north"])
     summary = json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text())
     failed = next(r for r in summary["results"] if r["id"] == "derive.north")
@@ -426,10 +426,13 @@ def test_missing_metric_and_empty_file(tmp_test_directory):
 def test_existing_submission_prevents_resubmission(tmp_test_directory):
     root = Path(tmp_test_directory)
     (root / "submission.json").write_text("{}", encoding="utf-8")
-    with pytest.raises(ValueError, match="do not resubmit"):
+    with pytest.raises(ValueError, match="Production submission blocked") as error:
         science_tests._check_inputs(
             {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
         )
+
+    assert str(root / "submission.json") in str(error.value)
+    assert "--allow_production does not override it" in str(error.value)
 
 
 def test_unknown_acceptance_rule_fails_preflight(campaign, successful_workflow):
@@ -658,7 +661,7 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     stale = [report / "stale.txt", work / "output/stale.txt"]
     for path in stale:
         path.touch()
-    science_tests.run_release(**args, dry_run=True)
+    science_tests.run_release(**args, dry_run=True, overwrite=True)
     assert all(path.exists() for path in stale)
     assert json.loads((report / "result.json").read_text()) == previous
     science_tests.run_release(**args)
@@ -671,3 +674,131 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
         science_tests.run_release(**args)
     assert json.loads((report / "result.json").read_text())["status"] == "incomplete"
     assert not (report / "metrics.json").exists()
+
+
+def test_campaign_model_settings(campaign, monkeypatch):
+    context = science_tests._load_yaml(campaign["context_file"])
+    context["simulation_models_git_path"] = str(campaign["template_dir"] / "models")
+    _write_yaml(campaign["context_file"], context)
+    release_file = campaign["release_dir"] / "release.yml"
+    release = science_tests._load_yaml(release_file)
+    release["simulation_models_git_revision"] = "v0.18.0"
+    _write_yaml(release_file, release)
+    captured = []
+    prepare = science_tests.prepare_workflow
+
+    def capture(args, replacements):
+        captured.append(
+            (args["simulation_models_git_path"], args["simulation_models_git_revision"])
+        )
+        return prepare(args, replacements=replacements)
+
+    monkeypatch.setattr(science_tests, "prepare_workflow", capture)
+    science_tests.run_release(
+        **campaign,
+        sites=["north"],
+        dry_run=True,
+        application_args={"simulation_models_git_revision": "main"},
+    )
+    assert captured == [(context["simulation_models_git_path"], "v0.18.0")] * 2
+
+
+@pytest.mark.parametrize(
+    ("state", "finished"),
+    [("failed", True), ("failed", False), ("completed", True), ("submitted", False)],
+)
+def test_production_retry_requires_finished_failed_jobs(mocker, state, finished):
+    mocker.patch.object(
+        science_tests,
+        "load_submission",
+        return_value=mocker.Mock(metadata={"state": state}, backend="htcondor"),
+    )
+    backend = mocker.patch.object(science_tests, "get_backend").return_value
+    backend.is_finished.return_value = finished
+    if state == "failed" and finished:
+        science_tests._validate_production_retry(Path("submission.json"))
+    else:
+        with pytest.raises(ValueError, match="Cannot overwrite"):
+            science_tests._validate_production_retry(Path("submission.json"))
+
+
+@pytest.mark.parametrize("overwrite", [False, True])
+def test_production_retry_archives_artifacts(tmp_test_directory, mocker, overwrite):
+    root = Path(tmp_test_directory)
+    candidate = root / "candidate/north"
+    work = root / "candidate/work/science-tests/north/production.gamma"
+    report = root / "release/reports/north/production.gamma"
+    for source in (candidate, work, report):
+        source.mkdir(parents=True)
+        (source / "keep.txt").write_text("previous run")
+    (candidate / "submission.json").write_text("{}")
+    validate = mocker.patch.object(science_tests, "_validate_production_retry")
+    science_tests._prepare_test_retry(
+        {"produces_production": True},
+        {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)},
+        {"science_overwrite": overwrite},
+        "retry-id",
+        work,
+        report,
+    )
+    assert candidate.exists() is not overwrite
+    assert work.exists() is not overwrite
+    assert report.exists() is not overwrite
+    assert validate.call_count == int(overwrite)
+    if overwrite:
+        assert len(list(root.rglob("keep.txt"))) == 3
+        assert all("archive" in path.parts for path in root.rglob("keep.txt"))
+
+
+@pytest.mark.parametrize("pending", [False, True])
+def test_collection_waits_for_outputs_without_submitting(tmp_test_directory, mocker, pending):
+    root = Path(tmp_test_directory)
+    product = root / "event.dat"
+    product.write_text("event")
+    manifest = root / "submission.json"
+    payload = {
+        "backend": "htcondor",
+        "work_dir": str(root),
+        "job_ids": ["job"],
+        "metadata": {"state": "submitted", "expected_outputs": {"job": [str(product)]}},
+    }
+    manifest.write_text(json.dumps(payload))
+
+    def collect(submission):
+        if pending:
+            return None
+        payload["metadata"]["state"] = "completed"
+        manifest.write_text(json.dumps(payload))
+        return []
+
+    mocker.patch.object(science_tests, "collect_submission", side_effect=collect)
+    run = mocker.patch.object(science_tests, "run_applications")
+    result = science_tests._execute_test_workflow(
+        {"collect_production": True, "products": [str(product)]},
+        {},
+        {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)},
+    )
+    assert result["status"] == ("pending" if pending else "pass")
+    run.assert_not_called()
+
+
+def test_submission_does_not_validate_completed_production(mocker):
+    run = mocker.patch.object(science_tests, "run_applications")
+    mocker.patch.object(science_tests, "_evaluate_products", return_value={"status": "pass"})
+    result = science_tests._execute_test_workflow({"produces_production": True}, {}, {})
+    assert result["status"] == result["execution"] == "submitted"
+    run.assert_called_once()
+
+
+def test_pending_collection_defers_dependent_tests(mocker):
+    collect = {"id": "collect.north", "site": "north"}
+    compare = {"id": "compare.north", "site": "north"}
+    execute = mocker.patch.object(
+        science_tests, "_run_test", return_value={**collect, "status": "pending"}
+    )
+    mocker.patch.object(science_tests, "_log_test_execution")
+    results = science_tests._execute_selection(
+        [(({},), collect), (({"depends_on": ["collect"]},), compare)], False, "run", {}
+    )
+    assert [result["status"] for result in results] == ["pending", "pending"]
+    execute.assert_called_once()

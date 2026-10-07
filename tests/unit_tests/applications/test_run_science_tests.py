@@ -17,10 +17,12 @@ def test_parser_supports_repeatable_selection():
             "--test",
             "compare.events",
             "--dry_run",
+            "--overwrite",
         ]
     )
     assert args.site == ["north", "south"]
     assert args.test == ["compare.events"]
+    assert args.overwrite
     assert args.dry_run
 
 
@@ -46,6 +48,7 @@ def test_main_forwards_runner_options(mocker):
         tests=["compare.events"],
         dry_run=True,
         allow_production=False,
+        overwrite=False,
         application_args=args,
     )
 

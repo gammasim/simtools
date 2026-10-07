@@ -15,6 +15,8 @@ from pathlib import Path
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.job_execution.backends.registry import get_backend
+from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners.simtools_runner import prepare_workflow, run_applications
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
@@ -118,9 +120,9 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
             results.append(
                 {
                     **planned,
-                    "status": "blocked",
-                    "execution": "blocked",
-                    "reason": "Dependency failed.",
+                    "status": _dependency_status(results, dependencies),
+                    "execution": _dependency_status(results, dependencies),
+                    "reason": "Dependency failed or is not yet complete.",
                 }
             )
         else:
@@ -129,6 +131,17 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
                 _run_test(*args, dry_run=False, run_id=run_id, application_args=application_args)
             )
     return results
+
+
+def _dependency_status(results, dependencies):
+    """Distinguish queued dependencies from failed dependencies."""
+    if all(
+        r["status"] in {"pass", "warn", "submitted", "pending"}
+        for r in results
+        if r["id"] in dependencies
+    ):
+        return "pending"
+    return "blocked"
 
 
 def _log_test_execution(result, action):
@@ -162,10 +175,13 @@ def _check_inputs(definition, replacements):
         _matched_files(replace_placeholders_recursively(pattern, replacements))
     if definition.get("produces_production"):
         root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
-        if any(root.rglob("submission.json")):
+        submission = next(root.rglob("submission.json"), None)
+        if submission is not None:
             raise ValueError(
-                "Candidate already has a submission; do not resubmit. "
-                "Resume it through the existing execution API or use a new candidate path."
+                f"Production submission blocked: existing record {submission}. "
+                "This also blocks retries of failed jobs; --allow_production does not override it. "
+                "Use --overwrite to archive and retry failed production once all jobs have ended, "
+                "or use a new candidate path."
             )
     if definition.get("requires_completed_production"):
         root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
@@ -383,6 +399,7 @@ def run_release(
     tests: Iterable[str] | None = None,
     dry_run: bool = False,
     allow_production: bool = False,
+    overwrite: bool = False,
     application_args: dict | None = None,
 ) -> dict:
     """Validate and run the selected site/test pairs for one release.
@@ -404,6 +421,8 @@ def run_release(
         Validate the complete selection without writes or execution.
     allow_production : bool
         Permit explicitly selected production using a previously reviewed grid.
+    overwrite : bool
+        Archive and retry failed production only after its jobs have ended.
     application_args : dict or None
         Common runner arguments such as model-source and environment overrides.
 
@@ -432,6 +451,8 @@ def run_release(
     requested_sites = _select(sites, suites, "site")
     requested_tests = _select(tests, catalogue, "test") if tests is not None else None
     acceptance = _load_acceptance(release_dir, template_dir)
+    application_args = _model_source_arguments(application_args, context, release)
+    application_args["science_overwrite"] = overwrite
     model_source = {
         key: str(application_args[key])
         for key in _MODEL_SOURCE_KEYS
@@ -476,9 +497,20 @@ def run_release(
         result for result in results if result["status"] in {"fail", "incomplete", "blocked"}
     ]
     if failures:
-        failed_ids = ", ".join(result["id"] for result in failures)
-        raise RuntimeError(f"Science tests failed: {failed_ids}")
+        details = "; ".join(
+            f"{result['id']}: {result.get('error') or result.get('reason') or result['status']}"
+            for result in failures
+        )
+        raise RuntimeError(f"Science tests failed: {details}")
     return summary
+
+
+def _model_source_arguments(application_args, context, release):
+    """Apply campaign model settings over runner defaults."""
+    args = dict(application_args or {})
+    for configuration in (context, release):
+        args.update({key: configuration[key] for key in _MODEL_SOURCE_KEYS if key in configuration})
+    return args
 
 
 def _shared_runtime_environment(template_dir, replacements):
@@ -518,7 +550,11 @@ def _run_test(
         _load_yaml(workflow),
         replacements,
     )
-    if not definition.get("produces_production") and "runtime_environment" not in resolved:
+    if (
+        not definition.get("produces_production")
+        and not definition.get("collect_production")
+        and "runtime_environment" not in resolved
+    ):
         runtime = _shared_runtime_environment(template_dir, replacements)
         if runtime is not None:
             resolved["runtime_environment"] = runtime
@@ -556,9 +592,7 @@ def _run_test(
         "report": None,
         "run_id": run_id,
         "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
-        "output_paths": list(
-            dict.fromkeys(str(config["configuration"]["output_path"]) for config in configurations)
-        ),
+        "output_paths": _test_output_paths(configurations, replacements),
         "execution": "planned" if dry_run else "completed",
         "status": "planned" if dry_run else "pass",
     }
@@ -566,12 +600,10 @@ def _run_test(
         return result
 
     try:
+        _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
         _clear_test_directory(work)
         _check_inputs(definition, replacements)
-        run_applications(args, replacements=replacements)
-        if definition.get("produces_production"):
-            _check_inputs({"requires_completed_production": True}, replacements)
-        result.update(_evaluate_products(definition, replacements))
+        result.update(_execute_test_workflow(definition, args, replacements))
     except _AcceptanceError as exc:
         result["status"] = "fail"
         result["error"] = str(exc)
@@ -586,7 +618,88 @@ def _run_test(
         result["execution"] = "failed"
         result["error"] = str(exc)
     _write_test_report(work, report_root, release_dir, result)
+    logger.info(
+        "%s: %s%s",
+        result["id"],
+        result["status"],
+        f" - {result['reason']}" if result.get("reason") else "",
+    )
     return result
+
+
+def _test_output_paths(configurations, replacements):
+    """Use application output paths or the candidate path for native collection."""
+    paths = [str(config["configuration"]["output_path"]) for config in configurations]
+    return list(dict.fromkeys(paths)) or [replacements["__SCIENCE_CANDIDATE_SITE_PATH__"]]
+
+
+def _execute_test_workflow(definition, args, replacements):
+    """Submit, collect, or execute a regular science workflow."""
+    if definition.get("collect_production"):
+        return _collect_production(definition, replacements)
+    run_applications(args, replacements=replacements)
+    validated = _evaluate_products(definition, replacements)
+    if definition.get("produces_production"):
+        return {
+            "status": "submitted",
+            "execution": "submitted",
+            "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
+        }
+    return validated
+
+
+def _collect_production(definition, replacements):
+    """Check all production submissions once, validating only completed results."""
+    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    manifests = _matched_files(str(candidate / "**/submission.json"))
+    pending = False
+    for manifest in manifests:
+        submission = load_submission(manifest)
+        if submission.backend != "htcondor":
+            raise ValueError(f"Collection is not supported for backend {submission.backend}.")
+        if submission.metadata.get("state") != "completed":
+            pending = collect_submission(submission) is None or pending
+    if pending:
+        return {
+            "status": "pending",
+            "execution": "pending",
+            "reason": "Production jobs are still queued; rerun collection after they finish.",
+        }
+    _check_inputs({"requires_completed_production": True}, replacements)
+    return _evaluate_products(definition, replacements)
+
+
+def _prepare_test_retry(definition, replacements, args, run_id, work, report):
+    """Archive a failed production before an explicitly requested retry."""
+    if not args.get("science_overwrite") or not definition.get("produces_production"):
+        return
+    _check_inputs({"requires": definition.get("requires", [])}, replacements)
+    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    submissions = list(candidate.rglob("submission.json"))
+    if not submissions:
+        return
+    for manifest in submissions:
+        _validate_production_retry(manifest)
+    for source, destination in (
+        (candidate, candidate.parent / "archive" / run_id / candidate.name),
+        (work, work.parents[1] / "archive" / run_id / work.parent.name / work.name),
+        (report, report.parents[1] / "archive" / run_id / report.parent.name / report.name),
+    ):
+        if source.exists():
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            source.rename(destination)
+            logger.info("Archived previous run: %s", destination)
+
+
+def _validate_production_retry(manifest):
+    """Require a failed manifest and scheduler confirmation that every job ended."""
+    submission = load_submission(manifest)
+    if submission.metadata.get("state") != "failed":
+        raise ValueError(f"Cannot overwrite {manifest}: only failed production can be retried.")
+    if submission.backend != "htcondor":
+        raise ValueError(f"Cannot confirm finished jobs for backend {submission.backend}.")
+    if not get_backend(submission.backend).is_finished(submission):
+        raise ValueError(f"Cannot overwrite {manifest}: jobs are still in the HTCondor queue.")
 
 
 def _clear_test_directory(path):

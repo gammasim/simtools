@@ -12,6 +12,7 @@ import yaml
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
 from simtools.job_execution.execution import (
+    collect_submission,
     execute_jobs,
     load_submission,
     map_ordered,
@@ -445,3 +446,28 @@ def test_htcondor_preserves_artifacts_when_expected_output_is_missing(
 
     assert input_dir.exists()
     assert result_dir.exists()
+
+
+@pytest.mark.parametrize(("finished", "failed"), [(False, False), (True, False), (True, True)])
+def test_collect_submission_never_waits(tmp_test_directory, mocker, finished, failed):
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=Path(tmp_test_directory),
+        job_ids=("job",),
+        metadata={"state": "submitted"},
+    )
+    backend = mocker.Mock()
+    backend.is_finished.return_value = finished
+    backend.collect.return_value = []
+    if failed:
+        backend.collect.side_effect = BackendExecutionError("worker failed")
+        with pytest.raises(BackendExecutionError, match="worker failed"):
+            collect_submission(submission, backend=backend)
+    else:
+        assert collect_submission(submission, backend=backend) == ([] if finished else None)
+    expected = "submitted"
+    if finished:
+        expected = "failed" if failed else "completed"
+    assert submission.metadata["state"] == expected
+    assert backend.collect.call_count == int(finished)
+    backend.wait.assert_not_called()

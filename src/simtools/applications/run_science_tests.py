@@ -21,6 +21,11 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ArgumentDefinition("template_dir", type=str),
         cli.ArgumentDefinition("site", action="append", help="Select a required site."),
         cli.ArgumentDefinition("test", action="append", help="Select a named test."),
+        cli.ArgumentDefinition(
+            "overwrite",
+            action="store_true",
+            help="Archive and retry failed production after all jobs have ended.",
+        ),
         cli.ArgumentDefinition("dry_run", action="store_true", help="Validate without writes."),
         cli.ArgumentDefinition(
             "allow_production",
@@ -47,6 +52,7 @@ def main():
         tests=args.get("test"),
         dry_run=args.get("dry_run", False),
         allow_production=args.get("allow_production", False),
+        overwrite=args.get("overwrite", False),
         application_args=args,
     )
 
