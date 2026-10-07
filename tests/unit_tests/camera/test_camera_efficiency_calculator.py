@@ -560,4 +560,7 @@ def test_calculator_returns_camera_efficiency_table():
     result = CameraEfficiencyCalculator(telescope, site).calculate()
     assert len(result) == 801
     assert result.colnames[:3] == ["wl", "eff", "eff_atm"]
+    assert all(result[name].description for name in result.colnames)
+    assert result["wl"].description == "Wavelength in nm."
+    assert result["pixel"].description == "Lightguide collection efficiency."
     assert result["eff"][200] == pytest.approx(0.09)
