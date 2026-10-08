@@ -179,7 +179,7 @@ def validate_optics(app_context):
         offset_file=args_dict.get("offset_file"),
         offset_directions=offset_directions,
     )
-    ray.simulate(test=args_dict["test"], force=False)
+    ray.simulate(test=args_dict["test"], force=False, max_workers=args_dict.get("max_workers"))
     ray.analyze(force=True, save_photons=args_dict.get("save_photons", False))
 
     _plot_psf_summary(ray, label, tel_model.name, io_handler)

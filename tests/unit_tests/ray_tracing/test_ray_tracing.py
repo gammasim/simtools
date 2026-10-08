@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
-from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
+from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS, INVALID_KEY_TO_PLOT, RayTracing
 
 
 def _example_rows():
@@ -447,6 +447,46 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     assert not photons_file.exists()
 
 
+@pytest.mark.parametrize("offsets", [[(0.0, 0.0)], [(0.0, 0.0), (1.0, -0.5)]])
+@pytest.mark.parametrize("test", [False, True])
+@pytest.mark.parametrize("max_workers", [DEFAULT_MAX_WORKERS, 2])
+def test_ray_tracing_simulate_obdeect(ray_tracing_lst, mocker, offsets, test, max_workers):
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.ray_tracing_backend = "obdeect"
+    config.args = {"obdeect_optical_model_file": "optical-model.json"}
+    ray_tracing_lst.off_axis_angle = offsets
+    simulators = [mocker.Mock() for _ in offsets]
+    factory = mocker.patch(
+        "simtools.ray_tracing.ray_tracing.SimulatorObdeect", side_effect=simulators
+    )
+    gzip_open = mocker.patch("gzip.open")
+
+    ray_tracing_lst.simulate(test=test, force=True, max_workers=max_workers)
+
+    assert factory.call_count == len(offsets)
+    for (off_x, off_y), simulator, factory_call in zip(
+        offsets, simulators, factory.call_args_list, strict=True
+    ):
+        simulator.run.assert_called_once_with(test=test)
+        kwargs = factory_call.kwargs
+        assert kwargs["config_data"] == {
+            "obdeect_optical_model_file": "optical-model.json",
+            "off_axis_x": off_x,
+            "off_axis_y": off_y,
+            "source_distance": ray_tracing_lst.mirrors[0]["source_distance"] * u.km,
+            "single_mirror_mode": False,
+            "number_of_photons": 100 if test else 10000,
+        }
+        assert kwargs["output_file"] == ray_tracing_lst.output_directory.joinpath(
+            ray_tracing_lst._generate_file_name(
+                file_type="photons", suffix=".csv", off_axis_x=off_x, off_axis_y=off_y
+            )
+        )
+        assert kwargs["force_simulate"] is True
+    gzip_open.assert_not_called()
+    ray_tracing_lst.telescope_model.write_sim_telarray_config_file.assert_not_called()
+
+
 def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, mocker):
     ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, 0.0)]
     mock_create_simulator = mocker.patch.object(
@@ -460,10 +500,20 @@ def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, m
     assert mock_run_simulator.call_count == 2
 
 
-@pytest.mark.parametrize(("max_workers", "expected_workers"), [(None, 8), (3, 3)])
+@pytest.mark.parametrize(
+    ("backend", "max_workers", "expected_workers"),
+    [
+        ("sim_telarray", DEFAULT_MAX_WORKERS, DEFAULT_MAX_WORKERS),
+        ("sim_telarray", 3, 3),
+        ("obdeect", DEFAULT_MAX_WORKERS, DEFAULT_MAX_WORKERS),
+        ("obdeect", 3, 3),
+    ],
+)
 def test_ray_tracing_simulate_limits_full_telescope_workers(
-    ray_tracing_lst, mocker, max_workers, expected_workers
+    ray_tracing_lst, mocker, backend, max_workers, expected_workers
 ):
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.ray_tracing_backend = backend
     ray_tracing_lst.off_axis_angle = [(float(index), 0.0) for index in range(10)]
     mocker.patch.object(
         ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock() for _ in range(10)]
@@ -472,19 +522,15 @@ def test_ray_tracing_simulate_limits_full_telescope_workers(
     executor = mocker.patch("simtools.ray_tracing.ray_tracing.ThreadPoolExecutor")
     executor.return_value.__enter__.return_value.map.return_value = []
 
-    if max_workers is None:
-        ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
-    else:
-        ray_tracing_lst.simulate(
-            test=True, force=True, compress_photons=False, max_workers=max_workers
-        )
+    ray_tracing_lst.simulate(test=True, force=True, compress_photons=False, max_workers=max_workers)
 
     executor.assert_called_once_with(max_workers=expected_workers)
 
 
-def test_ray_tracing_simulate_rejects_non_positive_worker_count(ray_tracing_lst):
+@pytest.mark.parametrize("max_workers", [0, -1])
+def test_ray_tracing_simulate_rejects_non_positive_worker_count(ray_tracing_lst, max_workers):
     with pytest.raises(ValueError, match="max_workers must be a positive integer"):
-        ray_tracing_lst.simulate(max_workers=0)
+        ray_tracing_lst.simulate(max_workers=max_workers)
 
 
 def test_ray_tracing_simulate_propagates_full_telescope_worker_failure(ray_tracing_lst, mocker):

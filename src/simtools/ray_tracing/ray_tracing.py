@@ -374,7 +374,7 @@ class RayTracing:
         self, test=False, force=False, compress_photons=True, max_workers=DEFAULT_MAX_WORKERS
     ):
         """
-        Run ray tracing simulations using sim_telarray.
+        Run simulations using the configured ray-tracing backend.
 
         Generates photon lists for each off-axis angle and mirror configuration,
         simulating light propagation through telescope optics.
@@ -451,7 +451,7 @@ class RayTracing:
                     mirror_number=None,
                 )
             )
-            simulator = SimulatorObdeect(
+            return SimulatorObdeect(
                 telescope_model=self.telescope_model,
                 label=self.label,
                 config_data={
@@ -468,7 +468,6 @@ class RayTracing:
                 force_simulate=force,
                 test=test,
             )
-            return simulator, off_x, off_y, mirror_number
         simulator = SimulatorRayTracing(
             telescope_model=self.telescope_model,
             site_model=self.site_model,

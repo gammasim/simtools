@@ -5,12 +5,19 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.ray_tracing.optics_validation import validate_optics
+from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
 
 _ARGUMENTS = (
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.MAX_OFFSET,
     cli.OFFSET_STEP,
+    cli.ArgumentDefinition(
+        "max_workers",
+        help="Maximum concurrent ray-tracing simulations (positive integer).",
+        type=int,
+        default=DEFAULT_MAX_WORKERS,
+    ),
     cli.ArgumentDefinition(
         "offset_file",
         help=(

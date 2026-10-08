@@ -9,9 +9,21 @@ import numpy as np
 import pytest
 from astropy.table import QTable, Table
 
+from simtools.applications import validate_optics
 from simtools.applications.validate_cumulative_psf import _ARGUMENTS
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.ray_tracing import optics_validation
+from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"), [([], DEFAULT_MAX_WORKERS), (["--max_workers", "2"], 2)]
+)
+def test_validate_optics_cli_max_workers(args, expected):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(validate_optics._ARGUMENTS)
+
+    assert parser.parse_args(args).max_workers == expected
 
 
 def test_cumulative_psf_cli_requires_measured_data():
@@ -150,7 +162,8 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
 
 
-def test_validate_optics_no_images(tmp_test_directory):
+@pytest.mark.parametrize("max_workers", [DEFAULT_MAX_WORKERS, 2])
+def test_validate_optics_no_images(tmp_test_directory, max_workers):
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -158,6 +171,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "zenith_angle": 20.0 * u.deg,
         "source_distance": 10.0 * u.km,
         "max_offset": 1.0 * u.deg,
+        "max_workers": max_workers,
         "offset_step": 0.5 * u.deg,
         "offset_file": None,
         "offset_directions": "N,S,E,W",
@@ -190,7 +204,7 @@ def test_validate_optics_no_images(tmp_test_directory):
 
         mock_export_model_parameter.assert_called_once()
 
-        mock_ray.simulate.assert_called_once_with(test=True, force=False)
+        mock_ray.simulate.assert_called_once_with(test=True, force=False, max_workers=max_workers)
         mock_ray.analyze.assert_called_once_with(force=True, save_photons=False)
         assert mock_ray.plot.call_count == 4
         assert mock_ray.plot.call_args_list[-1].kwargs["error_type"] == "errorbar"
