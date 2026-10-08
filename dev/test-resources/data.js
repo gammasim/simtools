@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791370860918,
+  "lastUpdate": 1791441648656,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29628,6 +29628,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 425.9140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Gernot Maier",
+            "username": "GernotMaier",
+            "email": "gernot.maier@desy.de"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "5b451eee19584ea49fd3cf6c3678275b164025f0",
+          "message": "skill update (#2615)",
+          "timestamp": "2026-10-07T10:45:37Z",
+          "url": "https://github.com/gammasim/simtools/commit/5b451eee19584ea49fd3cf6c3678275b164025f0"
+        },
+        "date": 1791441631380,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 73.62544121100001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 76.63000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 426.98046875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
           }
