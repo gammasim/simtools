@@ -81,6 +81,8 @@ def test_collect_resource_requirements_normalizes_and_measures_outputs(mocker, t
     assert {row["role"] for row in rows} == {"corsika", "sim_telarray"}
     assert rows[0]["wall_time_seconds_per_event"] == pytest.approx(2.0)
     assert rows[0]["cpu_time_seconds_per_event"] == pytest.approx(1.2)
+    assert rows[0]["wall_time_seconds"] == pytest.approx(20.0)
+    assert rows[0]["cpu_time_seconds"] == pytest.approx(12.0)
     corsika_row = next(row for row in rows if row["role"] == "corsika")
     simtel_row = next(row for row in rows if row["role"] == "sim_telarray")
     assert corsika_row["corsika_output_bytes"] is None
@@ -157,6 +159,9 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
     assert result["report_file"].is_file()
     report = result["report_file"].read_text(encoding="utf-8")
     assert "Storage" in report
+    assert "Wall time (s/run)" in report
+    assert "CPU time (s/run)" in report
+    assert "sim_telarray Storage (bytes/run)" in report
     assert all(f"{statistic}=" in report for statistic in ("mean", "median", "std", "min", "max"))
     plotter.assert_called_once()
 

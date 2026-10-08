@@ -18,9 +18,18 @@ _BYTES_PER_GIGABYTE = 1_000_000_000
 _RESOURCE_CHANGE_WARNING_FACTOR = 1.25
 _RESOURCE_CHANGE_MAJOR_FACTOR = 1.5
 _RATIO_CONFIGURATION_COLUMNS = ("primary", "site", "array_layout_name", "model_version")
+_SIMTELARRAY_STORAGE_LABEL = "sim_telarray storage"
+_SIMTELARRAY_OUTPUT_LABEL = "sim_telarray output"
+_REDUCED_EVENT_DATA_LABEL = "reduced event data"
+_SIMTELARRAY_HISTOGRAM_LABEL = "sim_telarray histogram"
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
+        "sim_telarray_storage_bytes",
+        "corsika_output_bytes",
+        "sim_telarray_output_bytes",
+        "reduced_event_data_bytes",
+        "sim_telarray_histogram_bytes",
         "sim_telarray_storage_bytes_per_event",
         "corsika_output_bytes_per_event",
         "sim_telarray_output_bytes_per_event",
@@ -56,21 +65,37 @@ def plot(rows, output_path, figure_format=None):
     -----
     Byte-based quantities are plotted in MB or GB, selected from the largest
     value in each plot, using decimal units. The input rows and resource table
-    retain byte values. When both baseline and candidate rows are present,
-    additional plots show candidate-to-baseline ratios for matching primary,
-    site, layout, and model-version configurations.
+    retain byte values. Per-run plots use the ``*_bytes`` and raw time columns;
+    per-event and per-triggered-event plots use their corresponding normalized
+    columns. When both baseline and candidate rows are present, additional
+    plots show candidate-to-baseline ratios for matching primary, site, layout,
+    and model-version configurations.
     """
     rows = list(rows)
     output_path = Path(output_path)
     plots = (
+        ("wall_time_seconds", "Wall time (s/run)", "resource_wall_time_run", None),
+        ("cpu_time_seconds", "CPU time (s/run)", "resource_cpu_time_run", None),
         ("wall_time_seconds_per_event", "Wall time (s/event)", "resource_wall_time", None),
         ("cpu_time_seconds_per_event", "CPU time (s/event)", "resource_cpu_time", None),
         ("peak_rss_bytes", "Peak RSS", "resource_peak_rss", None),
         (
+            "sim_telarray_storage_bytes",
+            _SIMTELARRAY_STORAGE_LABEL,
+            "resource_storage_run",
+            None,
+        ),
+        (
             "sim_telarray_storage_bytes_per_event",
-            "sim_telarray storage",
+            _SIMTELARRAY_STORAGE_LABEL,
             "resource_storage",
             None,
+        ),
+        (
+            "corsika_output_bytes",
+            "CORSIKA output",
+            "resource_corsika_output_run",
+            "corsika",
         ),
         (
             "corsika_output_bytes_per_event",
@@ -79,20 +104,38 @@ def plot(rows, output_path, figure_format=None):
             "corsika",
         ),
         (
+            "sim_telarray_output_bytes",
+            _SIMTELARRAY_OUTPUT_LABEL,
+            "resource_sim_telarray_output_run",
+            "sim_telarray",
+        ),
+        (
             "sim_telarray_output_bytes_per_event",
-            "sim_telarray output",
+            _SIMTELARRAY_OUTPUT_LABEL,
             "resource_sim_telarray_output",
             "sim_telarray",
         ),
         (
+            "reduced_event_data_bytes",
+            _REDUCED_EVENT_DATA_LABEL,
+            "resource_reduced_event_data_run",
+            "sim_telarray",
+        ),
+        (
             "reduced_event_data_bytes_per_event",
-            "reduced event data",
+            _REDUCED_EVENT_DATA_LABEL,
             "resource_reduced_event_data",
             "sim_telarray",
         ),
         (
+            "sim_telarray_histogram_bytes",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
+            "resource_sim_telarray_histogram_run",
+            "sim_telarray",
+        ),
+        (
             "sim_telarray_histogram_bytes_per_event",
-            "sim_telarray histogram",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
             "resource_sim_telarray_histogram",
             "sim_telarray",
         ),
@@ -110,25 +153,25 @@ def plot(rows, output_path, figure_format=None):
         ),
         (
             "sim_telarray_storage_bytes_per_triggered_event",
-            "sim_telarray storage",
+            _SIMTELARRAY_STORAGE_LABEL,
             "resource_storage_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_output_bytes_per_triggered_event",
-            "sim_telarray output",
+            _SIMTELARRAY_OUTPUT_LABEL,
             "resource_sim_telarray_output_triggered",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes_per_triggered_event",
-            "reduced event data",
+            _REDUCED_EVENT_DATA_LABEL,
             "resource_reduced_event_data_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes_per_triggered_event",
-            "sim_telarray histogram",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
             "resource_sim_telarray_histogram_triggered",
             "sim_telarray",
         ),
@@ -216,6 +259,8 @@ def _byte_plot_label(column, label, rows):
         suffix = ""
     elif column.endswith("_per_triggered_event"):
         suffix = "/triggered event"
+    elif column.endswith("_bytes"):
+        suffix = "/run"
     else:
         suffix = "/event"
     return f"{label} ({unit}{suffix})", scale
