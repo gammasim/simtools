@@ -34,6 +34,7 @@ _MODEL_SOURCE_KEYS = (
     "simulation_models_git_path",
     "simulation_models_git_revision",
 )
+_SUBMISSION_FILE_NAME = "submission.json"
 
 
 class _AcceptanceError(ValueError):
@@ -175,7 +176,7 @@ def _check_inputs(definition, replacements):
         _matched_files(replace_placeholders_recursively(pattern, replacements))
     if definition.get("produces_production"):
         root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
-        submission = next(root.rglob("submission.json"), None)
+        submission = next(root.rglob(_SUBMISSION_FILE_NAME), None)
         if submission is not None:
             raise ValueError(
                 f"Production submission blocked: existing record {submission}. "
@@ -185,7 +186,7 @@ def _check_inputs(definition, replacements):
             )
     if definition.get("requires_completed_production"):
         root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
-        for path in _matched_files(str(root / "**" / "submission.json")):
+        for path in _matched_files(str(root / "**" / _SUBMISSION_FILE_NAME)):
             _check_completed_submission(path)
 
 
@@ -651,7 +652,7 @@ def _execute_test_workflow(definition, args, replacements):
 def _collect_production(definition, replacements):
     """Check all production submissions once, validating only completed results."""
     candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
-    manifests = _matched_files(str(candidate / "**/submission.json"))
+    manifests = _matched_files(str(candidate / f"**/{_SUBMISSION_FILE_NAME}"))
     pending = False
     for manifest in manifests:
         submission = load_submission(manifest)
@@ -675,7 +676,7 @@ def _prepare_test_retry(definition, replacements, args, run_id, work, report):
         return
     _check_inputs({"requires": definition.get("requires", [])}, replacements)
     candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
-    submissions = list(candidate.rglob("submission.json"))
+    submissions = list(candidate.rglob(_SUBMISSION_FILE_NAME))
     if not submissions:
         return
     for manifest in submissions:
