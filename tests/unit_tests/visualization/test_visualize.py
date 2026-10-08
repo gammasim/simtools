@@ -346,13 +346,16 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-def test_save_figures_to_single_document(tmp_test_directory):
+@pytest.mark.parametrize("figure_container", [list, iter])
+def test_save_figures_to_single_document(tmp_test_directory, figure_container):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
     output_pdf = tmp_test_directory / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document([fig1, fig2], output_pdf, close=True)
+    visualize.save_figures_to_single_document(
+        figure_container([fig1, fig2]), output_pdf, close=True
+    )
     assert output_pdf.exists()
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
