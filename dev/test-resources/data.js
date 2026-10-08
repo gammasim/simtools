@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791451374979,
+  "lastUpdate": 1791468413089,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29794,6 +29794,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 426.24609375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a4c55563057697e904a0fc2660ee1cca7e7abfe8",
+          "message": "Replace `norm_spe` from `sim_telarray` by a simtools module. (#2561)\n\n* Replace `norm_spe` from `sim_telarray` by a simtools module.\n\n* test fixes\n\n* errors\n\n* docs / integration tests\n\n* fix minor differences to norm_spe\n\n* cleanup\n\n* reviewers comments\n\n* renaming of functions to remove historical norm_spe references\n\n* remove legacy reading\n\n* legacy reading",
+          "timestamp": "2026-10-08T15:55:47+02:00",
+          "tree_id": "b4f5b028c7fd0886b280faa89d61265d957e55b6",
+          "url": "https://github.com/gammasim/simtools/commit/a4c55563057697e904a0fc2660ee1cca7e7abfe8"
+        },
+        "date": 1791468400618,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 59.099398332999996,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 59.82,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 424.8359375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
           }
