@@ -34,8 +34,10 @@ If you are unsure, ask for clarification. Try to shut up.
   `tests/integration_tests/test_applications_from_config.py`.
 - Test resources: versioned integration resources in `simtools-tests`; ordinary
   unit tests must not depend on repository-local or external resource files.
-- Documentation: Sphinx in `docs/source/`, built from MyST Markdown plus some
-  RST autodoc pages.
+- Documentation: Sphinx in `docs/source/`, built from MyST Markdown with
+  `eval-rst` blocks for autodoc and custom directives.
+- Dependency and resource defaults: `dependency_versions.yml`; see
+  `docs/source/developer-guide/dependency_versions.md` before changing them.
 - Changelog fragments: `docs/changes/<pr-number>.<type>.md`.
 
 ## Development Conventions
@@ -83,9 +85,9 @@ If you are unsure, ask for clarification. Try to shut up.
 
 ## Python Environment
 
-- If `python`, `pytest`, or `pylint` is not available in the current
-  environment, check for a Conda or Mamba environment named `simtools-dev` and
-  run the command there when available.
+- Use the checkout's `.venv` when available. If `python`, `pytest`, or `pylint`
+  is not available there or in the current environment, check for a Conda or
+  Mamba environment named `simtools-dev` and run the command there when available.
 
 ## Testing
 
@@ -146,147 +148,41 @@ Unit-test rules:
 
 ## Integration Tests
 
-Integration tests run real `simtools-*` applications from YAML configs. Use the
-integration-testing skill for config work.
-
-Important mechanics:
-
-- Schema: `src/simtools/schemas/application_workflow.metaschema.yml`.
-- Config shape starts with `applications:` and ends with
-  `schema_name: application_workflow.metaschema` and `schema_version: 0.4.0`.
-- `model_version_use_current: true` is lower-case and application-level.
-- Generated paths such as `output_path`, `grid_output_path`, and
-  `pack_for_grid_register` should be relative; the harness rewrites them into
-  `tmp_test_directory`.
-- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_RESOURCE_VERSION`, or use the
-  corresponding `--simtools_tests_path` and `--simtools_tests_resource_version` options,
-  to select a versioned `simtools-tests` resource bundle.
-- Use `${static:path/to/file}` for maintained resources and
-  `${generated:path/to/file}` for generated resources. Pytest resolves these
-  against the selected `SIMTOOLS_TESTS_PATH` and resource version.
-- Put `expected_sim_telarray_output` and `expected_sim_telarray_metadata`
-  directly on the relevant `test_output_files` item.
-- Use `test_simtel_cfg_files` for version-specific sim_telarray cfg
-  comparisons.
-- Add `docs.title` and `docs.summary` when the config should appear as a
-  rendered documentation example.
-
-Useful commands:
-
-```bash
-pytest --no-cov tests/integration_tests/test_applications_from_config.py
-pytest -v -k "simtools-<app-name>" tests/integration_tests/test_applications_from_config.py
-pytest -v -k "simtools-<app-name>_<test_name>" \
-  tests/integration_tests/test_applications_from_config.py
-pytest -v --model_version 6.0.2 -k "<test_name>" \
-  tests/integration_tests/test_applications_from_config.py
-pytest -v --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
-  --simtools_tests_resource_version v0.38.0 \
-  tests/integration_tests/test_applications_from_config.py
-```
-
-Integration tests often require a configured simulation-model source and installed
-CORSIKA / sim_telarray. Unit tests should not.
+Integration tests run real `simtools-*` applications and often require a model
+source and installed CORSIKA / sim_telarray.
+Use [.agents/skills/integration-testing/SKILL.md](.agents/skills/integration-testing/SKILL.md)
+for config structure, schema versions, resources, validation, commands, and debugging.
 
 ## Documentation
 
-Use the documentation skill for docs, API reference, changelog, and docstring
-work.
+Documentation updates are not required for every code change. Apply these scope
+rules before the documentation skill's workflow:
 
-- Keep documentation concise and actionable: state what the reader needs to
-  know or do. Omit background, implementation narration, and repeated facts.
-- For small behavior changes, update the relevant sentence or example in an
-  existing section. Add a section only when it covers a distinct user task.
-- Document public behavior and useful overrides; keep internal helper names,
-  lookup algorithms, and incidental edge cases in code and tests unless users
-  need them to configure or troubleshoot the software.
-- Documentation pages are preferred in MyST Markdown.
-- Application autodoc pages are small RST files in
-  `docs/source/user-guide/applications/`.
-- New application pages use one `.. automodule::` directive with `:members:`
-  and usually `:exclude-members: main`.
-- Add new application pages to `docs/source/user-guide/applications.md` in
-  alphabetical order.
-- Add new library modules to the relevant `docs/source/api-reference/*.md`
-  file with `.. automodule:: <module.path>` and `:members:`.
-- Public functions, classes, and methods need NumPy-style docstrings. Include
-  only relevant sections such as `Parameters`, `Returns`, `Raises`, and
-  `Examples`.
-- Changelog fragment types: `feature`, `bugfix`, `api`, `doc`,
-  `maintenance`, `model`. Use the PR number, not the issue number.
-- Do not add development plans to the documentation.
+- Update documentation only when existing guidance becomes incorrect or a change
+  introduces a lasting user workflow that needs explanation. Routine fixes,
+  refactors, and individual development steps do not need new prose.
+- Keep one authoritative description. Do not repeat CLI options, defaults, or
+  docstrings already rendered by generated help or autodoc. Link to existing
+  guidance rather than duplicating it across component and application pages.
+- Describe stable usage, not implementation details or temporary development
+  decisions. Add performance or memory guidance only when needed to use the tool
+  correctly, and put it in one relevant place.
+- Prefer correcting an existing sentence over adding a paragraph or section.
 
-Docs validation:
-
-```bash
-conda run -n simtools-dev env PYTHONPATH="$PWD/src" make -C docs clean html linkcheck
-```
-
-The `docs/Makefile` enables `-W -n --keep-going`, so treat every Sphinx
-warning as a failure. The build imports the checkout's applications for CLI
-help and autodoc; the explicit `PYTHONPATH` is required when an installed
-simtools package may otherwise win. Check the import location before a build
-if the traceback mentions missing attributes, stale code, or a syntax error in
-`site-packages`.
-
-When adding or changing documentation:
-
-- Keep application modules to a one-line synopsis and put operational detail,
-  examples, inputs, outputs, and CLI explanation in the application's MyST
-  page. Do not duplicate the same description in the module docstring and the
-  page.
-- Add every new application page to the applications toctree and every new
-  library module to the relevant API-reference page. A file existing under
-  `docs/source/` is not enough; `toc.not_included` is a documentation failure.
-- Use the exact module path expected by neighboring `automodule` entries (for
-  example, `model_repository.reader`), not only a basename. Ensure the path is
-  importable from the checkout and that public docstring parameters, returns,
-  and types match the actual signature.
-- Resolve new Sphinx cross-reference warnings at their source. Do not add a
-  broad `nitpick_ignore` or `suppress_warnings` entry to hide an unresolved
-  reference.
-
-Before handing off a change that adds, removes, or moves a library module, run
-the API coverage check as well. Every reported module must be added to the
-appropriate API reference page with an `automodule` entry for its complete
-module path, matching the import style already used by that API page:
-
-```bash
-python - <<'PY'
-from pathlib import Path
-
-src_root = Path("src/simtools")
-api_text = "\n".join(
-    path.read_text(encoding="utf-8")
-    for path in Path("docs/source/api-reference").glob("*.md")
-)
-missing = []
-for path in src_root.rglob("*.py"):
-    relative = path.relative_to(src_root)
-    if (
-        path.name in {"__init__.py", "_version.py"}
-        or relative.parts[0] == "applications"
-        or relative.parts[0].startswith("_")
-    ):
-        continue
-    module = ".".join(relative.with_suffix("").parts)
-    candidates = (module, f"simtools.{module}")
-    if not any(f".. automodule:: {candidate}" in api_text for candidate in candidates):
-        missing.append(module)
-if missing:
-    raise SystemExit("Undocumented modules:\n" + "\n".join(sorted(missing)))
-PY
-```
+Use [.agents/skills/documentation/SKILL.md](.agents/skills/documentation/SKILL.md)
+for docstrings, MyST pages, API references, changelog fragments, and documentation checks.
 
 ## Adding Code
 
 New application checklist:
 
-1. Add the application under `src/simtools/applications/`.
+1. Add the application under `src/simtools/applications/`, following neighboring
+   modules' `APPLICATION = ApplicationDefinition.for_module(...)` pattern and
+   shared argument definitions in `simtools.configuration.arguments`.
 2. Register the command in `[project.scripts]` in `pyproject.toml`.
 3. Add or update unit tests.
 4. Add an integration config in `tests/integration_tests/config/`.
-5. Add the RST application page and applications toctree entry.
+5. Add the MyST Markdown application page and applications toctree entry.
 6. Add a changelog fragment when working in a PR flow.
 7. Applications in `src/simtools/applications/` are entry scripts. If possible, avoid
    adding code here and instead put reusable code in a library module.
@@ -295,7 +191,7 @@ New library module checklist:
 
 1. Add focused unit tests under the mirrored `tests/unit_tests/` path.
 2. Add API reference documentation.
-3. Add or update user documentation if behavior is user-facing.
+3. Add or update user documentation only when needed under the Documentation scope rules.
 4. Add a changelog fragment when working in a PR flow.
 
 Before handing off a change that adds, removes, or moves a library module, run
@@ -344,6 +240,7 @@ checkout's `src`; do not silently lint an installed package. `ruff check --fix`
 and pre-commit may modify files: inspect the diff and rerun the complete
 pre-commit suite after automatic fixes. A focused check is useful during
 iteration, but the final check must match CI (`pre-commit run --all-files`).
+Report which checks ran and any failures or checks that could not run.
 
 Pylint excludes tests. Do not satisfy pylint, Ruff, flake8, or SonarQube with
 broad disables or generated boilerplate when a small refactor, a correct
@@ -401,15 +298,6 @@ and run both tools plus the relevant tests before choosing a suppression.
 
 These issues have appeared repeatedly in local Codex logs and CI snippets:
 
-- Missing generated/static test resources: prefer `${static:...}` and
-  `${generated:...}` over raw `tests/resources/...` paths in integration
-  configs.
-- Wrong output descriptor in integration checks: verify whether the file is
-  under `output_path`, `grid_output_path`, or `pack_for_grid_register`.
-- sim_telarray files not produced: inspect the application log path printed in
-  stderr before changing expected filenames.
-- `log_inspector` failures: look for real `error`, `exception`, `traceback`,
-  `failed`, `runtime warning`, or `segmentation fault` text in stdout/stderr.
 - Warnings-as-errors failures: update deprecated APIs, for example matplotlib
   colormap handling, rather than suppressing the warning locally.
 - Pylint unused-argument/import/no-member failures: first confirm that pylint
@@ -424,11 +312,3 @@ These issues have appeared repeatedly in local Codex logs and CI snippets:
 - SonarQube maintainability findings: avoid nested conditional expressions,
   duplicate literals, unused parameters, redundant exception classes, and
   unclear comprehension rewrites.
-- `Undocumented module` CI failures: add the missing API reference entry.
-- The API documentation check scans every non-application, non-private
-  `src/simtools/**/*.py` module by basename. When adding or moving a module,
-  ensure that its basename is present in the appropriate
-  `docs/source/api-reference/*.md` page, with an `automodule` directive for
-  the complete module path (not merely a coincidental basename match). Resolve
-  every `Undocumented module: <name>` result; do not silence the check or rely
-  on a partial documentation build.
