@@ -125,7 +125,6 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
 
 def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
     monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
     config_dict = {
         "applications": [
             {
@@ -281,6 +280,25 @@ def test_configure_can_disable_dependency_defaults(configurator):
     configurator._config_from_file = MagicMock(return_value={})
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ({"default-ref": "v0.17.2"}, "v0.17.2"),
+        ({"default-ref": "main", "git-revision": "a" * 40}, "a" * 40),
+    ],
+)
+def test_dependency_defaults_select_model_ref(model, expected, mocker):
+    """The parser uses readable model refs and accepts an explicit legacy pin."""
+    mocker.patch(
+        "simtools.configuration.configurator.dependency_versions.load_dependency_catalog",
+        return_value={"model-repository": model},
+    )
+
+    assert Configurator._dependency_defaults({"simulation_models_git_revision": None}) == {
+        "simulation_models_git_revision": expected
+    }
 
 
 def test_arglist_from_dict_preserves_bare_star_argument():

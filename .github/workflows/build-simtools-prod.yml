@@ -5,6 +5,16 @@ name: build-simtools-prod
 on:
   workflow_dispatch:
     inputs:
+      simulation_model_branch:
+        description: 'Simulation model branch for image tests'
+        required: false
+        type: string
+        default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch for image tests'
+        required: false
+        type: string
+        default: 'main'
       avx_flag:
         description: "Build only this CPU variant"
         required: false
@@ -104,7 +114,7 @@ jobs:
           echo "simtools_git_revision=${simtools_git_revision}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
@@ -120,7 +130,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_build_id }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
@@ -128,18 +138,41 @@ jobs:
             type=raw,value={{date 'YYYYMMDD'}}
             type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
 
+      - name: Bound production image tags
+        id: image-tags
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          tags=()
+          while IFS= read -r image; do
+            [[ -n "$image" ]] || continue
+            tag=${image##*:}
+            if (( ${#tag} > 128 )); then
+              digest=$(printf '%s' "$tag" | sha256sum)
+              image="${image%:*}:${tag:0:111}-${digest:0:16}"
+            fi
+            tags+=("$image")
+          done <<< "$IMAGE_TAGS"
+          {
+            echo 'tags<<EOF'
+            printf '%s\n' "${tags[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Export generic tag for testing
         id: export-tags
         if: matrix.avx_flag == 'generic'
+        env:
+          IMAGE_TAGS: ${{ steps.image-tags.outputs.tags }}
         run: |
-          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          TAG=$(head -n1 <<< "$IMAGE_TAGS")
           TAG=${TAG##*:}
           echo "generic_tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Exported generic tag: $TAG"
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
         with:
           context: .
           platforms: ${{ matrix.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
@@ -153,7 +186,7 @@ jobs:
             SIMTOOLS_GIT_REVISION=${{ steps.build-identity.outputs.simtools_git_revision }}
           push: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
           file: ./docker/Dockerfile-simtools-prod
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.image-tags.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
   test-simtools-prod:
@@ -164,6 +197,8 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
       runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'
     secrets:
