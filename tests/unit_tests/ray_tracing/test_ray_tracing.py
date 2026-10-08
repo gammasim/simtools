@@ -425,6 +425,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
             "single_mirror_mode": ray_tracing_lst.single_mirror_mode,
             "use_random_focal_length": ray_tracing_lst.use_random_focal_length,
             "mirror_numbers": 0,
+            "number_of_photons": None,
         },
         force_simulate=True,
     )
@@ -449,11 +450,19 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
 
 @pytest.mark.parametrize("offsets", [[(0.0, 0.0)], [(0.0, 0.0), (1.0, -0.5)]])
 @pytest.mark.parametrize("test", [False, True])
+@pytest.mark.parametrize("mirror_class", [0, 2])
+@pytest.mark.parametrize("photon_count", [None, 12345, 0])
 @pytest.mark.parametrize("max_workers", [DEFAULT_MAX_WORKERS, 2])
-def test_ray_tracing_simulate_obdeect(ray_tracing_lst, mocker, offsets, test, max_workers):
+def test_ray_tracing_simulate_obdeect(
+    ray_tracing_lst, mocker, offsets, test, max_workers, mirror_class, photon_count
+):
     config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
     config.ray_tracing_backend = "obdeect"
-    config.args = {"obdeect_optical_model_file": "optical-model.json"}
+    config.args = {
+        "obdeect_optical_model_file": "optical-model.json",
+        "number_of_photons": photon_count,
+    }
+    ray_tracing_lst.telescope_model.get_parameter_value.return_value = mirror_class
     ray_tracing_lst.off_axis_angle = offsets
     simulators = [mocker.Mock() for _ in offsets]
     factory = mocker.patch(
@@ -475,7 +484,8 @@ def test_ray_tracing_simulate_obdeect(ray_tracing_lst, mocker, offsets, test, ma
             "off_axis_y": off_y,
             "source_distance": ray_tracing_lst.mirrors[0]["source_distance"] * u.km,
             "single_mirror_mode": False,
-            "number_of_photons": 100 if test else 10000,
+            "number_of_photons": 100 if test else 10000 if photon_count is None else photon_count,
+            "focal_surface_image": mirror_class == 2,
         }
         assert kwargs["output_file"] == ray_tracing_lst.output_directory.joinpath(
             ray_tracing_lst._generate_file_name(

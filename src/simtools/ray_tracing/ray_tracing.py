@@ -442,6 +442,7 @@ class RayTracing:
         )
         theta_offset = np.sqrt(off_x**2 + off_y**2)
         if settings.config.ray_tracing_backend == "obdeect":
+            photon_count = 100 if test else settings.config.args.get("number_of_photons")
             output_file = self.output_directory.joinpath(
                 self._generate_file_name(
                     file_type="photons",
@@ -462,7 +463,9 @@ class RayTracing:
                     "off_axis_y": off_y,
                     "source_distance": mirror_data["source_distance"] * u.km,
                     "single_mirror_mode": self.single_mirror_mode,
-                    "number_of_photons": 100 if test else 10000,
+                    "number_of_photons": 10000 if photon_count is None else photon_count,
+                    "focal_surface_image": self.telescope_model.get_parameter_value("mirror_class")
+                    == 2,
                 },
                 output_file=output_file,
                 force_simulate=force,
@@ -482,6 +485,9 @@ class RayTracing:
                 "single_mirror_mode": self.single_mirror_mode,
                 "use_random_focal_length": self.use_random_focal_length,
                 "mirror_numbers": mirror_number,
+                "number_of_photons": None
+                if test
+                else settings.config.args.get("number_of_photons"),
             },
             force_simulate=force,
         )

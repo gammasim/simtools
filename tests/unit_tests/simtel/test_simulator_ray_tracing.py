@@ -191,3 +191,45 @@ def test_check_run_result(simulator_ray_tracing_sst):
     with simulator_ray_tracing_sst._photons_file.open("a") as file:
         file.writelines(150 * [f"{1}\n"])
     assert simulator_ray_tracing_sst._check_run_result()
+
+
+@pytest.mark.parametrize("count", [None, 123456])
+def test_explicit_total_photons(count, telescope_model_sst, site_model_south, mocker):
+    """An explicit count is the total per offset, rather than per repeated run."""
+    mocker.patch.object(SimulatorRayTracing, "_load_required_files")
+    simulator = SimulatorRayTracing(
+        telescope_model_sst,
+        site_model_south,
+        config_data={
+            "single_mirror_mode": False,
+            "number_of_photons": count,
+            "zenith_angle": 20,
+            "off_axis_x": 0,
+            "off_axis_y": 0,
+            "source_distance": 10,
+            "use_random_focal_length": False,
+            "mirror_numbers": 0,
+        },
+    )
+    assert simulator.photons_per_run == (100000 if count is None else count)
+    assert simulator.runs_per_set == (20 if count is None else 1)
+
+
+@pytest.mark.parametrize("count", [0, -1, True, 1.5])
+def test_rejects_invalid_total_photons(count, telescope_model_sst, site_model_south, mocker):
+    mocker.patch.object(SimulatorRayTracing, "_load_required_files")
+    with pytest.raises(ValueError, match="positive integer"):
+        SimulatorRayTracing(
+            telescope_model_sst,
+            site_model_south,
+            config_data={
+                "single_mirror_mode": False,
+                "number_of_photons": count,
+                "zenith_angle": 20,
+                "off_axis_x": 0,
+                "off_axis_y": 0,
+                "source_distance": 10,
+                "use_random_focal_length": False,
+                "mirror_numbers": 0,
+            },
+        )

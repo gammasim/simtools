@@ -66,6 +66,18 @@ class SimulatorRayTracing(SimtelRunner):
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
+        photon_count = (
+            config_data.get("number_of_photons") if isinstance(config_data, dict) else None
+        )
+        if photon_count is not None:
+            if (
+                isinstance(photon_count, bool)
+                or not isinstance(photon_count, int)
+                or photon_count < 1
+            ):
+                raise ValueError("number_of_photons must be a positive integer")
+            self.photons_per_run = photon_count
+            self.runs_per_set = 1
         self._single_pixel_camera_file = None
         self._funnel_file = None
         self._write_config = True

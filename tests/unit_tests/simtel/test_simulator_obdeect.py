@@ -34,7 +34,11 @@ def test_obdeect_command_accepts_provenance_bound_optical_model_file(mocker, tmp
     )
     simulator = SimulatorObdeect(
         telescope_model=telescope,
-        config_data={"obdeect_optical_model_file": optical_model_file, "number_of_photons": 4},
+        config_data={
+            "obdeect_optical_model_file": optical_model_file,
+            "number_of_photons": 4,
+            "focal_surface_image": True,
+        },
         output_file=output_file,
     )
 
@@ -45,6 +49,8 @@ def test_obdeect_command_accepts_provenance_bound_optical_model_file(mocker, tmp
         "--optical-model",
         str(optical_model_file),
     ]
+    assert "--focal-surface-image" in command
+    assert command[command.index("--photons") + 1] == "4"
 
 
 @pytest.mark.parametrize(

@@ -76,6 +76,8 @@ class SimulatorObdeect:
                 str(float(self.config.get("wavelength_nm", 400.0))),
             ]
         )
+        if self.config.get("focal_surface_image", False):
+            command.append("--focal-surface-image")
         for key in ("source_x_m", "source_y_m", "source_z_m", "divergence_deg"):
             if key in self.config:
                 command.extend([f"--{key.replace('_', '-')}", str(float(self.config[key]))])
