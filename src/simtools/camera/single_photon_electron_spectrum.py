@@ -18,6 +18,16 @@ from simtools.io import io_handler
 ECSV_SUFFIX = ".ecsv"
 
 
+def _read_csv_spectrum(input_file, frequency_column):
+    """Read a headerless CSV spectrum into the schema's named columns."""
+    return Table.read(
+        input_file,
+        format="ascii.no_header",
+        delimiter=",",
+        names=("amplitude", frequency_column),
+    )
+
+
 class SinglePhotonElectronSpectrum:
     """
     Single photon electron spectral analysis.
@@ -248,13 +258,18 @@ class SinglePhotonElectronSpectrum:
             return None
         input_file = Path(input_file)
 
-        if input_file.suffix != ECSV_SUFFIX and input_table is None:
-            raise ValueError("Input spectrum must be an ECSV file.")
+        data_file = None
+        data_table = input_table
+        if input_table is None:
+            if input_file.suffix == ".csv":
+                data_table = _read_csv_spectrum(input_file, frequency_column)
+            else:
+                data_file = input_file
 
         data_validator = validate_data.DataValidator(
             schema_file=self.input_schema,
-            data_table=input_table,
-            data_file=input_file if input_table is None else None,
+            data_table=data_table,
+            data_file=data_file,
         )
         table = data_validator.validate_and_transform()
         return (

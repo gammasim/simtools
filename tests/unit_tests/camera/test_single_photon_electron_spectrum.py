@@ -278,12 +278,16 @@ def test_read_input_data(spe_spectrum, tmp_test_directory):
         np.testing.assert_allclose(frequency, [0.4694, 0.46378])
 
 
-def test_read_input_data_rejects_non_ecsv(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "invalid_spectrum"
-    input_file.write_text("0,0.4\n0,0.2\n", encoding="utf-8")
+def test_read_input_data_validates_csv(spe_spectrum, tmp_test_directory):
+    input_file = tmp_test_directory / "input_spectrum.csv"
+    input_file.write_text("0.01,0.4\n0.02,0.2\n", encoding="utf-8")
 
-    with pytest.raises(ValueError, match="must be an ECSV file"):
-        spe_spectrum._read_input_data(input_file, None, spe_spectrum.prompt_column)
+    amplitude, frequency = spe_spectrum._read_input_data(
+        input_file, None, spe_spectrum.prompt_column
+    )
+
+    np.testing.assert_allclose(amplitude, [0.01, 0.02])
+    np.testing.assert_allclose(frequency, [0.4, 0.2])
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.Table")
