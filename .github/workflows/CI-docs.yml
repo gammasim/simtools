@@ -130,6 +130,7 @@ jobs:
           target-folder: .
           clean: true
           clean-exclude: |
+            dev
             v*
 
       - name: Deploy dev docs on workflow_dispatch
@@ -142,5 +143,6 @@ jobs:
           target-folder: .
           clean: true
           clean-exclude: |
+            dev
             v*
           dry-run: true
