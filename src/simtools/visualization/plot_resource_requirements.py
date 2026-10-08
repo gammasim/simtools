@@ -18,6 +18,10 @@ _BYTES_PER_GIGABYTE = 1_000_000_000
 _RESOURCE_CHANGE_WARNING_FACTOR = 1.25
 _RESOURCE_CHANGE_MAJOR_FACTOR = 1.5
 _RATIO_CONFIGURATION_COLUMNS = ("primary", "site", "array_layout_name", "model_version")
+_SIMTELARRAY_STORAGE_LABEL = "sim_telarray storage"
+_SIMTELARRAY_OUTPUT_LABEL = "sim_telarray output"
+_REDUCED_EVENT_DATA_LABEL = "reduced event data"
+_SIMTELARRAY_HISTOGRAM_LABEL = "sim_telarray histogram"
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
@@ -77,13 +81,13 @@ def plot(rows, output_path, figure_format=None):
         ("peak_rss_bytes", "Peak RSS", "resource_peak_rss", None),
         (
             "sim_telarray_storage_bytes",
-            "sim_telarray storage",
+            _SIMTELARRAY_STORAGE_LABEL,
             "resource_storage_run",
             None,
         ),
         (
             "sim_telarray_storage_bytes_per_event",
-            "sim_telarray storage",
+            _SIMTELARRAY_STORAGE_LABEL,
             "resource_storage",
             None,
         ),
@@ -101,37 +105,37 @@ def plot(rows, output_path, figure_format=None):
         ),
         (
             "sim_telarray_output_bytes",
-            "sim_telarray output",
+            _SIMTELARRAY_OUTPUT_LABEL,
             "resource_sim_telarray_output_run",
             "sim_telarray",
         ),
         (
             "sim_telarray_output_bytes_per_event",
-            "sim_telarray output",
+            _SIMTELARRAY_OUTPUT_LABEL,
             "resource_sim_telarray_output",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes",
-            "reduced event data",
+            _REDUCED_EVENT_DATA_LABEL,
             "resource_reduced_event_data_run",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes_per_event",
-            "reduced event data",
+            _REDUCED_EVENT_DATA_LABEL,
             "resource_reduced_event_data",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes",
-            "sim_telarray histogram",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
             "resource_sim_telarray_histogram_run",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes_per_event",
-            "sim_telarray histogram",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
             "resource_sim_telarray_histogram",
             "sim_telarray",
         ),
@@ -149,25 +153,25 @@ def plot(rows, output_path, figure_format=None):
         ),
         (
             "sim_telarray_storage_bytes_per_triggered_event",
-            "sim_telarray storage",
+            _SIMTELARRAY_STORAGE_LABEL,
             "resource_storage_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_output_bytes_per_triggered_event",
-            "sim_telarray output",
+            _SIMTELARRAY_OUTPUT_LABEL,
             "resource_sim_telarray_output_triggered",
             "sim_telarray",
         ),
         (
             "reduced_event_data_bytes_per_triggered_event",
-            "reduced event data",
+            _REDUCED_EVENT_DATA_LABEL,
             "resource_reduced_event_data_triggered",
             "sim_telarray",
         ),
         (
             "sim_telarray_histogram_bytes_per_triggered_event",
-            "sim_telarray histogram",
+            _SIMTELARRAY_HISTOGRAM_LABEL,
             "resource_sim_telarray_histogram_triggered",
             "sim_telarray",
         ),
