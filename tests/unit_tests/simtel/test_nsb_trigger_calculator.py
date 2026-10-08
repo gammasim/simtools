@@ -206,6 +206,43 @@ def test_calculate_statistics_with_no_events_returns_zero_rate():
     assert stats[220]["num_runs"] == 0
 
 
+def test_calculate_statistics_excludes_zero_event_runs():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 0}, 2: {"triggers": 20, "events": 100}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {2: 20}
+    assert stats[220]["num_runs"] == 1
+
+
+@pytest.mark.parametrize("events", [float("nan"), float("inf")])
+def test_calculate_statistics_excludes_nonfinite_event_counts(events):
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": events}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {}
+    assert stats[220]["num_runs"] == 0
+
+
+def test_calculate_statistics_has_no_error_for_equal_rates_with_unequal_exposure():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 100}, 2: {"triggers": 100, "events": 1000}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["rate_hz"] == pytest.approx(100.0)
+    assert stats[220]["error_hz"] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("time_window", [0, -1, float("nan"), float("inf")])
+def test_calculate_statistics_rejects_invalid_time_window(time_window):
+    with pytest.raises(ValueError, match="time_window must be finite and positive"):
+        nsb_trigger_calculator.calculate_statistics({}, time_window=time_window)
+
+
 def test_generate_ecsv_output_writes_table(tmp_path):
     output_file = tmp_path / "nsb_rates.ecsv"
     statistics = {
@@ -290,9 +327,9 @@ def test_derive_nsb_triggers_raises_for_missing_time_window(tmp_path):
         nsb_trigger_calculator.derive_nsb_triggers({"root_dir": tmp_path})
 
 
-@pytest.mark.parametrize("time_window", [0, -1e-9])
-def test_derive_nsb_triggers_raises_for_non_positive_time_window(tmp_path, time_window):
-    with pytest.raises(ValueError, match="Argument 'time_window' must be > 0"):
+@pytest.mark.parametrize("time_window", [0, -1e-9, float("nan"), float("inf")])
+def test_derive_nsb_triggers_raises_for_invalid_time_window(tmp_path, time_window):
+    with pytest.raises(ValueError, match="Argument 'time_window' must be finite and > 0"):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": time_window}
         )
