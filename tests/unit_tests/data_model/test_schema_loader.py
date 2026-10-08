@@ -11,6 +11,46 @@ from simtools.io import ascii_handler
 DUMMY_FILE = "dummy_file.yml"
 
 
+@pytest.mark.parametrize("name", ["example.schema.yml", "model_parameters/example.schema.yml"])
+def test_load_packaged_schema_outside_checkout(name, tmp_test_directory, monkeypatch):
+    tmp_test_directory = Path(tmp_test_directory)
+    packaged = tmp_test_directory / "installed" / "schemas"
+    schema_file = packaged / name
+    schema_file.parent.mkdir(parents=True)
+    expected = {"schema_version": "1.0.0", "name": "packaged"}
+    schema_file.write_text(yaml.safe_dump(expected), encoding="utf-8")
+    working_directory = tmp_test_directory / "consumer"
+    working_directory.mkdir()
+    monkeypatch.chdir(working_directory)
+    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", packaged)
+
+    assert schema_loader.load_schema(name) == expected
+
+
+def test_local_schema_takes_precedence_over_packaged_schema(tmp_test_directory, monkeypatch):
+    tmp_test_directory = Path(tmp_test_directory)
+    packaged = tmp_test_directory / "schemas"
+    packaged.mkdir()
+    name = "example.schema.yml"
+    (packaged / name).write_text(yaml.safe_dump({"name": "packaged"}), encoding="utf-8")
+    local = tmp_test_directory / name
+    local.write_text(yaml.safe_dump({"name": "custom"}), encoding="utf-8")
+    monkeypatch.chdir(tmp_test_directory)
+    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", packaged)
+
+    assert schema_loader.load_schema(name)["name"] == "custom"
+    assert schema_loader.load_schema(local)["name"] == "custom"
+
+
+def test_missing_absolute_schema_does_not_use_packaged_namesake(tmp_test_directory, monkeypatch):
+    name = "example.schema.yml"
+    (tmp_test_directory / name).write_text(yaml.safe_dump({"name": "packaged"}), encoding="utf-8")
+    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory)
+
+    with pytest.raises(FileNotFoundError, match="Schema file not found"):
+        schema_loader.load_schema(tmp_test_directory / "missing" / name)
+
+
 @pytest.fixture(autouse=True)
 def clear_schema_loader_cache():
     """Clear shared schema state around every test."""

@@ -54,7 +54,9 @@ def update_dependency_source_revisions(catalog_path, updates):
         components = {component["source-ref"]: component for component in catalog[section]}
         for source_ref, values in updates[section].items():
             components[source_ref].update(values)
-    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False), encoding="utf-8")
+    catalog_path.write_text(
+        yaml.safe_dump(catalog, sort_keys=False, explicit_start=True), encoding="utf-8"
+    )
 
 
 def _corsika_tag(component):
@@ -179,12 +181,14 @@ def _dependency_tag(component, new_key, *old_keys):
 
 
 def find_dependency_versions(start_path=None):
-    """Find the nearest root-level dependency version catalog.
+    """Find the dependency catalog matching the running simtools installation.
 
     Parameters
     ----------
     start_path : str or Path, optional
-        Directory from which to start searching.
+        Explicit search directory, taking precedence over bundled catalogs.
+        By default, bundled catalogs take precedence over the working directory.
+        SIMTOOLS_DEPENDENCY_VERSIONS overrides either lookup order.
 
     Returns
     -------
@@ -194,14 +198,21 @@ def find_dependency_versions(start_path=None):
     Raises
     ------
     FileNotFoundError
-        If no matching project file can be found.
+        If an explicit environment override is missing or no catalog can be found.
     """
     configured_path = os.getenv("SIMTOOLS_DEPENDENCY_VERSIONS")
-    candidates = [Path(configured_path)] if configured_path else []
+    if configured_path:
+        catalog = Path(configured_path)
+        if not catalog.is_file():
+            raise FileNotFoundError(f"Configured dependency catalog does not exist: {catalog}")
+        return catalog
+    bundled = [
+        Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME,
+        Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME,
+    ]
     start = Path(start_path or Path.cwd()).resolve()
-    candidates.extend(parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents))
-    candidates.append(Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME)
-    candidates.append(Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME)
+    searched = [parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents)]
+    candidates = bundled + searched if start_path is None else searched + bundled
     for candidate in candidates:
         if candidate.is_file():
             return candidate

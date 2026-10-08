@@ -72,6 +72,24 @@ class GitModelSource:
             self._model_versions = sorted(versions, key=Version)
         return list(self._model_versions)
 
+    def get_production_descriptions(self):
+        """Return model-version descriptions from production info blobs."""
+        info_files = []
+        for path in self._object_store.iter_files(self.commit, _PRODUCTIONS_PATH.as_posix()):
+            info_path = PurePosixPath(path)
+            if info_path.parent.parent == _PRODUCTIONS_PATH and info_path.name in {
+                "info.yaml",
+                "info.yml",
+            }:
+                info_files.append(info_path)
+
+        def read_info(info_path):
+            return ascii_handler.collect_data_from_bytes(
+                self._object_store.read_blob(self.commit, info_path.as_posix()), info_path
+            )
+
+        return files.collect_production_descriptions(info_files, read_info)
+
     def _warm_model_version(self, model_version):
         """Warm all production and referenced parameter data for a model version."""
         model_version = str(model_version)

@@ -7,6 +7,37 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.38.3](https://github.com/gammasim/simtools/releases/tag/v0.38.3) - 2026-10-06
+
+### Bugfixes
+
+- Prefer the dependency catalogue bundled with simtools over a host working-directory catalogue, keeping container defaults consistent with the installed software. Explicit catalogue overrides remain supported. ([#2610](https://github.com/gammasim/simtools/pull/2610))
+- Fix inconsistency in setting output paths between integration test output and validation steps. ([#2612](https://github.com/gammasim/simtools/pull/2612))
+
+
+## [v0.38.2](https://github.com/gammasim/simtools/releases/tag/v0.38.2) - 2026-10-06
+
+### Bugfixes
+
+- Support both filesystem and Git simulation-model readers in integration tests, including Git revisions for production-summary and model-parameter-table validation.
+  Use `output_path` for generated array-element position files, reserving `simulation_models_path` for input model repositories. ([#2607](https://github.com/gammasim/simtools/pull/2607))
+- Resolve integration-test validation schemas through the shared schema loader using
+  package-relative names, allowing validation with installed simtools packages from
+  any working directory. ([#2608](https://github.com/gammasim/simtools/pull/2608))
+
+### New Features
+
+- Add simtools-create-setting-workflow for simpler setting of model parameters. ([#2598](https://github.com/gammasim/simtools/pull/2598))
+- Allow to use apptainers in simtools applications (docker and podman are already implemented). ([#2604](https://github.com/gammasim/simtools/pull/2604))
+
+### Maintenance
+
+- Reduce external CI build dependencies by caching pinned CORSIKA7 and sim_telarray inputs in private GHCR snapshots. ([#2596](https://github.com/gammasim/simtools/pull/2596))
+- Simplify pytest configuration by mirroring simulation-model and simtools-test
+  environment variables with matching command-line options. Remove the redundant
+  direct test-resource path setting. ([#2605](https://github.com/gammasim/simtools/pull/2605))
+
+
 ## [v0.38.1](https://github.com/gammasim/simtools/releases/tag/v0.38.1) - 2026-10-02
 
 ### Bugfixes

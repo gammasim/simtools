@@ -39,3 +39,11 @@ def test_write_production_summary_markdown_writes_table(tmp_test_directory):
     assert "| Production Model Version | Short Description                     |" in content
     assert "| 5.0.0 | Prod5 \\| dark |" in content
     assert "| 6.0.0 | Prod6 dark |" in content
+
+
+def test_collect_production_descriptions_uses_model_reader(mocker):
+    """Production descriptions can be read through either model source."""
+    model_reader = mocker.Mock()
+    model_reader.get_production_descriptions.return_value = [("7.0.0", "Prod7")]
+
+    assert collect_production_descriptions(model_reader=model_reader) == [("7.0.0", "Prod7")]
