@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791450075001,
+  "lastUpdate": 1791451374979,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29754,6 +29754,48 @@ window.BENCHMARK_DATA = {
             "value": 426.5859375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20260927.320.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2243d21029a4ef7d8fac6f1758833d1e5d4c4751",
+          "message": "Add comparison level per run for production computing statistics using  `simtools-compare-productions (#2618)\n\n* Add comparison level per run for production computing statistics using usage: compare_productions [-h] [--production LABEL [INPUT_FILE_PATTERNS ...]]\n                           [--baseline_path BASELINE_PATH]\n                           [--candidate_path CANDIDATE_PATH]\n                           [--baseline_label BASELINE_LABEL]\n                           [--candidate_label CANDIDATE_LABEL]\n                           [--select SELECT] [--compare_by COMPARE_BY]\n                           [--comparison_level {events,signal,computing}]\n                           [--array_layout_name ARRAY_LAYOUT_NAME [ARRAY_LAYOUT_NAME ...]]\n                           [--telescope_name TELESCOPE_NAME [TELESCOPE_NAME ...]]\n                           [--output_path OUTPUT_PATH] [--config CONFIG]\n                           [--env_file ENV_FILE] [--activity_id ACTIVITY_ID]\n                           [--label LABEL] [--log_level LOG_LEVEL]\n                           [--log_file LOG_FILE]\n                           [--log_file_path LOG_FILE_PATH]\n                           [--figure_format FIGURE_FORMAT [FIGURE_FORMAT ...]]\n                           [--figure_dpi FIGURE_DPI]\n                           [--export_build_info EXPORT_BUILD_INFO]\n                           [--build_info]\n                           [--runtime_environment_file RUNTIME_ENVIRONMENT_FILE]\n                           [--apptainer_image APPTAINER_IMAGE]\n                           [--ignore_runtime_environment]\n                           [--overwrite_collection_files]\n                           [--show_options SHOW_OPTIONS]\n                           [--user_name USER_NAME]\n                           [--user_organization USER_ORGANIZATION]\n                           [--user_email USER_EMAIL] [--user_orcid USER_ORCID]\n\nCompare simulation productions or summarize their resource requirements.\n\noptions:\n  -h, --help            show this help message and exit\n  --production LABEL [INPUT_FILE_PATTERNS ...]\n                        Production descriptor for event or signal comparison:\n                        --production <label> <comma-separated input file\n                        patterns>. Repeat for each production; the first\n                        production is the baseline. (default: None)\n  --baseline_path BASELINE_PATH\n                        Production directory containing baseline metadata\n                        manifests. (default: None)\n  --candidate_path CANDIDATE_PATH\n                        Optional candidate production directory containing\n                        metadata manifests. (default: None)\n  --baseline_label BASELINE_LABEL\n                        Display label for the baseline production in computing\n                        comparisons. (default: None)\n  --candidate_label CANDIDATE_LABEL\n                        Display label for the candidate production in\n                        computing comparisons. (default: None)\n  --select SELECT       Selection expression as dotted.path=value. Can be\n                        repeated. (default: [])\n  --compare_by COMPARE_BY\n                        Configuration field allowed to differ between baseline\n                        and candidate. (default: [])\n  --comparison_level {events,signal,computing}\n                        Comparison level to execute. (default: events)\n  --array_layout_name ARRAY_LAYOUT_NAME [ARRAY_LAYOUT_NAME ...]\n                        Restrict event-level comparison to selected array\n                        layout name(s), or signal-level comparison to selected\n                        telescope name(s). (default: None)\n  --telescope_name TELESCOPE_NAME [TELESCOPE_NAME ...]\n                        Restrict signal-level comparison to the selected\n                        telescope name(s). (default: None)\n\npaths:\n  --output_path OUTPUT_PATH\n                        Directory for files produced by this application.\n                        (default: ./simtools-output/)\n\nconfiguration:\n  --config CONFIG       Application configuration file. (default: None)\n  --env_file ENV_FILE   File containing environment variables. (default: .env)\n\nexecution:\n  --activity_id ACTIVITY_ID\n                        Activity identifier. (default: None)\n  --label LABEL         Application run label. (default: None)\n  --log_level LOG_LEVEL\n                        Logging level. (default: info)\n  --log_file LOG_FILE   Log file. (default: None)\n  --log_file_path LOG_FILE_PATH\n                        Directory for the generated log file. (default: None)\n  --figure_format FIGURE_FORMAT [FIGURE_FORMAT ...]\n                        output figure format(s) (default: ['png'])\n  --figure_dpi FIGURE_DPI\n                        PNG figure resolution in DPI (default: 300)\n  --export_build_info EXPORT_BUILD_INFO\n                        Write build information to this file. (default: None)\n  --build_info          Show build information and exit.\n\nrun time:\n  --runtime_environment_file RUNTIME_ENVIRONMENT_FILE\n                        Path to a standalone runtime-environment YAML file\n                        (top-level 'runtime_environment'). (default: None)\n  --apptainer_image APPTAINER_IMAGE\n                        Apptainer image path or a dictionary mapping labels to\n                        image paths. (default: None)\n  --ignore_runtime_environment\n                        Ignore the runtime environment and run the application\n                        in the current environment. (default: False)\n  --overwrite_collection_files\n                        Allow files copied by the workflow collection block to\n                        overwrite existing files with identical names.\n                        (default: False)\n\napplication:\n  --show_options SHOW_OPTIONS\n                        Print available values for a supported option and\n                        exit. (default: None)\n\nuser:\n  --user_name USER_NAME\n                        user name (default: None)\n  --user_organization USER_ORGANIZATION\n                        user organization (default: None)\n  --user_email USER_EMAIL\n                        user email (default: None)\n  --user_orcid USER_ORCID\n                        user ORCID (default: None).\n\n* sonar",
+          "timestamp": "2026-10-08T11:07:27+02:00",
+          "tree_id": "a4a603d3a6a7f800b6469e5e8442eedaaf877e2d",
+          "url": "https://github.com/gammasim/simtools/commit/2243d21029a4ef7d8fac6f1758833d1e5d4c4751"
+        },
+        "date": 1791451363207,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 71.09901248700001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 74.16000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 426.24609375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
