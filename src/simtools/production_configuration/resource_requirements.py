@@ -147,12 +147,19 @@ def summarize_resource_requirements(rows):
         "zenith_angle_deg",
     )
     metric_columns = (
+        "wall_time_seconds",
+        "cpu_time_seconds",
         "triggered_events",
         "wall_time_seconds_per_event",
         "cpu_time_seconds_per_event",
         "wall_time_seconds_per_triggered_event",
         "cpu_time_seconds_per_triggered_event",
         "peak_rss_bytes",
+        "corsika_output_bytes",
+        "sim_telarray_output_bytes",
+        "reduced_event_data_bytes",
+        "sim_telarray_histogram_bytes",
+        "sim_telarray_storage_bytes",
         "corsika_output_bytes_per_event",
         "sim_telarray_output_bytes_per_event",
         "sim_telarray_output_bytes_per_triggered_event",
@@ -229,21 +236,31 @@ def write_markdown_report(summary, diagnostics, output_file):
         if key in varying_dimensions or key in {"production_label", "role", "job_count"}
     )
     metrics = (
-        "wall_time_seconds_per_event",
-        "cpu_time_seconds_per_event",
-        "peak_rss_bytes",
-        "corsika_output_bytes_per_event",
-        "sim_telarray_output_bytes_per_event",
-        "reduced_event_data_bytes_per_event",
-        "sim_telarray_histogram_bytes_per_event",
-        "sim_telarray_storage_bytes_per_event",
-        "triggered_events",
-        "wall_time_seconds_per_triggered_event",
-        "cpu_time_seconds_per_triggered_event",
-        "sim_telarray_storage_bytes_per_triggered_event",
+        ("wall_time_seconds", "Wall time (s/run)"),
+        ("cpu_time_seconds", "CPU time (s/run)"),
+        ("wall_time_seconds_per_event", "Wall time (s/event)"),
+        ("cpu_time_seconds_per_event", "CPU time (s/event)"),
+        ("peak_rss_bytes", "Peak RSS (bytes)"),
+        ("corsika_output_bytes", "CORSIKA output (bytes/run)"),
+        ("sim_telarray_output_bytes", "sim_telarray output (bytes/run)"),
+        ("reduced_event_data_bytes", "reduced event data (bytes/run)"),
+        ("sim_telarray_histogram_bytes", "sim_telarray histogram (bytes/run)"),
+        ("sim_telarray_storage_bytes", "sim_telarray Storage (bytes/run)"),
+        ("corsika_output_bytes_per_event", "CORSIKA output (bytes/event)"),
+        ("sim_telarray_output_bytes_per_event", "sim_telarray output (bytes/event)"),
+        ("reduced_event_data_bytes_per_event", "reduced event data (bytes/event)"),
+        ("sim_telarray_histogram_bytes_per_event", "sim_telarray histogram (bytes/event)"),
+        ("sim_telarray_storage_bytes_per_event", "sim_telarray Storage (bytes/event)"),
+        ("triggered_events", "Triggered events (run)"),
+        ("wall_time_seconds_per_triggered_event", "Wall time (s/triggered event)"),
+        ("cpu_time_seconds_per_triggered_event", "CPU time (s/triggered event)"),
+        (
+            "sim_telarray_storage_bytes_per_triggered_event",
+            "sim_telarray Storage (bytes/triggered event)",
+        ),
     )
     headers = [header for key, header in dimension_specs if key in dimensions] + [
-        metric.removesuffix("_per_event").replace("_", " ").title() for metric in metrics
+        label for _, label in metrics
     ]
     lines = [
         "# Production resource requirements",
@@ -263,7 +280,7 @@ def write_markdown_report(summary, diagnostics, output_file):
             else _format_value(item[dimension])
             for dimension in dimensions
         ]
-        values.extend(_format_statistic(item, metric) for metric in metrics)
+        values.extend(_format_statistic(item, metric) for metric, _ in metrics)
         lines.append("| " + " | ".join(str(value) for value in values) + " |")
     if diagnostics:
         lines.extend(
