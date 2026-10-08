@@ -118,7 +118,19 @@ jobs:
           branch: gh-pages
           folder: docs/build/html
           target-folder: ${{ github.ref_name }}  # e.g., v0.7.0
-          clean: false
+          clean: true
+
+      - name: Deploy latest doc on stable release
+        if: github.event_name == 'release' && github.event.release.prerelease == false
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445  # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: docs/build/html
+          target-folder: .
+          clean: true
+          clean-exclude: |
+            v*
 
       - name: Deploy dev docs on workflow_dispatch
         if: github.event_name == 'workflow_dispatch'
@@ -128,5 +140,7 @@ jobs:
           branch: gh-pages
           folder: docs/build/html
           target-folder: .
-          clean: false
+          clean: true
+          clean-exclude: |
+            v*
           dry-run: true
