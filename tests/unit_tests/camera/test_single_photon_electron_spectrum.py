@@ -51,8 +51,13 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
 
 
 def test_derive_single_pe_spectrum(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "prompt.csv"
-    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    input_file = tmp_test_directory / "prompt.ecsv"
+    Table(
+        {
+            "amplitude": [0.0, 1.0, 2.0],
+            "frequency (prompt)": [0.0, 1.0, 0.0],
+        }
+    ).write(input_file, format="ascii.ecsv")
     spe_spectrum.args_dict["input_spectrum"] = input_file
 
     assert spe_spectrum.derive_single_pe_spectrum() == 0
@@ -104,8 +109,13 @@ def test_write_single_pe_spectrum_rejects_unexpected_spectrum_columns(spe_spectr
 
 
 def test_derive_spectrum(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "prompt.csv"
-    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    input_file = tmp_test_directory / "prompt.ecsv"
+    Table(
+        {
+            "amplitude": [0.0, 1.0, 2.0],
+            "frequency (prompt)": [0.0, 1.0, 0.0],
+        }
+    ).write(input_file, format="ascii.ecsv")
     spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=2.0)
 
     assert spe_spectrum.derive_single_pe_spectrum() == 0
@@ -117,8 +127,13 @@ def test_derive_spectrum(spe_spectrum, tmp_test_directory):
 
 
 def test_derive_spectrum_does_not_exceed_maximum(spe_spectrum, tmp_test_directory):
-    input_file = tmp_test_directory / "prompt.csv"
-    input_file.write_text("0,0\n1,1\n2,0\n", encoding="utf-8")
+    input_file = tmp_test_directory / "prompt.ecsv"
+    Table(
+        {
+            "amplitude": [0.0, 1.0, 2.0],
+            "frequency (prompt)": [0.0, 1.0, 0.0],
+        }
+    ).write(input_file, format="ascii.ecsv")
     spe_spectrum.args_dict.update(input_spectrum=input_file, max_amplitude=1.0, step_size=0.6)
 
     spe_spectrum.derive_single_pe_spectrum()
@@ -126,6 +141,26 @@ def test_derive_spectrum_does_not_exceed_maximum(spe_spectrum, tmp_test_director
     output = np.loadtxt(BytesIO(spe_spectrum.data.encode("utf-8")))
     np.testing.assert_allclose(output[:, 0], [0.0, 0.6])
     assert np.all(output[:, 0] <= 1.0)
+
+
+def test_derive_spectrum_uses_normalized_prompt_endpoint(spe_spectrum):
+    prompt_data = (np.array([0.0, 1.0, 2.0]), np.array([1.0, 2.0, 1.0]))
+    afterpulse_data = (np.array([0.0, 1.0]), np.array([0.0, 1.0]))
+    normalized_prompt = (np.array([0.0, 0.5, 1.0]), np.array([1.0, 2.0, 1.0]))
+    folded_data = (
+        np.array([0.0, 0.5, 1.0]),
+        np.array([1.0, 2.0, 1.0]),
+        np.array([1.0, 2.0, 1.0]),
+    )
+
+    with (
+        patch.object(spe_spectrum, "_read_input_data", side_effect=[prompt_data, afterpulse_data]),
+        patch.object(spe_spectrum, "_normalize_prompt_spectrum", return_value=normalized_prompt),
+        patch.object(spe_spectrum, "_fold_afterpulse_spectrum", return_value=folded_data) as fold,
+    ):
+        spe_spectrum._derive_spectrum("prompt", "afterpulse", None)
+
+    assert fold.call_args.kwargs["prompt_maximum"] == pytest.approx(1.0)
 
 
 def test_normalize_prompt_spectrum_rejects_invalid_input():
@@ -156,7 +191,9 @@ def test_linear_interpolate_uses_end_values_outside_input_range():
 
 
 def test_fold_afterpulse_spectrum(spe_spectrum):
-    spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
+    spe_spectrum.args_dict.update(
+        afterpulse_amplitude_range=[0.0, 42.0], scale_afterpulse_spectrum=1.0
+    )
     amplitude, prompt, combined = spe_spectrum._fold_afterpulse_spectrum(
         np.array([0.0, 1.0, 2.0]),
         np.array([0.0, 1.0, 0.0]),
@@ -170,7 +207,11 @@ def test_fold_afterpulse_spectrum(spe_spectrum):
 
 
 def test_fold_afterpulse_spectrum_reaches_output_maximum(spe_spectrum):
-    spe_spectrum.args_dict.update(max_amplitude=4.0, scale_afterpulse_spectrum=1.0)
+    spe_spectrum.args_dict.update(
+        max_amplitude=4.0,
+        afterpulse_amplitude_range=[0.0, 42.0],
+        scale_afterpulse_spectrum=1.0,
+    )
     amplitude, _, combined = spe_spectrum._fold_afterpulse_spectrum(
         np.array([0.0, 1.0, 2.0]),
         np.array([0.0, 1.0, 0.0]),
@@ -182,8 +223,10 @@ def test_fold_afterpulse_spectrum_reaches_output_maximum(spe_spectrum):
     assert combined[-1] == pytest.approx(1.0)
 
 
-def test_fold_afterpulse_spectrum_preserves_legacy_prompt_tail(spe_spectrum):
-    spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
+def test_fold_afterpulse_spectrum_preserves_prompt_tail(spe_spectrum):
+    spe_spectrum.args_dict.update(
+        afterpulse_amplitude_range=[0.0, 42.0], scale_afterpulse_spectrum=1.0
+    )
     amplitude = np.array([0.0, 1.0, 2.0])
     prompt = np.array([0.0, 1.0, 0.5])
     afterpulse_amplitude = np.array([0.0, 1.0, 2.0, 3.0])
@@ -204,24 +247,22 @@ def test_fold_afterpulse_spectrum_preserves_legacy_prompt_tail(spe_spectrum):
     np.testing.assert_allclose(output_prompt, [0.5, 0.25, 0.0])
 
 
+def test_fold_afterpulse_spectrum_applies_lower_amplitude_cutoff(spe_spectrum):
+    spe_spectrum.args_dict.update(
+        afterpulse_amplitude_range=[1.0, 42.0], scale_afterpulse_spectrum=1.0
+    )
+    _, _, combined = spe_spectrum._fold_afterpulse_spectrum(
+        np.array([0.0, 1.0, 2.0]),
+        np.array([0.0, 1.0, 0.0]),
+        np.array([0.0, 1.0, 2.0]),
+        np.array([1.0, 0.5, 0.0]),
+    )
+
+    np.testing.assert_allclose(combined, [0.0, 1.0, 0.5])
+
+
 def test_read_input_data(spe_spectrum, tmp_test_directory):
     assert spe_spectrum._read_input_data(None, None, spe_spectrum.prompt_column) is None
-
-    input_file = tmp_test_directory / "input_spectrum"
-    input_file.write_text("0,0.4\n1,0.2\n", encoding="utf-8")
-    amplitude, frequency = spe_spectrum._read_input_data(
-        input_file, None, spe_spectrum.prompt_column
-    )
-    np.testing.assert_allclose(amplitude, [0.0, 1.0])
-    np.testing.assert_allclose(frequency, [0.4, 0.2])
-
-    afterpulse_file = tmp_test_directory / "afterpulse_spectrum"
-    afterpulse_file.write_text("0.0,0.4\n1.0,0.2\n", encoding="utf-8")
-    amplitude, frequency = spe_spectrum._read_input_data(
-        afterpulse_file, None, spe_spectrum.afterpulse_column
-    )
-    np.testing.assert_allclose(amplitude, [0.0, 1.0])
-    np.testing.assert_allclose(frequency, [0.4, 0.2])
 
     with patch(
         "simtools.data_model.validate_data.DataValidator.validate_and_transform"
@@ -235,6 +276,14 @@ def test_read_input_data(spe_spectrum, tmp_test_directory):
         )
         np.testing.assert_allclose(amplitude, [0.0, 0.02])
         np.testing.assert_allclose(frequency, [0.4694, 0.46378])
+
+
+def test_read_input_data_rejects_non_ecsv(spe_spectrum, tmp_test_directory):
+    input_file = tmp_test_directory / "invalid_spectrum"
+    input_file.write_text("0,0.4\n0,0.2\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must be an ECSV file"):
+        spe_spectrum._read_input_data(input_file, None, spe_spectrum.prompt_column)
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.Table")

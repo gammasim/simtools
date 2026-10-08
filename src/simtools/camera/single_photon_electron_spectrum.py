@@ -1,7 +1,6 @@
 """Single photon electron spectral analysis."""
 
 import logging
-import re
 from io import BytesIO
 from pathlib import Path
 
@@ -79,9 +78,8 @@ class SinglePhotonElectronSpectrum:
         output_file = Path(self.args_dict["output_file"])
         metadata_output_file = Path(self.io_handler.get_output_directory()) / output_file.name
 
-        cleaned_data = re.sub(r"%%%.+", "", self.data)  # remove row metadata
         table = Table.read(
-            BytesIO(cleaned_data.encode("utf-8")),
+            BytesIO(self.data.encode("utf-8")),
             format="ascii.no_header",
             comment="#",
             delimiter="\t",
@@ -151,7 +149,7 @@ class SinglePhotonElectronSpectrum:
                     normalized_amplitude,
                     normalized_prompt,
                     *afterpulse_data,
-                    prompt_maximum=amplitude[-1],
+                    prompt_maximum=normalized_amplitude[-1],
                 )
             )
 
@@ -201,10 +199,12 @@ class SinglePhotonElectronSpectrum:
         folded_amplitude = amplitude[0] + step * np.arange(len(amplitude) + extra_samples)
         folded_prompt = self._linear_interpolate(amplitude, prompt, folded_amplitude)
         folded_prompt[folded_amplitude > prompt_maximum] = 0.0
+        afterpulse_minimum = self.args_dict["afterpulse_amplitude_range"][0]
+        filtered_afterpulse = np.where(afterpulse_amplitude >= afterpulse_minimum, afterpulse, 0.0)
         sampled_afterpulse = np.interp(
             folded_amplitude,
             afterpulse_amplitude,
-            afterpulse,
+            filtered_afterpulse,
             left=0.0,
             right=0.0,
         )
@@ -233,7 +233,7 @@ class SinglePhotonElectronSpectrum:
         """
         Read input data for spectrum normalization.
 
-        Input is validated using the single_pe_spectrum schema (legacy input is not validated).
+        Input is validated using the single_pe_spectrum schema.
 
         Parameters
         ----------
@@ -248,23 +248,19 @@ class SinglePhotonElectronSpectrum:
             return None
         input_file = Path(input_file)
 
-        input_data = ""
-        if input_file.suffix == ECSV_SUFFIX or input_table:
-            data_validator = validate_data.DataValidator(
-                schema_file=self.input_schema,
-                data_table=input_table,
-                data_file=input_file if input_table is None else None,
-            )
-            table = data_validator.validate_and_transform()
-            return (
-                np.asarray(table["amplitude"], dtype=float),
-                np.asarray(table[frequency_column], dtype=float),
-            )
+        if input_file.suffix != ECSV_SUFFIX and input_table is None:
+            raise ValueError("Input spectrum must be an ECSV file.")
 
-        input_data = input_file.read_bytes()
-        input_data = input_data.replace(b",", b" ")
-        data = np.atleast_2d(np.loadtxt(BytesIO(input_data), comments="#", usecols=(0, 1)))
-        return data[:, 0], data[:, 1]
+        data_validator = validate_data.DataValidator(
+            schema_file=self.input_schema,
+            data_table=input_table,
+            data_file=input_file if input_table is None else None,
+        )
+        table = data_validator.validate_and_transform()
+        return (
+            np.asarray(table["amplitude"], dtype=float),
+            np.asarray(table[frequency_column], dtype=float),
+        )
 
     def fit_afterpulse_spectrum(self):
         """
