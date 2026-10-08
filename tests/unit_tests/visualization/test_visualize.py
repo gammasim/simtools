@@ -360,3 +360,18 @@ def test_save_figures_to_single_document(tmp_test_directory, figure_container):
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
     plt.close("all")
+
+
+def test_save_figures_to_single_document_closes_pdf_after_generator_error(
+    tmp_test_directory, mocker
+):
+    mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
+
+    def figures():
+        raise RuntimeError("Cannot create figure")
+        yield
+
+    with pytest.raises(RuntimeError, match="Cannot create figure"):
+        visualize.save_figures_to_single_document(figures(), tmp_test_directory / "images.pdf")
+
+    mock_pdf.return_value.__exit__.assert_called_once()

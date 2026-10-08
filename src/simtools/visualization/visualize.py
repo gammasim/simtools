@@ -714,11 +714,9 @@ def save_figures_to_single_document(figs, output_file_name, close=False):
         Close each figure after saving. Defaults to False.
     """
     _logger.info(f"Saving figures to {output_file_name}")
-    pdf_pages = pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix())
-    for fig in figs:
-        fig.tight_layout()
-        pdf_pages.savefig(fig)
-        if close:
-            plt.close(fig)
-
-    pdf_pages.close()
+    with pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix()) as pdf_pages:
+        for fig in figs:
+            fig.tight_layout()
+            pdf_pages.savefig(fig)
+            if close:
+                plt.close(fig)

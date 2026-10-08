@@ -152,6 +152,20 @@ for config structure, schema versions, resources, validation, commands, and debu
 
 ## Documentation
 
+Documentation updates are not required for every code change. Apply these scope
+rules before the documentation skill's workflow:
+
+- Update documentation only when existing guidance becomes incorrect or a change
+  introduces a lasting user workflow that needs explanation. Routine fixes,
+  refactors, and individual development steps do not need new prose.
+- Keep one authoritative description. Do not repeat CLI options, defaults, or
+  docstrings already rendered by generated help or autodoc. Link to existing
+  guidance rather than duplicating it across component and application pages.
+- Describe stable usage, not implementation details or temporary development
+  decisions. Add performance or memory guidance only when needed to use the tool
+  correctly, and put it in one relevant place.
+- Prefer correcting an existing sentence over adding a paragraph or section.
+
 Use [.agents/skills/documentation/SKILL.md](.agents/skills/documentation/SKILL.md)
 for docstrings, MyST pages, API references, changelog fragments, and documentation checks.
 
@@ -174,7 +188,7 @@ New library module checklist:
 
 1. Add focused unit tests under the mirrored `tests/unit_tests/` path.
 2. Add API reference documentation.
-3. Add or update user documentation if behavior is user-facing.
+3. Add or update user documentation only when needed under the Documentation scope rules.
 4. Add a changelog fragment when working in a PR flow.
 
 Before handing off a change that adds, removes, or moves a library module, run
