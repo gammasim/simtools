@@ -262,7 +262,12 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
 
     max_extent_rounded = _max_image_extent(images_dict)
 
-    figures = []
+    figures = _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm)
+    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+
+
+def _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm):
+    """Yield annotated PSF image figures one at a time with a common image range."""
     for (off_x, off_y), image in images_dict.items():
         psf_cm_val = image.get_psf(fraction=0.8, unit="cm")
         converted_data, psf_quantity, containment_radius, plot_extent = _prepare_image_for_plotting(
@@ -271,24 +276,22 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
             max_extent_rounded,
             eff_flen_cm,
         )
-        figures.append(
-            plot_ray_tracing_psf.create_annotated_psf_image_figure(
-                converted_data,
-                off_x=off_x,
-                off_y=off_y,
-                psf=psf_quantity,
-                containment_radius=containment_radius,
-                image_range=[
-                    [-plot_extent, plot_extent],
-                    [-plot_extent, plot_extent],
-                ],
-                bins=150,
-                cmap="gist_heat_r",
-                psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
-                telescope_name=telescope_name,
-            )
+        fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+            converted_data,
+            off_x=off_x,
+            off_y=off_y,
+            psf=psf_quantity,
+            containment_radius=containment_radius,
+            image_range=[
+                [-plot_extent, plot_extent],
+                [-plot_extent, plot_extent],
+            ],
+            bins=150,
+            cmap="gist_heat_r",
+            psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+            telescope_name=telescope_name,
         )
-    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+        yield fig
 
 
 def _median_effective_focal_length(results):
