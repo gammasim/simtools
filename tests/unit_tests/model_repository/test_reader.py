@@ -91,6 +91,29 @@ def test_reader_reads_resolved_parameters_and_design(model_repository):
     parameters = reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
     assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
 
+
+def test_reader_inherits_design_model_name_parameters(model_repository):
+    """Telescope parameter loading includes camera and optics names from its design model."""
+    production_file = model_repository / "simulation-models/productions/1.0.0/LSTN-design.json"
+    production = json.loads(production_file.read_text(encoding="utf-8"))
+    production["parameters"]["LSTN-design"].update({"optics_name": "1.0.0", "camera_name": "1.0.0"})
+    production_file.write_text(json.dumps(production), encoding="utf-8")
+    _write_json(
+        model_repository
+        / "simulation-models/model_parameters/LSTN-design/optics_name/optics_name-1.0.0.json",
+        _parameter("LSTN-design", "optics_name", "1.0.0", "LSTN"),
+    )
+    _write_json(
+        model_repository
+        / "simulation-models/model_parameters/LSTN-design/camera_name/camera_name-1.0.0.json",
+        _parameter("LSTN-design", "camera_name", "1.0.0", "LSTCam"),
+    )
+    reader = SimulationModelReader.from_files(model_repository)
+    parameters = reader.get_model_parameters("North", "LSTN-01", "telescopes", "1.0.0")
+
+    assert parameters["optics_name"]["value"] == "LSTN"
+    assert parameters["camera_name"]["value"] == "LSTCam"
+
     selected = reader.get_model_parameters(
         "North", "LSTN-01", "telescopes", "1.0.0", parameter_names={"camera_body_diameter"}
     )

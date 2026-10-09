@@ -233,6 +233,7 @@ lint.preview = true
 
 [tool.pylint]
 main.disable = [
+  "E0001",
   "logging-fstring-interpolation",
   "R0801",                         # duplications
 ]

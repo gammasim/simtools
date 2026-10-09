@@ -472,10 +472,18 @@ class SimtelConfigWriter:
         if config_type == "telescope":
             meta_parameters.extend(
                 [
-                    f"camera_config_name = {telescope_design_model}",
+                    *(
+                        [f"camera_config_name = {telescope_design_model}"]
+                        if not model_parameters or "camera_name" not in model_parameters
+                        else []
+                    ),
                     f"camera_config_variant = {telescope_model_name}",
                     f"camera_config_version = {self._model_version}",
-                    f"optics_config_name = {telescope_design_model}",
+                    *(
+                        [f"optics_config_name = {telescope_design_model}"]
+                        if not model_parameters or "optics_name" not in model_parameters
+                        else []
+                    ),
                     f"optics_config_variant = {telescope_model_name}",
                     f"optics_config_version = {self._model_version}",
                 ]

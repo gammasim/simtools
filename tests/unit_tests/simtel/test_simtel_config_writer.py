@@ -873,6 +873,21 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
         simtel_config_writer._get_sim_telarray_metadata("unknown", None, None)
 
 
+def test_get_sim_telarray_metadata_suppresses_name_fallback_when_parameters_exist(
+    simtel_config_writer,
+):
+    """Configured name parameters use ordinary sim_telarray parameter mappings."""
+    metadata = simtel_config_writer._get_sim_telarray_metadata(
+        "telescope",
+        {"optics_name": {"value": "MST"}, "camera_name": {"value": "FlashCam"}},
+        "MSTSx-FlashCam",
+        telescope_design_model="MSTSx-FlashCam",
+    )
+
+    assert not any(line.startswith("camera_config_name =") for line in metadata)
+    assert not any(line.startswith("optics_config_name =") for line in metadata)
+
+
 def test_get_sim_telarray_metadata_includes_falsey_additional_metadata(simtel_config_writer):
     metadata = simtel_config_writer._get_sim_telarray_metadata(
         "site",
