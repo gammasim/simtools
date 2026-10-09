@@ -275,10 +275,15 @@ def test_completed_production_gate(tmp_test_directory):
     root = Path(tmp_test_directory)
     submission = root / "submission.json"
     product = root / "event.dat"
+    product_directory = root / "events"
     product.write_text("event", encoding="utf-8")
+    product_directory.mkdir()
     payload = {
         "job_ids": ["job"],
-        "metadata": {"state": "submitted", "expected_outputs": {"job": [str(product)]}},
+        "metadata": {
+            "state": "submitted",
+            "expected_outputs": {"job": [str(product), str(product_directory)]},
+        },
     }
     submission.write_text(json.dumps(payload), encoding="utf-8")
     definition = {"requires_completed_production": True}

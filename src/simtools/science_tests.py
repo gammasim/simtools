@@ -201,7 +201,7 @@ def _check_completed_submission(path):
     if not jobs or set(jobs) != set(outputs):
         raise ValueError(f"Production has missing expected outputs: {path}")
     if any(not paths for paths in outputs.values()) or any(
-        not Path(p).is_file() for paths in outputs.values() for p in paths
+        not Path(p).exists() for paths in outputs.values() for p in paths
     ):
         raise ValueError(f"Production has missing expected outputs: {path}")
 
