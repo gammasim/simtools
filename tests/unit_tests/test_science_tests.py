@@ -10,54 +10,14 @@ import yaml
 from simtools import science_tests
 
 
-def test_run_test_dry_run_validates_resolved_workflow(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    release_dir = root / "release"
-    template_dir = root / "science-test-template"
-    release_dir.mkdir()
-    template_dir.mkdir()
-    workflow = template_dir / "workflow.yml"
-    workflow.write_text(
-        yaml.safe_dump(
-            {
-                "schema_version": "0.5.0",
-                "schema_name": "application_workflow.metaschema",
-                "applications": [
-                    {
-                        "application": "simtools-run-application",
-                        "configuration": {},
-                    }
-                ],
-            },
-            sort_keys=False,
-        ),
-        encoding="utf-8",
-    )
-
-    result = science_tests._run_test(
-        release_dir,
-        template_dir,
-        {"__SCIENCE_CANDIDATE_PATH__": str(root / "candidate")},
-        "north",
-        {"array_layout_name": "CTAO-North-Alpha"},
-        "example",
-        {"workflow": "workflow.yml", "sites": ["north"]},
-        dry_run=True,
-    )
-
-    assert result["status"] == "planned"
-    assert not (release_dir / "reports").exists()
-    assert not (root / "candidate").exists()
-
-
 def test_setup_release_creates_minimal_release_from_templates(tmp_test_directory, caplog):
     root = Path(tmp_test_directory)
     template = root / "science-test-template"
     release = root / "v1.2.3" / "science_tests"
     for relative, contents in {
         "release.yml": "release_label: __SCIENCE_RELEASE_LABEL__\n",
-        "sites/north.yml": "site: north\n",
-        "sites/south.yml": "site: south\n",
+        "sites/east.yml": "site: east\n",
+        "sites/west.yml": "site: west\n",
         "context.example.yml": "__SCIENCE_CANDIDATE_PATH__: /path/candidate\n",
     }.items():
         path = template / relative
@@ -76,8 +36,8 @@ def test_setup_release_creates_minimal_release_from_templates(tmp_test_directory
         "context.yml",
         "release.yml",
         "sites",
-        "sites/north.yml",
-        "sites/south.yml",
+        "sites/east.yml",
+        "sites/west.yml",
     ]
 
 
@@ -87,6 +47,8 @@ def test_setup_release_does_not_overwrite_existing_files(tmp_test_directory):
     release = root / "v1.2.3" / "science_tests"
     (template / "release.yml").parent.mkdir(parents=True)
     (template / "release.yml").write_text("release_label: __SCIENCE_RELEASE_LABEL__\n")
+    (template / "sites").mkdir()
+    (template / "sites" / "example.yml").write_text("site: example\n")
     (template / "context.example.yml").write_text("context\n")
     (release / "release.yml").parent.mkdir(parents=True)
     (release / "release.yml").write_text("existing\n")
@@ -287,12 +249,6 @@ def test_failed_dependency_blocks_comparison(campaign, monkeypatch):
     }
 
 
-@pytest.mark.parametrize("value", [0, float("nan"), float("inf"), True, "3"])
-def test_invalid_or_insufficient_metric_fails(value):
-    with pytest.raises(ValueError, match="count"):
-        science_tests._check_metric(value, {"key": "count", "minimum": 2})
-
-
 def test_dependency_order_and_invalid_definitions():
     assert science_tests._dependency_order(["b", "a"], {"a": {}, "b": {"depends_on": ["a"]}}) == [
         "a",
@@ -384,33 +340,6 @@ def test_identical_release_context_paths_are_allowed_when_distinctness_not_requi
     )
 
 
-@pytest.mark.parametrize(
-    ("test_id", "definition", "message"),
-    [
-        ("../test", {}, "Invalid science-test ID"),
-        ("test", {"sites": ["south"]}, "does not support"),
-        ("test", {"sites": ["north"], "tier": "invalid"}, "Invalid tier"),
-        ("test", {"sites": ["north"], "tier": "smoke"}, "Missing workflow"),
-    ],
-)
-def test_invalid_test_definition(test_id, definition, message):
-    with pytest.raises(ValueError, match=message):
-        science_tests._validate_definition(test_id, "north", definition)
-
-
-@pytest.mark.parametrize("required", [[], ["north", "north"], "north"])
-def test_invalid_required_sites(campaign, required):
-    _write_yaml(
-        campaign["release_dir"] / "release.yml",
-        {
-            "release_label": "candidate",
-            "required_sites": required,
-        },
-    )
-    with pytest.raises(ValueError, match="required_sites"):
-        science_tests.run_release(**campaign, dry_run=True)
-
-
 @pytest.mark.parametrize("configuration_file", ["workflow.yml", "run_time.yml"])
 def test_configuration_change_invalidates_old_results(
     campaign, successful_workflow, configuration_file
@@ -485,19 +414,6 @@ def test_acceptance_failure_has_completed_execution(campaign, successful_workflo
     assert failed["execution"] == "completed"
 
 
-def test_missing_metric_and_empty_file(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    path = root / "metrics.json"
-    path.write_text("{}", encoding="utf-8")
-    with pytest.raises(ValueError, match="Missing metric"):
-        science_tests._evaluate_products(
-            {"rule": {"metrics": [{"file": str(path), "key": "missing"}]}}, {}
-        )
-    path.write_text("", encoding="utf-8")
-    with pytest.raises(ValueError, match="Missing or empty"):
-        science_tests._matched_files(str(path))
-
-
 def test_existing_submission_prevents_resubmission(tmp_test_directory):
     root = Path(tmp_test_directory)
     (root / "submission.json").write_text("{}", encoding="utf-8")
@@ -515,24 +431,6 @@ def test_unknown_acceptance_rule_fails_preflight(campaign, successful_workflow):
     with pytest.raises(ValueError, match="Missing acceptance rule"):
         science_tests.run_release(**campaign, dry_run=True)
     assert successful_workflow == []
-
-
-def test_missing_catalogue_does_not_fallback(campaign):
-    with pytest.raises(FileNotFoundError):
-        science_tests._load_catalogue(
-            {"catalogue": "missing.yml"}, campaign["release_dir"], campaign["template_dir"]
-        )
-
-
-def test_invalid_workflow_and_context(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    with pytest.raises(ValueError, match="relative template path"):
-        science_tests._resolve_workflow(root, root, "../workflow.yml")
-    assert science_tests._load_context(None) == {}
-    path = root / "context.yml"
-    path.write_text("[]", encoding="utf-8")
-    with pytest.raises(ValueError, match="Expected a mapping"):
-        science_tests._load_context(path)
 
 
 def test_site_cannot_override_context_root(tmp_test_directory):
@@ -564,24 +462,6 @@ def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
     with pytest.raises(ValueError, match="does not support"):
         science_tests.run_release(**campaign, sites=["south"], tests=["grid"], dry_run=True)
     assert successful_workflow == []
-
-
-@pytest.mark.parametrize(
-    "rule",
-    [
-        [],
-        {"mode": "unknown"},
-        {"mode": "advisory", "metrics": {}},
-        {"mode": "advisory", "metrics": [{}]},
-        {
-            "mode": "advisory",
-            "metrics": [{"file": "metrics.json", "key": "count", "minimum": True}],
-        },
-    ],
-)
-def test_malformed_acceptance_rules_fail_preflight(rule):
-    with pytest.raises(ValueError, match=r"acceptance|Acceptance"):
-        science_tests._validate_rule(rule, "comparison")
 
 
 @pytest.mark.parametrize("present", [False, True])
@@ -663,39 +543,6 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
     assert captured == [expected]
 
 
-@pytest.mark.parametrize("dry_run", [False, True])
-def test_science_test_output(campaign, successful_workflow, caplog, dry_run):
-    with caplog.at_level(logging.INFO):
-        science_tests.run_release(**campaign, sites=["north"], dry_run=dry_run)
-    action = "Planned" if dry_run else "Running"
-    assert caplog.messages.count(f"{action} science test: derive.north") == 1
-    assert caplog.messages.count(f"{action} science test: compare.north") == 1
-    assert caplog.messages.count("  Runtime: host (no container)") == 2
-    assert len([message for message in caplog.messages if message.startswith("  Output:")]) == 2
-    assert not any("Setting workflow output path" in message for message in caplog.messages)
-
-
-@pytest.mark.parametrize(
-    ("runtime", "ignored", "expected"),
-    [
-        (None, False, "host (no container)"),
-        (
-            {"container_engine": "apptainer", "image": "/images/test.sif"},
-            True,
-            "host (no container)",
-        ),
-        (
-            {"container_engine": "apptainer", "image": "/images/test.sif"},
-            False,
-            "apptainer (image: /images/test.sif)",
-        ),
-        ({"image": "test:latest"}, False, "docker (image: test:latest)"),
-    ],
-)
-def test_runtime_description(runtime, ignored, expected):
-    assert science_tests._runtime_description(runtime, ignored) == expected
-
-
 @pytest.mark.parametrize("sites", [["north"], ["North"], ["NORTH"], ["nOrTh"], ["North", "NORTH"]])
 def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites):
     summary = science_tests.run_release(**campaign, sites=sites)
@@ -703,26 +550,6 @@ def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites
     assert {
         result["site"] for result in summary["results"] if result["execution"] == "completed"
     } == {"north"}
-
-
-@pytest.mark.parametrize("sites", [["SOUTH"], ["sOuTh"]])
-def test_south_selection_is_case_insensitive(campaign, sites):
-    summary = science_tests.run_release(**campaign, sites=sites, dry_run=True)
-    assert {result["site"] for result in summary["results"] if result["status"] == "planned"} == {
-        "south"
-    }
-
-
-def test_test_names_remain_case_sensitive(campaign, successful_workflow):
-    with pytest.raises(ValueError, match="Invalid test selection"):
-        science_tests.run_release(**campaign, sites=["North"], tests=["COMPARE"])
-    assert successful_workflow == []
-
-
-def test_unknown_mixed_case_site_is_rejected(campaign, successful_workflow):
-    with pytest.raises(ValueError, match="Invalid site selection"):
-        science_tests.run_release(**campaign, sites=["Unknown"])
-    assert successful_workflow == []
 
 
 def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):

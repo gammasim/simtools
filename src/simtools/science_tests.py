@@ -1,7 +1,5 @@
 """Small runner for reusable, site-parameterised release science tests."""
 
-from __future__ import annotations
-
 import hashlib
 import json
 import logging
@@ -9,7 +7,6 @@ import math
 import re
 import shutil
 import subprocess
-from collections.abc import Iterable
 from pathlib import Path
 
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
@@ -36,11 +33,6 @@ _MODEL_SOURCE_KEYS = (
 )
 _SUBMISSION_FILE_NAME = "submission.json"
 _RELEASE_FILE_NAME = "release.yml"
-_SETUP_FILES = (
-    _RELEASE_FILE_NAME,
-    "sites/north.yml",
-    "sites/south.yml",
-)
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
 
 
@@ -435,21 +427,21 @@ def _validate_metric_rule(metric):
 
 
 def run_release(
-    release_dir: str | Path,
+    release_dir,
     *,
-    context_file: str | Path | None = None,
-    template_dir: str | Path | None = None,
-    sites: Iterable[str] | None = None,
-    tests: Iterable[str] | None = None,
-    dry_run: bool = False,
-    allow_production: bool = False,
-    overwrite: bool = False,
-    application_args: dict | None = None,
-) -> dict:
+    context_file=None,
+    template_dir=None,
+    sites=None,
+    tests=None,
+    dry_run=False,
+    allow_production=False,
+    overwrite=False,
+    application_args=None,
+):
     """Validate and run the selected site/test pairs for one release.
 
-    The release directory contains only a small release.yml and the two site
-    files. Test implementations are read from the shared template catalogue.
+    The release directory contains a release definition and site files. Test
+    implementations are read from the shared template catalogue.
 
     Parameters
     ----------
@@ -558,13 +550,22 @@ def setup_release(release_dir, template_dir=None, context_file=None):
     release_label = release_dir.parent.name
     if not _VALID_NAME.fullmatch(release_label):
         release_label = "candidate"
-    targets = [release_dir / path for path in (*_SETUP_FILES, "context.yml")]
+    site_templates = sorted(
+        path for path in (template_dir / "sites").glob("*.yml") if path.is_file()
+    )
+    if not site_templates:
+        raise FileNotFoundError(f"Science-test site templates not found: {template_dir / 'sites'}")
+    template_paths = [
+        _RELEASE_FILE_NAME,
+        *(path.relative_to(template_dir) for path in site_templates),
+    ]
+    targets = [release_dir / path for path in (*template_paths, "context.yml")]
     existing = [path for path in targets if path.exists()]
     if existing:
         paths = ", ".join(str(path) for path in existing)
         raise FileExistsError(f"Science-test setup files already exist: {paths}")
     context_source = Path(context_file) if context_file else template_dir / "context.example.yml"
-    sources = [template_dir / path for path in _SETUP_FILES] + [context_source]
+    sources = [template_dir / path for path in template_paths] + [context_source]
     missing = [path for path in sources if not path.is_file()]
     if missing:
         paths = ", ".join(str(path) for path in missing)
@@ -582,7 +583,7 @@ def setup_release(release_dir, template_dir=None, context_file=None):
     )
     logger.info(
         "Review site settings in: %s",
-        ", ".join(str(release_dir / path) for path in ("sites/north.yml", "sites/south.yml")),
+        ", ".join(str(release_dir / path) for path in template_paths[1:]),
     )
     return release_dir
 
