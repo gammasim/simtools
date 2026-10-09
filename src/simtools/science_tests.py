@@ -35,8 +35,9 @@ _MODEL_SOURCE_KEYS = (
     "simulation_models_git_revision",
 )
 _SUBMISSION_FILE_NAME = "submission.json"
+_RELEASE_FILE_NAME = "release.yml"
 _SETUP_FILES = (
-    "release.yml",
+    _RELEASE_FILE_NAME,
     "sites/north.yml",
     "sites/south.yml",
 )
@@ -482,7 +483,7 @@ def run_release(
         A workflow failed or lacks required evidence.
     """
     release_dir = Path(release_dir).resolve()
-    release = _load_yaml(release_dir / "release.yml")
+    release = _load_yaml(release_dir / _RELEASE_FILE_NAME)
     template_dir = _resolve_template_dir(release_dir, template_dir)
     catalogue = _load_catalogue(release, release_dir, template_dir)
     context = _load_context(context_file)
@@ -577,7 +578,7 @@ def setup_release(release_dir, template_dir=None, context_file=None):
     logger.info("Created science-test setup in %s", release_dir)
     logger.info(
         "Edit these files before the dry run: %s",
-        ", ".join(str(release_dir / path) for path in ("context.yml", "release.yml")),
+        ", ".join(str(release_dir / path) for path in ("context.yml", _RELEASE_FILE_NAME)),
     )
     logger.info(
         "Review site settings in: %s",
