@@ -7,12 +7,11 @@
 ```
 
 ```{eval-rst}
-Normalizes singe-p.e. amplitude distribution to mean amplitude of 1.0,
-as required by sim_telarray. Allows to fold in afterpulse distribution
-to prompt a spectrum. Uses the sim_telarray tool 'norm_spe' to normalize
-the spectra.
+Normalizes single-p.e. amplitude distribution to mean amplitude of 1.0,
+as required by sim_telarray. Allows an afterpulse distribution to be folded
+into a prompt spectrum.
 
-Input files can be in ecsv format (preferred) or in the sim_telarray legacy format.
+Input files must use the ECSV format.
 
 The output directory receives the schema-validated ECSV model parameter and its metadata:
 
@@ -28,7 +27,6 @@ The output directory receives the schema-validated ECSV model parameter and its 
         --afterpulse_spectrum spectrum_afterpulse.ecsv \\
         --step_size 0.02 \\
         --max_amplitude 42.0 \\
-        --use_norm_spe \\
         --output_path ./tests/output \\
         --output_file spectrum_photon_electron_afterpulse.ecsv
 

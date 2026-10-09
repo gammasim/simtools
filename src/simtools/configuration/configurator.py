@@ -11,7 +11,7 @@ import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
-from simtools import dependency_versions
+from simtools import constants, dependency_versions
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
@@ -228,7 +228,12 @@ class Configurator:
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
             _config_dict = (
-                ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
+                ascii_handler.collect_data_from_file(
+                    file_name=config_file,
+                    test_resources_path=constants.get_configured_test_resources_root(),
+                )
+                if config_file
+                else None
             )
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "configuration" in _config_dict.get("applications", [{}])[0]:
