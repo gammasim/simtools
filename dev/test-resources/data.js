@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791468413089,
+  "lastUpdate": 1791528474734,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -29836,6 +29836,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 424.8359375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Gernot Maier",
+            "username": "GernotMaier",
+            "email": "gernot.maier@desy.de"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "51684edf180a739d895ac475de3ef3810179ced1",
+          "message": "Replace placeholders test configs (#2619)\n\n* Replace `norm_spe` from `sim_telarray` by a simtools module.\n\n* test fixes\n\n* errors\n\n* docs / integration tests\n\n* fix minor differences to norm_spe\n\n* cleanup\n\n* reviewers comments\n\n* renaming of functions to remove historical norm_spe references\n\n* Allow to run tests config files with applications\n\n* remove legacy reading\n\n* csv input\n\n* changelog\n\n* Fix path variable reading in integration test config [skip ci]\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-10-08T14:29:09Z",
+          "url": "https://github.com/gammasim/simtools/commit/51684edf180a739d895ac475de3ef3810179ced1"
+        },
+        "date": 1791528458570,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 46.88832056,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 46.62,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 425.90625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
           }
