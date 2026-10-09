@@ -57,9 +57,6 @@ class PSFImage:
         self.photon_pos_x = []
         self.photon_pos_y = []
         self.photon_r = []
-        self.photon_weights = None
-        self._radial_weight_cdf = None
-        self.optical_detection_fraction = None
         self.centroid_x = None
         self.centroid_y = None
         self.centroid_x_error = 0.0
@@ -89,99 +86,10 @@ class PSFImage:
         use_rx: bool
             Use the RX method for analysis.
         """
-        if not use_rx and self._is_obdeect_arrival_file(photon_file):
-            self.read_obdeect_arrival_file(photon_file)
-        elif use_rx:
+        if use_rx:
             self._process_simtel_file_using_rx(photon_file)
         else:
             self.read_photon_list_from_simtel_file(photon_file)
-
-    @staticmethod
-    def _is_obdeect_arrival_file(photon_file):
-        """Return whether ``photon_file`` has the obdeect CSV contract."""
-        path = Path(photon_file)
-        if path.suffix.lower() != ".csv":
-            return False
-        try:
-            with path.open("r", encoding="utf-8") as handle:
-                header = handle.readline()
-        except OSError:
-            return False
-        return "contract_version" in header and "obdeect-arrival-v1" not in header
-
-    def read_obdeect_arrival_file(self, photon_file):
-        """Read a validated ``obdeect-arrival-v1`` CSV file.
-
-        Centroids and radial containment use arriving optical weights. Effective
-        area uses the native ``launch_area_m2`` or an explicit ``total_scattered_area``
-        for files without launch metadata. The optical detection fraction is also available.
-        """
-        try:
-            from obdeect.result_contract import (  # pylint: disable=import-outside-toplevel
-                ArrivalContractError,
-                read_arrivals,
-            )
-
-            arrivals = read_arrivals(Path(photon_file))
-        except ModuleNotFoundError as error:
-            raise RuntimeError(
-                "Reading obdeect arrivals requires the obdeect-dev package"
-            ) from error
-        except ArrivalContractError as error:
-            raise RuntimeError(f"Invalid obdeect arrival file {photon_file}: {error}") from error
-
-        if not arrivals:
-            raise RuntimeError(f"No arrivals in obdeect file {photon_file}")
-        input_weight = sum(arrival.source_weight for arrival in arrivals)
-        detected = [
-            arrival for arrival in arrivals if arrival.detected and arrival.optical_weight > 0
-        ]
-        if input_weight <= 0 or not detected:
-            raise RuntimeError(f"No positive optical weight in obdeect file {photon_file}")
-        self._total_photons = len(arrivals)
-        self._number_of_detected_photons = sum(arrival.detected for arrival in arrivals)
-        self.photon_weights = np.asarray([arrival.optical_weight for arrival in detected])
-        arriving_weight = self.photon_weights.sum()
-        self.optical_detection_fraction = arriving_weight / input_weight
-        self._effective_area = None
-        launch_area = self._obdeect_launch_area(arrivals)
-        if launch_area is not None:
-            if not np.isfinite(launch_area) or launch_area <= 0:
-                raise ValueError("total_scattered_area must be finite and positive")
-            self._effective_area = launch_area * self.optical_detection_fraction
-        self.photon_pos_x = np.asarray([arrival.focal_x_m * 100.0 for arrival in detected])
-        self.photon_pos_y = np.asarray([arrival.focal_y_m * 100.0 for arrival in detected])
-        self.centroid_x = np.average(self.photon_pos_x, weights=self.photon_weights)
-        self.centroid_y = np.average(self.photon_pos_y, weights=self.photon_weights)
-        self.centroid_x_error = self._weighted_centroid_error(self.photon_pos_x)
-        self.centroid_y_error = self._weighted_centroid_error(self.photon_pos_y)
-        radii = np.hypot(self.photon_pos_x - self.centroid_x, self.photon_pos_y - self.centroid_y)
-        order = np.argsort(radii, kind="stable")
-        self.photon_r = radii[order]
-        self._radial_weight_cdf = np.cumsum(self.photon_weights[order])
-        self._stored_psf.clear()
-
-    def _obdeect_launch_area(self, arrivals):
-        """Use the native launch area, checking any explicit analysis override."""
-        areas = {getattr(arrival, "launch_area_m2", None) for arrival in arrivals}
-        if len(areas) != 1:
-            raise ValueError("Inconsistent launch_area_m2 in obdeect arrivals")
-        area = areas.pop()
-        if self._total_area is not None:
-            if area is not None and not np.isclose(self._total_area, area, rtol=1e-12, atol=0):
-                raise ValueError("total_scattered_area disagrees with obdeect launch_area_m2")
-            return self._total_area
-        return area
-
-    def _weighted_centroid_error(self, positions):
-        """Use effective sample size for the weighted centroid's standard error."""
-        weights = self.photon_weights
-        effective_count = weights.sum() ** 2 / np.sum(weights**2)
-        if effective_count <= 1:
-            return 0.0
-        mean = np.average(positions, weights=weights)
-        variance = np.average((positions - mean) ** 2, weights=weights)
-        return float(np.sqrt(variance / (effective_count - 1)))
 
     def _process_simtel_file_using_rx(self, photon_file):
         """
@@ -192,9 +100,6 @@ class PSFImage:
         photons_file: str
             Name of sim_telarray file with photon list.
         """
-        self.photon_weights = None
-        self._radial_weight_cdf = None
-        self.optical_detection_fraction = None
         rx_command = [
             f"{settings.config.sim_telarray_path}/bin/rx",
             "-f",
@@ -262,8 +167,6 @@ class PSFImage:
         """
         self._logger.info(f"Reading sim_telarray photon file {photons_file}")
         self._total_photons = 0
-        self.photon_weights = None
-        self._radial_weight_cdf = None
         self._stored_psf.clear()
         file_open_function = gzip.open if Path(photons_file).suffix == ".gz" else open
 
@@ -478,11 +381,7 @@ class PSFImage:
         """
         if not 0 < fraction <= 1:
             raise ValueError("containment fraction must be in (0, 1]")
-        if self._radial_weight_cdf is not None:
-            index = np.searchsorted(self._radial_weight_cdf, fraction * self._radial_weight_cdf[-1])
-            self._stored_psf[fraction] = 2 * self.photon_r[min(index, len(self.photon_r) - 1)]
-        else:
-            self._stored_psf[fraction] = self._find_psf(fraction)
+        self._stored_psf[fraction] = self._find_psf(fraction)
 
     def _find_psf(self, fraction):
         """
@@ -601,9 +500,6 @@ class PSFImage:
 
     def _sum_photons_in_radius(self, radius):
         """Return number of photons inside radius using binary search on sorted radial distances."""
-        if self._radial_weight_cdf is not None:
-            count = np.searchsorted(self.photon_r, radius, side="right")
-            return self._radial_weight_cdf[count - 1] if count else 0.0
         return np.searchsorted(self.photon_r, radius)
 
     def get_image_data(self, centralized=True):
@@ -654,8 +550,6 @@ class PSFImage:
             psf_ls="--",
         )
         kwargs_for_image = collect_kwargs("image", kwargs)
-        if self.photon_weights is not None:
-            kwargs_for_image["weights"] = self.photon_weights
         kwargs_for_psf = collect_kwargs("psf", kwargs)
 
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
@@ -693,10 +587,10 @@ class PSFImage:
         else:
             fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(fraction), 30))
-        normalization = self._number_of_detected_photons
-        if self._radial_weight_cdf is not None:
-            normalization = self._radial_weight_cdf[-1]
-        intensity = [self._sum_photons_in_radius(rad) / normalization for rad in radius_all]
+        intensity = [
+            self._sum_photons_in_radius(rad) / self._number_of_detected_photons
+            for rad in radius_all
+        ]
         d_type = {
             "names": (self.__PSF_RADIUS, self.__PSF_CUMULATIVE),
             "formats": ("f8", "f8"),

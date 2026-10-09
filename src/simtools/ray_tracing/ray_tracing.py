@@ -446,7 +446,7 @@ class RayTracing:
             output_file = self.output_directory.joinpath(
                 self._generate_file_name(
                     file_type="photons",
-                    suffix=".csv",
+                    suffix=".lis",
                     off_axis_x=off_x,
                     off_axis_y=off_y,
                     mirror_number=None,
@@ -465,6 +465,7 @@ class RayTracing:
                     "single_mirror_mode": self.single_mirror_mode,
                     "number_of_photons": 10000 if photon_count is None else photon_count,
                     "focal_surface_image": True,
+                    "zenith_angle": self.zenith_angle,
                 },
                 output_file=output_file,
                 force_simulate=force,
@@ -498,8 +499,6 @@ class RayTracing:
         """Run one prepared simulator and optionally compress its photon list."""
         simulator, off_x, off_y, mirror_number = simulation
         simulator.run(test=test)
-        if settings.config.ray_tracing_backend == "obdeect":
-            return
         photons_file = self.output_directory.joinpath(
             self._generate_file_name(
                 file_type="photons",
@@ -662,7 +661,7 @@ class RayTracing:
 
     def _get_ray_tracing_files(self, off_x, off_y, mirror_number):
         """Return photon and star list paths for one ray-tracing simulation."""
-        photon_suffix = ".csv" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
+        photon_suffix = ".lis"
         photons_file_lis = self.output_directory.joinpath(
             self._generate_file_name(
                 "photons",
@@ -739,8 +738,6 @@ class RayTracing:
         list
             Telescope transmission parameters.
         """
-        if settings.config.ray_tracing_backend == "obdeect":
-            return [1, 0, 0, 0]
         return (
             self.telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
@@ -767,20 +764,11 @@ class RayTracing:
         PSFImage
             PSF image object.
         """
-        launch_area_m2 = None
-        if settings.config.ray_tracing_backend == "obdeect":
-            launch_area_m2 = settings.config.args.get("obdeect_launch_area_m2")
-            if launch_area_m2 is not None:
-                launch_area_m2 = float(launch_area_m2)
         image = PSFImage(
             focal_length=focal_length,
             containment_fraction=containment_fraction,
-            total_scattered_area=launch_area_m2,
         )
-        image.process_photon_list(
-            photons_file,
-            use_rx if settings.config.ray_tracing_backend == "sim_telarray" else False,
-        )
+        image.process_photon_list(photons_file, use_rx)
         return image
 
     def _analyze_image(

@@ -470,7 +470,7 @@ def test_ray_tracing_simulate_obdeect(
     )
     gzip_open = mocker.patch("gzip.open")
 
-    ray_tracing_lst.simulate(test=test, force=True, max_workers=max_workers)
+    ray_tracing_lst.simulate(test=test, force=True, max_workers=max_workers, compress_photons=False)
 
     assert factory.call_count == len(offsets)
     for (off_x, off_y), simulator, factory_call in zip(
@@ -486,10 +486,11 @@ def test_ray_tracing_simulate_obdeect(
             "single_mirror_mode": False,
             "number_of_photons": 100 if test else 10000 if photon_count is None else photon_count,
             "focal_surface_image": True,
+            "zenith_angle": ray_tracing_lst.zenith_angle,
         }
         assert kwargs["output_file"] == ray_tracing_lst.output_directory.joinpath(
             ray_tracing_lst._generate_file_name(
-                file_type="photons", suffix=".csv", off_axis_x=off_x, off_axis_y=off_y
+                file_type="photons", suffix=".lis", off_axis_x=off_x, off_axis_y=off_y
             )
         )
         assert kwargs["force_simulate"] is True
@@ -575,7 +576,6 @@ def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
     mock_psf_image.assert_called_once_with(
         focal_length=focal_length,
         containment_fraction=containment_fraction,
-        total_scattered_area=None,
     )
     mock_process_photon_list.assert_called_once_with(test_photons_file, use_rx)
     assert image == mock_psf_image_instance

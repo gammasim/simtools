@@ -1,4 +1,6 @@
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import astropy.units as u
 import pytest
@@ -27,7 +29,19 @@ def test_obdeect_command_accepts_provenance_bound_optical_model_file(mocker, tmp
     telescope.name = "MSTN-01"
     output_file = Path(tmp_test_directory) / "arrivals.csv"
     optical_model_file = Path(tmp_test_directory) / "MSTN.optical_model"
-    optical_model_file.write_text("obdeect.compiled-optical-model.v1\n")
+    optical_model_file.write_text(
+        json.dumps(
+            {
+                "trace_model": {
+                    "kind": "segmented",
+                    "primary_facets": [{"centre_m": [0, 0, 0], "diameter_m": 2}],
+                },
+                "focal_length_m": 10,
+                "camera": {"rotation_deg": 0},
+                "optical_model_sha256": "a" * 64,
+            }
+        )
+    )
     mocker.patch(
         "simtools.simtel.simulator_obdeect.settings.config",
         mocker.Mock(obdeect_exe=output_file.parent / "obdeect"),
@@ -42,6 +56,14 @@ def test_obdeect_command_accepts_provenance_bound_optical_model_file(mocker, tmp
         output_file=output_file,
     )
 
+    mocker.patch.object(
+        simulator,
+        "_load_imaging_metadata",
+        return_value=SimpleNamespace(
+            launch_radius_m=1.2,
+            entrance_z_m=2,
+        ),
+    )
     command = simulator.make_run_command()
 
     assert command[:3] == [
@@ -89,7 +111,21 @@ def test_obdeect_rejects_empty_native_output(mocker, tmp_test_directory):
     mocker.patch.object(simulator, "make_run_command", return_value=["obdeect-simtools-raytrace"])
     mocker.patch(
         "simtools.simtel.simulator_obdeect.subprocess.run",
-        side_effect=lambda *_args, **_kwargs: output.touch(),
+        side_effect=lambda *_args, **_kwargs: output.with_suffix(".obdeect.csv").touch(),
     )
     with pytest.raises(RuntimeError, match="did not write an arrival file"):
         simulator.run()
+
+
+@pytest.mark.parametrize("offset", [-2.5, 0, 2.5])
+def test_obdeect_source_pointing_matches_simtel(offset, tmp_test_directory):
+    model = Path(tmp_test_directory) / "model.json"
+    model.write_text("{}")
+    simulator = SimulatorObdeect(
+        telescope_model=None,
+        config_data={"obdeect_optical_model_file": model, "zenith_angle": 20, "off_axis_x": offset},
+        output_file=Path(tmp_test_directory) / "image.lis",
+    )
+    field_x, field_y = simulator._source_field_angles()
+    assert field_x == pytest.approx(-offset, abs=1e-12)
+    assert field_y == 0
