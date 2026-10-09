@@ -776,6 +776,77 @@ class HTCondorBackend:
             results.append(JobResult(job_id, index, payload.get("value")))
         return results, failures
 
+    def collect(self, submission):
+        """Read terminal job results without polling or waiting.
+
+        Parameters
+        ----------
+        submission : SubmissionHandle
+            Submission already confirmed finished with ``is_finished``.
+
+        Returns
+        -------
+        list[JobResult]
+            Validated results in submission order.
+
+        Raises
+        ------
+        BackendExecutionError
+            A worker failed or a required output is missing.
+        """
+        results, failures = self._load_results(submission)
+        failures.extend(self._missing_output_failures(submission))
+        if failures:
+            raise BackendExecutionError("HTCondor job failure(s): " + "; ".join(failures))
+        self._cleanup_successful_artifacts(submission)
+        return sorted(results, key=lambda result: result.index)
+
+    def is_finished(self, submission):
+        """Confirm every submitted process has left the queue and reached a terminal state.
+
+        Parameters
+        ----------
+        submission : SubmissionHandle
+            Submission whose scheduler state is checked without waiting.
+
+        Returns
+        -------
+        bool
+            False when jobs remain in the scheduler queue; True when history confirms completion.
+
+        Raises
+        ------
+        BackendExecutionError
+            Scheduler state cannot be determined for every process.
+        """
+        processes = set(submission.process_ids.values())
+        if (
+            submission.scheduler_id is None
+            or not processes
+            or set(submission.process_ids) != set(submission.job_ids)
+        ):
+            raise BackendExecutionError(
+                "Cannot confirm finished jobs: missing scheduler identifiers."
+            )
+        self._load_htcondor()
+        constraint = f"ClusterId == {int(submission.scheduler_id)}"
+        try:
+            if list(self._schedd.query(constraint=constraint, projection=["ProcId"])):
+                return False
+            history = list(
+                self._schedd.history(
+                    constraint=constraint, projection=["ProcId", "JobStatus"], match=len(processes)
+                )
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            raise BackendExecutionError(f"Cannot confirm finished HTCondor jobs: {exc}") from exc
+        finished = {record.get("ProcId") for record in history if record.get("JobStatus") in {3, 4}}
+        if finished != processes:
+            raise BackendExecutionError(
+                "Cannot confirm finished jobs: incomplete HTCondor history."
+            )
+        return True
+
     def cancel(self, submission):
         """Remove all processes in an active cluster."""
         if submission.scheduler_id is None:

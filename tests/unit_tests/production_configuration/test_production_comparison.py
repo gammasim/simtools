@@ -1,5 +1,6 @@
 """Tests for production comparison workflows."""
 
+import json
 import logging
 from pathlib import Path
 
@@ -146,6 +147,9 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     )
     assert mock_write.call_args.args[2] == output_directory / input_stem
     assert mock_write.call_args.args[3] == ["alpha"]
+    inventory = json.loads((output_directory / "comparison_inventory.json").read_text())
+    assert inventory["matched_pair_count"] == 1
+    assert inventory["pairing_error_count"] == 0
 
 
 def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
@@ -232,6 +236,10 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
 
     mock_write.assert_called_once()
     assert "missing candidates=1, missing baselines=0" in caplog.text
+    inventory = json.loads((base_directory / "comparison/comparison_inventory.json").read_text())
+    assert inventory["matched_pair_count"] == 1
+    assert inventory["pairing_error_count"] == 1
+    assert not Path(inventory["pairs"][0]).is_absolute()
     descriptors = mock_write.call_args.args[0]
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
     assert descriptors[0].input_files == [str(base_directory / "baseline" / "baseline_20.hdf5")]

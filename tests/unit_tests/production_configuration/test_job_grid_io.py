@@ -266,7 +266,8 @@ def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
         assert "simulation_software" not in args
 
 
-def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory):
+@pytest.mark.parametrize("model_key", ["simulation_models_path", "simulation_models_git_path"])
+def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory, model_key):
     """Build unique backend-neutral commands while forcing nested execution local."""
     corsika_path = Path(tmp_test_directory) / "corsika" / "corsika.input"
     model_path = Path(tmp_test_directory) / "models"
@@ -280,7 +281,7 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
         "output_path": tmp_test_directory / "output",
         "grid_output_path": tmp_test_directory / "grid",
         "label": "prod",
-        "simulation_models_path": model_path,
+        model_key: model_path,
         "reduced_event_lists": False,
         "correct_for_b_field_alignment": False,
         "corsika_file": corsika_path,

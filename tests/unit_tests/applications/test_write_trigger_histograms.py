@@ -75,6 +75,8 @@ def test_add_arguments_accepts_production_path_and_selection():
             "configuration.zenith_angle=20 deg",
         ]
     )
+    args.output_path = "output"
+    write_trigger_histograms._post_parse(args.__dict__, {"cli": {"output_path"}}, parser)
 
     assert args.production_path == "grid-output"
     assert args.select == [

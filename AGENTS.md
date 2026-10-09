@@ -47,8 +47,11 @@ If you are unsure, ask for clarification. Try to shut up.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
-- Documentation and comments should describe current behavior, not historical
-  production details or changes from earlier behavior.
+- Documentation and comments must be version-neutral and describe the current
+  contract and behavior. Never document how behavior was introduced, changed,
+  migrated, or replaced; do not include release-specific campaign details or
+  schema-version transition notes in general documentation. Put version-specific
+  information in release configuration or release notes.
 - Put useful exception text in the raised exception. When wrapping exceptions,
   use `raise ... from exc`.
 - Avoid `logger.error` immediately before raising; it usually duplicates the

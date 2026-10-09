@@ -55,12 +55,7 @@ _ARGUMENTS = (
         type=str,
         required=False,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "compare_by",
         help="Configuration field allowed to differ between baseline and candidate.",

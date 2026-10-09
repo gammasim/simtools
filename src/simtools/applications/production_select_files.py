@@ -19,12 +19,7 @@ _ARGUMENTS = (
         type=str,
         required=True,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "file_type",
         help="Manifest file type to select.",
