@@ -75,12 +75,33 @@ def test_add_arguments_accepts_production_path_and_selection():
             "configuration.zenith_angle=20 deg",
         ]
     )
+    args.output_path = "output"
+    write_trigger_histograms._post_parse(args.__dict__, {"cli": {"output_path"}}, parser)
 
     assert args.production_path == "grid-output"
     assert args.select == [
         "configuration.corsika_he_interaction=qgs3",
         "configuration.zenith_angle=20 deg",
     ]
+
+
+def test_add_arguments_accepts_multiple_values_after_one_selection_option():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
+
+    args = parser.parse_args(
+        [
+            "--production_path",
+            "grid-output",
+            "--select",
+            "configuration.primary=gamma",
+            "configuration.site=North",
+        ]
+    )
+    args.output_path = "output"
+    write_trigger_histograms._post_parse(args.__dict__, {"cli": {"output_path"}}, parser)
+
+    assert args.select == ["configuration.primary=gamma", "configuration.site=North"]
 
 
 def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):

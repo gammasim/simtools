@@ -55,13 +55,7 @@ _ARGUMENTS = (
         type=str,
         required=False,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        nargs="+",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "compare_by",
         help="Configuration field allowed to differ between baseline and candidate.",
@@ -95,11 +89,6 @@ _ARGUMENTS = (
 
 def _post_parse(args_dict, _config_sources, parser):
     """Validate legacy and metadata-based production input modes."""
-    args_dict["select"] = [
-        selection
-        for selections in args_dict.get("select", [])
-        for selection in (selections if isinstance(selections, list) else [selections])
-    ]
     if args_dict.get("comparison_level") == "computing":
         _validate_computing_arguments(args_dict, parser)
         return
