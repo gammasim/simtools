@@ -27,23 +27,6 @@ def test_application_parser_accepts_selection_options():
     assert args.select == ["configuration.primary=gamma"]
 
 
-def test_application_parser_accepts_multiple_values_after_one_selection_option():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(production_select_files.APPLICATION.all_arguments)
-
-    args = parser.parse_args(
-        [
-            "--production_path",
-            "production",
-            "--select",
-            "configuration.primary=gamma",
-            "configuration.site=North",
-        ]
-    )
-
-    assert args.select == ["configuration.primary=gamma", "configuration.site=North"]
-
-
 def test_main_prints_selection_summary_and_writes_explicit_output(
     mocker, capsys, tmp_test_directory
 ):

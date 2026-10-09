@@ -10,8 +10,6 @@ from simtools.science_tests import run_release, setup_release
 
 def _post_parse(args_dict, _config_sources, _parser):
     """Keep validation-only commands free of log-file writes."""
-    if not args_dict.get("setup") and not args_dict.get("context_file"):
-        _parser.error("--context_file is required unless --setup is selected.")
     if args_dict.get("dry_run"):
         args_dict["disable_log_file"] = True
 
