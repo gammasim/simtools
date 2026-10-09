@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 """Run the reusable release science-test catalogue."""
 
+from pathlib import Path
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.science_tests import run_release
+from simtools.science_tests import run_release, setup_release
 
 
 def _post_parse(args_dict, _config_sources, _parser):
     """Keep validation-only commands free of log-file writes."""
+    if not args_dict.get("setup") and not args_dict.get("context_file"):
+        _parser.error("--context_file is required unless --setup is selected.")
     if args_dict.get("dry_run"):
         args_dict["disable_log_file"] = True
 
@@ -17,7 +21,7 @@ APPLICATION = ApplicationDefinition.for_module(
     model_repository=True,
     arguments=(
         cli.ArgumentDefinition("release_dir", type=str, required=True),
-        cli.ArgumentDefinition("context_file", type=str, required=True),
+        cli.ArgumentDefinition("context_file", type=str),
         cli.ArgumentDefinition("template_dir", type=str),
         cli.ArgumentDefinition("site", action="append", help="Select a required site."),
         cli.ArgumentDefinition("test", action="append", help="Select a named test."),
@@ -32,6 +36,11 @@ APPLICATION = ApplicationDefinition.for_module(
             action="store_true",
             help="Allow explicitly selected production after grid review.",
         ),
+        cli.ArgumentDefinition(
+            "setup",
+            action="store_true",
+            help="Create a new release directory from the shared setup templates and exit.",
+        ),
     ),
     setup_io_handler=False,
     resolve_sim_software_executables=False,
@@ -44,9 +53,17 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """Parse the small release-runner interface and execute it."""
     args = APPLICATION.start().args
+    if args.get("setup"):
+        setup_release(
+            args["release_dir"],
+            template_dir=args.get("template_dir"),
+            context_file=args.get("context_file"),
+        )
+        return
+    context_file = args.get("context_file") or str(Path(args["release_dir"]) / "context.yml")
     run_release(
         args["release_dir"],
-        context_file=args["context_file"],
+        context_file=context_file,
         template_dir=args.get("template_dir"),
         sites=args.get("site"),
         tests=args.get("test"),

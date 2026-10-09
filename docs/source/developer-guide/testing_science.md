@@ -17,15 +17,14 @@ science-test-template/
 
 simtools-tests/<release>/science_tests/
   release.yml                    release label, baseline, sites, expected changes
-  context.example.yml            external paths; copy outside Git
+  context.yml                    external paths and runtime image location
   sites/*.yml                    site layout and required tests
-  acceptance/overrides.yml       must remain empty
   reports/                       comparison reports and lists of collected files
 ```
 
 The catalogue is reusable. Release files select the catalogue and sites; site files provide the
-array layout and required tests. The release file provides the release label. The external context
-provides absolute candidate, baseline, and production-configuration directories. The candidate is
+array layout and required tests. The release file provides the release label. The context provides
+absolute candidate, baseline, and production-configuration directories. The candidate is
 the production being tested;
 the baseline is the production used for comparison. Workflows use the application-workflow schema;
 the runner supplies site and report placeholders.
@@ -42,7 +41,7 @@ in the campaign signature.
 
 ## Run a campaign
 
-Copy the release context example outside Git and set values such as:
+Set values such as these in the release directory's `context.yml`:
 
 ```yaml
 __SCIENCE_CANDIDATE_PATH__: /data/science/candidate
@@ -52,11 +51,22 @@ __PRODUCTION_CONFIGURATION_PATH__: /data/production-configuration/data
 
 Use absolute directory paths and separate candidate and baseline directories.
 
+To create a new release directory from the shared templates, run:
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/context.example.yml --setup
+```
+
+This creates the release definition, site selections, and an editable `context.yml`. It does not
+overwrite existing setup files or copy generated reports. Review the generated files and context
+paths before running the dry-run validation.
+
 First validate the complete selection:
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
-  --context_file /path/to/context.yml --dry_run
+  --dry_run
 ```
 
 Then use the same release and context arguments to run the campaign:

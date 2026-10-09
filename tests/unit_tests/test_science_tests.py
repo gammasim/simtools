@@ -50,6 +50,51 @@ def test_run_test_dry_run_validates_resolved_workflow(tmp_test_directory):
     assert not (root / "candidate").exists()
 
 
+def test_setup_release_creates_minimal_release_from_templates(tmp_test_directory, caplog):
+    root = Path(tmp_test_directory)
+    template = root / "science-test-template"
+    release = root / "v1.2.3" / "science_tests"
+    for relative, contents in {
+        "release.yml": "release_label: __SCIENCE_RELEASE_LABEL__\n",
+        "sites/north.yml": "site: north\n",
+        "sites/south.yml": "site: south\n",
+        "context.example.yml": "__SCIENCE_CANDIDATE_PATH__: /path/candidate\n",
+    }.items():
+        path = template / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(contents, encoding="utf-8")
+
+    with caplog.at_level(logging.INFO):
+        science_tests.setup_release(release, template)
+
+    assert (release / "release.yml").read_text(encoding="utf-8") == "---\nrelease_label: v1.2.3\n"
+    assert all(
+        path.read_text(encoding="utf-8").startswith("---") for path in release.rglob("*.yml")
+    )
+    assert "Edit these files before the dry run" in caplog.text
+    assert sorted(path.relative_to(release).as_posix() for path in release.rglob("*")) == [
+        "context.yml",
+        "release.yml",
+        "sites",
+        "sites/north.yml",
+        "sites/south.yml",
+    ]
+
+
+def test_setup_release_does_not_overwrite_existing_files(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    template = root / "science-test-template"
+    release = root / "v1.2.3" / "science_tests"
+    (template / "release.yml").parent.mkdir(parents=True)
+    (template / "release.yml").write_text("release_label: __SCIENCE_RELEASE_LABEL__\n")
+    (template / "context.example.yml").write_text("context\n")
+    (release / "release.yml").parent.mkdir(parents=True)
+    (release / "release.yml").write_text("existing\n")
+
+    with pytest.raises(FileExistsError, match="already exist"):
+        science_tests.setup_release(release, template)
+
+
 def _write_yaml(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
@@ -312,6 +357,31 @@ def test_completed_production_gate(tmp_test_directory):
 def test_invalid_release_context(release, context, message):
     with pytest.raises(ValueError, match=message):
         science_tests._validate_release_context(release, context)
+
+
+def test_identical_release_context_paths_identifies_conflicting_entries():
+    context = {
+        "__SCIENCE_CANDIDATE_PATH__": "/data/production",
+        "__SCIENCE_BASELINE_PATH__": "/data/production",
+        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
+    }
+
+    with pytest.raises(ValueError, match="__SCIENCE_CANDIDATE_PATH__=/data/production") as error:
+        science_tests._validate_release_context({"release_label": "candidate"}, context)
+
+    assert "__SCIENCE_BASELINE_PATH__=/data/production" in str(error.value)
+
+
+def test_identical_release_context_paths_are_allowed_when_distinctness_not_required():
+    context = {
+        "__SCIENCE_CANDIDATE_PATH__": "/data/production",
+        "__SCIENCE_BASELINE_PATH__": "/data/production",
+        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
+    }
+
+    science_tests._validate_release_context(
+        {"release_label": "candidate"}, context, require_distinct_paths=False
+    )
 
 
 @pytest.mark.parametrize(

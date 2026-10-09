@@ -35,13 +35,19 @@ _MODEL_SOURCE_KEYS = (
     "simulation_models_git_revision",
 )
 _SUBMISSION_FILE_NAME = "submission.json"
+_SETUP_FILES = (
+    "release.yml",
+    "sites/north.yml",
+    "sites/south.yml",
+)
+_SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
 
 
 class _AcceptanceError(ValueError):
     """A valid measurement exceeds a configured acceptance limit."""
 
 
-def _validate_release_context(release, context):
+def _validate_release_context(release, context, require_distinct_paths=True):
     """Validate the release label and external directory paths."""
     label = release.get("release_label")
     if not isinstance(label, str) or not _VALID_NAME.fullmatch(label):
@@ -50,8 +56,13 @@ def _validate_release_context(release, context):
         value = context.get(key)
         if not isinstance(value, str) or not Path(value).is_absolute() or "__" in value:
             raise ValueError(f"Context requires an absolute path for {key}.")
-    if Path(context[_PATH_KEYS[0]]).resolve() == Path(context[_PATH_KEYS[1]]).resolve():
-        raise ValueError("Candidate and baseline paths must differ.")
+    candidate = Path(context[_PATH_KEYS[0]]).resolve()
+    baseline = Path(context[_PATH_KEYS[1]]).resolve()
+    if require_distinct_paths and candidate == baseline:
+        raise ValueError(
+            "Candidate and baseline paths must differ: "
+            f"{_PATH_KEYS[0]}={candidate}; {_PATH_KEYS[1]}={baseline}."
+        )
 
 
 def _select(requested, available, kind):
@@ -63,6 +74,37 @@ def _select(requested, available, kind):
     if not selected or set(selected) - set(available):
         raise ValueError(f"Invalid {kind} selection: {selected}; available: {sorted(available)}")
     return selected
+
+
+def _comparison_selected(requested_sites, requested_tests, suites, catalogue):
+    """Return whether the selected test dependency graph needs two productions."""
+    selected_test_ids = set()
+    for site in requested_sites:
+        selected = suites[site]["required_tests"] if requested_tests is None else requested_tests
+        selected_test_ids.update(_dependency_order(selected, catalogue))
+    return any(test_id.startswith("compare.") for test_id in selected_test_ids)
+
+
+def _warn_on_identical_paths(context, comparison_selected):
+    """Warn when a non-comparison run uses one path for both productions."""
+    if comparison_selected:
+        return
+    candidate = Path(context[_PATH_KEYS[0]]).resolve()
+    baseline = Path(context[_PATH_KEYS[1]]).resolve()
+    if candidate == baseline:
+        logger.warning(
+            "Candidate and baseline paths are identical; this is allowed for "
+            "non-comparison science tests."
+        )
+
+
+def _validate_selected_context(
+    release, context, requested_sites, requested_tests, suites, catalogue
+):
+    """Validate context paths for the selected test dependency graph."""
+    comparison_selected = _comparison_selected(requested_sites, requested_tests, suites, catalogue)
+    _validate_release_context(release, context, require_distinct_paths=comparison_selected)
+    _warn_on_identical_paths(context, comparison_selected)
 
 
 def _load_suites(release_dir, release, catalogue):
@@ -446,11 +488,13 @@ def run_release(
     context = _load_context(context_file)
     if not context:
         raise ValueError("A context_file is required for a science-test run.")
-    _validate_release_context(release, context)
     context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
     suites = _load_suites(release_dir, release, catalogue)
     requested_sites = _select(sites, suites, "site")
     requested_tests = _select(tests, catalogue, "test") if tests is not None else None
+    _validate_selected_context(
+        release, context, requested_sites, requested_tests, suites, catalogue
+    )
     acceptance = _load_acceptance(release_dir, template_dir)
     application_args = _model_source_arguments(application_args, context, release)
     application_args["science_overwrite"] = overwrite
@@ -504,6 +548,42 @@ def run_release(
         )
         raise RuntimeError(f"Science tests failed: {details}")
     return summary
+
+
+def setup_release(release_dir, template_dir=None, context_file=None):
+    """Create a new release directory from the shared science-test templates."""
+    release_dir = Path(release_dir).resolve()
+    template_dir = _resolve_template_dir(release_dir, template_dir)
+    release_label = release_dir.parent.name
+    if not _VALID_NAME.fullmatch(release_label):
+        release_label = "candidate"
+    targets = [release_dir / path for path in (*_SETUP_FILES, "context.yml")]
+    existing = [path for path in targets if path.exists()]
+    if existing:
+        paths = ", ".join(str(path) for path in existing)
+        raise FileExistsError(f"Science-test setup files already exist: {paths}")
+    context_source = Path(context_file) if context_file else template_dir / "context.example.yml"
+    sources = [template_dir / path for path in _SETUP_FILES] + [context_source]
+    missing = [path for path in sources if not path.is_file()]
+    if missing:
+        paths = ", ".join(str(path) for path in missing)
+        raise FileNotFoundError(f"Science-test setup templates not found: {paths}")
+    for source, target in zip(sources, targets):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        contents = source.read_text(encoding="utf-8").replace(_SETUP_RELEASE_LABEL, release_label)
+        if not contents.startswith("---"):
+            contents = "---\n" + contents
+        target.write_text(contents, encoding="utf-8")
+    logger.info("Created science-test setup in %s", release_dir)
+    logger.info(
+        "Edit these files before the dry run: %s",
+        ", ".join(str(release_dir / path) for path in ("context.yml", "release.yml")),
+    )
+    logger.info(
+        "Review site settings in: %s",
+        ", ".join(str(release_dir / path) for path in ("sites/north.yml", "sites/south.yml")),
+    )
+    return release_dir
 
 
 def _model_source_arguments(application_args, context, release):

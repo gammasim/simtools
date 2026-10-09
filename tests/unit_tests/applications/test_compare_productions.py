@@ -249,6 +249,18 @@ def test_comparison_level_argument_accepts_computing():
     assert args.candidate_label == "optimized"
 
 
+def test_post_parse_flattens_repeatable_selection_values(mocker):
+    args = {
+        "comparison_level": "computing",
+        "baseline_path": "production",
+        "select": [["configuration.primary=gamma", "configuration.site=North"]],
+    }
+
+    compare_productions._post_parse(args, None, mocker.Mock())
+
+    assert args["select"] == ["configuration.primary=gamma", "configuration.site=North"]
+
+
 def test_application_parses_productions_without_select(monkeypatch):
     monkeypatch.setattr(
         sys,

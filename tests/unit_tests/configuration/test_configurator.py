@@ -195,6 +195,30 @@ def test_arglist_from_config_splits_scalar_for_fixed_nargs():
     )
 
 
+def test_arglist_from_config_repeats_single_value_append_options():
+    configurator = Configurator()
+    configurator.parser.add_argument("--select", action="append")
+
+    assert [
+        "--select",
+        "configuration.primary=gamma",
+        "--select",
+        "configuration.site=North",
+    ] == Configurator._arglist_from_config(
+        {"select": ["configuration.primary=gamma", "configuration.site=North"]},
+        parser=configurator.parser,
+    )
+
+
+def test_arglist_from_config_keeps_multi_value_append_options_together():
+    configurator = Configurator()
+    configurator.parser.add_argument("--production", action="append", nargs="+")
+
+    assert ["--production", "baseline", "*.hdf5"] == Configurator._arglist_from_config(
+        {"production": ["baseline", "*.hdf5"]}, parser=configurator.parser
+    )
+
+
 def test_convert_string_none_to_none():
     assert {} == Configurator._convert_string_none_to_none({})
 
