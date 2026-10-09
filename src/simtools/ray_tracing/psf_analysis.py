@@ -113,8 +113,8 @@ class PSFImage:
         """Read a validated ``obdeect-arrival-v1`` CSV file.
 
         Centroids and radial containment use arriving optical weights. Effective
-        area requires the declared launch area in ``total_scattered_area``;
-        the dimensionless optical detection fraction remains available separately.
+        area uses the native ``launch_area_m2`` or an explicit ``total_scattered_area``
+        for files without launch metadata. The optical detection fraction is also available.
         """
         try:
             from obdeect.result_contract import (  # pylint: disable=import-outside-toplevel
@@ -144,10 +144,11 @@ class PSFImage:
         arriving_weight = self.photon_weights.sum()
         self.optical_detection_fraction = arriving_weight / input_weight
         self._effective_area = None
-        if self._total_area is not None:
-            if not np.isfinite(self._total_area) or self._total_area <= 0:
+        launch_area = self._obdeect_launch_area(arrivals)
+        if launch_area is not None:
+            if not np.isfinite(launch_area) or launch_area <= 0:
                 raise ValueError("total_scattered_area must be finite and positive")
-            self._effective_area = self._total_area * self.optical_detection_fraction
+            self._effective_area = launch_area * self.optical_detection_fraction
         self.photon_pos_x = np.asarray([arrival.focal_x_m * 100.0 for arrival in detected])
         self.photon_pos_y = np.asarray([arrival.focal_y_m * 100.0 for arrival in detected])
         self.centroid_x = np.average(self.photon_pos_x, weights=self.photon_weights)
@@ -159,6 +160,18 @@ class PSFImage:
         self.photon_r = radii[order]
         self._radial_weight_cdf = np.cumsum(self.photon_weights[order])
         self._stored_psf.clear()
+
+    def _obdeect_launch_area(self, arrivals):
+        """Use the native launch area, checking any explicit analysis override."""
+        areas = {getattr(arrival, "launch_area_m2", None) for arrival in arrivals}
+        if len(areas) != 1:
+            raise ValueError("Inconsistent launch_area_m2 in obdeect arrivals")
+        area = areas.pop()
+        if self._total_area is not None:
+            if area is not None and not np.isclose(self._total_area, area, rtol=1e-12, atol=0):
+                raise ValueError("total_scattered_area disagrees with obdeect launch_area_m2")
+            return self._total_area
+        return area
 
     def _weighted_centroid_error(self, positions):
         """Use effective sample size for the weighted centroid's standard error."""

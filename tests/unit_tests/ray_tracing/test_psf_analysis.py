@@ -586,3 +586,31 @@ def test_weighted_psf_histogram_preserves_optical_weight(tmp_test_directory):
         assert np.sum(axes.collections[0].get_array()) == pytest.approx(4)
     finally:
         plt.close(figure)
+
+
+@pytest.mark.parametrize("override", [None, 200, 100])
+def test_obdeect_native_launch_area(tmp_test_directory, override):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 3], [1, 1], lost_weight=2)
+    lines = arrival_file.read_text().splitlines()
+    arrival_file.write_text(
+        lines[0] + ",launch_area_m2\n" + "".join(line + ",200\n" for line in lines[1:])
+    )
+    image = PSFImage(total_scattered_area=override)
+    if override == 100:
+        with pytest.raises(ValueError, match="disagrees"):
+            image.process_photon_list(arrival_file, use_rx=False)
+    else:
+        image.process_photon_list(arrival_file, use_rx=False)
+        assert image.get_effective_area() == pytest.approx(200 * 4 / 6)
+
+
+def test_obdeect_inconsistent_launch_area(tmp_test_directory):
+    arrival_file = _write_weighted_arrivals(tmp_test_directory, [1, 1], [1, 1])
+    lines = arrival_file.read_text().splitlines()
+    arrival_file.write_text(
+        lines[0]
+        + ",launch_area_m2\n"
+        + "".join(f"{line},{200 + index}\n" for index, line in enumerate(lines[1:]))
+    )
+    with pytest.raises(ValueError, match="Inconsistent launch_area_m2"):
+        PSFImage().process_photon_list(arrival_file, use_rx=False)

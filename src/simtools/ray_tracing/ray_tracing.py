@@ -464,8 +464,7 @@ class RayTracing:
                     "source_distance": mirror_data["source_distance"] * u.km,
                     "single_mirror_mode": self.single_mirror_mode,
                     "number_of_photons": 10000 if photon_count is None else photon_count,
-                    "focal_surface_image": self.telescope_model.get_parameter_value("mirror_class")
-                    == 2,
+                    "focal_surface_image": True,
                 },
                 output_file=output_file,
                 force_simulate=force,

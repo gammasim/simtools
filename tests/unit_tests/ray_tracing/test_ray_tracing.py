@@ -485,7 +485,7 @@ def test_ray_tracing_simulate_obdeect(
             "source_distance": ray_tracing_lst.mirrors[0]["source_distance"] * u.km,
             "single_mirror_mode": False,
             "number_of_photons": 100 if test else 10000 if photon_count is None else photon_count,
-            "focal_surface_image": mirror_class == 2,
+            "focal_surface_image": True,
         }
         assert kwargs["output_file"] == ray_tracing_lst.output_directory.joinpath(
             ray_tracing_lst._generate_file_name(
