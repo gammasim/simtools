@@ -44,6 +44,9 @@ class SimulatorObdeect:
             raise ValueError("obdeect_optical_model_file is required for model-derived ray tracing")
         if not Path(self.config["obdeect_optical_model_file"]).expanduser().is_file():
             raise FileNotFoundError("obdeect_optical_model_file does not exist")
+        self._resolved_optical_model_file = Path(
+            self.config["obdeect_optical_model_file"]
+        ).expanduser()
         if self.config.get("single_mirror_mode", False):
             raise ValueError("single_mirror_mode is not supported by the reference obdeect CLI")
 
@@ -59,7 +62,7 @@ class SimulatorObdeect:
         distance_m = self._value(self.config.get("source_distance", 10.0), u.km) * 1000.0
         metadata = self._load_imaging_metadata(distance_m)
         command = [str(settings.config.obdeect_exe)]
-        optical_model_file = self.config.get("obdeect_optical_model_file")
+        optical_model_file = self._resolved_optical_model_file
         command.extend(["--optical-model", str(Path(optical_model_file).expanduser())])
         command.extend(
             [
@@ -89,8 +92,8 @@ class SimulatorObdeect:
                 "finite",
                 "--source-seed",
                 "0",
-                "--launch-radius-m",
-                str(metadata.launch_radius_m),
+                "--sampling-radius-m",
+                str(metadata.sampling_radius_m),
                 "--entrance-z-m",
                 str(metadata.entrance_z_m),
             ]
@@ -109,8 +112,20 @@ class SimulatorObdeect:
 
         if self.config.get("source", "star") != "star":
             raise ValueError("simtools imaging studies require a star source")
-        self._imaging_metadata = load_imaging_metadata(
+        from obdeect.observing_geometry import (  # pylint: disable=import-outside-toplevel
+            prepare_observing_model,
+        )
+
+        telescope_zenith = self._value(self.config.get("zenith_angle", 0), u.deg) - float(
+            self.config.get("off_axis_x", 0)
+        )
+        self._resolved_optical_model_file = prepare_observing_model(
             Path(self.config["obdeect_optical_model_file"]).expanduser(),
+            self.output_file.with_suffix(".optical-model.json"),
+            telescope_zenith,
+        )
+        self._imaging_metadata = load_imaging_metadata(
+            self._resolved_optical_model_file,
             distance_m,
             float(self.config.get("off_axis_x", 0)),
             float(self.config.get("off_axis_y", 0)),

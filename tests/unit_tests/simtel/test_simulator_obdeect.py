@@ -60,7 +60,7 @@ def test_obdeect_command_accepts_provenance_bound_optical_model_file(mocker, tmp
         simulator,
         "_load_imaging_metadata",
         return_value=SimpleNamespace(
-            launch_radius_m=1.2,
+            sampling_radius_m=1.2,
             entrance_z_m=2,
         ),
     )
@@ -129,3 +129,38 @@ def test_obdeect_source_pointing_matches_simtel(offset, tmp_test_directory):
     field_x, field_y = simulator._source_field_angles()
     assert field_x == pytest.approx(-offset, abs=1e-12)
     assert field_y == 0
+
+
+@pytest.mark.parametrize(("zenith", "offset", "expected"), [(20 * u.deg, 3, 17), (0, 3, -3)])
+def test_backend_resolves_model_at_scan_pointing(
+    mocker, tmp_test_directory, zenith, offset, expected
+):
+    """Use telescope pointing for deformation and pass resolved metadata to analysis."""
+    root = Path(tmp_test_directory)
+    source = root / "input-model.json"
+    source.write_text("{}")
+    output = root / "arrivals.csv"
+    resolved = root / "resolved-model.json"
+    prepare = mocker.patch(
+        "obdeect.observing_geometry.prepare_observing_model", return_value=resolved
+    )
+    metadata = SimpleNamespace(sampling_radius_m=2, entrance_z_m=0)
+    load = mocker.patch("obdeect.imaging_list.load_imaging_metadata", return_value=metadata)
+    mocker.patch(
+        "simtools.simtel.simulator_obdeect.settings.config", mocker.Mock(obdeect_exe="obdeect")
+    )
+    simulator = SimulatorObdeect(
+        telescope_model=mocker.Mock(),
+        config_data={
+            "obdeect_optical_model_file": source,
+            "zenith_angle": zenith,
+            "off_axis_x": offset,
+        },
+        output_file=output,
+    )
+    command = simulator.make_run_command()
+    prepare.assert_called_once_with(source, output.with_suffix(".optical-model.json"), expected)
+    load.assert_called_once_with(resolved, 10000, offset, 0, float(expected + offset))
+    assert command[command.index("--optical-model") + 1] == str(resolved)
+    assert simulator._imaging_metadata is metadata
+    assert source.read_text() == "{}"
