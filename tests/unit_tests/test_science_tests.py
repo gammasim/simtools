@@ -185,7 +185,7 @@ def successful_workflow(monkeypatch):
 
 def test_dry_run_is_read_only(campaign, successful_workflow):
     summary = science_tests.run_release(**campaign, dry_run=True)
-    assert len(summary["results"]) == 4
+    assert len(summary["results"]) == 2
     assert all(result["status"] == "planned" for result in summary["results"])
     assert not summary["qualified"]
     assert successful_workflow == []
@@ -196,12 +196,11 @@ def test_run_collects_evidence_and_preserves_subset_results(campaign, successful
     north = science_tests.run_release(**campaign, sites=["north"], tests=["compare"])
     assert {r["id"]: r["status"] for r in north["results"]} == {
         "compare.north": "warn",
-        "derive.north": "pass",
         "compare.south": "not_run",
     }
     south = science_tests.run_release(**campaign, sites=["south"], tests=["compare"])
-    assert len(south["results"]) == 4
-    assert successful_workflow == ["north", "north", "south", "south"]
+    assert len(south["results"]) == 2
+    assert successful_workflow == ["north", "south"]
     result = south["results"][0]
     report = campaign["release_dir"] / result["report"]
     assert json.loads((report / "metrics.json").read_text()) == {"count": 3}
@@ -240,7 +239,7 @@ def test_failed_dependency_blocks_comparison(campaign, monkeypatch):
 
     monkeypatch.setattr(science_tests, "run_applications", fail)
     with pytest.raises(RuntimeError, match="Science tests failed"):
-        science_tests.run_release(**campaign, sites=["north"])
+        science_tests.run_release(**campaign, sites=["north"], tests=["derive", "compare"])
     summary = json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text())
     assert len(calls) == 1
     assert {r["test"]: r["status"] for r in summary["results"] if r["site"] == "north"} == {
@@ -328,16 +327,28 @@ def test_identical_release_context_paths_identifies_conflicting_entries():
     assert "__SCIENCE_BASELINE_PATH__=/data/production" in str(error.value)
 
 
-def test_identical_release_context_paths_are_allowed_when_distinctness_not_required():
+def test_non_comparison_context_does_not_require_a_baseline():
     context = {
         "__SCIENCE_CANDIDATE_PATH__": "/data/production",
-        "__SCIENCE_BASELINE_PATH__": "/data/production",
         "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
     }
 
     science_tests._validate_release_context(
-        {"release_label": "candidate"}, context, require_distinct_paths=False
+        {"release_label": "candidate"}, context, require_baseline=False
     )
+
+
+def test_non_comparison_selection_does_not_require_a_baseline(campaign, successful_workflow):
+    context = campaign["context_file"]
+    configuration = yaml.safe_load(context.read_text(encoding="utf-8"))
+    del configuration["__SCIENCE_BASELINE_PATH__"]
+    _write_yaml(context, configuration)
+
+    summary = science_tests.run_release(**campaign, sites=["north"], tests=["derive"])
+
+    assert [result["id"] for result in summary["results"] if result["status"] != "not_run"] == [
+        "derive.north"
+    ]
 
 
 @pytest.mark.parametrize("configuration_file", ["workflow.yml", "run_time.yml"])
@@ -546,7 +557,7 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
 @pytest.mark.parametrize("sites", [["north"], ["North"], ["NORTH"], ["nOrTh"], ["North", "NORTH"]])
 def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites):
     summary = science_tests.run_release(**campaign, sites=sites)
-    assert successful_workflow == ["north", "north"]
+    assert successful_workflow == ["north"]
     assert {
         result["site"] for result in summary["results"] if result["execution"] == "completed"
     } == {"north"}

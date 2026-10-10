@@ -40,18 +40,19 @@ class _AcceptanceError(ValueError):
     """A valid measurement exceeds a configured acceptance limit."""
 
 
-def _validate_release_context(release, context, require_distinct_paths=True):
+def _validate_release_context(release, context, require_baseline=True):
     """Validate the release label and external directory paths."""
     label = release.get("release_label")
     if not isinstance(label, str) or not _VALID_NAME.fullmatch(label):
         raise ValueError("release_label must be a non-empty filename-safe label.")
-    for key in _PATH_KEYS:
+    required_keys = _PATH_KEYS if require_baseline else (_PATH_KEYS[0], _PATH_KEYS[2])
+    for key in required_keys:
         value = context.get(key)
         if not isinstance(value, str) or not Path(value).is_absolute() or "__" in value:
             raise ValueError(f"Context requires an absolute path for {key}.")
     candidate = Path(context[_PATH_KEYS[0]]).resolve()
-    baseline = Path(context[_PATH_KEYS[1]]).resolve()
-    if require_distinct_paths and candidate == baseline:
+    baseline = Path(context[_PATH_KEYS[1]]).resolve() if require_baseline else None
+    if require_baseline and candidate == baseline:
         raise ValueError(
             "Candidate and baseline paths must differ: "
             f"{_PATH_KEYS[0]}={candidate}; {_PATH_KEYS[1]}={baseline}."
@@ -82,6 +83,8 @@ def _warn_on_identical_paths(context, comparison_selected):
     """Warn when a non-comparison run uses one path for both productions."""
     if comparison_selected:
         return
+    if _PATH_KEYS[1] not in context:
+        return
     candidate = Path(context[_PATH_KEYS[0]]).resolve()
     baseline = Path(context[_PATH_KEYS[1]]).resolve()
     if candidate == baseline:
@@ -96,7 +99,7 @@ def _validate_selected_context(
 ):
     """Validate context paths for the selected test dependency graph."""
     comparison_selected = _comparison_selected(requested_sites, requested_tests, suites, catalogue)
-    _validate_release_context(release, context, require_distinct_paths=comparison_selected)
+    _validate_release_context(release, context, require_baseline=comparison_selected)
     _warn_on_identical_paths(context, comparison_selected)
 
 
@@ -426,6 +429,58 @@ def _validate_metric_rule(metric):
             raise ValueError(f"Invalid acceptance {limit}: {value}")
 
 
+def _prepare_release_run(
+    release_dir, template_dir, context_file, sites, tests, overwrite, application_args
+):
+    """Load and validate the shared state required for a release run."""
+    release_dir = Path(release_dir).resolve()
+    release = _load_yaml(release_dir / _RELEASE_FILE_NAME)
+    template_dir = _resolve_template_dir(release_dir, template_dir)
+    catalogue = _load_catalogue(release, release_dir, template_dir)
+    context = _load_context(context_file)
+    if not context:
+        raise ValueError("A context_file is required for a science-test run.")
+    context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
+    suites = _load_suites(release_dir, release, catalogue)
+    requested_sites = _select(sites, suites, "site")
+    requested_tests = _select(tests, catalogue, "test") if tests is not None else None
+    _validate_selected_context(
+        release, context, requested_sites, requested_tests, suites, catalogue
+    )
+    acceptance = _load_acceptance(release_dir, template_dir)
+    application_args = _model_source_arguments(application_args, context, release)
+    application_args["science_overwrite"] = overwrite
+    model_source = {
+        key: str(application_args[key])
+        for key in _MODEL_SOURCE_KEYS
+        if application_args.get(key) is not None
+    }
+    signature = _campaign_signature(
+        release_dir,
+        template_dir,
+        release,
+        catalogue,
+        context,
+        suites,
+        acceptance["products"],
+        acceptance["rules"],
+        model_source,
+    )
+    return {
+        "release_dir": release_dir,
+        "release": release,
+        "template_dir": template_dir,
+        "catalogue": catalogue,
+        "context": context,
+        "suites": suites,
+        "requested_sites": requested_sites,
+        "requested_tests": requested_tests,
+        "acceptance": acceptance,
+        "application_args": application_args,
+        "signature": signature,
+    }
+
+
 def run_release(
     release_dir,
     *,
@@ -452,7 +507,8 @@ def run_release(
     template_dir : str or pathlib.Path or None
         Shared template; discovered above the release directory by default.
     sites, tests : iterable of str or None
-        Selected sites/tests; comparison dependencies are included.
+        Selected sites/tests. Only selected tests are executed; dependencies are ordered when
+        selected together and otherwise their required products must already exist.
     dry_run : bool
         Validate the complete selection without writes or execution.
     allow_production : bool
@@ -474,63 +530,59 @@ def run_release(
     RuntimeError
         A workflow failed or lacks required evidence.
     """
-    release_dir = Path(release_dir).resolve()
-    release = _load_yaml(release_dir / _RELEASE_FILE_NAME)
-    template_dir = _resolve_template_dir(release_dir, template_dir)
-    catalogue = _load_catalogue(release, release_dir, template_dir)
-    context = _load_context(context_file)
-    if not context:
-        raise ValueError("A context_file is required for a science-test run.")
-    context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
-    suites = _load_suites(release_dir, release, catalogue)
-    requested_sites = _select(sites, suites, "site")
-    requested_tests = _select(tests, catalogue, "test") if tests is not None else None
-    _validate_selected_context(
-        release, context, requested_sites, requested_tests, suites, catalogue
-    )
-    acceptance = _load_acceptance(release_dir, template_dir)
-    application_args = _model_source_arguments(application_args, context, release)
-    application_args["science_overwrite"] = overwrite
-    model_source = {
-        key: str(application_args[key])
-        for key in _MODEL_SOURCE_KEYS
-        if application_args and application_args.get(key) is not None
-    }
-    signature = _campaign_signature(
-        release_dir,
-        template_dir,
-        release,
-        catalogue,
-        context,
-        suites,
-        acceptance["products"],
-        acceptance["rules"],
-        model_source,
+    run = _prepare_release_run(
+        release_dir, template_dir, context_file, sites, tests, overwrite, application_args
     )
     prepared = []
     run_id = get_uuid()
-    for site in requested_sites:
-        site_config = suites[site]
-        selected = site_config["required_tests"] if requested_tests is None else requested_tests
-        for test_id in _dependency_order(selected, catalogue):
-            _validate_definition(test_id, site, catalogue[test_id])
-            definition = _test_definition(test_id, catalogue, acceptance, release)
-            _check_production_selection(
-                test_id, definition, requested_tests, allow_production, dry_run
+    for site in run["requested_sites"]:
+        site_config = run["suites"][site]
+        selected = (
+            site_config["required_tests"]
+            if run["requested_tests"] is None
+            else run["requested_tests"]
+        )
+        ordered = _dependency_order(selected, run["catalogue"])
+        for test_id in (name for name in ordered if name in selected):
+            _validate_definition(test_id, site, run["catalogue"][test_id])
+            definition = _test_definition(
+                test_id, run["catalogue"], run["acceptance"], run["release"]
             )
-            args = (release_dir, template_dir, context, site, site_config, test_id, definition)
+            _check_production_selection(
+                test_id, definition, run["requested_tests"], allow_production, dry_run
+            )
+            args = (
+                run["release_dir"],
+                run["template_dir"],
+                run["context"],
+                site,
+                site_config,
+                test_id,
+                definition,
+            )
             prepared.append(
                 (
                     args,
                     _run_test(
-                        *args, dry_run=True, run_id=run_id, application_args=application_args
+                        *args,
+                        dry_run=True,
+                        run_id=run_id,
+                        application_args=run["application_args"],
                     ),
                 )
             )
-    results = _execute_selection(prepared, dry_run, run_id, application_args)
-    summary = _release_summary(release_dir, release, suites, results, dry_run, signature, catalogue)
+    results = _execute_selection(prepared, dry_run, run_id, run["application_args"])
+    summary = _release_summary(
+        run["release_dir"],
+        run["release"],
+        run["suites"],
+        results,
+        dry_run,
+        run["signature"],
+        run["catalogue"],
+    )
     if not dry_run:
-        _write_summary(release_dir / "reports", summary)
+        _write_summary(run["release_dir"] / "reports", summary)
     failures = [
         result for result in results if result["status"] in {"fail", "incomplete", "blocked"}
     ]

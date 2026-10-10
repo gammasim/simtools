@@ -22,7 +22,11 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ArgumentDefinition("context_file", type=str),
         cli.ArgumentDefinition("template_dir", type=str),
         cli.ArgumentDefinition("site", action="append", help="Select a required site."),
-        cli.ArgumentDefinition("test", action="append", help="Select a named test."),
+        cli.ArgumentDefinition(
+            "test",
+            action="append",
+            help="Select tests to execute; prerequisites must be selected explicitly.",
+        ),
         cli.ArgumentDefinition(
             "overwrite",
             action="store_true",

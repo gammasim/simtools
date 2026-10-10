@@ -14,8 +14,8 @@ science-test-template/
 
 Each release has a small `science_tests` directory containing `release.yml`, `context.yml`,
 `sites/*.yml`, and generated `reports/`. The release selects required sites; each site file selects
-its layout and required tests. The context provides absolute candidate, baseline, and
-production-configuration paths.
+its layout and required tests. The context provides the candidate and production-configuration
+paths; a baseline path is required only for comparison tests.
 
 ## Setup and run
 
@@ -40,15 +40,21 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test production.gamma --allow_production
 
-# Collect production, derive products, and compare them.
+# Check that production collection has completed.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test production.gamma.collect
+
+# Then explicitly derive products and compare them.
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test derive.trigger_histograms \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
 
-Repeat `--site` or `--test` to narrow execution; dependencies are included automatically. Production
-submission returns `submitted`; rerun `production.gamma.collect` to check completion. Failed or
-incomplete prerequisites block dependents. `--overwrite` archives a failed, finished production for
-an explicit retry with `--allow_production`.
+Repeat `--site` or `--test` to narrow execution. Only named tests run; prerequisites must be selected
+explicitly or their required products must already exist. Selected prerequisites run in dependency
+order, and missing or incomplete inputs block dependents. Production submission returns `submitted`;
+rerun `production.gamma.collect` to check completion. `--overwrite` archives a failed, finished
+production for an explicit retry with `--allow_production`.
 
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; failed numerical limits are `fail`; advisory limits are `warn` and require review.
