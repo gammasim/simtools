@@ -20,6 +20,7 @@ from simtools.sim_events.production_comparison import (
     parse_production_arguments,
 )
 from simtools.visualization import plot_event_level_production_comparison
+from simtools.visualization.visualize import save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     ]
     stem_counts = Counter(output_stems)
     pair_directories = []
+    compact_figures = [] if args_dict.get("report_mode") == "compact" else None
     for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
         pair_output_directory = _metadata_pair_output_directory(
             output_directory,
@@ -79,13 +81,26 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
             output_stem,
             stem_counts,
         )
-        _write_array_layout_comparisons(
-            production_descriptors,
-            args_dict,
-            pair_output_directory,
-            array_layout_names,
-        )
+        if compact_figures is None:
+            _write_array_layout_comparisons(
+                production_descriptors,
+                args_dict,
+                pair_output_directory,
+                array_layout_names,
+            )
+        else:
+            _write_array_layout_comparisons(
+                production_descriptors,
+                args_dict,
+                pair_output_directory,
+                array_layout_names,
+                compact_figures=compact_figures,
+            )
         pair_directories.append(pair_output_directory.relative_to(output_directory).as_posix())
+    if compact_figures:
+        save_figures_to_single_document(
+            compact_figures, output_directory / "trigger-report.pdf", close=True
+        )
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "comparison_inventory.json").write_text(
         json.dumps(
@@ -112,7 +127,7 @@ def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, 
 
 
 def _write_array_layout_comparisons(
-    production_descriptors, args_dict, output_directory, array_layout_names
+    production_descriptors, args_dict, output_directory, array_layout_names, compact_figures=None
 ):
     """Write comparison products for all selected array layouts."""
     for array_layout_name in array_layout_names:
@@ -121,20 +136,29 @@ def _write_array_layout_comparisons(
             args_dict,
             array_layout_name,
             output_directory,
+            compact_figures,
         )
 
 
-def _compare_array_layout(production_descriptors, args_dict, array_layout_name, output_directory):
+def _compare_array_layout(
+    production_descriptors, args_dict, array_layout_name, output_directory, compact_figures=None
+):
     """Compare one selected array layout and write its statistics metadata."""
     metrics_per_production = collect_production_metrics(
         production_descriptors,
         array_names=array_layout_name,
     )
+    plot_args = {
+        "output_path": output_directory,
+        "array_layout_name": array_layout_name,
+        "figure_format": args_dict.get("figure_format"),
+        "report_mode": args_dict.get("report_mode", "diagnostic"),
+    }
+    if compact_figures is not None:
+        plot_args["compact_figures"] = compact_figures
     comparison_statistics_file = plot_event_level_production_comparison.plot(
         metrics_per_production,
-        output_path=output_directory,
-        array_layout_name=array_layout_name,
-        figure_format=args_dict.get("figure_format"),
+        **plot_args,
     )
     metadata_args = dict(args_dict)
     metadata_args.update(
@@ -163,7 +187,12 @@ def _production_descriptor_pairs_from_metadata(args_dict):
 
     missing_candidates = sorted(set(baseline_by_key) - set(candidate_by_key))
     missing_baselines = sorted(set(candidate_by_key) - set(baseline_by_key))
-    descriptor_pairs = _matched_descriptor_pairs(baseline_by_key, candidate_by_key)
+    descriptor_pairs = _matched_descriptor_pairs(
+        baseline_by_key,
+        candidate_by_key,
+        args_dict.get("baseline_label", "baseline"),
+        args_dict.get("candidate_label", "candidate"),
+    )
     if missing_candidates or missing_baselines:
         raise _ProductionPairingError(
             "Trigger-histogram metadata pairing failed: "
@@ -175,18 +204,18 @@ def _production_descriptor_pairs_from_metadata(args_dict):
     return descriptor_pairs
 
 
-def _matched_descriptor_pairs(baseline_by_key, candidate_by_key):
+def _matched_descriptor_pairs(baseline_by_key, candidate_by_key, baseline_label, candidate_label):
     """Build descriptor pairs for configurations present in both productions."""
     return [
         (
             key,
             [
                 ProductionDescriptor(
-                    label="baseline",
+                    label=baseline_label,
                     input_files=[str(_single_trigger_histogram_file(baseline_by_key[key]))],
                 ),
                 ProductionDescriptor(
-                    label="candidate",
+                    label=candidate_label,
                     input_files=[str(_single_trigger_histogram_file(candidate_by_key[key]))],
                 ),
             ],

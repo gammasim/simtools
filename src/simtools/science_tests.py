@@ -17,6 +17,7 @@ from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners.simtools_runner import prepare_workflow, run_applications
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
+from simtools.version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ _MODEL_SOURCE_KEYS = (
 _SUBMISSION_FILE_NAME = "submission.json"
 _RELEASE_FILE_NAME = "release.yml"
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
+_PUBLICATION_WARNING_BYTES = 20 * 1024 * 1024
+_PUBLICATION_WARNING_FILES = 30
 
 
 class _AcceptanceError(ValueError):
@@ -52,9 +55,11 @@ def _validate_release_context(release, context, require_baseline=True):
             raise ValueError(f"Context requires an absolute path for {key}.")
     candidate = Path(context[_PATH_KEYS[0]]).resolve()
     baseline = Path(context[_PATH_KEYS[1]]).resolve() if require_baseline else None
-    if require_baseline and candidate == baseline:
+    if require_baseline and (
+        candidate == baseline or candidate in baseline.parents or baseline in candidate.parents
+    ):
         raise ValueError(
-            "Candidate and baseline paths must differ: "
+            "Candidate and baseline paths must be separate, non-overlapping directories: "
             f"{_PATH_KEYS[0]}={candidate}; {_PATH_KEYS[1]}={baseline}."
         )
 
@@ -146,7 +151,7 @@ def _check_production_selection(test_id, definition, tests, allow_production, dr
             )
 
 
-def _execute_selection(prepared, dry_run, run_id, application_args):
+def _execute_selection(prepared, dry_run, run_id, application_args, catalogue):
     """Execute dependency order and record blocked downstream tests."""
     results = []
     for args, planned in prepared:
@@ -154,7 +159,7 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
             _log_test_execution(planned, "Planned")
             results.append(planned)
             continue
-        dependencies = {f"{name}.{planned['site']}" for name in args[-1].get("depends_on", [])}
+        dependencies = _selected_ancestor_ids(planned, results, catalogue)
         if any(r["id"] in dependencies and r["status"] not in {"pass", "warn"} for r in results):
             results.append(
                 {
@@ -170,6 +175,14 @@ def _execute_selection(prepared, dry_run, run_id, application_args):
                 _run_test(*args, dry_run=False, run_id=run_id, application_args=application_args)
             )
     return results
+
+
+def _selected_ancestor_ids(planned, results, catalogue):
+    """Return every selected upstream test for a planned test and site."""
+    ancestors = set(_dependency_order([planned["test"]], catalogue))
+    ancestors.discard(planned["test"])
+    selected = {result["test"] for result in results if result["site"] == planned["site"]}
+    return {f"{test_id}.{planned['site']}" for test_id in ancestors & selected}
 
 
 def _dependency_status(results, dependencies):
@@ -248,6 +261,7 @@ def _evaluate_products(definition, replacements):
     """Enforce artifact completeness and declared numerical limits."""
     for pattern in definition.get("products", []):
         _matched_files(replace_placeholders_recursively(pattern, replacements))
+    _check_expected_pair_count(definition, replacements)
     rule = definition.get("rule", {})
     for metric in rule.get("metrics", []):
         pattern = replace_placeholders_recursively(metric["file"], replacements)
@@ -262,6 +276,22 @@ def _evaluate_products(definition, replacements):
     if rule.get("mode") == "advisory":
         return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
     return {"status": "pass"}
+
+
+def _check_expected_pair_count(definition, replacements):
+    """Require all reviewed trigger-comparison configurations to be represented."""
+    expected = definition.get("expected_pair_count")
+    if expected is None:
+        return
+    if isinstance(expected, bool) or not isinstance(expected, int) or expected < 1:
+        raise ValueError("expected_pair_count must be a positive integer.")
+    inventory = Path(replacements["__SCIENCE_REPORT_PATH__"]) / "comparison_inventory.json"
+    payload = json.loads(inventory.read_text(encoding="utf-8"))
+    observed = payload.get("matched_pair_count")
+    if observed != expected:
+        raise ValueError(
+            f"Incomplete comparison matrix: expected {expected} matched pairs, observed {observed}."
+        )
 
 
 def _check_metric(value, metric):
@@ -343,9 +373,19 @@ def _campaign_signature(
     products,
     rules,
     model_source,
+    ignore_runtime_environment,
 ):
     """Identify definitions and external context without publishing absolute paths."""
-    payload = [release, catalogue, context, suites, products, rules, model_source]
+    payload = [
+        release,
+        catalogue,
+        context,
+        suites,
+        products,
+        rules,
+        model_source,
+        {"ignore_runtime_environment": ignore_runtime_environment},
+    ]
     for definition in catalogue.values():
         payload.append(
             _resolve_workflow(template_dir, release_dir, definition["workflow"]).read_text(
@@ -390,14 +430,33 @@ def _test_definition(test_id, catalogue, acceptance, release):
         raise ValueError(f"Missing acceptance rule {rule_id} for {test_id}.")
     rule = acceptance["rules"].get(rule_id, {})
     _validate_rule(rule, rule_id)
-    return {
+    definition = {
         **catalogue[test_id],
         "products": products,
         "rule": rule,
         "expected_changes": release.get("expected_changes", []),
         "baseline": release.get("baseline"),
         "release_label": release.get("release_label"),
+        "report_mode": release.get("report_mode", "compact"),
     }
+    comparison_name = test_id.removeprefix("compare.")
+    requirements_by_comparison = release.get("comparison_requirements", {})
+    parameters_by_comparison = release.get("comparison_parameters", {})
+    if not isinstance(requirements_by_comparison, dict):
+        raise ValueError("comparison_requirements must be a mapping.")
+    if not isinstance(parameters_by_comparison, dict):
+        raise ValueError("comparison_parameters must be a mapping.")
+    requirements = requirements_by_comparison.get(comparison_name, {})
+    if requirements:
+        if not isinstance(requirements, dict):
+            raise ValueError(f"Invalid comparison requirements for {comparison_name}.")
+        definition.update(requirements)
+    parameters = parameters_by_comparison.get(comparison_name, {})
+    if parameters:
+        if not isinstance(parameters, dict):
+            raise ValueError(f"Invalid comparison parameters for {comparison_name}.")
+        definition["comparison_parameters"] = parameters
+    return definition
 
 
 def _validate_rule(rule, rule_id):
@@ -465,6 +524,7 @@ def _prepare_release_run(
         acceptance["products"],
         acceptance["rules"],
         model_source,
+        bool(application_args.get("ignore_runtime_environment")),
     )
     return {
         "release_dir": release_dir,
@@ -571,7 +631,9 @@ def run_release(
                     ),
                 )
             )
-    results = _execute_selection(prepared, dry_run, run_id, run["application_args"])
+    results = _execute_selection(
+        prepared, dry_run, run_id, run["application_args"], run["catalogue"]
+    )
     summary = _release_summary(
         run["release_dir"],
         run["release"],
@@ -583,6 +645,7 @@ def run_release(
     )
     if not dry_run:
         _write_summary(run["release_dir"] / "reports", summary)
+        _write_site_metrics(run["release_dir"] / "reports", summary)
     failures = [
         result for result in results if result["status"] in {"fail", "incomplete", "blocked"}
     ]
@@ -681,27 +744,7 @@ def _run_test(
     workflow = _resolve_workflow(template_dir, release_dir, definition["workflow"])
     replacements = _site_replacements(context, site, site_config, work)
     replacements["__CONFIG_DIRECTORY__"] = str(workflow.parent.resolve())
-    resolved = replace_placeholders_recursively(
-        _load_yaml(workflow),
-        replacements,
-    )
-    if (
-        not definition.get("produces_production")
-        and not definition.get("collect_production")
-        and "runtime_environment" not in resolved
-    ):
-        runtime = _shared_runtime_environment(template_dir, replacements)
-        if runtime is not None:
-            resolved["runtime_environment"] = runtime
-    for application in resolved.get("applications", []):
-        allowed = application.get("configuration", {}).get("compare_by", [])
-        if set(allowed) - set(definition.get("expected_changes", [])):
-            raise ValueError(f"Undeclared expected comparison differences: {allowed}")
-    schema.validate_dict_using_schema(
-        resolved,
-        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-        offline=True,
-    )
+    resolved = _resolved_test_workflow(template_dir, workflow, replacements, definition)
     args = {
         "ignore_runtime_environment": False,
         "ignore_existing_parameter_version": False,
@@ -727,6 +770,10 @@ def _run_test(
         "report": None,
         "run_id": run_id,
         "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
+        "software": {
+            "simtools": __version__,
+            "simulation_models": (application_args or {}).get("simulation_models_git_revision"),
+        },
         "output_paths": _test_output_paths(configurations, replacements),
         "execution": "planned" if dry_run else "completed",
         "status": "planned" if dry_run else "pass",
@@ -734,24 +781,12 @@ def _run_test(
     if dry_run:
         return result
 
-    try:
-        _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
-        _clear_test_directory(work)
-        _check_inputs(definition, replacements)
-        result.update(_execute_test_workflow(definition, args, replacements))
-    except _AcceptanceError as exc:
-        result["status"] = "fail"
-        result["error"] = str(exc)
-    except (
-        OSError,
-        ValueError,
-        RuntimeError,
-        subprocess.SubprocessError,
-        JobExecutionError,
-    ) as exc:
-        result["status"] = "incomplete"
-        result["execution"] = "failed"
-        result["error"] = str(exc)
+    _execute_and_record_test(
+        result, definition, replacements, args, run_id, work, report_root, resolved, runtime
+    )
+    result["execution_log"] = _relative_path(
+        work / "execution.log", Path(context["__SCIENCE_CANDIDATE_PATH__"])
+    )
     _write_test_report(work, report_root, release_dir, result)
     logger.info(
         "%s: %s%s",
@@ -760,6 +795,119 @@ def _run_test(
         f" - {result['reason']}" if result.get("reason") else "",
     )
     return result
+
+
+def _resolved_test_workflow(template_dir, workflow, replacements, definition):
+    """Resolve, customize, and validate one workflow before it is prepared."""
+    resolved = replace_placeholders_recursively(_load_yaml(workflow), replacements)
+    _add_shared_runtime(resolved, template_dir, replacements, definition)
+    _configure_comparison_applications(resolved, definition)
+    schema.validate_dict_using_schema(
+        resolved, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml", offline=True
+    )
+    return resolved
+
+
+def _add_shared_runtime(resolved, template_dir, replacements, definition):
+    """Apply the shared runtime to non-production workflows without one."""
+    needs_runtime = not definition.get("produces_production") and not definition.get(
+        "collect_production"
+    )
+    if needs_runtime and "runtime_environment" not in resolved:
+        runtime = _shared_runtime_environment(template_dir, replacements)
+        if runtime is not None:
+            resolved["runtime_environment"] = runtime
+
+
+def _configure_comparison_applications(resolved, definition):
+    """Apply release comparison settings and reject undeclared differences."""
+    for application in resolved.get("applications", []):
+        configuration = application.get("configuration", {})
+        if application.get("application") == "simtools-compare-productions":
+            configuration["report_mode"] = definition.get("report_mode", "compact")
+            configuration.update(definition.get("comparison_parameters", {}))
+            _set_event_comparison_labels(configuration, definition)
+        allowed = configuration.get("compare_by", [])
+        if set(allowed) - set(definition.get("expected_changes", [])):
+            raise ValueError(f"Undeclared expected comparison differences: {allowed}")
+
+
+def _set_event_comparison_labels(configuration, definition):
+    """Use release identities in event-comparison legends."""
+    if configuration.get("comparison_level") == "events":
+        configuration.setdefault("baseline_label", definition["baseline"])
+        configuration.setdefault("candidate_label", definition["release_label"])
+
+
+def _execute_and_record_test(
+    result, definition, replacements, args, run_id, work, report_root, resolved, runtime
+):
+    """Execute one test while retaining a useful failure result."""
+    try:
+        _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
+        _check_inputs(definition, replacements)
+        _run_or_reuse_test(result, definition, replacements, args, work, resolved, runtime)
+    except _AcceptanceError as exc:
+        result.update(status="fail", error=str(exc))
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        subprocess.SubprocessError,
+        JobExecutionError,
+    ) as exc:
+        result.update(status="incomplete", execution="failed", error=str(exc))
+
+
+def _run_or_reuse_test(result, definition, replacements, args, work, resolved, runtime):
+    """Reuse complete derivations or execute the workflow after preparing its work area."""
+    if _reuse_derived_product(definition, replacements, args):
+        result.update(_evaluate_products(definition, replacements))
+        result.update(
+            execution="reused",
+            reason="Reused complete derived products; use --overwrite to rebuild them.",
+        )
+        return
+    _prepare_derived_rebuild(definition, replacements, args)
+    _clear_test_directory(work)
+    _write_effective_settings(work, resolved, args, runtime)
+    result.update(_execute_test_workflow(definition, args, replacements))
+
+
+def _reuse_derived_product(definition, replacements, args):
+    """Reuse an existing complete derived product unless an explicit rebuild was requested."""
+    if not definition.get("derived_output") or args.get("science_overwrite"):
+        return False
+    try:
+        _evaluate_products(definition, replacements)
+    except ValueError:
+        return False
+    return True
+
+
+def _prepare_derived_rebuild(definition, replacements, args):
+    """Remove only this test's derived output when an explicit rebuild was requested."""
+    derived_output = definition.get("derived_output")
+    if not args.get("science_overwrite") or not derived_output:
+        return
+    path = Path(replace_placeholders_recursively(derived_output, replacements))
+    if path.exists():
+        shutil.rmtree(path)
+        logger.info("Removed derived output for explicit rebuild: %s", path)
+
+
+def _write_effective_settings(work, resolved, args, runtime):
+    """Record the settings actually supplied to the application runner."""
+    settings = {
+        "workflow": resolved,
+        "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
+        "ignore_runtime_environment": args["ignore_runtime_environment"],
+        "model_source": {key: args[key] for key in _MODEL_SOURCE_KEYS if args.get(key) is not None},
+        "environment_file": args.get("env_file"),
+    }
+    target = work / "provenance" / "effective-settings.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
 
 
 def _test_output_paths(configurations, replacements):
@@ -844,23 +992,61 @@ def _clear_test_directory(path):
 
 
 def _write_test_report(work, report_root, release_dir, result):
-    """Publish a small report even when execution or acceptance fails."""
-    _clear_test_directory(report_root)
+    """Publish successful evidence atomically and retain failed-attempt diagnostics."""
+    result["report"] = report_root.relative_to(release_dir).as_posix()
+    if result["status"] in {"fail", "incomplete", "blocked"}:
+        _write_failure_report(report_root, result)
+        return
+    staging = report_root.with_name(f".{report_root.name}.new")
+    _clear_test_directory(staging)
     source = work / "collected"
     if source.exists():
-        shutil.copytree(source, report_root)
-    report_root.mkdir(parents=True, exist_ok=True)
-    result["report"] = report_root.relative_to(release_dir).as_posix()
-    (report_root / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        shutil.copytree(source, staging)
+    staging.mkdir(parents=True, exist_ok=True)
+    result["publication"] = _publication_inventory(staging)
+    (staging / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     reason = (
         result.get("error")
         or result.get("reason")
         or "Required products and configured rules passed."
     )
-    (report_root / "summary.md").write_text(
+    (staging / "summary.md").write_text(
         f"# {result['id']}\n\nStatus: {result['status']}\n\n"
         f"Run ID: {result['run_id']}\n\n"
         f"Baseline: {result['baseline']}; candidate: {result['candidate']}\n\n{reason}\n",
+        encoding="utf-8",
+    )
+    previous = report_root.with_name(f".{report_root.name}.previous")
+    _clear_test_directory(previous)
+    if report_root.exists():
+        report_root.rename(previous)
+    staging.rename(report_root)
+    _clear_test_directory(previous)
+
+
+def _publication_inventory(report_root):
+    """Summarize compact publication size without making it an acceptance rule."""
+    files = [path for path in report_root.rglob("*") if path.is_file()]
+    total_bytes = sum(path.stat().st_size for path in files)
+    inventory = {"file_count": len(files), "byte_count": total_bytes}
+    if len(files) > _PUBLICATION_WARNING_FILES or total_bytes > _PUBLICATION_WARNING_BYTES:
+        inventory["warning"] = "Publication is larger than the compact-report guidance."
+        logger.warning(
+            "Science-test publication contains %d files and %d bytes.", len(files), total_bytes
+        )
+    return inventory
+
+
+def _write_failure_report(report_root, result):
+    """Keep the last successful publication while exposing the latest failed attempt."""
+    report_root.mkdir(parents=True, exist_ok=True)
+    reason = result.get("error") or result.get("reason") or "Science-test execution failed."
+    (report_root / "latest-failure.json").write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8"
+    )
+    (report_root / "latest-failure.md").write_text(
+        f"# Latest failed attempt: {result['id']}\n\nStatus: {result['status']}\n\n"
+        f"Run ID: {result['run_id']}\n\nLog: `{result.get('execution_log', '-')}`\n\n{reason}\n",
         encoding="utf-8",
     )
 
@@ -1014,3 +1200,18 @@ def _write_summary(report_dir, summary):
             f"{result['status']} | {link} |"
         )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_site_metrics(report_dir, summary):
+    """Consolidate each site's execution and science status for reviewer-facing publication."""
+    for site in summary["required_sites"]:
+        site_results = [result for result in summary["results"] if result["site"] == site]
+        payload = {
+            "release": summary["release"],
+            "baseline": summary.get("baseline"),
+            "site": site,
+            "results": site_results,
+        }
+        path = report_dir / site / "metrics.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

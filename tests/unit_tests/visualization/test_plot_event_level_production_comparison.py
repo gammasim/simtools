@@ -100,6 +100,34 @@ def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
     assert not (output_path / "trigger_multiplicity.png").exists()
 
 
+def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    statistics_file = plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, report_mode="compact"
+    )
+
+    assert (output_path / "comparison-report.pdf").is_file()
+    assert statistics_file.is_file()
+    assert not list(output_path.glob("*.png"))
+
+
+def test_no_plot_mode_retains_statistics(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
+
+    statistics_file = plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, report_mode="none"
+    )
+
+    assert statistics_file.is_file()
+    assert not list(output_path.glob("*.png"))
+
+
 def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
     metrics = [
         _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),

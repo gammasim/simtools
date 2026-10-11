@@ -212,6 +212,9 @@ def test_run_collects_evidence_and_preserves_subset_results(campaign, successful
     assert (
         json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text()) == south
     )
+    site_metrics = json.loads((campaign["release_dir"] / "reports/north/metrics.json").read_text())
+    assert site_metrics["site"] == "north"
+    assert site_metrics["results"][0]["id"] == "compare.north"
 
 
 @pytest.mark.parametrize(
@@ -327,6 +330,41 @@ def test_identical_release_context_paths_identifies_conflicting_entries():
     assert "__SCIENCE_BASELINE_PATH__=/data/production" in str(error.value)
 
 
+def test_nested_release_context_paths_are_rejected():
+    context = {
+        "__SCIENCE_CANDIDATE_PATH__": "/data/production/candidate",
+        "__SCIENCE_BASELINE_PATH__": "/data/production",
+        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
+    }
+
+    with pytest.raises(ValueError, match="non-overlapping"):
+        science_tests._validate_release_context({"release_label": "candidate"}, context)
+
+
+def test_campaign_signature_records_runtime_choice(campaign, successful_workflow):
+    standard = science_tests._prepare_release_run(
+        campaign["release_dir"],
+        campaign["template_dir"],
+        campaign["context_file"],
+        None,
+        None,
+        False,
+        {},
+    )
+    host = science_tests._prepare_release_run(
+        campaign["release_dir"],
+        campaign["template_dir"],
+        campaign["context_file"],
+        None,
+        None,
+        False,
+        {"ignore_runtime_environment": True},
+    )
+
+    assert standard["signature"] != host["signature"]
+    assert successful_workflow == []
+
+
 def test_non_comparison_context_does_not_require_a_baseline():
     context = {
         "__SCIENCE_CANDIDATE_PATH__": "/data/production",
@@ -393,9 +431,9 @@ def test_missing_product_is_recorded(campaign, monkeypatch):
     with pytest.raises(RuntimeError, match="Missing or empty required product"):
         science_tests.run_release(**campaign, sites=["north"])
     summary = json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text())
-    failed = next(r for r in summary["results"] if r["id"] == "derive.north")
+    failed = next(r for r in summary["results"] if r["id"] == "compare.north")
     report = campaign["release_dir"] / failed["report"]
-    assert "Missing or empty required product" in (report / "summary.md").read_text()
+    assert "Missing or empty required product" in (report / "latest-failure.md").read_text()
     assert failed["status"] == "incomplete"
 
 
@@ -584,9 +622,10 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     assert not any(path.exists() for path in stale)
     monkeypatch.setattr(science_tests, "run_applications", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="Science tests failed"):
-        science_tests.run_release(**args)
-    assert json.loads((report / "result.json").read_text())["status"] == "incomplete"
-    assert not (report / "metrics.json").exists()
+        science_tests.run_release(**args, overwrite=True)
+    assert json.loads((report / "result.json").read_text())["status"] == "pass"
+    assert json.loads((report / "latest-failure.json").read_text())["status"] == "incomplete"
+    assert (report / "metrics.json").exists()
 
 
 def test_campaign_model_settings(campaign, monkeypatch):
@@ -613,7 +652,7 @@ def test_campaign_model_settings(campaign, monkeypatch):
         dry_run=True,
         application_args={"simulation_models_git_revision": "main"},
     )
-    assert captured == [(context["simulation_models_git_path"], "v0.18.0")] * 2
+    assert captured == [(context["simulation_models_git_path"], "v0.18.0")]
 
 
 @pytest.mark.parametrize(
@@ -704,14 +743,18 @@ def test_submission_does_not_validate_completed_production(mocker):
 
 
 def test_pending_collection_defers_dependent_tests(mocker):
-    collect = {"id": "collect.north", "site": "north"}
-    compare = {"id": "compare.north", "site": "north"}
+    collect = {"id": "collect.north", "site": "north", "test": "collect"}
+    compare = {"id": "compare.north", "site": "north", "test": "compare"}
     execute = mocker.patch.object(
         science_tests, "_run_test", return_value={**collect, "status": "pending"}
     )
     mocker.patch.object(science_tests, "_log_test_execution")
     results = science_tests._execute_selection(
-        [(({},), collect), (({"depends_on": ["collect"]},), compare)], False, "run", {}
+        [(({},), collect), (({"depends_on": ["collect"]},), compare)],
+        False,
+        "run",
+        {},
+        {"collect": {}, "compare": {"depends_on": ["collect"]}},
     )
     assert [result["status"] for result in results] == ["pending", "pending"]
     execute.assert_called_once()

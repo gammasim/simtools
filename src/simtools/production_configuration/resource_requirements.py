@@ -130,7 +130,12 @@ def write_resource_requirements(args_dict, output_directory, plotter):
     )
     report_file = output_directory / "resource_requirements.md"
     write_markdown_report(summary, diagnostics, report_file)
-    plot_files = plotter(rows, output_directory, figure_format=args_dict.get("figure_format"))
+    plot_files = plotter(
+        rows,
+        output_directory,
+        figure_format=args_dict.get("figure_format"),
+        report_mode=args_dict.get("report_mode", "diagnostic"),
+    )
     return {
         "table_file": table_file,
         "json_file": json_file,

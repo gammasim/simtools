@@ -3,6 +3,8 @@
 import functools
 import logging
 from collections import Counter
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 
 import numpy as np
@@ -14,9 +16,10 @@ from simtools.statistics import (
 )
 from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import save_figure
+from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
+_COMPACT_FIGURES = ContextVar("event_comparison_compact_figures", default=None)
 
 
 def _output_directory_for_array_layout_selection(output_directory, array_layout_name):
@@ -40,6 +43,8 @@ def plot(
     array_layout_name=None,
     bins=40,
     figure_format=None,
+    report_mode="diagnostic",
+    compact_figures=None,
 ):
     """Create all event-level production comparison plots.
 
@@ -64,30 +69,60 @@ def plot(
     pathlib.Path
         Path to the JSON file containing the comparison statistics.
     """
+    if report_mode not in {"compact", "diagnostic", "none"}:
+        raise ValueError(f"Unsupported report mode: {report_mode}")
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
     output_path = output_path or io_handler.IOHandler().get_output_directory()
     output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
-        _record_plot_statistics(
-            comparison_statistics,
-            plot_name,
-            plot_function(metrics_per_production, output_path, figure_format=figure_format),
-        )
+    with _comparison_report(output_path, report_mode, compact_figures):
+        for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
+            _record_plot_statistics(
+                comparison_statistics,
+                plot_name,
+                plot_function(metrics_per_production, output_path, figure_format=figure_format),
+            )
 
-    _plot_quantity_comparisons(
-        metrics_per_production, output_path, bins, comparison_statistics, figure_format
-    )
-    _plot_per_type_comparisons(
-        metrics_per_production, output_path, bins, comparison_statistics, figure_format
-    )
+        _plot_quantity_comparisons(
+            metrics_per_production,
+            output_path,
+            bins,
+            comparison_statistics,
+            figure_format,
+            report_mode,
+        )
+        _plot_per_type_comparisons(
+            metrics_per_production, output_path, bins, comparison_statistics, figure_format
+        )
 
     return _write_comparison_statistics_json(comparison_statistics, output_path)
 
 
+@contextmanager
+def _comparison_report(output_path, report_mode, compact_figures=None):
+    """Route pages to one compact PDF or suppress rendering without changing metrics."""
+    if report_mode == "compact":
+        figures = compact_figures if compact_figures is not None else []
+        token = _COMPACT_FIGURES.set(figures)
+        try:
+            yield
+        finally:
+            _COMPACT_FIGURES.reset(token)
+        if compact_figures is None:
+            save_figures_to_single_document(
+                figures, output_path / "comparison-report.pdf", close=True
+            )
+        return
+    token = _COMPACT_FIGURES.set(False if report_mode == "none" else None)
+    try:
+        yield
+    finally:
+        _COMPACT_FIGURES.reset(token)
+
+
 def _plot_quantity_comparisons(
-    metrics_per_production, output_path, bins, comparison_statistics, figure_format
+    metrics_per_production, output_path, bins, comparison_statistics, figure_format, report_mode
 ):
     """Plot quantity-based comparisons and collect their statistics."""
     for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
@@ -117,8 +152,28 @@ def _plot_quantity_comparisons(
                     bins=bins,
                     cumulative=cumulative,
                     figure_format=figure_format,
+                    render=_render_quantity(
+                        quantity_name, cumulative, metrics_per_production, report_mode
+                    ),
                 ),
             )
+
+
+def _render_quantity(quantity_name, cumulative, metrics_per_production, report_mode):
+    """Suppress compact pages that have no resolved distribution information."""
+    if report_mode != "compact":
+        return True
+    if quantity_name == "core_distance" and cumulative:
+        return False
+    if quantity_name not in {"energy", "angular_distance"}:
+        return True
+    values = [
+        value
+        for metrics in metrics_per_production
+        for value in _get_quantity_arrays(metrics, quantity_name)
+        if value.size
+    ]
+    return bool(values) and any(np.unique(value).size > 1 for value in values)
 
 
 def _plot_per_type_comparisons(
@@ -155,6 +210,13 @@ def _plot_per_type_comparisons(
 
 def _save_figure(fig, output_path, filename, figure_format=None):
     """Save figure and close it."""
+    document = _COMPACT_FIGURES.get()
+    if document is False:
+        plt.close(fig)
+        return
+    if document is not None:
+        document.append(fig)
+        return
     output_file = output_path / Path(filename).with_suffix("")
     save_figure(
         fig,
@@ -577,6 +639,7 @@ def _plot_quantity_distribution(
     suffix="",
     cumulative=False,
     figure_format=None,
+    render=True,
 ):
     """Plot simulated and triggered distributions for one quantity.
 
@@ -675,12 +738,16 @@ def _plot_quantity_distribution(
     _annotate_comparison_statistics(ax, statistics)
 
     cum_str = "_cumulative" if cumulative else ""
-    _save_figure(
-        fig,
-        output_path,
-        f"distribution_{quantity_name}{cum_str}{suffix}.png",
-        figure_format,
-    )
+    if render:
+        _save_figure(
+            fig,
+            output_path,
+            f"distribution_{quantity_name}{cum_str}{suffix}.png",
+            figure_format,
+        )
+    else:
+        plt.close(fig)
+        statistics["rendering"] = {"rendered": False, "reason": "unresolved_distribution"}
     statistics["plot_name"] = f"distribution_{quantity_name}{cum_str}{suffix}"
     return statistics
 

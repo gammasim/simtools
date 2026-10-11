@@ -215,6 +215,15 @@ if missing:
 PY
 ```
 
+## Mandatory Pre-commit Validation
+
+Every change to source code, tests, workflows, configuration, documentation, or other
+tracked project files must pass the relevant pre-commit stage before handoff. Run the
+matching hooks for changed files during iteration and run `pre-commit run --all-files`
+as the final validation whenever the environment permits it. Do not report a change as
+complete when a pre-commit hook fails; fix the finding or clearly report the external
+blocker and the exact hook that could not run.
+
 ## Linting And Formatting
 
 Pre-commit runs ruff, ruff-format, pylint, flake8 cognitive complexity,

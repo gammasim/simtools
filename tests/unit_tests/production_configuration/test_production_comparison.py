@@ -53,12 +53,14 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             output_path=output_directory,
             array_layout_name="first",
             figure_format=["png"],
+            report_mode="diagnostic",
         ),
         mocker.call(
             mocker.sentinel.second_metrics,
             output_path=output_directory,
             array_layout_name="second",
             figure_format=["png"],
+            report_mode="diagnostic",
         ),
     ]
     assert [call.args[0]["array_layout_name"] for call in mock_dump.call_args_list] == [
@@ -150,6 +152,34 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     inventory = json.loads((output_directory / "comparison_inventory.json").read_text())
     assert inventory["matched_pair_count"] == 1
     assert inventory["pairing_error_count"] == 0
+
+
+def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "comparison"
+    descriptors = [
+        ProductionDescriptor("baseline", ["baseline.hdf5"]),
+        ProductionDescriptor("candidate", ["candidate.hdf5"]),
+    ]
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_production_descriptor_pairs_from_metadata",
+        return_value=[({"configuration": {"zenith_angle": 20}}, descriptors)],
+    )
+    figure = mocker.sentinel.figure
+
+    def write_pair(*_args, compact_figures=None):
+        compact_figures.append(figure)
+
+    mocker.patch.object(
+        production_comparison, "_write_array_layout_comparisons", side_effect=write_pair
+    )
+    save = mocker.patch.object(production_comparison, "save_figures_to_single_document")
+
+    production_comparison.write_production_comparison(
+        {"baseline_path": "baseline", "report_mode": "compact"}, output_directory
+    )
+
+    save.assert_called_once_with([figure], output_directory / "trigger-report.pdf", close=True)
 
 
 def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
