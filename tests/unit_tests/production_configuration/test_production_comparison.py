@@ -53,6 +53,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             array_layout_name="first",
             figure_format=["png"],
             report_mode="diagnostic",
+            comparison_title="Layout: first",
         ),
         mocker.call(
             mocker.sentinel.second_metrics,
@@ -60,6 +61,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             array_layout_name="second",
             figure_format=["png"],
             report_mode="diagnostic",
+            comparison_title="Layout: second",
         ),
     ]
     mock_summary.assert_called_once_with(
