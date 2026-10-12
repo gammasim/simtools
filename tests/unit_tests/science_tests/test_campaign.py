@@ -63,6 +63,14 @@ def test_setup_release_does_not_overwrite_existing_files(tmp_test_directory):
         campaign_runner.setup_release(release, template)
 
 
+def test_setup_release_requires_site_templates(tmp_test_directory):
+    template = Path(tmp_test_directory) / "science-test-template"
+    (template / "sites").mkdir(parents=True)
+
+    with pytest.raises(FileNotFoundError, match="site templates not found"):
+        campaign_runner.setup_release(Path(tmp_test_directory) / "release/science_tests", template)
+
+
 def test_dry_run_is_read_only(campaign, successful_workflow):
     summary = campaign_runner.run_release(**campaign, dry_run=True)
     assert len(summary["results"]) == 2
