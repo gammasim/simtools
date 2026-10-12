@@ -220,7 +220,7 @@ def _save_figure(fig, output_path, filename, figure_format=None):
     """Save figure and close it."""
     comparison_title = _COMPARISON_TITLE.get()
     if comparison_title:
-        fig.suptitle(comparison_title, fontsize=10, fontweight="semibold")
+        fig.suptitle(comparison_title, fontsize=10, fontweight="bold")
     document = _COMPACT_FIGURES.get()
     if document is False:
         plt.close(fig)
