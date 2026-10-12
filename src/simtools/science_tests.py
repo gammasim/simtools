@@ -782,7 +782,7 @@ def _run_test(
         "config_file": str(workflow),
         "steps": None,
         "log_file": str(work / "execution.log"),
-        "provenance_path": str(work / "provenance" / "resolved-workflow.yml"),
+        "provenance_path": str(work / "workflow.yml"),
     }
     args.setdefault("runtime_environment", resolved.get("runtime_environment"))
     configurations, runtime, *_ = prepare_workflow(args, replacements=replacements)
@@ -812,7 +812,7 @@ def _run_test(
         return result
 
     _execute_and_record_test(
-        result, definition, replacements, args, run_id, work, report_root, resolved, runtime
+        result, definition, replacements, args, run_id, work, report_root, resolved
     )
     result["execution_log"] = _relative_path(
         work / "execution.log", Path(context["__SCIENCE_CANDIDATE_PATH__"])
@@ -832,10 +832,22 @@ def _resolved_test_workflow(template_dir, workflow, replacements, definition):
     resolved = replace_placeholders_recursively(_load_yaml(workflow), replacements)
     _add_shared_runtime(resolved, template_dir, replacements, definition)
     _configure_comparison_applications(resolved, definition)
+    _disable_collection_inventory(resolved)
     schema.validate_dict_using_schema(
         resolved, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml", offline=True
     )
     return resolved
+
+
+def _disable_collection_inventory(resolved):
+    """Avoid a redundant checksum inventory for in-place science-test collection."""
+    collection = resolved.get("collection")
+    if isinstance(collection, dict):
+        collection["write_inventory"] = False
+    elif isinstance(collection, list):
+        for entry in collection:
+            if isinstance(entry, dict):
+                entry["write_inventory"] = False
 
 
 def _add_shared_runtime(resolved, template_dir, replacements, definition):
@@ -870,13 +882,13 @@ def _set_event_comparison_labels(configuration, definition):
 
 
 def _execute_and_record_test(
-    result, definition, replacements, args, run_id, work, report_root, resolved, runtime
+    result, definition, replacements, args, run_id, work, report_root, resolved
 ):
     """Execute one test while retaining a useful failure result."""
     try:
         _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
         _check_inputs(definition, replacements)
-        _run_or_reuse_test(result, definition, replacements, args, work, resolved, runtime)
+        _run_or_reuse_test(result, definition, replacements, args, work, resolved)
     except _AcceptanceError as exc:
         result.update(status="fail", error=str(exc))
     except (
@@ -889,7 +901,7 @@ def _execute_and_record_test(
         result.update(status="incomplete", execution="failed", error=str(exc))
 
 
-def _run_or_reuse_test(result, definition, replacements, args, work, resolved, runtime):
+def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
     """Reuse complete derivations or execute the workflow after preparing its work area."""
     if _reuse_derived_product(definition, replacements, args):
         result.update(_evaluate_products(definition, replacements))
@@ -901,7 +913,6 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved, r
     _prepare_derived_rebuild(definition, replacements, args)
     _clear_test_directory(work)
     args["config_file"] = str(_materialize_effective_workflow(work, resolved))
-    _write_effective_settings(work, resolved, args, runtime)
     result.update(_execute_test_workflow(definition, args, replacements))
 
 
@@ -928,25 +939,11 @@ def _prepare_derived_rebuild(definition, replacements, args):
 
 
 def _materialize_effective_workflow(work, resolved):
-    """Write the reviewed effective workflow that the application runner must execute."""
-    path = work / "provenance" / "effective-workflow.yml"
-    path.parent.mkdir(parents=True, exist_ok=True)
+    """Write the effective workflow, later replaced by its resolved execution record."""
+    work.mkdir(parents=True, exist_ok=True)
+    path = work / "workflow.yml"
     path.write_text(yaml.safe_dump(resolved, sort_keys=False), encoding="utf-8")
     return path
-
-
-def _write_effective_settings(work, resolved, args, runtime):
-    """Record the settings actually supplied to the application runner."""
-    settings = {
-        "workflow": resolved,
-        "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
-        "ignore_runtime_environment": args["ignore_runtime_environment"],
-        "model_source": {key: args[key] for key in _MODEL_SOURCE_KEYS if args.get(key) is not None},
-        "environment_file": args.get("env_file"),
-    }
-    target = work / "provenance" / "effective-settings.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
 
 
 def _test_output_paths(configurations, replacements):
@@ -1037,9 +1034,16 @@ def _write_test_report(work, report_root, release_dir, result):
         return
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
-    source = work / "collected"
-    if source.exists():
-        shutil.copytree(source, staging)
+    if work.exists():
+        staging.mkdir(parents=True, exist_ok=True)
+        for source in work.iterdir():
+            if source.name in {"execution.log", "workflow.yml"}:
+                continue
+            destination = staging / source.name
+            if source.is_dir():
+                shutil.copytree(source, destination)
+            else:
+                shutil.copyfile(source, destination)
     staging.mkdir(parents=True, exist_ok=True)
     result["publication"] = _publication_inventory(staging)
     previous = report_root.with_name(f".{report_root.name}.previous")
@@ -1076,8 +1080,8 @@ def _site_replacements(context, site, site_config, work):
             "__SCIENCE_ARRAY_LAYOUT__": site_config["array_layout_name"],
             "__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate_root / site),
             "__SCIENCE_BASELINE_SITE_PATH__": str(baseline_root / site),
-            "__SCIENCE_REPORT_PATH__": str(work / "output"),
-            "__SCIENCE_COLLECTION_PATH__": str(work / "collected"),
+            "__SCIENCE_REPORT_PATH__": str(work),
+            "__SCIENCE_COLLECTION_PATH__": str(work),
         }
     )
     for key, value in site_config.get("replacements", {}).items():

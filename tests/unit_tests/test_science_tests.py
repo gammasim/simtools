@@ -117,7 +117,7 @@ def campaign(tmp_test_directory):
             "collection": {
                 "output_path": "__SCIENCE_COLLECTION_PATH__",
                 "files": ["metrics.json"],
-                "write_inventory": True,
+                "write_inventory": False,
                 "preserve_relative_paths": True,
             },
         },
@@ -168,14 +168,14 @@ def successful_workflow(monkeypatch):
 
         calls.append(replacements["__SCIENCE_SITE_KEY__"])
         output = Path(replacements["__SCIENCE_REPORT_PATH__"])
-        output.mkdir(parents=True)
+        output.mkdir(parents=True, exist_ok=True)
         (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
         _copy_collection_files(
             [{"configuration": {"output_path": str(output)}}],
             {
                 "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
                 "files": ["metrics.json"],
-                "write_inventory": True,
+                "write_inventory": False,
             },
         )
 
@@ -204,9 +204,9 @@ def test_run_collects_evidence_and_preserves_subset_results(campaign, successful
     result = south["results"][0]
     report = campaign["release_dir"] / result["report"]
     assert json.loads((report / "metrics.json").read_text()) == {"count": 3}
-    inventory = json.loads((report / "inventory.json").read_text())
-    assert inventory[0]["source"] == "metrics.json"
-    assert len(inventory[0]["sha256"]) == 64
+    assert not (report / "inventory.json").exists()
+    assert not (report / "execution.log").exists()
+    assert not (report / "workflow.yml").exists()
     assert not south["qualified"]
     assert science_tests.run_release(**campaign, dry_run=True)["results"][0]["status"] == "planned"
     assert (
@@ -418,14 +418,14 @@ def test_comparison_execution_uses_release_parameters(campaign, monkeypatch):
 
         executed_workflows.append(yaml.safe_load(Path(args["config_file"]).read_text()))
         output = Path(replacements["__SCIENCE_REPORT_PATH__"])
-        output.mkdir(parents=True)
+        output.mkdir(parents=True, exist_ok=True)
         (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
         _copy_collection_files(
             [{"configuration": {"output_path": str(output)}}],
             {
                 "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
                 "files": ["metrics.json"],
-                "write_inventory": True,
+                "write_inventory": False,
             },
         )
 
@@ -565,6 +565,36 @@ def test_site_cannot_override_context_root(tmp_test_directory):
         science_tests._site_replacements(context, "north", suite, root)
 
 
+def test_report_and_collection_share_output_directory(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    context = {key: str(root) for key in science_tests._PATH_KEYS}
+    site_config = {"array_layout_name": "CTAO-North-Alpha"}
+
+    replacements = science_tests._site_replacements(context, "north", site_config, root)
+
+    assert replacements["__SCIENCE_COLLECTION_PATH__"] == replacements["__SCIENCE_REPORT_PATH__"]
+    assert replacements["__SCIENCE_REPORT_PATH__"] == str(root)
+
+
+@pytest.mark.parametrize(
+    "collection",
+    [
+        {"write_inventory": True},
+        [{"write_inventory": True}, {"write_inventory": True}],
+        None,
+    ],
+)
+def test_science_test_collection_does_not_write_inventory(collection):
+    resolved = {"collection": collection}
+
+    science_tests._disable_collection_inventory(resolved)
+
+    if isinstance(collection, dict):
+        assert collection["write_inventory"] is False
+    elif isinstance(collection, list):
+        assert all(entry["write_inventory"] is False for entry in collection)
+
+
 def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
     path = campaign["template_dir"] / "catalogue.yml"
     catalogue = yaml.safe_load(path.read_text())
@@ -681,7 +711,7 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     assert previous["execution_provenance"] == "work/science-tests/north/derive"
     context = science_tests._load_yaml(campaign["context_file"])
     work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / previous["execution_provenance"]
-    stale = [report / "stale.txt", work / "output/stale.txt"]
+    stale = [report / "stale.txt", work / "stale.txt"]
     for path in stale:
         path.touch()
     science_tests.run_release(**args, dry_run=True, overwrite=True)
@@ -692,6 +722,9 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
         if result["id"] == "derive.north"
     )
     assert current["run_id"] != previous["run_id"]
+    assert (work / "workflow.yml").is_file()
+    assert not (work / "provenance").exists()
+    assert not (work / "output").exists()
     assert not any(path.exists() for path in stale)
     assert not any((report / file_name).exists() for file_name in ("result.json", "summary.md"))
     monkeypatch.setattr(science_tests, "run_applications", lambda *args, **kwargs: None)
