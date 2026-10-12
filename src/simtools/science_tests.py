@@ -36,6 +36,8 @@ _MODEL_SOURCE_KEYS = (
 )
 _SUBMISSION_FILE_NAME = "submission.json"
 _RELEASE_FILE_NAME = "release.yml"
+_EXECUTION_LOG_FILE_NAME = "execution.log"
+_WORKFLOW_FILE_NAME = "workflow.yml"
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
 _PUBLICATION_WARNING_BYTES = 20 * 1024 * 1024
 _PUBLICATION_WARNING_FILES = 30
@@ -781,8 +783,8 @@ def _run_test(
         **(application_args or {}),
         "config_file": str(workflow),
         "steps": None,
-        "log_file": str(work / "execution.log"),
-        "provenance_path": str(work / "workflow.yml"),
+        "log_file": str(work / _EXECUTION_LOG_FILE_NAME),
+        "provenance_path": str(work / _WORKFLOW_FILE_NAME),
     }
     args.setdefault("runtime_environment", resolved.get("runtime_environment"))
     configurations, runtime, *_ = prepare_workflow(args, replacements=replacements)
@@ -815,7 +817,7 @@ def _run_test(
         result, definition, replacements, args, run_id, work, report_root, resolved
     )
     result["execution_log"] = _relative_path(
-        work / "execution.log", Path(context["__SCIENCE_CANDIDATE_PATH__"])
+        work / _EXECUTION_LOG_FILE_NAME, Path(context["__SCIENCE_CANDIDATE_PATH__"])
     )
     _write_test_report(work, report_root, release_dir, result)
     logger.info(
@@ -941,7 +943,7 @@ def _prepare_derived_rebuild(definition, replacements, args):
 def _materialize_effective_workflow(work, resolved):
     """Write the effective workflow, later replaced by its resolved execution record."""
     work.mkdir(parents=True, exist_ok=True)
-    path = work / "workflow.yml"
+    path = work / _WORKFLOW_FILE_NAME
     path.write_text(yaml.safe_dump(resolved, sort_keys=False), encoding="utf-8")
     return path
 
@@ -1037,7 +1039,7 @@ def _write_test_report(work, report_root, release_dir, result):
     if work.exists():
         staging.mkdir(parents=True, exist_ok=True)
         for source in work.iterdir():
-            if source.name in {"execution.log", "workflow.yml"}:
+            if source.name in {_EXECUTION_LOG_FILE_NAME, _WORKFLOW_FILE_NAME}:
                 continue
             destination = staging / source.name
             if source.is_dir():
