@@ -11,7 +11,7 @@ from astropy.table import Table
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
-_THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+(?:\.\d+)?)(?=\.)")
+_THRESHOLD_RE = re.compile(r"_(?:[ad]sum|discriminator)(?P<threshold>\d+(?:\.\d+)?)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 
 
