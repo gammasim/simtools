@@ -261,8 +261,7 @@ def _check_completed_submission(path):
 
 def _evaluate_products(definition, replacements):
     """Enforce artifact completeness and declared numerical limits."""
-    for pattern in definition.get("products", []):
-        _matched_files(replace_placeholders_recursively(pattern, replacements))
+    _check_required_products(definition, replacements)
     _check_expected_pair_count(definition, replacements)
     rule = definition.get("rule", {})
     for metric in rule.get("metrics", []):
@@ -278,6 +277,23 @@ def _evaluate_products(definition, replacements):
     if rule.get("mode") == "advisory":
         return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
     return {"status": "pass"}
+
+
+def _check_required_products(definition, replacements):
+    """Require declared products, allowing the consolidated comparison summary."""
+    for pattern in definition.get("products", []):
+        resolved_pattern = replace_placeholders_recursively(pattern, replacements)
+        if _is_consolidated_comparison_metadata(resolved_pattern, replacements):
+            continue
+        _matched_files(resolved_pattern)
+
+
+def _is_consolidated_comparison_metadata(pattern, replacements):
+    """Accept a consolidated statistics file for legacy per-pair metadata patterns."""
+    if not str(pattern).endswith("/**/comparison_statistics.meta.yml"):
+        return False
+    summary = Path(replacements["__SCIENCE_REPORT_PATH__"]) / "comparison_statistics.json"
+    return summary.is_file() and summary.stat().st_size > 0
 
 
 def _check_expected_pair_count(definition, replacements):

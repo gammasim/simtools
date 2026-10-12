@@ -20,6 +20,7 @@ from simtools.visualization.visualize import save_figure, save_figures_to_single
 
 _logger = logging.getLogger(__name__)
 _COMPACT_FIGURES = ContextVar("event_comparison_compact_figures", default=None)
+_COMPARISON_TITLE = ContextVar("event_comparison_title", default=None)
 
 
 def _output_directory_for_array_layout_selection(output_directory, array_layout_name):
@@ -45,6 +46,7 @@ def plot(
     figure_format=None,
     report_mode="diagnostic",
     compact_figures=None,
+    comparison_title=None,
 ):
     """Create all event-level production comparison plots.
 
@@ -63,6 +65,9 @@ def plot(
     figure_format : list[str] or str, optional
         Figure formats to write. Formats supported by Matplotlib can be used.
         Defaults to the configured formats or ``["png"]``.
+    comparison_title : str, optional
+        Context heading shown above each plot, such as the configuration of a
+        matched production pair.
 
     Returns
     -------
@@ -76,7 +81,7 @@ def plot(
     output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    with _comparison_report(output_path, report_mode, compact_figures):
+    with _comparison_report(output_path, report_mode, compact_figures, comparison_title):
         for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
             _record_plot_statistics(
                 comparison_statistics,
@@ -100,8 +105,9 @@ def plot(
 
 
 @contextmanager
-def _comparison_report(output_path, report_mode, compact_figures=None):
+def _comparison_report(output_path, report_mode, compact_figures=None, comparison_title=None):
     """Route pages to one compact PDF or suppress rendering without changing metrics."""
+    title_token = _COMPARISON_TITLE.set(comparison_title)
     if report_mode == "compact":
         figures = compact_figures if compact_figures is not None else []
         token = _COMPACT_FIGURES.set(figures)
@@ -109,6 +115,7 @@ def _comparison_report(output_path, report_mode, compact_figures=None):
             yield
         finally:
             _COMPACT_FIGURES.reset(token)
+            _COMPARISON_TITLE.reset(title_token)
         if compact_figures is None:
             save_figures_to_single_document(
                 figures, output_path / "comparison-report.pdf", close=True
@@ -119,6 +126,7 @@ def _comparison_report(output_path, report_mode, compact_figures=None):
         yield
     finally:
         _COMPACT_FIGURES.reset(token)
+        _COMPARISON_TITLE.reset(title_token)
 
 
 def _plot_quantity_comparisons(
@@ -210,6 +218,9 @@ def _plot_per_type_comparisons(
 
 def _save_figure(fig, output_path, filename, figure_format=None):
     """Save figure and close it."""
+    comparison_title = _COMPARISON_TITLE.get()
+    if comparison_title:
+        fig.suptitle(comparison_title, fontsize=10, fontweight="semibold")
     document = _COMPACT_FIGURES.get()
     if document is False:
         plt.close(fig)

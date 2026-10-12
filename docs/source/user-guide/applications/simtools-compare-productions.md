@@ -22,8 +22,10 @@ normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
 Metadata-based event comparisons also write `comparison_inventory.json` with relative pair
-directories, a matched-pair count, and a pairing-error count. Partial comparisons still produce
-the matched plots and log a warning; release acceptance must reject a non-zero pairing-error count.
+directories, a matched-pair count, and a pairing-error count. Event comparison statistics for all
+matched pairs are collected in one `comparison_statistics.json` file, including aggregate event
+counts and the detailed statistics for each pair. Partial comparisons still produce the matched
+plots and log a warning; release acceptance must reject a non-zero pairing-error count.
 
 For production resource requirements, use `--comparison_level computing` with a production root in
 `--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray

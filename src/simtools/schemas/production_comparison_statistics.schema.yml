@@ -21,6 +21,19 @@ properties:
     type: object
     additionalProperties:
       $ref: '#/definitions/PlotStatistics'
+  comparisons:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        pair:
+          type: string
+        array_layout:
+          type: string
+        statistics:
+          $ref: '#'
+      required: [pair, array_layout, statistics]
 required:
   - format_version
   - baseline

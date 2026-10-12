@@ -260,6 +260,12 @@ def _copy_pattern_files(
 
     _validate_collection_destination_name(destination_name)
 
+    if pattern == "**/comparison_statistics.meta.yml" and any(
+        (source_directory / "comparison_statistics.json").is_file()
+        for source_directory in source_directories
+    ):
+        return inventory
+
     source_files = _find_collection_files(pattern, source_directories)
     if destination_name is not None and len(source_files) != 1:
         raise FileExistsError(
