@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
@@ -208,7 +209,8 @@ def calculate_statistics(grouped_data, time_window):
         - 'error_hz': exposure-weighted standard error of run rates in Hz
         - 'num_runs': number of runs
     """
-    if not np.isfinite(time_window) or time_window <= 0:
+    time_window = _time_window_quantity(time_window)
+    if not np.isfinite(time_window.value) or time_window <= 0 * u.s:
         raise ValueError("time_window must be finite and positive.")
 
     statistics = {}
@@ -217,6 +219,13 @@ def calculate_statistics(grouped_data, time_window):
         statistics[threshold] = _calculate_threshold_statistics(run_statistics, time_window)
 
     return statistics
+
+
+def _time_window_quantity(time_window):
+    """Return the time window as a duration in seconds."""
+    if not isinstance(time_window, u.Quantity):
+        time_window = time_window * u.s
+    return time_window.to(u.s)
 
 
 def _collect_valid_run_statistics(runs_data, threshold, time_window):
@@ -253,16 +262,16 @@ def _calculate_threshold_statistics(run_statistics, time_window):
     events = run_statistics["events"]
     total_triggers = np.sum(triggers)
     total_events = np.sum(events) if events else 0
-    time_s = total_events * time_window if total_events > 0 else 0
-    rate_hz = total_triggers / time_s if time_s > 0 else 0
+    time_s = total_events * time_window if total_events > 0 else 0 * u.s
+    rate = total_triggers / time_s if time_s > 0 else 0 * u.Hz
     return {
         "runs": run_statistics["runs"],
         "total_triggers": int(total_triggers),
         "total_events": int(total_events),
-        "time_s": time_s,
-        "rate_hz": rate_hz,
-        "rate_khz": rate_hz / 1000.0,
-        "error_hz": _calculate_rate_error(run_statistics, time_s, rate_hz),
+        "time_s": time_s.to_value(u.s),
+        "rate_hz": rate.to_value(u.Hz),
+        "rate_khz": rate.to_value(u.kHz),
+        "error_hz": _calculate_rate_error(run_statistics, time_s, rate),
         "num_runs": len(triggers),
     }
 
@@ -272,8 +281,8 @@ def _calculate_rate_error(run_statistics, time_s, weighted_mean):
     if len(run_statistics["rates"]) < 2 or time_s <= 0:
         return 0
 
-    exposures = np.asarray(run_statistics["exposures"], dtype=float)
-    rates = np.asarray(run_statistics["rates"], dtype=float)
+    exposures = u.Quantity(run_statistics["exposures"]).to(u.s)
+    rates = u.Quantity(run_statistics["rates"]).to(u.Hz)
     weight_sum = np.sum(exposures)
     effective_runs = weight_sum**2 / np.sum(exposures**2)
     variance_denominator = weight_sum - np.sum(exposures**2) / weight_sum
@@ -282,7 +291,7 @@ def _calculate_rate_error(run_statistics, time_s, weighted_mean):
 
     weighted_variance = np.sum(exposures * (rates - weighted_mean) ** 2)
     weighted_variance /= variance_denominator
-    return np.sqrt(weighted_variance / effective_runs)
+    return np.sqrt(weighted_variance / effective_runs).to_value(u.Hz)
 
 
 def generate_ecsv_output(statistics, output_file, time_window):
