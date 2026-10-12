@@ -48,8 +48,9 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
   `docs/source/developer-guide/dependency_versions.md`.
 - Environment order: checkout `.venv`, Conda/Mamba `simtools-dev`, current
   environment. In other environments set `PYTHONPATH` to this checkout's `src`.
-  Diagnose imports only after verifying
-  `python -c "import simtools; print(simtools.__file__)"`.
+  Use the first environment that can run the required checks. Before diagnosing
+  imports, verify `python -c "import simtools; print(simtools.__file__)"` points
+  to this checkout.
 - Read applicable `.agents/skills/{unit-testing,integration-testing,documentation}/SKILL.md`
   before work. Documentation scope below overrides general skill requirements.
 - Containers: check Docker/Podman/Apptainer; use an available runtime.
@@ -140,10 +141,13 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
 - Linter also checks ASCII, Dockerfiles, pyproject/dependencies, citation,
   `pip check`, and dotenv where affected; pre-commit alone is insufficient.
 - Docs changes, docstrings, modules, command registrations, or doc dependencies
-  require application/API completeness, ASCII, `make -C docs html`, and skill
-  checks including linkcheck. Checking/building never authorizes deployment.
+  require application/API completeness, ASCII, and skill checks including
+  `env PYTHONPATH="$PWD/src" make -C docs clean html linkcheck` (prefix with
+  `conda run -n simtools-dev` when using Conda). Checking/building never
+  authorizes deployment.
 - Start `pytest tests/unit_tests/path/to/test_module.py`; `pytest` runs all unit
-  tests; coverage: `pytest --cov=simtools --cov-report=term-missing`.
+  tests; replace the example path with the changed module's test path. Coverage:
+  `pytest --cov=simtools --cov-report=term-missing`.
   Iterate `pre-commit run --files <changed-files>`; final lint:
   `pre-commit run --all-files`.
 - Report `no-commit-to-branch` separately; never skip it or claim full success.
