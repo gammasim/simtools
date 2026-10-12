@@ -1,7 +1,9 @@
 # Science tests
 
-Science tests run configured production, derivation, and comparison workflows for a release. Shared
-definitions are in [simtools-tests](https://github.com/gammasim/simtools-tests):
+The `simtools` repository provides the science-test runner and execution behavior. Reusable test
+definitions and versioned release configurations live in
+[simtools-tests](https://github.com/gammasim/simtools-tests). The runner executes selected production,
+derivation, and comparison workflows from those definitions:
 
 ```text
 science-test-template/

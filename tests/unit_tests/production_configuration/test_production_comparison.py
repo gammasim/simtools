@@ -65,7 +65,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
         ),
     ]
     mock_summary.assert_called_once_with(
-        [first_statistics_file, second_statistics_file], output_directory
+        [first_statistics_file, second_statistics_file], output_directory, "diagnostic"
     )
 
 
