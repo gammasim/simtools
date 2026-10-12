@@ -283,7 +283,7 @@ def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
         )
 
 
-@pytest.mark.parametrize("label", ["asum", "dsum"])
+@pytest.mark.parametrize("label", ["asum", "dsum", "discriminator"])
 @pytest.mark.parametrize("threshold", [7, 7.2, 7.4, 8, 9])
 def test_extract_threshold_preserves_decimals(tmp_test_directory, label, threshold):
     file_path = tmp_test_directory / "events.hdf5"

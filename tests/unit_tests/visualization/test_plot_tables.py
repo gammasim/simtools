@@ -626,7 +626,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
 
     mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
     mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
-    mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
     mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
