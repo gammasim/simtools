@@ -5,7 +5,7 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.science_tests import run_release, setup_release
+from simtools.science_tests.campaign import run_release, setup_release
 
 
 def _post_parse(args_dict, _config_sources, _parser):
