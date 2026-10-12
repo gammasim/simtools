@@ -6,6 +6,10 @@ import yaml
 from simtools.science_tests import definitions as science_test_definitions
 from simtools.science_tests import execution as science_test_execution
 
+_WORKFLOW_FILE_NAME = "workflow.yml"
+_METRICS_FILE_NAME = "metrics.json"
+_SCIENCE_REPORT_METRICS_PATH = f"__SCIENCE_REPORT_PATH__/{_METRICS_FILE_NAME}"
+
 
 def _write_yaml(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -39,12 +43,12 @@ def campaign(tmp_test_directory):
         {
             "tests": {
                 "derive": {
-                    "workflow": "workflow.yml",
+                    "workflow": _WORKFLOW_FILE_NAME,
                     "tier": "release-light",
                     "sites": ["north", "south"],
                 },
                 "compare": {
-                    "workflow": "workflow.yml",
+                    "workflow": _WORKFLOW_FILE_NAME,
                     "tier": "release-light",
                     "sites": ["north", "south"],
                     "depends_on": ["derive"],
@@ -54,7 +58,7 @@ def campaign(tmp_test_directory):
         },
     )
     _write_yaml(
-        template / "workflow.yml",
+        template / _WORKFLOW_FILE_NAME,
         {
             "schema_version": "0.7.0",
             "schema_name": "application_workflow.metaschema",
@@ -66,7 +70,7 @@ def campaign(tmp_test_directory):
             ],
             "collection": {
                 "output_path": "__SCIENCE_COLLECTION_PATH__",
-                "files": ["metrics.json"],
+                "files": [_METRICS_FILE_NAME],
                 "write_inventory": False,
                 "preserve_relative_paths": True,
             },
@@ -76,8 +80,8 @@ def campaign(tmp_test_directory):
         template / "acceptance" / "expected-products.yml",
         {
             "tests": {
-                "derive": ["__SCIENCE_REPORT_PATH__/metrics.json"],
-                "compare": ["__SCIENCE_REPORT_PATH__/metrics.json"],
+                "derive": [_SCIENCE_REPORT_METRICS_PATH],
+                "compare": [_SCIENCE_REPORT_METRICS_PATH],
             }
         },
     )
@@ -89,7 +93,7 @@ def campaign(tmp_test_directory):
                     "mode": "advisory",
                     "metrics": [
                         {
-                            "file": "__SCIENCE_REPORT_PATH__/metrics.json",
+                            "file": _SCIENCE_REPORT_METRICS_PATH,
                             "key": "count",
                             "minimum": 2,
                         }
@@ -121,12 +125,12 @@ def successful_workflow(monkeypatch):
         calls.append(replacements["__SCIENCE_SITE_KEY__"])
         output = Path(replacements["__SCIENCE_REPORT_PATH__"])
         output.mkdir(parents=True, exist_ok=True)
-        (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
+        (output / _METRICS_FILE_NAME).write_text('{"count": 3}', encoding="utf-8")
         _copy_collection_files(
             [{"configuration": {"output_path": str(output)}}],
             {
                 "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
-                "files": ["metrics.json"],
+                "files": [_METRICS_FILE_NAME],
                 "write_inventory": False,
             },
         )
