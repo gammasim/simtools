@@ -9,6 +9,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import yaml
+
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -313,6 +315,7 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         if previous.get("campaign_sha256") == signature
         else {}
     )
+    production_history = _production_history(previous, results, catalogue)
     _invalidate_dependents(records, results, catalogue)
     records.update({r["id"]: r for r in results})
     required = []
@@ -340,7 +343,18 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         "campaign_sha256": signature,
         "qualified": all(records[key]["status"] == "pass" for key in required),
         "results": sorted(records.values(), key=lambda r: (r["site"], r["test"])),
+        "production_history": production_history,
     }
+
+
+def _production_history(previous, results, catalogue):
+    """Keep submitted-production provenance when non-production checks are rerun."""
+    records = {record["id"]: record for record in previous.get("production_history", [])}
+    for result in results:
+        definition = catalogue[result["test"]]
+        if definition.get("produces_production") or definition.get("affects_production"):
+            records[result["id"]] = result
+    return sorted(records.values(), key=lambda record: (record["site"], record["test"]))
 
 
 def _invalidate_dependents(records, results, catalogue):
@@ -870,6 +884,7 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved, r
         return
     _prepare_derived_rebuild(definition, replacements, args)
     _clear_test_directory(work)
+    args["config_file"] = str(_materialize_effective_workflow(work, resolved))
     _write_effective_settings(work, resolved, args, runtime)
     result.update(_execute_test_workflow(definition, args, replacements))
 
@@ -894,6 +909,14 @@ def _prepare_derived_rebuild(definition, replacements, args):
     if path.exists():
         shutil.rmtree(path)
         logger.info("Removed derived output for explicit rebuild: %s", path)
+
+
+def _materialize_effective_workflow(work, resolved):
+    """Write the reviewed effective workflow that the application runner must execute."""
+    path = work / "provenance" / "effective-workflow.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(resolved, sort_keys=False), encoding="utf-8")
+    return path
 
 
 def _write_effective_settings(work, resolved, args, runtime):
@@ -992,10 +1015,9 @@ def _clear_test_directory(path):
 
 
 def _write_test_report(work, report_root, release_dir, result):
-    """Publish successful evidence atomically and retain failed-attempt diagnostics."""
+    """Publish successful collected evidence atomically without per-test wrappers."""
     result["report"] = report_root.relative_to(release_dir).as_posix()
     if result["status"] in {"fail", "incomplete", "blocked"}:
-        _write_failure_report(report_root, result)
         return
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
@@ -1004,18 +1026,6 @@ def _write_test_report(work, report_root, release_dir, result):
         shutil.copytree(source, staging)
     staging.mkdir(parents=True, exist_ok=True)
     result["publication"] = _publication_inventory(staging)
-    (staging / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    reason = (
-        result.get("error")
-        or result.get("reason")
-        or "Required products and configured rules passed."
-    )
-    (staging / "summary.md").write_text(
-        f"# {result['id']}\n\nStatus: {result['status']}\n\n"
-        f"Run ID: {result['run_id']}\n\n"
-        f"Baseline: {result['baseline']}; candidate: {result['candidate']}\n\n{reason}\n",
-        encoding="utf-8",
-    )
     previous = report_root.with_name(f".{report_root.name}.previous")
     _clear_test_directory(previous)
     if report_root.exists():
@@ -1035,20 +1045,6 @@ def _publication_inventory(report_root):
             "Science-test publication contains %d files and %d bytes.", len(files), total_bytes
         )
     return inventory
-
-
-def _write_failure_report(report_root, result):
-    """Keep the last successful publication while exposing the latest failed attempt."""
-    report_root.mkdir(parents=True, exist_ok=True)
-    reason = result.get("error") or result.get("reason") or "Science-test execution failed."
-    (report_root / "latest-failure.json").write_text(
-        json.dumps(result, indent=2) + "\n", encoding="utf-8"
-    )
-    (report_root / "latest-failure.md").write_text(
-        f"# Latest failed attempt: {result['id']}\n\nStatus: {result['status']}\n\n"
-        f"Run ID: {result['run_id']}\n\nLog: `{result.get('execution_log', '-')}`\n\n{reason}\n",
-        encoding="utf-8",
-    )
 
 
 def _site_replacements(context, site, site_config, work):
@@ -1185,20 +1181,22 @@ def _write_summary(report_dir, summary):
         "",
         f"Qualified: {summary['qualified']}",
         "",
-        "| Site | Test | Execution | Status | Report |",
+        "| Site | Test | Execution | Status | Reason |",
         "| --- | --- | --- | --- | --- |",
     ]
     for result in summary["results"]:
-        report = result.get("report")
-        link = (
-            f"[report]({Path(report).relative_to('reports').as_posix()}/summary.md)"
-            if report
-            else "-"
-        )
+        reason = result.get("error") or result.get("reason") or "-"
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
-            f"{result['status']} | {link} |"
+            f"{result['status']} | {reason} |"
         )
+    if summary["production_history"]:
+        lines.extend(["", "## Production history", ""])
+        for record in summary["production_history"]:
+            lines.append(
+                f"- {record['id']}: {record['execution']} ({record['status']}); "
+                f"run ID `{record.get('run_id', 'unknown')}`."
+            )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -1211,6 +1209,9 @@ def _write_site_metrics(report_dir, summary):
             "baseline": summary.get("baseline"),
             "site": site,
             "results": site_results,
+            "production_history": [
+                result for result in summary["production_history"] if result["site"] == site
+            ],
         }
         path = report_dir / site / "metrics.json"
         path.parent.mkdir(parents=True, exist_ok=True)

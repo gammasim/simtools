@@ -403,6 +403,79 @@ def test_configuration_change_invalidates_old_results(
     assert next(r for r in summary["results"] if r["id"] == "compare.north")["status"] == "not_run"
 
 
+def test_comparison_execution_uses_release_parameters(campaign, monkeypatch):
+    release_path = campaign["release_dir"] / "release.yml"
+    release = yaml.safe_load(release_path.read_text(encoding="utf-8"))
+    release.update(
+        expected_changes=["configuration.azimuth_angle"],
+        comparison_parameters={"compare": {"compare_by": ["configuration.azimuth_angle"]}},
+    )
+    _write_yaml(release_path, release)
+    executed_workflows = []
+
+    def execute(args, replacements):
+        from simtools.runners.simtools_runner import _copy_collection_files
+
+        executed_workflows.append(yaml.safe_load(Path(args["config_file"]).read_text()))
+        output = Path(replacements["__SCIENCE_REPORT_PATH__"])
+        output.mkdir(parents=True)
+        (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
+        _copy_collection_files(
+            [{"configuration": {"output_path": str(output)}}],
+            {
+                "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
+                "files": ["metrics.json"],
+                "write_inventory": True,
+            },
+        )
+
+    monkeypatch.setattr(science_tests, "run_applications", execute)
+    science_tests.run_release(**campaign, sites=["north"], tests=["compare"])
+
+    compare_workflow = executed_workflows[-1]["applications"][0]["configuration"]
+    assert compare_workflow["compare_by"] == ["configuration.azimuth_angle"]
+
+
+def test_production_history_survives_a_non_production_configuration_change(campaign):
+    catalogue_path = campaign["template_dir"] / "catalogue.yml"
+    catalogue = yaml.safe_load(catalogue_path.read_text(encoding="utf-8"))
+    catalogue["tests"]["production"] = {"affects_production": True}
+    _write_yaml(catalogue_path, catalogue)
+    report_path = campaign["release_dir"] / "reports/release-summary.json"
+    report_path.parent.mkdir()
+    report_path.write_text(
+        json.dumps(
+            {
+                "campaign_sha256": "old",
+                "results": [],
+                "production_history": [
+                    {
+                        "id": "production.north",
+                        "test": "production",
+                        "site": "north",
+                        "execution": "submitted",
+                        "status": "submitted",
+                        "run_id": "run-1",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    summary = science_tests._release_summary(
+        campaign["release_dir"],
+        {"release_label": "candidate"},
+        {"north": {"required_tests": ["compare"]}},
+        [],
+        False,
+        "new",
+        catalogue["tests"],
+    )
+
+    assert summary["production_history"][0]["run_id"] == "run-1"
+
+
 def test_rerunning_dependency_invalidates_comparison(campaign, successful_workflow):
     science_tests.run_release(**campaign, sites=["north"])
     summary = science_tests.run_release(**campaign, sites=["north"], tests=["derive"])
@@ -432,8 +505,7 @@ def test_missing_product_is_recorded(campaign, monkeypatch):
         science_tests.run_release(**campaign, sites=["north"])
     summary = json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text())
     failed = next(r for r in summary["results"] if r["id"] == "compare.north")
-    report = campaign["release_dir"] / failed["report"]
-    assert "Missing or empty required product" in (report / "latest-failure.md").read_text()
+    assert "Missing or empty required product" in failed["error"]
     assert failed["status"] == "incomplete"
 
 
@@ -603,9 +675,9 @@ def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites
 
 def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     args = {**campaign, "sites": ["north"], "tests": ["derive"]}
-    science_tests.run_release(**args)
+    initial = science_tests.run_release(**args)
     report = campaign["release_dir"] / "reports/north/derive"
-    previous = json.loads((report / "result.json").read_text())
+    previous = next(result for result in initial["results"] if result["id"] == "derive.north")
     assert previous["execution_provenance"] == "work/science-tests/north/derive"
     context = science_tests._load_yaml(campaign["context_file"])
     work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / previous["execution_provenance"]
@@ -614,17 +686,25 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
         path.touch()
     science_tests.run_release(**args, dry_run=True, overwrite=True)
     assert all(path.exists() for path in stale)
-    assert json.loads((report / "result.json").read_text()) == previous
-    science_tests.run_release(**args)
-    current = json.loads((report / "result.json").read_text())
+    current = next(
+        result
+        for result in science_tests.run_release(**args)["results"]
+        if result["id"] == "derive.north"
+    )
     assert current["run_id"] != previous["run_id"]
-    assert current["run_id"] in (report / "summary.md").read_text()
     assert not any(path.exists() for path in stale)
+    assert not any((report / file_name).exists() for file_name in ("result.json", "summary.md"))
     monkeypatch.setattr(science_tests, "run_applications", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="Science tests failed"):
         science_tests.run_release(**args, overwrite=True)
-    assert json.loads((report / "result.json").read_text())["status"] == "pass"
-    assert json.loads((report / "latest-failure.json").read_text())["status"] == "incomplete"
+    failed = next(
+        result
+        for result in json.loads(
+            (campaign["release_dir"] / "reports/release-summary.json").read_text()
+        )["results"]
+        if result["id"] == "derive.north"
+    )
+    assert failed["status"] == "incomplete"
     assert (report / "metrics.json").exists()
 
 
