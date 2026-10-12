@@ -22,6 +22,7 @@ _SIMTELARRAY_STORAGE_LABEL = "sim_telarray storage"
 _SIMTELARRAY_OUTPUT_LABEL = "sim_telarray output"
 _REDUCED_EVENT_DATA_LABEL = "reduced event data"
 _SIMTELARRAY_HISTOGRAM_LABEL = "sim_telarray histogram"
+_ENERGY_MIDPOINT_LABEL = "Energy midpoint (GeV)"
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
@@ -241,7 +242,7 @@ def _write_resource_role_plot(
     _plot_role(axis, rows, column, zenith_colors, value_scale=value_scale)
     axis.set_xscale("log")
     axis.set_yscale(_resource_y_scale(rows, column))
-    axis.set_xlabel("Energy midpoint (GeV)")
+    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
     axis.set_ylabel(plot_label)
     axis.set_title(f"{plot_label}: {role}")
     axis.grid(alpha=0.25)
@@ -264,7 +265,7 @@ def _write_resource_ratio_plot(
     ratio_label = f"{labels['candidate']} / {labels['baseline']}"
     _warn_on_large_changes(ratio_series, plot_label, role, ratio_label)
     axis.set_xscale("log")
-    axis.set_xlabel("Energy midpoint (GeV)")
+    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
     axis.set_ylabel(ratio_label)
     axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
     axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
@@ -294,7 +295,7 @@ def _write_compact_report(rows, output_path):
         _plot_role(axis, available, column, _zenith_colors(zeniths))
         axis.set_xscale("log")
         axis.set_yscale(_resource_y_scale(available, column))
-        axis.set_xlabel("Energy midpoint (GeV)")
+        axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
         axis.set_ylabel(label)
         axis.set_title(label)
         axis.grid(alpha=0.25)

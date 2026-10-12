@@ -264,6 +264,9 @@ post-merge clean-up. Before changing a workflow, run actionlint, yamllint, and
 shellcheck through pre-commit and inspect the complete workflow diff. Apply
 these rules:
 
+- Before handoff, review changed code for repeated string literals, including
+  short labels, and use a named constant when the repeated values share a meaning.
+
 - Pin every external GitHub Action to a full commit SHA; a tag, branch, or
   floating reference triggers the security-hotspot check.
 - Never expand `${{ secrets.* }}` directly in a `run:` block. Pass secrets in
