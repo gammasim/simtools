@@ -216,6 +216,147 @@ definitions:
 ---
 "$schema": http://json-schema.org/draft-06/schema#
 title: simtools dependency version catalog
+description: Catalog with readable source refs and optional immutable source snapshots.
+schema_version: 0.7.0
+schema_name: dependency_versions.schema
+type: object
+additionalProperties: false
+required: [schema_version, python, apptainer, cpu-variants, base-image, corsika-interaction-tables, archives, model-repository, simtools-tests, production-combinations, corsika, sim-telarray]
+properties:
+  schema_version: {const: 0.7.0}
+  python: {type: string, pattern: "^[0-9]+\\.[0-9]+$"}
+  apptainer: {type: string}
+  cpu-variants:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items: {enum: [generic, avx2, avx512f, sse4]}
+  base-image:
+    type: object
+    additionalProperties: false
+    required: [name, runtime-version, build-version]
+    properties:
+      name: {type: string}
+      runtime-version: {type: string}
+      runtime-digest: {"$ref": "#/definitions/sha256"}
+      build-version: {type: string}
+      build-digest: {"$ref": "#/definitions/sha256"}
+  corsika-interaction-tables:
+    type: object
+    additionalProperties: false
+    required: [ref, source-url]
+    properties:
+      ref: {"$ref": "#/definitions/source-ref"}
+      source-url: {type: string, pattern: "^https://"}
+      revision: {"$ref": "#/definitions/revision"}
+  archives:
+    type: object
+    additionalProperties:
+      "$ref": "#/definitions/archive"
+    required: [autoconf, gsl]
+  model-repository:
+    type: object
+    additionalProperties: false
+    required: [name, default-ref, repository-url]
+    properties:
+      name: {type: string, minLength: 1}
+      default-ref: {"$ref": "#/definitions/source-ref"}
+      repository-url: {type: string, pattern: "^https://"}
+      git-revision: {"$ref": "#/definitions/revision"}
+  simtools-tests:
+    type: object
+    additionalProperties: false
+    required: [repository, source-url, ref, resource-version]
+    properties:
+      repository: {type: string, pattern: "^[^/]+/[^/]+$"}
+      source-url: {type: string, pattern: "^https://"}
+      ref: {"$ref": "#/definitions/source-ref"}
+      revision: {"$ref": "#/definitions/revision"}
+      resource-version: {"$ref": "#/definitions/tag"}
+  production-combinations:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required: [corsika, sim-telarray]
+      properties:
+        corsika: {type: string, minLength: 1}
+        sim-telarray: {type: string, minLength: 1}
+        cpu-variants:
+          type: array
+          minItems: 1
+          uniqueItems: true
+  corsika:
+    type: array
+    minItems: 1
+    items: {"$ref": "#/definitions/corsika"}
+  sim-telarray:
+    type: array
+    minItems: 1
+    items: {"$ref": "#/definitions/simtel"}
+definitions:
+  tag:
+    type: string
+    pattern: "^v[0-9]+(?:[._-][0-9]+)*(?:[-+][0-9A-Za-z][0-9A-Za-z._-]*)?$"
+  source-ref:
+    type: string
+    pattern: '^(?![-/.])(?!HEAD$)(?!.*[\x00-\x20\x7f~^:?*\[\\])(?!.*\.\.)(?!.*//)(?!.*@\{)(?!.*(?:/\.|\.lock(?:/|$)))(?!.*[./]$).+$'
+  revision:
+    type: string
+    pattern: "^[0-9a-f]{40}$"
+  sha256:
+    type: string
+    pattern: "^sha256:[0-9a-f]{64}$"
+  archive-sha256:
+    type: string
+    pattern: "^[0-9a-f]{64}$"
+  archive:
+    type: object
+    additionalProperties: false
+    required: [version]
+    properties:
+      version: {type: string}
+      sha256: {"$ref": "#/definitions/archive-sha256"}
+  corsika:
+    type: object
+    additionalProperties: false
+    required: [source-ref, source-url, config-ref, config-source-url, opt-patch-ref, opt-patch-source-url]
+    properties:
+      source-ref: {"$ref": "#/definitions/source-ref"}
+      build-id: {type: string, pattern: "^[0-9]+$"}
+      source-url: {type: string, pattern: "^https://"}
+      source-revision: {"$ref": "#/definitions/revision"}
+      config-ref: {"$ref": "#/definitions/source-ref"}
+      config-source-url: {type: string, pattern: "^https://"}
+      config-revision: {"$ref": "#/definitions/revision"}
+      opt-patch-ref: {"$ref": "#/definitions/source-ref"}
+      opt-patch-source-url: {type: string, pattern: "^https://"}
+      opt-patch-revision: {"$ref": "#/definitions/revision"}
+      source-snapshot-digest: {"$ref": "#/definitions/sha256"}
+      image-digests:
+        type: object
+        additionalProperties: {"$ref": "#/definitions/sha256"}
+  simtel:
+    type: object
+    additionalProperties: false
+    required: [source-ref, source-url, hessio-ref, hessio-source-url, stdtools-ref, stdtools-source-url]
+    properties:
+      source-ref: {"$ref": "#/definitions/source-ref"}
+      build-id: {type: string, pattern: "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$"}
+      source-url: {type: string, pattern: "^https://"}
+      revision: {"$ref": "#/definitions/revision"}
+      hessio-ref: {"$ref": "#/definitions/source-ref"}
+      hessio-source-url: {type: string, pattern: "^https://"}
+      hessio-revision: {"$ref": "#/definitions/revision"}
+      stdtools-ref: {"$ref": "#/definitions/source-ref"}
+      stdtools-source-url: {type: string, pattern: "^https://"}
+      stdtools-revision: {"$ref": "#/definitions/revision"}
+      source-snapshot-digest: {"$ref": "#/definitions/sha256"}
+      image-digest: {"$ref": "#/definitions/sha256"}
+---
+"$schema": http://json-schema.org/draft-06/schema#
+title: simtools dependency version catalog
 description: Catalog with readable source refs and optional Git revisions.
 schema_version: 0.6.0
 schema_name: dependency_versions.schema

@@ -2,6 +2,7 @@
 
 import importlib
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -142,6 +143,35 @@ def test_array_position_writer_does_not_require_model_reader():
     ).APPLICATION
 
     assert application.initialize_model_reader is False
+    argument_names = {argument.name for argument in application.all_arguments}
+    assert "output_path" in argument_names
+    assert "simulation_models_path" not in argument_names
+
+
+def test_array_position_writer_uses_output_path(mocker, tmp_test_directory):
+    """Write generated parameters to the requested output directory."""
+    module = importlib.import_module(
+        "simtools.applications.maintain_simulation_model_write_array_element_positions"
+    )
+    arguments = {
+        "array_element_positions_file": "positions.ecsv",
+        "coordinate_system": "ground",
+        "output_path": Path(tmp_test_directory) / "model-output",
+        "parameter_version": "0.1.0",
+    }
+    mocker.patch.object(
+        module.ApplicationDefinition, "start", return_value=SimpleNamespace(args=arguments)
+    )
+    write = mocker.patch.object(module, "write_array_elements_from_file_to_repository")
+
+    module.main()
+
+    write.assert_called_once_with(
+        coordinate_system="ground",
+        input_file="positions.ecsv",
+        repository_path=arguments["output_path"],
+        parameter_version="0.1.0",
+    )
 
 
 def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch, tmp_test_directory):

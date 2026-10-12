@@ -288,8 +288,12 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
         matrices["corsika_source_matrix"][0]["corsika_opt_patch_tag"]
         == first_corsika["opt-patch-ref"]
     )
-    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == ""
-    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == ""
+    assert matrices["corsika_source_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
+    assert matrices["corsika_build_matrix"][0]["corsika_source_revision"] == first_corsika.get(
+        "source-revision", ""
+    )
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
@@ -363,6 +367,20 @@ def test_env_template_matches_catalog(simtools_root_path):
         (
             lambda data: data["corsika"][0].update({"source-revision": "short"}),
             "Invalid Git revision",
+        ),
+        (
+            lambda data: (
+                data["corsika"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["corsika"][0].pop("config-revision", None),
+            ),
+            "requires all source revisions",
+        ),
+        (
+            lambda data: (
+                data["sim-telarray"][0].update({"source-snapshot-digest": "sha256:" + "a" * 64}),
+                data["sim-telarray"][0].pop("hessio-revision", None),
+            ),
+            "requires all source revisions",
         ),
         (
             lambda data: data["model-repository"].update({"default-ref": "bad ref"}),
@@ -492,7 +510,6 @@ def test_validate_dependency_catalog_accepts_valid_revisions(simtools_root_path)
     catalog["sim-telarray"][0].update(
         {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
     )
-
     assert dependency_versions.validate_dependency_catalog(catalog) is catalog
 
 
@@ -508,6 +525,121 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
 
     assert matrix[0]["corsika_image"] == f"ghcr.io/gammasim/corsika7@{digest}"
     assert matrix[0]["simtel_image"] == f"ghcr.io/gammasim/sim_telarray@{digest}"
+
+
+def test_build_workflow_matrices_selects_private_source_snapshots(simtools_root_path):
+    """Use a deterministic private snapshot only when every source is pinned."""
+    catalog = _load_catalog(simtools_root_path)
+    revision = "a" * 40
+    catalog["corsika"][0].update(
+        {
+            "source-revision": revision,
+            "config-revision": revision,
+            "opt-patch-revision": revision,
+        }
+    )
+    catalog["sim-telarray"][0].update(
+        {"revision": revision, "hessio-revision": revision, "stdtools-revision": revision}
+    )
+    digest = "sha256:" + "b" * 64
+    catalog["corsika"][0]["source-snapshot-digest"] = digest
+    catalog["sim-telarray"][0]["source-snapshot-digest"] = digest
+
+    matrices = dependency_versions.build_workflow_matrices(catalog)
+
+    assert matrices["corsika_source_matrix"][0]["corsika_source_snapshot"] == (
+        f"ghcr.io/gammasim/corsika7-build-inputs@{digest}"
+    )
+    assert matrices["simtel_matrix"][0]["simtel_source_snapshot"] == (
+        f"ghcr.io/gammasim/simtel-array-build-inputs@{digest}"
+    )
+    assert (
+        dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
+            "corsika7-build-inputs", "", (revision, revision, revision)
+        )
+        == ""
+    )
+    assert (
+        dependency_versions._source_snapshot_image(  # pylint: disable=protected-access
+            "corsika7-build-inputs", digest, (revision, "", revision)
+        )
+        == ""
+    )
+    summary = dependency_versions.dependency_catalog_summary(catalog)
+    assert (
+        summary["default_corsika_source_snapshot"]
+        == matrices["corsika_source_matrix"][0]["corsika_source_snapshot"]
+    )
+    assert (
+        summary["default_simtel_source_snapshot"]
+        == matrices["simtel_matrix"][0]["simtel_source_snapshot"]
+    )
+
+
+def test_update_dependency_source_revisions_writes_structured_catalog(tmp_test_directory):
+    """Write source revisions and snapshot digests through the YAML catalog structure."""
+    catalog_path = tmp_test_directory / "dependency_versions.yml"
+    catalog_path.write_text(
+        """---
+schema_version: 0.6.0
+corsika:
+  - source-ref: v7.8010
+    source-url: https://example.org/corsika.git
+    config-source-url: https://example.org/config.git
+    opt-patch-source-url: https://example.org/patches.git
+sim-telarray:
+  - source-ref: v2025-11-30-rc
+    source-url: https://example.org/simtel.git
+    hessio-source-url: https://example.org/hessio.git
+    stdtools-source-url: https://example.org/stdtools.git
+""",
+        encoding="utf-8",
+    )
+    updates = {
+        "corsika": {
+            "v7.8010": {
+                "source-revision": "a" * 40,
+                "config-revision": "b" * 40,
+                "opt-patch-revision": "c" * 40,
+                "source-snapshot-digest": "sha256:" + "1" * 64,
+            }
+        },
+        "sim-telarray": {
+            "v2025-11-30-rc": {
+                "revision": "d" * 40,
+                "hessio-revision": "e" * 40,
+                "stdtools-revision": "f" * 40,
+                "source-snapshot-digest": "sha256:" + "2" * 64,
+            }
+        },
+    }
+
+    dependency_versions.update_dependency_source_revisions(catalog_path, updates)
+    updates["corsika"]["v7.8010"]["source-revision"] = "1" * 40
+    dependency_versions.update_dependency_source_revisions(catalog_path, updates)
+
+    catalog_text = catalog_path.read_text(encoding="utf-8")
+    assert catalog_text.startswith("---\n")
+    updated = yaml.safe_load(catalog_text)
+    assert updated["corsika"][0]["source-revision"] == "1" * 40
+    assert updated["corsika"][0]["config-revision"] == "b" * 40
+    assert updated["corsika"][0]["opt-patch-revision"] == "c" * 40
+    assert updated["corsika"][0]["source-snapshot-digest"] == "sha256:" + "1" * 64
+    assert updated["sim-telarray"][0]["revision"] == "d" * 40
+    assert updated["sim-telarray"][0]["hessio-revision"] == "e" * 40
+    assert updated["sim-telarray"][0]["stdtools-revision"] == "f" * 40
+    assert updated["sim-telarray"][0]["source-snapshot-digest"] == "sha256:" + "2" * 64
+
+
+def test_update_dependency_source_revisions_requires_catalog_sections(tmp_test_directory):
+    """Reject an incomplete catalog rather than writing partial source revisions."""
+    catalog_path = tmp_test_directory / "dependency_versions.yml"
+    catalog_path.write_text("corsika:\n  - source-ref: v7.8010\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Missing dependency catalog section: sim-telarray"):
+        dependency_versions.update_dependency_source_revisions(
+            catalog_path, {"corsika": {}, "sim-telarray": {}}
+        )
 
 
 def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_path):
@@ -637,6 +769,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.4.0",
         "0.5.0",
         "0.6.0",
+        "0.7.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
@@ -681,3 +814,49 @@ def test_catalog_optional_test_revision(revision):
             dependency_versions.dependency_catalog_environment(catalog)["SIMTOOLS_TESTS_REVISION"]
             == revision
         )
+
+
+@pytest.mark.parametrize("source_catalog", [False, True])
+def test_default_catalog_prefers_running_installation(
+    monkeypatch, tmp_test_directory, source_catalog
+):
+    root = Path(tmp_test_directory)
+    host = root / "host"
+    host.mkdir()
+    (host / "dependency_versions.yml").write_text("schema_version: host\n")
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package.parent.mkdir(parents=True)
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(host)
+    installed = root / "env" / "simtools" / "dependency_versions.yml"
+    installed.parent.mkdir(parents=True)
+    installed.write_text("schema_version: installed\n")
+    expected = installed
+    if source_catalog:
+        expected = root / "installation" / "dependency_versions.yml"
+        expected.write_text("schema_version: source\n")
+    assert dependency_versions.find_dependency_versions() == expected
+    assert dependency_versions.find_dependency_versions(host) == host / "dependency_versions.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(host / "dependency_versions.yml"))
+    assert dependency_versions.find_dependency_versions() == host / "dependency_versions.yml"
+
+
+def test_missing_catalog_override_does_not_fall_back(monkeypatch, tmp_test_directory):
+    missing = Path(tmp_test_directory) / "missing.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(missing))
+    with pytest.raises(FileNotFoundError, match="Configured dependency catalog does not exist"):
+        dependency_versions.find_dependency_versions()
+
+
+def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_directory):
+    root = Path(tmp_test_directory)
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(root)
+    catalog = root / "dependency_versions.yml"
+    catalog.write_text("schema_version: working-directory\n")
+    assert dependency_versions.find_dependency_versions() == catalog

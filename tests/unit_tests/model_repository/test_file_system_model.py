@@ -207,6 +207,25 @@ def test_file_system_handler_reads_production_and_parameters(simulation_models_p
     assert all(isinstance(value, int) for value in integer_parameter[0]["value"])
 
 
+def test_file_system_source_reads_production_descriptions(tmp_test_directory):
+    """Production summaries can read info files from a filesystem source."""
+    model_root = Path(tmp_test_directory) / "model-files"
+    for model_version, suffix, description in (
+        ("1.0.0", "yml", "Prod1"),
+        ("2.0.0", "yaml", "Prod2"),
+    ):
+        info_file = (
+            model_root / "simulation-models" / "productions" / model_version / f"info.{suffix}"
+        )
+        info_file.parent.mkdir(parents=True, exist_ok=True)
+        info_file.write_text(f"description: {description}\n", encoding="utf-8")
+    (model_root / "simulation-models" / "model_parameters").mkdir(parents=True)
+
+    source = FileSystemModelSource(model_root)
+
+    assert source.get_production_descriptions() == [("1.0.0", "Prod1"), ("2.0.0", "Prod2")]
+
+
 def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models_path):
     handler = FileSystemModelSource(simulation_models_path)
 

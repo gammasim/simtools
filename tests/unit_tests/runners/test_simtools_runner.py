@@ -886,6 +886,37 @@ def test_read_runtime_environment_with_minimal_options(monkeypatch):
     assert result == expected_command
 
 
+def test_read_runtime_environment_with_apptainer_options(monkeypatch):
+    runtime_environment = {
+        "image": "simtools.sif",
+        "container_engine": "apptainer",
+        "environment_file": "runtime.env",
+        "options": ["--bind /models:/models", "--containall"],
+    }
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="apptainer"))
+
+    result = simtools_runner.read_runtime_environment(runtime_environment)
+
+    assert result == [
+        "apptainer",
+        "exec",
+        "--bind",
+        "/models:/models",
+        "--containall",
+        "--env-file",
+        "runtime.env",
+        "simtools.sif",
+    ]
+
+
+def test_read_runtime_environment_rejects_apptainer_network(monkeypatch):
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="apptainer"))
+    with pytest.raises(ValueError, match="do not support the network option"):
+        simtools_runner.read_runtime_environment(
+            {"image": "simtools.sif", "container_engine": "apptainer", "network": "host"}
+        )
+
+
 def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
     runtime_file = Path(tmp_test_directory) / "runtime.yml"
     runtime_file.write_text(
