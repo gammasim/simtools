@@ -285,7 +285,9 @@ def _materialize_effective_workflow(work, resolved):
     """Write the effective workflow, later replaced by its resolved execution record."""
     work.mkdir(parents=True, exist_ok=True)
     path = work / _WORKFLOW_FILE_NAME
-    path.write_text(yaml.safe_dump(resolved, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(resolved, sort_keys=False, explicit_start=True), encoding="utf-8"
+    )
     return path
 
 

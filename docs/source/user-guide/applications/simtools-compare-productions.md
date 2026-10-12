@@ -22,25 +22,27 @@ normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
 Metadata-based event comparisons also write `comparison_inventory.json` with relative pair
-directories, a matched-pair count, and a pairing-error count. Event comparison statistics for all
-matched pairs are collected in one `comparison_statistics.json` file, including aggregate event
-counts and the detailed statistics for each pair. Partial comparisons still produce the matched
-plots and log a warning; release acceptance must reject a non-zero pairing-error count.
+directories, a matched-pair count, and a pairing-error count. Compact mode collects event counts
+for each matched pair and metric summaries grouped by candidate and plot type in
+`comparison_statistics.json`.
+Diagnostic mode retains the detailed per-pair histogram counts and bin edges. Partial comparisons
+still produce the matched plots and log a warning; release acceptance must reject a non-zero
+pairing-error count.
 
 For production resource requirements, use `--comparison_level computing` with a production root in
 `--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
-resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
-process role), a
-grouped `resource_requirements.md` report, a `resource_requirements.json` summary with counts and
-invalid-record diagnostics, and time, memory, and storage plots. Aggregate statistics include
-mean, median, standard deviation, extrema, and 5th/95th percentiles. Storage plots
-include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
+resource records. In compact report mode, it writes a short `resource_requirements.md` summary and
+`resource_requirements.json` with key metrics aggregated by production and process role, plus time,
+memory, and storage plots. Diagnostic report mode also writes the detailed ECSV table and per-bin
+JSON summary. Compact summaries report the median and 5th/95th percentiles across jobs; diagnostic
+summaries include the mean, median, standard deviation, extrema, and 5th/95th percentiles. Storage
+plots include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
 event output, reduced event data, and sim_telarray histograms when those files are available.
 Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
 per-process maximum. Byte-based quantities in plots use decimal MB or GB, selected according to
-the values shown; the ECSV resource table retains raw byte values. For sim_telarray, additional
-plots normalize time and output sizes by the
-number of triggered events recorded in the job metadata. Sim_telarray storage includes simtel event
+the values shown; the diagnostic ECSV resource table retains raw byte values. For sim_telarray,
+additional plots normalize time and output sizes by the number of triggered events recorded in the
+job metadata. Sim_telarray storage includes simtel event
 files, reduced event data, and histogram files. New job manifests record these counts under
 `statistics`; when processing older manifests, the computing comparison can recover the count from
 the reduced-event HDF5 table or the sim_telarray log without opening the `.simtel.zst` file.

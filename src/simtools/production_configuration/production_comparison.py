@@ -4,6 +4,7 @@ import json
 import logging
 from collections import Counter
 from pathlib import Path
+from statistics import median
 
 from simtools.production_configuration.production_file_selection import (
     check_manifest,
@@ -53,7 +54,9 @@ def write_production_comparison(args_dict, output_directory):
         output_directory,
         array_layout_names,
     )
-    _write_comparison_summary(statistics_files, output_directory)
+    _write_comparison_summary(
+        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
+    )
 
 
 def _write_metadata_comparisons(args_dict, output_directory, array_layout_names):
@@ -123,7 +126,9 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
-    _write_comparison_summary(statistics_files, output_directory)
+    _write_comparison_summary(
+        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
+    )
 
 
 def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
@@ -276,34 +281,34 @@ def _format_configuration_value(value, quantity=None):
     return str(value)
 
 
-def _write_comparison_summary(statistics_files, output_directory):
+def _write_comparison_summary(statistics_files, output_directory, report_mode="diagnostic"):
     """Combine per-pair statistics into one summary and remove the individual files."""
     comparisons = []
     baseline = None
     comparison_sets = {}
     plot_statistics = {}
+    compact_plot_statistics = {}
+    compact_report = report_mode == "compact"
     for statistics_file in statistics_files:
         statistics = json.loads(statistics_file.read_text(encoding="utf-8"))
-        path_parts = statistics_file.relative_to(output_directory).parts
-        pair_name = path_parts[0] if len(path_parts) > 2 else ""
-        array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
-        if array_layout == statistics_file.name:
-            array_layout = ""
-        comparisons.append(
-            {
-                "pair": pair_name,
-                "array_layout": array_layout,
-                "statistics": statistics,
-            }
+        comparison, pair_name, array_layout = _comparison_summary_entry(
+            statistics_file, output_directory, statistics, compact_report
         )
+        comparisons.append(comparison)
         baseline = _add_production_summary(baseline, statistics["baseline"])
-        for production in statistics["comparison_sets"]:
-            label = production["label"]
-            comparison_sets[label] = _add_production_summary(comparison_sets.get(label), production)
-        for name, values in statistics["plot_statistics"].items():
-            plot_statistics[f"{pair_name}/{array_layout}/{name}"] = values
+        comparison_sets = _add_comparison_sets(comparison_sets, statistics["comparison_sets"])
+        _collect_plot_statistics(
+            statistics["plot_statistics"],
+            pair_name,
+            array_layout,
+            compact_report,
+            plot_statistics,
+            compact_plot_statistics,
+        )
         statistics_file.unlink()
 
+    if compact_report:
+        plot_statistics = _finalize_compact_plot_statistics(compact_plot_statistics)
     summary = {
         "format_version": 1,
         "baseline": baseline
@@ -320,6 +325,114 @@ def _write_comparison_summary(statistics_files, output_directory):
     (output_directory / "comparison_statistics.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+
+
+def _comparison_summary_entry(statistics_file, output_directory, statistics, compact_report):
+    """Build one comparison entry, omitting duplicated plot data in compact mode."""
+    path_parts = statistics_file.relative_to(output_directory).parts
+    pair_name = path_parts[0] if len(path_parts) > 2 else ""
+    array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
+    if array_layout == statistics_file.name:
+        array_layout = ""
+    pair_statistics = statistics
+    if compact_report:
+        pair_statistics = {
+            "format_version": statistics.get("format_version", 1),
+            "baseline": statistics["baseline"],
+            "comparison_sets": statistics["comparison_sets"],
+            "plot_statistics": {},
+        }
+    return (
+        {
+            "pair": pair_name,
+            "array_layout": array_layout,
+            "statistics": pair_statistics,
+        },
+        pair_name,
+        array_layout,
+    )
+
+
+def _add_comparison_sets(comparison_sets, productions):
+    """Merge event counts for each candidate production label."""
+    for production in productions:
+        label = production["label"]
+        comparison_sets[label] = _add_production_summary(comparison_sets.get(label), production)
+    return comparison_sets
+
+
+def _collect_plot_statistics(
+    statistics, pair_name, array_layout, compact_report, plot_statistics, compact_statistics
+):
+    """Collect full per-pair statistics or compact per-plot metric summaries."""
+    for name, values in statistics.items():
+        if compact_report:
+            plot_name = values.get("plot_name", name)
+            _add_compact_plot_statistics(compact_statistics, plot_name, values)
+        else:
+            plot_statistics[f"{pair_name}/{array_layout}/{name}"] = values
+
+
+def _add_compact_plot_statistics(compact_statistics, plot_name, statistics):
+    """Accumulate plot metric results without retaining histogram arrays."""
+    entry = compact_statistics.setdefault(
+        plot_name,
+        {
+            "baseline_label": statistics.get("baseline_label"),
+            "metric_type": statistics["metric_type"],
+            "comparisons": [],
+            "metadata": {"compact": True, "pair_count": 0, "results": {}},
+        },
+    )
+    for key in ("metric", "quantity_name", "cumulative"):
+        if key in statistics:
+            entry[key] = statistics[key]
+    entry["metadata"]["pair_count"] += 1
+    for comparison in statistics.get("comparisons", []):
+        candidate_label = comparison.get("candidate_label", "candidate")
+        result_groups = {
+            key: comparison[key] for key in ("simulated", "triggered") if key in comparison
+        }
+        if not result_groups:
+            result_groups = {"result": comparison}
+        for group_name, result in result_groups.items():
+            result_key = f"{candidate_label}:{group_name}"
+            _record_compact_metric_result(entry["metadata"]["results"], result_key, result)
+
+
+def _record_compact_metric_result(results, group_name, result):
+    """Accumulate counts and scalar metric values for one distribution result."""
+    summary = results.setdefault(
+        group_name,
+        {"result_count": 0, "valid_count": 0, "invalid_reasons": {}, "values": []},
+    )
+    summary["result_count"] += 1
+    if result.get("valid"):
+        summary["valid_count"] += 1
+        value = result.get("value")
+        if isinstance(value, int | float):
+            summary["values"].append(value)
+    else:
+        reason = result.get("reason", "unspecified")
+        summary["invalid_reasons"][reason] = summary["invalid_reasons"].get(reason, 0) + 1
+
+
+def _finalize_compact_plot_statistics(compact_statistics):
+    """Return small per-plot metric summaries for the release report."""
+    for entry in compact_statistics.values():
+        results = entry["metadata"]["results"]
+        for summary in results.values():
+            values = summary.pop("values")
+            summary["invalid_count"] = summary["result_count"] - summary["valid_count"]
+            if values:
+                summary["minimum"] = min(values)
+                summary["median"] = median(values)
+                summary["maximum"] = max(values)
+            else:
+                summary["minimum"] = None
+                summary["median"] = None
+                summary["maximum"] = None
+    return compact_statistics
 
 
 def _add_production_summary(total, production):

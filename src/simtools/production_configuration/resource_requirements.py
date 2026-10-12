@@ -109,9 +109,14 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         )
         rows.extend(candidate_rows)
         diagnostics.extend(candidate_diagnostics)
-    table_file = output_directory / "resource_requirements.ecsv"
-    resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
-    summary = summarize_resource_requirements(rows)
+    report_mode = args_dict.get("report_mode", "diagnostic")
+    table_file = None
+    if report_mode == "compact":
+        summary = _summarize_compact_resource_requirements(rows)
+    else:
+        table_file = output_directory / "resource_requirements.ecsv"
+        resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
+        summary = summarize_resource_requirements(rows)
     json_file = output_directory / "resource_requirements.json"
     json_file.write_text(
         json.dumps(
@@ -129,7 +134,10 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         encoding="utf-8",
     )
     report_file = output_directory / "resource_requirements.md"
-    write_markdown_report(summary, diagnostics, report_file)
+    if report_mode == "compact":
+        _write_compact_markdown_report(summary, diagnostics, report_file)
+    else:
+        write_markdown_report(summary, diagnostics, report_file)
     plot_files = plotter(
         rows,
         output_directory,
@@ -148,6 +156,73 @@ def write_resource_requirements(args_dict, output_directory, plotter):
 def resource_table(rows):
     """Return resource rows as an ECSV-compatible Astropy table."""
     return Table(rows=rows)
+
+
+def _summarize_compact_resource_requirements(rows):
+    """Summarize key resource metrics across each production and process role."""
+    metrics = (
+        "wall_time_seconds_per_event",
+        "cpu_time_seconds_per_event",
+        "peak_rss_bytes",
+        "sim_telarray_storage_bytes_per_event",
+    )
+    grouped = {}
+    for row in rows:
+        key = (row["production_label"], row["role"])
+        grouped.setdefault(key, []).append(row)
+    summary = []
+    for (production_label, role), group_rows in sorted(grouped.items()):
+        item = {
+            "production_label": production_label,
+            "role": role,
+            "job_count": len(group_rows),
+        }
+        for metric in metrics:
+            values = [row[metric] for row in group_rows if row[metric] is not None]
+            item[f"{metric}_median"] = float(np.median(values)) if values else None
+            item[f"{metric}_p05"] = float(np.percentile(values, 5)) if values else None
+            item[f"{metric}_p95"] = float(np.percentile(values, 95)) if values else None
+        summary.append(item)
+    return summary
+
+
+def _write_compact_markdown_report(summary, diagnostics, output_file):
+    """Write a short resource summary for release review."""
+    metric_labels = (
+        ("wall_time_seconds_per_event", "Wall time (s/event)"),
+        ("cpu_time_seconds_per_event", "CPU time (s/event)"),
+        ("peak_rss_bytes", "Peak RSS (bytes)"),
+        ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
+    )
+    lines = [
+        "# Production resource requirements",
+        "",
+        f"Valid process records: {sum(item['job_count'] for item in summary)}",
+        f"Skipped process records: {len(diagnostics)}",
+        "",
+        "Median and 5th/95th percentiles across jobs, grouped by production and process role.",
+        "",
+        "| Production | Role | Jobs | Metric | Median | P05 | P95 |",
+        "| --- | --- | ---: | --- | ---: | ---: | ---: |",
+    ]
+    for item in summary:
+        for metric, label in metric_labels:
+            values = [
+                _format_value(item[f"{metric}_{statistic}"])
+                for statistic in ("median", "p05", "p95")
+            ]
+            lines.append(
+                f"| {item['production_label']} | {item['role']} | {item['job_count']} "
+                f"| {label} | " + " | ".join(values) + " |"
+            )
+    if diagnostics:
+        lines.extend(
+            ["", "## Skipped records", "", "| Job | Role | Reason |", "| --- | --- | --- |"]
+        )
+        lines.extend(
+            f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
+        )
+    Path(output_file).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def summarize_resource_requirements(rows):
