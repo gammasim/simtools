@@ -13,8 +13,10 @@ workflows, validation, reporting, and plotting.
 - Read the relevant code, tests, and working-tree status before editing. Make
   the smallest change that satisfies the task. Before changing a public API,
   CLI contract, or inherited/callback signature, explain the proposed change
-  and compatibility impact and ask the user for approval. Implement it only
-  after approval; update affected callers, tests, and documentation together.
+  and compatibility impact and ask for approval unless the user already
+  explicitly requested or approved that specific change. General permission
+  to refactor is not API approval. After approval, update affected callers,
+  tests, and documentation together.
   Change architecture only when correctness requires it or the user requests it.
 - Use existing conventions for routine choices. Ask when missing information
   changes required behavior, compatibility, scope, or authorization. State
@@ -68,7 +70,8 @@ workflows, validation, reporting, and plotting.
 - Use `pathlib`, double-quoted strings/docstrings, f-strings for interpolation,
   and logging for library messages. Do not use `print` in library code.
 - Do not add `__init__.py`; the project uses implicit namespace packages.
-- Preserve existing signature annotations. For new functions, follow neighboring
+- Preserve existing signature annotations; annotate new parameters according
+  to that function's existing style. For new functions, follow neighboring
   functions with the same role; if their annotation styles differ or none exist,
   leave the new signature unannotated unless the user requests annotations.
 - Put actionable text in exceptions; wrap with `raise ... from exc`. Do not log
@@ -113,20 +116,24 @@ workflows, validation, reporting, and plotting.
 - Prevent duplication during implementation: centralize repeated domain keys,
   parameter names, paths, and messages before adding further occurrences.
   When profile access is unavailable, use this repository fallback for new and
-  modified code: extract literal values of five or more characters occurring
-  at least twice in the affected file when the task adds or changes an occurrence.
+  modified code: extract executable string literal values of five or more
+  characters occurring at least twice in the affected file when the task adds
+  or changes an occurrence.
   This is a conservative review policy, not a claim about SonarQube thresholds.
-  Do not extract empty strings, punctuation, or shorter literals solely under
-  this fallback; still fix them when the analyzer reports a finding.
+  The fallback excludes docstrings, annotation strings, embedded documentation
+  examples, empty strings, punctuation-only strings, and shorter literals;
+  these exclusions override its length/count criteria. Preserve documentation
+  and annotation semantics. Address actual analyzer findings using the active
+  rule's requirements rather than applying fallback exclusions to them.
   Apply the same review to scan-excluded code.
 - Fix findings introduced or affected by the task. Report existing unrelated
   findings without broadening scope. Do not bypass S1192 with `NOSONAR`, new
   exclusions, threshold relaxation, string splitting, or cosmetic rewrites.
 - Ruff, pylint, and pre-commit do not prove S1192 compliance. Check SonarQube
   results for the final code revision when available. Without those results,
-  analyzer compliance remains unverified, even after manual review. In the
-  handoff, distinguish manual review, verified analysis, and pending analysis;
-  identify unavailable profile settings or scan-excluded files.
+  analyzer compliance remains unverified, even after manual review. Record
+  manual-review and analyzer status, unavailable settings, and scan-excluded
+  files for the handoff.
   Instructions about other lint exceptions never permit an S1192 suppression.
 
 ## Tests And Validation
@@ -150,12 +157,27 @@ workflows, validation, reporting, and plotting.
 - Choose checks by the actual change, subject to explicit user instructions.
   Apply every matching row and combine requirements. Shared library behavior
   means behavior used by multiple modules or applications.
+- Treat `.github/workflows/CI-linter.yml` and
+  `.github/workflows/CI-docs.yml` as authoritative definitions of CI checks.
+  Read their current validation steps when preparing changes for CI; apply
+  checks affected by the change in addition to the table below. For PR handoff,
+  inspect both workflows' results for the final revision and resolve
+  task-related failures. Pending or unavailable CI is reported as unverified.
+- Linter validation includes pre-commit, ASCII checks, Dockerfile linting,
+  pyproject/dependency validation, citation metadata, dependency consistency
+  (`pip check`), and dotenv linting where affected. Pre-commit alone does not
+  establish that the entire linter workflow passes.
+- Documentation validation includes application-page and API-reference
+  completeness, ASCII checks, and `make -C docs html`. Run these when changing
+  documentation, docstrings, modules, command registrations, or documentation
+  dependencies. Follow the documentation skill for additional checks such as
+  linkcheck. Build/check steps do not authorize documentation deployment.
 
   | Change | Required validation |
   | --- | --- |
   | Review only | Read relevant evidence; no mutation or test run required. |
   | Prose or agent instructions | Review links/instructions; applicable file hooks and `git diff --check`. |
-  | Python behavior or tests | Focused pytest, changed-file lint during iteration, full pre-commit before handoff. |
+  | Python implementation or tests, including behavior-preserving refactors | Focused pytest, changed-file lint during iteration, full pre-commit before handoff. |
   | Shared library behavior | Above, plus full unit suite and changed-code coverage. |
   | Workflow | actionlint, yamllint, shellcheck through pre-commit; review full workflow diff. |
   | Application/integration config | Relevant unit tests and affected integration cases when prerequisites exist. |
@@ -188,7 +210,8 @@ workflows, validation, reporting, and plotting.
   command, add tests and an integration config, and add its documentation page
   and applications toctree entry.
 - New library modules require mirrored unit tests and API reference entries.
-  When adding, moving, or removing modules, run CI's source-to-test check:
+  When adding, moving, or removing modules, run CI's source-to-test existence
+  check below. It verifies file naming and presence, not test quality or coverage.
 
   ```bash
   python - <<'PY'
