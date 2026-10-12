@@ -1,4 +1,4 @@
-"""Small runner for reusable, site-parameterised release science tests."""
+"""Load and validate release science-test definitions."""
 
 import hashlib
 import json

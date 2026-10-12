@@ -1,4 +1,4 @@
-"""Small runner for reusable, site-parameterised release science tests."""
+"""Prepare, execute, and collect science-test workflows."""
 
 import logging
 import shutil
@@ -48,11 +48,12 @@ def _execute_selection(prepared, dry_run, run_id, application_args, catalogue):
             continue
         dependencies = _selected_ancestor_ids(planned, results, catalogue)
         if any(r["id"] in dependencies and r["status"] not in {"pass", "warn"} for r in results):
+            status = _dependency_status(results, dependencies)
             results.append(
                 {
                     **planned,
-                    "status": _dependency_status(results, dependencies),
-                    "execution": _dependency_status(results, dependencies),
+                    "status": status,
+                    "execution": status,
                     "reason": "Dependency failed or is not yet complete.",
                 }
             )

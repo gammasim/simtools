@@ -1,4 +1,4 @@
-"""Small runner for reusable, site-parameterised release science tests."""
+"""Build release and per-test science-test reports."""
 
 import json
 import logging

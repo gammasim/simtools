@@ -1,4 +1,4 @@
-"""Small runner for reusable, site-parameterised release science tests."""
+"""Coordinate release science-test runs."""
 
 import logging
 from pathlib import Path

@@ -313,7 +313,7 @@ def test_pending_collection_defers_dependent_tests(mocker):
         science_test_execution, "_run_test", return_value={**collect, "status": "pending"}
     )
     mocker.patch.object(science_test_execution, "_log_test_execution")
-    results = science_test_definitions._execute_selection(
+    results = science_test_execution._execute_selection(
         [(({},), collect), (({"depends_on": ["collect"]},), compare)],
         False,
         "run",
