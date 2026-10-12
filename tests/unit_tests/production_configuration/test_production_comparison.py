@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from simtools.constants import SCHEMA_PATH
 from simtools.production_configuration import production_comparison
 from simtools.production_configuration.production_file_selection import ProductionManifest
 from simtools.sim_events.production_comparison import ProductionDescriptor
@@ -30,8 +29,8 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
         "plot_event_level_production_comparison.plot",
         side_effect=[first_statistics_file, second_statistics_file],
     )
-    mock_dump = mocker.patch(
-        "simtools.production_configuration.production_comparison.MetadataCollector.dump"
+    mock_summary = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_comparison_summary"
     )
 
     production_comparison.write_production_comparison(
@@ -63,12 +62,8 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             report_mode="diagnostic",
         ),
     ]
-    assert [call.args[0]["array_layout_name"] for call in mock_dump.call_args_list] == [
-        "first",
-        "second",
-    ]
-    assert mock_dump.call_args.args[0]["schema_file"] == str(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    mock_summary.assert_called_once_with(
+        [first_statistics_file, second_statistics_file], output_directory
     )
 
 
