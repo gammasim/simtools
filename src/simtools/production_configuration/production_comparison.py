@@ -4,7 +4,8 @@ import json
 import logging
 from collections import Counter
 from pathlib import Path
-from statistics import median
+
+import numpy as np
 
 from simtools.production_configuration.production_file_selection import (
     check_manifest,
@@ -426,7 +427,7 @@ def _finalize_compact_plot_statistics(compact_statistics):
             summary["invalid_count"] = summary["result_count"] - summary["valid_count"]
             if values:
                 summary["minimum"] = min(values)
-                summary["median"] = median(values)
+                summary["median"] = float(np.median(values))
                 summary["maximum"] = max(values)
             else:
                 summary["minimum"] = None
