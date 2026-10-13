@@ -9,6 +9,14 @@ _PRIMARY_DIAMETER = "primary_mirror_diameter"
 _SECONDARY_DIAMETER = "secondary_mirror_diameter"
 _SECONDARY = "secondary"
 _FOCAL_LENGTH = "focal_length"
+_DISH_SHAPE_LENGTH = "dish_shape_length"
+_MIRROR_FOCAL_LENGTH = "mirror_focal_length"
+_MIRROR_LIST = "mirror_list"
+_MIRROR_X = "mirror_x"
+_MIRROR_Y = "mirror_y"
+_MIRROR_DIAMETER = "mirror_diameter"
+_MIRROR_Z = "mirror_z"
+_PARABOLIC_DISH = "parabolic_dish"
 _SHAPE_TYPE = "shape_type"
 
 
@@ -51,10 +59,10 @@ def _polynomial_bounds(model, surface, radius):
 def _panel_heights(model, radius, listed_z):
     """Calculate nominal panel-centre heights as sim_telarray does."""
     focal_length = _length(model, _FOCAL_LENGTH)
-    dish_length = _length(model, "dish_shape_length") or focal_length
+    dish_length = _length(model, _DISH_SHAPE_LENGTH) or focal_length
     if not np.isfinite(dish_length) or dish_length <= 0:
         raise ValueError("Dish shape length must be positive and finite.")
-    if model.get_parameter_value("parabolic_dish"):
+    if model.get_parameter_value(_PARABOLIC_DISH):
         height = radius**2 / (4 * dish_length)
     else:
         if dish_length <= np.max(radius):
@@ -67,7 +75,7 @@ def _panel_extent(model, centre_radius, panel_radius, height, focal_length):
     """Bound axial tilt and spherical sag of each panel."""
     nominal_focus = _length(model, _FOCAL_LENGTH)
     if np.any(focal_length <= 0):
-        default_focal_length = _length(model, "mirror_focal_length") or nominal_focus
+        default_focal_length = _length(model, _MIRROR_FOCAL_LENGTH) or nominal_focus
         focal_length = np.where(focal_length > 0, focal_length, default_focal_length)
     if np.any(focal_length <= 0) or np.any(2 * focal_length <= panel_radius):
         raise ValueError("Mirror panel focal lengths must exceed half the panel radius.")
@@ -81,19 +89,22 @@ def _panel_extent(model, centre_radius, panel_radius, height, focal_length):
 
 def _single_mirror_bounds(model):
     """Bound mirror panels using their dish height, corners, tilt, and sag."""
-    table = model.get_parameter_table("mirror_list")
+    table = model.get_parameter_table(_MIRROR_LIST)
     needed = (
-        "mirror_x",
-        "mirror_y",
-        "mirror_diameter",
-        "mirror_z",
+        _MIRROR_X,
+        _MIRROR_Y,
+        _MIRROR_DIAMETER,
+        _MIRROR_Z,
         _SHAPE_TYPE,
         _FOCAL_LENGTH,
     )
     if len(table) == 0 or any(column not in table.colnames for column in needed):
         raise ValueError("mirror_list needs positions, diameters, shapes, and focal lengths.")
-    coordinates = [u.Quantity(table[name]).to_value(u.m) for name in needed[:4]]
-    x, y, diameter, z = (np.asarray(column) for column in coordinates)
+    x = np.asarray(u.Quantity(table[_MIRROR_X]).to_value(u.m))
+    y = np.asarray(u.Quantity(table[_MIRROR_Y]).to_value(u.m))
+    diameter = np.asarray(u.Quantity(table[_MIRROR_DIAMETER]).to_value(u.m))
+    z = np.asarray(u.Quantity(table[_MIRROR_Z]).to_value(u.m))
+    coordinates = (x, y, diameter, z)
     if not all(np.all(np.isfinite(column)) for column in coordinates) or np.any(diameter <= 0):
         raise ValueError("mirror_list positions and positive panel diameters must be finite.")
     shape = np.asarray(table[_SHAPE_TYPE])
