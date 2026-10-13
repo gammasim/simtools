@@ -134,10 +134,11 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
 | Application/integration config | Relevant unit/integration cases when prerequisites exist |
 | Dependencies/build | Full pre-commit and affected build/runtime checks |
 
-- CI authorities: `.github/workflows/CI-linter.yml` and
-  `.github/workflows/CI-docs.yml`.
-  Read current validation steps; add affected checks. Before PR handoff inspect
-  both final-revision results and resolve task-related failures.
+- CI authorities are the workflows relevant to the change, including
+  `.github/workflows/CI-linter.yml`, `.github/workflows/CI-unittests.yml`,
+  `.github/workflows/CI-integrationtests.yml`, and `.github/workflows/CI-docs.yml`.
+  Read their current validation steps and add affected checks. Before PR handoff
+  inspect relevant final-revision results and resolve task-related failures.
 - Linter also checks ASCII, Dockerfiles, pyproject/dependencies, citation,
   `pip check`, and dotenv where affected; pre-commit alone is insufficient.
 - Docs changes, docstrings, modules, command registrations, or doc dependencies
