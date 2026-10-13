@@ -474,10 +474,8 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     assert not statistics_file.exists()
 
 
-def test_version_one_comparison_statistics_schema_remains_available():
-    legacy_schema = schema.load_schema(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml", "1.0.0"
-    )
+def test_version_one_report_remains_valid_under_current_schema():
+    current_schema = schema.load_schema(SCHEMA_PATH / "production_comparison_statistics.schema.yml")
     schema.validate_dict_using_schema(
         {
             "format_version": 1,
@@ -489,5 +487,5 @@ def test_version_one_comparison_statistics_schema_remains_available():
             "comparison_sets": [],
             "plot_statistics": {},
         },
-        json_schema=legacy_schema,
+        json_schema=current_schema,
     )

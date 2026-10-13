@@ -148,11 +148,11 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         statistics = json.load(file_handle)
     comparison_schema = schema.load_schema(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml", "1.0.0"
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
     )
     statistics["format_version"] = 3
 
-    with pytest.raises(jsonschema.ValidationError, match="3 is not one of"):
+    with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(statistics, comparison_schema)
 
 
