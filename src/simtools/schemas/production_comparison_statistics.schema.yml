@@ -3,14 +3,14 @@ $schema: http://json-schema.org/draft-06/schema#
 title: Production comparison statistics
 description: |
   Schema for machine-readable reports written by simtools-compare-productions.
-schema_version: 1.0.0
+schema_version: 1.1.0
 schema_name: production_comparison_statistics.schema
 type: object
 additionalProperties: false
 properties:
   format_version:
     type: integer
-    enum: [1]
+    enum: [1, 2]
   baseline:
     $ref: '#/definitions/ProductionSummary'
   comparison_sets:
@@ -21,11 +21,34 @@ properties:
     type: object
     additionalProperties:
       $ref: '#/definitions/PlotStatistics'
+  comparisons:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      properties:
+        pair:
+          type: string
+        array_layout:
+          type: string
+        statistics:
+          $ref: '#'
+      required: [pair, array_layout, statistics]
 required:
   - format_version
   - baseline
   - comparison_sets
   - plot_statistics
+oneOf:
+  - properties:
+      format_version:
+        enum: [1]
+    not:
+      required: [comparisons]
+  - properties:
+      format_version:
+        enum: [2]
+    required: [comparisons]
 
 definitions:
   ProductionSummary:

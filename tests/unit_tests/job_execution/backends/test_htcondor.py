@@ -822,7 +822,10 @@ def test_htcondor_load_results_reports_each_invalid_payload(tmp_test_directory):
     assert "worker failed" in failures[3]
 
 
-def test_htcondor_wait_cleans_transient_artifacts_after_success(monkeypatch, tmp_test_directory):
+@pytest.mark.parametrize("method", ["wait", "collect"])
+def test_htcondor_wait_cleans_transient_artifacts_after_success(
+    monkeypatch, tmp_test_directory, method
+):
     """Successful scheduler runs remove payload and stream artifacts by default."""
     work_dir = Path(tmp_test_directory)
     for directory in ("inputs", "results", "stdout", "stderr"):
@@ -840,7 +843,7 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(monkeypatch, tmp
     monkeypatch.setattr(backend, "_load_htcondor", lambda: object())
     monkeypatch.setattr(backend, "_wait_for_processes", lambda _submission: [])
 
-    assert [result.value for result in backend.wait(submission)] == [4]
+    assert [result.value for result in getattr(backend, method)(submission)] == [4]
     assert not (work_dir / "results").exists()
 
 
@@ -888,3 +891,61 @@ def test_htcondor_cancel_loads_scheduler_for_detached_submission(monkeypatch):
     backend.cancel(SubmissionHandle("htcondor", Path("run"), (), scheduler_id=17))
 
     assert calls == [("remove", "ClusterId == 17")]
+
+
+@pytest.mark.parametrize(
+    ("queued", "history", "expected"),
+    [
+        ([{"ProcId": 0}], [], False),
+        ([], [{"ProcId": 0, "JobStatus": 4}], True),
+        ([], [{"ProcId": 0, "JobStatus": 3}], True),
+        ([], [], None),
+        ([], [{"ProcId": 0, "JobStatus": 5}], None),
+    ],
+)
+def test_is_finished_requires_terminal_history(
+    mocker, queued, history, expected, tmp_test_directory
+):
+    backend = HTCondorBackend()
+    mocker.patch.object(backend, "_load_htcondor")
+    backend._schedd = mocker.Mock()
+    backend._schedd.query.return_value = queued
+    backend._schedd.history.return_value = history
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=Path(tmp_test_directory),
+        job_ids=("job",),
+        scheduler_id=1,
+        process_ids={"job": 0},
+    )
+    if expected is None:
+        with pytest.raises(BackendExecutionError, match="incomplete HTCondor history"):
+            backend.is_finished(submission)
+    else:
+        assert backend.is_finished(submission) is expected
+
+
+def test_is_finished_refuses_unknown_scheduler_state(mocker, tmp_test_directory):
+    backend = HTCondorBackend()
+    submission = SubmissionHandle(
+        backend="htcondor", work_dir=Path(tmp_test_directory), job_ids=("job",)
+    )
+    with pytest.raises(BackendExecutionError, match="missing scheduler identifiers"):
+        backend.is_finished(submission)
+    submission.scheduler_id = 1
+    submission.process_ids = {"job": 0}
+    mocker.patch.object(backend, "_load_htcondor")
+    backend._schedd = mocker.Mock()
+    backend._schedd.query.side_effect = RuntimeError("offline")
+    with pytest.raises(BackendExecutionError, match="Cannot confirm finished HTCondor jobs"):
+        backend.is_finished(submission)
+
+
+def test_collect_reports_failed_workers(mocker, tmp_test_directory):
+    backend = HTCondorBackend()
+    mocker.patch.object(backend, "_load_results", return_value=([], ["worker failed"]))
+    submission = SubmissionHandle(
+        backend="htcondor", work_dir=Path(tmp_test_directory), job_ids=("job",)
+    )
+    with pytest.raises(BackendExecutionError, match="worker failed"):
+        backend.collect(submission)
