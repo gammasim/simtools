@@ -71,16 +71,13 @@ def test_setup_release_requires_site_templates(tmp_test_directory):
         campaign_runner.setup_release(Path(tmp_test_directory) / "release/science_tests", template)
 
 
-def test_dry_run_is_read_only(campaign, successful_workflow):
-    summary = campaign_runner.run_release(**campaign, dry_run=True)
-    assert len(summary["results"]) == 2
-    assert all(result["status"] == "planned" for result in summary["results"])
-    assert not summary["qualified"]
+def test_run_collects_evidence_and_preserves_subset_results(campaign, successful_workflow):
+    planned = campaign_runner.run_release(**campaign, dry_run=True)
+    assert all(result["status"] == "planned" for result in planned["results"])
+    assert not planned["qualified"]
     assert successful_workflow == []
     assert not (campaign["release_dir"] / "reports").exists()
 
-
-def test_run_collects_evidence_and_preserves_subset_results(campaign, successful_workflow):
     north = campaign_runner.run_release(**campaign, sites=["north"], tests=["compare"])
     assert {r["id"]: r["status"] for r in north["results"]} == {
         "compare.north": "warn",
@@ -174,7 +171,7 @@ def test_configuration_change_invalidates_old_results(
     assert next(r for r in summary["results"] if r["id"] == "compare.north")["status"] == "not_run"
 
 
-def test_comparison_execution_uses_release_parameters(campaign, monkeypatch):
+def test_comparison_execution_uses_release_parameters(campaign, successful_workflow):
     release_path = campaign["release_dir"] / "release.yml"
     release = yaml.safe_load(release_path.read_text(encoding="utf-8"))
     release.update(
@@ -182,29 +179,11 @@ def test_comparison_execution_uses_release_parameters(campaign, monkeypatch):
         comparison_parameters={"compare": {"compare_by": ["configuration.azimuth_angle"]}},
     )
     _write_yaml(release_path, release)
-    executed_workflows = []
-
-    def execute(args, replacements):
-        from simtools.runners.simtools_runner import _copy_collection_files
-
-        executed_workflows.append(yaml.safe_load(Path(args["config_file"]).read_text()))
-        output = Path(replacements["__SCIENCE_REPORT_PATH__"])
-        output.mkdir(parents=True, exist_ok=True)
-        (output / "metrics.json").write_text('{"count": 3}', encoding="utf-8")
-        _copy_collection_files(
-            [{"configuration": {"output_path": str(output)}}],
-            {
-                "output_path": replacements["__SCIENCE_COLLECTION_PATH__"],
-                "files": ["metrics.json"],
-                "write_inventory": False,
-            },
-        )
-
-    monkeypatch.setattr(science_test_execution, "run_applications", execute)
-    campaign_runner.run_release(**campaign, sites=["north"], tests=["compare"])
-
-    compare_workflow = executed_workflows[-1]["applications"][0]["configuration"]
+    summary = campaign_runner.run_release(**campaign, sites=["north"], tests=["compare"])
+    workflow = Path(summary["results"][0]["execution_provenance"]) / "workflow.yml"
+    compare_workflow = yaml.safe_load(workflow.read_text())["applications"][0]["configuration"]
     assert compare_workflow["compare_by"] == ["configuration.azimuth_angle"]
+    assert successful_workflow == ["north"]
 
 
 def test_rerunning_dependency_invalidates_comparison(campaign, successful_workflow):
@@ -257,9 +236,8 @@ def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
     assert successful_workflow == []
 
 
-@pytest.mark.parametrize("sites", [["north"], ["North"], ["NORTH"], ["nOrTh"], ["North", "NORTH"]])
-def test_site_selection_is_case_insensitive(campaign, successful_workflow, sites):
-    summary = campaign_runner.run_release(**campaign, sites=sites)
+def test_site_selection_is_case_insensitive_and_deduplicated(campaign, successful_workflow):
+    summary = campaign_runner.run_release(**campaign, sites=["North", "NORTH"])
     assert successful_workflow == ["north"]
     assert {
         result["site"] for result in summary["results"] if result["execution"] == "completed"

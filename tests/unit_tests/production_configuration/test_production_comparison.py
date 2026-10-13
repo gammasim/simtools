@@ -414,10 +414,16 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
                     "energy": {
                         "plot_name": "distribution_energy",
                         "metric_type": "ks",
+                        "baseline_counts": [10] * 1000,
                         "comparisons": [
                             {
                                 "candidate_label": "candidate",
-                                "simulated": {"valid": True, "value": 0.2},
+                                "simulated": {
+                                    "valid": True,
+                                    "value": 0.2,
+                                    "sample_size": 10,
+                                    "bin_counts": [2] * 1000,
+                                },
                                 "triggered": {"valid": False, "reason": "empty"},
                             }
                         ],
@@ -439,29 +445,12 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
         "candidate:triggered"
     ]["invalid_reasons"] == {"empty": 1}
+    pair_statistics = summary["comparisons"][0]["statistics"]["plot_statistics"]["energy"]
+    assert pair_statistics["comparisons"][0]["simulated"] == {
+        "valid": True,
+        "value": 0.2,
+        "sample_size": 10,
+    }
+    assert pair_statistics["comparisons"][0]["triggered"] == {"valid": False, "reason": "empty"}
+    assert "baseline_counts" not in pair_statistics
     assert not statistics_file.exists()
-
-
-def test_compact_scalar_metrics_keep_pair_validity_without_arrays():
-    result = production_comparison._scalar_plot_statistics(
-        {
-            "metric_type": "distribution",
-            "metric": "ks",
-            "baseline_counts": [10] * 1000,
-            "comparisons": [
-                {
-                    "candidate_label": "candidate",
-                    "simulated": {
-                        "valid": True,
-                        "value": 0.4,
-                        "sample_size": 10,
-                        "bin_counts": [2] * 1000,
-                    },
-                    "triggered": {"valid": False, "reason": "insufficient_data"},
-                }
-            ],
-        }
-    )
-    assert result["comparisons"][0]["simulated"] == {"valid": True, "value": 0.4, "sample_size": 10}
-    assert result["comparisons"][0]["triggered"]["reason"] == "insufficient_data"
-    assert "baseline_counts" not in result

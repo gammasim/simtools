@@ -245,6 +245,8 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
         if result["id"] == "derive.north"
     )
     assert failed["status"] == "incomplete"
+    assert failed["report"] is None
+    assert failed["previous_report"] == "reports/north/derive"
     assert (report / "metrics.json").exists()
 
 

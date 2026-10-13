@@ -92,28 +92,20 @@ def _comparison_selected(requested_sites, requested_tests, suites, catalogue):
     return any(test_id.startswith("compare.") for test_id in selected_test_ids)
 
 
-def _warn_on_identical_paths(context, comparison_selected):
-    """Warn when a non-comparison run uses one path for both productions."""
-    if comparison_selected:
-        return
-    if _PATH_KEYS[1] not in context:
-        return
-    candidate = Path(context[_PATH_KEYS[0]]).resolve()
-    baseline = Path(context[_PATH_KEYS[1]]).resolve()
-    if candidate == baseline:
-        logger.warning(
-            "Candidate and baseline paths are identical; this is allowed for "
-            "non-comparison science tests."
-        )
-
-
 def _validate_selected_context(
     release, context, requested_sites, requested_tests, suites, catalogue
 ):
     """Validate context paths for the selected test dependency graph."""
     comparison_selected = _comparison_selected(requested_sites, requested_tests, suites, catalogue)
     _validate_release_context(release, context, require_baseline=comparison_selected)
-    _warn_on_identical_paths(context, comparison_selected)
+    if not comparison_selected and _PATH_KEYS[1] in context:
+        candidate = Path(context[_PATH_KEYS[0]]).resolve()
+        baseline = Path(context[_PATH_KEYS[1]]).resolve()
+        if candidate == baseline:
+            logger.warning(
+                "Candidate and baseline paths are identical; this is allowed for "
+                "non-comparison science tests."
+            )
 
 
 def _load_suites(release_dir, release, catalogue, template_dir=None):
@@ -363,24 +355,26 @@ def _test_definition(test_id, catalogue, acceptance, release):
         "model_version": release.get("model_version"),
         "report_mode": release.get("report_mode", "compact"),
     }
-    comparison_name = test_id.removeprefix("compare.")
-    requirements_by_comparison = release.get("comparison_requirements", {})
-    parameters_by_comparison = release.get("comparison_parameters", {})
-    if not isinstance(requirements_by_comparison, dict):
-        raise ValueError("comparison_requirements must be a mapping.")
-    if not isinstance(parameters_by_comparison, dict):
-        raise ValueError("comparison_parameters must be a mapping.")
-    requirements = requirements_by_comparison.get(comparison_name, {})
+    comparison = test_id.removeprefix("compare.")
+    requirements = _comparison_settings(release, comparison, "requirements")
+    parameters = _comparison_settings(release, comparison, "parameters")
     if requirements:
-        if not isinstance(requirements, dict):
-            raise ValueError(f"Invalid comparison requirements for {comparison_name}.")
         definition.update(requirements)
-    parameters = parameters_by_comparison.get(comparison_name, {})
     if parameters:
-        if not isinstance(parameters, dict):
-            raise ValueError(f"Invalid comparison parameters for {comparison_name}.")
         definition["comparison_parameters"] = parameters
     return definition
+
+
+def _comparison_settings(release, comparison, kind):
+    """Read one comparison's release overrides, validating their mapping structure."""
+    key = f"comparison_{kind}"
+    settings = release.get(key, {})
+    if not isinstance(settings, dict):
+        raise ValueError(f"{key} must be a mapping.")
+    overrides = settings.get(comparison, {})
+    if overrides and not isinstance(overrides, dict):
+        raise ValueError(f"Invalid comparison {kind} for {comparison}.")
+    return overrides
 
 
 def _validate_rule(rule, rule_id):

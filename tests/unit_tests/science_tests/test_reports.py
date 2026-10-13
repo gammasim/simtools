@@ -84,13 +84,19 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
     assert "run-1" in markdown
 
 
-def test_publication_copies_nested_evidence_and_warns_when_large(
+def test_publication_filters_evidence_replaces_stale_output_and_warns_when_large(
     tmp_test_directory, monkeypatch, caplog
 ):
     root = Path(tmp_test_directory)
     work = root / "work"
     (work / "pair").mkdir(parents=True)
     (work / "pair/metrics.json").write_text("{}", encoding="utf-8")
+    provenance = work / "provenance"
+    provenance.mkdir()
+    (provenance / "effective-settings.json").write_text("{}", encoding="utf-8")
+    (provenance / "resolved-workflow.yml").write_text("workflow: {}\n", encoding="utf-8")
+    (work / "inventory.json").write_text("[]", encoding="utf-8")
+    (work / "comparison_inventory.json").write_text('{"matched_pair_count": 1}', encoding="utf-8")
     release_dir = root / "release"
     report_root = release_dir / "reports/north/compare"
     report_root.mkdir(parents=True)
@@ -105,23 +111,6 @@ def test_publication_copies_nested_evidence_and_warns_when_large(
     assert not (report_root / "stale.json").exists()
     assert result["publication"]["warning"]
     assert "Science-test publication contains" in caplog.text
-
-
-def test_publication_omits_duplicate_provenance_and_checksum_inventory(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    work = root / "work"
-    provenance = work / "provenance"
-    provenance.mkdir(parents=True)
-    (provenance / "effective-settings.json").write_text("{}", encoding="utf-8")
-    (provenance / "resolved-workflow.yml").write_text("workflow: {}\n", encoding="utf-8")
-    (work / "inventory.json").write_text("[]", encoding="utf-8")
-    (work / "comparison_inventory.json").write_text('{"matched_pair_count": 1}', encoding="utf-8")
-    release_dir = root / "release"
-    report_root = release_dir / "reports/north/compare"
-    result = {"status": "pass"}
-
-    science_test_reports._write_test_report(work, report_root, release_dir, result)
-
     assert not (report_root / "provenance/effective-settings.json").exists()
     assert (report_root / "provenance/resolved-workflow.yml").is_file()
     assert not (report_root / "inventory.json").exists()
@@ -144,15 +133,3 @@ def test_runtime_change_retains_native_collection_and_invalidates_analysis():
     )
     assert records["collect.north"]["status"] == "pass"
     assert records["compare.north"]["status"] == "not_run"
-
-
-def test_failed_attempt_marks_previous_publication_as_old(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    report = root / "reports/north/compare"
-    report.mkdir(parents=True)
-    (report / "metrics.json").write_text("{}", encoding="utf-8")
-    result = {"status": "incomplete"}
-    science_test_reports._write_test_report(root / "work", report, root, result)
-    assert result["report"] is None
-    assert result["previous_report"] == "reports/north/compare"
-    assert (report / "metrics.json").is_file()

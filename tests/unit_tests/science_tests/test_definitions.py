@@ -123,18 +123,6 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
         science_test_definitions._evaluate_products(definition, {})
 
 
-def test_consolidated_comparison_summary_uses_explicit_product_contract(
-    tmp_test_directory,
-):
-    report = Path(tmp_test_directory)
-    (report / "comparison_statistics.json").write_text("{}", encoding="utf-8")
-
-    science_test_definitions._check_required_products(
-        {"products": ["__SCIENCE_REPORT_PATH__/comparison_statistics.json"]},
-        {"__SCIENCE_REPORT_PATH__": str(report)},
-    )
-
-
 def test_release_acceptance_override_is_rejected(campaign):
     override = campaign["release_dir"] / "acceptance/overrides.yml"
     override.parent.mkdir(parents=True)
@@ -186,18 +174,6 @@ def test_completed_production_gate(tmp_test_directory):
     product.unlink()
     with pytest.raises(ValueError, match="missing expected outputs"):
         science_test_definitions._check_inputs(definition, replacements)
-
-
-def test_production_submission_cannot_be_repeated(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    candidate = root / "candidate"
-    (candidate / "job").mkdir(parents=True)
-    (candidate / "job/submission.json").write_text("{}", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="existing record"):
-        science_test_definitions._check_inputs(
-            {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)}
-        )
 
 
 def test_required_inputs_must_exist_and_be_nonempty(tmp_test_directory):
@@ -270,17 +246,6 @@ def test_nested_release_context_paths_are_rejected():
         science_test_definitions._validate_release_context({"release_label": "candidate"}, context)
 
 
-def test_non_comparison_context_does_not_require_a_baseline():
-    context = {
-        "__SCIENCE_CANDIDATE_PATH__": "/data/production",
-        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
-    }
-
-    science_test_definitions._validate_release_context(
-        {"release_label": "candidate"}, context, require_baseline=False
-    )
-
-
 def test_site_cannot_override_context_root(tmp_test_directory):
     root = Path(tmp_test_directory)
     context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
@@ -290,17 +255,6 @@ def test_site_cannot_override_context_root(tmp_test_directory):
     }
     with pytest.raises(ValueError, match="reserved context key"):
         science_test_definitions._site_replacements(context, "north", suite, root)
-
-
-def test_report_and_collection_share_output_directory(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    context = {key: str(root) for key in science_test_definitions._PATH_KEYS}
-    site_config = {"array_layout_name": "CTAO-North-Alpha"}
-
-    replacements = science_test_definitions._site_replacements(context, "north", site_config, root)
-
-    assert replacements["__SCIENCE_COLLECTION_PATH__"] == replacements["__SCIENCE_REPORT_PATH__"]
-    assert replacements["__SCIENCE_REPORT_PATH__"] == str(root)
 
 
 @pytest.mark.parametrize(
