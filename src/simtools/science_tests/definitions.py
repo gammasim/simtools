@@ -616,7 +616,11 @@ def _check_grid_configuration(row, metadata, configuration):
         if key in excluded:
             continue
         observed = configuration.get(key)
-        if key == "model_version" and isinstance(observed, list) and len(observed) == 1:
+        if (
+            key in {"model_version", "array_layout_name"}
+            and isinstance(observed, list)
+            and len(observed) == 1
+        ):
             observed = observed[0]
         if normalize_for_comparison(value) != normalize_for_comparison(observed):
             raise ValueError(

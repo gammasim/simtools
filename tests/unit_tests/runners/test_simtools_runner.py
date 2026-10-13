@@ -1399,3 +1399,24 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
     assert payload["runtime_environment"] is None
     assert payload["applications"][0]["configuration"]["env_file"] == "explicit.env"
     assert payload["applications"][0]["configuration"]["simulation_models_git_revision"] == "v1.2.3"
+
+
+def test_run_applications_without_host_simulation_executables(mocker, tmp_test_directory):
+    log_file = Path(tmp_test_directory) / "execution.log"
+    mocker.patch.object(
+        simtools_runner, "prepare_workflow", return_value=([], None, log_file, "workflow", None)
+    )
+    mocker.patch.object(simtools_runner, "_write_resolved_workflow")
+    mocker.patch.object(simtools_runner, "_update_workflow_metadata_files")
+    mocker.patch.object(
+        simtools_runner.dependencies,
+        "get_version_string",
+        side_effect=[FileNotFoundError("No host simulation software"), "simtools version\n"],
+    )
+    mocker.patch.object(
+        simtools_runner.dependencies, "get_dependency_manifest", return_value={"simtools": "test"}
+    )
+    simtools_runner.run_applications(_runner_args(ignore_runtime_environment=True))
+    content = log_file.read_text(encoding="utf-8")
+    assert "simtools version" in content
+    assert "Runtime simtools: test" in content

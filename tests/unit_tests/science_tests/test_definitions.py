@@ -281,6 +281,23 @@ def test_grid_configuration_checks_quantities_and_each_run():
         science_test_definitions._check_grid_configuration(row, {}, config | {"run_number": 1})
 
 
+@pytest.mark.parametrize("layout", ["CTAO-North-Alpha", ["CTAO-North-Alpha"]])
+def test_grid_configuration_accepts_single_array_layout(layout):
+    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
+    config = row | {"array_layout_name": layout}
+    science_test_definitions._check_grid_configuration(row, {}, config)
+
+
+@pytest.mark.parametrize(
+    "layout", [[], ["CTAO-South-Alpha"], ["CTAO-North-Alpha", "CTAO-South-Alpha"]]
+)
+def test_grid_configuration_rejects_different_or_multiple_array_layouts(layout):
+    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
+    config = row | {"array_layout_name": layout}
+    with pytest.raises(ValueError, match="array_layout_name"):
+        science_test_definitions._check_grid_configuration(row, {}, config)
+
+
 def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directory):
     from simtools.production_configuration.production_file_selection import ProductionManifest
 

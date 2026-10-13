@@ -116,7 +116,12 @@ def run_applications(args_dict, run_time=None, replacements=None):
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(run_time, include_software_versions=True))
+        try:
+            versions = dependencies.get_version_string(run_time, include_software_versions=True)
+        except FileNotFoundError as exc:
+            logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
+            versions = dependencies.get_version_string(run_time, include_software_versions=False)
+        file.write(versions)
         try:
             manifest = dependencies.get_dependency_manifest(run_time or None)
             file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")

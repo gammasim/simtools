@@ -3,6 +3,7 @@
 import json
 import logging
 import shutil
+from pathlib import Path
 
 from simtools.science_tests.definitions import (
     _EXECUTION_LOG_FILE_NAME,
@@ -160,14 +161,18 @@ def _write_summary(report_dir, summary):
         "",
         f"Qualified: {summary['qualified']}",
         "",
-        "| Site | Test | Execution | Status | Reason |",
-        "| --- | --- | --- | --- | --- |",
+        "| Site | Test | Execution | Status | Reason | Report |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for result in summary["results"]:
         reason = result.get("error") or result.get("reason") or "-"
+        report = "-"
+        if result.get("report"):
+            report_path = Path(result["report"]).relative_to("reports").as_posix()
+            report = f"[report]({report_path})"
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
-            f"{result['status']} | {reason} |"
+            f"{result['status']} | {reason} | {report} |"
         )
     lines.extend(["", "## Execution details", ""])
     for result in summary["results"]:

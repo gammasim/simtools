@@ -10,6 +10,7 @@ from astropy.io.registry import IORegistryError
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
+from simtools.io.ascii_handler import to_builtin
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
@@ -405,7 +406,7 @@ def _materialize_effective_workflow(work, resolved):
     work.mkdir(parents=True, exist_ok=True)
     path = work / _WORKFLOW_FILE_NAME
     path.write_text(
-        yaml.safe_dump(resolved, sort_keys=False, explicit_start=True), encoding="utf-8"
+        yaml.safe_dump(to_builtin(resolved), sort_keys=False, explicit_start=True), encoding="utf-8"
     )
     return path
 

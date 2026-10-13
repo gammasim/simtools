@@ -133,3 +133,24 @@ def test_runtime_change_retains_native_collection_and_invalidates_analysis():
     )
     assert records["collect.north"]["status"] == "pass"
     assert records["compare.north"]["status"] == "not_run"
+
+
+def test_write_summary_links_report_paths(tmp_test_directory):
+    report_dir = Path(tmp_test_directory)
+    summary = {
+        "release": "candidate",
+        "qualified": False,
+        "production_history": [],
+        "results": [
+            {
+                "site": "north",
+                "test": "compare",
+                "execution": "completed",
+                "status": "warn",
+                "report": "reports/north/compare",
+            }
+        ],
+    }
+    science_test_reports._write_summary(report_dir, summary)
+    markdown = (report_dir / "release-summary.md").read_text(encoding="utf-8")
+    assert "[report](north/compare)" in markdown

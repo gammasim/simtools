@@ -430,3 +430,19 @@ def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_d
                 "output_path": str(tmp_test_directory),
             }
         )
+
+
+def test_materialize_effective_workflow_serializes_model_paths(tmp_test_directory):
+    work = Path(tmp_test_directory) / "work"
+    models = Path(tmp_test_directory) / "models"
+    resolved = {
+        "applications": [
+            {
+                "application": "simtools-write-trigger-histograms",
+                "configuration": {"simulation_models_path": models},
+            }
+        ]
+    }
+    path = science_test_execution._materialize_effective_workflow(work, resolved)
+    recorded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert recorded["applications"][0]["configuration"]["simulation_models_path"] == str(models)
