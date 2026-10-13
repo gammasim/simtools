@@ -397,7 +397,7 @@ def _plot_nsb_curve(axis, nsb_stats):
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, nsb_thresholds, nsb_rates, color="tab:blue")
+    _plot_log_linear_fit(axis, nsb_thresholds, nsb_rates, color="tab:blue")
 
 
 def _plot_proton_curve(axis, proton_stats):
@@ -419,7 +419,7 @@ def _plot_proton_curve(axis, proton_stats):
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
+    _plot_log_linear_fit(axis, proton_thresholds, proton_rates, color="tab:orange")
 
 
 def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
@@ -445,13 +445,17 @@ def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
+    _plot_log_linear_fit(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
 
 
-def _plot_log_linear_trend(axis, thresholds, rates, color):
-    """Plot a log-linear trend line when at least two positive rates are available."""
+def _plot_log_linear_fit(axis, thresholds, rates, color):
+    """Plot a log-linear fit when at least two distinct valid thresholds are available."""
     fit = fit_bias_curve(thresholds, rates)
     if fit is None:
+        _logger.info(
+            "Skipping log-linear fit: need at least two distinct thresholds with "
+            "finite, positive rates."
+        )
         return
     fit_thresholds, coeffs = fit
     x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
@@ -475,7 +479,9 @@ def fit_bias_curve(thresholds, rates):
     -------
     tuple or None
         Valid thresholds and fit coefficients (slope, intercept), or None if
-        fewer than two distinct finite thresholds have positive finite rates.
+        fewer than two distinct finite thresholds have corresponding finite,
+        positive rates. Returning None is expected when there is not enough
+        data to fit a line.
     """
     thresholds = np.asarray(thresholds, dtype=float)
     rates = np.asarray(rates, dtype=float)

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import logging
 from pathlib import Path
 from unittest import mock
 
@@ -635,8 +636,8 @@ def test_plot_bias_curves_saves_and_closes_figure(
     assert output_path.parent.exists()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_nsb_curve_draws_errorbar_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     nsb_stats = {
         240: {"rate_hz": 200.0, "error_hz": 10.0},
@@ -654,21 +655,21 @@ def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
         color="tab:blue",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_nsb_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_nsb_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_proton_curve_draws_points_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     proton_stats = {
         240: {"rate_hz": 20.0, "error_hz": 2.0},
@@ -686,21 +687,21 @@ def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
         color="tab:orange",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_proton_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_proton_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_scaled_proton_curve_draws_points_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     proton_stats = {
         240: {"rate_hz": 20.0, "error_hz": 2.0},
@@ -719,32 +720,34 @@ def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
         color="tab:red",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_scaled_proton_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-def test_plot_log_linear_trend_returns_without_plot_for_insufficient_data():
+def test_plot_log_linear_fit_returns_without_plot_for_insufficient_data(caplog):
     axis = mock.MagicMock()
+    caplog.set_level(logging.INFO, logger="simtools.visualization.plot_tables")
 
-    plot_tables._plot_log_linear_trend(axis, [220], [10.0], color="tab:blue")
-    plot_tables._plot_log_linear_trend(axis, [220, 240], [0.0, -1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220], [10.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240], [0.0, -1.0], color="tab:blue")
 
     axis.plot.assert_not_called()
+    assert caplog.text.count("need at least two distinct thresholds") == 2
 
 
-def test_plot_log_linear_trend_plots_for_valid_positive_rates():
+def test_plot_log_linear_fit_plots_for_valid_positive_rates():
     axis = mock.MagicMock()
 
-    plot_tables._plot_log_linear_trend(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
 
     axis.plot.assert_called_once()
     args, kwargs = axis.plot.call_args
