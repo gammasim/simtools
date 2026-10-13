@@ -34,31 +34,37 @@ review the release and site settings. The runner uses `<release_dir>/context.yml
 
 ```console
 # Validate definitions without execution.
-simtools-run-science-tests --release_dir /path/to/release/science_tests --dry_run
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml --dry_run
 
 # Generate and review the production grid.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
-  --test production.gamma.grid
+  --context_file /path/to/release/science_tests/context.yml --test production.gamma.grid
 
 # Submit production only after grid review.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml \
   --test production.gamma --allow_production
 
-# Check that production collection has completed.
+# Collect finished jobs, validate their products, and update the release report.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml \
   --test production.gamma.collect
 
 # Explicitly derive products and compare them.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml \
   --test derive.trigger_histograms \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
 
 Repeat `--site` or `--test` to narrow execution. Only named tests run; prerequisites must be selected
 explicitly or their required products must already exist. Selected prerequisites run in dependency
-order, and missing or incomplete inputs block dependents. Production submission returns `submitted`;
-rerun `production.gamma.collect` to check completion. `--overwrite` archives a failed, finished
-production for an explicit retry with `--allow_production`.
+order, and missing or incomplete inputs block dependents. Production submission returns `submitted`.
+`production.gamma.collect` checks submitted jobs, collects finished jobs, validates the required
+products, and records whether collection is pending or complete in the release summary. Rerun it
+while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
+retry with `--allow_production`.
 
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; failed numerical limits are `fail`; advisory limits are `warn` and require review.
