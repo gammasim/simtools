@@ -151,7 +151,8 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
   `pytest --cov=simtools --cov-report=term-missing`.
   Iterate `pre-commit run --files <changed-files>`; final lint:
   `pre-commit run --all-files`.
-- Report `no-commit-to-branch` separately; never skip it or claim full success.
+- Report `no-commit-to-branch` separately; CI may deliberately skip it on
+  main, but do not claim it ran when skipped. Keep it enabled for local commits.
   Use authorized feature branches; otherwise request branch approval only for
   commits/PR preparation. Local edits leave the branch intact.
 - Inspect automatic fixes; protect unrelated edits and rerun affected checks.
