@@ -148,10 +148,14 @@ def main():
         )
         sys.exit(f"error: illuminator simulation failed: {failures}")
 
-    if not results and not simulate_all:
+    if not results:
+        visibility_count = simulator.visibility.n_valid_pairs
+        light_source_filter = light_source or "all"
+        telescope_filter = telescope or "all"
         sys.exit(
-            "error: no valid illuminator-telescope pairs found for the requested "
-            "--light_source/--telescope combination."
+            "error: no illuminator-telescope pairs were scheduled for "
+            f"light_source={light_source_filter}, telescope={telescope_filter}; "
+            f"the visibility table contains {visibility_count} valid pairs."
         )
 
 

@@ -1,0 +1,9 @@
+{% extends "!layout.html" %}
+
+{% block htmltitle %}
+  {% if pagename == root_doc %}
+    <title>{{ docstitle|striptags|e }}</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
