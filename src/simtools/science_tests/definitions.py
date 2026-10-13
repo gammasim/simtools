@@ -199,12 +199,9 @@ def _check_inputs(definition, replacements):
     if definition.get("reviewed_grid") and not definition.get("collect_production"):
         _check_reviewed_production(definition, replacements)
         if definition.get("acceptance_rule"):
-            baseline = {
-                key: value.replace(
-                    replacements["__SCIENCE_CANDIDATE_PATH__"],
-                    replacements["__SCIENCE_BASELINE_PATH__"],
-                )
-                for key, value in replacements.items()
+            baseline = replacements | {
+                "__SCIENCE_CANDIDATE_PATH__": replacements["__SCIENCE_BASELINE_PATH__"],
+                "__SCIENCE_CANDIDATE_SITE_PATH__": replacements["__SCIENCE_BASELINE_SITE_PATH__"],
             }
             _check_reviewed_production(definition, baseline)
     if definition.get("requires_completed_production"):

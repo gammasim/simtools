@@ -157,12 +157,28 @@ def test_non_comparison_selection_does_not_require_a_baseline(campaign, successf
     ]
 
 
-@pytest.mark.parametrize("configuration_file", ["workflow.yml", "run_time.yml"])
+@pytest.mark.parametrize(
+    "configuration_file",
+    [
+        "workflow.yml",
+        "run_time.yml",
+        "candidate/events.hdf5",
+        "baseline/events.hdf5",
+        "candidate/metadata.yml",
+    ],
+)
 def test_configuration_change_invalidates_old_results(
     campaign, successful_workflow, configuration_file
 ):
+    role, _, name = configuration_file.partition("/")
+    if name:
+        context = science_test_definitions._load_yaml(campaign["context_file"])
+        path = Path(context[f"__SCIENCE_{role.upper()}_PATH__"]) / "north" / name
+        path.parent.mkdir(parents=True)
+        path.write_text("old evidence\n", encoding="utf-8")
+    else:
+        path = campaign["template_dir"] / configuration_file
     campaign_runner.run_release(**campaign, sites=["north"])
-    path = campaign["template_dir"] / configuration_file
     if configuration_file == "run_time.yml":
         _write_yaml(path, {"runtime_environment": {"image": "test"}})
     else:

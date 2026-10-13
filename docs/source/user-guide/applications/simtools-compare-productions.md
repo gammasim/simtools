@@ -90,7 +90,6 @@ simtools-compare-productions \
 | Input | `telescope_name` | Telescope name(s) | Optional alias for signal-level telescope selection. |
 | Output | `output_path` | Directory | Directory for figures and the statistics report. |
 | Output | `comparison_statistics.json` | JSON | Machine-readable comparison statistics. |
-| Output | `comparison_statistics.meta.yml` | YAML | Metadata sidecar for the statistics report. |
 
 Event-level comparisons include trigger multiplicity, trigger combinations, single-telescope and
 mixed-type trigger distributions, telescope participation, and simulated/triggered distributions

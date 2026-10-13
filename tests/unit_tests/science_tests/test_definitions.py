@@ -336,3 +336,20 @@ def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directo
     )
     with pytest.raises(ValueError, match="job-000002"):
         science_test_definitions._check_reviewed_production(definition, replacements)
+
+
+def test_baseline_check_preserves_paths_containing_candidate_name(mocker):
+    check = mocker.patch.object(science_test_definitions, "_check_reviewed_production")
+    replacements = {
+        "__SCIENCE_CANDIDATE_PATH__": "/data/v1",
+        "__SCIENCE_BASELINE_PATH__": "/data/v10",
+        "__SCIENCE_CANDIDATE_SITE_PATH__": "/data/v1/north",
+        "__SCIENCE_BASELINE_SITE_PATH__": "/data/v10/north",
+    }
+    science_test_definitions._check_inputs(
+        {"reviewed_grid": "grid.ecsv", "acceptance_rule": "events"}, replacements
+    )
+    baseline = check.call_args.args[1]
+    assert baseline["__SCIENCE_CANDIDATE_PATH__"] == "/data/v10"
+    assert baseline["__SCIENCE_CANDIDATE_SITE_PATH__"] == "/data/v10/north"
+    assert baseline["__SCIENCE_BASELINE_PATH__"] == "/data/v10"

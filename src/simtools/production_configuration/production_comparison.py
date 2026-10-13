@@ -567,7 +567,8 @@ def _scalar_plot_statistics(statistics):
     summary = {
         key: value
         for key, value in statistics.items()
-        if key in {"metric_type", "metric", "quantity_name", "cumulative", "rendering"}
+        if key
+        in {"baseline_label", "metric_type", "metric", "quantity_name", "cumulative", "rendering"}
     }
     summary["comparisons"] = [
         _scalar_metric_result(value) for value in statistics.get("comparisons", [])

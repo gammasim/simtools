@@ -135,6 +135,26 @@ def test_runtime_change_retains_native_collection_and_invalidates_analysis():
     assert records["compare.north"]["status"] == "not_run"
 
 
+def test_derived_evidence_change_preserves_collection(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    derived = root / "north/derived/histograms.hdf5"
+    derived.parent.mkdir(parents=True)
+    derived.write_bytes(b"old histogram")
+    context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
+    previous = {"north": science_test_reports._evidence_fingerprints(context, "north")}
+    derived.write_bytes(b"new histogram")
+    current = {"north": science_test_reports._evidence_fingerprints(context, "north")}
+    records = {
+        "collect.north": {"site": "north", "test": "collect", "status": "pass"},
+        "compare.north": {"site": "north", "test": "compare", "status": "warn"},
+    }
+    science_test_reports._invalidate_evidence_changes(
+        records, previous, current, {"collect": {"collect_production": True}, "compare": {}}
+    )
+    assert records["collect.north"]["status"] == "pass"
+    assert records["compare.north"]["status"] == "not_run"
+
+
 def test_write_summary_links_report_paths(tmp_test_directory):
     report_dir = Path(tmp_test_directory)
     summary = {

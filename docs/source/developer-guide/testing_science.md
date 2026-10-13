@@ -71,5 +71,4 @@ Expected products and acceptance rules are declared in the template. Missing pro
 Reports and the release summary are written under `reports/`; production data remains at the external
 candidate path.
 
-For the complete staged commands and rerun guidance, see `TEST_RUNS.md` in the simtools
-repository. The runner records effective execution settings with each external workflow.
+The runner records effective execution settings with each external workflow.

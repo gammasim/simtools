@@ -186,6 +186,7 @@ def run_release(
         dry_run,
         run["signature"],
         run["catalogue"],
+        context=run["context"],
     )
     if not dry_run:
         _write_summary(run["release_dir"] / "reports", summary)

@@ -1,5 +1,6 @@
 """Build release and per-test science-test reports."""
 
+import hashlib
 import json
 import logging
 import shutil
@@ -17,7 +18,9 @@ logger = logging.getLogger(__name__)
 _REDUNDANT_PUBLICATION_FILES = {"effective-settings.json", "inventory.json"}
 
 
-def _release_summary(release_dir, release, suites, results, dry_run, signature, catalogue):
+def _release_summary(
+    release_dir, release, suites, results, dry_run, signature, catalogue, context=None
+):
     """Merge compatible subset results into the complete required-site matrix."""
     path = release_dir / "reports" / "release-summary.json"
     previous = (
@@ -28,6 +31,15 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         if previous.get("campaign_sha256") == signature
         else {}
     )
+    evidence = (
+        {site: _evidence_fingerprints(context, site) for site in suites}
+        if context is not None and not dry_run
+        else None
+    )
+    if evidence is not None:
+        _invalidate_evidence_changes(
+            records, previous.get("evidence_sha256", {}), evidence, catalogue
+        )
     _invalidate_runtime_changes(records, results, catalogue)
     production_history = _production_history(previous, results, catalogue)
     _invalidate_dependents(records, results, catalogue)
@@ -55,10 +67,55 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         "required_sites": list(suites),
         "dry_run": dry_run,
         "campaign_sha256": signature,
+        "evidence_sha256": evidence,
         "qualified": all(records[key]["status"] == "pass" for key in required),
         "results": sorted(records.values(), key=lambda r: (r["site"], r["test"])),
         "production_history": production_history,
     }
+
+
+def _evidence_fingerprints(context, site):
+    """Hash small metadata and product file identities, excluding analysis work directories."""
+    hashes = {kind: hashlib.sha256() for kind in ("production", "analysis")}
+    for role in ("candidate", "baseline"):
+        path = context.get(f"__SCIENCE_{role.upper()}_PATH__")
+        if not path:
+            continue
+        root = Path(path) / site
+        grid = root.parent / f"{site}_job_grid.ecsv"
+        files = sorted(file for file in root.rglob("*") if file.is_file())
+        if grid.is_file():
+            files.append(grid)
+        for file in files:
+            stat = file.stat()
+            content = (
+                hashlib.sha256(file.read_bytes()).hexdigest()
+                if stat.st_size <= 1024 * 1024 or file.suffix in {".yml", ".yaml", ".json", ".ecsv"}
+                else None
+            )
+            relative = file.relative_to(root.parent)
+            entry = json.dumps(
+                [role, str(relative), stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns, content]
+            ).encode()
+            hashes["analysis"].update(entry)
+            if role == "candidate" and relative.parts[:2] != (site, "derived"):
+                hashes["production"].update(entry)
+    return {kind: digest.hexdigest() for kind, digest in hashes.items()}
+
+
+def _invalidate_evidence_changes(records, previous, current, catalogue):
+    """Discard stale evidence while preserving native steps after derived-only changes."""
+    for record in records.values():
+        definition = catalogue[record["test"]]
+        native = definition.get("collect_production") or definition.get("produces_production")
+        kind = "production" if native else "analysis"
+        site = record["site"]
+        if previous.get(site, {}).get(kind) != current[site][kind]:
+            record.update(
+                status="not_run",
+                execution="not_run",
+                reason="Production evidence changed; rerun required.",
+            )
 
 
 def _production_history(previous, results, catalogue):
