@@ -1,6 +1,4 @@
 import json
-import os
-import time
 from pathlib import Path
 
 import jsonschema
@@ -83,85 +81,49 @@ def test_existing_submission_prevents_resubmission(tmp_test_directory):
     assert "--allow_production does not override it" in str(error.value)
 
 
-def test_reuse_derived_product_requires_complete_products(mocker):
-    definition = {"derived_output": "__OUTPUT__"}
-    replacements = {"__OUTPUT__": "/existing/output"}
-
-    mocker.patch.object(science_test_execution, "_evaluate_products")
-    assert science_test_execution._reuse_derived_product(definition, replacements, {})
+def test_reuse_rejects_unrecorded_partial_output(tmp_test_directory):
+    output = Path(tmp_test_directory) / "derived"
+    output.mkdir()
+    (output / "partial.hdf5").write_bytes(b"not HDF5")
+    definition = {"derived_output": str(output)}
+    args = {
+        "science_workflow": {"applications": []},
+        "provenance_path": str(Path(tmp_test_directory) / "workflow.yml"),
+    }
+    with pytest.raises(ValueError, match="--overwrite"):
+        science_test_execution._reuse_derived_product(definition, {}, args)
     assert not science_test_execution._reuse_derived_product(
-        definition, replacements, {"science_overwrite": True}
-    )
-
-    mocker.patch.object(
-        science_test_execution, "_evaluate_products", side_effect=ValueError("incomplete")
-    )
-    assert not science_test_execution._reuse_derived_product(definition, replacements, {})
-
-
-def test_science_comparison_receives_release_parameters():
-    workflow = {
-        "applications": [
-            {
-                "application": "simtools-compare-science-results",
-                "configuration": {"output_path": "/tmp/report"},
-            }
-        ]
-    }
-    definition = {
-        "comparison_parameters": {"compare_by": ["case.azimuth_angle"]},
-        "baseline": "v0.37.0",
-        "release_label": "v0.38.0",
-        "expected_changes": ["case.azimuth_angle"],
-    }
-
-    science_test_execution._configure_comparison_applications(workflow, definition)
-
-    configuration = workflow["applications"][0]["configuration"]
-    assert configuration["compare_by"] == ["case.azimuth_angle"]
-    assert configuration["baseline_label"] == "v0.37.0"
-    assert configuration["candidate_label"] == "v0.38.0"
-
-
-def test_simtools_version_uses_runtime_identity_when_log_has_none():
-    assert (
-        science_test_execution._simtools_version_from_log(
-            None, {"options": ["--env", "SIMTOOLS_VERSION=0.38.1"]}
-        )
-        == "0.38.1"
+        definition, {}, args | {"science_overwrite": True}
     )
 
 
-def test_camera_collection_copies_native_plots_into_report_work(tmp_test_directory, mocker):
-    root = Path(tmp_test_directory)
-    output = root / "candidate/north/camera_efficiency"
-    (output / "plots").mkdir(parents=True)
-    (output / "plots/native.png").write_bytes(b"plot")
-    work = root / "work/science-tests/north/camera_efficiency.candidate"
-    mocker.patch.object(
-        science_test_execution,
-        "_load_yaml",
-        return_value={
-            "applications": [
-                {
-                    "application": "simtools-validate-camera-efficiency",
-                    "configuration": {"output_path": str(output)},
-                }
-            ]
-        },
-    )
-    mocker.patch.object(
-        science_test_execution,
-        "collect_legacy_results",
-        return_value={"artifacts": {"native_plots": ["plots/native.png"]}},
-    )
+@pytest.mark.parametrize(("writes_log", "raises"), [(False, False), (True, False), (True, True)])
+def test_execution_log_is_recorded_only_for_current_execution(
+    tmp_test_directory, monkeypatch, writes_log, raises
+):
+    work = Path(tmp_test_directory) / "work"
+    work.mkdir()
+    log_path = work / science_test_definitions._EXECUTION_LOG_FILE_NAME
+    log_path.write_text("stale log", encoding="utf-8")
 
-    science_test_execution._collect_camera_results(
-        {"result_type": "camera_efficiency"},
-        {"config_file": "workflow.yml", "log_file": str(work / "execution.log")},
-    )
+    def execute(_definition, args, _replacements):
+        if writes_log:
+            log_path.write_text("current log", encoding="utf-8")
+        if raises:
+            raise RuntimeError("execution failed")
+        return {"status": "pass", "execution": "completed"}
 
-    assert (work / "native_artifacts/native.png").read_bytes() == b"plot"
+    monkeypatch.setattr(science_test_execution, "_execute_test_workflow", execute)
+    result = {}
+    if raises:
+        with pytest.raises(RuntimeError, match="execution failed"):
+            science_test_execution._run_or_reuse_test(
+                result, {}, {}, {}, work, {"applications": []}
+            )
+    else:
+        science_test_execution._run_or_reuse_test(result, {}, {}, {}, work, {"applications": []})
+
+    assert result.get("execution_log") == (str(log_path) if writes_log else None)
 
 
 def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
@@ -236,74 +198,6 @@ def test_shared_runtime_environment_invalid(tmp_test_directory):
         science_test_definitions._shared_runtime_environment(template, {})
 
 
-def test_role_specific_runtime_environment(tmp_test_directory):
-    template = Path(tmp_test_directory)
-    _write_yaml(
-        template / "run_time.yml",
-        {
-            "runtime_environments": {
-                "baseline": {"container_engine": "apptainer", "image": "base.sif"},
-                "candidate": {"container_engine": "apptainer", "image": "candidate.sif"},
-                "analysis": {"container_engine": "apptainer", "image": "analysis.sif"},
-            }
-        },
-    )
-
-    runtime = science_test_definitions._shared_runtime_environment(template, {}, role="candidate")
-
-    assert runtime["image"] == "candidate.sif"
-
-
-def test_role_runtime_template_keeps_default_for_existing_tests(tmp_test_directory):
-    template = Path(tmp_test_directory)
-    _write_yaml(
-        template / "run_time.yml",
-        {
-            "runtime_environment": {
-                "container_engine": "apptainer",
-                "image": "default.sif",
-            },
-            "runtime_environments": {
-                "candidate": {"container_engine": "apptainer", "image": "candidate.sif"}
-            },
-        },
-    )
-
-    runtime = science_test_definitions._shared_runtime_environment(template, {})
-
-    assert runtime["image"] == "default.sif"
-
-
-def test_role_specific_runtime_requires_known_role(tmp_test_directory):
-    template = Path(tmp_test_directory)
-    _write_yaml(
-        template / "run_time.yml",
-        {"runtime_environments": {"analysis": {"image": "analysis.sif"}}},
-    )
-
-    with pytest.raises(ValueError, match="No runtime environment"):
-        science_test_definitions._shared_runtime_environment(template, {}, role="baseline")
-
-
-def test_compute_summary_records_timing_and_unavailable_memory(tmp_test_directory, monkeypatch):
-    path = Path(tmp_test_directory) / "compute-summary.json"
-    monkeypatch.setattr(science_test_execution, "_peak_memory_bytes", lambda: None)
-    before = os.times()
-
-    science_test_execution._write_compute_summary(
-        path,
-        time.monotonic() - 0.01,
-        before,
-        {"log_file": "execution.log"},
-        {"status": "pass"},
-    )
-
-    summary = json.loads(path.read_text(encoding="utf-8"))
-    assert summary["wall_seconds"] > 0
-    assert summary["peak_memory_bytes"] is None
-    assert summary["memory_accounting"] == "unavailable"
-
-
 @pytest.mark.parametrize(
     ("produces_production", "inline"), [(False, False), (True, False), (False, True)]
 )
@@ -350,7 +244,7 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     initial = campaign_runner.run_release(**args)
     report = campaign["release_dir"] / "reports/north/derive"
     previous = next(result for result in initial["results"] if result["id"] == "derive.north")
-    assert previous["execution_provenance"] == "work/science-tests/north/derive"
+    assert previous["execution_provenance"].endswith("/candidate/work/science-tests/north/derive")
     context = science_test_definitions._load_yaml(campaign["context_file"])
     work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / previous["execution_provenance"]
     stale = [report / "stale.txt", work / "stale.txt"]
@@ -380,6 +274,8 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
         if result["id"] == "derive.north"
     )
     assert failed["status"] == "incomplete"
+    assert failed["report"] is None
+    assert failed["previous_report"] == "reports/north/derive"
     assert (report / "metrics.json").exists()
 
 
@@ -488,3 +384,94 @@ def test_pending_collection_defers_dependent_tests(mocker):
     )
     assert [result["status"] for result in results] == ["pending", "pending"]
     execute.assert_called_once()
+
+
+def test_derived_group_checks_readability_runs_settings_and_freshness(tmp_test_directory):
+    from types import SimpleNamespace
+
+    from astropy.table import Table
+
+    from simtools.io import table_handler
+    from simtools.production_configuration.production_file_selection import ProductionManifest
+    from simtools.production_configuration.trigger_histograms import (
+        TRIGGER_HISTOGRAM_BINS_TABLE,
+        TRIGGER_HISTOGRAM_METADATA_TABLE,
+    )
+
+    root = Path(tmp_test_directory)
+    source = root / "events.hdf5"
+    source.write_bytes(b"events")
+    output = root / "product.hdf5"
+    tables = [
+        Table({"count": [1]}, meta={"EXTNAME": name})
+        for name in (TRIGGER_HISTOGRAM_METADATA_TABLE, TRIGGER_HISTOGRAM_BINS_TABLE)
+    ]
+    table_handler.write_tables(tables, output, file_type="HDF5")
+    group = SimpleNamespace(run_numbers=[1], file_paths=[source])
+    product = ProductionManifest(
+        root / "product.yml",
+        {
+            "input_run_numbers": [1],
+            "input_files": {"reduced_event_data": ["events.hdf5"]},
+            "files": {"trigger_histograms": ["product.hdf5"]},
+            "histogram_settings": {"angular_distance_bin_width": {"value": 0.5, "unit": "deg"}},
+        },
+    )
+    config = {"angular_distance_bin_width": "0.5 deg"}
+    science_test_execution._validate_derived_group(group, product, config)
+    with pytest.raises(ValueError, match="setting changed"):
+        science_test_execution._validate_derived_group(
+            group, product, {"angular_distance_bin_width": "1 deg"}
+        )
+    product.data["input_run_numbers"] = [1, 2]
+    with pytest.raises(ValueError, match="run coverage"):
+        science_test_execution._validate_derived_group(group, product, config)
+    product.data["input_run_numbers"] = [1]
+    output.write_bytes(b"not HDF5")
+    with pytest.raises(ValueError, match="Unreadable trigger histogram"):
+        science_test_execution._validate_derived_group(group, product, config)
+
+
+def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_directory):
+    from types import SimpleNamespace
+
+    mocker.patch.object(
+        science_test_execution,
+        "select_file_groups",
+        return_value={
+            "groups": [
+                SimpleNamespace(configuration={"energy_min": 30}),
+                SimpleNamespace(configuration={"energy_min": 3000}),
+            ],
+        },
+    )
+    mocker.patch.object(
+        science_test_execution,
+        "discover_product_manifests",
+        return_value=[
+            SimpleNamespace(data={"configuration": {"energy_min": 30}}),
+        ],
+    )
+    with pytest.raises(ValueError, match="coverage differs"):
+        science_test_execution._validate_derived_products(
+            {
+                "production_path": str(tmp_test_directory),
+                "output_path": str(tmp_test_directory),
+            }
+        )
+
+
+def test_materialize_effective_workflow_serializes_model_paths(tmp_test_directory):
+    work = Path(tmp_test_directory) / "work"
+    models = Path(tmp_test_directory) / "models"
+    resolved = {
+        "applications": [
+            {
+                "application": "simtools-write-trigger-histograms",
+                "configuration": {"simulation_models_path": models},
+            }
+        ]
+    }
+    path = science_test_execution._materialize_effective_workflow(work, resolved)
+    recorded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert recorded["applications"][0]["configuration"]["simulation_models_path"] == str(models)

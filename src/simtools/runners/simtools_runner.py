@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
@@ -90,14 +91,6 @@ def run_applications(args_dict, run_time=None, replacements=None):
         workflow_activity_id,
         collection_config,
     ) = prepare_workflow(args_dict, replacements=replacements)
-    _write_resolved_workflow(
-        args_dict["config_file"],
-        configurations,
-        runtime_environment,
-        collection_config,
-        provenance_path=args_dict.get("provenance_path"),
-    )
-
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
@@ -105,6 +98,15 @@ def run_applications(args_dict, run_time=None, replacements=None):
     model_source_options = _model_source_options(args_dict)
     explicit_env_file = _get_explicit_env_file(args_dict)
 
+    _apply_execution_overrides(configurations, args_dict, model_source_options, explicit_env_file)
+    effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
+    _write_resolved_workflow(
+        args_dict["config_file"],
+        configurations,
+        effective_runtime,
+        collection_config,
+        provenance_path=args_dict.get("provenance_path"),
+    )
     if args_dict["ignore_runtime_environment"]:
         run_time = []
     elif run_time is None:
@@ -114,7 +116,18 @@ def run_applications(args_dict, run_time=None, replacements=None):
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(run_time, include_software_versions=False))
+        try:
+            versions = dependencies.get_version_string(run_time, include_software_versions=True)
+        except FileNotFoundError as exc:
+            logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
+            versions = dependencies.get_version_string(run_time, include_software_versions=False)
+        file.write(versions)
+        try:
+            manifest = dependencies.get_dependency_manifest(run_time or None)
+            file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
+            file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            file.write(f"Runtime identity unavailable: {exc}\n")
         try:
             for config in configurations:
                 app = config.get("application")
@@ -123,11 +136,6 @@ def run_applications(args_dict, run_time=None, replacements=None):
                     continue
 
                 app_configuration = config.get("configuration", {})
-                _apply_model_source_options(app, app_configuration, model_source_options)
-                if args_dict.get("ignore_existing_parameter_version"):
-                    app_configuration["ignore_existing_parameter_version"] = True
-                if explicit_env_file is not None:
-                    app_configuration["env_file"] = explicit_env_file
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
@@ -671,7 +679,9 @@ def _write_resolved_workflow(
         "collection": collection,
     }
     with provenance_path.open("w", encoding="utf-8") as file:
-        yaml.safe_dump(payload, file, sort_keys=False, explicit_start=True)
+        yaml.safe_dump(
+            ascii_handler.to_builtin(payload), file, sort_keys=False, explicit_start=True
+        )
 
 
 def _get_application_log_file(application, app_configuration, counter):
@@ -925,3 +935,14 @@ def _pull_image(engine, image):
         job_manager.submit([engine, "pull", image], capture_output=False)
     except job_manager.JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc
+
+
+def _apply_execution_overrides(configurations, args, model_source, env_file):
+    """Apply inherited settings before recording or running applications."""
+    for config in configurations:
+        configuration = config.get("configuration", {})
+        _apply_model_source_options(config.get("application"), configuration, model_source)
+        if args.get("ignore_existing_parameter_version"):
+            configuration["ignore_existing_parameter_version"] = True
+        if env_file is not None:
+            configuration["env_file"] = env_file

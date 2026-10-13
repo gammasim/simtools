@@ -7,7 +7,9 @@ import h5py
 import pytest
 
 from simtools.production_configuration import resource_requirements
-from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+)
 
 
 def _manifest(tmp_test_directory):
@@ -250,6 +252,7 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
         "discover_manifests",
         side_effect=[[baseline], [candidate]],
     )
+    candidate.data["configuration"]["primary"] = "gamma"
     plotter = mocker.Mock(return_value=[])
     result = resource_requirements.write_resource_requirements(
         {
@@ -271,3 +274,32 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
         "candidate",
     }
     assert result["table_file"].is_file()
+
+
+def test_resource_coverage_rejects_missing_configuration_or_role():
+    common = {"energy_min_gev": 30, "energy_max_gev": 30, "zenith_angle_deg": 20}
+    rows = [
+        common | {"comparison_role": "baseline", "role": "corsika"},
+        common | {"comparison_role": "candidate", "role": "corsika"},
+    ]
+    resource_requirements._validate_resource_coverage(rows)
+    with pytest.raises(ValueError, match="coverage differs"):
+        resource_requirements._validate_resource_coverage(
+            [*rows, common | {"comparison_role": "baseline", "role": "sim_telarray"}]
+        )
+
+
+def test_configuration_resource_summary_preserves_costs_and_ratios():
+    common = {
+        "role": "corsika",
+        "production_label": "production",
+        "energy_midpoint_gev": 30,
+        "zenith_angle_deg": 20,
+    }
+    rows = [
+        common | {"comparison_role": "baseline", "cpu_time_seconds_per_event": 2},
+        common | {"comparison_role": "candidate", "cpu_time_seconds_per_event": 3},
+    ]
+    result = resource_requirements._configuration_resource_summary(rows)[0]
+    assert result["ratios"]["cpu_time_seconds_per_event"] == pytest.approx(1.5)
+    assert result["productions"]["baseline"]["count"] == 1

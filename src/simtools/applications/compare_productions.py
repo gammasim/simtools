@@ -129,6 +129,11 @@ def _validate_non_computing_arguments(args_dict, parser):
         parser.error("'--baseline_path' and '--candidate_path' must be used together.")
     if args_dict.get("comparison_level") == "signal" and not has_legacy_input:
         parser.error("Signal-level comparison requires '--production' sim_telarray inputs.")
+    if has_metadata_input and args_dict.get("comparison_level") == "events":
+        baseline_label = args_dict.get("baseline_label") or "baseline"
+        candidate_label = args_dict.get("candidate_label") or "candidate"
+        if baseline_label == candidate_label:
+            parser.error("'--baseline_label' and '--candidate_label' must be different.")
 
 
 APPLICATION = ApplicationDefinition.for_module(

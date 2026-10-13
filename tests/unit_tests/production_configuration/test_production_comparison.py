@@ -6,8 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from simtools.constants import SCHEMA_PATH
+from simtools.data_model import schema
 from simtools.production_configuration import production_comparison
-from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+)
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
 
@@ -411,12 +415,26 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
                 "plot_statistics": {
                     "energy": {
                         "plot_name": "distribution_energy",
-                        "metric_type": "ks",
+                        "baseline_label": "base",
+                        "metric_type": "quantity_distribution",
+                        "baseline_counts": [10] * 1000,
                         "comparisons": [
                             {
                                 "candidate_label": "candidate",
-                                "simulated": {"valid": True, "value": 0.2},
-                                "triggered": {"valid": False, "reason": "empty"},
+                                "simulated": {
+                                    "metric": "ks",
+                                    "valid": True,
+                                    "value": 0.2,
+                                    "reason": "",
+                                    "sample_size": 10,
+                                    "bin_counts": [2] * 1000,
+                                },
+                                "triggered": {
+                                    "metric": "ks",
+                                    "value": None,
+                                    "valid": False,
+                                    "reason": "empty",
+                                },
                             }
                         ],
                     }
@@ -429,6 +447,12 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     production_comparison._write_comparison_summary([statistics_file], output, "compact")
 
     summary = json.loads((output / "comparison_statistics.json").read_text(encoding="utf-8"))
+    schema.validate_dict_using_schema(
+        summary,
+        schema_file=SCHEMA_PATH / "production_comparison_statistics.schema.yml",
+        offline=True,
+    )
+    assert summary["format_version"] == 2
     assert summary["baseline"]["simulated_event_count"] == 10
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["pair_count"] == 1
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
@@ -437,4 +461,31 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
         "candidate:triggered"
     ]["invalid_reasons"] == {"empty": 1}
+    pair_statistics = summary["comparisons"][0]["statistics"]["plot_statistics"]["energy"]
+    assert pair_statistics["comparisons"][0]["simulated"] == {
+        "metric": "ks",
+        "valid": True,
+        "value": 0.2,
+        "reason": "",
+        "sample_size": 10,
+    }
+    assert pair_statistics["comparisons"][0]["triggered"]["reason"] == "empty"
+    assert "baseline_counts" not in pair_statistics
     assert not statistics_file.exists()
+
+
+def test_version_one_report_remains_valid_under_current_schema():
+    current_schema = schema.load_schema(SCHEMA_PATH / "production_comparison_statistics.schema.yml")
+    schema.validate_dict_using_schema(
+        {
+            "format_version": 1,
+            "baseline": {
+                "label": "baseline",
+                "simulated_event_count": 10,
+                "triggered_event_count": 5,
+            },
+            "comparison_sets": [],
+            "plot_statistics": {},
+        },
+        json_schema=current_schema,
+    )

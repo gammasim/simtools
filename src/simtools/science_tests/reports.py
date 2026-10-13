@@ -1,8 +1,10 @@
 """Build release and per-test science-test reports."""
 
+import hashlib
 import json
 import logging
 import shutil
+from pathlib import Path
 
 from simtools.science_tests.definitions import (
     _EXECUTION_LOG_FILE_NAME,
@@ -16,7 +18,9 @@ logger = logging.getLogger(__name__)
 _REDUNDANT_PUBLICATION_FILES = {"effective-settings.json", "inventory.json"}
 
 
-def _release_summary(release_dir, release, suites, results, dry_run, signature, catalogue):
+def _release_summary(
+    release_dir, release, suites, results, dry_run, signature, catalogue, context=None
+):
     """Merge compatible subset results into the complete required-site matrix."""
     path = release_dir / "reports" / "release-summary.json"
     previous = (
@@ -27,6 +31,16 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         if previous.get("campaign_sha256") == signature
         else {}
     )
+    evidence = (
+        {site: _evidence_fingerprints(context, site) for site in suites}
+        if context is not None and not dry_run
+        else None
+    )
+    if evidence is not None:
+        _invalidate_evidence_changes(
+            records, previous.get("evidence_sha256", {}), evidence, catalogue
+        )
+    _invalidate_runtime_changes(records, results, catalogue)
     production_history = _production_history(previous, results, catalogue)
     _invalidate_dependents(records, results, catalogue)
     records.update({r["id"]: r for r in results})
@@ -53,10 +67,55 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         "required_sites": list(suites),
         "dry_run": dry_run,
         "campaign_sha256": signature,
+        "evidence_sha256": evidence,
         "qualified": all(records[key]["status"] == "pass" for key in required),
         "results": sorted(records.values(), key=lambda r: (r["site"], r["test"])),
         "production_history": production_history,
     }
+
+
+def _evidence_fingerprints(context, site):
+    """Hash small metadata and product file identities, excluding analysis work directories."""
+    hashes = {kind: hashlib.sha256() for kind in ("production", "analysis")}
+    for role in ("candidate", "baseline"):
+        path = context.get(f"__SCIENCE_{role.upper()}_PATH__")
+        if not path:
+            continue
+        root = Path(path) / site
+        grid = root.parent / f"{site}_job_grid.ecsv"
+        files = sorted(file for file in root.rglob("*") if file.is_file())
+        if grid.is_file():
+            files.append(grid)
+        for file in files:
+            stat = file.stat()
+            content = (
+                hashlib.sha256(file.read_bytes()).hexdigest()
+                if stat.st_size <= 1024 * 1024 or file.suffix in {".yml", ".yaml", ".json", ".ecsv"}
+                else None
+            )
+            relative = file.relative_to(root.parent)
+            entry = json.dumps(
+                [role, str(relative), stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns, content]
+            ).encode()
+            hashes["analysis"].update(entry)
+            if role == "candidate" and relative.parts[:2] != (site, "derived"):
+                hashes["production"].update(entry)
+    return {kind: digest.hexdigest() for kind, digest in hashes.items()}
+
+
+def _invalidate_evidence_changes(records, previous, current, catalogue):
+    """Discard stale evidence while preserving native steps after derived-only changes."""
+    for record in records.values():
+        definition = catalogue[record["test"]]
+        native = definition.get("collect_production") or definition.get("produces_production")
+        kind = "production" if native else "analysis"
+        site = record["site"]
+        if previous.get(site, {}).get(kind) != current[site][kind]:
+            record.update(
+                status="not_run",
+                execution="not_run",
+                reason="Production evidence changed; rerun required.",
+            )
 
 
 def _production_history(previous, results, catalogue):
@@ -97,9 +156,13 @@ def _clear_test_directory(path):
 
 def _write_test_report(work, report_root, release_dir, result):
     """Publish successful collected evidence atomically without per-test wrappers."""
-    result["report"] = report_root.relative_to(release_dir).as_posix()
+    report = report_root.relative_to(release_dir).as_posix()
     if result["status"] in {"fail", "incomplete", "blocked"}:
+        result["report"] = None
+        if report_root.exists():
+            result["previous_report"] = report
         return
+    result["report"] = report
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
     if work.exists():
@@ -118,9 +181,6 @@ def _write_test_report(work, report_root, release_dir, result):
                 shutil.copyfile(source, destination)
     staging.mkdir(parents=True, exist_ok=True)
     result["publication"] = _publication_inventory(staging)
-    result["artifacts"] = sorted(
-        path.relative_to(staging).as_posix() for path in staging.rglob("*") if path.is_file()
-    )
     previous = report_root.with_name(f".{report_root.name}.previous")
     _clear_test_directory(previous)
     if report_root.exists():
@@ -158,16 +218,33 @@ def _write_summary(report_dir, summary):
         "",
         f"Qualified: {summary['qualified']}",
         "",
-        "| Site | Test | Execution | Status | Reason | Artifacts |",
+        "| Site | Test | Execution | Status | Reason | Report |",
         "| --- | --- | --- | --- | --- | --- |",
     ]
     for result in summary["results"]:
         reason = result.get("error") or result.get("reason") or "-"
-        artifacts = _artifact_links(result)
+        report = "-"
+        if result.get("report"):
+            report_path = Path(result["report"]).relative_to("reports").as_posix()
+            report = f"[report]({report_path})"
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
-            f"{result['status']} | {reason} | {artifacts} |"
+            f"{result['status']} | {reason} | {report} |"
         )
+    lines.extend(["", "## Execution details", ""])
+    for result in summary["results"]:
+        if not result.get("execution_log"):
+            continue
+        lines.append(
+            f"- {result['site']}/{result['test']}: {result.get('runtime', 'unknown')}; "
+            f"[log]({result['execution_log']}); "
+            f"work: `{result['execution_provenance']}`."
+        )
+        if result.get("previous_report"):
+            lines.append(
+                f"  Previous successful output: `{result['previous_report']}` "
+                "(not evidence for this failed attempt)."
+            )
     if summary["production_history"]:
         lines.extend(["", "## Production history", ""])
         for record in summary["production_history"]:
@@ -178,13 +255,24 @@ def _write_summary(report_dir, summary):
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _artifact_links(result):
-    """Link published products from the release summary table."""
-    report = result.get("report")
-    artifacts = result.get("artifacts", [])
-    if not report or not artifacts:
-        return "-"
-    relative_report = report.removeprefix("reports/")
-    return ", ".join(
-        f"[{path.rsplit('/', maxsplit=1)[-1]}]({relative_report}/{path})" for path in artifacts
-    )
+def _invalidate_runtime_changes(records, results, catalogue):
+    """Invalidate analysis results when their actual runtime changes, retaining native steps."""
+    native = {
+        name
+        for name, definition in catalogue.items()
+        if definition.get("collect_production") or definition.get("produces_production")
+    }
+    for result in results:
+        if result["test"] in native or "runtime" not in result:
+            continue
+        for record in records.values():
+            if (
+                record["site"] == result["site"]
+                and record["test"] not in native
+                and record.get("runtime") != result["runtime"]
+            ):
+                record.update(
+                    status="not_run",
+                    execution="not_run",
+                    reason="Analysis runtime changed; rerun required.",
+                )

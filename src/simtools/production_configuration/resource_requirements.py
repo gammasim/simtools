@@ -94,21 +94,28 @@ def write_resource_requirements(args_dict, output_directory, plotter):
     output_directory = Path(output_directory)
     baseline_label = args_dict.get("baseline_label") or "baseline"
     candidate_label = args_dict.get("candidate_label") or "candidate"
+    selections = list(args_dict.get("select") or [])
+    layouts = args_dict.get("array_layout_name") or []
+    if len(layouts) > 1:
+        raise ValueError("Computing comparison supports one selected array layout at a time.")
+    if layouts:
+        selections.append(f"configuration.array_layout_name={layouts[0]}")
     rows, diagnostics = collect_resource_requirements(
         args_dict["baseline_path"],
-        args_dict.get("select"),
+        selections,
         label=baseline_label,
         comparison_role="baseline",
     )
     if args_dict.get("candidate_path"):
         candidate_rows, candidate_diagnostics = collect_resource_requirements(
             args_dict["candidate_path"],
-            args_dict.get("select"),
+            selections,
             label=candidate_label,
             comparison_role="candidate",
         )
         rows.extend(candidate_rows)
         diagnostics.extend(candidate_diagnostics)
+        _validate_resource_coverage(rows)
     report_mode = args_dict.get("report_mode", "diagnostic")
     table_file = None
     if report_mode == "compact":
@@ -126,6 +133,7 @@ def write_resource_requirements(args_dict, output_directory, plotter):
                 "diagnostic_count": len(diagnostics),
                 "summary": summary,
                 "diagnostics": diagnostics,
+                "configurations": _configuration_resource_summary(rows),
             },
             indent=2,
             allow_nan=False,
@@ -201,6 +209,7 @@ def _write_compact_markdown_report(summary, diagnostics, output_file):
         f"Skipped process records: {len(diagnostics)}",
         "",
         "Median and 5th/95th percentiles across jobs, grouped by production and process role.",
+        "Hardware and concurrency are not controlled; timing ratios require review.",
         "",
         "| Production | Role | Jobs | Metric | Median | P05 | P95 |",
         "| --- | --- | ---: | --- | ---: | ---: | ---: |",
@@ -217,7 +226,13 @@ def _write_compact_markdown_report(summary, diagnostics, output_file):
             )
     if diagnostics:
         lines.extend(
-            ["", "## Skipped records", "", "| Job | Role | Reason |", "| --- | --- | --- |"]
+            [
+                "",
+                "## Skipped records",
+                "",
+                "| Job | Role | Reason |",
+                "| --- | --- | --- |",
+            ]
         )
         lines.extend(
             f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
@@ -612,3 +627,81 @@ def _format_statistic(summary, metric):
     if statistics["median"] is None:
         return "-"
     return "; ".join(f"{name}={value:.6g}" for name, value in statistics.items())
+
+
+def _configuration_resource_summary(rows):
+    """Keep small configuration-resolved resource summaries without per-job records."""
+    dimensions = (
+        "role",
+        "primary",
+        "site",
+        "array_layout_name",
+        "model_version",
+        "energy_midpoint_gev",
+        "zenith_angle_deg",
+    )
+    metrics = (
+        "wall_time_seconds_per_event",
+        "cpu_time_seconds_per_event",
+        "peak_rss_bytes",
+        "sim_telarray_storage_bytes_per_event",
+    )
+    groups = {}
+    for row in rows:
+        key = tuple(row.get(name) for name in dimensions)
+        role = row.get("comparison_role") or row["production_label"]
+        groups.setdefault(key, {}).setdefault(role, []).append(row)
+    output = []
+    for key, productions in sorted(groups.items(), key=lambda item: str(item[0])):
+        item = dict(zip(dimensions, key))
+        item["productions"] = {}
+        for production, samples in productions.items():
+            values = {"count": len(samples)}
+            for metric in metrics:
+                observations = [row[metric] for row in samples if row.get(metric) is not None]
+                if observations:
+                    values[metric] = {
+                        "median": float(np.median(observations)),
+                        "p95": float(np.percentile(observations, 95)),
+                    }
+            item["productions"][production] = values
+        if {"baseline", "candidate"} <= productions.keys():
+            item["ratios"] = _resource_median_ratios(item["productions"], metrics)
+        output.append(item)
+    return output
+
+
+def _resource_median_ratios(productions, metrics):
+    """Return comparable positive median ratios with missing values left explicit."""
+    ratios = {}
+    for metric in metrics:
+        baseline = productions["baseline"].get(metric, {}).get("median")
+        candidate = productions["candidate"].get(metric, {}).get("median")
+        ratios[metric] = candidate / baseline if baseline and candidate is not None else None
+    return ratios
+
+
+def _validate_resource_coverage(rows):
+    """Reject omitted configuration/role pairs instead of silently intersecting them."""
+    dimensions = (
+        "role",
+        "primary",
+        "site",
+        "array_layout_name",
+        "model_version",
+        "energy_min_gev",
+        "energy_max_gev",
+        "zenith_angle_deg",
+    )
+    keys = {
+        role: {
+            tuple(row.get(key) for key in dimensions)
+            for row in rows
+            if row.get("comparison_role") == role
+        }
+        for role in ("baseline", "candidate")
+    }
+    if keys["baseline"] != keys["candidate"]:
+        raise ValueError(
+            "Resource configuration/role coverage differs between baseline and candidate."
+        )

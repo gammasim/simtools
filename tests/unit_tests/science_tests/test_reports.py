@@ -64,8 +64,6 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
                 "execution": "failed",
                 "status": "incomplete",
                 "error": "missing report",
-                "report": "reports/north/compare",
-                "artifacts": ["science-comparison.json", "science-comparison.png"],
             }
         ],
         "production_history": [
@@ -82,18 +80,23 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
 
     markdown = (report_dir / "release-summary.md").read_text(encoding="utf-8")
     assert "incomplete | missing report" in markdown
-    assert "[science-comparison.json](north/compare/science-comparison.json)" in markdown
     assert "Production history" in markdown
     assert "run-1" in markdown
 
 
-def test_publication_copies_nested_evidence_and_warns_when_large(
+def test_publication_filters_evidence_replaces_stale_output_and_warns_when_large(
     tmp_test_directory, monkeypatch, caplog
 ):
     root = Path(tmp_test_directory)
     work = root / "work"
     (work / "pair").mkdir(parents=True)
     (work / "pair/metrics.json").write_text("{}", encoding="utf-8")
+    provenance = work / "provenance"
+    provenance.mkdir()
+    (provenance / "effective-settings.json").write_text("{}", encoding="utf-8")
+    (provenance / "resolved-workflow.yml").write_text("workflow: {}\n", encoding="utf-8")
+    (work / "inventory.json").write_text("[]", encoding="utf-8")
+    (work / "comparison_inventory.json").write_text('{"matched_pair_count": 1}', encoding="utf-8")
     release_dir = root / "release"
     report_root = release_dir / "reports/north/compare"
     report_root.mkdir(parents=True)
@@ -107,26 +110,67 @@ def test_publication_copies_nested_evidence_and_warns_when_large(
     assert (report_root / "pair/metrics.json").read_text() == "{}"
     assert not (report_root / "stale.json").exists()
     assert result["publication"]["warning"]
-    assert "pair/metrics.json" in result["artifacts"]
     assert "Science-test publication contains" in caplog.text
-
-
-def test_publication_omits_duplicate_provenance_and_checksum_inventory(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    work = root / "work"
-    provenance = work / "provenance"
-    provenance.mkdir(parents=True)
-    (provenance / "effective-settings.json").write_text("{}", encoding="utf-8")
-    (provenance / "resolved-workflow.yml").write_text("workflow: {}\n", encoding="utf-8")
-    (work / "inventory.json").write_text("[]", encoding="utf-8")
-    (work / "comparison_inventory.json").write_text('{"matched_pair_count": 1}', encoding="utf-8")
-    release_dir = root / "release"
-    report_root = release_dir / "reports/north/compare"
-    result = {"status": "pass"}
-
-    science_test_reports._write_test_report(work, report_root, release_dir, result)
-
     assert not (report_root / "provenance/effective-settings.json").exists()
     assert (report_root / "provenance/resolved-workflow.yml").is_file()
     assert not (report_root / "inventory.json").exists()
     assert (report_root / "comparison_inventory.json").is_file()
+
+
+def test_runtime_change_retains_native_collection_and_invalidates_analysis():
+    records = {
+        "collect.north": {"site": "north", "test": "collect", "runtime": "host", "status": "pass"},
+        "compare.north": {
+            "site": "north",
+            "test": "compare",
+            "runtime": "container",
+            "status": "warn",
+        },
+    }
+    catalogue = {"collect": {"collect_production": True}, "compare": {}, "derive": {}}
+    science_test_reports._invalidate_runtime_changes(
+        records, [{"site": "north", "test": "derive", "runtime": "host"}], catalogue
+    )
+    assert records["collect.north"]["status"] == "pass"
+    assert records["compare.north"]["status"] == "not_run"
+
+
+def test_derived_evidence_change_preserves_collection(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    derived = root / "north/derived/histograms.hdf5"
+    derived.parent.mkdir(parents=True)
+    derived.write_bytes(b"old histogram")
+    context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
+    previous = {"north": science_test_reports._evidence_fingerprints(context, "north")}
+    derived.write_bytes(b"new histogram")
+    current = {"north": science_test_reports._evidence_fingerprints(context, "north")}
+    records = {
+        "collect.north": {"site": "north", "test": "collect", "status": "pass"},
+        "compare.north": {"site": "north", "test": "compare", "status": "warn"},
+    }
+    science_test_reports._invalidate_evidence_changes(
+        records, previous, current, {"collect": {"collect_production": True}, "compare": {}}
+    )
+    assert records["collect.north"]["status"] == "pass"
+    assert records["compare.north"]["status"] == "not_run"
+
+
+def test_write_summary_links_report_paths(tmp_test_directory):
+    report_dir = Path(tmp_test_directory)
+    summary = {
+        "release": "candidate",
+        "qualified": False,
+        "production_history": [],
+        "results": [
+            {
+                "site": "north",
+                "test": "compare",
+                "execution": "completed",
+                "status": "warn",
+                "report": "reports/north/compare",
+            }
+        ],
+    }
+    science_test_reports._write_summary(report_dir, summary)
+    markdown = (report_dir / "release-summary.md").read_text(encoding="utf-8")
+    assert "[report](north/compare)" in markdown

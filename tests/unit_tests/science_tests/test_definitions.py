@@ -123,47 +123,6 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
         science_test_definitions._evaluate_products(definition, {})
 
 
-@pytest.mark.parametrize(
-    ("payload", "expected"),
-    [
-        ({"status": "complete", "changes": {"cam_eff": {"advisory": True}}}, "warn"),
-        ({"status": "complete", "changes": {"cam_eff": {"advisory": False}}}, "pass"),
-    ],
-)
-def test_evaluate_products_propagates_comparison_outcomes(tmp_test_directory, payload, expected):
-    root = Path(tmp_test_directory)
-    result_path = root / "science-comparison.json"
-    result_path.write_text(json.dumps(payload), encoding="utf-8")
-
-    result = science_test_definitions._evaluate_products(
-        {"result_status_file": str(result_path)}, {}
-    )
-
-    assert result["status"] == expected
-
-
-def test_evaluate_products_rejects_incomplete_comparison(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    result_path = root / "science-comparison.json"
-    result_path.write_text(
-        json.dumps({"status": "incomplete", "diagnostics": ["missing provenance"]}),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValueError, match="missing provenance"):
-        science_test_definitions._evaluate_products({"result_status_file": str(result_path)}, {})
-
-
-def test_consolidated_comparison_summary_satisfies_legacy_metadata_product(tmp_test_directory):
-    report = Path(tmp_test_directory)
-    (report / "comparison_statistics.json").write_text("{}", encoding="utf-8")
-
-    science_test_definitions._check_required_products(
-        {"products": ["__SCIENCE_REPORT_PATH__/**/comparison_statistics.meta.yml"]},
-        {"__SCIENCE_REPORT_PATH__": str(report)},
-    )
-
-
 def test_release_acceptance_override_is_rejected(campaign):
     override = campaign["release_dir"] / "acceptance/overrides.yml"
     override.parent.mkdir(parents=True)
@@ -189,6 +148,12 @@ def test_metric_rules_reject_non_numeric_or_non_finite_limits(value):
         )
 
 
+@pytest.mark.parametrize("metric", [None, {}, {"file": "metrics.json"}, {"key": "count"}])
+def test_metric_rules_reject_incomplete_selector(metric):
+    with pytest.raises(ValueError, match="Each acceptance metric needs file and key"):
+        science_test_definitions._validate_metric_rule(metric)
+
+
 def test_completed_production_gate(tmp_test_directory):
     root = Path(tmp_test_directory)
     submission = root / "submission.json"
@@ -196,6 +161,7 @@ def test_completed_production_gate(tmp_test_directory):
     product_directory = root / "events"
     product.write_text("event", encoding="utf-8")
     product_directory.mkdir()
+    (product_directory / "data").write_bytes(b"events")
     payload = {
         "job_ids": ["job"],
         "metadata": {
@@ -214,18 +180,6 @@ def test_completed_production_gate(tmp_test_directory):
     product.unlink()
     with pytest.raises(ValueError, match="missing expected outputs"):
         science_test_definitions._check_inputs(definition, replacements)
-
-
-def test_production_submission_cannot_be_repeated(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    candidate = root / "candidate"
-    (candidate / "job").mkdir(parents=True)
-    (candidate / "job/submission.json").write_text("{}", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="existing record"):
-        science_test_definitions._check_inputs(
-            {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)}
-        )
 
 
 def test_required_inputs_must_exist_and_be_nonempty(tmp_test_directory):
@@ -298,17 +252,6 @@ def test_nested_release_context_paths_are_rejected():
         science_test_definitions._validate_release_context({"release_label": "candidate"}, context)
 
 
-def test_non_comparison_context_does_not_require_a_baseline():
-    context = {
-        "__SCIENCE_CANDIDATE_PATH__": "/data/production",
-        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
-    }
-
-    science_test_definitions._validate_release_context(
-        {"release_label": "candidate"}, context, require_baseline=False
-    )
-
-
 def test_site_cannot_override_context_root(tmp_test_directory):
     root = Path(tmp_test_directory)
     context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
@@ -320,12 +263,99 @@ def test_site_cannot_override_context_root(tmp_test_directory):
         science_test_definitions._site_replacements(context, "north", suite, root)
 
 
-def test_report_and_collection_share_output_directory(tmp_test_directory):
+@pytest.mark.parametrize(
+    "observed", [["job-000001"], ["job-000001", "job-000001"], ["job-000001", "job-000003"]]
+)
+def test_reviewed_ids_reject_missing_extra_and_duplicate_jobs(observed):
+    with pytest.raises(ValueError, match="Incomplete production jobs"):
+        science_test_definitions._require_same_ids(
+            {"job-000001", "job-000002"}, observed, "production jobs"
+        )
+
+
+def test_grid_configuration_checks_quantities_and_each_run():
+    import astropy.units as u
+
+    row = {"run_number": 2, "energy_min": 1 * u.TeV, "model_version": "7.0.0"}
+    config = {
+        "run_number": 2,
+        "energy_min": {"value": 1000, "unit": "GeV"},
+        "model_version": ["7.0.0"],
+    }
+    science_test_definitions._check_grid_configuration(row, {}, config)
+    with pytest.raises(ValueError, match="run_number"):
+        science_test_definitions._check_grid_configuration(row, {}, config | {"run_number": 1})
+
+
+@pytest.mark.parametrize("layout", ["CTAO-North-Alpha", ["CTAO-North-Alpha"]])
+def test_grid_configuration_accepts_single_array_layout(layout):
+    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
+    config = row | {"array_layout_name": layout}
+    science_test_definitions._check_grid_configuration(row, {}, config)
+
+
+@pytest.mark.parametrize(
+    "layout", [[], ["CTAO-South-Alpha"], ["CTAO-North-Alpha", "CTAO-South-Alpha"]]
+)
+def test_grid_configuration_rejects_different_or_multiple_array_layouts(layout):
+    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
+    config = row | {"array_layout_name": layout}
+    with pytest.raises(ValueError, match="array_layout_name"):
+        science_test_definitions._check_grid_configuration(row, {}, config)
+
+
+def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directory):
+    from simtools.production_configuration.production_file_selection import ProductionManifest
+
     root = Path(tmp_test_directory)
-    context = {key: str(root) for key in science_test_definitions._PATH_KEYS}
-    site_config = {"array_layout_name": "CTAO-North-Alpha"}
+    (root / "events.hdf5").write_bytes(b"events")
+    manifest = ProductionManifest(
+        root / "metadata.yml",
+        {
+            "job_id": "job-000001",
+            "configuration": {"run_number": 1},
+            "files": {"reduced_event_data": ["events.hdf5"]},
+        },
+    )
+    mocker.patch.object(
+        science_test_definitions, "read_job_grid", return_value=([{"run_number": 1}], {})
+    )
+    mocker.patch.object(science_test_definitions, "discover_manifests", return_value=[manifest])
+    submission = {
+        "job_ids": ["job-000001"],
+        "metadata": {
+            "state": "completed",
+            "expected_outputs": {"job-000001": [str(root / "events.hdf5")]},
+        },
+    }
+    (root / "submission.json").write_text(json.dumps(submission), encoding="utf-8")
+    definition = {"reviewed_grid": "grid.ecsv"}
+    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
+    assert science_test_definitions._check_reviewed_production(definition, replacements) == {
+        "expected_jobs": 1,
+        "observed_jobs": 1,
+    }
+    mocker.patch.object(
+        science_test_definitions,
+        "read_job_grid",
+        return_value=([{"run_number": 1}, {"run_number": 2}], {}),
+    )
+    with pytest.raises(ValueError, match="job-000002"):
+        science_test_definitions._check_reviewed_production(definition, replacements)
 
-    replacements = science_test_definitions._site_replacements(context, "north", site_config, root)
 
-    assert replacements["__SCIENCE_COLLECTION_PATH__"] == replacements["__SCIENCE_REPORT_PATH__"]
-    assert replacements["__SCIENCE_REPORT_PATH__"] == str(root)
+def test_baseline_check_preserves_paths_containing_candidate_name(mocker):
+    check = mocker.patch.object(science_test_definitions, "_check_reviewed_production")
+    replacements = {
+        "__SCIENCE_CANDIDATE_PATH__": "/data/v1",
+        "__SCIENCE_BASELINE_PATH__": "/data/v10",
+        "__SCIENCE_CANDIDATE_SITE_PATH__": "/data/v1/north",
+        "__SCIENCE_BASELINE_SITE_PATH__": "/data/v10/north",
+    }
+    science_test_definitions._check_inputs(
+        {"reviewed_grid": "grid.ecsv", "acceptance_rule": "events"}, replacements
+    )
+    baseline = check.call_args.args[1]
+    assert baseline["__SCIENCE_CANDIDATE_PATH__"] == "/data/v10"
+    assert baseline["__SCIENCE_CANDIDATE_SITE_PATH__"] == "/data/v10/north"
+    assert baseline["__SCIENCE_BASELINE_PATH__"] == "/data/v10"

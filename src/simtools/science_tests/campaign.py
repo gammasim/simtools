@@ -45,9 +45,7 @@ def _prepare_release_run(
     if not context:
         raise ValueError("A context_file is required for a science-test run.")
     context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
-    if release.get("model_version"):
-        context["__SCIENCE_MODEL_VERSION__"] = release["model_version"]
-    suites = _load_suites(release_dir, release, catalogue)
+    suites = _load_suites(release_dir, release, catalogue, template_dir)
     requested_sites = _select(sites, suites, "site")
     requested_tests = _select(tests, catalogue, "test") if tests is not None else None
     _validate_selected_context(
@@ -71,7 +69,6 @@ def _prepare_release_run(
         acceptance["products"],
         acceptance["rules"],
         model_source,
-        bool(application_args.get("ignore_runtime_environment")),
     )
     return {
         "release_dir": release_dir,
@@ -189,6 +186,7 @@ def run_release(
         dry_run,
         run["signature"],
         run["catalogue"],
+        context=run["context"],
     )
     if not dry_run:
         _write_summary(run["release_dir"] / "reports", summary)

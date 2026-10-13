@@ -40,9 +40,8 @@ KS statistic for continuous quantities, Jensen-Shannon distance for categorical 
 telescope distributions, and Wasserstein-1 distance for ordered trigger multiplicities. Distances
 compare normalized distribution shapes, so differing production event totals do not directly set
 the result. Diagnostic reports store metric values together with aligned histogram counts and bin
-edges; compact reports retain event counts and aggregate metric summaries by plot type. A
-`comparison_statistics.meta.yml` sidecar records the application configuration and
-provenance. The report format is described by
+edges; compact reports retain per-pair scalar metrics and summaries by plot type.
+The consolidated JSON format is described by
 `src/simtools/schemas/production_comparison_statistics.schema.yml`. The report file contains
 diagnostics; simtools does not apply acceptance thresholds.
 

@@ -5,11 +5,17 @@ import json
 import logging
 import math
 import re
+from collections import Counter
 from pathlib import Path
 
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.production_configuration.job_grid_io import read_job_grid
+from simtools.production_configuration.production_file_selection import (
+    discover_manifests,
+    normalize_for_comparison,
+)
 from simtools.utils.general import replace_placeholders_recursively
 
 _VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
@@ -86,31 +92,23 @@ def _comparison_selected(requested_sites, requested_tests, suites, catalogue):
     return any(test_id.startswith("compare.") for test_id in selected_test_ids)
 
 
-def _warn_on_identical_paths(context, comparison_selected):
-    """Warn when a non-comparison run uses one path for both productions."""
-    if comparison_selected:
-        return
-    if _PATH_KEYS[1] not in context:
-        return
-    candidate = Path(context[_PATH_KEYS[0]]).resolve()
-    baseline = Path(context[_PATH_KEYS[1]]).resolve()
-    if candidate == baseline:
-        logger.warning(
-            "Candidate and baseline paths are identical; this is allowed for "
-            "non-comparison science tests."
-        )
-
-
 def _validate_selected_context(
     release, context, requested_sites, requested_tests, suites, catalogue
 ):
     """Validate context paths for the selected test dependency graph."""
     comparison_selected = _comparison_selected(requested_sites, requested_tests, suites, catalogue)
     _validate_release_context(release, context, require_baseline=comparison_selected)
-    _warn_on_identical_paths(context, comparison_selected)
+    if not comparison_selected and _PATH_KEYS[1] in context:
+        candidate = Path(context[_PATH_KEYS[0]]).resolve()
+        baseline = Path(context[_PATH_KEYS[1]]).resolve()
+        if candidate == baseline:
+            logger.warning(
+                "Candidate and baseline paths are identical; this is allowed for "
+                "non-comparison science tests."
+            )
 
 
-def _load_suites(release_dir, release, catalogue):
+def _load_suites(release_dir, release, catalogue, template_dir=None):
     """Read every required suite before any selected test is executed."""
     sites = release.get("required_sites")
     if not isinstance(sites, list) or not sites or len(sites) != len(set(sites)):
@@ -119,16 +117,36 @@ def _load_suites(release_dir, release, catalogue):
     for site in sites:
         if not isinstance(site, str) or not _VALID_NAME.fullmatch(site):
             raise ValueError(f"Invalid site name: {site!r}")
-        suite = _load_yaml(release_dir / "sites" / f"{site}.yml")
-        required = suite.get("required_tests")
-        if suite.get("site") != site or not suite.get("array_layout_name"):
-            raise ValueError(f"Invalid site or missing layout in suite {site}.")
-        if not isinstance(required, list) or not required or len(required) != len(set(required)):
-            raise ValueError(f"Suite {site} needs a non-empty unique required_tests list.")
-        for test_id in _dependency_order(required, catalogue):
-            _validate_definition(test_id, site, catalogue[test_id])
+        suite = _load_site_suite(release_dir, template_dir, site)
+        _validate_site_suite(site, suite, catalogue)
         suites[site] = suite
     return suites
+
+
+def _load_site_suite(release_dir, template_dir, site):
+    """Load shared site defaults and an optional release-specific override."""
+    site_file = release_dir / "sites" / f"{site}.yml"
+    suite = {}
+    if template_dir:
+        defaults = template_dir / "sites" / f"{site}.yml"
+        if defaults.is_file():
+            suite.update(_load_yaml(defaults))
+    if site_file.is_file():
+        suite.update(_load_yaml(site_file))
+    if not suite:
+        raise FileNotFoundError(site_file)
+    return suite
+
+
+def _validate_site_suite(site, suite, catalogue):
+    """Validate one site's layout and required-test declarations."""
+    required = suite.get("required_tests")
+    if suite.get("site") != site or not suite.get("array_layout_name"):
+        raise ValueError(f"Invalid site or missing layout in suite {site}.")
+    if not isinstance(required, list) or not required or len(required) != len(set(required)):
+        raise ValueError(f"Suite {site} needs a non-empty unique required_tests list.")
+    for test_id in _dependency_order(required, catalogue):
+        _validate_definition(test_id, site, catalogue[test_id])
 
 
 def _validate_definition(test_id, site, definition):
@@ -141,8 +159,6 @@ def _validate_definition(test_id, site, definition):
         raise ValueError(f"Invalid tier for {test_id}.")
     if not definition.get("workflow"):
         raise ValueError(f"Missing workflow for {test_id}.")
-    if definition.get("runtime_role") not in {None, "baseline", "candidate", "analysis"}:
-        raise ValueError(f"Invalid runtime role for {test_id}.")
 
 
 def _check_production_selection(test_id, definition, tests, allow_production, dry_run):
@@ -180,6 +196,14 @@ def _check_inputs(definition, replacements):
                 "Use --overwrite to archive and retry failed production once all jobs have ended, "
                 "or use a new candidate path."
             )
+    if definition.get("reviewed_grid") and not definition.get("collect_production"):
+        _check_reviewed_production(definition, replacements)
+        if definition.get("acceptance_rule"):
+            baseline = replacements | {
+                "__SCIENCE_CANDIDATE_PATH__": replacements["__SCIENCE_BASELINE_PATH__"],
+                "__SCIENCE_CANDIDATE_SITE_PATH__": replacements["__SCIENCE_BASELINE_SITE_PATH__"],
+            }
+            _check_reviewed_production(definition, baseline)
     if definition.get("requires_completed_production"):
         root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
         for path in _matched_files(str(root / "**" / _SUBMISSION_FILE_NAME)):
@@ -197,7 +221,7 @@ def _check_completed_submission(path):
     if not jobs or set(jobs) != set(outputs):
         raise ValueError(f"Production has missing expected outputs: {path}")
     if any(not paths for paths in outputs.values()) or any(
-        not Path(p).exists() for paths in outputs.values() for p in paths
+        not _nonempty_output(Path(p)) for paths in outputs.values() for p in paths
     ):
         raise ValueError(f"Production has missing expected outputs: {path}")
 
@@ -217,44 +241,16 @@ def _evaluate_products(definition, replacements):
             except (KeyError, IndexError, TypeError) as exc:
                 raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
             _check_metric(value, metric)
-    result_status = _check_result_status(definition, replacements)
     if rule.get("mode") == "advisory":
         return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
-    if result_status is not None:
-        return result_status
     return {"status": "pass"}
-
-
-def _check_result_status(definition, replacements):
-    """Propagate generic comparison completeness and advisory outcomes."""
-    result_file = definition.get("result_status_file")
-    if not result_file:
-        return None
-    path = Path(replace_placeholders_recursively(result_file, replacements))
-    result = json.loads(path.read_text(encoding="utf-8"))
-    if result.get("status") != "complete":
-        diagnostics = "; ".join(result.get("diagnostics", []))
-        raise ValueError(f"Science result is incomplete in {path}: {diagnostics}")
-    if any(change.get("advisory") for change in result.get("changes", {}).values()):
-        return {"status": "warn", "reason": "One or more advisory tolerances were exceeded."}
-    return None
 
 
 def _check_required_products(definition, replacements):
     """Require declared products, allowing the consolidated comparison summary."""
     for pattern in definition.get("products", []):
         resolved_pattern = replace_placeholders_recursively(pattern, replacements)
-        if _is_consolidated_comparison_metadata(resolved_pattern, replacements):
-            continue
         _matched_files(resolved_pattern)
-
-
-def _is_consolidated_comparison_metadata(pattern, replacements):
-    """Accept a consolidated statistics file for legacy per-pair metadata patterns."""
-    if not str(pattern).endswith("/**/comparison_statistics.meta.yml"):
-        return False
-    summary = Path(replacements["__SCIENCE_REPORT_PATH__"]) / "comparison_statistics.json"
-    return summary.is_file() and summary.stat().st_size > 0
 
 
 def _check_expected_pair_count(definition, replacements):
@@ -291,7 +287,6 @@ def _campaign_signature(
     products,
     rules,
     model_source,
-    ignore_runtime_environment,
 ):
     """Identify definitions and external context without publishing absolute paths."""
     payload = [
@@ -302,7 +297,6 @@ def _campaign_signature(
         products,
         rules,
         model_source,
-        {"ignore_runtime_environment": ignore_runtime_environment},
     ]
     for definition in catalogue.values():
         payload.append(
@@ -355,26 +349,29 @@ def _test_definition(test_id, catalogue, acceptance, release):
         "expected_changes": release.get("expected_changes", []),
         "baseline": release.get("baseline"),
         "release_label": release.get("release_label"),
+        "model_version": release.get("model_version"),
         "report_mode": release.get("report_mode", "compact"),
     }
-    comparison_name = test_id.removeprefix("compare.")
-    requirements_by_comparison = release.get("comparison_requirements", {})
-    parameters_by_comparison = release.get("comparison_parameters", {})
-    if not isinstance(requirements_by_comparison, dict):
-        raise ValueError("comparison_requirements must be a mapping.")
-    if not isinstance(parameters_by_comparison, dict):
-        raise ValueError("comparison_parameters must be a mapping.")
-    requirements = requirements_by_comparison.get(comparison_name, {})
+    comparison = test_id.removeprefix("compare.")
+    requirements = _comparison_settings(release, comparison, "requirements")
+    parameters = _comparison_settings(release, comparison, "parameters")
     if requirements:
-        if not isinstance(requirements, dict):
-            raise ValueError(f"Invalid comparison requirements for {comparison_name}.")
         definition.update(requirements)
-    parameters = parameters_by_comparison.get(comparison_name, {})
     if parameters:
-        if not isinstance(parameters, dict):
-            raise ValueError(f"Invalid comparison parameters for {comparison_name}.")
         definition["comparison_parameters"] = parameters
     return definition
+
+
+def _comparison_settings(release, comparison, kind):
+    """Read one comparison's release overrides, validating their mapping structure."""
+    key = f"comparison_{kind}"
+    settings = release.get(key, {})
+    if not isinstance(settings, dict):
+        raise ValueError(f"{key} must be a mapping.")
+    overrides = settings.get(comparison, {})
+    if overrides and not isinstance(overrides, dict):
+        raise ValueError(f"Invalid comparison {kind} for {comparison}.")
+    return overrides
 
 
 def _validate_rule(rule, rule_id):
@@ -390,9 +387,11 @@ def _validate_rule(rule, rule_id):
 
 def _validate_metric_rule(metric):
     """Validate a metric's JSON selector and finite numerical limits."""
-    if not isinstance(metric, dict):
-        raise ValueError("Each acceptance metric needs file and key.")
-    if not isinstance(metric.get("file"), str) or not isinstance(metric.get("key"), str):
+    if (
+        not isinstance(metric, dict)
+        or not isinstance(metric.get("file"), str)
+        or not isinstance(metric.get("key"), str)
+    ):
         raise ValueError("Each acceptance metric needs file and key.")
     for limit in ("minimum", "maximum"):
         if limit not in metric:
@@ -414,29 +413,18 @@ def _model_source_arguments(application_args, context, release):
     return args
 
 
-def _shared_runtime_environment(template_dir, replacements, role=None):
-    """Load a shared or role-specific runtime with paths relative to the runtime file."""
+def _shared_runtime_environment(template_dir, replacements):
+    """Load shared runtime settings with paths relative to the runtime file."""
     runtime_file = template_dir / "run_time.yml"
     if not runtime_file.is_file():
         return None
     runtime_replacements = dict(replacements)
     runtime_replacements["__CONFIG_DIRECTORY__"] = str(runtime_file.parent.resolve())
     configuration = replace_placeholders_recursively(_load_yaml(runtime_file), runtime_replacements)
-    runtime = configuration.get("runtime_environment")
-    role_environments = configuration.get("runtime_environments")
-    if role_environments is not None:
-        if not isinstance(role_environments, dict):
-            raise ValueError("runtime_environments must be a mapping of role names to runtimes.")
-        if role is not None:
-            runtime = role_environments.get(role)
-            if runtime is None:
-                raise ValueError(f"No runtime environment is configured for role {role!r}.")
     schema.validate_dict_using_schema(
-        {"runtime_environment": runtime},
-        schema_file=RUN_TIME_ENVIRONMENT_SCHEMA,
-        offline=True,
+        configuration, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
     )
-    return runtime
+    return configuration["runtime_environment"]
 
 
 def _site_replacements(context, site, site_config, work):
@@ -560,3 +548,81 @@ def _load_yaml(path):
     if not isinstance(data, dict):
         raise ValueError(f"Expected a mapping in {path}")
     return data
+
+
+def _nonempty_output(path):
+    """Require a nonempty file or a populated job directory."""
+    if path.is_file():
+        return path.stat().st_size > 0
+    return path.is_dir() and any(p.is_file() and p.stat().st_size > 0 for p in path.rglob("*"))
+
+
+def _check_reviewed_production(definition, replacements):
+    """Reconcile completed jobs and their configurations with the reviewed grid."""
+    grid = replace_placeholders_recursively(definition["reviewed_grid"], replacements)
+    rows, metadata = read_job_grid(grid)
+    root = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    manifests = discover_manifests(root)
+    expected_ids = {f"job-{index + 1:06d}" for index in range(len(rows))}
+    observed_ids = [manifest.data.get("job_id") for manifest in manifests]
+    _require_same_ids(expected_ids, observed_ids, "production jobs")
+    by_id = {manifest.data["job_id"]: manifest for manifest in manifests}
+    for index, row in enumerate(rows):
+        manifest = by_id[f"job-{index + 1:06d}"]
+        _check_grid_configuration(row, metadata, manifest.data["configuration"])
+        files = manifest.data["files"]
+        if not files.get("reduced_event_data"):
+            raise ValueError(f"Missing reduced event data in {manifest.path}.")
+        for paths in files.values():
+            for relative in paths:
+                path = (manifest.directory / relative).resolve()
+                if not path.is_relative_to(manifest.directory.resolve()) or not _nonempty_output(
+                    path
+                ):
+                    raise ValueError(f"Missing or empty production output: {path}")
+    submitted = []
+    for path in _matched_files(str(root / "**" / _SUBMISSION_FILE_NAME)):
+        _check_completed_submission(path)
+        submitted.extend(json.loads(path.read_text(encoding="utf-8")).get("job_ids", []))
+    _require_same_ids(expected_ids, submitted, "submitted jobs")
+    return {"expected_jobs": len(rows), "observed_jobs": len(manifests)}
+
+
+def _require_same_ids(expected, observed, description):
+    """Report bounded missing/extra diagnostics and reject duplicate identities."""
+    counts = Counter(observed)
+    missing = expected - counts.keys()
+    extra = counts.keys() - expected
+    duplicate = [key for key, count in counts.items() if count > 1]
+    if missing or extra or duplicate:
+        raise ValueError(
+            f"Incomplete {description}: missing={sorted(missing)[:5]}, "
+            f"extra={sorted(extra)[:5]}, duplicate={duplicate[:5]}."
+        )
+
+
+def _check_grid_configuration(row, metadata, configuration):
+    """Check simulation-defining grid fields, including each run number."""
+    excluded = {
+        "nsb_rate",
+        "overwrite_model_parameters",
+        "scan_label",
+        "model_parameter_set",
+    }
+    for key, value in (
+        row | {key: metadata[key] for key in ("site", "simulation_software") if key in metadata}
+    ).items():
+        if key in excluded:
+            continue
+        observed = configuration.get(key)
+        if (
+            key in {"model_version", "array_layout_name"}
+            and isinstance(observed, list)
+            and len(observed) == 1
+        ):
+            observed = observed[0]
+        if normalize_for_comparison(value) != normalize_for_comparison(observed):
+            raise ValueError(
+                f"Reviewed grid mismatch for run {row['run_number']}, {key}: "
+                f"expected {value}, observed {observed}."
+            )

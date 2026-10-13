@@ -308,7 +308,7 @@ def _write_comparison_summary(statistics_files, output_directory, report_mode="d
     if compact_report:
         plot_statistics = _finalize_compact_plot_statistics(compact_plot_statistics)
     summary = {
-        "format_version": 1,
+        "format_version": 2,
         "baseline": baseline
         or {
             "label": None,
@@ -338,7 +338,10 @@ def _comparison_summary_entry(statistics_file, output_directory, statistics, com
             "format_version": statistics.get("format_version", 1),
             "baseline": statistics["baseline"],
             "comparison_sets": statistics["comparison_sets"],
-            "plot_statistics": {},
+            "plot_statistics": {
+                name: _scalar_plot_statistics(value)
+                for name, value in statistics["plot_statistics"].items()
+            },
         }
     return (
         {
@@ -557,3 +560,30 @@ def _single_trigger_histogram_file(manifest):
     if path.is_absolute():
         return path
     return manifest.directory / path
+
+
+def _scalar_plot_statistics(statistics):
+    """Retain metric results and validity without distribution arrays."""
+    summary = {
+        key: value
+        for key, value in statistics.items()
+        if key
+        in {"baseline_label", "metric_type", "metric", "quantity_name", "cumulative", "rendering"}
+    }
+    summary["comparisons"] = [
+        _scalar_metric_result(value) for value in statistics.get("comparisons", [])
+    ]
+    return summary
+
+
+def _scalar_metric_result(result):
+    """Keep small scalar results, including nested simulated/triggered metrics."""
+    summary = {}
+    for key, value in result.items():
+        if key in {"baseline", "candidate", "metadata"}:
+            continue
+        if isinstance(value, dict):
+            summary[key] = _scalar_metric_result(value)
+        elif isinstance(value, (str, int, float, bool, type(None))):
+            summary[key] = value
+    return summary

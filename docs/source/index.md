@@ -21,7 +21,7 @@ html_theme.sidebar_secondary.remove: true
 ```
 
 **simtools** is a toolkit for simulation of imaging atmospheric Cherenkov telescopes.
-It provides tools for model parameter management, configuring simulation productions, setting, validation workflows.
+It provides tools for model parameter management, configuring simulation productions, and setting up validation workflows.
 
 ````{div} sd-d-flex-row
 ```{button-ref} user-guide/getting_started
