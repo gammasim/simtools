@@ -13,6 +13,7 @@ from simtools.science_tests.definitions import (
 )
 
 logger = logging.getLogger(__name__)
+_REDUNDANT_PUBLICATION_FILES = {"effective-settings.json", "inventory.json"}
 
 
 def _release_summary(release_dir, release, suites, results, dry_run, signature, catalogue):
@@ -104,11 +105,15 @@ def _write_test_report(work, report_root, release_dir, result):
     if work.exists():
         staging.mkdir(parents=True, exist_ok=True)
         for source in work.iterdir():
-            if source.name in {_EXECUTION_LOG_FILE_NAME, _WORKFLOW_FILE_NAME}:
+            if source.name in {
+                _EXECUTION_LOG_FILE_NAME,
+                _WORKFLOW_FILE_NAME,
+                *_REDUNDANT_PUBLICATION_FILES,
+            }:
                 continue
             destination = staging / source.name
             if source.is_dir():
-                shutil.copytree(source, destination)
+                shutil.copytree(source, destination, ignore=_ignore_redundant_files)
             else:
                 shutil.copyfile(source, destination)
     staging.mkdir(parents=True, exist_ok=True)
@@ -132,6 +137,11 @@ def _publication_inventory(report_root):
             "Science-test publication contains %d files and %d bytes.", len(files), total_bytes
         )
     return inventory
+
+
+def _ignore_redundant_files(_directory, names):
+    """Skip duplicate settings and checksum files within published evidence."""
+    return set(names) & _REDUNDANT_PUBLICATION_FILES
 
 
 def _write_summary(report_dir, summary):
@@ -162,21 +172,3 @@ def _write_summary(report_dir, summary):
                 f"run ID `{record.get('run_id', 'unknown')}`."
             )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def _write_site_metrics(report_dir, summary):
-    """Consolidate each site's execution and science status for reviewer-facing publication."""
-    for site in summary["required_sites"]:
-        site_results = [result for result in summary["results"] if result["site"] == site]
-        payload = {
-            "release": summary["release"],
-            "baseline": summary.get("baseline"),
-            "site": site,
-            "results": site_results,
-            "production_history": [
-                result for result in summary["production_history"] if result["site"] == site
-            ],
-        }
-        path = report_dir / site / "metrics.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

@@ -102,9 +102,7 @@ def test_run_collects_evidence_and_preserves_subset_results(campaign, successful
     assert (
         json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text()) == south
     )
-    site_metrics = json.loads((campaign["release_dir"] / "reports/north/metrics.json").read_text())
-    assert site_metrics["site"] == "north"
-    assert site_metrics["results"][0]["id"] == "compare.north"
+    assert not (campaign["release_dir"] / "reports/north/metrics.json").exists()
 
 
 @pytest.mark.parametrize(

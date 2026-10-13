@@ -149,6 +149,7 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     inventory = json.loads((output_directory / "comparison_inventory.json").read_text())
     assert inventory["matched_pair_count"] == 1
     assert inventory["pairing_error_count"] == 0
+    assert "pairs" not in inventory
 
 
 def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_directory):
@@ -266,7 +267,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
     inventory = json.loads((base_directory / "comparison/comparison_inventory.json").read_text())
     assert inventory["matched_pair_count"] == 1
     assert inventory["pairing_error_count"] == 1
-    assert not Path(inventory["pairs"][0]).is_absolute()
+    assert "pairs" not in inventory
     descriptors = mock_write.call_args.args[0]
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
     assert descriptors[0].input_files == [str(base_directory / "baseline" / "baseline_20.hdf5")]

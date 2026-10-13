@@ -75,7 +75,6 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         for _, production_descriptors in descriptor_pairs
     ]
     stem_counts = Counter(output_stems)
-    pair_directories = []
     statistics_files = []
     compact_figures = [] if args_dict.get("report_mode") == "compact" else None
     for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
@@ -106,7 +105,6 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
                 **comparison_kwargs,
             )
         statistics_files.extend(pair_statistics or [])
-        pair_directories.append(pair_output_directory.relative_to(output_directory).as_posix())
     if compact_figures:
         save_figures_to_single_document(
             compact_figures, output_directory / "trigger-report.pdf", close=True
@@ -116,9 +114,8 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         json.dumps(
             {
                 "format_version": 1,
-                "matched_pair_count": len(pair_directories),
+                "matched_pair_count": len(descriptor_pairs),
                 "pairing_error_count": int(pairing_error is not None),
-                "pairs": pair_directories,
             },
             indent=2,
         )

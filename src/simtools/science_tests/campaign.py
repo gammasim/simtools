@@ -26,7 +26,6 @@ from simtools.science_tests.definitions import (
 from simtools.science_tests.execution import _execute_selection, _run_test
 from simtools.science_tests.reports import (
     _release_summary,
-    _write_site_metrics,
     _write_summary,
 )
 from simtools.utils.general import get_uuid
@@ -191,7 +190,6 @@ def run_release(
     )
     if not dry_run:
         _write_summary(run["release_dir"] / "reports", summary)
-        _write_site_metrics(run["release_dir"] / "reports", summary)
     failures = [
         result for result in results if result["status"] in {"fail", "incomplete", "blocked"}
     ]

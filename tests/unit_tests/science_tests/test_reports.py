@@ -105,3 +105,24 @@ def test_publication_copies_nested_evidence_and_warns_when_large(
     assert not (report_root / "stale.json").exists()
     assert result["publication"]["warning"]
     assert "Science-test publication contains" in caplog.text
+
+
+def test_publication_omits_duplicate_provenance_and_checksum_inventory(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    work = root / "work"
+    provenance = work / "provenance"
+    provenance.mkdir(parents=True)
+    (provenance / "effective-settings.json").write_text("{}", encoding="utf-8")
+    (provenance / "resolved-workflow.yml").write_text("workflow: {}\n", encoding="utf-8")
+    (work / "inventory.json").write_text("[]", encoding="utf-8")
+    (work / "comparison_inventory.json").write_text('{"matched_pair_count": 1}', encoding="utf-8")
+    release_dir = root / "release"
+    report_root = release_dir / "reports/north/compare"
+    result = {"status": "pass"}
+
+    science_test_reports._write_test_report(work, report_root, release_dir, result)
+
+    assert not (report_root / "provenance/effective-settings.json").exists()
+    assert (report_root / "provenance/resolved-workflow.yml").is_file()
+    assert not (report_root / "inventory.json").exists()
+    assert (report_root / "comparison_inventory.json").is_file()
