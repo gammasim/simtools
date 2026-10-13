@@ -89,13 +89,15 @@ def test_polynomial_coefficients_are_not_scaled_by_reference_radius():
 
     model = _model(2)
     values = model.get_parameter_value_with_unit.side_effect
-    model.get_parameter_value_with_unit.side_effect = lambda name: (
-        2 * u.m
-        if name == _PRIMARY_MIRROR_REF_RADIUS
-        else [0.25, 0] * u.m
-        if name == _PRIMARY_MIRROR_PARAMETERS
-        else values(name)
-    )
+
+    def read_parameter(name):
+        if name == _PRIMARY_MIRROR_REF_RADIUS:
+            return 2 * u.m
+        if name == _PRIMARY_MIRROR_PARAMETERS:
+            return [0.25, 0] * u.m
+        return values(name)
+
+    model.get_parameter_value_with_unit.side_effect = read_parameter
     assert _polynomial_bounds(model, "primary", 1) == pytest.approx((0.25, 0.25))
 
 
