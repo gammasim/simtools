@@ -112,6 +112,11 @@ Output files include:
 * Optimized simulation model parameter files (if --write_psf_parameters is specified)
 ```
 
+The complete optimization or Monte Carlo uncertainty analysis runs as one job on the
+selected [execution backend](../execution_backends.md). The application waits for the
+job to finish. Individual evaluations remain sequential; local execution runs in the
+main process.
+
 ## Command line arguments
 
 ```{eval-rst}

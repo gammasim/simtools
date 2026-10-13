@@ -12,6 +12,7 @@ to quantify the difference between measured and simulated PSF curves.
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -19,6 +20,7 @@ from astropy.table import Table
 from scipy import stats
 
 from simtools.data_model import model_data_writer as writer
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.utils import names
@@ -1362,6 +1364,31 @@ def write_monte_carlo_analysis(
                 )
 
     return mc_file
+
+
+@dataclass(frozen=True)
+class PSFOptimizationJob:
+    """Serializable arguments and output directory for one complete PSF workflow."""
+
+    args: dict
+    output_dir: Path
+
+
+def run_psf_optimization_job(job):
+    """Initialize models and run a complete workflow on the selected worker.
+
+    Parameters
+    ----------
+    job : PSFOptimizationJob
+        Application arguments and output directory for the workflow.
+    """
+    tel_model, site_model, _ = initialize_simulation_models(
+        label=job.args.get("label"),
+        site=job.args["site"],
+        telescope_name=job.args["telescope"],
+        model_version=job.args["model_version"],
+    )
+    run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir)
 
 
 def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
