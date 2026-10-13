@@ -82,6 +82,34 @@ def wait_for_submission(submission, *, options=None, backend=None):
     return sorted(results, key=lambda result: result.index)
 
 
+def collect_submission(submission, *, backend=None):
+    """Collect finished scheduler jobs without waiting for active jobs.
+
+    Parameters
+    ----------
+    submission : SubmissionHandle
+        Persisted scheduler submission to inspect.
+    backend : object or None
+        Execution backend; constructed from the submission when omitted.
+
+    Returns
+    -------
+    list[JobResult] or None
+        Completed results, or None while jobs remain in the scheduler queue.
+    """
+    backend = backend or get_backend(submission.backend)
+    if not backend.is_finished(submission):
+        return None
+    try:
+        results = backend.collect(submission)
+        _validate_manifest_outputs(submission)
+    except Exception:
+        _mark_submission(submission, "failed")
+        raise
+    _mark_submission(submission, "completed")
+    return results
+
+
 def load_submission(path):
     """Load a submission handle from a JSON manifest."""
     manifest = Path(path)
