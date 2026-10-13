@@ -414,6 +414,56 @@ def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):
     }
 
 
+def test_plot_writes_per_run_resource_figures(tmp_test_directory):
+    rows = [
+        {
+            "role": "corsika",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds": 20.0,
+            "cpu_time_seconds": 10.0,
+            "corsika_output_bytes": 2_000_000.0,
+            "sim_telarray_storage_bytes": None,
+        },
+        {
+            "role": "sim_telarray",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds": 30.0,
+            "cpu_time_seconds": 15.0,
+            "sim_telarray_storage_bytes": 3_000_000.0,
+            "sim_telarray_output_bytes": 1_000_000.0,
+            "reduced_event_data_bytes": 1_000_000.0,
+            "sim_telarray_histogram_bytes": 1_000_000.0,
+        },
+    ]
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert {output_file.name for output_file in output_files} == {
+        "resource_wall_time_run_corsika",
+        "resource_wall_time_run_sim_telarray",
+        "resource_cpu_time_run_corsika",
+        "resource_cpu_time_run_sim_telarray",
+        "resource_storage_run_sim_telarray",
+        "resource_corsika_output_run_corsika",
+        "resource_sim_telarray_output_run_sim_telarray",
+        "resource_reduced_event_data_run_sim_telarray",
+        "resource_sim_telarray_histogram_run_sim_telarray",
+    }
+
+
+def test_byte_plot_label_adds_run_unit():
+    label, scale = plot_resource_requirements._byte_plot_label(
+        "sim_telarray_storage_bytes",
+        "sim_telarray storage",
+        [{"sim_telarray_storage_bytes": 2_000_000.0}],
+    )
+
+    assert label == "sim_telarray storage (MB/run)"
+    assert scale == pytest.approx(1e-6)
+
+
 def test_plot_uses_zenith_colors_and_separate_averages(mocker, tmp_test_directory):
     rows = []
     for zenith, value in ((20.0, 1.0), (70.0, 3.0)):

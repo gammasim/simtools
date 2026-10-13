@@ -105,14 +105,14 @@ def _calculate_time_window(args):
 
     disc_bins = telescope_model.get_parameter_value("disc_bins")
     fadc_mhz = telescope_model.get_parameter_value("fadc_mhz")
-    time_window = disc_bins / (fadc_mhz * 1e6)
+    time_window = disc_bins / (fadc_mhz * u.MHz)
 
     _logger.info(
         f"Telescope {telescope_name}: disc_bins={disc_bins}, "
-        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window:.2f} s"
+        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window.to_value(u.s):.2f} s"
     )
 
-    return time_window
+    return time_window.to_value(u.s)
 
 
 def _extract_nsb_rates(args, time_window):

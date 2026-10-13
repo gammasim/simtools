@@ -120,3 +120,15 @@ The test-resource directory remains selected by the catalog's `resource-version`
 it is independent of the branch checked out. Custom test branches must contain that directory.
 Unit tests and unit benchmarks export these settings; integration tests download the selected
 repositories. Image builds use the catalog's source refs.
+
+
+## Runtime catalog selection
+
+Runtime applications prefer the dependency catalog bundled with the running simtools source or
+installation over a catalog in the working directory. This keeps container defaults tied to the
+software installed in the image when a host checkout is mounted. Working-directory lookup is a
+fallback when no bundled catalog exists.
+
+Set `SIMTOOLS_DEPENDENCY_VERSIONS` to explicitly select another catalog, including a mounted host
+catalog. A missing override file raises an error. An explicit `start_path` passed to
+`find_dependency_versions` searches that directory and its parents before bundled catalogs.
