@@ -8,6 +8,7 @@ import pytest
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_sphere import derive_telescope_sphere_radius
 
 _PRIMARY_MIRROR_REF_RADIUS = "primary_mirror_ref_radius"
@@ -83,10 +84,41 @@ def test_dual_mirror_encloses_polynomial_surfaces():
     assert_quantity_allclose(result, np.hypot(1, 4) * u.m)
 
 
+def test_polynomial_coefficients_are_not_scaled_by_reference_radius():
+    from simtools.model.telescope_sphere import _polynomial_bounds
+
+    model = _model(2)
+    values = model.get_parameter_value_with_unit.side_effect
+    model.get_parameter_value_with_unit.side_effect = lambda name: (
+        2 * u.m
+        if name == _PRIMARY_MIRROR_REF_RADIUS
+        else [0.25, 0] * u.m
+        if name == _PRIMARY_MIRROR_PARAMETERS
+        else values(name)
+    )
+    assert _polynomial_bounds(model, "primary", 1) == pytest.approx((0.25, 0.25))
+
+
 def test_missing_geometry_is_actionable():
     model = _model()
     model.get_parameter_table.return_value = QTable()
     with pytest.raises(ValueError, match="mirror_list needs positions"):
+        derive_telescope_sphere_radius(model)
+
+
+def test_missing_mirror_table_is_actionable():
+    model = _model()
+    model.get_parameter_table.side_effect = InvalidModelParameterError("missing mirror_list")
+    with pytest.raises(ValueError, match="mirror_list table is required"):
+        derive_telescope_sphere_radius(model)
+
+
+def test_missing_length_parameter_is_actionable():
+    model = _model()
+    model.get_parameter_value_with_unit.side_effect = InvalidModelParameterError(
+        "missing focal_length"
+    )
+    with pytest.raises(ValueError, match="focal_length"):
         derive_telescope_sphere_radius(model)
 
 
@@ -208,3 +240,13 @@ def test_nonfinite_polynomial_coefficients():
     )
     with pytest.raises(ValueError, match="finite coefficients"):
         derive_telescope_sphere_radius(model)
+
+
+def test_axes_offsets_are_normalized_to_quantity_array():
+    model = _model()
+    values = model.get_parameter_value_with_unit.side_effect
+    model.get_parameter_value_with_unit.side_effect = lambda name: (
+        [160 * u.cm, 0 * u.cm] if name == "axes_offsets" else values(name)
+    )
+    result = derive_telescope_sphere_radius(model)
+    assert result.unit == u.m

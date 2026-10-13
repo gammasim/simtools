@@ -3,6 +3,7 @@
 import astropy.units as u
 import numpy as np
 
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.utils.geometry import fiducial_radius_from_shape, telescope_fiducial_sphere_radius
 
 _PRIMARY_DIAMETER = "primary_mirror_diameter"
@@ -25,7 +26,7 @@ def _length(model, name):
     try:
         value = model.get_parameter_value_with_unit(name)
         return float(value.to_value(u.m))
-    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+    except (AttributeError, InvalidModelParameterError, KeyError, TypeError, ValueError) as exc:
         raise ValueError(f"A length-valued {name} is required to derive the sphere.") from exc
 
 
@@ -39,7 +40,7 @@ def _polynomial_bounds(model, surface, radius):
         coefficients = np.asarray(
             u.Quantity(model.get_parameter_value_with_unit(name)).to_value(u.m)
         )
-    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+    except (AttributeError, InvalidModelParameterError, KeyError, TypeError, ValueError) as exc:
         raise ValueError(f"Length-valued {name} coefficients are required.") from exc
     if coefficients.ndim != 1 or coefficients.size == 0 or not np.all(np.isfinite(coefficients)):
         raise ValueError(f"{name} must contain finite coefficients.")
@@ -52,7 +53,7 @@ def _polynomial_bounds(model, surface, radius):
     points.extend(
         float(root.real) for root in critical if abs(root.imag) < 1e-10 and 0 < root.real < upper
     )
-    values = sign * reference * polynomial(points)
+    values = sign * polynomial(points)
     return float(np.min(values)), float(np.max(values))
 
 
@@ -62,7 +63,11 @@ def _panel_heights(model, radius, listed_z):
     dish_length = _length(model, _DISH_SHAPE_LENGTH) or focal_length
     if not np.isfinite(dish_length) or dish_length <= 0:
         raise ValueError("Dish shape length must be positive and finite.")
-    if model.get_parameter_value(_PARABOLIC_DISH):
+    try:
+        parabolic_dish = model.get_parameter_value(_PARABOLIC_DISH)
+    except InvalidModelParameterError as exc:
+        raise ValueError(f"A model parameter {_PARABOLIC_DISH} is required.") from exc
+    if parabolic_dish:
         height = radius**2 / (4 * dish_length)
     else:
         if dish_length <= np.max(radius):
@@ -89,7 +94,10 @@ def _panel_extent(model, centre_radius, panel_radius, height, focal_length):
 
 def _single_mirror_bounds(model):
     """Bound mirror panels using their dish height, corners, tilt, and sag."""
-    table = model.get_parameter_table(_MIRROR_LIST)
+    try:
+        table = model.get_parameter_table(_MIRROR_LIST)
+    except InvalidModelParameterError as exc:
+        raise ValueError("A mirror_list table is required to derive the sphere.") from exc
     needed = (
         _MIRROR_X,
         _MIRROR_Y,
@@ -145,7 +153,10 @@ def derive_telescope_sphere_radius(model, zenith_range=(0, 90) * u.deg, margin=0
     ValueError
         If required model geometry is missing or invalid.
     """
-    mirror_class = model.get_parameter_value("mirror_class")
+    try:
+        mirror_class = model.get_parameter_value("mirror_class")
+    except InvalidModelParameterError as exc:
+        raise ValueError("A mirror_class parameter is required to derive the sphere.") from exc
     if mirror_class in (0, 1):
         primary = _single_mirror_bounds(model)
         elements = [primary]
@@ -162,11 +173,16 @@ def derive_telescope_sphere_radius(model, zenith_range=(0, 90) * u.deg, margin=0
 
     radii = np.array([radius for radius, _ in elements]) * u.m
     bounds = np.array([axial for _, axial in elements]) * u.m
+    try:
+        axes_offsets = u.Quantity(model.get_parameter_value_with_unit("axes_offsets")).to(u.m)
+        mirror_offset = model.get_parameter_value_with_unit("mirror_offset")
+    except (AttributeError, InvalidModelParameterError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError("Axes and mirror offsets are required to derive the sphere.") from exc
     return telescope_fiducial_sphere_radius(
         radii,
         bounds,
-        model.get_parameter_value_with_unit("axes_offsets"),
-        mirror_offset=model.get_parameter_value_with_unit("mirror_offset"),
+        axes_offsets,
+        mirror_offset=mirror_offset,
         zenith_range=zenith_range,
         margin=margin,
     )

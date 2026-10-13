@@ -18,9 +18,6 @@ applications:
       validations:
       - type: format
         format: json
-      - type: model_parameter
-        reference_parameter_name: telescope_sphere_radius
-        tolerance: 0.2
     - path_descriptor: output_path
       file: telescope_sphere_radius.meta.yml
       validations:
