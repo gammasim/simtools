@@ -308,7 +308,7 @@ def _write_comparison_summary(statistics_files, output_directory, report_mode="d
     if compact_report:
         plot_statistics = _finalize_compact_plot_statistics(compact_plot_statistics)
     summary = {
-        "format_version": 1,
+        "format_version": 2,
         "baseline": baseline
         or {
             "label": None,

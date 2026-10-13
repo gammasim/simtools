@@ -148,6 +148,12 @@ def test_metric_rules_reject_non_numeric_or_non_finite_limits(value):
         )
 
 
+@pytest.mark.parametrize("metric", [None, {}, {"file": "metrics.json"}, {"key": "count"}])
+def test_metric_rules_reject_incomplete_selector(metric):
+    with pytest.raises(ValueError, match="Each acceptance metric needs file and key"):
+        science_test_definitions._validate_metric_rule(metric)
+
+
 def test_completed_production_gate(tmp_test_directory):
     root = Path(tmp_test_directory)
     submission = root / "submission.json"

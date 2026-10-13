@@ -97,6 +97,35 @@ def test_reuse_rejects_unrecorded_partial_output(tmp_test_directory):
     )
 
 
+@pytest.mark.parametrize(("writes_log", "raises"), [(False, False), (True, False), (True, True)])
+def test_execution_log_is_recorded_only_for_current_execution(
+    tmp_test_directory, monkeypatch, writes_log, raises
+):
+    work = Path(tmp_test_directory) / "work"
+    work.mkdir()
+    log_path = work / science_test_definitions._EXECUTION_LOG_FILE_NAME
+    log_path.write_text("stale log", encoding="utf-8")
+
+    def execute(_definition, args, _replacements):
+        if writes_log:
+            log_path.write_text("current log", encoding="utf-8")
+        if raises:
+            raise RuntimeError("execution failed")
+        return {"status": "pass", "execution": "completed"}
+
+    monkeypatch.setattr(science_test_execution, "_execute_test_workflow", execute)
+    result = {}
+    if raises:
+        with pytest.raises(RuntimeError, match="execution failed"):
+            science_test_execution._run_or_reuse_test(
+                result, {}, {}, {}, work, {"applications": []}
+            )
+    else:
+        science_test_execution._run_or_reuse_test(result, {}, {}, {}, work, {"applications": []})
+
+    assert result.get("execution_log") == (str(log_path) if writes_log else None)
+
+
 def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
     candidate = "/candidate/site"
     replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": candidate}

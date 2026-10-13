@@ -318,6 +318,47 @@ def test_computing_comparison_rejects_duplicate_effective_labels(mocker):
     )
 
 
+@pytest.mark.parametrize(
+    ("baseline_label", "candidate_label"),
+    [("candidate", None), (None, "baseline"), ("same", "same")],
+)
+def test_event_comparison_rejects_duplicate_effective_metadata_labels(
+    mocker, baseline_label, candidate_label
+):
+    parser = mocker.Mock()
+    compare_productions._post_parse(
+        {
+            "comparison_level": "events",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": baseline_label,
+            "candidate_label": candidate_label,
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--baseline_label' and '--candidate_label' must be different."
+    )
+
+
+def test_event_comparison_accepts_distinct_effective_metadata_labels(mocker):
+    parser = mocker.Mock()
+    compare_productions._post_parse(
+        {
+            "comparison_level": "events",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": "reference",
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_not_called()
+
+
 def test_main_runs_computing_comparison(mocker, tmp_test_directory):
     app_context = mocker.MagicMock()
     app_context.args = {"comparison_level": "computing", "baseline_path": "production"}

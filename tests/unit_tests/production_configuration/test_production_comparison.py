@@ -452,6 +452,7 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
         schema_file=SCHEMA_PATH / "production_comparison_statistics.schema.yml",
         offline=True,
     )
+    assert summary["format_version"] == 2
     assert summary["baseline"]["simulated_event_count"] == 10
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["pair_count"] == 1
     assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
@@ -471,3 +472,22 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     assert pair_statistics["comparisons"][0]["triggered"]["reason"] == "empty"
     assert "baseline_counts" not in pair_statistics
     assert not statistics_file.exists()
+
+
+def test_version_one_comparison_statistics_schema_remains_available():
+    legacy_schema = schema.load_schema(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml", "1.0.0"
+    )
+    schema.validate_dict_using_schema(
+        {
+            "format_version": 1,
+            "baseline": {
+                "label": "baseline",
+                "simulated_event_count": 10,
+                "triggered_event_count": 5,
+            },
+            "comparison_sets": [],
+            "plot_statistics": {},
+        },
+        json_schema=legacy_schema,
+    )

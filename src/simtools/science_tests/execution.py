@@ -187,7 +187,6 @@ def _run_test(
     _execute_and_record_test(
         result, definition, replacements, args, run_id, work, report_root, resolved
     )
-    result["execution_log"] = str(work / _EXECUTION_LOG_FILE_NAME)
     _write_test_report(work, report_root, release_dir, result)
     logger.info(
         "%s: %s%s",
@@ -297,7 +296,12 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
     _prepare_derived_rebuild(definition, replacements, args)
     _clear_test_directory(work)
     args["config_file"] = str(_materialize_effective_workflow(work, resolved))
-    result.update(_execute_test_workflow(definition, args, replacements))
+    try:
+        result.update(_execute_test_workflow(definition, args, replacements))
+    finally:
+        log_path = work / _EXECUTION_LOG_FILE_NAME
+        if log_path.is_file():
+            result["execution_log"] = str(log_path)
     if definition.get("derived_output"):
         for application in resolved["applications"]:
             _validate_derived_products(application["configuration"])

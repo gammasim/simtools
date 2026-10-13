@@ -8,7 +8,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from simtools.constants import SCHEMA_PATH
-from simtools.io import ascii_handler
+from simtools.data_model import schema
 from simtools.sim_events.production_comparison import ProductionEventMetrics
 from simtools.visualization import plot_event_level_production_comparison
 
@@ -64,7 +64,7 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
 
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         stats_payload = json.load(file_handle)
-    comparison_schema = ascii_handler.collect_data_from_file(
+    comparison_schema = schema.load_schema(
         SCHEMA_PATH / "production_comparison_statistics.schema.yml"
     )
     jsonschema.Draft6Validator.check_schema(comparison_schema)
@@ -147,12 +147,12 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
     plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         statistics = json.load(file_handle)
-    comparison_schema = ascii_handler.collect_data_from_file(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    comparison_schema = schema.load_schema(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml", "1.0.0"
     )
-    statistics["format_version"] = 2
+    statistics["format_version"] = 3
 
-    with pytest.raises(jsonschema.ValidationError, match="2 is not one of"):
+    with pytest.raises(jsonschema.ValidationError, match="3 is not one of"):
         jsonschema.validate(statistics, comparison_schema)
 
 

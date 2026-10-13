@@ -387,9 +387,11 @@ def _validate_rule(rule, rule_id):
 
 def _validate_metric_rule(metric):
     """Validate a metric's JSON selector and finite numerical limits."""
-    if not isinstance(metric, dict):
-        raise ValueError("Each acceptance metric needs file and key.")
-    if not isinstance(metric.get("file"), str) or not isinstance(metric.get("key"), str):
+    if (
+        not isinstance(metric, dict)
+        or not isinstance(metric.get("file"), str)
+        or not isinstance(metric.get("key"), str)
+    ):
         raise ValueError("Each acceptance metric needs file and key.")
     for limit in ("minimum", "maximum"):
         if limit not in metric:
