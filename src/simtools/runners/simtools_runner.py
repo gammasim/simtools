@@ -679,7 +679,9 @@ def _write_resolved_workflow(
         "collection": collection,
     }
     with provenance_path.open("w", encoding="utf-8") as file:
-        yaml.safe_dump(payload, file, sort_keys=False, explicit_start=True)
+        yaml.safe_dump(
+            ascii_handler.to_builtin(payload), file, sort_keys=False, explicit_start=True
+        )
 
 
 def _get_application_log_file(application, app_configuration, counter):

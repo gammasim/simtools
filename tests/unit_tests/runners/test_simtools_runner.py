@@ -1401,6 +1401,24 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
     assert payload["applications"][0]["configuration"]["simulation_models_git_revision"] == "v1.2.3"
 
 
+def test_resolved_workflow_serializes_path_values(tmp_test_directory):
+    output = Path(tmp_test_directory)
+    repository = output / "simulation-models.git"
+    destination = output / "resolved.yml"
+    simtools_runner._write_resolved_workflow(
+        "workflow.yml",
+        [{"configuration": {"output_path": output, "simulation_models_git_path": repository}}],
+        None,
+        None,
+        provenance_path=destination,
+    )
+
+    resolved = yaml.safe_load(destination.read_text(encoding="utf-8"))
+    assert resolved["applications"][0]["configuration"]["simulation_models_git_path"] == str(
+        repository
+    )
+
+
 def test_run_applications_without_host_simulation_executables(mocker, tmp_test_directory):
     log_file = Path(tmp_test_directory) / "execution.log"
     mocker.patch.object(
