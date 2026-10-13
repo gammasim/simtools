@@ -81,6 +81,37 @@ def test_existing_submission_prevents_resubmission(tmp_test_directory):
     assert "--allow_production does not override it" in str(error.value)
 
 
+def test_reuse_derived_product_requires_complete_products(mocker):
+    definition = {"derived_output": "__OUTPUT__"}
+    replacements = {"__OUTPUT__": "/existing/output"}
+
+    mocker.patch.object(science_test_execution, "_evaluate_products")
+    assert science_test_execution._reuse_derived_product(definition, replacements, {})
+    assert not science_test_execution._reuse_derived_product(
+        definition, replacements, {"science_overwrite": True}
+    )
+
+    mocker.patch.object(
+        science_test_execution, "_evaluate_products", side_effect=ValueError("incomplete")
+    )
+    assert not science_test_execution._reuse_derived_product(definition, replacements, {})
+
+
+def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
+    candidate = "/candidate/site"
+    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": candidate}
+
+    assert science_test_execution._test_output_paths(
+        [
+            {"configuration": {"output_path": "/output/one"}},
+            {"configuration": {"output_path": "/output/one"}},
+            {"configuration": {"output_path": "/output/two"}},
+        ],
+        replacements,
+    ) == ["/output/one", "/output/two"]
+    assert science_test_execution._test_output_paths([], replacements) == [candidate]
+
+
 @pytest.mark.parametrize(
     "collection",
     [

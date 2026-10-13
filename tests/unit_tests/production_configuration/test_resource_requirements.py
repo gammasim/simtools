@@ -174,6 +174,55 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
     plotter.assert_called_once()
 
 
+def test_write_resource_requirements_compact_skips_table_and_writes_summary(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    mocker.patch.object(resource_requirements, "discover_manifests", return_value=[manifest])
+    plotter = mocker.Mock(return_value=[])
+
+    result = resource_requirements.write_resource_requirements(
+        {"baseline_path": "production", "report_mode": "compact"},
+        tmp_test_directory,
+        plotter,
+    )
+
+    assert result["table_file"] is None
+    assert result["report_file"].is_file()
+    report = result["report_file"].read_text(encoding="utf-8")
+    assert "Wall time (s/event)" in report
+    assert "| baseline | corsika | 1 |" in report
+    plotter.assert_called_once_with(
+        plotter.call_args.args[0],
+        tmp_test_directory,
+        figure_format=None,
+        report_mode="compact",
+    )
+
+
+def test_compact_resource_summary_handles_missing_metrics(tmp_test_directory):
+    report = Path(tmp_test_directory) / "compact.md"
+    summary = resource_requirements._summarize_compact_resource_requirements(
+        [
+            {
+                "production_label": "candidate",
+                "role": "sim_telarray",
+                "wall_time_seconds_per_event": None,
+                "cpu_time_seconds_per_event": 2.0,
+                "peak_rss_bytes": 10,
+                "sim_telarray_storage_bytes_per_event": None,
+            }
+        ]
+    )
+
+    assert summary[0]["wall_time_seconds_per_event_median"] is None
+    assert summary[0]["cpu_time_seconds_per_event_median"] == pytest.approx(2.0)
+    resource_requirements._write_compact_markdown_report(
+        summary, [{"job_id": "job-1", "role": "corsika", "message": "bad record"}], report
+    )
+    assert "Skipped records" in report.read_text(encoding="utf-8")
+
+
 def test_resource_percentiles_are_interpolated():
     metrics = resource_requirements._metric_statistics("wall", [{"wall": v} for v in (0, 10, 20)])
     assert metrics["wall_p05"] == pytest.approx(1)

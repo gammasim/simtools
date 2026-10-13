@@ -355,3 +355,85 @@ def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tm
     empty_manifest = ProductionManifest(path=manifest.path, data={"files": {}})
     with pytest.raises(ValueError, match="Expected exactly one"):
         production_comparison._single_trigger_histogram_file(empty_manifest)
+
+
+def test_comparison_title_formats_shared_and_different_configuration_values():
+    configuration = {
+        "baseline": {
+            "primary": "gamma",
+            "site": "North",
+            "energy_min": {"value": 30, "unit": "GeV"},
+            "energy_max": {"value": 100, "unit": "GeV"},
+            "zenith_angle": {"value": 20, "unit": "deg"},
+            "azimuth_angle": {"value": 0, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        },
+        "candidate": {
+            "primary": "gamma",
+            "site": "North",
+            "energy_min": {"value": 30, "unit": "GeV"},
+            "energy_max": {"value": 200, "unit": "GeV"},
+            "zenith_angle": {"value": 20, "unit": "deg"},
+            "azimuth_angle": {"value": 10, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        },
+    }
+
+    title = production_comparison._comparison_title(
+        {"configurations": configuration}, "CTAO-North-Alpha"
+    )
+
+    assert "Layout: CTAO-North-Alpha | Primary: gamma | Site: North" in title
+    assert "baseline 30 GeV to 100 GeV; candidate 30 GeV to 200 GeV" in title
+    assert "Zenith: 20 deg" in title
+    assert "Azimuth: baseline 0 deg -> candidate 10 deg" in title
+    assert "Interaction model: qgs3" in title
+    assert production_comparison._comparison_title(None, None) is None
+
+
+def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
+    output = Path(tmp_test_directory)
+    statistics_file = output / "pair" / "alpha" / "comparison_statistics.json"
+    statistics_file.parent.mkdir(parents=True)
+    statistics_file.write_text(
+        json.dumps(
+            {
+                "format_version": 1,
+                "baseline": {
+                    "label": "base",
+                    "simulated_event_count": 10,
+                    "triggered_event_count": 5,
+                },
+                "comparison_sets": [
+                    {"label": "candidate", "simulated_event_count": 12, "triggered_event_count": 6}
+                ],
+                "plot_statistics": {
+                    "energy": {
+                        "plot_name": "distribution_energy",
+                        "metric_type": "ks",
+                        "comparisons": [
+                            {
+                                "candidate_label": "candidate",
+                                "simulated": {"valid": True, "value": 0.2},
+                                "triggered": {"valid": False, "reason": "empty"},
+                            }
+                        ],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    production_comparison._write_comparison_summary([statistics_file], output, "compact")
+
+    summary = json.loads((output / "comparison_statistics.json").read_text(encoding="utf-8"))
+    assert summary["baseline"]["simulated_event_count"] == 10
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["pair_count"] == 1
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
+        "candidate:simulated"
+    ]["median"] == pytest.approx(0.2)
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
+        "candidate:triggered"
+    ]["invalid_reasons"] == {"empty": 1}
+    assert not statistics_file.exists()
