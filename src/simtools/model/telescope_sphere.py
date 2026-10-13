@@ -73,7 +73,7 @@ def _panel_heights(model, radius, listed_z):
         if dish_length <= np.max(radius):
             raise ValueError("Davies-Cotton dish length must exceed panel-centre radii.")
         height = dish_length - np.sqrt(dish_length**2 - radius**2)
-    return np.where(listed_z != 0, np.abs(listed_z), height)
+    return np.where(listed_z != 0, listed_z, height)
 
 
 def _panel_extent(model, centre_radius, panel_radius, height, focal_length):

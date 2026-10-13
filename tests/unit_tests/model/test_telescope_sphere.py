@@ -169,6 +169,13 @@ def test_parabolic_dish_uses_parabolic_panel_heights():
     assert height[0] == pytest.approx(0.2)
 
 
+def test_listed_panel_height_preserves_sign():
+    from simtools.model.telescope_sphere import _panel_heights
+
+    height = _panel_heights(_model(), np.array([2.0]), np.array([-0.5]))
+    assert height[0] == pytest.approx(-0.5)
+
+
 def test_invalid_davies_cotton_dish_length():
     model = _model()
     values = model.get_parameter_value_with_unit.side_effect
