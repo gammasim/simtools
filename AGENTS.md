@@ -199,9 +199,11 @@ PY
 
 ## Workflow Security And Handoff
 
-- External actions use full commit SHAs. Secrets go through step `env`, never
-  `${{ secrets.* }}` in `run:`. Quote expansions; Bash uses `set -euo pipefail`
-  and arrays for dynamically constructed multi-argument commands.
+- External actions use full commit SHAs. For shell `run:` steps, pass secrets
+  through step `env`, never `${{ secrets.* }}` directly in `run:`. Use action
+  `with` inputs when required by the action. Quote expansions; Bash uses
+  `set -euo pipefail` and arrays for dynamically constructed multi-argument
+  commands.
 - Workflow `permissions: {}`; declare required job permissions, preserving
   authorized behavior. Never weaken security/quality gates for tool disagreements;
   explain unresolved findings/decisions.
