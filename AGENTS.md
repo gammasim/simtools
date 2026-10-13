@@ -192,9 +192,10 @@ PY
 - Update incorrect guidance/new user workflows; routine refactors need no prose.
   Keep one authoritative description; link generated help/autodoc rather than
   duplicating options/defaults. Prefer correcting text over new sections.
-- PR preparation/requested changelogs: `docs/changes/<pr-number>.<type>.md`;
-  types from `[tool.towncrier]`. Unknown PR number: prepare text, report pending
-  naming; never fabricate numbers or open unauthorized PRs.
+- Non-draft PRs require `docs/changes/<pr-number>.<type>.md` unless labeled
+  `no-changelog-needed` or `dependencies`; types are from `[tool.towncrier]`.
+  If the PR number is unknown, prepare the text and report pending naming;
+  never fabricate numbers or open unauthorized PRs.
 
 ## Workflow Security And Handoff
 
