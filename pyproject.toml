@@ -81,6 +81,7 @@ scripts.simtools-compare-productions = "simtools.applications.compare_production
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """
+scripts.simtools-create-setting-workflow = "simtools.applications.create_setting_workflow:main"
 scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
 scripts.simtools-derive-bias-curves = "simtools.applications.derive_bias_curves:main"
@@ -139,6 +140,7 @@ scripts.simtools-production-generate-grid = "simtools.applications.production_ge
 scripts.simtools-production-select-files = "simtools.applications.production_select_files:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
+scripts.simtools-run-science-tests = "simtools.applications.run_science_tests:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"

@@ -814,3 +814,49 @@ def test_catalog_optional_test_revision(revision):
             dependency_versions.dependency_catalog_environment(catalog)["SIMTOOLS_TESTS_REVISION"]
             == revision
         )
+
+
+@pytest.mark.parametrize("source_catalog", [False, True])
+def test_default_catalog_prefers_running_installation(
+    monkeypatch, tmp_test_directory, source_catalog
+):
+    root = Path(tmp_test_directory)
+    host = root / "host"
+    host.mkdir()
+    (host / "dependency_versions.yml").write_text("schema_version: host\n")
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    package.parent.mkdir(parents=True)
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(host)
+    installed = root / "env" / "simtools" / "dependency_versions.yml"
+    installed.parent.mkdir(parents=True)
+    installed.write_text("schema_version: installed\n")
+    expected = installed
+    if source_catalog:
+        expected = root / "installation" / "dependency_versions.yml"
+        expected.write_text("schema_version: source\n")
+    assert dependency_versions.find_dependency_versions() == expected
+    assert dependency_versions.find_dependency_versions(host) == host / "dependency_versions.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(host / "dependency_versions.yml"))
+    assert dependency_versions.find_dependency_versions() == host / "dependency_versions.yml"
+
+
+def test_missing_catalog_override_does_not_fall_back(monkeypatch, tmp_test_directory):
+    missing = Path(tmp_test_directory) / "missing.yml"
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(missing))
+    with pytest.raises(FileNotFoundError, match="Configured dependency catalog does not exist"):
+        dependency_versions.find_dependency_versions()
+
+
+def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_directory):
+    root = Path(tmp_test_directory)
+    package = root / "installation" / "src" / "simtools" / "dependency_versions.py"
+    monkeypatch.setattr(dependency_versions, "__file__", str(package))
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(root / "env"))
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.chdir(root)
+    catalog = root / "dependency_versions.yml"
+    catalog.write_text("schema_version: working-directory\n")
+    assert dependency_versions.find_dependency_versions() == catalog

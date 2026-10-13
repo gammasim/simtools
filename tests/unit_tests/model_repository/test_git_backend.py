@@ -62,13 +62,32 @@ def _raise_invalid_repository(_):
 
 def _install_pygit2(monkeypatch, repository):
     """Install a minimal pygit2 substitute and return the resolved commit."""
+    owner_validation = {"enabled": True}
+
+    def option(option_type, enabled=None):
+        if option_type == 35:
+            return owner_validation["enabled"]
+        owner_validation["enabled"] = enabled
+        return None
+
+    def open_repository(path):
+        assert owner_validation["enabled"] is False
+        if callable(repository):
+            return repository(path)
+        return repository
+
     pygit2 = SimpleNamespace(
         Commit=object(),
         GitError=type("GitError", (Exception,), {}),
-        Repository=lambda _: repository,
+        enums=SimpleNamespace(
+            Option=SimpleNamespace(GET_OWNER_VALIDATION=35, SET_OWNER_VALIDATION=36)
+        ),
+        option=option,
+        Repository=open_repository,
         BlobIO=lambda blob: io.BytesIO(blob.data),
     )
     monkeypatch.setitem(sys.modules, "pygit2", pygit2)
+    return pygit2, owner_validation
 
 
 def test_pygit2_object_store_requires_runtime_dependency(monkeypatch, tmp_test_directory):
@@ -91,16 +110,11 @@ def test_pygit2_object_store_rejects_missing_repository(monkeypatch, tmp_test_di
 
 def test_pygit2_object_store_rejects_unreadable_repository(monkeypatch, tmp_test_directory):
     """A path that pygit2 cannot open reports a readable error."""
-    pygit2 = SimpleNamespace(
-        Commit=object(),
-        GitError=type("GitError", (Exception,), {}),
-        Repository=_raise_invalid_repository,
-        BlobIO=lambda blob: io.BytesIO(blob.data),
-    )
-    monkeypatch.setitem(sys.modules, "pygit2", pygit2)
+    _, owner_validation = _install_pygit2(monkeypatch, _raise_invalid_repository)
 
     with pytest.raises(ValueError, match="Not a readable Git model repository"):
         Pygit2ObjectStore(tmp_test_directory)
+    assert owner_validation["enabled"] is True
 
 
 def test_pygit2_object_store_reads_tree_blobs(monkeypatch, tmp_test_directory):
@@ -132,9 +146,11 @@ def test_pygit2_object_store_reads_tree_blobs(monkeypatch, tmp_test_directory):
             "nested-tree": nested_tree,
         },
     )
-    _install_pygit2(monkeypatch, repository)
+    pygit2, owner_validation = _install_pygit2(monkeypatch, repository)
     store = Pygit2ObjectStore(tmp_test_directory)
 
+    assert owner_validation["enabled"] is True
+    assert pygit2.option(pygit2.enums.Option.GET_OWNER_VALIDATION) is True
     resolved = store.resolve_revision("v1")
 
     assert resolved == "a" * 40

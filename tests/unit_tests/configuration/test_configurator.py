@@ -9,6 +9,7 @@ import astropy.units as u
 import pytest
 import yaml
 
+from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
@@ -123,9 +124,12 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
+def test_config_from_file_resolves_test_resource_paths_from_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "simtools-tests"))
+    monkeypatch.setenv("SIMTOOLS_TESTS_RESOURCE_VERSION", "v0.38.0")
     config_dict = {
         "applications": [
             {
@@ -148,11 +152,27 @@ def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_director
     config_builder = Configurator()
     loaded_config = config_builder._config_from_file(config_file)
 
-    assert loaded_config["trigger_histogram_file"] == (
-        "${generated:gamma_diffuse_run000010.trigger_histograms.hdf5}"
+    resource_path = tmp_test_directory / "simtools-tests" / "v0.38.0" / "integration_tests"
+    assert loaded_config["trigger_histogram_file"] == str(
+        resource_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
     )
-    assert loaded_config["plot_config"] == "${static:plot_config.yml}"
-    assert loaded_config["table_data_path"] == "${downloaded:table_data}"
+    assert loaded_config["plot_config"] == str(resource_path / "static/plot_config.yml")
+    assert loaded_config["table_data_path"] == str(resource_path / "downloaded/table_data")
+
+
+def test_config_from_file_does_not_resolve_test_resource_paths_without_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_RESOURCE_VERSION", raising=False)
+    config_file = tmp_test_directory / "configuration-resource-macros.yml"
+    config_file.write_text("input: ${generated:input.ecsv}\n", encoding="utf-8")
+
+    config_builder = Configurator()
+    loaded_config = config_builder._config_from_file(config_file)
+
+    assert loaded_config["input"] == "${generated:input.ecsv}"
 
 
 def test_arglist_from_config():
@@ -193,6 +213,30 @@ def test_arglist_from_config_splits_scalar_for_fixed_nargs():
     ] == Configurator._arglist_from_config(
         {"showers_per_run_power_law": "0.0 1 TeV"},
         parser=configurator.parser,
+    )
+
+
+def test_arglist_from_config_repeats_single_value_append_options():
+    configurator = Configurator()
+    configurator.parser.add_argument("--select", action="append")
+
+    assert [
+        "--select",
+        "configuration.primary=gamma",
+        "--select",
+        "configuration.site=North",
+    ] == Configurator._arglist_from_config(
+        {"select": ["configuration.primary=gamma", "configuration.site=North"]},
+        parser=configurator.parser,
+    )
+
+
+def test_arglist_from_config_keeps_multi_value_append_options_together():
+    configurator = Configurator()
+    configurator.parser.add_argument("--production", action="append", nargs="+")
+
+    assert ["--production", "baseline", "*.hdf5"] == Configurator._arglist_from_config(
+        {"production": ["baseline", "*.hdf5"]}, parser=configurator.parser
     )
 
 

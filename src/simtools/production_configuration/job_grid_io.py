@@ -52,6 +52,7 @@ _SIMULATE_PROD_PATH_FIELDS = (
     "corsika_path",
     "corsika_interaction_table_path",
     "simulation_models_path",
+    "simulation_models_git_path",
     "model_path",
     "overwrite_model_parameters",
 )

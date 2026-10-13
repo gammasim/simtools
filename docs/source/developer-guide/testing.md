@@ -4,9 +4,8 @@
 
 - [Unit tests](testing_unit.md) for library modules and functions.
 - [Integration tests](testing_integration.md) for end-to-end application workflows.
-- [Science tests](testing_science.md) for longer-running physics and production validation.
-- [Test resources](testing_resources.md) for generating and releasing versioned
-  test resource sets.
+- [Science tests](testing_science.md) for extensive tests for physics validation.
+
 
 ```{toctree}
 :hidden:

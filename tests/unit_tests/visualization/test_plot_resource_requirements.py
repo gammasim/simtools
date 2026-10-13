@@ -44,6 +44,27 @@ def test_plot_writes_available_resource_figures(tmp_test_directory):
     assert all(output_file.with_suffix(".png").is_file() for output_file in output_files)
 
 
+def test_compact_report_writes_one_pdf(tmp_test_directory):
+    rows = [
+        {
+            "production_label": "baseline",
+            "comparison_role": "baseline",
+            "role": "corsika",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds_per_event": 1.0,
+            "cpu_time_seconds_per_event": 0.5,
+            "peak_rss_bytes": 1_000_000.0,
+            "sim_telarray_storage_bytes_per_event": None,
+        }
+    ]
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, report_mode="compact")
+
+    assert output_files == [tmp_test_directory / "resources-report.pdf"]
+    assert output_files[0].is_file()
+
+
 def test_plot_uses_linear_y_axis_for_nonpositive_values(mocker, tmp_test_directory):
     rows = [
         {
@@ -272,8 +293,8 @@ def test_plot_writes_ratio_figures_for_baseline_and_candidate(mocker, tmp_test_d
     }
     assert axis.axhline.call_count == 4
     assert [call.kwargs["label"] for call in axis.errorbar.call_args_list] == [
-        "_nolegend_",
-        "za=20 deg",
+        "optimized: za=20 deg",
+        "reference: za=20 deg",
         "za=20 deg",
     ] * 4
     assert all(
@@ -414,6 +435,56 @@ def test_plot_writes_trigger_normalized_simtel_figures(tmp_test_directory):
     }
 
 
+def test_plot_writes_per_run_resource_figures(tmp_test_directory):
+    rows = [
+        {
+            "role": "corsika",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds": 20.0,
+            "cpu_time_seconds": 10.0,
+            "corsika_output_bytes": 2_000_000.0,
+            "sim_telarray_storage_bytes": None,
+        },
+        {
+            "role": "sim_telarray",
+            "zenith_angle_deg": 20.0,
+            "energy_midpoint_gev": 100.0,
+            "wall_time_seconds": 30.0,
+            "cpu_time_seconds": 15.0,
+            "sim_telarray_storage_bytes": 3_000_000.0,
+            "sim_telarray_output_bytes": 1_000_000.0,
+            "reduced_event_data_bytes": 1_000_000.0,
+            "sim_telarray_histogram_bytes": 1_000_000.0,
+        },
+    ]
+
+    output_files = plot_resource_requirements.plot(rows, tmp_test_directory, figure_format=["png"])
+
+    assert {output_file.name for output_file in output_files} == {
+        "resource_wall_time_run_corsika",
+        "resource_wall_time_run_sim_telarray",
+        "resource_cpu_time_run_corsika",
+        "resource_cpu_time_run_sim_telarray",
+        "resource_storage_run_sim_telarray",
+        "resource_corsika_output_run_corsika",
+        "resource_sim_telarray_output_run_sim_telarray",
+        "resource_reduced_event_data_run_sim_telarray",
+        "resource_sim_telarray_histogram_run_sim_telarray",
+    }
+
+
+def test_byte_plot_label_adds_run_unit():
+    label, scale = plot_resource_requirements._byte_plot_label(
+        "sim_telarray_storage_bytes",
+        "sim_telarray storage",
+        [{"sim_telarray_storage_bytes": 2_000_000.0}],
+    )
+
+    assert label == "sim_telarray storage (MB/run)"
+    assert scale == pytest.approx(1e-6)
+
+
 def test_plot_uses_zenith_colors_and_separate_averages(mocker, tmp_test_directory):
     rows = []
     for zenith, value in ((20.0, 1.0), (70.0, 3.0)):
@@ -441,3 +512,21 @@ def test_plot_uses_zenith_colors_and_separate_averages(mocker, tmp_test_director
     assert len(average_calls) == 6
     assert all(call.kwargs["yerr"] == [0.0] for call in average_calls)
     assert average_calls[0].kwargs["color"] != average_calls[1].kwargs["color"]
+
+
+def test_compact_resource_pages_separate_process_roles(mocker, tmp_test_directory):
+    common = {
+        "production_label": "baseline",
+        "comparison_role": "baseline",
+        "energy_midpoint_gev": 30,
+        "zenith_angle_deg": 20,
+        "cpu_time_seconds_per_event": 1,
+    }
+    rows = [common | {"role": "corsika"}, common | {"role": "sim_telarray"}]
+    plot = mocker.spy(plot_resource_requirements, "_plot_role")
+    plot_resource_requirements.plot(rows, tmp_test_directory, report_mode="compact")
+    assert plot.call_count == 2
+    assert [{row["role"] for row in call.args[1]} for call in plot.call_args_list] == [
+        {"corsika"},
+        {"sim_telarray"},
+    ]

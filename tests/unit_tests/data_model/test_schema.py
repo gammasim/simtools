@@ -358,11 +358,39 @@ def test_application_workflow_schema_rejects_legacy_output_fields():
         )
 
 
+@pytest.mark.parametrize("version", ["0.7.0", "0.6.0"])
+def test_collection_inventory_schema_is_versioned(version):
+    """Accept inventory and relative-path options only in the new schema."""
+    workflow = {
+        "schema_version": version,
+        "schema_name": "application_workflow.metaschema",
+        "applications": [{"application": "simtools-test", "configuration": {}}],
+        "collection": {
+            "output_path": "reports",
+            "files": ["**/metrics.json"],
+            "write_inventory": True,
+            "preserve_relative_paths": True,
+        },
+    }
+    if version == "0.6.0":
+        with pytest.raises(jsonschema.ValidationError):
+            schema.validate_dict_using_schema(
+                workflow,
+                schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+                offline=True,
+            )
+    else:
+        schema.validate_dict_using_schema(
+            workflow, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml", offline=True
+        )
+
+
 def test_application_workflow_schema_preserves_previous_version():
     """Load the newest workflow schema first while retaining earlier versions."""
     schema_file = SCHEMA_PATH / "application_workflow.metaschema.yml"
 
-    assert schema.load_schema(schema_file)["schema_version"] == "0.6.0"
+    assert schema.load_schema(schema_file)["schema_version"] == "0.7.0"
+    assert schema.load_schema(schema_file, "0.6.0")["schema_version"] == "0.6.0"
     previous_schema = schema.load_schema(schema_file, "0.5.0")
     assert previous_schema["schema_version"] == "0.5.0"
     assert (

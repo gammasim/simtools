@@ -3,12 +3,29 @@
 import logging
 from pathlib import Path
 
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
+
+
+def collect_production_descriptions(info_files, read_info):
+    """Collect sorted production descriptions using the supplied document reader."""
+
+    def sort_key(path):
+        try:
+            return (0, Version(path.parent.name))
+        except InvalidVersion:
+            return (1, path.parent.name)
+
+    descriptions = []
+    for path in sorted(info_files, key=sort_key):
+        info = read_info(path)
+        description = str(info.get("description", "")).replace("\n", " ").strip()
+        descriptions.append((str(info.get("model_version", path.parent.name)), description))
+    return descriptions
 
 
 def get_production_table_files(model_path):
