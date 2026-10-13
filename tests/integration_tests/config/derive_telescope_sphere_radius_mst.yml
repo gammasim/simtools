@@ -1,0 +1,31 @@
+---
+applications:
+- application: simtools-derive-telescope-sphere-radius
+  docs:
+    title: Derive the MST fiducial sphere radius
+    summary: Enclose the MST reflector panels over all supported pointings.
+  configuration:
+    site: South
+    telescope: MSTx-FlashCam
+    model_version: 7.0.0
+    parameter_version: 1.0.0
+    ignore_existing_parameter_version: true
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: telescope_sphere_radius.json
+      validations:
+      - type: format
+        format: json
+      - type: model_parameter
+        reference_parameter_name: telescope_sphere_radius
+        tolerance: 0.01
+    - path_descriptor: output_path
+      file: telescope_sphere_radius.meta.yml
+      validations:
+      - type: format
+        format: yaml
+  test_name: derive_telescope_sphere_radius_mst
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0
