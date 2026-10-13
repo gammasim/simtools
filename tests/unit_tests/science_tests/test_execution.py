@@ -1,4 +1,6 @@
 import json
+import os
+import time
 from pathlib import Path
 
 import jsonschema
@@ -97,6 +99,71 @@ def test_reuse_derived_product_requires_complete_products(mocker):
     assert not science_test_execution._reuse_derived_product(definition, replacements, {})
 
 
+def test_science_comparison_receives_release_parameters():
+    workflow = {
+        "applications": [
+            {
+                "application": "simtools-compare-science-results",
+                "configuration": {"output_path": "/tmp/report"},
+            }
+        ]
+    }
+    definition = {
+        "comparison_parameters": {"compare_by": ["case.azimuth_angle"]},
+        "baseline": "v0.37.0",
+        "release_label": "v0.38.0",
+        "expected_changes": ["case.azimuth_angle"],
+    }
+
+    science_test_execution._configure_comparison_applications(workflow, definition)
+
+    configuration = workflow["applications"][0]["configuration"]
+    assert configuration["compare_by"] == ["case.azimuth_angle"]
+    assert configuration["baseline_label"] == "v0.37.0"
+    assert configuration["candidate_label"] == "v0.38.0"
+
+
+def test_simtools_version_uses_runtime_identity_when_log_has_none():
+    assert (
+        science_test_execution._simtools_version_from_log(
+            None, {"options": ["--env", "SIMTOOLS_VERSION=0.38.1"]}
+        )
+        == "0.38.1"
+    )
+
+
+def test_camera_collection_copies_native_plots_into_report_work(tmp_test_directory, mocker):
+    root = Path(tmp_test_directory)
+    output = root / "candidate/north/camera_efficiency"
+    (output / "plots").mkdir(parents=True)
+    (output / "plots/native.png").write_bytes(b"plot")
+    work = root / "work/science-tests/north/camera_efficiency.candidate"
+    mocker.patch.object(
+        science_test_execution,
+        "_load_yaml",
+        return_value={
+            "applications": [
+                {
+                    "application": "simtools-validate-camera-efficiency",
+                    "configuration": {"output_path": str(output)},
+                }
+            ]
+        },
+    )
+    mocker.patch.object(
+        science_test_execution,
+        "collect_legacy_results",
+        return_value={"artifacts": {"native_plots": ["plots/native.png"]}},
+    )
+
+    science_test_execution._collect_camera_results(
+        {"result_type": "camera_efficiency"},
+        {"config_file": "workflow.yml", "log_file": str(work / "execution.log")},
+    )
+
+    assert (work / "native_artifacts/native.png").read_bytes() == b"plot"
+
+
 def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
     candidate = "/candidate/site"
     replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": candidate}
@@ -167,6 +234,74 @@ def test_shared_runtime_environment_invalid(tmp_test_directory):
     _write_yaml(template / "run_time.yml", {"runtime_environment": {"image": ""}})
     with pytest.raises(jsonschema.ValidationError):
         science_test_definitions._shared_runtime_environment(template, {})
+
+
+def test_role_specific_runtime_environment(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(
+        template / "run_time.yml",
+        {
+            "runtime_environments": {
+                "baseline": {"container_engine": "apptainer", "image": "base.sif"},
+                "candidate": {"container_engine": "apptainer", "image": "candidate.sif"},
+                "analysis": {"container_engine": "apptainer", "image": "analysis.sif"},
+            }
+        },
+    )
+
+    runtime = science_test_definitions._shared_runtime_environment(template, {}, role="candidate")
+
+    assert runtime["image"] == "candidate.sif"
+
+
+def test_role_runtime_template_keeps_default_for_existing_tests(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(
+        template / "run_time.yml",
+        {
+            "runtime_environment": {
+                "container_engine": "apptainer",
+                "image": "default.sif",
+            },
+            "runtime_environments": {
+                "candidate": {"container_engine": "apptainer", "image": "candidate.sif"}
+            },
+        },
+    )
+
+    runtime = science_test_definitions._shared_runtime_environment(template, {})
+
+    assert runtime["image"] == "default.sif"
+
+
+def test_role_specific_runtime_requires_known_role(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(
+        template / "run_time.yml",
+        {"runtime_environments": {"analysis": {"image": "analysis.sif"}}},
+    )
+
+    with pytest.raises(ValueError, match="No runtime environment"):
+        science_test_definitions._shared_runtime_environment(template, {}, role="baseline")
+
+
+def test_compute_summary_records_timing_and_unavailable_memory(tmp_test_directory, monkeypatch):
+    path = Path(tmp_test_directory) / "compute-summary.json"
+    monkeypatch.setattr(science_test_execution, "_peak_memory_bytes", lambda: None)
+    before = os.times()
+
+    science_test_execution._write_compute_summary(
+        path,
+        time.monotonic() - 0.01,
+        before,
+        {"log_file": "execution.log"},
+        {"status": "pass"},
+    )
+
+    summary = json.loads(path.read_text(encoding="utf-8"))
+    assert summary["wall_seconds"] > 0
+    assert summary["peak_memory_bytes"] is None
+    assert summary["memory_accounting"] == "unavailable"
 
 
 @pytest.mark.parametrize(

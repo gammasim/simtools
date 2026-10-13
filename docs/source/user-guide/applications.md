@@ -58,6 +58,7 @@ finite choices declared by argparse.
 :maxdepth: 1
 
 simtools-compare-productions <applications/simtools-compare-productions>
+simtools-compare-science-results <applications/simtools-compare-science-results>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-create-setting-workflow <applications/simtools-create-setting-workflow>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>

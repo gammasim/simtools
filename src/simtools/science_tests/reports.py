@@ -118,6 +118,9 @@ def _write_test_report(work, report_root, release_dir, result):
                 shutil.copyfile(source, destination)
     staging.mkdir(parents=True, exist_ok=True)
     result["publication"] = _publication_inventory(staging)
+    result["artifacts"] = sorted(
+        path.relative_to(staging).as_posix() for path in staging.rglob("*") if path.is_file()
+    )
     previous = report_root.with_name(f".{report_root.name}.previous")
     _clear_test_directory(previous)
     if report_root.exists():
@@ -155,14 +158,15 @@ def _write_summary(report_dir, summary):
         "",
         f"Qualified: {summary['qualified']}",
         "",
-        "| Site | Test | Execution | Status | Reason |",
-        "| --- | --- | --- | --- | --- |",
+        "| Site | Test | Execution | Status | Reason | Artifacts |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for result in summary["results"]:
         reason = result.get("error") or result.get("reason") or "-"
+        artifacts = _artifact_links(result)
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
-            f"{result['status']} | {reason} |"
+            f"{result['status']} | {reason} | {artifacts} |"
         )
     if summary["production_history"]:
         lines.extend(["", "## Production history", ""])
@@ -172,3 +176,15 @@ def _write_summary(report_dir, summary):
                 f"run ID `{record.get('run_id', 'unknown')}`."
             )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _artifact_links(result):
+    """Link published products from the release summary table."""
+    report = result.get("report")
+    artifacts = result.get("artifacts", [])
+    if not report or not artifacts:
+        return "-"
+    relative_report = report.removeprefix("reports/")
+    return ", ".join(
+        f"[{path.rsplit('/', maxsplit=1)[-1]}]({relative_report}/{path})" for path in artifacts
+    )

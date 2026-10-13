@@ -3,11 +3,8 @@
 """Calculate on-axis telescope throughput and NSB pixels rates."""
 
 from simtools.application.definition import ApplicationDefinition
-from simtools.camera.camera_efficiency import CameraEfficiency
+from simtools.camera.camera_efficiency_workflow import run_camera_efficiency
 from simtools.configuration import arguments as cli
-from simtools.io.ascii_handler import write_data_to_file
-from simtools.model.model_utils import initialize_simulation_models
-from simtools.utils import names
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -68,41 +65,11 @@ def main():
     app_context = APPLICATION.start()
     _validate_required_args(app_context.args)
 
-    telescope_model, site_model, _ = initialize_simulation_models(
+    run_camera_efficiency(
+        app_context.args,
+        app_context.io_handler.get_output_directory(),
         label=app_context.args.get("label"),
-        model_version=app_context.args["model_version"],
-        site=app_context.args["site"],
-        telescope_name=app_context.args["telescope"],
     )
-    results = {}
-    for efficiency_type in ["Shower", "NSB", "Muon"]:
-        ce = CameraEfficiency(
-            label=app_context.args.get("label"),
-            config_data=app_context.args,
-            efficiency_type=efficiency_type,
-            telescope_model=telescope_model,
-            site_model=site_model,
-        )
-        ce.simulate()
-        ce.analyze(force=True)
-        results |= ce.results_summary()
-        ce.plot_efficiency(save_fig=True)
-
-        if ce.efficiency_type == "nsb":
-            ce.dump_nsb_pixel_rate()
-        if ce.efficiency_type == "muon":
-            ce.calc_partial_efficiency()
-
-    results_file = app_context.io_handler.get_output_directory() / names.generate_file_name(
-        file_type="camera_efficiency_summary",
-        suffix=".yml",
-        site=app_context.args["site"],
-        telescope_model_name=app_context.args["telescope"],
-        zenith_angle=app_context.args["zenith_angle"].value,
-        azimuth_angle=app_context.args["azimuth_angle"].value,
-    )
-    app_context.logger.info(f"Writing results summary to {results_file}")
-    write_data_to_file(results, results_file, unique_lines=True)
 
 
 if __name__ == "__main__":

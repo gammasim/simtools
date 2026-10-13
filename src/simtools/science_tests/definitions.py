@@ -141,6 +141,8 @@ def _validate_definition(test_id, site, definition):
         raise ValueError(f"Invalid tier for {test_id}.")
     if not definition.get("workflow"):
         raise ValueError(f"Missing workflow for {test_id}.")
+    if definition.get("runtime_role") not in {None, "baseline", "candidate", "analysis"}:
+        raise ValueError(f"Invalid runtime role for {test_id}.")
 
 
 def _check_production_selection(test_id, definition, tests, allow_production, dry_run):
@@ -215,9 +217,27 @@ def _evaluate_products(definition, replacements):
             except (KeyError, IndexError, TypeError) as exc:
                 raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
             _check_metric(value, metric)
+    result_status = _check_result_status(definition, replacements)
     if rule.get("mode") == "advisory":
         return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
+    if result_status is not None:
+        return result_status
     return {"status": "pass"}
+
+
+def _check_result_status(definition, replacements):
+    """Propagate generic comparison completeness and advisory outcomes."""
+    result_file = definition.get("result_status_file")
+    if not result_file:
+        return None
+    path = Path(replace_placeholders_recursively(result_file, replacements))
+    result = json.loads(path.read_text(encoding="utf-8"))
+    if result.get("status") != "complete":
+        diagnostics = "; ".join(result.get("diagnostics", []))
+        raise ValueError(f"Science result is incomplete in {path}: {diagnostics}")
+    if any(change.get("advisory") for change in result.get("changes", {}).values()):
+        return {"status": "warn", "reason": "One or more advisory tolerances were exceeded."}
+    return None
 
 
 def _check_required_products(definition, replacements):
@@ -394,18 +414,29 @@ def _model_source_arguments(application_args, context, release):
     return args
 
 
-def _shared_runtime_environment(template_dir, replacements):
-    """Load shared runtime settings with paths relative to the runtime file."""
+def _shared_runtime_environment(template_dir, replacements, role=None):
+    """Load a shared or role-specific runtime with paths relative to the runtime file."""
     runtime_file = template_dir / "run_time.yml"
     if not runtime_file.is_file():
         return None
     runtime_replacements = dict(replacements)
     runtime_replacements["__CONFIG_DIRECTORY__"] = str(runtime_file.parent.resolve())
     configuration = replace_placeholders_recursively(_load_yaml(runtime_file), runtime_replacements)
+    runtime = configuration.get("runtime_environment")
+    role_environments = configuration.get("runtime_environments")
+    if role_environments is not None:
+        if not isinstance(role_environments, dict):
+            raise ValueError("runtime_environments must be a mapping of role names to runtimes.")
+        if role is not None:
+            runtime = role_environments.get(role)
+            if runtime is None:
+                raise ValueError(f"No runtime environment is configured for role {role!r}.")
     schema.validate_dict_using_schema(
-        configuration, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+        {"runtime_environment": runtime},
+        schema_file=RUN_TIME_ENVIRONMENT_SCHEMA,
+        offline=True,
     )
-    return configuration["runtime_environment"]
+    return runtime
 
 
 def _site_replacements(context, site, site_config, work):

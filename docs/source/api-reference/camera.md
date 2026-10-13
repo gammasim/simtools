@@ -20,6 +20,13 @@ etc.) are required inputs.
    :members:
 ```
 
+### camera_efficiency_workflow
+
+```{eval-rst}
+.. automodule:: simtools.camera.camera_efficiency_workflow
+   :members:
+```
+
 ## Single photon-electron spectral analysis
 
 ### single_photon_electron_spectrum

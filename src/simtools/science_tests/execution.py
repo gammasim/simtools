@@ -1,11 +1,20 @@
 """Prepare, execute, and collect science-test workflows."""
 
+import json
 import logging
+import os
+import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import yaml
+
+try:
+    import resource
+except ImportError:
+    resource = None
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
@@ -13,6 +22,11 @@ from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners.simtools_runner import prepare_workflow, run_applications
+from simtools.science_tests.camera_efficiency_results import (
+    collect_legacy_results,
+    sha256_file,
+    write_json,
+)
 from simtools.science_tests.definitions import (
     _EXECUTION_LOG_FILE_NAME,
     _SUBMISSION_FILE_NAME,
@@ -199,7 +213,9 @@ def _add_shared_runtime(resolved, template_dir, replacements, definition):
         "collect_production"
     )
     if needs_runtime and "runtime_environment" not in resolved:
-        runtime = _shared_runtime_environment(template_dir, replacements)
+        runtime = _shared_runtime_environment(
+            template_dir, replacements, definition.get("runtime_role")
+        )
         if runtime is not None:
             resolved["runtime_environment"] = runtime
 
@@ -208,10 +224,15 @@ def _configure_comparison_applications(resolved, definition):
     """Apply release comparison settings and reject undeclared differences."""
     for application in resolved.get("applications", []):
         configuration = application.get("configuration", {})
-        if application.get("application") == "simtools-compare-productions":
+        application_name = application.get("application")
+        if application_name == "simtools-compare-productions":
             configuration["report_mode"] = definition.get("report_mode", "compact")
             configuration.update(definition.get("comparison_parameters", {}))
             _set_event_comparison_labels(configuration, definition)
+        elif application_name == "simtools-compare-science-results":
+            configuration.update(definition.get("comparison_parameters", {}))
+            configuration.setdefault("baseline_label", definition["baseline"])
+            configuration.setdefault("candidate_label", definition["release_label"])
         allowed = configuration.get("compare_by", [])
         if set(allowed) - set(definition.get("expected_changes", [])):
             raise ValueError(f"Undeclared expected comparison differences: {allowed}")
@@ -228,10 +249,16 @@ def _execute_and_record_test(
     result, definition, replacements, args, run_id, work, report_root, resolved
 ):
     """Execute one test while retaining a useful failure result."""
+    started = time.monotonic()
+    resource_before = os.times()
+    execution_definition = {
+        **definition,
+        "runtime_environment": resolved.get("runtime_environment"),
+    }
     try:
         _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
         _check_inputs(definition, replacements)
-        _run_or_reuse_test(result, definition, replacements, args, work, resolved)
+        _run_or_reuse_test(result, execution_definition, replacements, args, work, resolved)
     except _AcceptanceError as exc:
         result.update(status="fail", error=str(exc))
     except (
@@ -242,6 +269,36 @@ def _execute_and_record_test(
         JobExecutionError,
     ) as exc:
         result.update(status="incomplete", execution="failed", error=str(exc))
+    finally:
+        summary_path = work / "compute-summary.json"
+        _write_compute_summary(summary_path, started, resource_before, args, result)
+        result["compute_summary"] = summary_path.name
+
+
+def _write_compute_summary(path, started, before, args, result):
+    """Record wall time and available child CPU accounting for one workflow."""
+    after = os.times()
+    summary = {
+        "wall_seconds": time.monotonic() - started,
+        "child_cpu_seconds": (after.children_user - before.children_user)
+        + (after.children_system - before.children_system),
+        "peak_memory_bytes": _peak_memory_bytes(),
+        "memory_accounting": "platform child-process peak RSS",
+        "logs": args.get("log_file"),
+        "status": result.get("status", "incomplete"),
+        "error": result.get("error"),
+    }
+    if summary["peak_memory_bytes"] is None:
+        summary["memory_accounting"] = "unavailable"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+
+
+def _peak_memory_bytes():
+    """Return the process-wide peak child RSS when the platform exposes it."""
+    if resource is None:
+        return None
+    return resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * 1024
 
 
 def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
@@ -302,6 +359,7 @@ def _execute_test_workflow(definition, args, replacements):
     if definition.get("collect_production"):
         return _collect_production(definition, replacements)
     run_applications(args, replacements=replacements)
+    _collect_camera_results(definition, args)
     validated = _evaluate_products(definition, replacements)
     if definition.get("produces_production"):
         return {
@@ -310,6 +368,73 @@ def _execute_test_workflow(definition, args, replacements):
             "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
         }
     return validated
+
+
+def _collect_camera_results(definition, args):
+    """Complete legacy camera summaries with host-known runtime provenance."""
+    if definition.get("result_type") != "camera_efficiency":
+        return
+    workflow = _load_yaml(args["config_file"])
+    camera = next(
+        (
+            item.get("configuration", {})
+            for item in workflow.get("applications", [])
+            if item.get("application") == "simtools-validate-camera-efficiency"
+        ),
+        None,
+    )
+    if camera is None:
+        raise ValueError("Camera result collection requires simtools-validate-camera-efficiency.")
+    output = Path(camera["output_path"])
+    manifest_path = output / "camera_efficiency_manifest.json"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    else:
+        manifest = collect_legacy_results(
+            output,
+            camera,
+            _runtime_image_identity(definition.get("runtime_environment") or {}),
+            _simtools_version_from_log(
+                args.get("log_file"), definition.get("runtime_environment") or {}
+            ),
+        )
+        write_json(manifest_path, manifest)
+    native_plots = manifest.get("artifacts", {}).get("native_plots", [])
+    artifact_directory = Path(args["log_file"]).parent / "native_artifacts"
+    for plot_path in native_plots:
+        source = output / plot_path
+        artifact_directory.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, artifact_directory / source.name)
+
+
+def _runtime_image_identity(runtime):
+    """Identify a local image by hash or a remote image by immutable digest."""
+    image = runtime.get("image")
+    for option in runtime.get("options", []):
+        match = re.search(r"SIMTOOLS_IMAGE_ID=(sha256:[a-fA-F0-9]{64})", option)
+        if match:
+            return match.group(1)
+    if not image:
+        return None
+    path = Path(image)
+    if path.is_file():
+        return f"sha256:{sha256_file(path)}"
+    if "@sha256:" in image:
+        return image.rsplit("@", maxsplit=1)[1]
+    return None
+
+
+def _simtools_version_from_log(log_path, runtime):
+    """Read the actual simtools version reported by the run or pinned image."""
+    if log_path and Path(log_path).is_file():
+        match = re.search(r"simtools:\s*([^\s]+)", Path(log_path).read_text(encoding="utf-8"))
+        if match:
+            return match.group(1)
+    for option in runtime.get("options", []):
+        match = re.search(r"SIMTOOLS_VERSION=([^\s]+)", option)
+        if match:
+            return match.group(1)
+    return None
 
 
 def _collect_production(definition, replacements):

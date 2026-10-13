@@ -64,6 +64,8 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
                 "execution": "failed",
                 "status": "incomplete",
                 "error": "missing report",
+                "report": "reports/north/compare",
+                "artifacts": ["science-comparison.json", "science-comparison.png"],
             }
         ],
         "production_history": [
@@ -80,6 +82,7 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
 
     markdown = (report_dir / "release-summary.md").read_text(encoding="utf-8")
     assert "incomplete | missing report" in markdown
+    assert "[science-comparison.json](north/compare/science-comparison.json)" in markdown
     assert "Production history" in markdown
     assert "run-1" in markdown
 
@@ -104,6 +107,7 @@ def test_publication_copies_nested_evidence_and_warns_when_large(
     assert (report_root / "pair/metrics.json").read_text() == "{}"
     assert not (report_root / "stale.json").exists()
     assert result["publication"]["warning"]
+    assert "pair/metrics.json" in result["artifacts"]
     assert "Science-test publication contains" in caplog.text
 
 

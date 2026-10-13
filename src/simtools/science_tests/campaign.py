@@ -45,6 +45,8 @@ def _prepare_release_run(
     if not context:
         raise ValueError("A context_file is required for a science-test run.")
     context["__SCIENCE_RELEASE_LABEL__"] = release["release_label"]
+    if release.get("model_version"):
+        context["__SCIENCE_MODEL_VERSION__"] = release["model_version"]
     suites = _load_suites(release_dir, release, catalogue)
     requested_sites = _select(sites, suites, "site")
     requested_tests = _select(tests, catalogue, "test") if tests is not None else None

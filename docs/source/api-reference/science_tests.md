@@ -22,3 +22,10 @@ their reports.
 ```{eval-rst}
 .. automodule:: science_tests.reports
 ```
+
+## camera efficiency results
+
+```{eval-rst}
+.. automodule:: science_tests.camera_efficiency_results
+   :members:
+```

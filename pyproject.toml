@@ -78,6 +78,7 @@ urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls.documentation = "https://gammasim.github.io/simtools/"
 urls.repository = "https://github.com/gammasim/simtools"
 scripts.simtools-compare-productions = "simtools.applications.compare_productions:main"
+scripts.simtools-compare-science-results = "simtools.applications.compare_science_results:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """

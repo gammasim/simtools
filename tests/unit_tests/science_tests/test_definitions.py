@@ -123,6 +123,37 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
         science_test_definitions._evaluate_products(definition, {})
 
 
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        ({"status": "complete", "changes": {"cam_eff": {"advisory": True}}}, "warn"),
+        ({"status": "complete", "changes": {"cam_eff": {"advisory": False}}}, "pass"),
+    ],
+)
+def test_evaluate_products_propagates_comparison_outcomes(tmp_test_directory, payload, expected):
+    root = Path(tmp_test_directory)
+    result_path = root / "science-comparison.json"
+    result_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = science_test_definitions._evaluate_products(
+        {"result_status_file": str(result_path)}, {}
+    )
+
+    assert result["status"] == expected
+
+
+def test_evaluate_products_rejects_incomplete_comparison(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    result_path = root / "science-comparison.json"
+    result_path.write_text(
+        json.dumps({"status": "incomplete", "diagnostics": ["missing provenance"]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="missing provenance"):
+        science_test_definitions._evaluate_products({"result_status_file": str(result_path)}, {})
+
+
 def test_consolidated_comparison_summary_satisfies_legacy_metadata_product(tmp_test_directory):
     report = Path(tmp_test_directory)
     (report / "comparison_statistics.json").write_text("{}", encoding="utf-8")

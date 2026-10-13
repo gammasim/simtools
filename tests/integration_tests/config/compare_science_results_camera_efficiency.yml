@@ -1,0 +1,23 @@
+---
+applications:
+- application: simtools-compare-science-results
+  docs:
+    title: Compare camera-efficiency science results
+    summary: Compare exported camera-efficiency evidence without rerunning calculations.
+  configuration:
+    baseline_path: ${generated:camera_efficiency/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    candidate_path: ${generated:camera_efficiency/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    baseline_label: reference
+    candidate_label: candidate
+    output_path: science-comparison
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: science-comparison.json
+    - path_descriptor: output_path
+      file: science-comparison.png
+    - path_descriptor: output_path
+      file: science-comparison.pdf
+  test_name: camera_efficiency_artifacts
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0
