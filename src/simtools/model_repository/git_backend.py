@@ -2,6 +2,21 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path, PurePosixPath
+from threading import Lock
+
+_OWNER_VALIDATION_LOCK = Lock()
+
+
+def _open_repository_without_owner_validation(pygit2, repository_path):
+    """Open the explicitly configured model repository without owner validation."""
+    option = pygit2.enums.Option
+    with _OWNER_VALIDATION_LOCK:
+        owner_validation = pygit2.option(option.GET_OWNER_VALIDATION)
+        try:
+            pygit2.option(option.SET_OWNER_VALIDATION, False)
+            return pygit2.Repository(str(repository_path))
+        finally:
+            pygit2.option(option.SET_OWNER_VALIDATION, owner_validation)
 
 
 class GitModelSourceDependencyError(RuntimeError):
@@ -45,7 +60,9 @@ class Pygit2ObjectStore(GitObjectStore):
         if not self.repository_path.exists():
             raise FileNotFoundError(f"Git model repository does not exist: {self.repository_path}")
         try:
-            self._repository = pygit2.Repository(str(self.repository_path))
+            self._repository = _open_repository_without_owner_validation(
+                pygit2, self.repository_path
+            )
         except (KeyError, OSError, ValueError, pygit2.GitError) as exc:
             raise ValueError(
                 f"Not a readable Git model repository: {self.repository_path}"

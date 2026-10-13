@@ -36,7 +36,7 @@ applications:
       file: job_grid_ha_dec_density.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/job_grid_density.schema.yml
+        schema: job_grid_density.schema.yml
       - type: table
         minimum_rows: 1
         unique_columns:

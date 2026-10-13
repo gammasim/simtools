@@ -5,6 +5,14 @@ applications:
     title: Retrieve a versioned LST mirror list
     summary: >-
       Read version 2.0.0 of the LSTN-01 mirror-list parameter from the simulation-model repository.
+  preparation:
+  - application: simtools-get-model-parameter
+    configuration:
+      output_file: mirror_list-2.0.0.json
+      parameter: mirror_list
+      parameter_version: 2.0.0
+      site: North
+      telescope: LSTN-01
   configuration:
     log_level: DEBUG
     output_file: test.json
@@ -19,8 +27,8 @@ applications:
       file: test.json
       validations:
       - type: reference
-        file: ${generated:model_parameters/mirror_list-2.0.0.json}
+        file: ${prepared:mirror_list-2.0.0.json}
         tolerance: 1.0e-05
   test_name: telescope_parameter_parameter_version
 schema_name: application_workflow.metaschema
-schema_version: 0.5.0
+schema_version: 0.6.0

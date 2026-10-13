@@ -11,9 +11,17 @@ inputs:
     required: false
     default: "true"
   extract-simulation-model:
-    description: Export simulation-model settings from .env_template.
+    description: Export dependency settings and select development repository branches.
     required: false
     default: "true"
+  simulation-model-branch:
+    description: Simulation model branch used by tests.
+    required: false
+    default: "main"
+  simtools-tests-branch:
+    description: simtools-tests branch used by tests.
+    required: false
+    default: "main"
 runs:
   using: composite
   steps:
@@ -28,12 +36,22 @@ runs:
       shell: bash -leo pipefail {0}
       run: pip install -e '.[tests]'
 
-    - name: Export catalog-managed model repository settings
+    - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}
       shell: bash -leo pipefail {0}
+      env:
+        INSTALL_DEPENDENCIES: ${{ inputs.install-dependencies }}
+        MODEL_BRANCH: ${{ inputs.simulation-model-branch }}
+        TESTS_BRANCH: ${{ inputs.simtools-tests-branch }}
       run: |
-        if [[ "${{ inputs.install-dependencies }}" != "true" ]]; then
+        if [[ "$INSTALL_DEPENDENCIES" != "true" ]]; then
           python -m pip install pyyaml
         fi
         python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
-        echo "Catalog-managed runtime values exported."
+        git check-ref-format --branch "$MODEL_BRANCH"
+        git check-ref-format --branch "$TESTS_BRANCH"
+        {
+          echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$MODEL_BRANCH"
+          echo "SIMTOOLS_TESTS_REF=$TESTS_BRANCH"
+          echo "SIMTOOLS_TESTS_REVISION="
+        } >> "$GITHUB_ENV"

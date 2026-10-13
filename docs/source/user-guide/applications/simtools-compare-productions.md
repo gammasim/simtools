@@ -25,10 +25,13 @@ For production resource requirements, use `--comparison_level computing` with a 
 `--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
 resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
 process role), a
-grouped `resource_requirements.md` report, and time, memory, and storage plots. Storage plots
-include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
-event output, reduced event data, and sim_telarray histograms when those files are available.
-Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
+grouped `resource_requirements.md` report, and time, memory, and storage plots. The plots include
+both per-run and per-event variants; storage plots include the combined sim_telarray total plus
+separate plots for CORSIKA output, sim_telarray event output, reduced event data, and sim_telarray
+histograms when those files are available.
+The report includes aggregate statistics per run and per event for time and output sizes; the
+per-run values are useful for estimating cluster job requirements. Time, CPU, and output sizes
+are normalized by `showers_per_run` for the per-event values; peak resident memory remains a
 per-process maximum. Byte-based quantities in plots use decimal MB or GB, selected according to
 the values shown; the ECSV resource table retains raw byte values. For sim_telarray, additional
 plots normalize time and output sizes by the

@@ -57,12 +57,6 @@ _ARGUMENTS = (
         default=15.0,
         required=False,
     ),
-    cli.ArgumentDefinition(
-        "use_norm_spe",
-        help="Use sim_telarray tool 'norm_spe' to normalize the spectrum.",
-        action="store_true",
-        required=False,
-    ),
 )
 
 

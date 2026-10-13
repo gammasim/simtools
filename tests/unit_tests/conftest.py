@@ -74,9 +74,9 @@ def _local_urlretrieve(url, dest):
 
 
 @functools.lru_cache
-def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).parent / "resources" / "mock_db"
-    file_path = mock_db_dir / file_name
+def _load_model_source_json(file_name):
+    model_source_dir = Path(__file__).parent / "resources" / "model_source"
+    file_path = model_source_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -437,15 +437,15 @@ def mock_model_reader():
     Returns a MagicMock configured with typical model-reader methods.
     """
     # Load mock data from JSON files
-    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
+    mock_parameters = _apply_mock_param_defaults(_load_model_source_json("mock_parameters.json"))
     mock_sim_config_params = _apply_mock_param_defaults(
-        _load_mock_db_json("mock_sim_config_params.json")
+        _load_model_source_json("mock_sim_config_params.json")
     )
     site_specific_params_north = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_north.json")
+        _load_model_source_json("site_params_north.json")
     )
     site_specific_params_south = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_south.json")
+        _load_model_source_json("site_params_south.json")
     )
 
     # Create closures for mock functions with captured data
@@ -488,22 +488,22 @@ def mock_model_reader():
         return _mock_get_array_elements_of_type(array_element_type, all_array_elements)
 
     # Configure the source-neutral reader
-    mock_db = MagicMock()
-    mock_db.is_configured.return_value = True
-    mock_db.get_design_model.side_effect = mock_get_design_model
-    mock_db.get_model_parameters.side_effect = mock_get_model_parameters
-    mock_db.get_model_parameter.side_effect = mock_get_model_parameter
-    mock_db.get_model_parameters_for_all_model_versions.return_value = {}
-    mock_db.get_model_versions.return_value = ["6.0.2", "5.0.0"]
-    mock_db.get_array_elements.return_value = _format_elements("LSTN", 1) + list(
+    model_source = MagicMock()
+    model_source.is_configured.return_value = True
+    model_source.get_design_model.side_effect = mock_get_design_model
+    model_source.get_model_parameters.side_effect = mock_get_model_parameters
+    model_source.get_model_parameter.side_effect = mock_get_model_parameter
+    model_source.get_model_parameters_for_all_model_versions.return_value = {}
+    model_source.get_model_versions.return_value = ["6.0.2", "5.0.0"]
+    model_source.get_array_elements.return_value = _format_elements("LSTN", 1) + list(
         chain.from_iterable(_format_elements(t) for t in ["LSTS", "MSTN", "MSTS", "SSTS"])
     )
-    mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
-    mock_db.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
-    mock_db.export_model_files.side_effect = _mock_export_model_files
-    mock_db.export_model_file.return_value = None
-    mock_db.get_ecsv_file_as_astropy_table.side_effect = _mock_get_ecsv_file_as_astropy_table
-    return mock_db
+    model_source.get_simulation_configuration_parameters.return_value = mock_sim_config_params
+    model_source.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
+    model_source.export_model_files.side_effect = _mock_export_model_files
+    model_source.export_model_file.return_value = None
+    model_source.get_ecsv_file_as_astropy_table.side_effect = _mock_get_ecsv_file_as_astropy_table
+    return model_source
 
 
 @pytest.fixture(autouse=True)

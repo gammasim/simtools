@@ -50,7 +50,9 @@ def load_schema(schema_file, schema_version="latest"):
     Parameters
     ----------
     schema_file : str or Path
-        Local path or URL of the schema file.
+        Local path, URL, or name relative to the packaged schemas directory
+        (for example, ``model_parameters/num_gains.schema.yml``). Local files
+        take precedence over packaged schemas. Absolute paths are used directly.
     schema_version : str
         Schema version to return, or ``latest`` for the first document.
 

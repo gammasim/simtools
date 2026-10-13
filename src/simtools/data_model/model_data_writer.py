@@ -58,6 +58,7 @@ class ModelDataWriter:
         product_data=None,
         output_file_format="ascii.ecsv",
         validate_schema_file=None,
+        metadata_output_file=None,
     ):
         """
         Write model data and metadata (as static method).
@@ -74,6 +75,9 @@ class ModelDataWriter:
             Format of output file.
         validate_schema_file: str
             Schema file used in validation of output data.
+        metadata_output_file: str or Path, optional
+            Separate output path for application metadata. If omitted, metadata is
+            written next to the product data.
         """
         writer = ModelDataWriter(
             output_file=output_file,
@@ -85,7 +89,11 @@ class ModelDataWriter:
                 product_data_table=product_data,
                 validate_schema_file=validate_schema_file,
             )
-        writer.write_data(metadata=metadata, product_data=product_data)
+        writer.write_data(
+            metadata=metadata,
+            product_data=product_data,
+            metadata_output_file=metadata_output_file,
+        )
 
     @staticmethod
     def write_model_parameter(
@@ -455,7 +463,7 @@ class ModelDataWriter:
 
         return validated
 
-    def write_data(self, product_data=None, metadata=None):
+    def write_data(self, product_data=None, metadata=None, metadata_output_file=None):
         """
         Write model data and metadata.
 
@@ -465,6 +473,9 @@ class ModelDataWriter:
             Model data to be written
         metadata: MetadataCollector object
             Metadata to be written.
+        metadata_output_file: str or Path, optional
+            Separate output path for application metadata. If omitted, metadata is
+            written next to the product data.
 
         Raises
         ------
@@ -490,7 +501,10 @@ class ModelDataWriter:
             self._logger.error(f"Error writing model data to {self.output_file}.")
             raise
         if metadata is not None:
-            metadata.write(self.output_file, add_activity_name=True)
+            metadata.write(
+                metadata_output_file or self.output_file,
+                add_activity_name=True,
+            )
 
     def write_model_parameter_dict_json(self, file_name, data_dict):
         """

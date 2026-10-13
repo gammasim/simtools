@@ -90,16 +90,19 @@ one of these repository sources.
 
 ## Resources
 
-Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
-resource path is configured, `SIMTOOLS_TESTS_PATH` identifies the
-`simtools-tests` checkout. The default tag is maintained in
-`dependency_versions.yml`; the command-line option `--simtools_tests_tag` can
-select a different tag for an individual run. `SIMTOOLS_TESTS_TAG` is the
-canonical environment override; `SIMTOOLS_TESTS_VERSION` remains supported as
-an alias.
+Tests resolve resources from `SIMTOOLS_TESTS_PATH` and
+`SIMTOOLS_TESTS_RESOURCE_VERSION`. The first identifies the `simtools-tests`
+checkout; the second selects the versioned resource directory below it. The
+catalog separately records the Git ref used to obtain the repository and its
+`resource-version`. The corresponding command-line options are
+`--simtools_tests_path` and `--simtools_tests_resource_version`.
+
+CI checks out the configurable `simtools_tests_branch` and `simulation_model_branch`, both
+defaulting to `main`. These branches are independent of the release refs recorded in the
+dependency catalog; see [CI repository branches](dependency_versions.md#ci-repository-branches).
 
 ```text
-<simtools-tests>/simtools-tests/<selected-tag>/integration_tests/
+<simtools-tests>/simtools-tests/<resource-version>/integration_tests/
   static/
   generated/
   downloaded/
@@ -108,17 +111,11 @@ an alias.
 Use `${static:path/to/file}` for maintained inputs and
 `${generated:path/to/file}` for generated reference products.
 Use `${downloaded:path/to/file}` for externally downloaded resources.
-To run against a different resource set:
+To select a resource set:
 
 ```bash
-pytest --test_resources_path /full/path/to/resources \
-  tests/integration_tests/test_applications_from_config.py
-```
-
-To select a tag instead of a path:
-
-```bash
-pytest --simtools_tests_tag v0.36.0 \
+pytest --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
+  --simtools_tests_resource_version v0.36.0 \
   tests/integration_tests/test_applications_from_config.py
 ```
 
@@ -135,6 +132,29 @@ The resource generation and release workflow is documented in
 
 Use the current versioned resource set from `simtools-tests` for development,
 PR CI, and compatibility checks.
+
+### Prepared model parameters
+
+An integration test can prepare model-parameter inputs in its temporary directory instead of
+storing them in a versioned resource bundle. Use workflow schema version `0.6.0` for
+`preparation` steps, which run first and may only use
+`simtools-get-model-parameter`. Refer to their outputs with `${prepared:path/to/file}` in the
+tested application's `configuration` or a validation reference.
+
+```yaml
+preparation:
+- application: simtools-get-model-parameter
+  configuration:
+    parameter: array_layouts
+    parameter_version: 2.0.2
+    site: North
+    output_file: array_layouts-2.0.2.json
+configuration:
+  array_layout_parameter_file: ${prepared:array_layouts-2.0.2.json}
+```
+
+Preparation outputs are isolated per test, are not added to `simtools-tests`, and cannot use
+absolute paths or `..` path segments.
 
 ## Validation
 
@@ -156,7 +176,10 @@ worker counts, and version-specific expectations.
 
 Each output owns its location and validation rules. Product schemas validate
 stable structure such as columns, types, and units. Table and metadata rules
-describe expectations specific to the tested workflow.
+describe expectations specific to the tested workflow. For `data_schema`, use a
+local schema path, URL, or a name relative to the schemas bundled with simtools.
+Schema resolution uses the same loader as applications and does not require a
+source checkout.
 
 ```yaml
 test_outputs:
@@ -164,7 +187,7 @@ test_outputs:
   path_descriptor: output_path
   validations:
   - type: data_schema
-    schema: src/simtools/schemas/job_grid_density.schema.yml
+    schema: job_grid_density.schema.yml
   - type: table
     minimum_rows: 1
     unique_columns: [run_number]

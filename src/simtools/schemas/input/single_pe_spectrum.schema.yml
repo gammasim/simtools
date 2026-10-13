@@ -30,6 +30,12 @@ data:
         required: false
         unit: dimensionless
         type: float64
+      - name: frequency stdev (afterpulsing)
+        description: |-
+          Standard deviation of the single photo-electron afterpulsing response.
+        required: false
+        unit: dimensionless
+        type: float64
       - name: frequency (prompt+afterpulsing)
         description: |-
           Single photo-electron response (prompt+afterpulsing)

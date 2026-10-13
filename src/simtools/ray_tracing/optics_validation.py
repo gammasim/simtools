@@ -68,7 +68,7 @@ def load_data(datafile):
 
 def validate_cumulative_psf(app_context):
     """
-    Simulate PSF measurements and compare cumulative PSF with measured data if provided.
+    Simulate PSF measurements and compare cumulative PSF with measured data.
 
     Parameters
     ----------
@@ -78,10 +78,12 @@ def validate_cumulative_psf(app_context):
     Raises
     ------
     ValueError
-        If no radius data is available to compute the cumulative PSF.
+        If measured PSF data is not provided.
     """
     args_dict = app_context.args
     io_handler = app_context.io_handler
+    if not args_dict.get("data"):
+        raise ValueError("Measured PSF data is required to compute the cumulative PSF.")
     label = args_dict.get("label") or Path("validate_cumulative_psf").stem
 
     tel_model, site_model, _ = initialize_simulation_models(
@@ -108,16 +110,10 @@ def validate_cumulative_psf(app_context):
     logger.info(f"d80 in cm = {image.get_psf()}")
 
     data_to_plot = OrderedDict()
-    radius = None
-    if args_dict.get("data", None):
-        data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
-        data_to_plot["measured"] = load_data(data_file)
-        radius = data_to_plot["measured"]["Radius [cm]"]
-
-    if radius is not None:
-        data_to_plot[r"sim$\_$telarray"] = image.get_cumulative_data(radius * u.cm)
-    else:
-        raise ValueError("Radius data is not available. Cannot compute cumulative PSF.")
+    data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
+    data_to_plot["measured"] = load_data(data_file)
+    radius = data_to_plot["measured"]["Radius [cm]"]
+    data_to_plot[r"sim$\_$telarray"] = image.get_cumulative_data(radius * u.cm)
 
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
@@ -266,7 +262,12 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
 
     max_extent_rounded = _max_image_extent(images_dict)
 
-    figures = []
+    figures = _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm)
+    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+
+
+def _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm):
+    """Yield annotated PSF image figures one at a time with a common image range."""
     for (off_x, off_y), image in images_dict.items():
         psf_cm_val = image.get_psf(fraction=0.8, unit="cm")
         converted_data, psf_quantity, containment_radius, plot_extent = _prepare_image_for_plotting(
@@ -275,24 +276,22 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
             max_extent_rounded,
             eff_flen_cm,
         )
-        figures.append(
-            plot_ray_tracing_psf.create_annotated_psf_image_figure(
-                converted_data,
-                off_x=off_x,
-                off_y=off_y,
-                psf=psf_quantity,
-                containment_radius=containment_radius,
-                image_range=[
-                    [-plot_extent, plot_extent],
-                    [-plot_extent, plot_extent],
-                ],
-                bins=150,
-                cmap="gist_heat_r",
-                psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
-                telescope_name=telescope_name,
-            )
+        fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+            converted_data,
+            off_x=off_x,
+            off_y=off_y,
+            psf=psf_quantity,
+            containment_radius=containment_radius,
+            image_range=[
+                [-plot_extent, plot_extent],
+                [-plot_extent, plot_extent],
+            ],
+            bins=150,
+            cmap="gist_heat_r",
+            psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+            telescope_name=telescope_name,
         )
-    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+        yield fig
 
 
 def _median_effective_focal_length(results):
