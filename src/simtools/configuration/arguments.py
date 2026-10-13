@@ -203,6 +203,15 @@ OUTPUT_ARGUMENTS = (
     SKIP_OUTPUT_VALIDATION,
 )
 
+SELECT = _argument(
+    "select",
+    "application",
+    help="Selection expression as dotted.path=value. Can be repeated.",
+    action="extend",
+    nargs="+",
+    default=[],
+)
+
 RUNTIME_ENVIRONMENT_FILE = _argument(
     "runtime_environment_file",
     _RUN_TIME_GROUP,

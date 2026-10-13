@@ -329,7 +329,7 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     assert hasattr(shower_data, "shower_id")
 
 
-def test_read_event_data_rejects_empty_required_table(tmp_test_directory, mock_tables):
+def test_read_event_data_accepts_empty_triggers_table(tmp_test_directory, mock_tables):
     test_file = tmp_test_directory / "test_empty_triggers.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
     trigger_table = trigger_table[:0]
@@ -342,5 +342,11 @@ def test_read_event_data_rejects_empty_required_table(tmp_test_directory, mock_t
 
     reader = EventDataReader(str(test_file))
 
-    with pytest.raises(ValueError, match="empty required table\\(s\\): TRIGGERS"):
-        reader.read_event_data(str(test_file))
+    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
+        str(test_file)
+    )
+
+    assert len(file_info) == 1
+    assert len(shower_data.shower_id) == 2
+    assert len(triggered_shower.shower_id) == 0
+    assert len(triggered_data.event_id) == 0

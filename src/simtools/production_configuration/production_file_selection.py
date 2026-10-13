@@ -422,6 +422,8 @@ def _values_match(value, expected):
     """Return whether a manifest value matches a command-line selection value."""
     if value is None:
         return False
+    if isinstance(value, list):
+        return any(_values_match(item, expected) for item in value)
     if isinstance(value, dict) and set(value) == {"value", "unit"}:
         return _quantity_matches(value, expected)
     return str(value) == expected

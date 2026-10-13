@@ -21,6 +21,7 @@ from simtools.production_configuration.production_file_selection import (
     _validate_file_type,
     _validate_filename_run_number,
     _validate_manifest_structure,
+    _values_match,
     check_manifest,
     discover_product_manifests,
     filter_manifests,
@@ -560,3 +561,16 @@ def test_empty_selection_summary_has_no_missing_runs():
     result = {"metadata_files_read": 0, "matching_jobs": 0, "configuration_groups": 0, "groups": []}
     assert selection_summary(result).endswith("Missing runs: none")
     assert _missing_run_numbers([]) == []
+
+
+@pytest.mark.parametrize(
+    ("value", "expected", "matches"),
+    [
+        (["CTAO-North-Alpha"], "CTAO-North-Alpha", True),
+        (["CTAO-North-Alpha", "CTAO-South-Alpha"], "CTAO-South-Alpha", True),
+        (["CTAO-North-Alpha"], "CTAO-South-Alpha", False),
+        ([], "CTAO-North-Alpha", False),
+    ],
+)
+def test_selection_matches_list_members(value, expected, matches):
+    assert _values_match(value, expected) is matches

@@ -7,7 +7,9 @@ import h5py
 import pytest
 
 from simtools.production_configuration import resource_requirements
-from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+)
 
 
 def _manifest(tmp_test_directory):
@@ -157,13 +159,76 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
 
     assert result["table_file"].is_file()
     assert result["report_file"].is_file()
+    metrics = json.loads(result["json_file"].read_text(encoding="utf-8"))
+    assert metrics["resource_row_count"] == 2
+    assert metrics["diagnostic_count"] == 0
+    assert metrics["summary"][0]["peak_rss_bytes_p05"] == pytest.approx(1000)
+    assert metrics["summary"][0]["peak_rss_bytes_p95"] == pytest.approx(1000)
     report = result["report_file"].read_text(encoding="utf-8")
     assert "Storage" in report
     assert "Wall time (s/run)" in report
     assert "CPU time (s/run)" in report
     assert "sim_telarray Storage (bytes/run)" in report
-    assert all(f"{statistic}=" in report for statistic in ("mean", "median", "std", "min", "max"))
+    assert all(
+        f"{statistic}=" in report
+        for statistic in ("mean", "median", "std", "min", "max", "p05", "p95")
+    )
     plotter.assert_called_once()
+
+
+def test_write_resource_requirements_compact_skips_table_and_writes_summary(
+    mocker, tmp_test_directory
+):
+    manifest = _manifest(tmp_test_directory)
+    mocker.patch.object(resource_requirements, "discover_manifests", return_value=[manifest])
+    plotter = mocker.Mock(return_value=[])
+
+    result = resource_requirements.write_resource_requirements(
+        {"baseline_path": "production", "report_mode": "compact"},
+        tmp_test_directory,
+        plotter,
+    )
+
+    assert result["table_file"] is None
+    assert result["report_file"].is_file()
+    report = result["report_file"].read_text(encoding="utf-8")
+    assert "Wall time (s/event)" in report
+    assert "| baseline | corsika | 1 |" in report
+    plotter.assert_called_once_with(
+        plotter.call_args.args[0],
+        tmp_test_directory,
+        figure_format=None,
+        report_mode="compact",
+    )
+
+
+def test_compact_resource_summary_handles_missing_metrics(tmp_test_directory):
+    report = Path(tmp_test_directory) / "compact.md"
+    summary = resource_requirements._summarize_compact_resource_requirements(
+        [
+            {
+                "production_label": "candidate",
+                "role": "sim_telarray",
+                "wall_time_seconds_per_event": None,
+                "cpu_time_seconds_per_event": 2.0,
+                "peak_rss_bytes": 10,
+                "sim_telarray_storage_bytes_per_event": None,
+            }
+        ]
+    )
+
+    assert summary[0]["wall_time_seconds_per_event_median"] is None
+    assert summary[0]["cpu_time_seconds_per_event_median"] == pytest.approx(2.0)
+    resource_requirements._write_compact_markdown_report(
+        summary, [{"job_id": "job-1", "role": "corsika", "message": "bad record"}], report
+    )
+    assert "Skipped records" in report.read_text(encoding="utf-8")
+
+
+def test_resource_percentiles_are_interpolated():
+    metrics = resource_requirements._metric_statistics("wall", [{"wall": v} for v in (0, 10, 20)])
+    assert metrics["wall_p05"] == pytest.approx(1)
+    assert metrics["wall_p95"] == pytest.approx(19)
 
 
 def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test_directory):
@@ -187,6 +252,7 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
         "discover_manifests",
         side_effect=[[baseline], [candidate]],
     )
+    candidate.data["configuration"]["primary"] = "gamma"
     plotter = mocker.Mock(return_value=[])
     result = resource_requirements.write_resource_requirements(
         {
@@ -208,3 +274,32 @@ def test_collect_and_write_apply_selection_and_candidate_labels(mocker, tmp_test
         "candidate",
     }
     assert result["table_file"].is_file()
+
+
+def test_resource_coverage_rejects_missing_configuration_or_role():
+    common = {"energy_min_gev": 30, "energy_max_gev": 30, "zenith_angle_deg": 20}
+    rows = [
+        common | {"comparison_role": "baseline", "role": "corsika"},
+        common | {"comparison_role": "candidate", "role": "corsika"},
+    ]
+    resource_requirements._validate_resource_coverage(rows)
+    with pytest.raises(ValueError, match="coverage differs"):
+        resource_requirements._validate_resource_coverage(
+            [*rows, common | {"comparison_role": "baseline", "role": "sim_telarray"}]
+        )
+
+
+def test_configuration_resource_summary_preserves_costs_and_ratios():
+    common = {
+        "role": "corsika",
+        "production_label": "production",
+        "energy_midpoint_gev": 30,
+        "zenith_angle_deg": 20,
+    }
+    rows = [
+        common | {"comparison_role": "baseline", "cpu_time_seconds_per_event": 2},
+        common | {"comparison_role": "candidate", "cpu_time_seconds_per_event": 3},
+    ]
+    result = resource_requirements._configuration_resource_summary(rows)[0]
+    assert result["ratios"]["cpu_time_seconds_per_event"] == pytest.approx(1.5)
+    assert result["productions"]["baseline"]["count"] == 1
