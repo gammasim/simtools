@@ -1,9 +1,11 @@
 # Science tests
 
-The `simtools` repository provides the science-test runner and execution behavior. Reusable test
-definitions and versioned release configurations live in
-[simtools-tests](https://github.com/gammasim/simtools-tests). The runner executes selected production,
-derivation, and comparison workflows from those definitions:
+Science tests provide extensive physics validation for new releases of `simtools`,
+`CORSIKA`, `sim_telarray` and any other `simtools` dependency.
+The `simtools-run-science-tests` provides the runner tool to access and run the reusable tests
+as defined in [simtools-tests](https://github.com/gammasim/simtools-tests).
+
+The runner executes selected production, derivation, and comparison workflows from those definitions:
 
 ```text
 science-test-template/
@@ -14,7 +16,7 @@ science-test-template/
   run_time.yml           optional shared container runtime
 ```
 
-Each release has a small `science_tests` directory containing `release.yml`, `context.yml`,
+Each release has a `science_tests` directory containing `release.yml`, `context.yml`,
 `sites/*.yml`, and generated `reports/`. The release selects required sites; each site file selects
 its layout and required tests. The context provides the candidate and production-configuration
 paths; a baseline path is required only for comparison tests.
@@ -46,7 +48,7 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test production.gamma.collect
 
-# Then explicitly derive products and compare them.
+# Explicitly derive products and compare them.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test derive.trigger_histograms \
   --test compare.trigger_histograms --test compare.compute_resources
