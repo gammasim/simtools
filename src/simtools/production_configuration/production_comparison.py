@@ -564,20 +564,25 @@ def _single_trigger_histogram_file(manifest):
 
 def _scalar_plot_statistics(statistics):
     """Retain metric results and validity without distribution arrays."""
-    return {
+    summary = {
         key: value
         for key, value in statistics.items()
         if key in {"metric_type", "metric", "quantity_name", "cumulative", "rendering"}
-    } | {
-        "comparisons": [_scalar_metric_result(value) for value in statistics.get("comparisons", [])]
     }
+    summary["comparisons"] = [
+        _scalar_metric_result(value) for value in statistics.get("comparisons", [])
+    ]
+    return summary
 
 
 def _scalar_metric_result(result):
     """Keep small scalar results, including nested simulated/triggered metrics."""
-    return {
-        key: _scalar_metric_result(value) if isinstance(value, dict) else value
-        for key, value in result.items()
-        if isinstance(value, (str, int, float, bool, type(None), dict))
-        and key not in {"baseline", "candidate", "metadata"}
-    }
+    summary = {}
+    for key, value in result.items():
+        if key in {"baseline", "candidate", "metadata"}:
+            continue
+        if isinstance(value, dict):
+            summary[key] = _scalar_metric_result(value)
+        elif isinstance(value, (str, int, float, bool, type(None))):
+            summary[key] = value
+    return summary

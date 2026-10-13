@@ -2,7 +2,7 @@
 
 # Science-test workflow modules
 
-Internal modules for loading release definitions, coordinating selected test runs, and publishing
+Modules for loading release definitions, coordinating selected test runs, and publishing
 their reports.
 
 ## campaign
