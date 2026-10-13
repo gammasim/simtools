@@ -7,7 +7,10 @@ import numpy as np
 from matplotlib import colormaps
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import save_figure, save_figures_to_single_document
+from simtools.visualization.visualize import (
+    save_figure,
+    save_figures_to_single_document,
+)
 
 _ROLE_STYLE = {
     "sim_telarray": {"marker": "s", "zorder": 3},
@@ -290,16 +293,21 @@ def _write_compact_report(rows, output_path):
         available = [row for row in rows if row.get(column) is not None]
         if not available:
             continue
-        fig, axis = plt.subplots(figsize=(9, 5))
-        zeniths = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in available})
-        _plot_role(axis, available, column, _zenith_colors(zeniths))
-        axis.set_xscale("log")
-        axis.set_yscale(_resource_y_scale(available, column))
-        axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
-        axis.set_ylabel(label)
-        axis.set_title(label)
-        axis.grid(alpha=0.25)
-        axis.legend()
+        roles = sorted({row["role"] for row in available})
+        fig, axes = plt.subplots(1, len(roles), figsize=(9, 5), squeeze=False)
+        for role, axis in zip(roles, axes[0]):
+            role_rows = [row for row in available if row["role"] == role]
+            zeniths = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in role_rows})
+            _plot_role(axis, role_rows, column, _zenith_colors(zeniths))
+            axis.set_xscale("log")
+            axis.set_yscale(_resource_y_scale(role_rows, column))
+            axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
+            axis.set_ylabel(label)
+            axis.set_title(role)
+            axis.grid(alpha=0.25)
+            axis.legend(fontsize=6)
+        fig.suptitle(label)
+        fig.tight_layout()
         figures.append(fig)
     save_figures_to_single_document(figures, output_file, close=True)
     return [output_file]

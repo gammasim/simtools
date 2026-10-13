@@ -338,7 +338,10 @@ def _comparison_summary_entry(statistics_file, output_directory, statistics, com
             "format_version": statistics.get("format_version", 1),
             "baseline": statistics["baseline"],
             "comparison_sets": statistics["comparison_sets"],
-            "plot_statistics": {},
+            "plot_statistics": {
+                name: _scalar_plot_statistics(value)
+                for name, value in statistics["plot_statistics"].items()
+            },
         }
     return (
         {
@@ -557,3 +560,24 @@ def _single_trigger_histogram_file(manifest):
     if path.is_absolute():
         return path
     return manifest.directory / path
+
+
+def _scalar_plot_statistics(statistics):
+    """Retain metric results and validity without distribution arrays."""
+    return {
+        key: value
+        for key, value in statistics.items()
+        if key in {"metric_type", "metric", "quantity_name", "cumulative", "rendering"}
+    } | {
+        "comparisons": [_scalar_metric_result(value) for value in statistics.get("comparisons", [])]
+    }
+
+
+def _scalar_metric_result(result):
+    """Keep small scalar results, including nested simulated/triggered metrics."""
+    return {
+        key: _scalar_metric_result(value) if isinstance(value, dict) else value
+        for key, value in result.items()
+        if isinstance(value, (str, int, float, bool, type(None), dict))
+        and key not in {"baseline", "candidate", "metadata"}
+    }

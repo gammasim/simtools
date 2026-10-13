@@ -121,7 +121,9 @@ def test_missing_unselected_site_fails_preflight(campaign, successful_workflow):
     assert successful_workflow == []
 
 
-def test_campaign_signature_records_runtime_choice(campaign, successful_workflow):
+def test_campaign_signature_keeps_native_steps_across_runtime_choices(
+    campaign, successful_workflow
+):
     standard = campaign_runner._prepare_release_run(
         campaign["release_dir"],
         campaign["template_dir"],
@@ -141,7 +143,7 @@ def test_campaign_signature_records_runtime_choice(campaign, successful_workflow
         {"ignore_runtime_environment": True},
     )
 
-    assert standard["signature"] != host["signature"]
+    assert standard["signature"] == host["signature"]
     assert successful_workflow == []
 
 
@@ -289,3 +291,14 @@ def test_campaign_model_settings(campaign, monkeypatch):
         application_args={"simulation_models_git_revision": "main"},
     )
     assert captured == [(context["simulation_models_git_path"], "v0.18.0")]
+
+
+def test_shared_site_defaults_allow_missing_release_site_files(campaign, successful_workflow):
+    site_file = campaign["release_dir"] / "sites/north.yml"
+    shared = campaign["template_dir"] / "sites"
+    shared.mkdir()
+    shutil.copyfile(site_file, shared / "north.yml")
+    site_file.unlink()
+    summary = campaign_runner.run_release(**campaign, sites=["north"], dry_run=True)
+    assert summary["required_sites"] == ["north", "south"]
+    assert successful_workflow == []

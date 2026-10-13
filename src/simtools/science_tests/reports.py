@@ -27,6 +27,7 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         if previous.get("campaign_sha256") == signature
         else {}
     )
+    _invalidate_runtime_changes(records, results, catalogue)
     production_history = _production_history(previous, results, catalogue)
     _invalidate_dependents(records, results, catalogue)
     records.update({r["id"]: r for r in results})
@@ -97,9 +98,13 @@ def _clear_test_directory(path):
 
 def _write_test_report(work, report_root, release_dir, result):
     """Publish successful collected evidence atomically without per-test wrappers."""
-    result["report"] = report_root.relative_to(release_dir).as_posix()
+    report = report_root.relative_to(release_dir).as_posix()
     if result["status"] in {"fail", "incomplete", "blocked"}:
+        result["report"] = None
+        if report_root.exists():
+            result["previous_report"] = report
         return
+    result["report"] = report
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
     if work.exists():
@@ -164,6 +169,20 @@ def _write_summary(report_dir, summary):
             f"| {result['site']} | {result['test']} | {result['execution']} | "
             f"{result['status']} | {reason} |"
         )
+    lines.extend(["", "## Execution details", ""])
+    for result in summary["results"]:
+        if not result.get("execution_log"):
+            continue
+        lines.append(
+            f"- {result['site']}/{result['test']}: {result.get('runtime', 'unknown')}; "
+            f"[log]({result['execution_log']}); "
+            f"work: `{result['execution_provenance']}`."
+        )
+        if result.get("previous_report"):
+            lines.append(
+                f"  Previous successful output: `{result['previous_report']}` "
+                "(not evidence for this failed attempt)."
+            )
     if summary["production_history"]:
         lines.extend(["", "## Production history", ""])
         for record in summary["production_history"]:
@@ -172,3 +191,26 @@ def _write_summary(report_dir, summary):
                 f"run ID `{record.get('run_id', 'unknown')}`."
             )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _invalidate_runtime_changes(records, results, catalogue):
+    """Invalidate analysis results when their actual runtime changes, retaining native steps."""
+    native = {
+        name
+        for name, definition in catalogue.items()
+        if definition.get("collect_production") or definition.get("produces_production")
+    }
+    for result in results:
+        if result["test"] in native or "runtime" not in result:
+            continue
+        for record in records.values():
+            if (
+                record["site"] == result["site"]
+                and record["test"] not in native
+                and record.get("runtime") != result["runtime"]
+            ):
+                record.update(
+                    status="not_run",
+                    execution="not_run",
+                    reason="Analysis runtime changed; rerun required.",
+                )

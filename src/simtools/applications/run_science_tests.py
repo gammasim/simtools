@@ -30,7 +30,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ArgumentDefinition(
             "overwrite",
             action="store_true",
-            help="Archive and retry failed production after all jobs have ended.",
+            help="Rebuild derived products, or archive and retry failed production after jobs end.",
         ),
         cli.ArgumentDefinition("dry_run", action="store_true", help="Validate without writes."),
         cli.ArgumentDefinition(

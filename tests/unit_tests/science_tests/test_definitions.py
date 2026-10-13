@@ -123,12 +123,14 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
         science_test_definitions._evaluate_products(definition, {})
 
 
-def test_consolidated_comparison_summary_satisfies_legacy_metadata_product(tmp_test_directory):
+def test_consolidated_comparison_summary_uses_explicit_product_contract(
+    tmp_test_directory,
+):
     report = Path(tmp_test_directory)
     (report / "comparison_statistics.json").write_text("{}", encoding="utf-8")
 
     science_test_definitions._check_required_products(
-        {"products": ["__SCIENCE_REPORT_PATH__/**/comparison_statistics.meta.yml"]},
+        {"products": ["__SCIENCE_REPORT_PATH__/comparison_statistics.json"]},
         {"__SCIENCE_REPORT_PATH__": str(report)},
     )
 
@@ -165,6 +167,7 @@ def test_completed_production_gate(tmp_test_directory):
     product_directory = root / "events"
     product.write_text("event", encoding="utf-8")
     product_directory.mkdir()
+    (product_directory / "data").write_bytes(b"events")
     payload = {
         "job_ids": ["job"],
         "metadata": {
@@ -298,3 +301,67 @@ def test_report_and_collection_share_output_directory(tmp_test_directory):
 
     assert replacements["__SCIENCE_COLLECTION_PATH__"] == replacements["__SCIENCE_REPORT_PATH__"]
     assert replacements["__SCIENCE_REPORT_PATH__"] == str(root)
+
+
+@pytest.mark.parametrize(
+    "observed", [["job-000001"], ["job-000001", "job-000001"], ["job-000001", "job-000003"]]
+)
+def test_reviewed_ids_reject_missing_extra_and_duplicate_jobs(observed):
+    with pytest.raises(ValueError, match="Incomplete production jobs"):
+        science_test_definitions._require_same_ids(
+            {"job-000001", "job-000002"}, observed, "production jobs"
+        )
+
+
+def test_grid_configuration_checks_quantities_and_each_run():
+    import astropy.units as u
+
+    row = {"run_number": 2, "energy_min": 1 * u.TeV, "model_version": "7.0.0"}
+    config = {
+        "run_number": 2,
+        "energy_min": {"value": 1000, "unit": "GeV"},
+        "model_version": ["7.0.0"],
+    }
+    science_test_definitions._check_grid_configuration(row, {}, config)
+    with pytest.raises(ValueError, match="run_number"):
+        science_test_definitions._check_grid_configuration(row, {}, config | {"run_number": 1})
+
+
+def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directory):
+    from simtools.production_configuration.production_file_selection import ProductionManifest
+
+    root = Path(tmp_test_directory)
+    (root / "events.hdf5").write_bytes(b"events")
+    manifest = ProductionManifest(
+        root / "metadata.yml",
+        {
+            "job_id": "job-000001",
+            "configuration": {"run_number": 1},
+            "files": {"reduced_event_data": ["events.hdf5"]},
+        },
+    )
+    mocker.patch.object(
+        science_test_definitions, "read_job_grid", return_value=([{"run_number": 1}], {})
+    )
+    mocker.patch.object(science_test_definitions, "discover_manifests", return_value=[manifest])
+    submission = {
+        "job_ids": ["job-000001"],
+        "metadata": {
+            "state": "completed",
+            "expected_outputs": {"job-000001": [str(root / "events.hdf5")]},
+        },
+    }
+    (root / "submission.json").write_text(json.dumps(submission), encoding="utf-8")
+    definition = {"reviewed_grid": "grid.ecsv"}
+    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
+    assert science_test_definitions._check_reviewed_production(definition, replacements) == {
+        "expected_jobs": 1,
+        "observed_jobs": 1,
+    }
+    mocker.patch.object(
+        science_test_definitions,
+        "read_job_grid",
+        return_value=([{"run_number": 1}, {"run_number": 2}], {}),
+    )
+    with pytest.raises(ValueError, match="job-000002"):
+        science_test_definitions._check_reviewed_production(definition, replacements)

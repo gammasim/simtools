@@ -10,6 +10,7 @@ from unittest import mock
 
 import jsonschema
 import pytest
+import yaml
 
 import simtools.utils.general as gen
 from simtools.job_execution.job_manager import JobExecutionError
@@ -83,7 +84,6 @@ def test_prepare_workflow_preserves_empty_runtime_override(mocker):
 
 
 def test_prepare_workflow_resolves_nested_profile_without_writes(tmp_test_directory):
-    import yaml
 
     root = Path(tmp_test_directory)
     workflow = root / "workflow.yml"
@@ -493,7 +493,15 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Patch _read_application_configuration
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id", None)),
+        mock.Mock(
+            return_value=(
+                mock_configurations,
+                None,
+                log_file_path,
+                "wf-activity-id",
+                None,
+            )
+        ),
     )
     workflow_build_mock = mock.Mock(return_value={"id": "wf-activity-id"})
     workflow_update_mock = mock.Mock()
@@ -547,7 +555,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert submit_calls[0]["configuration"]["output_path"] == str(tmp_test_directory)
     assert submit_calls[1]["configuration"]["output_path"] == str(tmp_test_directory)
 
-    version_string_mock.assert_called_once_with([], include_software_versions=False)
+    version_string_mock.assert_called_once_with([], include_software_versions=True)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
 
@@ -844,7 +852,7 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
             "configuration": {
                 "parameter": "pm_photoelectron_spectrum",
                 "parameter_version": "2.0.1",
-                "output_path": "output/test_workflow",
+                "output_path": str(tmp_test_directory / "test_workflow"),
                 "site": "North",
                 "telescope": "LSTN-design",
                 "activity_id": "cfg-id-1",
@@ -855,7 +863,15 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
 
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id", None)),
+        mock.Mock(
+            return_value=(
+                mock_configurations,
+                None,
+                log_file_path,
+                "wf-activity-id",
+                None,
+            )
+        ),
     )
     monkeypatch.setattr(
         "simtools.dependencies.get_version_string",
@@ -1346,3 +1362,40 @@ def test_copy_collection_files_list_format_skips_empty_entry(tmp_test_directory)
     ]
     simtools_runner._copy_collection_files(configurations, collection_config)
     assert not out.exists()
+
+
+def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directory):
+    workflow = Path(tmp_test_directory) / "workflow.yml"
+    workflow.write_text(
+        "schema_name: application_workflow.metaschema\nschema_version: 0.7.0\n"
+        "applications:\n- application: simtools-write-trigger-histograms\n"
+        '  configuration: {output_path: "' + str(tmp_test_directory) + '"}\n',
+        encoding="utf-8",
+    )
+    provenance = Path(tmp_test_directory) / "effective.yml"
+    mocker.patch.object(
+        simtools_runner.dependencies, "get_version_string", return_value="versions\n"
+    )
+    mocker.patch.object(simtools_runner.dependencies, "get_dependency_manifest", return_value={})
+    mocker.patch.object(simtools_runner, "_update_workflow_metadata_files")
+    mocker.patch.object(
+        simtools_runner,
+        "_submit_application_and_collect_metadata",
+        return_value=mocker.Mock(stdout="", stderr=""),
+    )
+    simtools_runner.run_applications(
+        {
+            "config_file": str(workflow),
+            "ignore_runtime_environment": True,
+            "runtime_environment": {"image": "unused"},
+            "provenance_path": str(provenance),
+            "log_file": str(Path(tmp_test_directory) / "execution.log"),
+            "simulation_models_git_revision": "v1.2.3",
+            "env_file": "explicit.env",
+            "_metadata_configuration_sources": {"cli": ["env_file"]},
+        }
+    )
+    payload = yaml.safe_load(provenance.read_text())
+    assert payload["runtime_environment"] is None
+    assert payload["applications"][0]["configuration"]["env_file"] == "explicit.env"
+    assert payload["applications"][0]["configuration"]["simulation_models_git_revision"] == "v1.2.3"

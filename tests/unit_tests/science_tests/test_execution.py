@@ -81,20 +81,20 @@ def test_existing_submission_prevents_resubmission(tmp_test_directory):
     assert "--allow_production does not override it" in str(error.value)
 
 
-def test_reuse_derived_product_requires_complete_products(mocker):
-    definition = {"derived_output": "__OUTPUT__"}
-    replacements = {"__OUTPUT__": "/existing/output"}
-
-    mocker.patch.object(science_test_execution, "_evaluate_products")
-    assert science_test_execution._reuse_derived_product(definition, replacements, {})
+def test_reuse_rejects_unrecorded_partial_output(tmp_test_directory):
+    output = Path(tmp_test_directory) / "derived"
+    output.mkdir()
+    (output / "partial.hdf5").write_bytes(b"not HDF5")
+    definition = {"derived_output": str(output)}
+    args = {
+        "science_workflow": {"applications": []},
+        "provenance_path": str(Path(tmp_test_directory) / "workflow.yml"),
+    }
+    with pytest.raises(ValueError, match="--overwrite"):
+        science_test_execution._reuse_derived_product(definition, {}, args)
     assert not science_test_execution._reuse_derived_product(
-        definition, replacements, {"science_overwrite": True}
+        definition, {}, args | {"science_overwrite": True}
     )
-
-    mocker.patch.object(
-        science_test_execution, "_evaluate_products", side_effect=ValueError("incomplete")
-    )
-    assert not science_test_execution._reuse_derived_product(definition, replacements, {})
 
 
 def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
@@ -215,7 +215,7 @@ def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
     initial = campaign_runner.run_release(**args)
     report = campaign["release_dir"] / "reports/north/derive"
     previous = next(result for result in initial["results"] if result["id"] == "derive.north")
-    assert previous["execution_provenance"] == "work/science-tests/north/derive"
+    assert previous["execution_provenance"].endswith("/candidate/work/science-tests/north/derive")
     context = science_test_definitions._load_yaml(campaign["context_file"])
     work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / previous["execution_provenance"]
     stale = [report / "stale.txt", work / "stale.txt"]
@@ -353,3 +353,78 @@ def test_pending_collection_defers_dependent_tests(mocker):
     )
     assert [result["status"] for result in results] == ["pending", "pending"]
     execute.assert_called_once()
+
+
+def test_derived_group_checks_readability_runs_settings_and_freshness(tmp_test_directory):
+    from types import SimpleNamespace
+
+    from astropy.table import Table
+
+    from simtools.io import table_handler
+    from simtools.production_configuration.production_file_selection import ProductionManifest
+    from simtools.production_configuration.trigger_histograms import (
+        TRIGGER_HISTOGRAM_BINS_TABLE,
+        TRIGGER_HISTOGRAM_METADATA_TABLE,
+    )
+
+    root = Path(tmp_test_directory)
+    source = root / "events.hdf5"
+    source.write_bytes(b"events")
+    output = root / "product.hdf5"
+    tables = [
+        Table({"count": [1]}, meta={"EXTNAME": name})
+        for name in (TRIGGER_HISTOGRAM_METADATA_TABLE, TRIGGER_HISTOGRAM_BINS_TABLE)
+    ]
+    table_handler.write_tables(tables, output, file_type="HDF5")
+    group = SimpleNamespace(run_numbers=[1], file_paths=[source])
+    product = ProductionManifest(
+        root / "product.yml",
+        {
+            "input_run_numbers": [1],
+            "input_files": {"reduced_event_data": ["events.hdf5"]},
+            "files": {"trigger_histograms": ["product.hdf5"]},
+            "histogram_settings": {"angular_distance_bin_width": {"value": 0.5, "unit": "deg"}},
+        },
+    )
+    config = {"angular_distance_bin_width": "0.5 deg"}
+    science_test_execution._validate_derived_group(group, product, config)
+    with pytest.raises(ValueError, match="setting changed"):
+        science_test_execution._validate_derived_group(
+            group, product, {"angular_distance_bin_width": "1 deg"}
+        )
+    product.data["input_run_numbers"] = [1, 2]
+    with pytest.raises(ValueError, match="run coverage"):
+        science_test_execution._validate_derived_group(group, product, config)
+    product.data["input_run_numbers"] = [1]
+    output.write_bytes(b"not HDF5")
+    with pytest.raises(ValueError, match="Unreadable trigger histogram"):
+        science_test_execution._validate_derived_group(group, product, config)
+
+
+def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_directory):
+    from types import SimpleNamespace
+
+    mocker.patch.object(
+        science_test_execution,
+        "select_file_groups",
+        return_value={
+            "groups": [
+                SimpleNamespace(configuration={"energy_min": 30}),
+                SimpleNamespace(configuration={"energy_min": 3000}),
+            ],
+        },
+    )
+    mocker.patch.object(
+        science_test_execution,
+        "discover_product_manifests",
+        return_value=[
+            SimpleNamespace(data={"configuration": {"energy_min": 30}}),
+        ],
+    )
+    with pytest.raises(ValueError, match="coverage differs"):
+        science_test_execution._validate_derived_products(
+            {
+                "production_path": str(tmp_test_directory),
+                "output_path": str(tmp_test_directory),
+            }
+        )

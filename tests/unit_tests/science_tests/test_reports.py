@@ -126,3 +126,33 @@ def test_publication_omits_duplicate_provenance_and_checksum_inventory(tmp_test_
     assert (report_root / "provenance/resolved-workflow.yml").is_file()
     assert not (report_root / "inventory.json").exists()
     assert (report_root / "comparison_inventory.json").is_file()
+
+
+def test_runtime_change_retains_native_collection_and_invalidates_analysis():
+    records = {
+        "collect.north": {"site": "north", "test": "collect", "runtime": "host", "status": "pass"},
+        "compare.north": {
+            "site": "north",
+            "test": "compare",
+            "runtime": "container",
+            "status": "warn",
+        },
+    }
+    catalogue = {"collect": {"collect_production": True}, "compare": {}, "derive": {}}
+    science_test_reports._invalidate_runtime_changes(
+        records, [{"site": "north", "test": "derive", "runtime": "host"}], catalogue
+    )
+    assert records["collect.north"]["status"] == "pass"
+    assert records["compare.north"]["status"] == "not_run"
+
+
+def test_failed_attempt_marks_previous_publication_as_old(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    report = root / "reports/north/compare"
+    report.mkdir(parents=True)
+    (report / "metrics.json").write_text("{}", encoding="utf-8")
+    result = {"status": "incomplete"}
+    science_test_reports._write_test_report(root / "work", report, root, result)
+    assert result["report"] is None
+    assert result["previous_report"] == "reports/north/compare"
+    assert (report / "metrics.json").is_file()

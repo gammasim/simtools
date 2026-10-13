@@ -17,8 +17,8 @@ science-test-template/
 ```
 
 Each release has a `science_tests` directory containing `release.yml`, `context.yml`,
-`sites/*.yml`, and generated `reports/`. The release selects required sites; each site file selects
-its layout and required tests. The context provides the candidate and production-configuration
+optional `sites/*.yml` overrides, and generated `reports/`. The release selects required sites;
+shared site templates supply defaults. The context provides the candidate and production-configuration
 paths; a baseline path is required only for comparison tests.
 
 ## Setup and run
@@ -70,3 +70,6 @@ Expected products and acceptance rules are declared in the template. Missing pro
 `incomplete`; failed numerical limits are `fail`; advisory limits are `warn` and require review.
 Reports and the release summary are written under `reports/`; production data remains at the external
 candidate path.
+
+For the complete staged commands and rerun guidance, see `TEST_RUNS.md` in the simtools
+repository. The runner records effective execution settings with each external workflow.

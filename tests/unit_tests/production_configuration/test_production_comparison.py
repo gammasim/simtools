@@ -7,7 +7,9 @@ from pathlib import Path
 import pytest
 
 from simtools.production_configuration import production_comparison
-from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+)
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
 
@@ -438,3 +440,28 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
         "candidate:triggered"
     ]["invalid_reasons"] == {"empty": 1}
     assert not statistics_file.exists()
+
+
+def test_compact_scalar_metrics_keep_pair_validity_without_arrays():
+    result = production_comparison._scalar_plot_statistics(
+        {
+            "metric_type": "distribution",
+            "metric": "ks",
+            "baseline_counts": [10] * 1000,
+            "comparisons": [
+                {
+                    "candidate_label": "candidate",
+                    "simulated": {
+                        "valid": True,
+                        "value": 0.4,
+                        "sample_size": 10,
+                        "bin_counts": [2] * 1000,
+                    },
+                    "triggered": {"valid": False, "reason": "insufficient_data"},
+                }
+            ],
+        }
+    )
+    assert result["comparisons"][0]["simulated"] == {"valid": True, "value": 0.4, "sample_size": 10}
+    assert result["comparisons"][0]["triggered"]["reason"] == "insufficient_data"
+    assert "baseline_counts" not in result
