@@ -4,7 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.model.model_utils import initialize_simulation_models
+from simtools.job_execution.execution import map_ordered
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
 _ARGUMENTS = (
@@ -80,6 +80,7 @@ APPLICATION = ApplicationDefinition.for_module(
     model_repository=True,
     arguments=(
         *_ARGUMENTS,
+        *cli.BACKEND_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
@@ -96,18 +97,15 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    tel_model, site_model, _ = initialize_simulation_models(
-        label=app_context.args.get("label"),
-        site=app_context.args["site"],
-        telescope_name=app_context.args["telescope"],
-        model_version=app_context.args["model_version"],
+    job = psf_opt.PSFOptimizationJob(
+        args=dict(app_context.args),
+        output_dir=app_context.io_handler.get_output_directory(),
     )
-
-    psf_opt.run_psf_optimization_workflow(
-        tel_model,
-        site_model,
-        app_context.args,
-        app_context.io_handler.get_output_directory(),
+    map_ordered(
+        psf_opt.run_psf_optimization_job,
+        [job],
+        backend=app_context.args.get("backend", "local"),
+        backend_config=app_context.args.get("backend_config"),
     )
 
 
