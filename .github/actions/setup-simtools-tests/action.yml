@@ -43,11 +43,15 @@ runs:
         INSTALL_DEPENDENCIES: ${{ inputs.install-dependencies }}
         MODEL_BRANCH: ${{ inputs.simulation-model-branch }}
         TESTS_BRANCH: ${{ inputs.simtools-tests-branch }}
+        RELEASE_EVENT: ${{ github.event_name == 'release' }}
       run: |
         if [[ "$INSTALL_DEPENDENCIES" != "true" ]]; then
           python -m pip install pyyaml
         fi
         python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+        if [[ "$RELEASE_EVENT" == "true" ]]; then
+          MODEL_BRANCH=$(python -c 'from pathlib import Path; import yaml; print(yaml.safe_load(Path("dependency_versions.yml").read_text())["model-repository"]["default-ref"])')
+        fi
         git check-ref-format --branch "$MODEL_BRANCH"
         git check-ref-format --branch "$TESTS_BRANCH"
         {

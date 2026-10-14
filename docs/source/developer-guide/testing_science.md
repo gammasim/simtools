@@ -58,7 +58,9 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
 
-`--preflight` is recommended before production. It validates all configured host paths, then runs
+Production grids always validate model compatibility against the target image and initialize
+representative configurations before submitting simulation jobs. `--preflight` additionally
+checks filesystem visibility and is recommended before production. It validates all configured host paths, then runs
 one high-priority worker-side Apptainer canary per selected site using the production container
 setup. If omitted, production still proceeds with a warning.
 

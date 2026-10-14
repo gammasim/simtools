@@ -12,6 +12,12 @@ from pathlib import Path
 import yaml
 
 from simtools import version as versioning
+from simtools.model_repository.compatibility import (
+    LEGACY_MODEL_KEY,
+    MODEL_KEY,
+    RANGE_KEY,
+    _contract,
+)
 
 DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
 PYPROJECT_FILENAME = "pyproject.toml"
@@ -25,7 +31,8 @@ SOURCE_REF_PATTERN = re.compile(
 )
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
-READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0", "0.7.0"}
+COMPATIBILITY_SCHEMA_VERSION = "0.8.0"
+READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0", "0.7.0", COMPATIBILITY_SCHEMA_VERSION}
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
 
 
@@ -278,6 +285,11 @@ def validate_dependency_catalog(catalog):
     ValueError
         If a required value is missing or invalid.
     """
+    if LEGACY_MODEL_KEY in catalog:
+        if MODEL_KEY in catalog:
+            raise ValueError("Catalog declares both legacy and current model dependency keys.")
+        catalog = dict(catalog)
+        catalog[MODEL_KEY] = catalog.pop(LEGACY_MODEL_KEY)
     required = {
         "schema_version",
         "python",
@@ -438,6 +450,7 @@ def _validate_model_and_test_components(catalog, schema_version):
         elif schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
             message = "Invalid simulation-model release tags."
         raise ValueError(message)
+    _validate_model_constraint(catalog, schema_version)
     if model.get("repository-url") is not None:
         _validate_source_url(model["repository-url"], "simulation-model repository")
     if model.get("git-revision") is not None:
@@ -446,6 +459,15 @@ def _validate_model_and_test_components(catalog, schema_version):
         _validate_simtools_tests(
             catalog["simtools-tests"], schema_version == "0.5.0", readable_refs
         )
+
+
+def _validate_model_constraint(catalog, schema_version):
+    """Validate the range declaration without changing historical catalog semantics."""
+    model = catalog[MODEL_KEY]
+    if schema_version == COMPATIBILITY_SCHEMA_VERSION and RANGE_KEY not in model:
+        raise ValueError("Missing simulation-model compatible-versions.")
+    if RANGE_KEY in model:
+        _contract(catalog)
 
 
 def _validate_simtools_tests(test_resources, require_revision=False, readable_refs=False):

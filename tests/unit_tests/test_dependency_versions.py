@@ -770,6 +770,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.5.0",
         "0.6.0",
         "0.7.0",
+        "0.8.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
@@ -860,3 +861,14 @@ def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_d
     catalog = root / "dependency_versions.yml"
     catalog.write_text("schema_version: working-directory\n")
     assert dependency_versions.find_dependency_versions() == catalog
+
+
+def test_historical_model_database_key_is_normalized_without_mutation():
+    from simtools.model_repository.compatibility import LEGACY_MODEL_KEY, MODEL_KEY
+
+    catalog = _legacy_catalog()
+    catalog[LEGACY_MODEL_KEY] = catalog.pop(MODEL_KEY)
+    normalized = dependency_versions.validate_dependency_catalog(catalog)
+    assert MODEL_KEY in normalized
+    assert LEGACY_MODEL_KEY in catalog
+    assert LEGACY_MODEL_KEY not in normalized

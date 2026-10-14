@@ -348,6 +348,10 @@ def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
     """HTCondor grid jobs detach unless explicitly asked to wait."""
     job_specs = [MagicMock()]
     mocker.patch(
+        "simtools.applications.simulate_prod._prepare_jobs",
+        side_effect=lambda jobs, args, options: jobs,
+    )
+    mocker.patch(
         "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=job_specs
     )
     mocker.patch("simtools.applications.simulate_prod.options_from_args")

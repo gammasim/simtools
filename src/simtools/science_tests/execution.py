@@ -1,5 +1,6 @@
 """Prepare, execute, and collect science-test workflows."""
 
+import json
 import logging
 import os
 import shutil
@@ -16,6 +17,7 @@ from simtools.io.ascii_handler import to_builtin
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
+from simtools.production_configuration.compatibility import RECORD_NAME, _preview
 from simtools.production_configuration.production_file_selection import (
     _values_match,
     discover_product_manifests,
@@ -51,6 +53,14 @@ from simtools.science_tests.reports import (
 )
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
 from simtools.version import __version__
+
+_PRODUCES_PRODUCTION = "produces_production"
+_ENCODING = "utf-8"
+_DEPENDENCY_COMPATIBILITY = "dependency_compatibility"
+_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
+
+_CONFIGURATION = "configuration"
+_APPLICATION = "application"
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +194,10 @@ def _run_test(
         "status": "planned" if dry_run else "pass",
     }
     if dry_run:
+        if definition.get(_PRODUCES_PRODUCTION):
+            result[_DEPENDENCY_COMPATIBILITY] = _preview_production(
+                configurations, args, replacements
+            )
         return result
 
     _execute_and_record_test(
@@ -197,6 +211,20 @@ def _run_test(
         f" - {result['reason']}" if result.get("reason") else "",
     )
     return result
+
+
+def _preview_production(configurations, args, replacements):
+    """Report the effective workflow selection, including explicit per-step overrides."""
+    selected = dict(args)
+    image = replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
+    for application in configurations:
+        if application.get(_APPLICATION) == "simtools-simulate-prod":
+            selected.update(application.get(_CONFIGURATION, {}))
+            backend = selected.get("backend_config")
+            if isinstance(backend, dict):
+                image = backend.get("container_image")
+            break
+    return _preview(selected, image)
 
 
 def _resolved_test_workflow(template_dir, workflow, replacements, definition):
@@ -224,7 +252,7 @@ def _disable_collection_inventory(resolved):
 
 def _add_shared_runtime(resolved, template_dir, replacements, definition):
     """Apply the shared runtime to non-production workflows without one."""
-    needs_runtime = not definition.get("produces_production") and not definition.get(
+    needs_runtime = not definition.get(_PRODUCES_PRODUCTION) and not definition.get(
         "collect_production"
     )
     if needs_runtime and "runtime_environment" not in resolved:
@@ -236,8 +264,8 @@ def _add_shared_runtime(resolved, template_dir, replacements, definition):
 def _configure_comparison_applications(resolved, definition):
     """Apply release comparison settings and reject undeclared differences."""
     for application in resolved.get("applications", []):
-        configuration = application.get("configuration", {})
-        if application.get("application") == "simtools-compare-productions":
+        configuration = application.get(_CONFIGURATION, {})
+        if application.get(_APPLICATION) == "simtools-compare-productions":
             configuration["report_mode"] = definition.get("report_mode", "compact")
             configuration.update(definition.get("comparison_parameters", {}))
             _set_event_comparison_labels(configuration, definition)
@@ -262,7 +290,7 @@ def _execute_and_record_test(
         _check_inputs(definition, replacements)
         if definition.get("acceptance_rule") == "gamma-events":
             for root_key in (
-                "__SCIENCE_CANDIDATE_SITE_PATH__",
+                _CANDIDATE_SITE_PATH,
                 "__SCIENCE_BASELINE_SITE_PATH__",
             ):
                 _validate_derived_products(
@@ -306,7 +334,7 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
             result["execution_log"] = str(log_path)
     if definition.get("derived_output"):
         for application in resolved["applications"]:
-            _validate_derived_products(application["configuration"])
+            _validate_derived_products(application[_CONFIGURATION])
 
 
 def _reuse_derived_product(definition, replacements, args):
@@ -322,8 +350,8 @@ def _reuse_derived_product(definition, replacements, args):
         if not previous.is_file():
             raise ValueError("No recorded derivation settings")
         old = _load_yaml(previous)
-        current_configs = [app["configuration"] for app in workflow["applications"]]
-        old_configs = [app["configuration"] for app in old["applications"]]
+        current_configs = [app[_CONFIGURATION] for app in workflow["applications"]]
+        old_configs = [app[_CONFIGURATION] for app in old["applications"]]
         if _reuse_settings(current_configs) != _reuse_settings(old_configs):
             raise ValueError("Derivation settings changed")
         for configuration in current_configs:
@@ -358,7 +386,7 @@ def _validate_derived_products(configuration):
     products = discover_product_manifests(configuration["output_path"], "trigger_histograms")
     by_key = {}
     for product in products:
-        key = normalize_for_comparison(product.data["configuration"])
+        key = normalize_for_comparison(product.data[_CONFIGURATION])
         if key in by_key:
             raise ValueError("Duplicate derived configuration")
         by_key[key] = product
@@ -412,15 +440,16 @@ def _materialize_effective_workflow(work, resolved):
     work.mkdir(parents=True, exist_ok=True)
     path = work / _WORKFLOW_FILE_NAME
     path.write_text(
-        yaml.safe_dump(to_builtin(resolved), sort_keys=False, explicit_start=True), encoding="utf-8"
+        yaml.safe_dump(to_builtin(resolved), sort_keys=False, explicit_start=True),
+        encoding=_ENCODING,
     )
     return path
 
 
 def _test_output_paths(configurations, replacements):
     """Use application output paths or the candidate path for native collection."""
-    paths = [str(config["configuration"]["output_path"]) for config in configurations]
-    return list(dict.fromkeys(paths)) or [replacements["__SCIENCE_CANDIDATE_SITE_PATH__"]]
+    paths = [str(config[_CONFIGURATION]["output_path"]) for config in configurations]
+    return list(dict.fromkeys(paths)) or [replacements[_CANDIDATE_SITE_PATH]]
 
 
 def _execute_test_workflow(definition, args, replacements):
@@ -430,8 +459,13 @@ def _execute_test_workflow(definition, args, replacements):
     with _selected_model_source_environment(args):
         run_applications(args, replacements=replacements)
     validated = _evaluate_products(definition, replacements)
-    if definition.get("produces_production"):
+    if definition.get(_PRODUCES_PRODUCTION):
+        record = Path(replacements[_CANDIDATE_SITE_PATH]) / RECORD_NAME
+        compatibility = (
+            json.loads(record.read_text(encoding=_ENCODING)) if record.is_file() else None
+        )
         return {
+            _DEPENDENCY_COMPATIBILITY: compatibility,
             "status": "submitted",
             "execution": "submitted",
             "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
@@ -462,7 +496,7 @@ def _selected_model_source_environment(args):
 
 def _collect_production(definition, replacements):
     """Check all production submissions once, validating only completed results."""
-    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    candidate = Path(replacements[_CANDIDATE_SITE_PATH])
     manifests = _matched_files(str(candidate / f"**/{_SUBMISSION_FILE_NAME}"))
     pending = False
     for manifest in manifests:
@@ -488,10 +522,10 @@ def _collect_production(definition, replacements):
 
 def _prepare_test_retry(definition, replacements, args, run_id, work, report):
     """Archive a failed production before an explicitly requested retry."""
-    if not args.get("science_overwrite") or not definition.get("produces_production"):
+    if not args.get("science_overwrite") or not definition.get(_PRODUCES_PRODUCTION):
         return
     _check_inputs({"requires": definition.get("requires", [])}, replacements)
-    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    candidate = Path(replacements[_CANDIDATE_SITE_PATH])
     submissions = list(candidate.rglob(_SUBMISSION_FILE_NAME))
     if not submissions:
         return

@@ -23,6 +23,9 @@ from simtools.model_repository.parsing import normalize_model_parameter
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
 
+CORSIKA_COLLECTION = "configuration_corsika"
+SIMTEL_COLLECTION = "configuration_sim_telarray"
+
 
 class FileSystemModelSource:
     """Read-only source backed by a checked-out simulation-model repository."""
@@ -154,7 +157,7 @@ class FileSystemModelSource:
             return instrument
         if collection_name == "sites" and query.get("site"):
             return f"OBS-{query['site']}"
-        if collection_name in ("configuration_corsika", "configuration_sim_telarray"):
+        if collection_name in (CORSIKA_COLLECTION, SIMTEL_COLLECTION):
             return "global"
         raise ValueError(
             f"Filesystem lookup for collection {collection_name} requires an array element name"
@@ -440,8 +443,21 @@ class SimulationModelReader:
                     if parameter in parameter_names
                 }
             if versions:
-                parameters.update(self._read_parameters(versions, collection, element, site))
+                resolved = self._read_parameters(versions, collection, element, site)
+                self._check_configuration_parameters(versions, resolved, collection, model_version)
+                parameters.update(resolved)
         return {key: parameters[key] for key in sorted(parameters)}
+
+    def _check_configuration_parameters(self, versions, resolved, collection, model_version):
+        """Reject incomplete software configuration instead of failing during simulation."""
+        if collection not in (CORSIKA_COLLECTION, SIMTEL_COLLECTION):
+            return
+        missing = sorted(set(versions) - set(resolved))
+        if missing:
+            raise ValueError(
+                f"Missing {collection} parameters {missing} for model {model_version} "
+                f"in {self.source_name}; check the model files and supported release."
+            )
 
     def get_model_parameters_for_all_model_versions(self, site, array_element_name, collection):
         """Read resolved parameters for an element across all model versions."""
@@ -478,12 +494,18 @@ class SimulationModelReader:
     ):
         """Read CORSIKA or sim_telarray configuration parameters."""
         if simulation_software == "corsika":
-            return self.get_model_parameters(None, None, "configuration_corsika", model_version)
+            parameters = self.get_model_parameters(None, None, CORSIKA_COLLECTION, model_version)
+            if not parameters:
+                raise ValueError(
+                    f"No CORSIKA parameters for model {model_version} in {self.source_name}; "
+                    "check the repository layout and supported dependency release."
+                )
+            return parameters
         if simulation_software == "sim_telarray":
             if not site:
                 return {}
             return self.get_model_parameters(
-                site, array_element_name, "configuration_sim_telarray", model_version
+                site, array_element_name, SIMTEL_COLLECTION, model_version
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
@@ -702,11 +724,11 @@ class SimulationModelReader:
 
     def _get_array_element_list(self, array_element_name, site, production, collection):
         """Return the design and concrete elements represented by a request."""
-        if collection == "configuration_corsika":
+        if collection == CORSIKA_COLLECTION:
             return ["global"]
         if collection == "sites":
             return [f"OBS-{site}"]
-        if collection == "configuration_sim_telarray":
+        if collection == SIMTEL_COLLECTION:
             return self._get_sim_telarray_array_element_list(array_element_name, production)
         if names.is_design_type(array_element_name):
             return [array_element_name]

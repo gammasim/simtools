@@ -106,7 +106,8 @@ the catalog remains the fallback for the model ref.
 ## CI repository branches
 
 Test CI selects the `simulation-models` and `simtools-tests` branches independently of the
-catalog's release refs. Both default to `main`, including release and release-candidate runs.
+catalog's release refs. Development runs default to `main`. Published release runs select the model catalog's
+`default-ref`; the test-resource branch remains independently selected.
 Manual unit, integration, benchmark, and production-image test workflows accept
 `simulation_model_branch` and `simtools_tests_branch`. The reusable integration workflow accepts
 the same inputs, and its callers forward both selections.
@@ -132,3 +133,81 @@ fallback when no bundled catalog exists.
 Set `SIMTOOLS_DEPENDENCY_VERSIONS` to explicitly select another catalog, including a mounted host
 catalog. A missing override file raises an error. An explicit `start_path` passed to
 `find_dependency_versions` searches that directory and its parents before bundled catalogs.
+
+## Supported model releases
+
+The catalog bundled with each simtools installation defines its model compatibility
+contract. Starting with catalog schema `0.8.0`, `model-repository` requires
+`compatible-versions`, a `packaging.specifiers.SpecifierSet` expression, for example:
+
+```yaml
+model-repository:
+  name: CTAO-Simulation-Model
+  default-ref: v0.18.0
+  compatible-versions: "==0.18.0"
+```
+
+The default selects a recommended input; the range restricts supported releases;
+production provenance identifies the exact release, commit, and content SHA-256
+actually used. A leading `v` is normalized. Stable release defaults must satisfy
+the constraint. Prereleases and development refs are not qualified production
+inputs, even when a broad numeric constraint would otherwise include them.
+Python package requirements continue to live in `pyproject.toml`. Existing
+scientific build combinations remain explicit; a model range does not widen them.
+
+For historical catalogs without a range, the declared release default is the only
+accepted production release. Legacy `model-database.default-tag` entries are
+supported. Thus the unchanged simtools v0.37.0 image accepts models v0.17.1 and
+rejects v0.17.2 before production submission. This conservative fallback is a
+policy, not evidence that every other release fails intrinsically.
+
+A filesystem checkout must have one unambiguous stable release version tagged at
+HEAD and unchanged model contents. Exported directories without Git metadata need
+`simulation-models-release.json` at their root, with `version`, the 40-character
+source `commit`, and `content_sha256`. The digest hashes, in sorted path order,
+each model file's repository-relative UTF-8 name, a NUL byte, and the raw SHA-256
+of its contents. Only `simulation-models/` is included. Symbolic links are rejected.
+The manifest is verified, not trusted solely on its version label. Changing files
+without producing a new identified snapshot is not a qualified production input.
+
+For HTCondor production grids, the submission controller reads the selected image's
+bundled catalog using Apptainer and reports its simtools version separately from
+the submit host. Before simulation jobs are submitted, it initializes representative
+configurations through the selected backend and image, including each selected
+zenith/atmosphere mode. This loads models and constructs the simulator without
+running showers. Initialization outputs go into a sibling `work/<output-name>-dependency-validation/`
+directory, outside the production tree so collection cannot mistake canary submissions
+for production jobs. A filesystem snapshot's identity is checked again
+on workers using standard-library code that also runs in historical images.
+No image is patched or rebuilt, and no model checkout is switched automatically.
+
+Normal logs show the selected version/path, constraint and policy, target runtime,
+and initialization status. `dependency-compatibility.json` records the decision
+and exact identities; science-test reports include the same compatibility result.
+Dry runs show the static decision and label initialization as not checked, without
+submitting canaries. Initialization is mandatory even without the optional host
+filesystem `--preflight` checks. Validation is deliberately rerun for each submission;
+there is no implicit cache of previous successful campaigns.
+
+Direct simulations validate the selected models against the running installation's
+catalog before model reading. Existing `--test` mode permits development inputs
+with a conspicuous unqualified status; it must not be used for qualified production.
+Git source reads retain their fixed source identity; filesystem production commands
+receive only `--simulation_models_path`, never Git source options.
+
+### Model format evolution
+
+Model repository release versions and scientific model versions (such as `7.0.0`)
+identify different things. Neither replaces a reader-format compatibility contract.
+Future simulation-models release metadata should declare an independent format
+version, and readers should declare which formats they support. Layout changes
+must be treated as breaking even when parameter values are unchanged. This producer
+policy requires agreement in the simulation-models repository; this change does not
+edit existing tags or claim that such metadata already exists. Until that policy
+is adopted, explicit release constraints and initialization checks remain the gate.
+
+Release CI must test catalog-default model refs. Development branch testing remains
+separate and cannot silently widen a published compatibility contract. Expand a
+range only with recorded compatibility evidence, including the releases it admits
+and the next excluded release. Existing production image manifests describe built-in
+dependencies; mounted model inputs are recorded separately in campaign provenance.

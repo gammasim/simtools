@@ -263,7 +263,11 @@ jobs:
         id: simulation_model_branch
         env:
           BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          RELEASE_EVENT: ${{ github.event_name == 'release' }}
         run: |
+          if [[ "$RELEASE_EVENT" == "true" ]]; then
+            BRANCH=$(python -c 'from pathlib import Path; import yaml; print(yaml.safe_load(Path("dependency_versions.yml").read_text())["model-repository"]["default-ref"])')
+          fi
           git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -388,6 +392,9 @@ jobs:
         env:
           BRANCH: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
         run: |
+          if [[ "$RELEASE_EVENT" == "true" ]]; then
+            BRANCH=$(python -c 'from pathlib import Path; import yaml; print(yaml.safe_load(Path("dependency_versions.yml").read_text())["model-repository"]["default-ref"])')
+          fi
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
           test -n "$SIMTOOLS_TESTS_REPOSITORY"

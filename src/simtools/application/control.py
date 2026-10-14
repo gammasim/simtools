@@ -9,11 +9,14 @@ from pathlib import Path
 from astropy.utils import iers
 
 import simtools.utils.general as gen
-from simtools import dependencies, version
+from simtools import dependencies, dependency_versions, version
 from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.io import io_handler
+from simtools.model_repository.compatibility import _validate
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
+
+_DEFER_SIMULATION_VALIDATION = "_defer_simulation_dependency_validation"
 
 SECRET_ENV_VAR_NAMES = []
 SECRET_KEY_PATTERNS = [
@@ -205,9 +208,7 @@ def _initialize_runtime(
         args_dict,
         resolve_sim_software_executables=resolve_sim_software_executables,
     )
-    if validate_simulation_dependencies and not args_dict.get(
-        "_defer_simulation_dependency_validation", False
-    ):
+    if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
         simulation_software = args_dict.get("simulation_software", "sim_telarray")
         dependencies.validate_simulation_dependencies(simulation_software)
 
@@ -218,6 +219,9 @@ def _initialize_runtime(
     )
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
+
+    if validate_simulation_dependencies and not args_dict.get(_DEFER_SIMULATION_VALIDATION, False):
+        _validate_model_compatibility(args_dict)
 
     model_reader = None
     if initialize_model_reader:
@@ -314,3 +318,17 @@ def _version_info(args_dict, io_handler_instance, logger):
             else args_dict["export_build_info"]
         )
         dependencies.export_build_info(output_path, args_dict.get("run_time"))
+
+
+def _validate_model_compatibility(args):
+    """Validate direct simulations before reading configuration parameters."""
+    filesystem_path = args.get("simulation_models_path")
+    path = filesystem_path or args.get("simulation_models_git_path")
+    if path:
+        revision = None if filesystem_path else args.get("simulation_models_git_revision")
+        args["_dependency_compatibility"] = _validate(
+            path,
+            dependency_versions.load_dependency_catalog(),
+            revision=revision,
+            development=bool(args.get("test")),
+        )

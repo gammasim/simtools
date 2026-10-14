@@ -14,6 +14,12 @@ from simtools.science_tests.definitions import (
     _dependency_order,
 )
 
+_RESULTS = "results"
+_STATUS = "status"
+_DEPENDENCY_COMPATIBILITY = "dependency_compatibility"
+_COMPATIBLE = "compatible"
+_UNKNOWN = "unknown"
+
 logger = logging.getLogger(__name__)
 _REDUNDANT_PUBLICATION_FILES = {"effective-settings.json", "inventory.json"}
 
@@ -27,7 +33,7 @@ def _release_summary(
         json.loads(path.read_text(encoding="utf-8")) if path.is_file() and not dry_run else {}
     )
     records = (
-        {r["id"]: r for r in previous.get("results", [])}
+        {r["id"]: r for r in previous.get(_RESULTS, [])}
         if previous.get("campaign_sha256") == signature
         else {}
     )
@@ -55,7 +61,7 @@ def _release_summary(
                     "test": test_id,
                     "site": site,
                     "report": None,
-                    "status": "not_run",
+                    _STATUS: "not_run",
                     "execution": "not_run",
                     "reason": "Not selected or not executed.",
                 },
@@ -68,10 +74,19 @@ def _release_summary(
         "dry_run": dry_run,
         "campaign_sha256": signature,
         "evidence_sha256": evidence,
-        "qualified": all(records[key]["status"] == "pass" for key in required),
-        "results": sorted(records.values(), key=lambda r: (r["site"], r["test"])),
+        "qualified": all(records[key][_STATUS] == "pass" for key in required)
+        and _dependencies_qualified(records.values()),
+        _RESULTS: sorted(records.values(), key=lambda r: (r["site"], r["test"])),
         "production_history": production_history,
     }
+
+
+def _dependencies_qualified(records):
+    """Keep development production inputs unqualified even after collection passes."""
+    return all(
+        (record.get(_DEPENDENCY_COMPATIBILITY) or {}).get(_STATUS, _COMPATIBLE) == _COMPATIBLE
+        for record in records
+    )
 
 
 def _evidence_fingerprints(context, site):
@@ -157,7 +172,7 @@ def _clear_test_directory(path):
 def _write_test_report(work, report_root, release_dir, result):
     """Publish successful collected evidence atomically without per-test wrappers."""
     report = report_root.relative_to(release_dir).as_posix()
-    if result["status"] in {"fail", "incomplete", "blocked"}:
+    if result[_STATUS] in {"fail", "incomplete", "blocked"}:
         result["report"] = None
         if report_root.exists():
             result["previous_report"] = report
@@ -221,7 +236,7 @@ def _write_summary(report_dir, summary):
         "| Site | Test | Execution | Status | Reason | Report |",
         "| --- | --- | --- | --- | --- | --- |",
     ]
-    for result in summary["results"]:
+    for result in summary[_RESULTS]:
         reason = result.get("error") or result.get("reason") or "-"
         report = "-"
         if result.get("report"):
@@ -229,14 +244,24 @@ def _write_summary(report_dir, summary):
             report = f"[report]({report_path})"
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
-            f"{result['status']} | {reason} | {report} |"
+            f"{result[_STATUS]} | {reason} | {report} |"
         )
+    lines.extend(["", "## Dependency compatibility", ""])
+    for result in summary[_RESULTS]:
+        proof = result.get(_DEPENDENCY_COMPATIBILITY)
+        if proof:
+            lines.append(
+                f"- {result['id']}: target simtools {proof.get('target_simtools')}; "
+                f"models {proof.get('version', _UNKNOWN)} at `{proof.get('source')}`; "
+                f"allowed `{proof.get('allowed')}` ({proof.get('policy')}); "
+                f"{proof.get(_STATUS)}; initialization: {proof.get('initialization')}."
+            )
     lines.extend(["", "## Execution details", ""])
-    for result in summary["results"]:
+    for result in summary[_RESULTS]:
         if not result.get("execution_log"):
             continue
         lines.append(
-            f"- {result['site']}/{result['test']}: {result.get('runtime', 'unknown')}; "
+            f"- {result['site']}/{result['test']}: {result.get('runtime', _UNKNOWN)}; "
             f"[log]({result['execution_log']}); "
             f"work: `{result['execution_provenance']}`."
         )
@@ -249,8 +274,8 @@ def _write_summary(report_dir, summary):
         lines.extend(["", "## Production history", ""])
         for record in summary["production_history"]:
             lines.append(
-                f"- {record['id']}: {record['execution']} ({record['status']}); "
-                f"run ID `{record.get('run_id', 'unknown')}`."
+                f"- {record['id']}: {record['execution']} ({record[_STATUS]}); "
+                f"run ID `{record.get('run_id', _UNKNOWN)}`."
             )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

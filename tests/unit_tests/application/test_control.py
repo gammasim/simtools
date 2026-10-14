@@ -16,6 +16,8 @@ from simtools.application.control import (
 )
 from simtools.settings import config
 
+_DEVELOPMENT = "development"
+
 
 def _reset_stream(handler):
     """Helper to reset stream for reading output."""
@@ -449,3 +451,21 @@ def test_setup_logging_with_file_handler(tmp_test_directory):
         for handler in logger.handlers[:]:
             handler.close()
             logger.removeHandler(handler)
+
+
+@pytest.mark.parametrize(_DEVELOPMENT, [False, True])
+def test_direct_simulations_check_selected_model_contract(
+    tmp_test_directory, monkeypatch, development
+):
+    from simtools.application import control
+
+    captured = []
+    proof = {"status": "compatible"}
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
+    monkeypatch.setattr(
+        control, "_validate", lambda *args, **kwargs: captured.append(kwargs) or proof
+    )
+    args = {"simulation_models_path": str(tmp_test_directory), "test": development}
+    control._validate_model_compatibility(args)
+    assert captured == [{"revision": None, _DEVELOPMENT: development}]
+    assert args["_dependency_compatibility"] == proof

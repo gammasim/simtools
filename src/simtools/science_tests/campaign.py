@@ -179,12 +179,6 @@ def run_release(
                     ),
                 )
             )
-    production_selected = any(args[6].get("tier") == "release-prod" for args, _ in prepared)
-    if production_selected and not dry_run and not preflight:
-        logger.warning(
-            "Production science tests are being submitted without --preflight; "
-            "host and worker filesystem checks were skipped."
-        )
     _run_preflight(prepared, run, preflight, dry_run)
     results = _execute_selection(
         prepared, dry_run, run_id, run["application_args"], run["catalogue"]
