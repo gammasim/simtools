@@ -10,6 +10,9 @@ from simtools.constants import SCHEMA_PATH
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration import job_grid_io
 
+_FILESYSTEM_MODELS = "simulation_models_path"
+_GIT_MODELS = "simulation_models_git_path"
+
 
 def _job_rows():
     return [
@@ -266,7 +269,7 @@ def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
         assert "simulation_software" not in args
 
 
-@pytest.mark.parametrize("model_key", ["simulation_models_path", "simulation_models_git_path"])
+@pytest.mark.parametrize("model_key", [_FILESYSTEM_MODELS, _GIT_MODELS])
 def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory, model_key):
     """Build unique backend-neutral commands while forcing nested execution local."""
     corsika_path = Path(tmp_test_directory) / "corsika" / "corsika.input"
@@ -331,6 +334,27 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert command[core_scatter_index + 1] == "10 200.0 m"
     view_cone_index = command.index("--view_cone")
     assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"
+
+
+@pytest.mark.parametrize("model_key", [_FILESYSTEM_MODELS, _GIT_MODELS])
+def test_job_commands_forward_git_revision_only_for_git_models(tmp_test_directory, model_key):
+    revision = "v0.18.0"
+    args = {
+        "output_path": tmp_test_directory / "output",
+        model_key: tmp_test_directory / "models",
+        "simulation_models_git_revision": revision,
+    }
+    if model_key == _FILESYSTEM_MODELS:
+        args[_GIT_MODELS] = tmp_test_directory / "inherited-git-models"
+
+    job = job_grid_io.build_simulate_prod_job_specs(
+        args, [_job_rows()[0]], app.APPLICATION.build_parser(), _metadata()
+    )[0]
+
+    assert f"--{model_key}" in job.command
+    assert (f"--{_GIT_MODELS}" in job.command) == (model_key == _GIT_MODELS)
+    assert ("--simulation_models_git_revision" in job.command) == (model_key == _GIT_MODELS)
+    assert (revision in job.command) == (model_key == _GIT_MODELS)
 
 
 def test_build_simulate_prod_job_specs_uses_one_based_job_names(tmp_test_directory):
