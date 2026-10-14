@@ -327,9 +327,9 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Lower NSB to ensure sign change
     }
     proton_stats = {
-        220: {"rate_hz": 1100.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 11000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     args = {"scaling_factor": 1.35}
@@ -376,9 +376,9 @@ def test_calculate_trigger_threshold_with_nan_values():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Valid - adjusted to create sign change
     }
     proton_stats = {
-        220: {"rate_hz": 700.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 7000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     # Should work with the valid points (250, 280) and find intersection
@@ -676,7 +676,7 @@ def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):
 @pytest.mark.parametrize("scaling_factor", [1.0, 1.35, 2.0])
 def test_trigger_threshold_matches_scaled_fitted_curves(scaling_factor):
     nsb = {t: {"rate_hz": 100 * 10 ** (-(t - 7))} for t in (7, 7.2, 7.4, 8, 9)}
-    proton = {t: {"rate_hz": 10.0} for t in (7.1, 7.3, 8.1, 9.1)}
+    proton = {t: {"rate_hz": 100.0} for t in (7.1, 7.3, 8.1, 9.1)}
     threshold = bias_curve_generator._calculate_trigger_threshold(
         {"scaling_factor": scaling_factor}, nsb, proton
     )

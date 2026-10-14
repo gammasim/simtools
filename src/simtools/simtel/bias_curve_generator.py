@@ -53,7 +53,11 @@ def generate_bias_curves(args):
     for thresh in thresholds:
         nsb_rate = nsb_stats[thresh]["rate_hz"] if thresh in nsb_stats else None
         proton_rate = proton_stats[thresh]["rate_hz"] if thresh in proton_stats else None
-        scaled_proton = scaling_factor * proton_rate if proton_rate is not None else None
+        scaled_proton = (
+            scaling_factor * plot_tables.PROTON_INTERSECTION_FRACTION * proton_rate
+            if proton_rate is not None
+            else None
+        )
         _logger.info(
             f"  Threshold {thresh}: NSB={nsb_rate} Hz, "
             f"Proton={proton_rate} Hz, Scaled={scaled_proton} Hz"
@@ -357,8 +361,9 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     """
     Calculate trigger threshold from bias curve intersection.
 
-    Trigger threshold is the intersection of the log-linear fits to the NSB and
-    scaled proton rates, within their shared threshold range.
+    Trigger threshold is the intersection of log-linear fits to the NSB and
+    proton rates (scaled by the scaling factor and then multiplied by 0.1),
+    within their shared threshold range.
 
     Parameters
     ----------
@@ -381,7 +386,10 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     """
     scaling_factor = args.get("scaling_factor", 1.35)
     fits = []
-    for stats, scale in ((nsb_stats, 1.0), (proton_stats, scaling_factor)):
+    for stats, scale in (
+        (nsb_stats, 1.0),
+        (proton_stats, scaling_factor * plot_tables.PROTON_INTERSECTION_FRACTION),
+    ):
         thresholds = sorted(stats)
         fit = plot_tables.fit_bias_curve(
             thresholds, [scale * stats[threshold]["rate_hz"] for threshold in thresholds]

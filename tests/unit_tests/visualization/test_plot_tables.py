@@ -602,6 +602,7 @@ def test_resolve_plot_output_path_file_and_directory(tmp_path):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_intersection_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -611,6 +612,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -629,6 +631,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
     mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
     mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
     mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
