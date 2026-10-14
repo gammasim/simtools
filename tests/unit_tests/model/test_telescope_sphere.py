@@ -18,6 +18,7 @@ _FINITE = "finite"
 _FOCAL_LENGTH = "focal_length"
 _DISH_SHAPE_LENGTH = "dish_shape_length"
 _MIRROR_FOCAL_LENGTH = "mirror_focal_length"
+_AXES_OFFSETS = "axes_offsets"
 _SHAPE_TYPE = "shape_type"
 _MIRROR_Z = "mirror_z"
 
@@ -28,7 +29,7 @@ def _model(mirror_class=0):
         mirror_class if name == "mirror_class" else 0
     )
     values = {
-        "axes_offsets": [0, 0] * u.m,
+        _AXES_OFFSETS: [0, 0] * u.m,
         "mirror_offset": 0 * u.m,
         _FOCAL_LENGTH: 5 * u.m,
         _DISH_SHAPE_LENGTH: 5 * u.m,
@@ -255,7 +256,7 @@ def test_axes_offsets_are_normalized_to_quantity_array():
     model = _model()
     values = model.get_parameter_value_with_unit.side_effect
     model.get_parameter_value_with_unit.side_effect = lambda name: (
-        [160 * u.cm, 0 * u.cm] if name == "axes_offsets" else values(name)
+        [160 * u.cm, 0 * u.cm] if name == _AXES_OFFSETS else values(name)
     )
     result = derive_telescope_sphere_radius(model)
     assert result.unit == u.m

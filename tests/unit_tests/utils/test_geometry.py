@@ -5,6 +5,12 @@ from astropy.units import UnitsError
 
 import simtools.utils.geometry as transf
 
+_RADIAL_EXTENT = "radial_extent"
+_AXIAL_EXTENT = "axial_extent"
+_AXES_OFFSETS = "axes_offsets"
+_ZENITH_RANGE = "zenith_range"
+_MIRROR_OFFSET = "mirror_offset"
+
 
 def test_rotate_telescope_position(caplog) -> None:
     x = np.array([-10, -10, 10, 10]).astype(float)
@@ -186,24 +192,24 @@ def test_telescope_fiducial_sphere_contains_transformed_cylinder():
 @pytest.mark.parametrize(
     ("keyword", "value", "message"),
     [
-        ("radial_extent", [] * u.m, "one radial extent"),
-        ("radial_extent", [[1]] * u.m, "one radial extent"),
-        ("radial_extent", [-1] * u.m, "nonnegative"),
-        ("axial_extent", [[2, 1]] * u.m, "ordered"),
-        ("axial_extent", [[0, np.nan]] * u.m, "finite"),
-        ("axes_offsets", [0] * u.m, "two axes offsets"),
-        ("zenith_range", [90, 0] * u.deg, "Zenith-angle bounds"),
-        ("zenith_range", [-1, 90] * u.deg, "Zenith-angle bounds"),
-        ("zenith_range", [0, 181] * u.deg, "Zenith-angle bounds"),
+        (_RADIAL_EXTENT, [] * u.m, "one radial extent"),
+        (_RADIAL_EXTENT, [[1]] * u.m, "one radial extent"),
+        (_RADIAL_EXTENT, [-1] * u.m, "nonnegative"),
+        (_AXIAL_EXTENT, [[2, 1]] * u.m, "ordered"),
+        (_AXIAL_EXTENT, [[0, np.nan]] * u.m, "finite"),
+        (_AXES_OFFSETS, [0] * u.m, "two axes offsets"),
+        (_ZENITH_RANGE, [90, 0] * u.deg, "Zenith-angle bounds"),
+        (_ZENITH_RANGE, [-1, 90] * u.deg, "Zenith-angle bounds"),
+        (_ZENITH_RANGE, [0, 181] * u.deg, "Zenith-angle bounds"),
         ("margin", -1 * u.m, "nonnegative margin"),
-        ("mirror_offset", np.inf * u.m, "must be finite"),
+        (_MIRROR_OFFSET, np.inf * u.m, "must be finite"),
     ],
 )
 def test_telescope_fiducial_sphere_invalid_bounds(keyword, value, message):
     kwargs = {
-        "radial_extent": [1] * u.m,
-        "axial_extent": [[0, 1]] * u.m,
-        "axes_offsets": [0, 0] * u.m,
+        _RADIAL_EXTENT: [1] * u.m,
+        _AXIAL_EXTENT: [[0, 1]] * u.m,
+        _AXES_OFFSETS: [0, 0] * u.m,
         keyword: value,
     }
     with pytest.raises(ValueError, match=message):

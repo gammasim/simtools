@@ -10,6 +10,7 @@ from simtools.model.model_utils import initialize_simulation_models
 from simtools.model.telescope_sphere import derive_telescope_sphere_radius
 
 _TELESCOPE = "telescope"
+_TELESCOPE_SPHERE_RADIUS = "telescope_sphere_radius"
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
@@ -40,11 +41,11 @@ def main():
     )
     radius = derive_telescope_sphere_radius(model)
     ModelDataWriter.write_model_parameter(
-        parameter_name="telescope_sphere_radius",
+        parameter_name=_TELESCOPE_SPHERE_RADIUS,
         value=radius.to_value(u.m),
         instrument=args[_TELESCOPE],
         parameter_version=args["parameter_version"],
-        output_file="telescope_sphere_radius.json",
+        output_file=f"{_TELESCOPE_SPHERE_RADIUS}.json",
         output_path=args.get("output_path"),
         metadata_input_dict=args,
         unit="m",
