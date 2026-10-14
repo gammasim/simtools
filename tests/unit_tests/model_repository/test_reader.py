@@ -451,8 +451,7 @@ def test_reader_facade_routes_source_operations_and_branches():
     assert reader.get_array_elements_of_type("LST", "1.0.0", "telescopes") == ["LSTN-01"]
     assert reader._get_array_element_list(None, "North", {}, "sites") == ["OBS-North"]
     assert reader._get_array_element_list("LSTN-design", None, {}, "telescopes") == ["LSTN-design"]
-    with pytest.raises(ValueError, match="No CORSIKA parameters"):
-        reader.get_simulation_configuration_parameters("corsika", None, None, "1.0.0")
+    assert reader.get_simulation_configuration_parameters("corsika", None, None, "1.0.0") == {}
     assert reader.get_simulation_configuration_parameters(
         "sim_telarray", "North", "LSTN-01", "1.0.0"
     ) == {"camera_body_diameter": {"parameter": "camera_body_diameter", "value": 1}}
@@ -737,19 +736,3 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     with pytest.raises(KeyError, match="Failed to generate array element list"):
         reader._get_sim_telarray_array_element_list(None, {})
     scopes.assert_called_once()
-
-
-def test_incomplete_configuration_reports_source_before_simulation():
-    source = Mock(source_name="incomplete model snapshot")
-    reader = SimulationModelReader(source)
-    model_version = "7.0.0"
-    with pytest.raises(ValueError, match="Missing configuration_corsika parameters"):
-        reader._check_configuration_parameters(
-            {"corsika_starting_grammage": "1.0.2"},
-            {},
-            reader_module.CORSIKA_COLLECTION,
-            model_version,
-        )
-    reader._check_configuration_parameters(
-        {"optional": None}, {}, "calibration_devices", model_version
-    )

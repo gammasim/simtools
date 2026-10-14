@@ -1,6 +1,5 @@
 """Prepare, execute, and collect science-test workflows."""
 
-import json
 import logging
 import os
 import shutil
@@ -17,7 +16,7 @@ from simtools.io.ascii_handler import to_builtin
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
-from simtools.production_configuration.compatibility import RECORD_NAME, _preview
+from simtools.production_configuration.compatibility import _preview
 from simtools.production_configuration.production_file_selection import (
     _values_match,
     discover_product_manifests,
@@ -55,12 +54,8 @@ from simtools.utils.general import get_uuid, replace_placeholders_recursively
 from simtools.version import __version__
 
 _PRODUCES_PRODUCTION = "produces_production"
-_ENCODING = "utf-8"
-_DEPENDENCY_COMPATIBILITY = "dependency_compatibility"
-_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
-
-_CONFIGURATION = "configuration"
 _APPLICATION = "application"
+_CONFIGURATION = "configuration"
 
 logger = logging.getLogger(__name__)
 
@@ -193,11 +188,9 @@ def _run_test(
         "execution": "planned" if dry_run else "completed",
         "status": "planned" if dry_run else "pass",
     }
+    if definition.get(_PRODUCES_PRODUCTION):
+        result["dependency_compatibility"] = _preview_production(configurations, args, replacements)
     if dry_run:
-        if definition.get(_PRODUCES_PRODUCTION):
-            result[_DEPENDENCY_COMPATIBILITY] = _preview_production(
-                configurations, args, replacements
-            )
         return result
 
     _execute_and_record_test(
@@ -214,7 +207,7 @@ def _run_test(
 
 
 def _preview_production(configurations, args, replacements):
-    """Report the effective workflow selection, including explicit per-step overrides."""
+    """Check the effective production configuration, including workflow overrides."""
     selected = dict(args)
     image = replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
     for application in configurations:
@@ -290,7 +283,7 @@ def _execute_and_record_test(
         _check_inputs(definition, replacements)
         if definition.get("acceptance_rule") == "gamma-events":
             for root_key in (
-                _CANDIDATE_SITE_PATH,
+                "__SCIENCE_CANDIDATE_SITE_PATH__",
                 "__SCIENCE_BASELINE_SITE_PATH__",
             ):
                 _validate_derived_products(
@@ -440,8 +433,7 @@ def _materialize_effective_workflow(work, resolved):
     work.mkdir(parents=True, exist_ok=True)
     path = work / _WORKFLOW_FILE_NAME
     path.write_text(
-        yaml.safe_dump(to_builtin(resolved), sort_keys=False, explicit_start=True),
-        encoding=_ENCODING,
+        yaml.safe_dump(to_builtin(resolved), sort_keys=False, explicit_start=True), encoding="utf-8"
     )
     return path
 
@@ -449,7 +441,7 @@ def _materialize_effective_workflow(work, resolved):
 def _test_output_paths(configurations, replacements):
     """Use application output paths or the candidate path for native collection."""
     paths = [str(config[_CONFIGURATION]["output_path"]) for config in configurations]
-    return list(dict.fromkeys(paths)) or [replacements[_CANDIDATE_SITE_PATH]]
+    return list(dict.fromkeys(paths)) or [replacements["__SCIENCE_CANDIDATE_SITE_PATH__"]]
 
 
 def _execute_test_workflow(definition, args, replacements):
@@ -460,12 +452,7 @@ def _execute_test_workflow(definition, args, replacements):
         run_applications(args, replacements=replacements)
     validated = _evaluate_products(definition, replacements)
     if definition.get(_PRODUCES_PRODUCTION):
-        record = Path(replacements[_CANDIDATE_SITE_PATH]) / RECORD_NAME
-        compatibility = (
-            json.loads(record.read_text(encoding=_ENCODING)) if record.is_file() else None
-        )
         return {
-            _DEPENDENCY_COMPATIBILITY: compatibility,
             "status": "submitted",
             "execution": "submitted",
             "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
@@ -496,7 +483,7 @@ def _selected_model_source_environment(args):
 
 def _collect_production(definition, replacements):
     """Check all production submissions once, validating only completed results."""
-    candidate = Path(replacements[_CANDIDATE_SITE_PATH])
+    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
     manifests = _matched_files(str(candidate / f"**/{_SUBMISSION_FILE_NAME}"))
     pending = False
     for manifest in manifests:
@@ -525,7 +512,7 @@ def _prepare_test_retry(definition, replacements, args, run_id, work, report):
     if not args.get("science_overwrite") or not definition.get(_PRODUCES_PRODUCTION):
         return
     _check_inputs({"requires": definition.get("requires", [])}, replacements)
-    candidate = Path(replacements[_CANDIDATE_SITE_PATH])
+    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
     submissions = list(candidate.rglob(_SUBMISSION_FILE_NAME))
     if not submissions:
         return

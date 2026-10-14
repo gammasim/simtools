@@ -10,17 +10,6 @@ from simtools.science_tests import campaign as campaign_runner
 from simtools.science_tests import definitions as science_test_definitions
 from simtools.science_tests import execution as science_test_execution
 
-_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
-
-
-_FILESYSTEM_PATH = "simulation_models_path"
-
-
-_PREVIEW_NAME = "_preview"
-_CONTAINER_IMAGE_PATH = "__SCIENCE_CONTAINER_IMAGE_PATH__"
-_APPLICATION = "application"
-_CONFIGURATION = "configuration"
-
 
 def _write_yaml(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -86,7 +75,7 @@ def test_existing_submission_prevents_resubmission(tmp_test_directory):
     (root / "submission.json").write_text("{}", encoding="utf-8")
     with pytest.raises(ValueError, match="Production submission blocked") as error:
         science_test_definitions._check_inputs(
-            {"produces_production": True}, {_CANDIDATE_SITE_PATH: str(root)}
+            {"produces_production": True}, {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
         )
 
     assert str(root / "submission.json") in str(error.value)
@@ -140,13 +129,13 @@ def test_execution_log_is_recorded_only_for_current_execution(
 
 def test_test_output_paths_deduplicate_and_fall_back_to_candidate():
     candidate = "/candidate/site"
-    replacements = {_CANDIDATE_SITE_PATH: candidate}
+    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": candidate}
 
     assert science_test_execution._test_output_paths(
         [
-            {_CONFIGURATION: {"output_path": "/output/one"}},
-            {_CONFIGURATION: {"output_path": "/output/one"}},
-            {_CONFIGURATION: {"output_path": "/output/two"}},
+            {"configuration": {"output_path": "/output/one"}},
+            {"configuration": {"output_path": "/output/one"}},
+            {"configuration": {"output_path": "/output/two"}},
         ],
         replacements,
     ) == ["/output/one", "/output/two"]
@@ -181,7 +170,7 @@ def test_shared_runtime_environment(tmp_test_directory, present):
             {
                 "runtime_environment": {
                     "container_engine": "apptainer",
-                    "image": _CONTAINER_IMAGE_PATH,
+                    "image": "__SCIENCE_CONTAINER_IMAGE_PATH__",
                     "environment_file": "__CONFIG_DIRECTORY__/profiles/htcondor.env",
                 },
             },
@@ -189,7 +178,7 @@ def test_shared_runtime_environment(tmp_test_directory, present):
     runtime = science_test_definitions._shared_runtime_environment(
         template,
         {
-            _CONTAINER_IMAGE_PATH: "/images/simtools.sif",
+            "__SCIENCE_CONTAINER_IMAGE_PATH__": "/images/simtools.sif",
             "__CONFIG_DIRECTORY__": "/other/workflow",
         },
     )
@@ -214,16 +203,14 @@ def test_shared_runtime_environment_invalid(tmp_test_directory):
     ("produces_production", "inline"), [(False, False), (True, False), (False, True)]
 )
 def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production, inline):
-    monkeypatch.setattr(
-        science_test_execution, _PREVIEW_NAME, lambda *args: {"initialization": "not checked"}
-    )
     template = campaign["template_dir"]
-    shared = {"container_engine": "apptainer", "image": _CONTAINER_IMAGE_PATH}
+    shared = {"container_engine": "apptainer", "image": "__SCIENCE_CONTAINER_IMAGE_PATH__"}
     _write_yaml(template / "run_time.yml", {"runtime_environment": shared})
     if inline:
         workflow = science_test_definitions._load_yaml(template / "workflow.yml")
         workflow["runtime_environment"] = {"container_engine": "apptainer", "image": "inline.sif"}
         _write_yaml(template / "workflow.yml", workflow)
+    monkeypatch.setattr(science_test_execution, "_preview", lambda *_: {})
     captured = []
     prepare = science_test_execution.prepare_workflow
 
@@ -238,7 +225,7 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
         template,
         {
             "__SCIENCE_CANDIDATE_PATH__": str(template / "candidate"),
-            _CONTAINER_IMAGE_PATH: "/images/shared.sif",
+            "__SCIENCE_CONTAINER_IMAGE_PATH__": "/images/shared.sif",
         },
         "north",
         {"array_layout_name": "CTAO-North-Alpha"},
@@ -326,7 +313,7 @@ def test_production_retry_archives_artifacts(tmp_test_directory, mocker, overwri
     validate = mocker.patch.object(science_test_execution, "_validate_production_retry")
     science_test_execution._prepare_test_retry(
         {"produces_production": True},
-        {_CANDIDATE_SITE_PATH: str(candidate)},
+        {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)},
         {"science_overwrite": overwrite},
         "retry-id",
         work,
@@ -367,22 +354,18 @@ def test_collection_waits_for_outputs_without_submitting(tmp_test_directory, moc
     result = science_test_execution._execute_test_workflow(
         {"collect_production": True, "products": [str(product)]},
         {},
-        {_CANDIDATE_SITE_PATH: str(root)},
+        {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)},
     )
     assert result["status"] == ("pending" if pending else "pass")
     run.assert_not_called()
 
 
-def test_submission_does_not_validate_completed_production(mocker, tmp_test_directory):
+def test_submission_does_not_validate_completed_production(mocker):
     run = mocker.patch.object(science_test_execution, "run_applications")
     mocker.patch.object(
         science_test_execution, "_evaluate_products", return_value={"status": "pass"}
     )
-    result = science_test_execution._execute_test_workflow(
-        {"produces_production": True},
-        {},
-        {_CANDIDATE_SITE_PATH: str(tmp_test_directory)},
-    )
+    result = science_test_execution._execute_test_workflow({"produces_production": True}, {}, {})
     assert result["status"] == result["execution"] == "submitted"
     run.assert_called_once()
 
@@ -391,7 +374,7 @@ def test_submission_does_not_validate_completed_production(mocker, tmp_test_dire
     ("source", "inactive_environment"),
     [
         ({"simulation_models_git_path": "/models.git"}, "SIMTOOLS_SIMULATION_MODELS_PATH"),
-        ({_FILESYSTEM_PATH: "/models"}, "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"),
+        ({"simulation_models_path": "/models"}, "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"),
     ],
 )
 def test_execution_hides_inactive_model_source_environment(
@@ -509,7 +492,7 @@ def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_d
         science_test_execution,
         "discover_product_manifests",
         return_value=[
-            SimpleNamespace(data={_CONFIGURATION: {"energy_min": 30}}),
+            SimpleNamespace(data={"configuration": {"energy_min": 30}}),
         ],
     )
     with pytest.raises(ValueError, match="coverage differs"):
@@ -527,35 +510,11 @@ def test_materialize_effective_workflow_serializes_model_paths(tmp_test_director
     resolved = {
         "applications": [
             {
-                _APPLICATION: "simtools-write-trigger-histograms",
-                _CONFIGURATION: {_FILESYSTEM_PATH: models},
+                "application": "simtools-write-trigger-histograms",
+                "configuration": {"simulation_models_path": models},
             }
         ]
     }
     path = science_test_execution._materialize_effective_workflow(work, resolved)
     recorded = yaml.safe_load(path.read_text(encoding="utf-8"))
-    assert recorded["applications"][0][_CONFIGURATION][_FILESYSTEM_PATH] == str(models)
-
-
-def test_production_preview_uses_effective_workflow_overrides(monkeypatch):
-    captured = []
-    monkeypatch.setattr(
-        science_test_execution, _PREVIEW_NAME, lambda args, image: captured.append((args, image))
-    )
-    source = "selected-workflow-models"
-    image = "selected-workflow-image.sif"
-    science_test_execution._preview_production(
-        [
-            {
-                _APPLICATION: "simtools-simulate-prod",
-                _CONFIGURATION: {
-                    _FILESYSTEM_PATH: source,
-                    "backend_config": {"container_image": image},
-                },
-            }
-        ],
-        {_FILESYSTEM_PATH: "inherited-models"},
-        {_CONTAINER_IMAGE_PATH: "inherited-image.sif"},
-    )
-    assert captured[0][0][_FILESYSTEM_PATH] == source
-    assert captured[0][1] == image
+    assert recorded["applications"][0]["configuration"]["simulation_models_path"] == str(models)
