@@ -396,9 +396,7 @@ class Configurator:
             return boolean_tokens
 
         if isinstance(value, list):
-            if value:
-                return [option, *map(str, value)]
-            return [option] if action is not None and action.nargs == "*" else []
+            return Configurator._list_arg_tokens(option, value, action)
 
         if Configurator._is_scalar_config_value(value):
             return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
@@ -407,6 +405,24 @@ class Configurator:
             return [option]
 
         return []
+
+    @staticmethod
+    def _list_arg_tokens(option, value, action):
+        """Convert a list-valued configuration entry to command-line tokens."""
+        if not value:
+            return [option] if action is not None and action.nargs == "*" else []
+        if Configurator._is_repeatable_single_value(action):
+            return [token for item in value for token in (option, str(item))]
+        return [option, *map(str, value)]
+
+    @staticmethod
+    def _is_repeatable_single_value(action):
+        """Return whether an argparse action appends one value per occurrence."""
+        return (
+            action is not None
+            and action.__class__.__name__ == "_AppendAction"
+            and action.nargs is None
+        )
 
     @staticmethod
     def _boolean_arg_tokens(option, value, action):

@@ -20,8 +20,8 @@ html_theme.sidebar_secondary.remove: true
 .. currentmodule:: simtools
 ```
 
-**simtools** is a toolkit for model parameter management, configuring simulation productions, setting, validation workflows.
-It is part of the simulation pipeline [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
+**simtools** is a toolkit for simulation of imaging atmospheric Cherenkov telescopes.
+It provides tools for model parameter management, configuring simulation productions, and setting up validation workflows.
 
 ````{div} sd-d-flex-row
 ```{button-ref} user-guide/getting_started

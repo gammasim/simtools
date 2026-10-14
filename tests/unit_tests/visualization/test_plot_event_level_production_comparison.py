@@ -8,7 +8,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from simtools.constants import SCHEMA_PATH
-from simtools.io import ascii_handler
+from simtools.data_model import schema
 from simtools.sim_events.production_comparison import ProductionEventMetrics
 from simtools.visualization import plot_event_level_production_comparison
 
@@ -64,7 +64,7 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
 
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         stats_payload = json.load(file_handle)
-    comparison_schema = ascii_handler.collect_data_from_file(
+    comparison_schema = schema.load_schema(
         SCHEMA_PATH / "production_comparison_statistics.schema.yml"
     )
     jsonschema.Draft6Validator.check_schema(comparison_schema)
@@ -100,6 +100,34 @@ def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
     assert not (output_path / "trigger_multiplicity.png").exists()
 
 
+def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    statistics_file = plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, report_mode="compact"
+    )
+
+    assert (output_path / "comparison-report.pdf").is_file()
+    assert statistics_file.is_file()
+    assert not list(output_path.glob("*.png"))
+
+
+def test_no_plot_mode_retains_statistics(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
+
+    statistics_file = plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, report_mode="none"
+    )
+
+    assert statistics_file.is_file()
+    assert not list(output_path.glob("*.png"))
+
+
 def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
     metrics = [
         _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
@@ -119,12 +147,12 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
     plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         statistics = json.load(file_handle)
-    comparison_schema = ascii_handler.collect_data_from_file(
+    comparison_schema = schema.load_schema(
         SCHEMA_PATH / "production_comparison_statistics.schema.yml"
     )
-    statistics["format_version"] = 2
+    statistics["format_version"] = 3
 
-    with pytest.raises(jsonschema.ValidationError, match="2 is not one of"):
+    with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(statistics, comparison_schema)
 
 

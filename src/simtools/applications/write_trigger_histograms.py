@@ -38,12 +38,7 @@ _ARGUMENTS = (
         exclusive_group="event_data_input",
         exclusive_group_required=True,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "require_complete_runs",
         help="Fail when selected run numbers are not contiguous within each configuration group.",

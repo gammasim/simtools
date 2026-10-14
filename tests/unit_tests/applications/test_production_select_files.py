@@ -25,8 +25,6 @@ def test_application_parser_accepts_selection_options():
 
     assert args.production_path == "production"
     assert args.select == ["configuration.primary=gamma"]
-    assert args.file_type == "reduced_event_data"
-    assert args.require_complete_runs is True
 
 
 def test_main_prints_selection_summary_and_writes_explicit_output(

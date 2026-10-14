@@ -1,13 +1,17 @@
 """Tests for production comparison workflows."""
 
+import json
 import logging
 from pathlib import Path
 
 import pytest
 
 from simtools.constants import SCHEMA_PATH
+from simtools.data_model import schema
 from simtools.production_configuration import production_comparison
-from simtools.production_configuration.production_file_selection import ProductionManifest
+from simtools.production_configuration.production_file_selection import (
+    ProductionManifest,
+)
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
 
@@ -29,8 +33,8 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
         "plot_event_level_production_comparison.plot",
         side_effect=[first_statistics_file, second_statistics_file],
     )
-    mock_dump = mocker.patch(
-        "simtools.production_configuration.production_comparison.MetadataCollector.dump"
+    mock_summary = mocker.patch(
+        "simtools.production_configuration.production_comparison._write_comparison_summary"
     )
 
     production_comparison.write_production_comparison(
@@ -52,20 +56,20 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             output_path=output_directory,
             array_layout_name="first",
             figure_format=["png"],
+            report_mode="diagnostic",
+            comparison_title="Layout: first",
         ),
         mocker.call(
             mocker.sentinel.second_metrics,
             output_path=output_directory,
             array_layout_name="second",
             figure_format=["png"],
+            report_mode="diagnostic",
+            comparison_title="Layout: second",
         ),
     ]
-    assert [call.args[0]["array_layout_name"] for call in mock_dump.call_args_list] == [
-        "first",
-        "second",
-    ]
-    assert mock_dump.call_args.args[0]["schema_file"] == str(
-        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    mock_summary.assert_called_once_with(
+        [first_statistics_file, second_statistics_file], output_directory, "diagnostic"
     )
 
 
@@ -146,6 +150,38 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     )
     assert mock_write.call_args.args[2] == output_directory / input_stem
     assert mock_write.call_args.args[3] == ["alpha"]
+    inventory = json.loads((output_directory / "comparison_inventory.json").read_text())
+    assert inventory["matched_pair_count"] == 1
+    assert inventory["pairing_error_count"] == 0
+    assert "pairs" not in inventory
+
+
+def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "comparison"
+    descriptors = [
+        ProductionDescriptor("baseline", ["baseline.hdf5"]),
+        ProductionDescriptor("candidate", ["candidate.hdf5"]),
+    ]
+    mocker.patch(
+        "simtools.production_configuration.production_comparison."
+        "_production_descriptor_pairs_from_metadata",
+        return_value=[({"configuration": {"zenith_angle": 20}}, descriptors)],
+    )
+    figure = mocker.sentinel.figure
+
+    def write_pair(*_args, compact_figures=None):
+        compact_figures.append(figure)
+
+    mocker.patch.object(
+        production_comparison, "_write_array_layout_comparisons", side_effect=write_pair
+    )
+    save = mocker.patch.object(production_comparison, "save_figures_to_single_document")
+
+    production_comparison.write_production_comparison(
+        {"baseline_path": "baseline", "report_mode": "compact"}, output_directory
+    )
+
+    save.assert_called_once_with([figure], output_directory / "trigger-report.pdf", close=True)
 
 
 def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
@@ -232,6 +268,10 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
 
     mock_write.assert_called_once()
     assert "missing candidates=1, missing baselines=0" in caplog.text
+    inventory = json.loads((base_directory / "comparison/comparison_inventory.json").read_text())
+    assert inventory["matched_pair_count"] == 1
+    assert inventory["pairing_error_count"] == 1
+    assert "pairs" not in inventory
     descriptors = mock_write.call_args.args[0]
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
     assert descriptors[0].input_files == [str(base_directory / "baseline" / "baseline_20.hdf5")]
@@ -320,3 +360,132 @@ def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tm
     empty_manifest = ProductionManifest(path=manifest.path, data={"files": {}})
     with pytest.raises(ValueError, match="Expected exactly one"):
         production_comparison._single_trigger_histogram_file(empty_manifest)
+
+
+def test_comparison_title_formats_shared_and_different_configuration_values():
+    configuration = {
+        "baseline": {
+            "primary": "gamma",
+            "site": "North",
+            "energy_min": {"value": 30, "unit": "GeV"},
+            "energy_max": {"value": 100, "unit": "GeV"},
+            "zenith_angle": {"value": 20, "unit": "deg"},
+            "azimuth_angle": {"value": 0, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        },
+        "candidate": {
+            "primary": "gamma",
+            "site": "North",
+            "energy_min": {"value": 30, "unit": "GeV"},
+            "energy_max": {"value": 200, "unit": "GeV"},
+            "zenith_angle": {"value": 20, "unit": "deg"},
+            "azimuth_angle": {"value": 10, "unit": "deg"},
+            "corsika_he_interaction": "qgs3",
+        },
+    }
+
+    title = production_comparison._comparison_title(
+        {"configurations": configuration}, "CTAO-North-Alpha"
+    )
+
+    assert "Layout: CTAO-North-Alpha | Primary: gamma | Site: North" in title
+    assert "baseline 30 GeV to 100 GeV; candidate 30 GeV to 200 GeV" in title
+    assert "Zenith: 20 deg" in title
+    assert "Azimuth: baseline 0 deg -> candidate 10 deg" in title
+    assert "Interaction model: qgs3" in title
+    assert production_comparison._comparison_title(None, None) is None
+
+
+def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
+    output = Path(tmp_test_directory)
+    statistics_file = output / "pair" / "alpha" / "comparison_statistics.json"
+    statistics_file.parent.mkdir(parents=True)
+    statistics_file.write_text(
+        json.dumps(
+            {
+                "format_version": 1,
+                "baseline": {
+                    "label": "base",
+                    "simulated_event_count": 10,
+                    "triggered_event_count": 5,
+                },
+                "comparison_sets": [
+                    {"label": "candidate", "simulated_event_count": 12, "triggered_event_count": 6}
+                ],
+                "plot_statistics": {
+                    "energy": {
+                        "plot_name": "distribution_energy",
+                        "baseline_label": "base",
+                        "metric_type": "quantity_distribution",
+                        "baseline_counts": [10] * 1000,
+                        "comparisons": [
+                            {
+                                "candidate_label": "candidate",
+                                "simulated": {
+                                    "metric": "ks",
+                                    "valid": True,
+                                    "value": 0.2,
+                                    "reason": "",
+                                    "sample_size": 10,
+                                    "bin_counts": [2] * 1000,
+                                },
+                                "triggered": {
+                                    "metric": "ks",
+                                    "value": None,
+                                    "valid": False,
+                                    "reason": "empty",
+                                },
+                            }
+                        ],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    production_comparison._write_comparison_summary([statistics_file], output, "compact")
+
+    summary = json.loads((output / "comparison_statistics.json").read_text(encoding="utf-8"))
+    schema.validate_dict_using_schema(
+        summary,
+        schema_file=SCHEMA_PATH / "production_comparison_statistics.schema.yml",
+        offline=True,
+    )
+    assert summary["format_version"] == 2
+    assert summary["baseline"]["simulated_event_count"] == 10
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["pair_count"] == 1
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
+        "candidate:simulated"
+    ]["median"] == pytest.approx(0.2)
+    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
+        "candidate:triggered"
+    ]["invalid_reasons"] == {"empty": 1}
+    pair_statistics = summary["comparisons"][0]["statistics"]["plot_statistics"]["energy"]
+    assert pair_statistics["comparisons"][0]["simulated"] == {
+        "metric": "ks",
+        "valid": True,
+        "value": 0.2,
+        "reason": "",
+        "sample_size": 10,
+    }
+    assert pair_statistics["comparisons"][0]["triggered"]["reason"] == "empty"
+    assert "baseline_counts" not in pair_statistics
+    assert not statistics_file.exists()
+
+
+def test_version_one_report_remains_valid_under_current_schema():
+    current_schema = schema.load_schema(SCHEMA_PATH / "production_comparison_statistics.schema.yml")
+    schema.validate_dict_using_schema(
+        {
+            "format_version": 1,
+            "baseline": {
+                "label": "baseline",
+                "simulated_event_count": 10,
+                "triggered_event_count": 5,
+            },
+            "comparison_sets": [],
+            "plot_statistics": {},
+        },
+        json_schema=current_schema,
+    )
