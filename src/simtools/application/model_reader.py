@@ -47,7 +47,7 @@ def create_model_reader(
     if simulation_models_git_path:
         revision = simulation_models_git_revision
         if revision is None:
-            revision = dependency_versions._model_revision(
+            revision = dependency_versions.model_repository_revision(
                 dependency_versions.load_dependency_catalog()
             )
         if not revision:

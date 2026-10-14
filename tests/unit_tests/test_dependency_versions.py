@@ -313,7 +313,9 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["corsika_tables_revision"] == ""
     build_id = corsika["source-ref"].removeprefix("v").replace(".", "")
     assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
-    assert summary["model_repository_revision"] == dependency_versions._model_revision(catalog)
+    assert summary["model_repository_revision"] == dependency_versions.model_repository_revision(
+        catalog
+    )
     assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
     assert summary["simtools_tests_ref"] == catalog["simtools-tests"]["ref"]
     assert (
@@ -687,8 +689,9 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
     output = dependency_versions.export_dependency_configuration(output_format="env")
     catalog = _load_catalog(simtools_root_path)
     test_resources = catalog["simtools-tests"]
+    model_revision = dependency_versions.model_repository_revision(catalog)
     expected = [
-        f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={dependency_versions._model_revision(catalog)}",
+        f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={model_revision}",
         f"SIMTOOLS_TESTS_REF={test_resources['ref']}",
         f"SIMTOOLS_TESTS_RESOURCE_VERSION={test_resources['resource-version']}",
         f"SIMTOOLS_TESTS_REPOSITORY={test_resources['repository']}",

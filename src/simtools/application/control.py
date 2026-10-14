@@ -328,7 +328,7 @@ def _validate_model_compatibility(args):
         catalog = dependency_versions.load_dependency_catalog()
         revision = None if filesystem_path else args.get("simulation_models_git_revision")
         if not filesystem_path and revision is None:
-            revision = dependency_versions._model_revision(catalog)
+            revision = dependency_versions.model_repository_revision(catalog)
         args["_dependency_compatibility"] = _validate(
             path,
             catalog,

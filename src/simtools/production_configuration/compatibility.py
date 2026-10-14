@@ -86,7 +86,7 @@ def _preview(args, image=None):
     if not args.get(PATH_KEY):
         revision = args.get(GIT_REVISION_KEY)
         if revision is None:
-            revision = dependency_versions._model_revision(target[CATALOG_KEY])
+            revision = dependency_versions.model_repository_revision(target[CATALOG_KEY])
     logger.info("Checking models for target simtools %s (host %s)", target[TARGET_KEY], __version__)
     return {
         **_validate(

@@ -177,7 +177,7 @@ def _simtel_build_id(component):
     return _safe_build_id(source_ref, build_id)
 
 
-def _model_revision(catalog):
+def model_repository_revision(catalog):
     """Return the configured simulation-model repository ref or revision."""
     model = catalog.get("model-repository") or catalog.get("model-database", {})
     return model.get("git-revision") or model.get(
@@ -818,7 +818,7 @@ def dependency_catalog_summary(catalog):
         ),
         "corsika_tables_revision": catalog["corsika-interaction-tables"].get("revision", ""),
         "model_repository": catalog["model-repository"].get("repository-url", ""),
-        "model_repository_revision": _model_revision(catalog),
+        "model_repository_revision": model_repository_revision(catalog),
         "simtools_tests_repository": test_resources.get("repository", ""),
         "simtools_tests_url": test_resources.get("source-url", ""),
         "simtools_tests_ref": _tests_ref(test_resources) or _tests_tag(test_resources),
@@ -852,7 +852,7 @@ def dependency_catalog_environment(catalog):
         configuration. Local paths and credentials are intentionally omitted.
     """
     environment = {
-        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": model_repository_revision(catalog),
     }
     if "simtools-tests" in catalog:
         if catalog["schema_version"] in _readable_ref_schemas():
