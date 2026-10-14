@@ -17,6 +17,9 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 
+# Fraction of the scaled proton rate that is intersected with the NSB rate
+PROTON_INTERSECTION_FRACTION = 0.1
+
 
 def plot(config, output_file, data_path=None, model_reader=None):
     """
@@ -357,6 +360,7 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
     _plot_proton_curve(axis, proton_stats)
     scaling_factor = config.get("scaling_factor", 1.35)
     _plot_scaled_proton_curve(axis, proton_stats, scaling_factor)
+    _plot_intersection_proton_curve(axis, proton_stats, scaling_factor)
 
     # Add vertical line at trigger threshold if provided (before legend creation)
     if trigger_threshold is not None:
@@ -423,29 +427,44 @@ def _plot_proton_curve(axis, proton_stats):
 
 
 def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
-    """Plot scaled proton trigger rates for bias curve intersection."""
+    """Plot scaled proton trigger rates."""
+    _plot_rescaled_proton_curve(
+        axis, proton_stats, scaling_factor, f"{scaling_factor} x Proton", "^", "tab:red"
+    )
+
+
+def _plot_intersection_proton_curve(axis, proton_stats, scaling_factor=1.35):
+    """Plot the fraction of the scaled proton rates that is intersected with the NSB rates."""
+    _plot_rescaled_proton_curve(
+        axis,
+        proton_stats,
+        scaling_factor * PROTON_INTERSECTION_FRACTION,
+        f"{PROTON_INTERSECTION_FRACTION} x {scaling_factor} x Proton",
+        "v",
+        "tab:green",
+    )
+
+
+def _plot_rescaled_proton_curve(axis, proton_stats, scale, label, fmt, color):
+    """Plot proton trigger rates multiplied by a scale, with log-linear fit."""
     if not proton_stats:
         return
 
     proton_thresholds = sorted(proton_stats.keys())
-    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
-    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
-
-    # Scale by the provided scaling factor
-    scaled_proton_rates = [scaling_factor * r for r in proton_rates]
-    scaled_proton_errors = [scaling_factor * e for e in proton_errors]
+    scaled_rates = [scale * proton_stats[t]["rate_hz"] for t in proton_thresholds]
+    scaled_errors = [scale * proton_stats[t]["error_hz"] for t in proton_thresholds]
 
     axis.errorbar(
         proton_thresholds,
-        scaled_proton_rates,
-        yerr=scaled_proton_errors,
-        fmt="^",
-        label=f"{scaling_factor} x Proton",
-        color="tab:red",
+        scaled_rates,
+        yerr=scaled_errors,
+        fmt=fmt,
+        label=label,
+        color=color,
         capsize=3,
     )
 
-    _plot_log_linear_fit(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
+    _plot_log_linear_fit(axis, proton_thresholds, scaled_rates, color=color)
 
 
 def _plot_log_linear_fit(axis, thresholds, rates, color):
@@ -508,6 +527,9 @@ def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
         proton_rates = [stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0]
         all_rates.extend(proton_rates)
         all_rates.extend(scaling_factor * rate for rate in proton_rates)
+        all_rates.extend(
+            PROTON_INTERSECTION_FRACTION * scaling_factor * rate for rate in proton_rates
+        )
 
     if all_rates:
         # Add 10% padding above and below
