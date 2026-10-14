@@ -81,6 +81,17 @@ def test_validate_event_numbers_multiple_files(tmp_path, mocker):
     assert mock_get_events.call_count == 2
 
 
+def test_validate_event_numbers_skips_check_without_expected_count(tmp_path, mocker):
+    data_file = tmp_path / "corsika.data"
+    mock_get_events = mocker.patch(
+        "simtools.corsika.corsika_output_validator.file_info.get_simulated_events"
+    )
+
+    validate_event_numbers([data_file], expected_shower_events=None)
+
+    mock_get_events.assert_not_called()
+
+
 def test_validate_log_files_with_curved_atmosphere(tmp_path, mocker):
     log_file = tmp_path / "corsika.log"
 

@@ -10,7 +10,7 @@ applications:
     input_meta: tests/resources/static/MLTdata-preproduction.meta.yml
     output_file: test.ecsv
     output_path: simtools-output
-    schema_file: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
+    schema_file: input/MST_mirror_2f_measurements.schema.yml
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

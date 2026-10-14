@@ -109,14 +109,14 @@ def _calculate_time_window(args):
 
     disc_bins = telescope_model.get_parameter_value("disc_bins")
     fadc_mhz = telescope_model.get_parameter_value("fadc_mhz")
-    time_window = disc_bins / (fadc_mhz * 1e6)
+    time_window = disc_bins / (fadc_mhz * u.MHz)
 
     _logger.info(
         f"Telescope {telescope_name}: disc_bins={disc_bins}, "
-        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window:.2f} s"
+        f"fadc_mhz={fadc_mhz} MHz, time_window={time_window.to_value(u.s):.2f} s"
     )
 
-    return time_window
+    return time_window.to_value(u.s)
 
 
 def _extract_nsb_rates(args, time_window):
@@ -168,7 +168,7 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
     """Group proton HDF5 files by threshold and run extracted from file names."""
     threshold_files = {}
 
-    for hdf5_file in proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}"):
+    for hdf5_file in sorted(proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}")):
         if "proton" not in hdf5_file.name.lower():
             continue
 
@@ -182,7 +182,13 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
             )
             continue
 
-        threshold_files.setdefault(threshold, {})[run] = hdf5_file
+        run_files = threshold_files.setdefault(threshold, {})
+        if run in run_files:
+            raise ValueError(
+                f"Duplicate proton input for threshold {threshold}, run {run}: "
+                f"{run_files[run]} and {hdf5_file}"
+            )
+        run_files[run] = hdf5_file
 
     return threshold_files
 

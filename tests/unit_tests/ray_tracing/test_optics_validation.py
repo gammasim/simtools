@@ -9,7 +9,17 @@ import numpy as np
 import pytest
 from astropy.table import QTable, Table
 
+from simtools.applications.validate_cumulative_psf import _ARGUMENTS
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.ray_tracing import optics_validation
+
+
+def test_cumulative_psf_cli_requires_measured_data():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(_ARGUMENTS)
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
 
 
 def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
@@ -47,7 +57,7 @@ def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
         optics_validation.load_data(data_file)
 
 
-def test_validate_cumulative_psf_raises_without_radius_data():
+def test_validate_cumulative_psf_requires_data_before_simulation():
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -74,8 +84,9 @@ def test_validate_cumulative_psf_raises_without_radius_data():
         ),
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
     ):
-        with pytest.raises(ValueError, match="Radius data is not available"):
+        with pytest.raises(ValueError, match="Measured PSF data is required"):
             optics_validation.validate_cumulative_psf(app_context)
+    mock_ray.simulate.assert_not_called()
 
 
 def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_directory):
@@ -237,7 +248,8 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
             return_value=MagicMock(),
         ) as mock_create_figure,
         patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
+            side_effect=lambda figures, *_args, **_kwargs: list(figures),
         ) as mock_save_pdf,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
         patch(
@@ -595,7 +607,8 @@ def test_plot_psf_images_calls_create_figure_per_image_and_saves_pdf():
             return_value=MagicMock(),
         ) as mock_create,
         patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
+            side_effect=lambda figures, *_args, **_kwargs: list(figures),
         ) as mock_save,
     ):
         optics_validation._plot_psf_images(mock_ray, "LSTN-01", Path("out.pdf"))
@@ -619,7 +632,10 @@ def test_plot_psf_images_passes_telescope_name_to_figure():
             ".create_annotated_psf_image_figure",
             return_value=MagicMock(),
         ) as mock_create,
-        patch("simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"),
+        patch(
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
+            side_effect=lambda figures, *_args, **_kwargs: list(figures),
+        ),
     ):
         optics_validation._plot_psf_images(mock_ray, "MSTS-01", Path("out.pdf"))
 
@@ -646,7 +662,10 @@ def test_plot_psf_images_in_degrees_uses_eff_flen():
             ".create_annotated_psf_image_figure",
             side_effect=capture_figure,
         ),
-        patch("simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"),
+        patch(
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
+            side_effect=lambda figures, *_args, **_kwargs: list(figures),
+        ),
     ):
         optics_validation._plot_psf_images(
             mock_ray, "LSTN-01", Path("out.pdf"), plot_in_degrees=True

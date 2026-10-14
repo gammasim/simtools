@@ -29,12 +29,14 @@ def test_telescope_trigger_rates():
             "simtools.telescope_trigger_rates.ascii_handler.collect_data_from_file"
         ) as mock_collect_data,
         patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
+        patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
         patch("simtools.telescope_trigger_rates.plot_simtel_event_histograms.plot") as mock_plot,
         patch("simtools.telescope_trigger_rates.io_handler.IOHandler") as mock_io_handler,
     ):
         mock_collect_data.return_value = {"telescope_configs": {"array1": [1, 2, 3]}}
         mock_histograms_instance = MagicMock()
         mock_histograms.return_value = mock_histograms_instance
+        mock_calculate.return_value = (None, None, 1 * u.Hz)
         mock_io_handler_instance = MagicMock()
         mock_io_handler.return_value = mock_io_handler_instance
         mock_io_handler_instance.get_output_directory.return_value = Path("output_dir")
@@ -80,8 +82,10 @@ def test_telescope_trigger_rates_forwards_cr_spectrum():
         )
 
 
-def test_get_cosmic_ray_spectrum_default():
-    assert get_cosmic_ray_spectrum() is IRFDOC_PROTON_SPECTRUM
+@pytest.mark.parametrize("primary_particle", [None, "gamma", "typo"])
+def test_get_cosmic_ray_spectrum_rejects_unknown_particle(primary_particle):
+    with pytest.raises(ValueError, match="No default cosmic-ray spectrum"):
+        get_cosmic_ray_spectrum(primary_particle=primary_particle)
 
 
 def test_get_cosmic_ray_spectrum_known_particle():

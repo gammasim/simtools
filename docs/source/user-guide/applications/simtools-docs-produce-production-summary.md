@@ -9,12 +9,18 @@
 ```{eval-rst}
 Reads ``info.yml`` files from the simulation-models productions directory
 and writes a markdown table of production model versions and their short
-descriptions.
+descriptions. Select either a checked-out repository with
+``--simulation_models_path`` or a local Git repository with
+``--simulation_models_git_path`` and ``--simulation_models_git_revision``.
 
 **Command line arguments**
 
 simulation_models_path (Path)
-    Path to the simulation-models repository root.
+    Path to a checked-out simulation-models repository. Use this or the Git options.
+simulation_models_git_path (Path)
+    Path to a local normal, bare, or mirror Git simulation-model repository.
+simulation_models_git_revision (str)
+    Git tag, ref, or commit to read. Defaults to the dependency catalog revision.
 output_path (Path)
     Directory for the output file.
 output_file (str)
@@ -26,6 +32,12 @@ output_file (str)
 
     simtools-docs-produce-production-summary \\
         --simulation_models_path ../simulation-models \\
+        --output_path simtools-output/reports/productions \\
+        --output_file production_version_descriptions.md
+
+    simtools-docs-produce-production-summary \\
+        --simulation_models_git_path ../simulation-models.git \\
+        --simulation_models_git_revision HEAD \\
         --output_path simtools-output/reports/productions \\
         --output_file production_version_descriptions.md
 ```

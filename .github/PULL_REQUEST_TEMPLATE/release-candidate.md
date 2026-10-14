@@ -13,7 +13,9 @@ If test resources must be updated:
 - [ ] Define a new test-resource version in the [simtools-tests repository](https://github.com/gammasim/simtools-tests).
 - [ ] Update its workflow configuration to use the release-candidate `simtools-prod` image, including the required image variant and tag.
 - [ ] Generate the new resources with `simtools-resources-test-generate` and commit them to `simtools-tests`.
-- [ ] Run unit and integration tests with the new resources using `--test_resources_path`.
+- [ ] Run unit and integration tests with the new resources using
+      `--simtools_tests_path /full/path/to/simtools-tests/simtools-tests` and
+      `--simtools_tests_resource_version <version>`.
 
 ## Release Preparation Checklist
 

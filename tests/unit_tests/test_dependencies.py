@@ -240,6 +240,31 @@ def test_validate_table_file_reports_unreadable_file(tmp_test_directory, mocker)
     assert "file is not readable" in _validate_table_file(table_file, 1)
 
 
+def test_validate_table_file_detects_same_size_content_change(tmp_test_directory):
+    table_file = Path(tmp_test_directory) / "table.dat"
+    table_file.write_bytes(b"other")
+
+    assert "SHA-256 mismatch" in _validate_table_file(
+        table_file,
+        expected_size=5,
+        expected_sha256="2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    )
+
+
+def test_validate_table_file_accepts_matching_sha256(tmp_test_directory):
+    table_file = Path(tmp_test_directory) / "table.dat"
+    table_file.write_bytes(b"hello")
+
+    assert (
+        _validate_table_file(
+            table_file,
+            expected_size=5,
+            expected_sha256="2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        )
+        is None
+    )
+
+
 def test_is_git_lfs_pointer_handles_read_errors(mocker):
     """An unreadable file is not mistaken for an LFS pointer."""
     path = mocker.Mock()

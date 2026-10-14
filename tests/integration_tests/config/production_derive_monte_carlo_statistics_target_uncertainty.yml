@@ -21,7 +21,7 @@ applications:
       file: mc_statistics_uncertainty.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/monte_carlo_statistics.schema.yml
+        schema: monte_carlo_statistics.schema.yml
       - type: table
         minimum_rows: 1
         columns:

@@ -70,6 +70,7 @@ def plot(config, output_file, model_reader=None):
                 site=config["site"],
                 array_element_name=config.get("telescope"),
                 parameter_version=config["parameter_version"],
+                model_version=config.get("model_version"),
             )
             parameters["camera_pixel_layout"] = layout_parameter["camera_pixel_layout"]
         camera_components = _resolve_camera_components(model_reader, parameters)
