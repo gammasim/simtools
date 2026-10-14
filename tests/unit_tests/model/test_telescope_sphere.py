@@ -130,6 +130,18 @@ def test_invalid_mirror_class():
         derive_telescope_sphere_radius(_model(3))
 
 
+@pytest.mark.parametrize("parameter", ["primary_mirror_diameter", "secondary_mirror_diameter"])
+@pytest.mark.parametrize("value", [0, np.nan])
+def test_invalid_parameterized_mirror_diameter(parameter, value):
+    model = _model(2)
+    values = model.get_parameter_value_with_unit.side_effect
+    model.get_parameter_value_with_unit.side_effect = lambda name: (
+        value * u.m if name == parameter else values(name)
+    )
+    with pytest.raises(ValueError, match="mirror diameter must be positive and finite"):
+        derive_telescope_sphere_radius(model)
+
+
 def test_nonfinite_dish_length():
     model = _model()
     values = model.get_parameter_value_with_unit.side_effect
@@ -175,6 +187,17 @@ def test_listed_panel_height_preserves_sign():
 
     height = _panel_heights(_model(), np.array([2.0]), np.array([-0.5]))
     assert height[0] == pytest.approx(-0.5)
+
+
+def test_explicit_panel_heights_do_not_require_dish_geometry():
+    from simtools.model.telescope_sphere import _panel_heights
+
+    model = _model()
+    model.get_parameter_value_with_unit.side_effect = InvalidModelParameterError(
+        "missing dish geometry"
+    )
+    listed_z = np.array([-0.5, 0.25])
+    np.testing.assert_array_equal(_panel_heights(model, np.array([2.0, 3.0]), listed_z), listed_z)
 
 
 def test_invalid_davies_cotton_dish_length():

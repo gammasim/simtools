@@ -59,6 +59,8 @@ def _polynomial_bounds(model, surface, radius):
 
 def _panel_heights(model, radius, listed_z):
     """Calculate nominal panel-centre heights as sim_telarray does."""
+    if np.all(listed_z != 0):
+        return listed_z
     focal_length = _length(model, _FOCAL_LENGTH)
     dish_length = _length(model, _DISH_SHAPE_LENGTH) or focal_length
     if not np.isfinite(dish_length) or dish_length <= 0:
@@ -166,7 +168,10 @@ def derive_telescope_sphere_radius(model, zenith_range=(0, 90) * u.deg, margin=0
             ("primary", _PRIMARY_DIAMETER),
             (_SECONDARY, _SECONDARY_DIAMETER),
         ):
-            radius = _length(model, diameter_name) / 2
+            diameter = _length(model, diameter_name)
+            if not np.isfinite(diameter) or diameter <= 0:
+                raise ValueError(f"{surface} mirror diameter must be positive and finite.")
+            radius = diameter / 2
             elements.append((radius, _polynomial_bounds(model, surface, radius)))
     else:
         raise ValueError(f"Unsupported mirror_class {mirror_class}; expected 0, 1, or 2.")
