@@ -1,8 +1,10 @@
 """Prepare, execute, and collect science-test workflows."""
 
 import logging
+import os
 import shutil
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
 import yaml
@@ -425,7 +427,8 @@ def _execute_test_workflow(definition, args, replacements):
     """Submit, collect, or execute a regular science workflow."""
     if definition.get("collect_production"):
         return _collect_production(definition, replacements)
-    run_applications(args, replacements=replacements)
+    with _selected_model_source_environment(args):
+        run_applications(args, replacements=replacements)
     validated = _evaluate_products(definition, replacements)
     if definition.get("produces_production"):
         return {
@@ -434,6 +437,27 @@ def _execute_test_workflow(definition, args, replacements):
             "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
         }
     return validated
+
+
+@contextmanager
+def _selected_model_source_environment(args):
+    """Keep an inactive model source from a parent .env out of child applications."""
+    if args.get("simulation_models_git_path"):
+        inactive = "SIMTOOLS_SIMULATION_MODELS_PATH"
+    elif args.get("simulation_models_path"):
+        inactive = "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
+    else:
+        yield
+        return
+    previous = os.environ.get(inactive)
+    os.environ[inactive] = ""
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(inactive, None)
+        else:
+            os.environ[inactive] = previous
 
 
 def _collect_production(definition, replacements):

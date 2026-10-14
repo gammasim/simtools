@@ -44,7 +44,7 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
 # Submit production only after grid review.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --context_file /path/to/release/science_tests/context.yml \
-  --test production.gamma --allow_production
+  --test production.gamma --allow_production --preflight
 
 # Collect finished jobs, validate their products, and update the release report.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
@@ -57,6 +57,10 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test derive.trigger_histograms \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
+
+`--preflight` is recommended before production. It validates all configured host paths, then runs
+one high-priority worker-side Apptainer canary per selected site using the production container
+setup. If omitted, production still proceeds with a warning.
 
 Repeat `--site` or `--test` to narrow execution. Only named tests run; prerequisites must be selected
 explicitly or their required products must already exist. Selected prerequisites run in dependency
