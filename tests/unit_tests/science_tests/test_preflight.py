@@ -27,6 +27,28 @@ def test_validate_context_paths_reports_missing_paths(tmp_test_directory):
         )
 
 
+def test_validate_context_paths_reports_empty_directories_and_image(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    empty = root / "empty"
+    empty.mkdir()
+    image = root / "empty.sif"
+    image.touch()
+
+    with pytest.raises(
+        ValueError, match="simulation_models_path directory contains no non-empty files"
+    ) as error:
+        preflight.validate_context_paths(
+            {
+                "simulation_models_path": str(empty),
+                "__SCIENCE_CONTAINER_IMAGE_PATH__": str(image),
+            }
+        )
+
+    message = str(error.value)
+    assert "simulation_models_path directory contains no non-empty files" in message
+    assert "__SCIENCE_CONTAINER_IMAGE_PATH__ is not a non-empty file" in message
+
+
 def test_canary_config_ignores_null_context_values(tmp_test_directory):
     root = Path(tmp_test_directory)
     workflow = root / "workflow.yml"
@@ -52,6 +74,14 @@ applications:
     )
 
     assert config["container_image"] == "/image.sif"
+
+
+def test_canary_config_requires_inline_backend_config(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    workflow = root / "workflow.yml"
+    workflow.write_text("applications:\n  - configuration: {}\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="requires inline backend_config"):
+        preflight._canary_config(root, "workflow.yml", {})
 
 
 def test_worker_canary_uses_high_priority(tmp_test_directory, monkeypatch):
@@ -85,3 +115,49 @@ applications:
     assert captured["options"].backend_config["priority"] == preflight.PREFLIGHT_PRIORITY
     assert "PREFLIGHT_FAILED" in captured["jobs"][0].command[2]
     subprocess.run(["sh", "-n"], input=captured["jobs"][0].command[2], text=True, check=True)
+
+
+def test_worker_canary_requires_container_image(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    (root / "workflow.yml").write_text(
+        "applications:\n  - configuration:\n      backend_config: {}\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="has no container image"):
+        preflight.run_worker_canary(root, "workflow.yml", {}, root / "work")
+
+
+def test_worker_canary_checks_context_paths_and_waits_for_submission(
+    tmp_test_directory, monkeypatch
+):
+    root = Path(tmp_test_directory)
+    (root / "workflow.yml").write_text(
+        "applications:\n  - configuration:\n      backend_config:\n"
+        "        container_image: /image.sif\n",
+        encoding="utf-8",
+    )
+    captured = {}
+    submission = object()
+    monkeypatch.setattr(
+        preflight,
+        "submit_jobs",
+        lambda jobs, options: captured.update(jobs=jobs, options=options) or submission,
+    )
+    monkeypatch.setattr(
+        preflight,
+        "wait_for_submission",
+        lambda received, options: captured.update(submission=received, waited_options=options),
+    )
+
+    preflight.run_worker_canary(
+        root,
+        "workflow.yml",
+        {"__SCIENCE_CANDIDATE_PATH__": "/candidate dir"},
+        root / "work",
+    )
+
+    command = captured["jobs"][0].command[2]
+    assert "check_path __SCIENCE_CANDIDATE_PATH__ '/candidate dir'" in command
+    assert captured["submission"] is submission
+    assert captured["waited_options"] is captured["options"]

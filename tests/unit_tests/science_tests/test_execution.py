@@ -411,6 +411,25 @@ def test_execution_restores_absent_model_source_environment_after_failure(monkey
     assert inactive not in os.environ
 
 
+def test_execution_preserves_model_source_environment_when_no_source_is_selected(
+    monkeypatch, mocker
+):
+    variable = "SIMTOOLS_SIMULATION_MODELS_PATH"
+    monkeypatch.setenv(variable, "/inherited")
+    observed = []
+    mocker.patch.object(
+        science_test_execution,
+        "run_applications",
+        side_effect=lambda *_args, **_kwargs: observed.append(os.environ[variable]),
+    )
+    mocker.patch.object(science_test_execution, "_evaluate_products", return_value={})
+
+    science_test_execution._execute_test_workflow({}, {}, {})
+
+    assert observed == ["/inherited"]
+    assert os.environ[variable] == "/inherited"
+
+
 def test_pending_collection_defers_dependent_tests(mocker):
     collect = {"id": "collect.north", "site": "north", "test": "collect"}
     compare = {"id": "compare.north", "site": "north", "test": "compare"}
