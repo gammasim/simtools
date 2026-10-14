@@ -318,9 +318,42 @@ def test_filesystem_model_source_overrides_inherited_git_source(campaign):
 def test_run_preflight_checks_host_paths_and_one_canary_per_site(monkeypatch, tmp_test_directory):
     candidate = Path(tmp_test_directory)
     prepared = [
-        ((None, None, None, "North", None, None, {"workflow": "north-a.yml"}), None),
-        ((None, None, None, "North", None, None, {"workflow": "north-b.yml"}), None),
-        ((None, None, None, "South", None, None, {"workflow": "south.yml"}), None),
+        (
+            (
+                None,
+                None,
+                None,
+                "North",
+                None,
+                None,
+                {"workflow": "north-a.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
+        (
+            (
+                None,
+                None,
+                None,
+                "North",
+                None,
+                None,
+                {"workflow": "north-b.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
+        (
+            (
+                None,
+                None,
+                None,
+                "South",
+                None,
+                None,
+                {"workflow": "south.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
     ]
     run = {
         "context": {"__SCIENCE_CANDIDATE_PATH__": str(candidate)},
