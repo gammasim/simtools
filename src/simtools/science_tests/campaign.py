@@ -215,7 +215,11 @@ def run_release(
 
 def _run_preflight(prepared, run, preflight, dry_run):
     """Validate host paths and run one worker canary per selected site."""
-    if not preflight or dry_run:
+    if (
+        not preflight
+        or dry_run
+        or not any(args[6].get("tier") == "release-prod" for args, _ in prepared)
+    ):
         return
     validate_context_paths(run["context"])
     seen_sites = set()

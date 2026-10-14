@@ -21,6 +21,7 @@ _CONTAINER_DIRECTORY_PATHS = (
     "/workdir/simulation_software/corsika7",
     "/workdir/simulation_software/sim_telarray",
 )
+_CONTAINER_IMAGE_CONTEXT_KEY = "__SCIENCE_CONTAINER_IMAGE_PATH__"
 PREFLIGHT_PRIORITY = 1_000_000
 
 
@@ -36,11 +37,11 @@ def validate_context_paths(context):
             errors.append(f"{key} directory does not exist: {path}")
         elif not any(item.is_file() and item.stat().st_size > 0 for item in path.rglob("*")):
             errors.append(f"{key} directory contains no non-empty files: {path}")
-    image = context.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
+    image = context.get(_CONTAINER_IMAGE_CONTEXT_KEY)
     if image:
         image_path = Path(image).expanduser()
         if not image_path.is_file() or image_path.stat().st_size == 0:
-            errors.append(f"__SCIENCE_CONTAINER_IMAGE_PATH__ is not a non-empty file: {image_path}")
+            errors.append(f"{_CONTAINER_IMAGE_CONTEXT_KEY} is not a non-empty file: {image_path}")
     if errors:
         raise ValueError("Science-test preflight failed:\n- " + "\n- ".join(errors))
 

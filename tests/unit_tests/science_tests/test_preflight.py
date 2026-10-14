@@ -5,6 +5,8 @@ import pytest
 
 from simtools.science_tests import preflight
 
+_CONTAINER_IMAGE_CONTEXT_KEY = "__SCIENCE_CONTAINER_IMAGE_PATH__"
+
 
 def test_validate_context_paths_accepts_nonempty_directories(tmp_test_directory):
     root = Path(tmp_test_directory)
@@ -15,7 +17,7 @@ def test_validate_context_paths_accepts_nonempty_directories(tmp_test_directory)
     preflight.validate_context_paths(
         {
             "__CORSIKA_INTERACTION_TABLE_PATH__": str(table_path),
-            "__SCIENCE_CONTAINER_IMAGE_PATH__": str(table_path / "table.dat"),
+            _CONTAINER_IMAGE_CONTEXT_KEY: str(table_path / "table.dat"),
         }
     )
 
@@ -40,13 +42,13 @@ def test_validate_context_paths_reports_empty_directories_and_image(tmp_test_dir
         preflight.validate_context_paths(
             {
                 "simulation_models_path": str(empty),
-                "__SCIENCE_CONTAINER_IMAGE_PATH__": str(image),
+                _CONTAINER_IMAGE_CONTEXT_KEY: str(image),
             }
         )
 
     message = str(error.value)
     assert "simulation_models_path directory contains no non-empty files" in message
-    assert "__SCIENCE_CONTAINER_IMAGE_PATH__ is not a non-empty file" in message
+    assert f"{_CONTAINER_IMAGE_CONTEXT_KEY} is not a non-empty file" in message
 
 
 def test_canary_config_ignores_null_context_values(tmp_test_directory):
@@ -68,7 +70,7 @@ applications:
         root,
         "workflow.yml",
         {
-            "__SCIENCE_CONTAINER_IMAGE_PATH__": "/image.sif",
+            _CONTAINER_IMAGE_CONTEXT_KEY: "/image.sif",
             "optional_path": None,
         },
     )
@@ -108,7 +110,7 @@ applications:
     preflight.run_worker_canary(
         root,
         "workflow.yml",
-        {"__SCIENCE_CONTAINER_IMAGE_PATH__": "/image.sif"},
+        {_CONTAINER_IMAGE_CONTEXT_KEY: "/image.sif"},
         root / "work",
     )
 
