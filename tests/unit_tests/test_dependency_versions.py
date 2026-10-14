@@ -313,7 +313,9 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["corsika_tables_revision"] == ""
     build_id = corsika["source-ref"].removeprefix("v").replace(".", "")
     assert summary["dev_corsika_image"] == f"ghcr.io/gammasim/corsika7:v{build_id}-generic"
-    assert summary["model_repository_revision"] == dependency_versions._model_revision(catalog)
+    assert summary["model_repository_revision"] == dependency_versions.model_repository_revision(
+        catalog
+    )
     assert summary["simtools_tests_repository"] == catalog["simtools-tests"]["repository"]
     assert summary["simtools_tests_ref"] == catalog["simtools-tests"]["ref"]
     assert (
@@ -687,8 +689,9 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
     output = dependency_versions.export_dependency_configuration(output_format="env")
     catalog = _load_catalog(simtools_root_path)
     test_resources = catalog["simtools-tests"]
+    model_revision = dependency_versions.model_repository_revision(catalog)
     expected = [
-        f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={dependency_versions._model_revision(catalog)}",
+        f"SIMTOOLS_SIMULATION_MODELS_GIT_REVISION={model_revision}",
         f"SIMTOOLS_TESTS_REF={test_resources['ref']}",
         f"SIMTOOLS_TESTS_RESOURCE_VERSION={test_resources['resource-version']}",
         f"SIMTOOLS_TESTS_REPOSITORY={test_resources['repository']}",
@@ -754,7 +757,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema_path = simtools_root_path / "src/simtools/schemas/dependency_versions.schema.yml"
     schemas = list(yaml.safe_load_all(schema_path.read_text(encoding="utf-8")))
     schemas_by_version = {item["schema_version"]: item for item in schemas}
-    for schema_version in dependency_versions.READABLE_REF_SCHEMAS:
+    for schema_version in dependency_versions._readable_ref_schemas():
         source_ref_pattern = schemas_by_version[schema_version]["definitions"]["source-ref"][
             "pattern"
         ]
@@ -770,6 +773,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.5.0",
         "0.6.0",
         "0.7.0",
+        "0.8.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]
@@ -860,3 +864,14 @@ def test_default_catalog_falls_back_to_working_directory(monkeypatch, tmp_test_d
     catalog = root / "dependency_versions.yml"
     catalog.write_text("schema_version: working-directory\n")
     assert dependency_versions.find_dependency_versions() == catalog
+
+
+def test_historical_model_database_key_is_normalized_without_mutation():
+    from simtools.model_repository.compatibility import LEGACY_MODEL_KEY, MODEL_KEY
+
+    catalog = _legacy_catalog()
+    catalog[LEGACY_MODEL_KEY] = catalog.pop(MODEL_KEY)
+    normalized = dependency_versions.validate_dependency_catalog(catalog)
+    assert MODEL_KEY in normalized
+    assert LEGACY_MODEL_KEY in catalog
+    assert LEGACY_MODEL_KEY not in normalized
