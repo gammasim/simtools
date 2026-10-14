@@ -11,14 +11,13 @@ _ARGUMENTS = ()
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
+    model_repository=True,
     arguments=(
         *_ARGUMENTS,
-        cli.SIMULATION_MODELS_PATH(required=True),
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
-    initialize_model_reader=False,
 )
 
 
@@ -31,7 +30,9 @@ def main():
         raise ValueError("Missing required argument output_file.")
 
     output_file_path = app_context.io_handler.get_output_file(output_file)
-    write_production_summary_markdown(app_context.args["simulation_models_path"], output_file_path)
+    write_production_summary_markdown(
+        output_file=output_file_path, model_reader=app_context.model_reader
+    )
 
     app_context.logger.info(f"Production summary written to {output_file_path}")
 

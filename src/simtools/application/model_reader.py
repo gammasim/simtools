@@ -23,7 +23,7 @@ def create_model_reader(
     simulation_models_git_path : str or Path, optional
         Local normal, bare, or mirror Git repository.
     simulation_models_git_revision : str, optional
-        Git tag, ref, or commit. The model-repository catalog revision is used when
+        Git tag, ref, or commit. The model-repository catalog ref is used when
         the Git path is set and this value is omitted.
 
     Returns
@@ -50,7 +50,7 @@ def create_model_reader(
             catalog = dependency_versions.load_dependency_catalog()
             model = catalog["model-repository"]
             revision = model.get("git-revision") or model.get(
-                "default-tag", model.get("default-version")
+                "default-ref", model.get("default-tag", model.get("default-version"))
             )
         if not revision:
             raise ValueError("A Git simulation-model revision is required.")

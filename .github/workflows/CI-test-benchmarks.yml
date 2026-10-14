@@ -4,6 +4,16 @@ name: CI-test-benchmarks
 on:
   workflow_dispatch:
     inputs:
+      simulation_model_branch:
+        description: 'Simulation model branch'
+        required: false
+        type: string
+        default: 'main'
+      simtools_tests_branch:
+        description: 'simtools-tests branch'
+        required: false
+        type: string
+        default: 'main'
       model_versions:
         description: 'JSON list of model versions for integration benchmarks'
         required: false
@@ -36,6 +46,9 @@ jobs:
 
       - name: Set up simtools tests
         uses: ./.github/actions/setup-simtools-tests
+        with:
+          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
       - name: Run unit resource benchmark
         run: |
@@ -60,6 +73,8 @@ jobs:
       contents: read
     with:
       benchmark: true
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
       model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}
       runner_labels: '["ubuntu-24.04"]'
@@ -135,7 +150,7 @@ jobs:
           PY
 
       - name: Store benchmark history
-        uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba  # v1
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc  # v1
         with:
           name: simtools CI test benchmarks
           tool: customSmallerIsBetter

@@ -42,20 +42,35 @@ reject_define() {
 }
 
 require_define "__URQMD__"
-if [[ "$model" == "qgs3" ]]; then
-    require_define "__QGSJET__"
-    require_define "__QGSIII__"
-    require_define "__CACHE_QGSJETIII__"
-    require_define "__CACHE_QGSJET_III__"
-    reject_define "__EPOS__"
-elif [[ "$model" == "epos" ]]; then
-    require_define "__EPOS__"
-    reject_define "__QGSJET__"
-    reject_define "__QGSIII__"
-else
-    echo "Unsupported high-energy model: ${model}" >&2
-    exit 2
-fi
+case "$model" in
+    qgs2)
+        require_define "__QGSJET__"
+        require_define "__QGSII__"
+        require_define "__CACHE_QGSJETII__"
+        reject_define "__EPOS__"
+        reject_define "__QGSIII__"
+        model_banner="QGSJET-II MODEL"
+        ;;
+    qgs3)
+        require_define "__QGSJET__"
+        require_define "__QGSIII__"
+        require_define "__CACHE_QGSJETIII__"
+        require_define "__CACHE_QGSJET_III__"
+        reject_define "__EPOS__"
+        model_banner="QGSJET-III MODEL"
+        expanded_model_banner="QUARK GLUON STRING JET - III MODEL"
+        ;;
+    epos)
+        require_define "__EPOS__"
+        reject_define "__QGSJET__"
+        reject_define "__QGSIII__"
+        model_banner="EPOS MODEL"
+        ;;
+    *)
+        echo "Unsupported high-energy model: ${model}" >&2
+        exit 2
+        ;;
+esac
 
 if [[ "$geometry" == "curved" ]]; then
     require_define "__CURVED__"
@@ -84,18 +99,13 @@ if ! ldd "$executable" > "${report_dir}/linked-libraries.txt" 2>&1; then
 fi
 
 strings "$executable" > "${report_dir}/executable.strings"
-if [[ "$model" == "qgs3" ]]; then
-    grep -q "QGSJET-III MODEL" "${report_dir}/executable.strings" || {
-        echo "Expected QGSJET-III banner not found in strings output for ${executable}." >&2
-        exit 1
-    }
-    grep -q "QUARK GLUON STRING JET - III MODEL" "${report_dir}/executable.strings" || {
-        echo "Expected expanded QGSJET-III banner not found in strings output for ${executable}." >&2
-        exit 1
-    }
-else
-    grep -q "EPOS MODEL" "${report_dir}/executable.strings" || {
-        echo "Expected EPOS banner not found in strings output for ${executable}." >&2
+grep -q "$model_banner" "${report_dir}/executable.strings" || {
+    echo "Expected ${model_banner} banner not found in strings output for ${executable}." >&2
+    exit 1
+}
+if [[ -n "${expanded_model_banner:-}" ]]; then
+    grep -q "$expanded_model_banner" "${report_dir}/executable.strings" || {
+        echo "Expected ${expanded_model_banner} banner not found in strings output for ${executable}." >&2
         exit 1
     }
 fi
@@ -126,11 +136,7 @@ if [[ "$optimization" == "generic" ]]; then
         exit 1
     fi
 
-    if [[ "$model" == "qgs3" ]]; then
-        grep -q "QGSJET-III MODEL" "${report_dir}/startup.log"
-    else
-        grep -q "EPOS MODEL" "${report_dir}/startup.log"
-    fi
+    grep -q "$model_banner" "${report_dir}/startup.log"
     startup_validation="passed"
 fi
 

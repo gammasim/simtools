@@ -28,7 +28,7 @@ applications:
       file: base_grid.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/job_grid_density.schema.yml
+        schema: job_grid_density.schema.yml
       - type: table
         minimum_rows: 1
         columns:
@@ -60,7 +60,7 @@ applications:
       file: scan_grid.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/job_grid_density.schema.yml
+        schema: job_grid_density.schema.yml
       - type: table
         minimum_rows: 1
         columns:
@@ -82,7 +82,7 @@ applications:
       file: base_grid.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/job_grid_density.schema.yml
+        schema: job_grid_density.schema.yml
       - type: table
         minimum_rows: 1
         columns:
@@ -114,7 +114,7 @@ applications:
       file: scan_grid.ecsv
       validations:
       - type: data_schema
-        schema: src/simtools/schemas/job_grid_density.schema.yml
+        schema: job_grid_density.schema.yml
       - type: table
         minimum_rows: 1
         columns:

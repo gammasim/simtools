@@ -9,6 +9,7 @@ import astropy.units as u
 import pytest
 import yaml
 
+from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
@@ -123,9 +124,12 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
+def test_config_from_file_resolves_test_resource_paths_from_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "simtools-tests"))
+    monkeypatch.setenv("SIMTOOLS_TESTS_RESOURCE_VERSION", "v0.38.0")
     config_dict = {
         "applications": [
             {
@@ -148,11 +152,27 @@ def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_director
     config_builder = Configurator()
     loaded_config = config_builder._config_from_file(config_file)
 
-    assert loaded_config["trigger_histogram_file"] == (
-        "${generated:gamma_diffuse_run000010.trigger_histograms.hdf5}"
+    resource_path = tmp_test_directory / "simtools-tests" / "v0.38.0" / "integration_tests"
+    assert loaded_config["trigger_histogram_file"] == str(
+        resource_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
     )
-    assert loaded_config["plot_config"] == "${static:plot_config.yml}"
-    assert loaded_config["table_data_path"] == "${downloaded:table_data}"
+    assert loaded_config["plot_config"] == str(resource_path / "static/plot_config.yml")
+    assert loaded_config["table_data_path"] == str(resource_path / "downloaded/table_data")
+
+
+def test_config_from_file_does_not_resolve_test_resource_paths_without_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_RESOURCE_VERSION", raising=False)
+    config_file = tmp_test_directory / "configuration-resource-macros.yml"
+    config_file.write_text("input: ${generated:input.ecsv}\n", encoding="utf-8")
+
+    config_builder = Configurator()
+    loaded_config = config_builder._config_from_file(config_file)
+
+    assert loaded_config["input"] == "${generated:input.ecsv}"
 
 
 def test_arglist_from_config():
@@ -281,6 +301,25 @@ def test_configure_can_disable_dependency_defaults(configurator):
     configurator._config_from_file = MagicMock(return_value={})
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ({"default-ref": "v0.17.2"}, "v0.17.2"),
+        ({"default-ref": "main", "git-revision": "a" * 40}, "a" * 40),
+    ],
+)
+def test_dependency_defaults_select_model_ref(model, expected, mocker):
+    """The parser uses readable model refs and accepts an explicit legacy pin."""
+    mocker.patch(
+        "simtools.configuration.configurator.dependency_versions.load_dependency_catalog",
+        return_value={"model-repository": model},
+    )
+
+    assert Configurator._dependency_defaults({"simulation_models_git_revision": None}) == {
+        "simulation_models_git_revision": expected
+    }
 
 
 def test_arglist_from_dict_preserves_bare_star_argument():
