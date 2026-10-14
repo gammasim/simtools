@@ -31,9 +31,30 @@ SOURCE_REF_PATTERN = re.compile(
 )
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
-COMPATIBILITY_SCHEMA_VERSION = "0.8.0"
-READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0", "0.7.0", COMPATIBILITY_SCHEMA_VERSION}
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
+
+
+@cache
+def _dependency_schemas():
+    """Load supported catalog formats and their features from the schema documents."""
+    path = Path(__file__).parent / "schemas" / "dependency_versions.schema.yml"
+    documents = yaml.safe_load_all(path.read_text(encoding="utf-8"))
+    return {document["schema_version"]: document for document in documents}
+
+
+def _readable_ref_schemas():
+    """Return formats whose model declaration uses source refs."""
+    return {
+        version
+        for version, schema in _dependency_schemas().items()
+        if "default-ref" in schema["properties"][MODEL_KEY]["properties"]
+    }
+
+
+def _requires_model_range(schema_version):
+    """Check whether the version's schema requires a model compatibility range."""
+    model_schema = _dependency_schemas()[schema_version]["properties"][MODEL_KEY]
+    return RANGE_KEY in model_schema.get("required", [])
 
 
 def _source_snapshot_image(package, digest, revisions):
@@ -307,7 +328,7 @@ def validate_dependency_catalog(catalog):
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     schema_version = catalog["schema_version"]
-    if schema_version not in {"0.1.0", "0.2.0", "0.3.0", "0.4.0", *READABLE_REF_SCHEMAS}:
+    if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
     if schema_version != "0.1.0" and "simtools-tests" not in catalog:
         raise ValueError("Missing dependency catalog keys: simtools-tests")
@@ -321,7 +342,7 @@ def validate_dependency_catalog(catalog):
 
 def _validate_components(catalog, schema_version):
     """Validate CORSIKA and sim_telarray component records."""
-    readable_refs = schema_version in READABLE_REF_SCHEMAS
+    readable_refs = schema_version in _readable_ref_schemas()
     ref_validator = _validate_source_ref if readable_refs else _validate_release_tag
     interaction_tables = catalog["corsika-interaction-tables"]
     interaction_ref = (
@@ -429,7 +450,7 @@ def _validate_simtel_components(
 def _validate_model_and_test_components(catalog, schema_version):
     """Validate model-repository and simtools-tests catalog values."""
     model = catalog["model-repository"]
-    readable_refs = schema_version in READABLE_REF_SCHEMAS
+    readable_refs = schema_version in _readable_ref_schemas()
     model_version = (
         model["default-ref"]
         if readable_refs
@@ -464,7 +485,7 @@ def _validate_model_and_test_components(catalog, schema_version):
 def _validate_model_constraint(catalog, schema_version):
     """Validate the range declaration without changing historical catalog semantics."""
     model = catalog[MODEL_KEY]
-    if schema_version == COMPATIBILITY_SCHEMA_VERSION and RANGE_KEY not in model:
+    if _requires_model_range(schema_version) and RANGE_KEY not in model:
         raise ValueError("Missing simulation-model compatible-versions.")
     if RANGE_KEY in model:
         _contract(catalog)
@@ -834,7 +855,7 @@ def dependency_catalog_environment(catalog):
         "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
     }
     if "simtools-tests" in catalog:
-        if catalog["schema_version"] in READABLE_REF_SCHEMAS:
+        if catalog["schema_version"] in _readable_ref_schemas():
             test_environment = {
                 "SIMTOOLS_TESTS_REF": _tests_ref(catalog["simtools-tests"]),
                 "SIMTOOLS_TESTS_RESOURCE_VERSION": _tests_resource_version(

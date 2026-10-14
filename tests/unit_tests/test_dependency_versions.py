@@ -754,7 +754,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     schema_path = simtools_root_path / "src/simtools/schemas/dependency_versions.schema.yml"
     schemas = list(yaml.safe_load_all(schema_path.read_text(encoding="utf-8")))
     schemas_by_version = {item["schema_version"]: item for item in schemas}
-    for schema_version in dependency_versions.READABLE_REF_SCHEMAS:
+    for schema_version in dependency_versions._readable_ref_schemas():
         source_ref_pattern = schemas_by_version[schema_version]["definitions"]["source-ref"][
             "pattern"
         ]
