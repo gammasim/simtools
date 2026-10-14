@@ -41,7 +41,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.ArgumentDefinition(
             "preflight",
             action="store_true",
-            help="Validate paths and run worker container canaries before production (required).",
+            help="Validate paths and run worker container canaries before production (recommended).",
         ),
         cli.ArgumentDefinition(
             "setup",
