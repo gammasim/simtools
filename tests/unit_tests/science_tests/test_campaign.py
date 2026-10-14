@@ -287,6 +287,118 @@ def test_campaign_model_settings(campaign, monkeypatch):
     assert captured == [(context["simulation_models_git_path"], "v0.18.0")]
 
 
+def test_git_model_source_overrides_inherited_filesystem_path(campaign):
+    context = science_test_definitions._load_yaml(campaign["context_file"])
+    context["simulation_models_git_path"] = str(campaign["template_dir"] / "models.git")
+    selected = science_test_definitions._model_source_arguments(
+        {"simulation_models_path": str(campaign["template_dir"] / "models")},
+        context,
+        {"simulation_models_git_revision": "v0.18.0"},
+    )
+    assert selected["simulation_models_path"] is None
+    assert selected["simulation_models_git_path"] == context["simulation_models_git_path"]
+    assert selected["simulation_models_git_revision"] == "v0.18.0"
+
+
+def test_filesystem_model_source_overrides_inherited_git_source(campaign):
+    models = str(campaign["template_dir"] / "models")
+    selected = science_test_definitions._model_source_arguments(
+        {
+            "simulation_models_git_path": str(campaign["template_dir"] / "models.git"),
+            "simulation_models_git_revision": "main",
+        },
+        {"simulation_models_path": models},
+        {},
+    )
+    assert selected["simulation_models_path"] == models
+    assert selected["simulation_models_git_path"] is None
+    assert selected["simulation_models_git_revision"] is None
+
+
+def test_run_preflight_checks_host_paths_and_one_canary_per_site(monkeypatch, tmp_test_directory):
+    candidate = Path(tmp_test_directory)
+    prepared = [
+        (
+            (
+                None,
+                None,
+                None,
+                "North",
+                None,
+                None,
+                {"workflow": "north-a.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
+        (
+            (
+                None,
+                None,
+                None,
+                "North",
+                None,
+                None,
+                {"workflow": "north-b.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
+        (
+            (
+                None,
+                None,
+                None,
+                "South",
+                None,
+                None,
+                {"workflow": "south.yml", "tier": "release-prod"},
+            ),
+            None,
+        ),
+    ]
+    run = {
+        "context": {"__SCIENCE_CANDIDATE_PATH__": str(candidate)},
+        "template_dir": candidate / "templates",
+    }
+    validated = []
+    canaries = []
+    monkeypatch.setattr(
+        campaign_runner, "validate_context_paths", lambda context: validated.append(context)
+    )
+    monkeypatch.setattr(
+        campaign_runner,
+        "run_worker_canary",
+        lambda *args: canaries.append(args),
+    )
+
+    campaign_runner._run_preflight(prepared, run, preflight=True, dry_run=False)
+
+    assert validated == [run["context"]]
+    assert [call[1] for call in canaries] == ["north-a.yml", "south.yml"]
+    assert [call[3] for call in canaries] == [
+        candidate / "work/science-tests/preflight/North",
+        candidate / "work/science-tests/preflight/South",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("preflight", "dry_run"),
+    [(False, False), (True, True)],
+)
+def test_run_preflight_skips_validation_when_disabled_or_dry_run(monkeypatch, preflight, dry_run):
+    monkeypatch.setattr(
+        campaign_runner,
+        "validate_context_paths",
+        lambda _context: pytest.fail("host paths should not be checked"),
+    )
+    monkeypatch.setattr(
+        campaign_runner,
+        "run_worker_canary",
+        lambda *_args: pytest.fail("worker canary should not run"),
+    )
+
+    campaign_runner._run_preflight([], {"context": {}}, preflight, dry_run)
+
+
 def test_shared_site_defaults_allow_missing_release_site_files(campaign, successful_workflow):
     site_file = campaign["release_dir"] / "sites/north.yml"
     shared = campaign["template_dir"] / "sites"

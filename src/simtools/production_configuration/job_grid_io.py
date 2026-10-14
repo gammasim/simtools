@@ -25,6 +25,8 @@ _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "model_parameter_set")
 _MISSING = object()
+_SIMULATION_MODELS_PATH = "simulation_models_path"
+_SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     {
         "primary",
@@ -51,8 +53,8 @@ _SIMULATE_PROD_PATH_FIELDS = (
     "sim_telarray_path",
     "corsika_path",
     "corsika_interaction_table_path",
-    "simulation_models_path",
-    "simulation_models_git_path",
+    _SIMULATION_MODELS_PATH,
+    _SIMULATION_MODELS_GIT_PATH,
     "model_path",
     "overwrite_model_parameters",
 )
@@ -502,6 +504,9 @@ def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, me
     _add_grid_output_path(job_args, job_name, mount_paths, output_paths)
     _add_scan_label(job_args, row)
     _normalize_simulate_prod_paths(job_args, args_dict)
+    if job_args.get(_SIMULATION_MODELS_PATH):
+        job_args.pop(_SIMULATION_MODELS_GIT_PATH, None)
+        job_args.pop("simulation_models_git_revision", None)
     _add_simulate_prod_input_mount_paths(job_args, mount_paths)
     job_args = {
         key: " ".join(map(str, value)) if isinstance(value, tuple) else value
