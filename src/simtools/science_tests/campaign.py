@@ -24,6 +24,7 @@ from simtools.science_tests.definitions import (
     _validate_selected_context,
 )
 from simtools.science_tests.execution import _execute_selection, _run_test
+from simtools.science_tests.preflight import run_worker_canary, validate_context_paths
 from simtools.science_tests.reports import (
     _release_summary,
     _write_summary,
@@ -94,6 +95,7 @@ def run_release(
     tests=None,
     dry_run=False,
     allow_production=False,
+    preflight=False,
     overwrite=False,
     application_args=None,
 ):
@@ -117,6 +119,8 @@ def run_release(
         Validate the complete selection without writes or execution.
     allow_production : bool
         Permit explicitly selected production using a previously reviewed grid.
+    preflight : bool
+        Validate host paths and run one worker-side container canary per site before production.
     overwrite : bool
         Archive and retry failed production only after its jobs have ended.
     application_args : dict or None
@@ -175,6 +179,13 @@ def run_release(
                     ),
                 )
             )
+    production_selected = any(args[6].get("tier") == "release-prod" for args, _ in prepared)
+    if production_selected and not dry_run and not preflight:
+        logger.warning(
+            "Production science tests are being submitted without --preflight; "
+            "host and worker filesystem checks were skipped."
+        )
+    _run_preflight(prepared, run, preflight, dry_run)
     results = _execute_selection(
         prepared, dry_run, run_id, run["application_args"], run["catalogue"]
     )
@@ -200,6 +211,28 @@ def run_release(
         )
         raise RuntimeError(f"Science tests failed: {details}")
     return summary
+
+
+def _run_preflight(prepared, run, preflight, dry_run):
+    """Validate host paths and run one worker canary per selected site."""
+    if not preflight or dry_run:
+        return
+    validate_context_paths(run["context"])
+    seen_sites = set()
+    for args, _ in prepared:
+        site = args[3]
+        if site in seen_sites:
+            continue
+        seen_sites.add(site)
+        definition = args[6]
+        work_dir = (
+            Path(run["context"]["__SCIENCE_CANDIDATE_PATH__"])
+            / "work"
+            / "science-tests"
+            / "preflight"
+            / site
+        )
+        run_worker_canary(run["template_dir"], definition["workflow"], run["context"], work_dir)
 
 
 def setup_release(release_dir, template_dir=None, context_file=None):

@@ -287,6 +287,34 @@ def test_campaign_model_settings(campaign, monkeypatch):
     assert captured == [(context["simulation_models_git_path"], "v0.18.0")]
 
 
+def test_git_model_source_overrides_inherited_filesystem_path(campaign):
+    context = science_test_definitions._load_yaml(campaign["context_file"])
+    context["simulation_models_git_path"] = str(campaign["template_dir"] / "models.git")
+    selected = science_test_definitions._model_source_arguments(
+        {"simulation_models_path": str(campaign["template_dir"] / "models")},
+        context,
+        {"simulation_models_git_revision": "v0.18.0"},
+    )
+    assert selected["simulation_models_path"] is None
+    assert selected["simulation_models_git_path"] == context["simulation_models_git_path"]
+    assert selected["simulation_models_git_revision"] == "v0.18.0"
+
+
+def test_filesystem_model_source_overrides_inherited_git_source(campaign):
+    models = str(campaign["template_dir"] / "models")
+    selected = science_test_definitions._model_source_arguments(
+        {
+            "simulation_models_git_path": str(campaign["template_dir"] / "models.git"),
+            "simulation_models_git_revision": "main",
+        },
+        {"simulation_models_path": models},
+        {},
+    )
+    assert selected["simulation_models_path"] == models
+    assert selected["simulation_models_git_path"] is None
+    assert selected["simulation_models_git_revision"] is None
+
+
 def test_shared_site_defaults_allow_missing_release_site_files(campaign, successful_workflow):
     site_file = campaign["release_dir"] / "sites/north.yml"
     shared = campaign["template_dir"] / "sites"

@@ -39,6 +39,11 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Allow explicitly selected production after grid review.",
         ),
         cli.ArgumentDefinition(
+            "preflight",
+            action="store_true",
+            help="Validate paths and run worker container canaries before production (required).",
+        ),
+        cli.ArgumentDefinition(
             "setup",
             action="store_true",
             help="Create a new release directory from the shared setup templates and exit.",
@@ -71,6 +76,7 @@ def main():
         tests=args.get("test"),
         dry_run=args.get("dry_run", False),
         allow_production=args.get("allow_production", False),
+        preflight=args.get("preflight", False),
         overwrite=args.get("overwrite", False),
         application_args=args,
     )

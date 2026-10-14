@@ -410,6 +410,20 @@ def _model_source_arguments(application_args, context, release):
     args = dict(application_args or {})
     for configuration in (context, release):
         args.update({key: configuration[key] for key in _MODEL_SOURCE_KEYS if key in configuration})
+    source = next(
+        (
+            configuration
+            for configuration in (release, context, args)
+            if configuration.get("simulation_models_git_path")
+            or configuration.get("simulation_models_path")
+        ),
+        args,
+    )
+    if source.get("simulation_models_git_path"):
+        args["simulation_models_path"] = None
+    elif source.get("simulation_models_path"):
+        args["simulation_models_git_path"] = None
+        args["simulation_models_git_revision"] = None
     return args
 
 

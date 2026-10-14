@@ -192,7 +192,7 @@ class HTCondorBackend:
                 raise BackendConfigurationError(f"Configured {key} does not exist: {value}")
 
     @staticmethod
-    def _read_environment_file(path, bind_paths=(), python_path=None):
+    def _read_environment_file(path, bind_paths=(), python_path=None, implicit_bind_path=None):
         """Convert a simple dotenv file into an HTCondor environment value."""
         if path is None and not bind_paths and python_path is None:
             return None
@@ -202,6 +202,16 @@ class HTCondorBackend:
             HTCondorBackend._add_python_path(entries, python_path)
         for bind_path in bind_paths:
             HTCondorBackend._add_apptainer_bind_path(entries, bind_path)
+        implicit_destination = (
+            Path(implicit_bind_path).resolve() if implicit_bind_path is not None else None
+        )
+        configured_binds = entries.pop("APPTAINER_BINDPATH", "").split(",")
+        for bind_path in configured_binds:
+            if (
+                bind_path
+                and HTCondorBackend._apptainer_bind_paths(bind_path)[1] != implicit_destination
+            ):
+                HTCondorBackend._add_apptainer_bind_path(entries, bind_path)
         return ";".join(f"{key}={value}" for key, value in entries.items())
 
     @staticmethod
@@ -482,13 +492,12 @@ class HTCondorBackend:
         # Container jobs must import simtools from the configured image, not
         # from the source checkout that submitted the job.
         source_path = None if uses_container else self._source_checkout_path()
-        bind_paths = self._build_container_bind_paths(
-            uses_container, source_path, work_dir, working_directory, jobs
-        )
+        bind_paths = self._build_container_bind_paths(uses_container, source_path, work_dir, jobs)
         environment = self._read_environment_file(
             config.get("environment_file"),
             bind_paths=bind_paths,
             python_path=source_path,
+            implicit_bind_path=working_directory if uses_container else None,
         )
         if environment:
             submit_values["environment"] = environment
@@ -555,11 +564,11 @@ class HTCondorBackend:
             )
 
     @staticmethod
-    def _build_container_bind_paths(uses_container, source_path, work_dir, working_directory, jobs):
+    def _build_container_bind_paths(uses_container, source_path, work_dir, jobs):
         """Return minimized bind paths needed by container jobs."""
         if not uses_container:
             return ()
-        bind_paths = [work_dir.parent, working_directory]
+        bind_paths = [work_dir.parent]
         if source_path is not None:
             bind_paths.append(source_path)
         bind_paths.extend(
