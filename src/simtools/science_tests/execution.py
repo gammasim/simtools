@@ -189,7 +189,9 @@ def _run_test(
         "status": "planned" if dry_run else "pass",
     }
     if definition.get(_PRODUCES_PRODUCTION):
-        result["dependency_compatibility"] = _preview_production(configurations, args, replacements)
+        result["dependency_compatibility"] = _preview_production(
+            configurations, args, replacements, runtime
+        )
     if dry_run:
         return result
 
@@ -206,16 +208,18 @@ def _run_test(
     return result
 
 
-def _preview_production(configurations, args, replacements):
+def _preview_production(configurations, args, replacements, runtime):
     """Check the effective production configuration, including workflow overrides."""
     selected = dict(args)
-    image = replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
+    image = (
+        runtime.get("image") if runtime else replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
+    )
     for application in configurations:
         if application.get(_APPLICATION) == "simtools-simulate-prod":
             selected.update(application.get(_CONFIGURATION, {}))
             backend = selected.get("backend_config")
-            if isinstance(backend, dict):
-                image = backend.get("container_image")
+            if isinstance(backend, dict) and backend.get("container_image"):
+                image = backend["container_image"]
             break
     return _preview(selected, image)
 

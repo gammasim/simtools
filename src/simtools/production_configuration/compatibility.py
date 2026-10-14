@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from simtools import __version__, dependency_versions, version
-from simtools.model_repository.compatibility import _contract, _validate
+from simtools.model_repository.compatibility import _validate
 
 IMAGE_KEY = "container_image"
 
@@ -45,7 +45,16 @@ INFO_CODE = (
     + """
 import json
 from simtools import __version__
-print(json.dumps({'target_simtools': __version__, 'catalog': dependency_versions.load_dependency_catalog(catalog_path, validate=False)}))
+print(
+    json.dumps(
+        {
+            'target_simtools': __version__,
+            'catalog': dependency_versions.load_dependency_catalog(
+                catalog_path, validate=False
+            ),
+        }
+    )
+)
 """
 )
 
@@ -75,7 +84,9 @@ def _preview(args, image=None):
         raise ValueError("Production requires an explicit simulation-model source path.")
     revision = None
     if not args.get(PATH_KEY):
-        revision = args.get(GIT_REVISION_KEY) or _contract(target[CATALOG_KEY])["default"]
+        revision = args.get(GIT_REVISION_KEY)
+        if revision is None:
+            revision = dependency_versions._model_revision(target[CATALOG_KEY])
     logger.info("Checking models for target simtools %s (host %s)", target[TARGET_KEY], __version__)
     return {
         **_validate(

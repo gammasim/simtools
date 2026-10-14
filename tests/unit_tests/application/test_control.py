@@ -483,3 +483,15 @@ def test_development_build_accepts_unreleased_model_without_test_flag(
     monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
     control._validate_model_compatibility({"simulation_models_path": str(tmp_test_directory)})
     assert captured == [{"revision": None, _DEVELOPMENT: True}]
+
+
+def test_direct_git_simulation_checks_catalog_revision(tmp_test_directory, monkeypatch):
+    from simtools.application import control
+
+    catalog = {"model-repository": {"git-revision": "v0.18.0", "default-ref": "main"}}
+    captured = []
+    monkeypatch.setattr(control.version, "is_development_build", False)
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: catalog)
+    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    control._validate_model_compatibility({"simulation_models_git_path": str(tmp_test_directory)})
+    assert captured == [{"revision": "v0.18.0", _DEVELOPMENT: False}]

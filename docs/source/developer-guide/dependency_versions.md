@@ -106,8 +106,8 @@ the catalog remains the fallback for the model ref.
 ## CI repository branches
 
 Test CI selects the `simulation-models` and `simtools-tests` branches independently of the
-catalog's release refs. Development runs default to `main`. Published release runs select the model catalog's
-`default-ref`; the test-resource branch remains independently selected.
+catalog's release refs. These workflows default to `main`, including published release runs;
+the test-resource branch remains independently selected.
 Manual unit, integration, benchmark, and production-image test workflows accept
 `simulation_model_branch` and `simtools_tests_branch`. The reusable integration workflow accepts
 the same inputs, and its callers forward both selections.

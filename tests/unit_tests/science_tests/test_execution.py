@@ -210,7 +210,12 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
         workflow = science_test_definitions._load_yaml(template / "workflow.yml")
         workflow["runtime_environment"] = {"container_engine": "apptainer", "image": "inline.sif"}
         _write_yaml(template / "workflow.yml", workflow)
-    monkeypatch.setattr(science_test_execution, "_preview", lambda *_: {})
+    preview_images = []
+    monkeypatch.setattr(
+        science_test_execution,
+        "_preview",
+        lambda args, image: preview_images.append(image) or {},
+    )
     captured = []
     prepare = science_test_execution.prepare_workflow
 
@@ -239,6 +244,8 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
     elif not produces_production:
         expected = {"container_engine": "apptainer", "image": "/images/shared.sif"}
     assert captured == [expected]
+    if produces_production:
+        assert preview_images == ["inline.sif" if inline else "/images/shared.sif"]
 
 
 def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):

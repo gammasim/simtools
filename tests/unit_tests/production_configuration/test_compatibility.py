@@ -51,6 +51,19 @@ def test_local_git_source_uses_catalog_default(monkeypatch, tmp_test_directory):
         production._preview({})
 
 
+def test_local_git_source_uses_catalog_git_revision(monkeypatch, tmp_test_directory):
+    catalog = {models.LEGACY_MODEL_KEY: {"git-revision": "v0.17.1", "default-tag": "main"}}
+    monkeypatch.setattr(production.version, "is_development_build", False)
+    monkeypatch.setattr(production, "_bundled_catalog_path", lambda: Path(tmp_test_directory))
+    monkeypatch.setattr(
+        production.dependency_versions, "load_dependency_catalog", lambda _: catalog
+    )
+    validate = Mock(return_value={})
+    monkeypatch.setattr(production, VALIDATE, validate)
+    production._preview({production.GIT_PATH_KEY: str(tmp_test_directory)})
+    validate.assert_called_once_with(str(tmp_test_directory), catalog, "v0.17.1", False)
+
+
 def test_submission_checks_before_returning_jobs(monkeypatch):
     preview = Mock()
     monkeypatch.setattr(production, "_preview", preview)

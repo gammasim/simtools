@@ -179,7 +179,7 @@ def _simtel_build_id(component):
 
 def _model_revision(catalog):
     """Return the configured simulation-model repository ref or revision."""
-    model = catalog["model-repository"]
+    model = catalog.get("model-repository") or catalog.get("model-database", {})
     return model.get("git-revision") or model.get(
         "default-ref", model.get("default-tag", model.get("default-version"))
     )

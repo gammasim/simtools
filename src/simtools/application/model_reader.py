@@ -47,10 +47,8 @@ def create_model_reader(
     if simulation_models_git_path:
         revision = simulation_models_git_revision
         if revision is None:
-            catalog = dependency_versions.load_dependency_catalog()
-            model = catalog["model-repository"]
-            revision = model.get("git-revision") or model.get(
-                "default-ref", model.get("default-tag", model.get("default-version"))
+            revision = dependency_versions._model_revision(
+                dependency_versions.load_dependency_catalog()
             )
         if not revision:
             raise ValueError("A Git simulation-model revision is required.")
