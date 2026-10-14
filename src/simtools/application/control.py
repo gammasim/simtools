@@ -330,5 +330,5 @@ def _validate_model_compatibility(args):
             path,
             dependency_versions.load_dependency_catalog(),
             revision=revision,
-            development=bool(args.get("test")),
+            development=version.is_development_build or bool(args.get("test")),
         )

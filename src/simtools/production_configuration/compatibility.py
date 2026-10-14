@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from simtools import __version__, dependency_versions
+from simtools import __version__, dependency_versions, version
 from simtools.model_repository.compatibility import _contract, _validate
 
 IMAGE_KEY = "container_image"
@@ -78,7 +78,12 @@ def _preview(args, image=None):
         revision = args.get(GIT_REVISION_KEY) or _contract(target[CATALOG_KEY])["default"]
     logger.info("Checking models for target simtools %s (host %s)", target[TARGET_KEY], __version__)
     return {
-        **_validate(path, target[CATALOG_KEY], revision, bool(args.get("test"))),
+        **_validate(
+            path,
+            target[CATALOG_KEY],
+            revision,
+            version.is_development_build or bool(args.get("test")),
+        ),
         TARGET_KEY: target[TARGET_KEY],
     }
 

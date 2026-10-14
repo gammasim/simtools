@@ -24,6 +24,7 @@ IMAGE = "old.sif"
 
 
 def test_image_contract(monkeypatch, tmp_test_directory):
+    monkeypatch.setattr(production.version, "is_development_build", False)
     run = Mock(return_value=SimpleNamespace(stdout=json.dumps(TARGET)))
     monkeypatch.setattr(production.subprocess, "run", run)
     validate = Mock(return_value={models.STATUS_KEY: "compatible"})
@@ -35,6 +36,7 @@ def test_image_contract(monkeypatch, tmp_test_directory):
 
 
 def test_local_git_source_uses_catalog_default(monkeypatch, tmp_test_directory):
+    monkeypatch.setattr(production.version, "is_development_build", False)
     catalog = Path(tmp_test_directory) / "dependency_versions.yml"
     catalog.write_text("unused")
     monkeypatch.setattr(production, "_bundled_catalog_path", lambda: catalog)
@@ -82,3 +84,16 @@ def test_bundled_catalog_ignores_working_directory(monkeypatch, tmp_test_directo
     expected.unlink()
     with pytest.raises(RuntimeError, match="no bundled dependency catalog"):
         production._bundled_catalog_path()
+
+
+def test_development_build_allows_nonrelease_model_branch(monkeypatch, tmp_test_directory):
+    monkeypatch.setattr(production.version, "is_development_build", True)
+    run = Mock(return_value=SimpleNamespace(stdout=json.dumps(TARGET)))
+    monkeypatch.setattr(production.subprocess, "run", run)
+    validate = Mock(return_value={models.STATUS_KEY: models.DEVELOPMENT_STATUS})
+    monkeypatch.setattr(production, VALIDATE, validate)
+    assert (
+        production._preview({MODELS_PATH: str(tmp_test_directory)}, IMAGE)[production.TARGET_KEY]
+        == TARGET_VERSION
+    )
+    validate.assert_called_once_with(str(tmp_test_directory), CATALOG, None, True)

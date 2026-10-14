@@ -82,13 +82,13 @@ def _validate(path, catalog, revision=None, development=False):
                 f"Allowed {contract[ALLOWED_KEY]} ({contract[POLICY_KEY]}). "
                 f"Select a compatible checkout, for example {contract[DEFAULT_KEY]}."
             ) from exc
-        logger.warning("%s: %s", DEVELOPMENT_STATUS, exc)
-    logger.info(
-        "Models %s at %s; allowed %s (%s); %s",
+    log = logger.warning if development else logger.info
+    log(
+        "Models %s; version %s at %s; allowed %s (%s)",
+        result[STATUS_KEY],
         result.get(VERSION_KEY, "unknown"),
         source,
         contract[ALLOWED_KEY],
         contract[POLICY_KEY],
-        result[STATUS_KEY],
     )
     return result

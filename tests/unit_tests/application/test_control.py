@@ -461,6 +461,7 @@ def test_direct_simulations_check_selected_model_contract(
 
     captured = []
     proof = {"status": "compatible"}
+    monkeypatch.setattr(control.version, "is_development_build", False)
     monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
     monkeypatch.setattr(
         control, "_validate", lambda *args, **kwargs: captured.append(kwargs) or proof
@@ -469,3 +470,16 @@ def test_direct_simulations_check_selected_model_contract(
     control._validate_model_compatibility(args)
     assert captured == [{"revision": None, _DEVELOPMENT: development}]
     assert args["_dependency_compatibility"] == proof
+
+
+def test_development_build_accepts_unreleased_model_without_test_flag(
+    tmp_test_directory, monkeypatch
+):
+    from simtools.application import control
+
+    captured = []
+    monkeypatch.setattr(control.version, "is_development_build", True)
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
+    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    control._validate_model_compatibility({"simulation_models_path": str(tmp_test_directory)})
+    assert captured == [{"revision": None, _DEVELOPMENT: True}]
