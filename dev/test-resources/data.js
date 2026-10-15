@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792041721001,
+  "lastUpdate": 1792047376937,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30242,6 +30242,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 431.4140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f12fc12b07d7054015a39a36666bd070e8b4ee7",
+          "message": "Add `simtools-derive-telescope-sphere-radius` tool to calculate CORSIKA telescope sphere radius (#2624)\n\n* Calculate fiducial sphere bounds with telescope axis offsets\n\n* Add application to derive telescope sphere radius\n\n* simplification\n\n* changelog\n\n* fix: address telescope sphere review comments\n\n* test: simplify telescope sphere fixture\n\n* fix: preserve signed mirror heights\n\n* style: centralize repeated parameter keys\n\n* fix: validate telescope sphere geometry inputs",
+          "timestamp": "2026-10-15T08:42:35+02:00",
+          "tree_id": "e8fb73ff718a8abc9a4420e5f13942363b4289f8",
+          "url": "https://github.com/gammasim/simtools/commit/7f12fc12b07d7054015a39a36666bd070e8b4ee7"
+        },
+        "date": 1792047362390,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 77.262377555,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 80.59999999999998,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 432.359375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
