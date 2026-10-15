@@ -7,6 +7,13 @@ import yaml
 
 from simtools.science_tests import reports as science_test_reports
 
+DERIVE_TEST = "derive"
+COMPUTING_TEST = "computing"
+CONTAINER_RUNTIME = "container"
+REQUIRED_TESTS_KEY = "required_tests"
+COMPLETED_EXECUTION = "completed"
+EXECUTION_KEY = "execution"
+
 REPORT_KEY = "report"
 STATUS_KEY = "status"
 
@@ -45,7 +52,7 @@ def test_production_history_survives_a_non_production_configuration_change(campa
                         "id": "production.north",
                         "test": "production",
                         "site": SITE,
-                        "execution": "submitted",
+                        EXECUTION_KEY: "submitted",
                         STATUS_KEY: "submitted",
                         "run_id": "run-1",
                     }
@@ -58,7 +65,7 @@ def test_production_history_survives_a_non_production_configuration_change(campa
     summary = science_test_reports._release_summary(
         campaign["release_dir"],
         {RELEASE_LABEL_KEY: RELEASE_LABEL},
-        {SITE: {"required_tests": [COMPARE_TEST]}},
+        {SITE: {REQUIRED_TESTS_KEY: [COMPARE_TEST]}},
         [],
         False,
         "new",
@@ -77,7 +84,7 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
             {
                 "site": SITE,
                 "test": COMPARE_TEST,
-                "execution": "failed",
+                EXECUTION_KEY: "failed",
                 STATUS_KEY: "incomplete",
                 "error": "missing report",
             }
@@ -85,7 +92,7 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
         "production_history": [
             {
                 "id": "production.north",
-                "execution": "submitted",
+                EXECUTION_KEY: "submitted",
                 STATUS_KEY: "submitted",
                 "run_id": "run-1",
             }
@@ -153,22 +160,41 @@ def test_success_without_report_products_does_not_create_directories(tmp_test_di
     assert not report_root.with_name(f".{report_root.name}.new").exists()
 
 
-def test_runtime_change_retains_native_collection_and_invalidates_analysis():
-    records = {
-        "collect.north": {"site": SITE, "test": "collect", "runtime": "host", STATUS_KEY: "pass"},
-        COMPARE_ID: {
+def test_separate_steps_preserve_results_across_different_runtimes(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    path = root / SUMMARY_PATH
+    path.parent.mkdir()
+    catalogue = {DERIVE_TEST: {}, COMPARE_TEST: {"depends_on": [DERIVE_TEST]}, COMPUTING_TEST: {}}
+    completed = {}
+    for test, runtime, status in (
+        (DERIVE_TEST, CONTAINER_RUNTIME, "pass"),
+        (COMPARE_TEST, "host", "warn"),
+        (COMPUTING_TEST, "host", "pass"),
+        (COMPARE_TEST, CONTAINER_RUNTIME, "pass"),
+    ):
+        result = {
+            "id": f"{test}.{SITE}",
+            "test": test,
             "site": SITE,
-            "test": COMPARE_TEST,
-            "runtime": "container",
-            STATUS_KEY: "warn",
-        },
-    }
-    catalogue = {"collect": {"collect_production": True}, COMPARE_TEST: {}, "derive": {}}
-    science_test_reports._invalidate_runtime_changes(
-        records, [{"site": SITE, "test": "derive", "runtime": "host"}], catalogue
-    )
-    assert records["collect.north"][STATUS_KEY] == "pass"
-    assert records[COMPARE_ID][STATUS_KEY] == "not_run"
+            "runtime": runtime,
+            STATUS_KEY: status,
+            EXECUTION_KEY: COMPLETED_EXECUTION,
+        }
+        completed[result["id"]] = dict(result)
+        summary = science_test_reports._release_summary(
+            root,
+            {RELEASE_LABEL_KEY: RELEASE_LABEL},
+            {SITE: {REQUIRED_TESTS_KEY: list(catalogue)}},
+            [result],
+            False,
+            UNCHANGED_SIGNATURE,
+            catalogue,
+        )
+        records = {record["id"]: record for record in summary[RESULTS_KEY]}
+        for test_id, expected in completed.items():
+            assert records[test_id] == expected
+        path.write_text(json.dumps(summary), encoding=TEXT_ENCODING)
+    assert summary[QUALIFIED_KEY] is True
 
 
 def test_release_summary_reuses_results_without_scanning_storage(tmp_test_directory, monkeypatch):
@@ -188,7 +214,7 @@ def test_release_summary_reuses_results_without_scanning_storage(tmp_test_direct
     summary = science_test_reports._release_summary(
         root,
         {RELEASE_LABEL_KEY: RELEASE_LABEL},
-        {SITE: {"required_tests": [COMPARE_TEST]}},
+        {SITE: {REQUIRED_TESTS_KEY: [COMPARE_TEST]}},
         [],
         False,
         UNCHANGED_SIGNATURE,
@@ -220,7 +246,7 @@ def test_write_summary_links_report_paths(tmp_test_directory):
             {
                 "site": SITE,
                 "test": COMPARE_TEST,
-                "execution": "completed",
+                EXECUTION_KEY: COMPLETED_EXECUTION,
                 STATUS_KEY: "warn",
                 REPORT_KEY: "reports/north/compare",
             }

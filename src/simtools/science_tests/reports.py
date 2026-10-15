@@ -28,7 +28,6 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
         if previous.get("campaign_sha256") == signature
         else {}
     )
-    _invalidate_runtime_changes(records, results, catalogue)
     production_history = _production_history(previous, results, catalogue)
     _invalidate_dependents(records, results, catalogue)
     records.update({r["id"]: r for r in results})
@@ -203,26 +202,3 @@ def _write_summary(report_dir, summary):
                 f"run ID `{record.get('run_id', 'unknown')}`."
             )
     (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def _invalidate_runtime_changes(records, results, catalogue):
-    """Invalidate analysis results when their actual runtime changes, retaining native steps."""
-    native = {
-        name
-        for name, definition in catalogue.items()
-        if definition.get("collect_production") or definition.get("produces_production")
-    }
-    for result in results:
-        if result["test"] in native or "runtime" not in result:
-            continue
-        for record in records.values():
-            if (
-                record["site"] == result["site"]
-                and record["test"] not in native
-                and record.get("runtime") != result["runtime"]
-            ):
-                record.update(
-                    status="not_run",
-                    execution="not_run",
-                    reason="Analysis runtime changed; rerun required.",
-                )

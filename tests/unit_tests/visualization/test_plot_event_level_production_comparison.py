@@ -42,13 +42,13 @@ def fixed_pair_context():
 
 def test_metadata_suppression_converts_units_and_tolerates_roundoff(fixed_pair_context):
     maximum = 0.030000000000001
-    assert maximum == pytest.approx(0.03)
+    assert np.isclose(maximum, 0.03, rtol=1e-6, atol=1e-12)
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][ENERGY_MAX_KEY] = {
         VALUE_KEY: maximum,
         "unit": "TeV",
     }
     offset = 1e-13
-    assert offset == pytest.approx(0.0, abs=1e-12)
+    assert np.isclose(offset, 0.0, rtol=0.0, atol=1e-12)
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][VIEW_CONE_MAX_KEY] = offset
     assert plot_event_level_production_comparison._metadata_suppressed_distributions(
         fixed_pair_context
