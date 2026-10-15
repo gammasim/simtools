@@ -14,6 +14,13 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
+BASELINE_KEY = "baseline"
+COMPARISON_SETS_KEY = "comparison_sets"
+PLOT_STATISTICS_KEY = "plot_statistics"
+COMPARISONS_KEY = "comparisons"
+TEXT_ENCODING = "utf-8"
+SIMULATED_EVENT_COUNT_KEY = "simulated_event_count"
+
 ARRAY_LAYOUT_KEY = "array_layout_name"
 CONFIGURATION_KEY = "configuration"
 
@@ -56,7 +63,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
 
     production_comparison.write_production_comparison(
         {
-            "production": ["baseline", "baseline.hdf5", "candidate", "candidate.hdf5"],
+            "production": [BASELINE_KEY, "baseline.hdf5", "candidate", "candidate.hdf5"],
             ARRAY_LAYOUT_KEY: ["first", "second"],
             "figure_format": ["png"],
         },
@@ -116,14 +123,14 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
         "simtools.production_configuration.production_comparison."
         "_selected_trigger_histogram_manifests",
         side_effect=[
-            [manifest("baseline", "qgs3", 20), manifest("baseline", "qgs3", 40)],
+            [manifest(BASELINE_KEY, "qgs3", 20), manifest(BASELINE_KEY, "qgs3", 40)],
             [manifest("candidate", "epos", 20), manifest("candidate", "epos", 40)],
         ],
     )
 
     pairs = production_comparison._production_descriptor_pairs_from_metadata(
         {
-            "baseline_path": base_directory / "baseline",
+            "baseline_path": base_directory / BASELINE_KEY,
             "candidate_path": base_directory / "candidate",
             "select": [],
             "compare_by": ["corsika_he_interaction"],
@@ -144,7 +151,7 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     pairing_key = {CONFIGURATION_KEY: {"primary": "gamma"}}
     input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
     descriptors = [
-        ProductionDescriptor("baseline", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor(BASELINE_KEY, [f"{input_stem}.hdf5"]),
         ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
@@ -157,13 +164,13 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
+        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
         output_directory,
     )
 
     assert mock_write.call_args.args[:2] == (
         descriptors,
-        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
+        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
     )
     assert mock_write.call_args.args[2] == output_directory / input_stem
     assert mock_write.call_args.args[3] == ["alpha"]
@@ -176,7 +183,7 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
 def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
     descriptors = [
-        ProductionDescriptor("baseline", ["baseline.hdf5"]),
+        ProductionDescriptor(BASELINE_KEY, ["baseline.hdf5"]),
         ProductionDescriptor("candidate", ["candidate.hdf5"]),
     ]
     mocker.patch(
@@ -195,7 +202,7 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
     save = mocker.patch.object(production_comparison, "save_figures_to_single_document")
 
     production_comparison.write_production_comparison(
-        {"baseline_path": "baseline", "report_mode": "compact"}, output_directory
+        {"baseline_path": BASELINE_KEY, "report_mode": "compact"}, output_directory
     )
 
     save.assert_called_once_with([figure], output_directory / "trigger-report.pdf", close=True)
@@ -207,7 +214,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
     output_directory = Path(tmp_test_directory) / "comparison"
     input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
     descriptors = [
-        ProductionDescriptor("baseline", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor(BASELINE_KEY, [f"{input_stem}.hdf5"]),
         ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
@@ -223,7 +230,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
+        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
         output_directory,
     )
 
@@ -247,7 +254,7 @@ def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test
 
     with pytest.raises(ValueError, match="pairing failed"):
         production_comparison._production_descriptor_pairs_from_metadata(
-            {"baseline_path": "baseline", "candidate_path": "candidate"}
+            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"}
         )
 
 
@@ -269,7 +276,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
         "simtools.production_configuration.production_comparison."
         "_selected_trigger_histogram_manifests",
         side_effect=[
-            [manifest("baseline", 20), manifest("baseline", 40)],
+            [manifest(BASELINE_KEY, 20), manifest(BASELINE_KEY, 40)],
             [manifest("candidate", 20)],
         ],
     )
@@ -279,7 +286,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
 
     with caplog.at_level(logging.WARNING, logger=production_comparison.__name__):
         production_comparison.write_production_comparison(
-            {"baseline_path": "baseline", "candidate_path": "candidate"},
+            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"},
             base_directory / "comparison",
         )
 
@@ -290,8 +297,8 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
     assert inventory["pairing_error_count"] == 1
     assert "pairs" not in inventory
     descriptors = mock_write.call_args.args[0]
-    assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
-    assert descriptors[0].input_files == [str(base_directory / "baseline" / "baseline_20.hdf5")]
+    assert [descriptor.label for descriptor in descriptors] == [BASELINE_KEY, "candidate"]
+    assert descriptors[0].input_files == [str(base_directory / BASELINE_KEY / "baseline_20.hdf5")]
     assert descriptors[1].input_files == [str(base_directory / "candidate" / "candidate_20.hdf5")]
 
 
@@ -313,7 +320,7 @@ def test_write_production_comparison_rejects_completely_unmatched_metadata(
 
     with pytest.raises(ValueError, match="pairing failed"):
         production_comparison.write_production_comparison(
-            {"baseline_path": "baseline", "candidate_path": "candidate"},
+            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"},
             Path(tmp_test_directory) / "comparison",
         )
 
@@ -362,7 +369,7 @@ def test_unique_manifests_by_pairing_key_rejects_duplicates(tmp_test_directory):
 
     with pytest.raises(ValueError, match="More than one baseline"):
         production_comparison._unique_manifests_by_pairing_key(
-            [manifest, manifest], set(), "baseline"
+            [manifest, manifest], set(), BASELINE_KEY
         )
 
 
@@ -401,7 +408,7 @@ def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tm
 
 def test_comparison_title_formats_shared_and_different_configuration_values():
     configuration = {
-        "baseline": {
+        BASELINE_KEY: {
             "primary": "gamma",
             "site": "North",
             "energy_min": {"value": 30, "unit": "GeV"},
@@ -433,7 +440,8 @@ def test_comparison_title_formats_shared_and_different_configuration_values():
     assert production_comparison._comparison_title(None, None) is None
 
 
-def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
+@pytest.mark.parametrize("pair_count", [1, 100])
+def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
     output = Path(tmp_test_directory)
     statistics_file = output / "pair" / "alpha" / "comparison_statistics.json"
     statistics_file.parent.mkdir(parents=True)
@@ -441,21 +449,25 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
         json.dumps(
             {
                 "format_version": 1,
-                "baseline": {
+                BASELINE_KEY: {
                     "label": "base",
-                    "simulated_event_count": 10,
+                    SIMULATED_EVENT_COUNT_KEY: 10,
                     "triggered_event_count": 5,
                 },
-                "comparison_sets": [
-                    {"label": "candidate", "simulated_event_count": 12, "triggered_event_count": 6}
+                COMPARISON_SETS_KEY: [
+                    {
+                        "label": "candidate",
+                        SIMULATED_EVENT_COUNT_KEY: 12,
+                        "triggered_event_count": 6,
+                    }
                 ],
-                "plot_statistics": {
+                PLOT_STATISTICS_KEY: {
                     "energy": {
                         "plot_name": "distribution_energy",
                         "baseline_label": "base",
                         "metric_type": "quantity_distribution",
                         "baseline_counts": [10] * 1000,
-                        "comparisons": [
+                        COMPARISONS_KEY: [
                             {
                                 "candidate_label": "candidate",
                                 "simulated": {
@@ -478,39 +490,33 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
                 },
             }
         ),
-        encoding="utf-8",
+        encoding=TEXT_ENCODING,
     )
 
-    production_comparison._write_comparison_summary([statistics_file], output, "compact")
+    statistics_files = [statistics_file]
+    for index in range(1, pair_count):
+        path = output / f"pair-{index}" / "alpha" / statistics_file.name
+        path.parent.mkdir(parents=True)
+        path.write_text(statistics_file.read_text(encoding=TEXT_ENCODING), encoding=TEXT_ENCODING)
+        statistics_files.append(path)
+    production_comparison._write_comparison_summary(statistics_files, output, "compact")
 
-    summary = json.loads((output / "comparison_statistics.json").read_text(encoding="utf-8"))
+    text = (output / statistics_file.name).read_text(encoding=TEXT_ENCODING)
+    summary = json.loads(text)
     schema.validate_dict_using_schema(
         summary,
         schema_file=SCHEMA_PATH / "production_comparison_statistics.schema.yml",
         offline=True,
     )
     assert summary["format_version"] == 2
-    assert summary["baseline"]["simulated_event_count"] == 10
-    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["pair_count"] == 1
-    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
-        "candidate:simulated"
-    ]["median"] == pytest.approx(0.2)
-    assert summary["plot_statistics"]["distribution_energy"]["metadata"]["results"][
-        "candidate:triggered"
-    ]["invalid_reasons"] == {"empty": 1}
-    pair_statistics = summary["comparisons"][0]["statistics"]["plot_statistics"]["energy"]
-    assert pair_statistics["comparisons"][0]["simulated"] == {
-        "metric": "ks",
-        "valid": True,
-        "value": 0.2,
-        "reason": "",
-        "sample_size": 10,
-    }
-    assert pair_statistics["comparisons"][0]["triggered"]["reason"] == "empty"
-    assert "baseline_counts" not in pair_statistics
-    assert not statistics_file.exists()
-    assert not statistics_file.parent.exists()
-    assert not statistics_file.parent.parent.exists()
+    assert summary[BASELINE_KEY][SIMULATED_EVENT_COUNT_KEY] == 10 * pair_count
+    assert summary[COMPARISON_SETS_KEY][0][SIMULATED_EVENT_COUNT_KEY] == 12 * pair_count
+    assert summary[PLOT_STATISTICS_KEY] == {}
+    assert summary[COMPARISONS_KEY] == []
+    assert len(text.splitlines()) <= 20
+    assert len(text.encode(TEXT_ENCODING)) < 1024
+    assert all(not path.exists() for path in statistics_files)
+    assert all(not path.parent.exists() for path in statistics_files)
     assert output.is_dir()
 
 
@@ -534,13 +540,13 @@ def test_version_one_report_remains_valid_under_current_schema():
     schema.validate_dict_using_schema(
         {
             "format_version": 1,
-            "baseline": {
-                "label": "baseline",
-                "simulated_event_count": 10,
+            BASELINE_KEY: {
+                "label": BASELINE_KEY,
+                SIMULATED_EVENT_COUNT_KEY: 10,
                 "triggered_event_count": 5,
             },
-            "comparison_sets": [],
-            "plot_statistics": {},
+            COMPARISON_SETS_KEY: [],
+            PLOT_STATISTICS_KEY: {},
         },
         json_schema=current_schema,
     )

@@ -19,6 +19,8 @@ from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 
+PLOT_STATISTICS_KEY = "plot_statistics"
+
 ENERGY = "energy"
 ANGULAR_DISTANCE = "angular_distance"
 CORE_DISTANCE = "core_distance"
@@ -123,6 +125,8 @@ def plot(
             suppressed_distributions,
         )
 
+    if report_mode == COMPACT_REPORT:
+        comparison_statistics[PLOT_STATISTICS_KEY] = {}
     return _write_comparison_statistics_json(comparison_statistics, output_path)
 
 
@@ -1117,7 +1121,7 @@ def _initialize_comparison_statistics(metrics_per_production):
             }
             for metrics in metrics_per_production[1:]
         ],
-        "plot_statistics": {},
+        PLOT_STATISTICS_KEY: {},
     }
 
 
@@ -1125,7 +1129,7 @@ def _record_plot_statistics(comparison_statistics, plot_name, statistics):
     """Store plot-level statistics if available."""
     if statistics is None:
         return
-    comparison_statistics["plot_statistics"][plot_name] = statistics
+    comparison_statistics[PLOT_STATISTICS_KEY][plot_name] = statistics
 
 
 def _plot_name_from_statistics(statistics):

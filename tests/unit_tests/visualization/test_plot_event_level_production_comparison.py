@@ -122,6 +122,7 @@ def test_distribution_suppression_covers_overall_and_telescope_types(
         "_save_figure",
         side_effect=lambda figure, *_args, **_kwargs: plt.close(figure),
     )
+    record = mocker.spy(plot_event_level_production_comparison, "_record_plot_statistics")
     path = plot_event_level_production_comparison.plot(
         metrics,
         output_path=Path(tmp_test_directory),
@@ -131,12 +132,15 @@ def test_distribution_suppression_covers_overall_and_telescope_types(
     )
     names = {call.args[2] for call in save.call_args_list}
     statistics = json.loads(path.read_text(encoding=TEXT_ENCODING))[PLOT_STATISTICS_KEY]
+    if report_mode == COMPACT_REPORT:
+        assert statistics == {}
+    recorded_names = {call.args[1] for call in record.call_args_list}
     for quantity in (ENERGY, ANGULAR_DISTANCE):
         variants = ("", "_cumulative") if quantity == ANGULAR_DISTANCE else ("",)
         for cumulative in variants:
             for suffix in ("", "_LSTN"):
                 key = f"distribution_{quantity}{cumulative}{suffix}"
-                assert key in statistics
+                assert key in recorded_names
                 assert (f"{key}.png" in names) is (
                     report_mode != COMPACT_REPORT or not has_metadata
                 )
@@ -244,6 +248,7 @@ def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory
 
     assert (output_path / "comparison-report.pdf").is_file()
     assert statistics_file.is_file()
+    assert len(statistics_file.read_text(encoding=TEXT_ENCODING).splitlines()) <= 20
     assert not list(output_path.glob("*.png"))
 
 
