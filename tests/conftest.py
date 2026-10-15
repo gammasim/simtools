@@ -1,5 +1,6 @@
 """Shared pytest configuration."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -53,8 +54,7 @@ def _catalog_test_resources_version():
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
     integration_test_run = any(_is_integration_test_argument(argument) for argument in config.args)
-    resource_version = options.get_mirrored_option(config, "simtools_tests_resource_version")
-    resource_version = resource_version or _catalog_test_resources_version()
+    resource_version = _catalog_test_resources_version()
     if resource_version:
         versioning.validate_release_tag(resource_version)
     path = _versioned_test_resources_path(config, resource_version, integration_test_run)
@@ -72,6 +72,7 @@ def pytest_configure(config):
     import simtools.constants
 
     _load_integration_environment(config)
+    os.environ["SIMTOOLS_TESTS_RESOURCE_VERSION"] = _catalog_test_resources_version()
     test_resources_path = _configured_test_resources_path(config)
     config.option.test_resources_path = test_resources_path
     simtools.constants.TEST_RESOURCES_ROOT = test_resources_path
