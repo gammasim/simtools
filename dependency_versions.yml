@@ -29,7 +29,7 @@ simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
   ref: main
-  resource-version: v0.38.0
+  resource-version: v0.39.0
 production-combinations:
 - corsika: v7.8010
   sim-telarray: v2025-11-30-rc

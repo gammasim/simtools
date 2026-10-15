@@ -78,16 +78,11 @@ class SimulationParameters:
         primary = PrimaryParticle()
         if args.get("primary") is not None and args.get("primary_id_type") is not None:
             primary = PrimaryParticle(args["primary_id_type"], args["primary"])
-        showers = args.get("showers_per_run", 0)
-        reuse = args.get("core_scatter", [1])[0]
         values = {
             "primary_particle": primary,
             "zenith_angle": round(zenith, 2),
             "azimuth_angle": round(azimuth, 2),
             "zenith_min": zenith,
-            "shower_events": int(showers),
-            "mc_events": int(showers * reuse),
-            "viewcone_max": args.get("view_cone", [0 * u.deg, 0 * u.deg])[1].to_value(u.deg),
         }
         run_mode = args.get("run_mode")
         if run_mode in CALIBRATION_RUN_MODES:
@@ -102,6 +97,14 @@ class SimulationParameters:
                     "Observatory altitude does not match simulation file observation height: "
                     f"{site_height.to_value(u.m)} m (site model) != {heights[0]} m (file)"
                 )
+        else:
+            showers = args.get("showers_per_run", 0)
+            reuse = args.get("core_scatter", [1])[0]
+            values.update(
+                shower_events=int(showers),
+                mc_events=int(showers * reuse),
+                viewcone_max=args.get("view_cone", [0 * u.deg, 0 * u.deg])[1].to_value(u.deg),
+            )
         curved = zenith >= args.get("curved_atmosphere_min_zenith_angle", 90 * u.deg).to_value(
             u.deg
         )

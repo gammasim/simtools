@@ -9,6 +9,11 @@ from simtools import settings
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
 
+TELESCOPE_CONFIG_KEY = "telescope"
+LIGHT_SOURCE_CONFIG_KEY = "light_source"
+DEFAULT_LIGHT_SOURCE_TOKEN = "calibration"
+LIGHT_EMISSION_OUTPUT_DIRECTORY = "light_emission"
+
 
 class LightEmissionConfigWriter:
     """Write settings and tables for ff-1m and xyzls.
@@ -204,10 +209,11 @@ class LightEmissionConfigWriter:
         Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..max_angle_deg.
         """
         tel = self.simulation.get_file_name_token(
-            self.simulation.light_emission_config.get("telescope") or "telescope"
+            self.simulation.light_emission_config.get(TELESCOPE_CONFIG_KEY) or TELESCOPE_CONFIG_KEY
         )
         cal = self.simulation.get_file_name_token(
-            self.simulation.light_emission_config.get("light_source") or "calibration"
+            self.simulation.light_emission_config.get(LIGHT_SOURCE_CONFIG_KEY)
+            or DEFAULT_LIGHT_SOURCE_TOKEN
         )
         fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
         max_angle_deg = (
@@ -218,7 +224,10 @@ class LightEmissionConfigWriter:
             .value
         )
         path = simtel_file_writer.write_angular_distribution_table_lambertian(
-            file_path=self.simulation.io_handler.get_output_directory("light_emission") / fname,
+            file_path=self.simulation.io_handler.get_output_directory(
+                LIGHT_EMISSION_OUTPUT_DIRECTORY
+            )
+            / fname,
             max_angle_deg=max_angle_deg,
             n_samples=100,
         )
@@ -272,38 +281,42 @@ class LightEmissionConfigWriter:
         width_ns = pulse_shape_value[1]
         exp_ns = pulse_shape_value[2]
 
-        # Handle Gauss-Exponential by writing a DAT file
-        if shape_name == "Gauss-Exponential":
-            if width_ns <= 0 or exp_ns <= 0:
-                raise ValueError(
-                    "Gauss-Exponential pulse shape requires positive width"
-                    " and exponential decay values"
-                )
-            try:
-                tel = self.simulation.light_emission_config.get("telescope") or "telescope"
-                cal = self.simulation.light_emission_config.get("light_source") or "calibration"
-                telescope_token = self.simulation.get_file_name_token(tel)
-                source_token = self.simulation.get_file_name_token(cal)
-                fname = f"flasher_pulse_shape_{telescope_token}_{source_token}.dat"
-                table_path = (
-                    self.simulation.io_handler.get_output_directory("light_emission") / fname
-                )
-                fadc_bins = self.simulation.telescope_model.get_parameter_value("fadc_sum_bins")
+        if shape_name != "Gauss-Exponential":
+            return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
-                simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
-                    file_path=table_path,
-                    width_ns=width_ns,
-                    exp_decay_ns=exp_ns,
-                    fadc_sum_bins=fadc_bins,
-                    time_margin_ns=5.0,
-                )
-                return str(table_path)
-            except (ValueError, OSError) as err:
-                self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
-                return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
+        if width_ns <= 0 or exp_ns <= 0:
+            raise ValueError(
+                "Gauss-Exponential pulse shape requires positive width and exponential decay values"
+            )
+        try:
+            tel = (
+                self.simulation.light_emission_config.get(TELESCOPE_CONFIG_KEY)
+                or TELESCOPE_CONFIG_KEY
+            )
+            cal = (
+                self.simulation.light_emission_config.get(LIGHT_SOURCE_CONFIG_KEY)
+                or DEFAULT_LIGHT_SOURCE_TOKEN
+            )
+            telescope_token = self.simulation.get_file_name_token(tel)
+            source_token = self.simulation.get_file_name_token(cal)
+            fname = f"flasher_pulse_shape_{telescope_token}_{source_token}.dat"
+            table_path = (
+                self.simulation.io_handler.get_output_directory(LIGHT_EMISSION_OUTPUT_DIRECTORY)
+                / fname
+            )
+            fadc_bins = self.simulation.telescope_model.get_parameter_value("fadc_sum_bins")
 
-        # For other shapes, return token string
-        return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
+            simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
+                file_path=table_path,
+                width_ns=width_ns,
+                exp_decay_ns=exp_ns,
+                fadc_sum_bins=fadc_bins,
+                time_margin_ns=5.0,
+            )
+            return str(table_path)
+        except (ValueError, OSError) as err:
+            self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
+            return self.get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
     def get_pulse_shape_string_token(self, shape_name, width_ns, exp_ns):
         """

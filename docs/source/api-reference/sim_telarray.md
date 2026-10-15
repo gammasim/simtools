@@ -120,9 +120,6 @@ incomplete contracts and invalid matrix grids before creating a configuration.
 
 (simulate-array-1)=
 
-Replace `SimulatorArray(corsika_config=...)` with
-`SimulatorArray(simulation_parameters=..., array_model=...)`.
-
 ```{eval-rst}
 .. automodule:: simtel.simulator_array
    :members:

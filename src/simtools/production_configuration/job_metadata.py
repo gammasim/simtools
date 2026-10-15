@@ -333,6 +333,15 @@ def _primary_name(args_dict, simulator):
         if primary_name:
             return str(primary_name).lower()
 
+    simulation_parameters = getattr(simulator, "simulation_parameters", [])
+    if not isinstance(simulation_parameters, list):
+        simulation_parameters = [simulation_parameters]
+    for parameters in simulation_parameters:
+        primary_particle = getattr(parameters, "primary_particle", None)
+        primary_name = getattr(primary_particle, "name", None)
+        if primary_name:
+            return str(primary_name).lower()
+
     raise ValueError("Unable to determine the primary particle for production metadata.")
 
 
@@ -355,6 +364,17 @@ def _showers_per_run(args_dict, simulator):
         configuration.shower_events
         for configuration in corsika_configurations
         if configuration is not None and getattr(configuration, "shower_events", None) is not None
+    }
+    if len(shower_counts) == 1:
+        return shower_counts.pop()
+
+    simulation_parameters = getattr(simulator, "simulation_parameters", [])
+    if not isinstance(simulation_parameters, list):
+        simulation_parameters = [simulation_parameters]
+    shower_counts = {
+        parameters.shower_events
+        for parameters in simulation_parameters
+        if getattr(parameters, "shower_events", None) is not None
     }
     if len(shower_counts) == 1:
         return shower_counts.pop()

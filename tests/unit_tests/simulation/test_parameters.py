@@ -8,6 +8,10 @@ import pytest
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.simulation.parameters import CALIBRATION_RUN_MODES, SimulationParameters
 
+SHOWERS_PER_RUN = "showers_per_run"
+CORE_SCATTER = "core_scatter"
+VIEW_CONE = "view_cone"
+
 
 def test_physical_settings_from_arguments(mocker):
     parameters = SimulationParameters.from_args(
@@ -16,9 +20,9 @@ def test_physical_settings_from_arguments(mocker):
             "primary_id_type": "common_name",
             "zenith_angle": 30 * u.deg,
             "azimuth_angle": 120 * u.deg,
-            "showers_per_run": 7,
-            "core_scatter": [3, 200 * u.m],
-            "view_cone": [0 * u.deg, 5 * u.deg],
+            SHOWERS_PER_RUN: 7,
+            CORE_SCATTER: [3, 200 * u.m],
+            VIEW_CONE: [0 * u.deg, 5 * u.deg],
             "curved_atmosphere_min_zenith_angle": 25 * u.deg,
         },
         42,
@@ -52,7 +56,8 @@ def test_defaults(mocker):
 
 
 @pytest.mark.parametrize("height", [None, 2200, 1800])
-def test_input_file_uses_selected_reader(height, mocker):
+@pytest.mark.parametrize("cli_defaults", [False, True])
+def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
     metadata = {
         "primary_particle": PrimaryParticle("common_name", "gamma"),
         "zenith_angle": 42,
@@ -68,6 +73,8 @@ def test_input_file_uses_selected_reader(height, mocker):
     site = mocker.Mock()
     site.get_parameter_value_with_unit.return_value = 2200 * u.m
     args = {"corsika_file": "showers.new", "simulation_file_format": "example"}
+    if cli_defaults:
+        args.update({SHOWERS_PER_RUN: None, CORE_SCATTER: None, VIEW_CONE: None})
     if height == 1800:
         with pytest.raises(ValueError, match="altitude does not match"):
             SimulationParameters.from_args(args, 1, site)

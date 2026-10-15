@@ -239,10 +239,11 @@ def test_process_file_info_else(monkeypatch, tmp_test_directory):
     assert info["nsb_level"] == pytest.approx(0.0)
 
 
-def test_read_simulation_parameters(mocker):
+@pytest.mark.parametrize("observation_level_count", [1, np.float32(1)])
+def test_read_simulation_parameters(observation_level_count, mocker):
     run = {
         "n_showers": 7,
-        "n_observation_levels": 1,
+        "n_observation_levels": observation_level_count,
         "observation_height": [220000],
     }
     event = {

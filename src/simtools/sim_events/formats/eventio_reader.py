@@ -223,7 +223,8 @@ class EventioReader:
             "shower_events": showers,
             "mc_events": showers * int(event["n_reuse"]),
             "observation_levels": [
-                height / 100 for height in run["observation_height"][: run["n_observation_levels"]]
+                height / 100
+                for height in run["observation_height"][: int(run["n_observation_levels"])]
             ],
         }
 

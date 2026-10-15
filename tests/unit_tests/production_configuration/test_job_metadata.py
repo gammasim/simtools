@@ -11,7 +11,9 @@ from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_metadata import (
     REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS,
     _add_optional_configuration_value,
+    _primary_name,
     _resolved_model_parameter_overrides,
+    _showers_per_run,
     build_production_job_manifest,
     build_simulation_job_metadata,
     get_sim_telarray_event_counts,
@@ -79,6 +81,17 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
         "dec": -45.0,
         "ha": 123.0,
     }
+
+
+def test_sim_telarray_only_metadata_uses_resolved_simulation_parameters():
+    simulator = _simulator("MSTS-01")
+    simulator.corsika_configurations = [None]
+    simulator.simulation_parameters = [
+        SimpleNamespace(primary_particle=SimpleNamespace(name="gamma"), shower_events=10)
+    ]
+
+    assert _primary_name({"primary": None}, simulator) == "gamma"
+    assert _showers_per_run({"showers_per_run": None}, simulator) == 10
 
 
 def test_build_simulation_job_metadata_rounds_angles_to_two_decimal_places():
