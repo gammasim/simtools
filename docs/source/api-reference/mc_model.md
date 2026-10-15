@@ -75,6 +75,13 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
    :members:
 ```
 
+## telescope sphere
+
+```{eval-rst}
+.. automodule:: model.telescope_sphere
+   :members:
+```
+
 ## model utilities
 
 (model-utils)=
