@@ -28,10 +28,6 @@ Typical outputs are:
 
 CORSIKA and sim_telarray stdout is saved in `.log.gz` files; matching `.err.gz` files
 contain stderr. Both streams are retained when packaging grid outputs and inspecting logs.
-Older `.log.gz` files can contain both streams and remain supported. A nonempty stderr file
-can contain progress messages or warnings and does not by itself indicate a failed run.
-LightEmission simulations use the same convention; ray-tracing logs use plain `.log` and
-`.err` files. HTCondor job stdout and stderr are separate from these simulator logs.
 
 Example command:
 
