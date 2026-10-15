@@ -74,6 +74,15 @@ class FileSystemModelSource:
             self._model_versions = sorted(versions, key=Version)
         return list(self._model_versions)
 
+    def get_production_descriptions(self):
+        """Return model-version descriptions from production info files."""
+        info_files = set(self.productions_path.glob("*/info.yaml")) | set(
+            self.productions_path.glob("*/info.yml")
+        )
+        return files.collect_production_descriptions(
+            info_files, ascii_handler.collect_data_from_file
+        )
+
     def read_production_table(self, collection_name, model_version):
         """Return an aggregated production table for a collection and version."""
         key = (str(model_version), collection_name)
@@ -365,6 +374,10 @@ class SimulationModelReader:
     def get_model_versions(self, collection_name="telescopes"):
         """Return available model versions."""
         return self._source.get_model_versions(collection_name)
+
+    def get_production_descriptions(self):
+        """Return model-version descriptions from the selected source."""
+        return self._source.get_production_descriptions()
 
     def read_production_table(self, collection_name, model_version):
         """Read a production table."""

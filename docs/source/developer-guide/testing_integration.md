@@ -90,13 +90,11 @@ one of these repository sources.
 
 ## Resources
 
-Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
-resource path is configured, `SIMTOOLS_TESTS_PATH` identifies the
-`simtools-tests` checkout. The catalog separately records the Git ref used to
-obtain the repository and its `resource-version`, which names the directory
-below. The command-line option `--simtools_tests_resource_version` selects a
-different resource directory for an individual run. `SIMTOOLS_TESTS_RESOURCE_VERSION`
-is the environment override.
+Tests resolve resources from `SIMTOOLS_TESTS_PATH` and the `resource-version`
+in `dependency_versions.yml`. The environment variable identifies the local
+`simtools-tests` checkout; the catalog selects the versioned resource directory
+below it and records the Git ref used to obtain the repository. The corresponding
+command-line option is `--simtools_tests_path`.
 
 CI checks out the configurable `simtools_tests_branch` and `simulation_model_branch`, both
 defaulting to `main`. These branches are independent of the release refs recorded in the
@@ -112,21 +110,15 @@ dependency catalog; see [CI repository branches](dependency_versions.md#ci-repos
 Use `${static:path/to/file}` for maintained inputs and
 `${generated:path/to/file}` for generated reference products.
 Use `${downloaded:path/to/file}` for externally downloaded resources.
-To run against a different resource set:
+To select a resource set:
 
 ```bash
-pytest --test_resources_path /full/path/to/resources \
+pytest --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-To select a resource version instead of a path:
-
-```bash
-pytest --simtools_tests_resource_version v0.36.0 \
-  tests/integration_tests/test_applications_from_config.py
-```
-
-When no version is specified, simtools uses the version in `dependency_versions.yml`.
+To select another resource directory, update `resource-version` in
+`dependency_versions.yml`.
 
 Versioned resource bundles are archived in
 [`gammasim/simtools-tests`](https://github.com/gammasim/simtools-tests). Use
@@ -183,7 +175,10 @@ worker counts, and version-specific expectations.
 
 Each output owns its location and validation rules. Product schemas validate
 stable structure such as columns, types, and units. Table and metadata rules
-describe expectations specific to the tested workflow.
+describe expectations specific to the tested workflow. For `data_schema`, use a
+local schema path, URL, or a name relative to the schemas bundled with simtools.
+Schema resolution uses the same loader as applications and does not require a
+source checkout.
 
 ```yaml
 test_outputs:
@@ -191,7 +186,7 @@ test_outputs:
   path_descriptor: output_path
   validations:
   - type: data_schema
-    schema: src/simtools/schemas/job_grid_density.schema.yml
+    schema: job_grid_density.schema.yml
   - type: table
     minimum_rows: 1
     unique_columns: [run_number]

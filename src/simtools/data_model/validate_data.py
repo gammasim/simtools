@@ -484,6 +484,10 @@ class DataValidator:
                 col_name=col_name,
             )
             self.data_table[col_name] = converted_col
+            if len(converted_col) == 0:
+                if self._get_data_description(col_name).get("required_range"):
+                    raise ValueError(f"Empty column '{col_name}' cannot cover its required range.")
+                continue
             self._check_range(
                 col_name,
                 np.nanmin(converted_col.data),

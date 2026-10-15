@@ -69,6 +69,7 @@ simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape-parameters>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-derive-telescope-sphere-radius <applications/simtools-derive-telescope-sphere-radius>
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
@@ -102,6 +103,7 @@ simtools-production-generate-grid <applications/simtools-production-generate-gri
 simtools-production-select-files <applications/simtools-production-select-files>
 simtools-resources-test-generate <applications/simtools-resources-test-generate>
 simtools-run-application <applications/simtools-run-application>
+simtools-run-science-tests <applications/simtools-run-science-tests>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
 simtools-simulate-pedestals <applications/simtools-simulate-pedestals>
