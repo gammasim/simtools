@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792071597890,
+  "lastUpdate": 1792073726943,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30368,6 +30368,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 432.25390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "acae2c5250c71d31792f5699fc1a5fb9fdcd0ba0",
+          "message": "Schemas for science tests (#2630)\n\n* improved error message\n\n* Improve simtools-prod CI usage of simulation models version\n\n* fine tuning of output directories\n\n* shorted report for fixed values\n\n* compact report generation\n\n* simplify\n\n* add statistics comparison\n\n* add statistics comparison\n\n* comparison and warnings\n\n* simplify\n\n* Schemas for science tests\n\n* sonar\n\n* reviewers comments\n\n* address reviewers comments\n\n* unit tests\n\n* remove duplicated lines",
+          "timestamp": "2026-10-15T16:00:41+02:00",
+          "tree_id": "b5f36a0bbf9dba6ab138c5a79af989d1ba3e012d",
+          "url": "https://github.com/gammasim/simtools/commit/acae2c5250c71d31792f5699fc1a5fb9fdcd0ba0"
+        },
+        "date": 1792073710533,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 82.772451908,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 85.97999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 434.078125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
