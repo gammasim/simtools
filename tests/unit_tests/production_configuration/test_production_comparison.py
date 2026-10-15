@@ -215,6 +215,7 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
         [statistics_file],
         output_directory,
         {statistics_file: {"distribution_core_distance": [1]}},
+        comparison_labels={statistics_file: ("baseline-vs-candidate", "")},
     )
 
 
