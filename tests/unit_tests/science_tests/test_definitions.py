@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import jsonschema
 import pytest
 import yaml
 
@@ -12,6 +13,19 @@ _STORAGE_ROOT_PLACEHOLDER = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
 _ENCODING = "utf-8"
 _RELEASE_LABEL_KEY = "release_label"
 _REPORT_PAGE_COLUMN = "report_page"
+
+
+def test_science_test_config_schema_rejects_unknown_site_fields():
+    with pytest.raises(jsonschema.ValidationError, match="Additional properties"):
+        science_test_definitions._validate_science_test_config(
+            {
+                "site": "north",
+                "required_tests": ["compare"],
+                "array_layout_name": "CTAO-North-Alpha",
+                "unexpected": True,
+            },
+            science_test_definitions._SITE_SCHEMA_FILE,
+        )
 
 
 def test_dependency_order_and_invalid_definitions():

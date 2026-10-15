@@ -171,6 +171,7 @@ package-data.simtools = [
   "schemas/*.yml",
   "schemas/input/*.yml",
   "schemas/model_parameters/*.yml",
+  "schemas/science_tests/*.yml",
 ]
 data-files.simtools = [ "dependency_versions.yml" ]
 
