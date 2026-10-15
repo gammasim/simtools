@@ -30,7 +30,7 @@ class SimtelRunner:
         Configuration parameters.
     """
 
-    def __init__(self, label=None, config=None):
+    def __init__(self, label=None, config=None, array_model=None):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
@@ -39,7 +39,9 @@ class SimtelRunner:
 
         self.runs_per_set = 1
 
-        self.runner_service = RunnerServices(config, run_type="sim_telarray", label=label)
+        self.runner_service = RunnerServices(
+            config, run_type="sim_telarray", label=label, array_model=array_model
+        )
         self.file_list = None
 
     def run(self, test=False, input_file=None, run_number=None):

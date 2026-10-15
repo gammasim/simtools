@@ -9,6 +9,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 - [Coding Guidelines](coding_guidelines.md): Code style and best practices.
 - [Pull Requests](pull_requests.md): How to open a PR via [GitHub](https://github.com/gammasim/simtools/pulls).
 - [Documentation](documentation.md): Contributing to user and developer documentation.
+- [Simulation formats](simulation_formats.md): Add configuration writers and result readers.
 - [Testing](testing.md): Unit, integration, and science tests.
 
 ## Automatic Processes
@@ -38,6 +39,7 @@ coding_guidelines.md
 pull_requests.md
 documentation.md
 testing.md
+simulation_formats.md
 continuous_integration.md
 simtools_build_images.md
 dependency_versions.md

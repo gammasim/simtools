@@ -71,7 +71,8 @@ def test_input_arguments_are_mutually_exclusive():
         parser.parse_args(["--input_files", "input.simtel.zst", "--input_file_list", "inputs.txt"])
 
 
-def test_main_passes_application_arguments_to_metadata_builder():
+@pytest.mark.parametrize("file_format", ["eventio", "example_format"])
+def test_main_passes_application_arguments_to_metadata_builder(file_format):
     """Pass the generated activity ID into reduced-event metadata."""
     args = {
         "input_files": ["input.simtel.zst"],
@@ -79,6 +80,7 @@ def test_main_passes_application_arguments_to_metadata_builder():
         "input_file_list_pattern": None,
         "files_per_reduced_event_file": 1,
         "max_workers": 1,
+        "simulation_file_format": file_format,
     }
     app_context = SimpleNamespace(
         args=args,
@@ -97,4 +99,5 @@ def test_main_passes_application_arguments_to_metadata_builder():
         write_reduced_event_lists.main()
 
     assert mock_write.call_args.kwargs["metadata_args"] is args
+    assert mock_write.call_args.kwargs["file_format"] == file_format
     assert mock_write.call_args.kwargs["input_file_list_pattern"] is None

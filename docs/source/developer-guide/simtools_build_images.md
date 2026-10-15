@@ -46,6 +46,7 @@ simtools-dependency-versions --format github-output
 **Run workflow** from the GitHub Actions page. It resolves the configured source references and
 builds a new private GHCR snapshot when an input revision changes or its corresponding snapshot is
 missing.
+
 When a new snapshot is published, the workflow opens or updates a review PR. The PR is labelled
 `no-changelog-needed` and changes only `dependency_versions.yml`: the resolved source revisions
 and private snapshot digest. It never adds the generated source or auxiliary archives to Git.
