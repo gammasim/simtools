@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791955717739,
+  "lastUpdate": 1792041721001,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30204,6 +30204,46 @@ window.BENCHMARK_DATA = {
             "value": 429.37109375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261004.327.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Gernot Maier",
+            "username": "GernotMaier",
+            "email": "gernot.maier@desy.de"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "f4955eac59bf92c35eac6f2c0ac3ecc6f3e39424",
+          "message": "Check simulation-model release compatibility before production (#2627)\n\n* improve setting of dependency paths for tests\n\n* string repetition\n\n* docs\n\n* Validate production model dependencies against the target runtime\n\nDeclare supported model release ranges, resolve exact external model identities, and initialize target configurations before submitting production jobs. Honor historical image catalogs without modifying images, seal model inputs on workers, and expose compatibility decisions in normal output and campaign reports.\n\n* Document production dependency compatibility checks\n\n* Reduce compatibility checks to release version constraints\n\n* Derive catalog features from schemas\n\n* developer exception\n\n* improve unit test coverage\n\n* Improve preflight condition check [skip ci]\n\nRefactor preflight condition to improve readability.\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n* Update help text for preflight argument [skip ci]\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n* Address dependency compatibility review comments\n\n* review comments\n\n* Fix reviewer lint findings\n\n* pylint\n\n* stale file\n\n---------\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-10-14T12:34:31Z",
+          "url": "https://github.com/gammasim/simtools/commit/f4955eac59bf92c35eac6f2c0ac3ecc6f3e39424"
+        },
+        "date": 1792041709130,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 79.546075088,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 82.48,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 431.4140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
