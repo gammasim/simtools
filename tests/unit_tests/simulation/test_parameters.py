@@ -11,19 +11,23 @@ from simtools.simulation.parameters import CALIBRATION_RUN_MODES, SimulationPara
 SHOWERS_PER_RUN = "showers_per_run"
 CORE_SCATTER = "core_scatter"
 VIEW_CONE = "view_cone"
+ZENITH_ANGLE = "zenith_angle"
+AZIMUTH_ANGLE = "azimuth_angle"
+COMMON_NAME = "common_name"
+CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE = "curved_atmosphere_min_zenith_angle"
 
 
 def test_physical_settings_from_arguments(mocker):
     parameters = SimulationParameters.from_args(
         {
             "primary": "proton",
-            "primary_id_type": "common_name",
-            "zenith_angle": 30 * u.deg,
-            "azimuth_angle": 120 * u.deg,
+            "primary_id_type": COMMON_NAME,
+            ZENITH_ANGLE: 30 * u.deg,
+            AZIMUTH_ANGLE: 120 * u.deg,
             SHOWERS_PER_RUN: 7,
             CORE_SCATTER: [3, 200 * u.m],
             VIEW_CONE: [0 * u.deg, 5 * u.deg],
-            "curved_atmosphere_min_zenith_angle": 25 * u.deg,
+            CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE: 25 * u.deg,
         },
         42,
         mocker.Mock(),
@@ -56,7 +60,7 @@ def test_defaults(mocker):
 
 
 def test_curved_atmosphere_is_disabled_without_threshold(mocker):
-    parameters = SimulationParameters.from_args({"zenith_angle": 90 * u.deg}, 1, mocker.Mock())
+    parameters = SimulationParameters.from_args({ZENITH_ANGLE: 90 * u.deg}, 1, mocker.Mock())
 
     assert not parameters.use_curved_atmosphere
 
@@ -65,9 +69,9 @@ def test_curved_atmosphere_is_disabled_without_threshold(mocker):
 @pytest.mark.parametrize("cli_defaults", [False, True])
 def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
     metadata = {
-        "primary_particle": PrimaryParticle("common_name", "gamma"),
-        "zenith_angle": 42,
-        "azimuth_angle": 180,
+        "primary_particle": PrimaryParticle(COMMON_NAME, "gamma"),
+        ZENITH_ANGLE: 42,
+        AZIMUTH_ANGLE: 180,
         "zenith_min": 40,
         "shower_events": 3,
         "mc_events": 6,
@@ -81,7 +85,7 @@ def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
     args = {
         "corsika_file": "showers.new",
         "simulation_file_format": "example",
-        "curved_atmosphere_min_zenith_angle": 30 * u.deg,
+        CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE: 30 * u.deg,
     }
     if cli_defaults:
         args.update({SHOWERS_PER_RUN: None, CORE_SCATTER: None, VIEW_CONE: None})
