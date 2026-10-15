@@ -83,6 +83,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     ]
     stem_counts = Counter(output_stems)
     statistics_files = []
+    comparison_labels = {}
     compact_figures = [] if args_dict.get("report_mode") == "compact" else None
     report_pages = {}
     for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
@@ -92,28 +93,20 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
             output_stem,
             stem_counts,
         )
-        comparison_kwargs = {}
-        if "configurations" in pairing_key:
-            comparison_kwargs[COMPARISON_CONTEXT_KEY] = pairing_key
-        if compact_figures is None:
-            pair_statistics = _write_array_layout_comparisons(
-                production_descriptors,
-                args_dict,
-                pair_output_directory,
-                array_layout_names,
-                **comparison_kwargs,
-            )
-        else:
-            pair_statistics = _write_array_layout_comparisons(
-                production_descriptors,
-                args_dict,
-                pair_output_directory,
-                array_layout_names,
-                compact_figures=compact_figures,
-                report_pages=report_pages,
-                **comparison_kwargs,
-            )
+        pair_statistics = _write_array_layout_comparisons(
+            production_descriptors,
+            args_dict,
+            pair_output_directory,
+            array_layout_names,
+            compact_figures=compact_figures,
+            comparison_context=pairing_key,
+            report_pages=report_pages if compact_figures is not None else None,
+        )
         statistics_files.extend(pair_statistics or [])
+        if array_layout_names == [None]:
+            comparison_labels.update(
+                dict.fromkeys(pair_statistics or [], (pair_output_directory.name, ""))
+            )
     if compact_figures:
         save_figures_to_single_document(
             compact_figures, output_directory / "trigger-report.pdf", close=True
@@ -133,7 +126,15 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
-    _write_comparison_summary(statistics_files, output_directory, report_pages)
+    if comparison_labels:
+        _write_comparison_summary(
+            statistics_files,
+            output_directory,
+            report_pages,
+            comparison_labels=comparison_labels,
+        )
+    else:
+        _write_comparison_summary(statistics_files, output_directory, report_pages)
 
 
 def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
@@ -301,7 +302,9 @@ def _format_configuration_value(value, quantity=None):
     return str(value)
 
 
-def _write_comparison_summary(statistics_files, output_directory, report_pages=None):
+def _write_comparison_summary(
+    statistics_files, output_directory, report_pages=None, comparison_labels=None
+):
     """Combine per-pair statistics into one summary and remove the individual files."""
     baseline = None
     comparison_sets = {}
@@ -316,6 +319,7 @@ def _write_comparison_summary(statistics_files, output_directory, report_pages=N
                 output_directory,
                 statistics,
                 (report_pages or {}).get(statistics_file, {}),
+                (comparison_labels or {}).get(statistics_file),
             )
         )
         statistics_file.unlink()
@@ -340,11 +344,18 @@ def _write_comparison_summary(statistics_files, output_directory, report_pages=N
     _write_compact_statistics_csv(compact_statistics, output_directory)
 
 
-def _compact_statistic_rows(statistics_file, output_directory, statistics, report_pages=None):
+def _compact_statistic_rows(
+    statistics_file, output_directory, statistics, report_pages=None, comparison_label=None
+):
     """Extract scalar comparison results while excluding histogram arrays."""
     path_parts = statistics_file.relative_to(output_directory).parts
-    pair = path_parts[0] if len(path_parts) > 2 else ""
-    array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
+    if comparison_label is None:
+        pair = path_parts[0] if len(path_parts) > 2 else ""
+        array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
+        if len(path_parts) == 1:
+            array_layout = ""
+    else:
+        pair, array_layout = comparison_label
     report_pages = report_pages or {}
     rows = []
     for plot_name, plot_statistics in statistics[PLOT_STATISTICS_KEY].items():
