@@ -12,6 +12,8 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
 
+GLOBAL_FILE_PARAMETER = "iobuf_maximum"
+
 
 def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
@@ -155,8 +157,9 @@ def test_add_additional_models(telescope_model_lst, mocker):
     # Test case 2: Single model
     mock_model = mocker.Mock()
     mock_model.parameters = {"new_param": "new_value"}
+    global_parameter = {"value": "random-generator.dat", "file": True}
     mock_model.get_simulation_software_parameters.return_value = {
-        "iobuf_maximum": {"value": 1000},
+        GLOBAL_FILE_PARAMETER: global_parameter,
         "min_photons": {"value": 3},
     }
     mock_model.export_model_files = mocker.Mock()
@@ -164,9 +167,13 @@ def test_add_additional_models(telescope_model_lst, mocker):
     exporter._add_additional_models(mock_model, parameters)
     assert "new_param" in parameters
     assert parameters["new_param"] == "new_value"
-    assert parameters["iobuf_maximum"] == {"value": 1000}
+    assert parameters[GLOBAL_FILE_PARAMETER] == global_parameter
     assert "min_photons" not in parameters
     mock_model.export_model_files.assert_called_once()
+    mock_model.model_reader.export_model_files.assert_called_once_with(
+        parameters={GLOBAL_FILE_PARAMETER: global_parameter},
+        dest=telescope_copy.config_file_directory,
+    )
 
     # Test case 3: Dictionary of models
     mock_model2 = mocker.Mock()

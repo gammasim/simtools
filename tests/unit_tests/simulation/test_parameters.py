@@ -78,7 +78,11 @@ def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
     factory = mocker.patch("simtools.simulation.parameters.get_reader", return_value=reader)
     site = mocker.Mock()
     site.get_parameter_value_with_unit.return_value = 2200 * u.m
-    args = {"corsika_file": "showers.new", "simulation_file_format": "example"}
+    args = {
+        "corsika_file": "showers.new",
+        "simulation_file_format": "example",
+        "curved_atmosphere_min_zenith_angle": 30 * u.deg,
+    }
     if cli_defaults:
         args.update({SHOWERS_PER_RUN: None, CORE_SCATTER: None, VIEW_CONE: None})
     if height == 1800:
@@ -89,4 +93,5 @@ def test_input_file_uses_selected_reader(height, cli_defaults, mocker):
         assert parameters.zenith_angle == 42
         assert parameters.mc_events == 6
         assert parameters.primary_particle.name == "gamma"
+        assert parameters.use_curved_atmosphere
     factory.assert_called_once_with("showers.new", "example")

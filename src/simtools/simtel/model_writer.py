@@ -14,6 +14,8 @@ from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
+SIMTEL_SOFTWARE = "sim_telarray"
+
 
 class SimtelModelWriter:
     """Export a resolved model in sim_telarray configuration formats.
@@ -45,7 +47,7 @@ class SimtelModelWriter:
             Optional label override used for output file naming.
         """
         parameters = self.model.parameters.copy()
-        software_parameters = self.model.get_simulation_software_parameters("sim_telarray") or {}
+        software_parameters = self.model.get_simulation_software_parameters(SIMTEL_SOFTWARE) or {}
         parameters.update(software_parameters)
         self.model.export_model_files(update_if_necessary=True)
         self.model.model_reader.export_model_files(
@@ -77,17 +79,21 @@ class SimtelModelWriter:
             return
 
         parameters.update(additional_models.parameters)
-        parameters.update(
-            {
-                name: parameter
-                for name, parameter in (
-                    additional_models.get_simulation_software_parameters("sim_telarray") or {}
-                ).items()
-                if names.is_global_sim_telarray_parameter(name)
-            }
+        software_parameters = (
+            additional_models.get_simulation_software_parameters(SIMTEL_SOFTWARE) or {}
         )
+        global_parameters = {
+            name: parameter
+            for name, parameter in software_parameters.items()
+            if names.is_global_sim_telarray_parameter(name)
+        }
+        parameters.update(global_parameters)
         additional_models.export_model_files(
             self.model.config_file_directory, update_if_necessary=True
+        )
+        additional_models.model_reader.export_model_files(
+            parameters=global_parameters,
+            dest=self.model.config_file_directory,
         )
 
     def _load_simtel_config_writer(self, label=None):
@@ -118,7 +124,7 @@ class SimtelModelWriter:
             Model directory to export the file to.
         """
         parameter_name = "correct_nsb_spectrum_to_telescope_altitude"
-        correction_parameters = self.model.get_simulation_software_parameters("sim_telarray")
+        correction_parameters = self.model.get_simulation_software_parameters(SIMTEL_SOFTWARE)
         if parameter_name not in correction_parameters:
             return
         parameter = deepcopy(correction_parameters[parameter_name])

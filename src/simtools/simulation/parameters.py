@@ -11,6 +11,7 @@ from simtools.sim_events.formats.registry import get_reader
 CALIBRATION_RUN_MODES = frozenset(
     {"pedestals", "pedestals_dark", "pedestals_nsb_only", "direct_injection"}
 )
+ZENITH_ANGLE_PARAMETER = "zenith_angle"
 
 
 @dataclass
@@ -73,14 +74,14 @@ class SimulationParameters:
         SimulationParameters
             Shared run settings, without constructing a shower configuration.
         """
-        zenith = args.get("zenith_angle", 20.0 * u.deg).to_value(u.deg)
+        zenith = args.get(ZENITH_ANGLE_PARAMETER, 20.0 * u.deg).to_value(u.deg)
         azimuth = args.get("azimuth_angle", 0.0 * u.deg).to_value(u.deg)
         primary = PrimaryParticle()
         if args.get("primary") is not None and args.get("primary_id_type") is not None:
             primary = PrimaryParticle(args["primary_id_type"], args["primary"])
         values = {
             "primary_particle": primary,
-            "zenith_angle": round(zenith, 2),
+            ZENITH_ANGLE_PARAMETER: round(zenith, 2),
             "azimuth_angle": round(azimuth, 2),
             "zenith_min": zenith,
         }
@@ -106,5 +107,7 @@ class SimulationParameters:
                 viewcone_max=args.get("view_cone", [0 * u.deg, 0 * u.deg])[1].to_value(u.deg),
             )
         curved_threshold = args.get("curved_atmosphere_min_zenith_angle")
-        curved = curved_threshold is not None and zenith >= curved_threshold.to_value(u.deg)
+        curved = curved_threshold is not None and values[ZENITH_ANGLE_PARAMETER] >= (
+            curved_threshold.to_value(u.deg)
+        )
         return cls(run_number=run_number, run_mode=run_mode, use_curved_atmosphere=curved, **values)
