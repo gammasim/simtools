@@ -265,6 +265,7 @@ class HTCondorBackend:
         value = HTCondorBackend._strip_environment_comment(value).strip().strip("\"'")
         if not key:
             raise BackendConfigurationError(f"Invalid empty environment key in {path}.")
+        value = os.path.expandvars(str(Path(value).expanduser()))
         return key, value
 
     @staticmethod

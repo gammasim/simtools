@@ -101,7 +101,8 @@ while jobs remain pending. `--overwrite` archives a failed, finished production 
 retry with `--allow_production`.
 
 Expected products and acceptance rules are declared in the template. Missing products are
-`incomplete`; failed numerical limits are `fail`; advisory limits are `warn` and require review.
+`incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
+Warnings do not qualify a release; every required test must pass.
 Reports and the release summary are written under `reports/`; production data remains at the external
 candidate path.
 Summary generation does not scan candidate or baseline data. If those files change outside the

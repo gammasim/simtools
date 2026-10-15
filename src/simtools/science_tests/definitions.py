@@ -322,6 +322,12 @@ def _read_csv_acceptance_values(row, field, path):
 
 def _check_csv_thresholds(value, metric, field, label, row):
     """Apply warning and failure thresholds to one valid statistic."""
+    minimum = metric.get("minimum", -math.inf)
+    if value < minimum:
+        raise _AcceptanceError(
+            f"{label}: {field}={_format_acceptance_value(value)} is below required minimum "
+            f"{_format_acceptance_value(minimum)}{_report_page_suffix(row)}."
+        )
     warning_limit = metric.get("warning_maximum")
     fail_limit = metric.get("maximum", math.inf)
     if value > fail_limit:

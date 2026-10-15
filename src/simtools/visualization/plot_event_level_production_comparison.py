@@ -141,6 +141,7 @@ def plot(
             suppressed_distributions,
         )
 
+    # Keep JSON scalar-only in every mode; detailed histograms are already in the plots.
     comparison_statistics[PLOT_STATISTICS_KEY] = _compact_plot_statistics(
         comparison_statistics[PLOT_STATISTICS_KEY]
     )
@@ -148,7 +149,7 @@ def plot(
 
 
 def _compact_plot_statistics(plot_statistics):
-    """Keep scalar statistics for compact output and omit arrays and categories."""
+    """Keep JSON scalar-only so diagnostic histogram arrays do not create huge files."""
     compact = {}
     for plot_name, statistics in plot_statistics.items():
         item = {

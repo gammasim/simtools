@@ -332,18 +332,7 @@ def setup_release(
 
 def _setup_overrides(contents, filename, baseline_version, model_revision):
     """Update selected YAML fields while preserving template comments and formatting."""
-    overrides = {}
-    if filename == _RELEASE_FILE_NAME:
-        if baseline_version is not None:
-            overrides["baseline"] = baseline_version
-        if model_revision is not None:
-            overrides["simulation_models_git_revision"] = model_revision
-    elif filename == _CONTEXT_FILE_NAME and baseline_version is not None:
-        context = yaml.safe_load(contents)
-        baseline_path = context.get(_BASELINE_PATH_KEY) if isinstance(context, dict) else None
-        if not isinstance(baseline_path, str) or not baseline_path:
-            raise ValueError(f"Setup context requires {_BASELINE_PATH_KEY} to set the baseline.")
-        overrides[_BASELINE_PATH_KEY] = str(Path(baseline_path).parent / baseline_version)
+    overrides = _setup_override_values(contents, filename, baseline_version, model_revision)
     for key, value in overrides.items():
         replacement = yaml.safe_dump({key: value}, sort_keys=False).rstrip()
         pattern = rf"^{re.escape(key)}:.*$"
@@ -357,3 +346,23 @@ def _setup_overrides(contents, filename, baseline_version, model_revision):
         else:
             contents = contents.rstrip() + "\n" + replacement + "\n"
     return contents
+
+
+def _setup_override_values(contents, filename, baseline_version, model_revision):
+    """Return setup values for release or context configuration files."""
+    if filename == _RELEASE_FILE_NAME:
+        return {
+            key: value
+            for key, value in (
+                ("baseline", baseline_version),
+                ("simulation_models_git_revision", model_revision),
+            )
+            if value is not None
+        }
+    if filename != _CONTEXT_FILE_NAME or baseline_version is None:
+        return {}
+    context = yaml.safe_load(contents)
+    baseline_path = context.get(_BASELINE_PATH_KEY) if isinstance(context, dict) else None
+    if not isinstance(baseline_path, str) or not baseline_path:
+        raise ValueError(f"Setup context requires {_BASELINE_PATH_KEY} to set the baseline.")
+    return {_BASELINE_PATH_KEY: str(Path(baseline_path).parent / baseline_version)}
