@@ -24,6 +24,10 @@ normally be produced with
 Metadata-based event comparisons write pair coverage to `comparison_inventory.json` and scalar
 metrics to `comparison_statistics.json`. Check pairing errors before interpreting the results.
 Use `--report_mode diagnostic` to retain histogram arrays and detailed figures.
+Compact reports omit energy distributions for fixed-energy pairs and angular-distance distributions
+for on-axis pairs when both productions' metadata confirms those conditions. This applies to
+telescope-type plots too; numerical comparison results are retained. Missing metadata keeps the
+distributions visible.
 
 For computing summaries, use `--comparison_level computing --baseline_path <production-root>`.
 Add `--candidate_path` to compare a second production and repeated `--select` options to filter

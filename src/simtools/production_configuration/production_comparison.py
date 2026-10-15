@@ -22,6 +22,8 @@ from simtools.sim_events.production_comparison import (
 from simtools.visualization import plot_event_level_production_comparison
 from simtools.visualization.visualize import save_figures_to_single_document
 
+COMPARISON_CONTEXT_KEY = "comparison_context"
+
 ARRAY_LAYOUT_KEY = "array_layout_name"
 
 _logger = logging.getLogger(__name__)
@@ -88,7 +90,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         )
         comparison_kwargs = {}
         if "configurations" in pairing_key:
-            comparison_kwargs["comparison_context"] = pairing_key
+            comparison_kwargs[COMPARISON_CONTEXT_KEY] = pairing_key
         if compact_figures is None:
             pair_statistics = _write_array_layout_comparisons(
                 production_descriptors,
@@ -185,6 +187,8 @@ def _compare_array_layout(
     }
     if compact_figures is not None:
         plot_args["compact_figures"] = compact_figures
+    if comparison_context is not None:
+        plot_args[COMPARISON_CONTEXT_KEY] = comparison_context
     return plot_event_level_production_comparison.plot(
         metrics_per_production,
         **plot_args,

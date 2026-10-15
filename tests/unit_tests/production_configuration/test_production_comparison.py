@@ -17,7 +17,19 @@ from simtools.sim_events.production_comparison import ProductionDescriptor
 ARRAY_LAYOUT_KEY = "array_layout_name"
 CONFIGURATION_KEY = "configuration"
 
+CONFIGURATIONS_KEY = "configurations"
 LAYOUT_NAME = "layout-a"
+
+
+def test_compare_array_layout_passes_metadata_to_plotting(mocker, tmp_test_directory):
+    mocker.patch.object(production_comparison, "collect_production_metrics", return_value=[])
+    mocker.patch.object(production_comparison, "_comparison_title", return_value=None)
+    plot = mocker.patch.object(production_comparison.plot_event_level_production_comparison, "plot")
+    context = {CONFIGURATIONS_KEY: {}}
+    production_comparison._compare_array_layout(
+        [], {}, None, Path(tmp_test_directory), comparison_context=context
+    )
+    assert plot.call_args.kwargs["comparison_context"] is context
 
 
 def test_write_production_comparison_writes_each_selected_array_layout(mocker, tmp_test_directory):
@@ -410,7 +422,7 @@ def test_comparison_title_formats_shared_and_different_configuration_values():
     }
 
     title = production_comparison._comparison_title(
-        {"configurations": configuration}, "CTAO-North-Alpha"
+        {CONFIGURATIONS_KEY: configuration}, "CTAO-North-Alpha"
     )
 
     assert "Layout: CTAO-North-Alpha | Primary: gamma | Site: North" in title
