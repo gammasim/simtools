@@ -15,6 +15,20 @@ from simtools.simulation.configuration import get_light_source_writer
 MAKE_COMMAND_METHOD = "make_command"
 
 
+FAILING_STAGE_PARAMETER = "failing_stage"
+LIGHT_SOURCE_TYPE = "light_source_type"
+FLAT_FIELDING = "flat_fielding"
+PHOTON_FILE_NAME = "photons.iact"
+EMISSION_STAGE = "emission"
+SIMTEL_STAGE = "simtel"
+FLASHER_APPLICATION = "ff-1m"
+IACT_OUTPUT = "iact_output"
+SIMTEL_OUTPUT = "sim_telarray_output"
+TELESCOPE_POINTING_METHOD = "_get_telescope_pointing"
+SETTINGS_TARGET = "simtools.simtel.simulator_light_emission.settings"
+TEXT_ENCODING = "utf-8"
+
+
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     # Setup minimal mocks
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
@@ -27,25 +41,25 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
 
     # Mock the helper methods
     with (
-        patch.object(simulator_instance, "_get_telescope_pointing", return_value=[0, 0]),
+        patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=[0, 0]),
         patch.object(
             get_light_source_writer(simulator_instance),
             "get_light_emission_application_name",
-            return_value="ff-1m",
+            return_value=FLASHER_APPLICATION,
         ),
-        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+        patch(SETTINGS_TARGET) as mock_settings,
     ):
         mock_settings.config.sim_telarray_exe = "/mock/simtel/bin/sim_telarray"
         mock_settings.config.sim_telarray_path = Path("/mock/simtel")
         # Test flat_fielding - should include Bypass_Optics
-        simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+        simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
 
         options = simulator_instance._make_simtel_script()
         assert "Bypass_Optics=1" in options
         assert "-I/mock/simtel/bin/sim_telarray" not in options
 
         # Test illuminator - should NOT include Bypass_Optics
-        simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+        simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: "illuminator"}
 
         options = simulator_instance._make_simtel_script()
         assert "Bypass_Optics=1" not in options
@@ -57,11 +71,11 @@ def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simula
     simulator_instance.site_model.get_parameter_value.return_value = (
         "atmospheric_transmission-2.0.0.ecsv"
     )
-    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: "illuminator"}
 
     with (
-        patch.object(simulator_instance, "_get_telescope_pointing", return_value=[0, 0]),
-        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+        patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=[0, 0]),
+        patch(SETTINGS_TARGET) as mock_settings,
     ):
         mock_settings.config.sim_telarray_exe = "/mock/simtel/bin/sim_telarray"
 
@@ -154,7 +168,7 @@ def test_uses_telescope_position_file_rule(simulator_instance):
 def test_prepare_run(simulator_instance, tmp_test_directory):
     # Setup mocks
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
-    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: "illuminator"}
 
     script_dir = Path(tmp_test_directory) / "output" / "scripts"
     script_dir.mkdir(parents=True, exist_ok=True)
@@ -172,9 +186,9 @@ def test_prepare_run(simulator_instance, tmp_test_directory):
 
     # Mock runner_service.get_file_name to return paths
     def get_file_name_side_effect(file_type):
-        if file_type == "sim_telarray_output":
+        if file_type == SIMTEL_OUTPUT:
             return Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
-        if file_type == "iact_output":
+        if file_type == IACT_OUTPUT:
             return Path(tmp_test_directory) / "output" / "iact.dat"
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
@@ -205,7 +219,7 @@ def test_prepare_run(simulator_instance, tmp_test_directory):
 
 def test_prepare_run_output_file_exists(simulator_instance, tmp_test_directory):
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
-    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: "illuminator"}
 
     # Create the actual output file to trigger FileExistsError
     output_file_path = Path(tmp_test_directory) / "output" / "existing_output.simtel.gz"
@@ -214,11 +228,11 @@ def test_prepare_run_output_file_exists(simulator_instance, tmp_test_directory):
 
     # Setup mock to return the output file that already exists
     def get_file_name_side_effect(file_type):
-        if file_type == "sim_telarray_output":
+        if file_type == SIMTEL_OUTPUT:
             return output_file_path
         if file_type == "sub_script":
             return Path(tmp_test_directory) / "output" / "script.sh"
-        if file_type == "iact_output":
+        if file_type == IACT_OUTPUT:
             return Path(tmp_test_directory) / "output" / "iact.dat"
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
@@ -251,13 +265,13 @@ def test_simulate(simulator_instance, tmp_test_directory):
 
     # Setup runner_service mock to return the output file and other paths
     def get_file_name_side_effect(file_type):
-        if file_type == "sim_telarray_output":
+        if file_type == SIMTEL_OUTPUT:
             return mock_output_file
         if file_type == "sub_out":
             return Path(tmp_test_directory) / "output" / "logfile.log"
         if file_type == "sub_err":
             return Path(tmp_test_directory) / "output" / "logfile.err"
-        if file_type == "iact_output":
+        if file_type == IACT_OUTPUT:
             return Path(tmp_test_directory) / "output" / "iact.dat"
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
@@ -297,7 +311,7 @@ def test__initialize_light_emission_configuration(simulator_instance):
     result = simulator_instance._initialize_light_emission_configuration(config)
 
     # Verify flasher_type was converted to light_source_type (lowercase)
-    assert result["light_source_type"] == "led"
+    assert result[LIGHT_SOURCE_TYPE] == "led"
     assert result["flasher_photons"] == pytest.approx(5e6)
     assert result["existing_key"] == "value"  # Existing key preserved
 
@@ -308,7 +322,7 @@ def test__initialize_light_emission_configuration_with_flasher_photons_override(
 
     def mock_get_parameter_value(param_name):
         if param_name == "flasher_type":
-            return "flat_fielding"
+            return FLAT_FIELDING
         if param_name == "flasher_photons":
             return 1234567
         return None
@@ -318,7 +332,7 @@ def test__initialize_light_emission_configuration_with_flasher_photons_override(
     config = {"flasher_photons": 1234567}
     result = simulator_instance._initialize_light_emission_configuration(config)
 
-    assert result["light_source_type"] == "flat_fielding"
+    assert result[LIGHT_SOURCE_TYPE] == FLAT_FIELDING
     assert result["flasher_photons"] == pytest.approx(1234567)
     simulator_instance.calibration_model.overwrite_model_parameter.assert_called_once_with(
         "flasher_photons", 1234567
@@ -340,7 +354,7 @@ def test__initialize_light_emission_configuration_preserves_run_mode(simulator_i
         {"run_mode": "full_simulation"}
     )
 
-    assert result["light_source_type"] == "illuminator"
+    assert result[LIGHT_SOURCE_TYPE] == "illuminator"
     assert result["run_mode"] == "full_simulation"
     assert result["flasher_photons"] == pytest.approx(5e6)
 
@@ -368,7 +382,7 @@ def test__initialize_light_emission_configuration_with_position(simulator_instan
     np.testing.assert_array_equal(result["light_source_position"].value, [1.5, 2.0, 3.5])
     assert result["flasher_photons"] == pytest.approx(1e7)
     # No light_source_type should be set since flasher_type is None
-    assert "light_source_type" not in result
+    assert LIGHT_SOURCE_TYPE not in result
 
 
 def test___init__(tmp_test_directory):
@@ -506,13 +520,13 @@ def test___init___with_wavelength(tmp_test_directory):
 
 def test__get_telescope_pointing(simulator_instance):
     # Test flat_fielding type returns (0.0, 0.0)
-    simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
     result = simulator_instance._get_telescope_pointing()
     assert result == (0.0, 0.0)
 
     # Test with light_source_position keeps fixed vertical-up telescope pointing
     simulator_instance.light_emission_config = {
-        "light_source_type": "illuminator",
+        LIGHT_SOURCE_TYPE: "illuminator",
         "light_source_position": [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
     }
     with patch.object(
@@ -526,7 +540,7 @@ def test__get_telescope_pointing(simulator_instance):
         )
 
     # Test default case uses _calibration_pointing_direction
-    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: "illuminator"}
     simulator_instance._logger.reset_mock()
 
     with (
@@ -597,7 +611,7 @@ def test_write_telescope_position_file(simulator_instance, tmp_test_directory):
 
     # Verify file was created with correct content
     assert result.exists()
-    content = result.read_text(encoding="utf-8")
+    content = result.read_text(encoding=TEXT_ENCODING)
     expected_content = "100.0 200.0 300.0 1500.0\n"
     assert content == expected_content
 
@@ -768,7 +782,7 @@ def test__calibration_pointing_direction_with_custom_params(simulator_instance):
 
 def test_validate_simulations_success(simulator_instance, tmp_test_directory):
     output_file = Path(tmp_test_directory) / "output.iact"
-    output_file.write_text("test data", encoding="utf-8")
+    output_file.write_text("test data", encoding=TEXT_ENCODING)
 
     simulator_instance.runner_service.get_file_name.return_value = output_file
 
@@ -903,11 +917,11 @@ def test_get_available_wavelengths_from_config_missing_keys():
         SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_version)
 
 
-@pytest.mark.parametrize("failing_stage", ["emission", "simtel"])
+@pytest.mark.parametrize(FAILING_STAGE_PARAMETER, [EMISSION_STAGE, SIMTEL_STAGE])
 def test_run_command_preserves_pipeline_failure(
     simulator_instance, tmp_test_directory, mocker, failing_stage
 ):
-    iact_file = Path(tmp_test_directory) / "photons.iact"
+    iact_file = Path(tmp_test_directory) / PHOTON_FILE_NAME
     iact_file.write_bytes(b"photon stream")
     log_file = tmp_test_directory / "diagnostics.log.gz"
     simulator_instance.runner_service.get_file_name.return_value = iact_file
@@ -915,12 +929,12 @@ def test_run_command_preserves_pipeline_failure(
     mocker.patch.object(
         get_light_source_writer(simulator_instance),
         MAKE_COMMAND_METHOD,
-        return_value=failing_command if failing_stage == "emission" else "true",
+        return_value=failing_command if failing_stage == EMISSION_STAGE else "true",
     )
     mocker.patch.object(
         simulator_instance,
         "_make_simtel_script",
-        return_value=failing_command if failing_stage == "simtel" else "true",
+        return_value=failing_command if failing_stage == SIMTEL_STAGE else "true",
     )
 
     result = subprocess.run(
@@ -932,5 +946,75 @@ def test_run_command_preserves_pipeline_failure(
 
     assert result.returncode == 7
     assert iact_file.read_bytes() == b"photon stream"
-    with gzip.open(log_file, "rt", encoding="utf-8") as handle:
+    with gzip.open(log_file, "rt", encoding=TEXT_ENCODING) as handle:
         assert handle.read() == "diagnostic\n"
+
+
+@pytest.mark.parametrize(FAILING_STAGE_PARAMETER, [None, EMISSION_STAGE, SIMTEL_STAGE])
+def test_run_script_separates_diagnostics(
+    simulator_instance, tmp_test_directory, mocker, failing_stage
+):
+    root = Path(tmp_test_directory) / "simulation with spaces"
+    source = root / "LightEmission" / FLASHER_APPLICATION
+    source.parent.mkdir(parents=True)
+    simtel = root / SIMTEL_STAGE
+    for stage, executable in ((EMISSION_STAGE, source), (SIMTEL_STAGE, simtel)):
+        exit_code = 7 if stage == failing_stage else 0
+        executable.write_text(
+            f"#!/usr/bin/env bash\necho '{stage} stdout'\necho '{stage} stderr' >&2\n"
+            f"exit {exit_code}\n",
+            encoding=TEXT_ENCODING,
+        )
+        executable.chmod(0o755)
+
+    file_names = {
+        IACT_OUTPUT: root / PHOTON_FILE_NAME,
+        "light_emission_log": root / "emission.log.gz",
+        "light_emission_resources": root / "emission.resources.json",
+        "sim_telarray_log": root / "simtel.log.gz",
+        "sim_telarray_resources": root / "simtel.resources.json",
+        SIMTEL_OUTPUT: root / "events.simtel.gz",
+        "sim_telarray_histogram": root / "events.hdata.gz",
+    }
+    file_names[IACT_OUTPUT].write_bytes(b"photon stream")
+    simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: file_names[
+        file_type
+    ]
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
+    simulator_instance.telescope_model.config_file_directory = root
+    simulator_instance.telescope_model.config_file_path = root / "telescope.cfg"
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2200 * u.m
+    simulator_instance.site_model.get_parameter_value.return_value = "transmission.dat"
+    writer = get_light_source_writer(simulator_instance)
+    mocker.patch.object(writer, "get_site_command", return_value=[])
+    mocker.patch.object(writer, "get_light_source_command", return_value=[])
+    mocker.patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=(0, 0))
+    mock_settings = mocker.Mock()
+    mock_settings.config.sim_telarray_path = root
+    mock_settings.config.sim_telarray_exe = simtel
+    mocker.patch("simtools.simtel.light_emission_config_writer.settings", mock_settings)
+    mocker.patch(SETTINGS_TARGET, mock_settings)
+    mocker.patch(
+        "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
+    )
+
+    result = subprocess.run(
+        ["bash", "-c", "".join(simulator_instance.make_run_command())],
+        capture_output=True,
+        check=False,
+        timeout=20,
+    )
+
+    assert result.returncode == (7 if failing_stage else 0), result.stderr.decode()
+    assert file_names[IACT_OUTPUT].exists() is (failing_stage is not None)
+    for stage in (EMISSION_STAGE, SIMTEL_STAGE):
+        stdout_file = root / f"{stage}.log.gz"
+        stderr_file = root / f"{stage}.err.gz"
+        if failing_stage == EMISSION_STAGE and stage == SIMTEL_STAGE:
+            assert not stdout_file.exists()
+            assert not stderr_file.exists()
+            continue
+        with gzip.open(stdout_file, "rt", encoding=TEXT_ENCODING) as handle:
+            assert handle.read() == f"{stage} stdout\n"
+        with gzip.open(stderr_file, "rt", encoding=TEXT_ENCODING) as handle:
+            assert handle.read() == f"{stage} stderr\n"

@@ -10,10 +10,14 @@ import subprocess
 import sys
 import threading
 import time
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 
 from simtools.version import __version__
+
+_STDOUT_LOG_SUFFIX = ".log.gz"
+_STDERR_LOG_SUFFIX = ".err.gz"
 
 
 def build_accounting_command(
@@ -44,7 +48,8 @@ def build_accounting_command(
     model_version : str, optional
         Simulation-model version associated with this process.
     log_file : str or pathlib.Path, optional
-        Gzip-compressed combined stdout and stderr log file.
+        Gzip-compressed stdout log file. Stderr is written to a sibling
+        ``.err.gz`` file, replacing the ``.log.gz`` suffix.
     input_file : str or pathlib.Path, optional
         File connected to the child's stdin.
 
@@ -102,7 +107,8 @@ def run_and_record(
     model_version : str, optional
         Simulation-model version associated with this process.
     log_file : str or pathlib.Path, optional
-        Gzip-compressed combined stdout and stderr log file.
+        Gzip-compressed stdout log file. Stderr is written to a sibling
+        ``.err.gz`` file, replacing the ``.log.gz`` suffix.
     input_file : str or pathlib.Path, optional
         File connected to the child's stdin.
     env : dict, optional
@@ -117,8 +123,9 @@ def run_and_record(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     start_time = datetime.now(UTC)
     start_clock = time.perf_counter()
-    process, opened_files, log_writer = _start_process(command, log_file, input_file, env)
-    log_thread = _start_log_writer(process, log_writer)
+    process, opened_files, log_writers = _start_process(command, log_file, input_file, env)
+    capture_errors = []
+    log_threads = _start_log_writers(process, log_writers, capture_errors)
     cpu_times = None
     peak_rss_bytes = None
     try:
@@ -128,9 +135,9 @@ def run_and_record(
         cpu_times, peak_rss_bytes = _update_measurements(process.pid, cpu_times, peak_rss_bytes)
         return_code = process.wait()
     finally:
-        if log_thread:
+        for log_thread, process_output in log_threads:
             log_thread.join()
-            process.stdout.close()
+            process_output.close()
         for opened_file in opened_files:
             opened_file.close()
 
@@ -148,28 +155,39 @@ def run_and_record(
         return_code,
     )
     output_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if capture_errors:
+        raise RuntimeError(
+            "Failed to capture simulation output; inspect the available logs."
+        ) from (capture_errors[0])
     return return_code
 
 
 def _start_process(command, log_file, input_file, env):
     """Start the child process and return it with files needing closure."""
     opened_files = []
+    log_writers = []
     stdin = None
     stdout = None
     stderr = None
-    if input_file:
-        stdin = Path(input_file).open("rb")  # pylint: disable=consider-using-with
-        opened_files.append(stdin)
-    if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_writer = gzip.open(log_path, "wb")  # pylint: disable=consider-using-with
-        opened_files.append(log_writer)
-        stdout = subprocess.PIPE
-        stderr = subprocess.STDOUT
-    else:
-        log_writer = None
     try:
+        if input_file:
+            stdin = Path(input_file).open("rb")  # pylint: disable=consider-using-with
+            opened_files.append(stdin)
+        if log_file:
+            log_path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            if log_path.name.endswith(_STDOUT_LOG_SUFFIX):
+                error_path = log_path.with_name(
+                    log_path.name.removesuffix(_STDOUT_LOG_SUFFIX) + _STDERR_LOG_SUFFIX
+                )
+            else:
+                error_path = log_path.with_name(log_path.name + _STDERR_LOG_SUFFIX)
+            for path in (log_path, error_path):
+                log_writer = gzip.open(path, "wb")  # pylint: disable=consider-using-with
+                opened_files.append(log_writer)
+                log_writers.append(log_writer)
+            stdout = subprocess.PIPE
+            stderr = subprocess.PIPE
         # The process and streams must remain open until the monitoring loop completes.
         # pylint: disable=consider-using-with
         process = subprocess.Popen(
@@ -184,22 +202,33 @@ def _start_process(command, log_file, input_file, env):
         for opened_file in opened_files:
             opened_file.close()
         raise
-    return process, opened_files, log_writer
+    return process, opened_files, log_writers
 
 
-def _start_log_writer(process, log_writer):
-    """Copy combined child output to a gzip log without buffering it in memory."""
-    if log_writer is None:
-        return None
-    log_thread = threading.Thread(target=_copy_process_output, args=(process.stdout, log_writer))
-    log_thread.start()
-    return log_thread
+def _start_log_writers(process, log_writers, capture_errors):
+    """Drain stdout and stderr concurrently into their separate gzip logs."""
+    log_threads = []
+    for process_output, log_writer in zip((process.stdout, process.stderr), log_writers):
+        log_thread = threading.Thread(
+            target=_copy_process_output,
+            args=(process_output, log_writer, process, capture_errors),
+        )
+        log_thread.start()
+        log_threads.append((log_thread, process_output))
+    return log_threads
 
 
-def _copy_process_output(process_output, log_writer):
-    """Copy one child-process output stream to its compressed log file."""
-    while chunk := process_output.read(1024 * 1024):
-        log_writer.write(chunk)
+def _copy_process_output(process_output, log_writer, process, capture_errors):
+    """Copy one stream, stopping the process if output cannot be retained."""
+    try:
+        while chunk := process_output.read(1024 * 1024):
+            log_writer.write(chunk)
+    except (OSError, ValueError, zlib.error) as exc:
+        capture_errors.append(exc)
+        try:
+            process.kill()
+        except ProcessLookupError:
+            pass
 
 
 def _build_environment(env):
