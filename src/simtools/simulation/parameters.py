@@ -105,7 +105,6 @@ class SimulationParameters:
                 mc_events=int(showers * reuse),
                 viewcone_max=args.get("view_cone", [0 * u.deg, 0 * u.deg])[1].to_value(u.deg),
             )
-        curved = zenith >= args.get("curved_atmosphere_min_zenith_angle", 90 * u.deg).to_value(
-            u.deg
-        )
+        curved_threshold = args.get("curved_atmosphere_min_zenith_angle")
+        curved = curved_threshold is not None and zenith >= curved_threshold.to_value(u.deg)
         return cls(run_number=run_number, run_mode=run_mode, use_curved_atmosphere=curved, **values)

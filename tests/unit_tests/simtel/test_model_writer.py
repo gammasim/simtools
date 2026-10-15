@@ -52,6 +52,35 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
 
 
+def test_write_sim_telarray_config_file_exports_software_parameter_assets(
+    telescope_model_lst, mocker
+):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    parameter_name = "software_parameter_file"
+    parameter = {"value": "software-file.dat", "file": True}
+    software_parameters = {parameter_name: parameter}
+    mocker.patch.object(
+        telescope_copy,
+        "get_simulation_software_parameters",
+        return_value=software_parameters,
+    )
+    mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
+    mock_writer = mocker.Mock()
+    exporter = get_model_writer(telescope_copy)
+    mocker.patch.object(
+        exporter,
+        "_load_simtel_config_writer",
+        side_effect=lambda *args, **kwargs: setattr(exporter, "config_writer", mock_writer),
+    )
+
+    telescope_copy.write_sim_telarray_config_file()
+
+    mock_export.assert_any_call(
+        parameters={parameter_name: parameter}, dest=telescope_copy.config_file_directory
+    )
+
+
 def test_write_sim_telarray_config_file_exports_nsb_correction_file(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     exporter = get_model_writer(telescope_copy)

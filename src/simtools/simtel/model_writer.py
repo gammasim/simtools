@@ -45,8 +45,13 @@ class SimtelModelWriter:
             Optional label override used for output file naming.
         """
         parameters = self.model.parameters.copy()
-        parameters.update(self.model.get_simulation_software_parameters("sim_telarray") or {})
+        software_parameters = self.model.get_simulation_software_parameters("sim_telarray") or {}
+        parameters.update(software_parameters)
         self.model.export_model_files(update_if_necessary=True)
+        self.model.model_reader.export_model_files(
+            parameters=software_parameters,
+            dest=self.model.config_file_directory,
+        )
         if (
             "correct_nsb_spectrum_to_telescope_altitude"
             in self.model.get_simulation_software_parameters("sim_telarray")

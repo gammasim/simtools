@@ -294,6 +294,17 @@ def _resolved_atmosphere_configuration(args_dict, simulator):
         for configuration in corsika_configurations
         if configuration is not None
     }
+    if not curved_values and not any(
+        configuration is not None for configuration in corsika_configurations
+    ):
+        simulation_parameters = getattr(simulator, "simulation_parameters", [])
+        if not isinstance(simulation_parameters, list):
+            simulation_parameters = [simulation_parameters]
+        curved_values = {
+            bool(parameters.use_curved_atmosphere)
+            for parameters in simulation_parameters
+            if parameters is not None and hasattr(parameters, "use_curved_atmosphere")
+        }
     if len(curved_values) == 1:
         atmosphere["use_curved_atmosphere"] = curved_values.pop()
 

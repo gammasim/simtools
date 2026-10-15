@@ -55,6 +55,12 @@ def test_defaults(mocker):
     assert not parameters.use_curved_atmosphere
 
 
+def test_curved_atmosphere_is_disabled_without_threshold(mocker):
+    parameters = SimulationParameters.from_args({"zenith_angle": 90 * u.deg}, 1, mocker.Mock())
+
+    assert not parameters.use_curved_atmosphere
+
+
 @pytest.mark.parametrize("height", [None, 2200, 1800])
 @pytest.mark.parametrize("cli_defaults", [False, True])
 def test_input_file_uses_selected_reader(height, cli_defaults, mocker):

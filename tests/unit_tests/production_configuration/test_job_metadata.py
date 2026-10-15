@@ -366,6 +366,29 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
     )
 
 
+def test_telescope_only_manifest_uses_resolved_atmosphere_parameter(tmp_test_directory):
+    simulator = SimpleNamespace(
+        array_models=[],
+        corsika_configurations=[None],
+        simulation_parameters=[SimpleNamespace(use_curved_atmosphere=True)],
+        run_number=12,
+        get_files=lambda file_type: [],
+    )
+
+    manifest = build_production_job_manifest(
+        _args(
+            simulation_software="sim_telarray",
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+        ),
+        simulator,
+        tmp_test_directory,
+    )
+
+    assert manifest["configuration"]["atmosphere"]["use_curved_atmosphere"] is True
+
+
 def test_resolved_model_parameter_overrides_keeps_values_by_model_version():
     models = [
         SimpleNamespace(
