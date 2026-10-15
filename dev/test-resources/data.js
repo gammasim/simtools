@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792047376937,
+  "lastUpdate": 1792069799507,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30284,6 +30284,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 432.359375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2096ad1b105e3b7203c4038ee9bcf8535190d14c",
+          "message": "Separate simulation configuration and file format adapters (#2626)\n\n* fix: resolve annotated source tags to commits\n\n* fix: keep auxiliary archives out of snapshots\n\n* fix: stage only the snapshot catalog update\n\n* docs: describe source snapshot refreshes\n\n* fix: preserve catalog document marker\n\n* test: support pinned source catalog entries\n\n* chore: update build-input source revisions (#2603)\n\nCo-authored-by: GernotMaier <14001688+GernotMaier@users.noreply.github.com>\n\n* Separate simulation configuration writers and result readers from common model and run settings.\n\n* simplified docs\n\n* fix testing\n\n* copilot comments\n\n* simplifiy\n\n* fix simtel issue\n\n* reviewers comments\n\n---------\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: GernotMaier <14001688+GernotMaier@users.noreply.github.com>",
+          "timestamp": "2026-10-15T14:54:29+02:00",
+          "tree_id": "88fd4cb01f7f92c773fcbeb8c25baccca73a9905",
+          "url": "https://github.com/gammasim/simtools/commit/2096ad1b105e3b7203c4038ee9bcf8535190d14c"
+        },
+        "date": 1792069743236,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 75.89820878699999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 78.66000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 433.08203125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
