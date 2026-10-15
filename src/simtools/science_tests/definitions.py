@@ -42,7 +42,6 @@ _ACCEPTANCE_VALUE_FORMAT = ".4g"
 _REPORT_PAGE_COLUMN = "report_page"
 
 _SITE_SCHEMA_FILE = "site.schema.yml"
-
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
