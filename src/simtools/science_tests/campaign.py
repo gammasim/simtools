@@ -151,41 +151,7 @@ def run_release(
     prepared = []
     run_id = get_uuid()
     for site in run["requested_sites"]:
-        site_config = run["suites"][site]
-        selected = (
-            site_config["required_tests"]
-            if run["requested_tests"] is None
-            else run["requested_tests"]
-        )
-        ordered = _dependency_order(selected, run["catalogue"])
-        for test_id in (name for name in ordered if name in selected):
-            _validate_definition(test_id, site, run["catalogue"][test_id])
-            definition = _test_definition(
-                test_id, run["catalogue"], run["acceptance"], run["release"]
-            )
-            _check_production_selection(
-                test_id, definition, run["requested_tests"], allow_production, dry_run
-            )
-            args = (
-                run["release_dir"],
-                run["template_dir"],
-                run["context"],
-                site,
-                site_config,
-                test_id,
-                definition,
-            )
-            prepared.append(
-                (
-                    args,
-                    _run_test(
-                        *args,
-                        dry_run=True,
-                        run_id=run_id,
-                        application_args=run["application_args"],
-                    ),
-                )
-            )
+        prepared.extend(_prepare_site_tests(run, site, allow_production, dry_run, run_id))
     production_selected = any(args[6].get("tier") == "release-prod" for args, _ in prepared)
     if production_selected and not dry_run and not preflight:
         logger.warning(
@@ -217,6 +183,46 @@ def run_release(
         )
         raise RuntimeError(f"Science tests failed: {details}")
     return summary
+
+
+def _prepare_site_tests(run, site, allow_production, dry_run, run_id):
+    """Validate and prepare the selected tests for one site."""
+    site_config = run["suites"][site]
+    selected = (
+        site_config["required_tests"] if run["requested_tests"] is None else run["requested_tests"]
+    )
+    ordered = _dependency_order(selected, run["catalogue"])
+    prepared = []
+    for test_id in (name for name in ordered if name in selected):
+        prepared.append(
+            _prepare_test(run, site, site_config, test_id, allow_production, dry_run, run_id)
+        )
+    return prepared
+
+
+def _prepare_test(run, site, site_config, test_id, allow_production, dry_run, run_id):
+    """Validate and dry-run one selected site/test pair."""
+    _validate_definition(test_id, site, run["catalogue"][test_id])
+    definition = _test_definition(test_id, run["catalogue"], run["acceptance"], run["release"])
+    _check_production_selection(
+        test_id, definition, run["requested_tests"], allow_production, dry_run
+    )
+    args = (
+        run["release_dir"],
+        run["template_dir"],
+        run["context"],
+        site,
+        site_config,
+        test_id,
+        definition,
+    )
+    result = _run_test(
+        *args,
+        dry_run=True,
+        run_id=run_id,
+        application_args=run["application_args"],
+    )
+    return args, result
 
 
 def _run_preflight(prepared, run, preflight, dry_run):
