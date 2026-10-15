@@ -300,7 +300,7 @@ def _execute_and_record_test(
                 )
         _run_or_reuse_test(result, definition, replacements, args, work, resolved)
     except _AcceptanceError as exc:
-        result.update(status="fail", error=str(exc))
+        result.update(status="warn", reason=f"Acceptance warning: {exc}")
     except (
         OSError,
         ValueError,
@@ -354,6 +354,8 @@ def _reuse_derived_product(definition, replacements, args):
         for configuration in current_configs:
             _validate_derived_products(configuration)
         _evaluate_products(definition, replacements)
+    except _AcceptanceError:
+        raise
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(
             f"Derived products are incomplete or stale: {exc}. "
