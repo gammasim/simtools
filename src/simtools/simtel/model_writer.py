@@ -52,10 +52,7 @@ class SimtelModelWriter:
             parameters=software_parameters,
             dest=self.model.config_file_directory,
         )
-        if (
-            "correct_nsb_spectrum_to_telescope_altitude"
-            in self.model.get_simulation_software_parameters("sim_telarray")
-        ):
+        if "correct_nsb_spectrum_to_telescope_altitude" in software_parameters:
             self.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.model.config_file_directory
             )
