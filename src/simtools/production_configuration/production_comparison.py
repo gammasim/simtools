@@ -22,6 +22,8 @@ from simtools.sim_events.production_comparison import (
 from simtools.visualization import plot_event_level_production_comparison
 from simtools.visualization.visualize import save_figures_to_single_document
 
+ARRAY_LAYOUT_KEY = "array_layout_name"
+
 _logger = logging.getLogger(__name__)
 
 
@@ -43,7 +45,7 @@ def write_production_comparison(args_dict, output_directory):
     output_directory : pathlib.Path
         Directory in which comparison products are written.
     """
-    array_layout_names = args_dict.get("array_layout_name") or [None]
+    array_layout_names = args_dict.get(ARRAY_LAYOUT_KEY) or [None]
     if args_dict.get("baseline_path"):
         _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         return
@@ -176,7 +178,7 @@ def _compare_array_layout(
     )
     plot_args = {
         "output_path": output_directory,
-        "array_layout_name": array_layout_name,
+        ARRAY_LAYOUT_KEY: array_layout_name,
         "figure_format": args_dict.get("figure_format"),
         "report_mode": args_dict.get("report_mode", "diagnostic"),
         "comparison_title": _comparison_title(comparison_context, array_layout_name),
@@ -304,6 +306,7 @@ def _write_comparison_summary(statistics_files, output_directory, report_mode="d
             compact_plot_statistics,
         )
         statistics_file.unlink()
+        _remove_empty_comparison_directories(statistics_file.parent, output_directory)
 
     if compact_report:
         plot_statistics = _finalize_compact_plot_statistics(compact_plot_statistics)
@@ -323,6 +326,16 @@ def _write_comparison_summary(statistics_files, output_directory, report_mode="d
     (output_directory / "comparison_statistics.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+
+
+def _remove_empty_comparison_directories(directory, output_directory):
+    """Remove emptied per-pair directories without touching plots or the report root."""
+    while directory != output_directory and directory.is_relative_to(output_directory):
+        try:
+            directory.rmdir()
+        except OSError:
+            break
+        directory = directory.parent
 
 
 def _comparison_summary_entry(statistics_file, output_directory, statistics, compact_report):
@@ -540,6 +553,9 @@ def _pairing_key(manifest, compare_by):
     paired_configuration = {
         key: value for key, value in configuration.items() if key not in compare_by
     }
+    layout = paired_configuration.get(ARRAY_LAYOUT_KEY)
+    if isinstance(layout, (list, tuple)) and len(layout) == 1:
+        paired_configuration[ARRAY_LAYOUT_KEY] = layout[0]
     return normalize_for_comparison(
         {
             "configuration": paired_configuration,

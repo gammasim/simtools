@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import math
+import os
 import re
 from collections import Counter
 from pathlib import Path
@@ -37,6 +38,8 @@ _SUBMISSION_FILE_NAME = "submission.json"
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
+
+_SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
 
 _PUBLICATION_WARNING_BYTES = 20 * 1024 * 1024
 
@@ -549,10 +552,20 @@ def _relative_path(path, root):
 
 
 def _load_context(context_file):
-    """Load the optional science-test context mapping."""
+    """Load context paths, resolving the optional shared storage root."""
     if context_file is None:
         return {}
-    return _load_yaml(Path(context_file))
+    context = _load_yaml(Path(context_file))
+    placeholder = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
+    if not any(isinstance(value, str) and placeholder in value for value in context.values()):
+        return context
+    storage_root = os.environ.get(_SCIENCE_TESTS_ROOT_ENV)
+    if not storage_root or not Path(storage_root).is_absolute():
+        raise ValueError(
+            f"Set {_SCIENCE_TESTS_ROOT_ENV} to a non-empty absolute path "
+            f"before loading {context_file}."
+        )
+    return replace_placeholders_recursively(context, {placeholder: str(Path(storage_root))})
 
 
 def _load_yaml(path):

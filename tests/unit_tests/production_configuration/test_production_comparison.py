@@ -14,6 +14,11 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
+ARRAY_LAYOUT_KEY = "array_layout_name"
+CONFIGURATION_KEY = "configuration"
+
+LAYOUT_NAME = "layout-a"
+
 
 def test_write_production_comparison_writes_each_selected_array_layout(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
@@ -40,7 +45,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
     production_comparison.write_production_comparison(
         {
             "production": ["baseline", "baseline.hdf5", "candidate", "candidate.hdf5"],
-            "array_layout_name": ["first", "second"],
+            ARRAY_LAYOUT_KEY: ["first", "second"],
             "figure_format": ["png"],
         },
         output_directory,
@@ -82,7 +87,7 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
         return ProductionManifest(
             path=base_directory / directory / f"{zenith}.yml",
             data={
-                "configuration": {
+                CONFIGURATION_KEY: {
                     "primary": "gamma",
                     "zenith_angle": {"value": zenith, "unit": "deg"},
                     "corsika_he_interaction": interaction,
@@ -124,7 +129,7 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     mocker, tmp_test_directory
 ):
     output_directory = Path(tmp_test_directory) / "comparison"
-    pairing_key = {"configuration": {"primary": "gamma"}}
+    pairing_key = {CONFIGURATION_KEY: {"primary": "gamma"}}
     input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
     descriptors = [
         ProductionDescriptor("baseline", [f"{input_stem}.hdf5"]),
@@ -140,13 +145,13 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": "baseline", "array_layout_name": ["alpha"]},
+        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
         output_directory,
     )
 
     assert mock_write.call_args.args[:2] == (
         descriptors,
-        {"baseline_path": "baseline", "array_layout_name": ["alpha"]},
+        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
     )
     assert mock_write.call_args.args[2] == output_directory / input_stem
     assert mock_write.call_args.args[3] == ["alpha"]
@@ -165,7 +170,7 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
     mocker.patch(
         "simtools.production_configuration.production_comparison."
         "_production_descriptor_pairs_from_metadata",
-        return_value=[({"configuration": {"zenith_angle": 20}}, descriptors)],
+        return_value=[({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors)],
     )
     figure = mocker.sentinel.figure
 
@@ -197,8 +202,8 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
         "simtools.production_configuration.production_comparison."
         "_production_descriptor_pairs_from_metadata",
         return_value=[
-            ({"configuration": {"zenith_angle": 20}}, descriptors),
-            ({"configuration": {"zenith_angle": 40}}, descriptors),
+            ({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors),
+            ({CONFIGURATION_KEY: {"zenith_angle": 40}}, descriptors),
         ],
     )
     mock_write = mocker.patch(
@@ -206,7 +211,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": "baseline", "array_layout_name": ["alpha"]},
+        {"baseline_path": "baseline", ARRAY_LAYOUT_KEY: ["alpha"]},
         output_directory,
     )
 
@@ -220,7 +225,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
 def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test_directory):
     manifest = ProductionManifest(
         path=Path(tmp_test_directory) / "baseline.yml",
-        data={"configuration": {}, "files": {"trigger_histograms": ["baseline.hdf5"]}},
+        data={CONFIGURATION_KEY: {}, "files": {"trigger_histograms": ["baseline.hdf5"]}},
     )
     mocker.patch(
         "simtools.production_configuration.production_comparison."
@@ -243,7 +248,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
         return ProductionManifest(
             path=base_directory / directory / f"{zenith}.yml",
             data={
-                "configuration": {"zenith_angle": {"value": zenith, "unit": "deg"}},
+                CONFIGURATION_KEY: {"zenith_angle": {"value": zenith, "unit": "deg"}},
                 "files": {"trigger_histograms": [f"{directory}_{zenith}.hdf5"]},
             },
         )
@@ -340,13 +345,33 @@ def test_selected_trigger_histogram_manifests_rejects_empty_selection(mocker):
 def test_unique_manifests_by_pairing_key_rejects_duplicates(tmp_test_directory):
     manifest = ProductionManifest(
         path=Path(tmp_test_directory) / "first.yml",
-        data={"configuration": {}},
+        data={CONFIGURATION_KEY: {}},
     )
 
     with pytest.raises(ValueError, match="More than one baseline"):
         production_comparison._unique_manifests_by_pairing_key(
             [manifest, manifest], set(), "baseline"
         )
+
+
+@pytest.mark.parametrize(
+    ("layout", "matches"),
+    [
+        ([LAYOUT_NAME], True),
+        ((LAYOUT_NAME,), True),
+        ([], False),
+        ([LAYOUT_NAME, "other-layout"], False),
+        (["different-layout"], False),
+    ],
+)
+def test_pairing_normalizes_only_single_equivalent_layouts(layout, matches):
+    field = ARRAY_LAYOUT_KEY
+    baseline = {CONFIGURATION_KEY: {field: LAYOUT_NAME}}
+    candidate = {CONFIGURATION_KEY: {field: layout}}
+    actual = production_comparison._pairing_key(baseline, set()) == (
+        production_comparison._pairing_key(candidate, set())
+    )
+    assert actual is matches
 
 
 def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tmp_test_directory):
@@ -472,6 +497,24 @@ def test_compact_comparison_summary_aggregates_plot_metrics(tmp_test_directory):
     assert pair_statistics["comparisons"][0]["triggered"]["reason"] == "empty"
     assert "baseline_counts" not in pair_statistics
     assert not statistics_file.exists()
+    assert not statistics_file.parent.exists()
+    assert not statistics_file.parent.parent.exists()
+    assert output.is_dir()
+
+
+def test_empty_comparison_cleanup_preserves_plots_and_external_directories(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    output = root / "report"
+    layout = output / "pair/layout"
+    layout.mkdir(parents=True)
+    plot_file = layout / "plot.png"
+    plot_file.write_bytes(b"plot")
+    production_comparison._remove_empty_comparison_directories(layout, output)
+    assert plot_file.read_bytes() == b"plot"
+    outside = root / "outside"
+    outside.mkdir()
+    production_comparison._remove_empty_comparison_directories(outside, output)
+    assert outside.is_dir()
 
 
 def test_version_one_report_remains_valid_under_current_schema():

@@ -221,7 +221,9 @@ def _convert_dict_to_args(parameters):
             if value:
                 args.append(f"--{key}")
         elif isinstance(value, list):
-            if value and isinstance(value[0], dict):
+            if not value:
+                continue
+            if isinstance(value[0], dict):
                 args.extend([f"--{key}", json.dumps(value)])
             else:
                 args.extend([f"--{key}", *(str(item) for item in value)])
