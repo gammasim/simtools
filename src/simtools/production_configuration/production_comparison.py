@@ -29,6 +29,7 @@ COMPARISONS_KEY = "comparisons"
 COMPARISON_CONTEXT_KEY = "comparison_context"
 
 ARRAY_LAYOUT_KEY = "array_layout_name"
+REPORT_PAGE_COLUMN = "report_page"
 
 _logger = logging.getLogger(__name__)
 
@@ -83,6 +84,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     stem_counts = Counter(output_stems)
     statistics_files = []
     compact_figures = [] if args_dict.get("report_mode") == "compact" else None
+    report_pages = {}
     for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
         pair_output_directory = _metadata_pair_output_directory(
             output_directory,
@@ -108,6 +110,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
                 pair_output_directory,
                 array_layout_names,
                 compact_figures=compact_figures,
+                report_pages=report_pages,
                 **comparison_kwargs,
             )
         statistics_files.extend(pair_statistics or [])
@@ -130,7 +133,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
-    _write_comparison_summary(statistics_files, output_directory)
+    _write_comparison_summary(statistics_files, output_directory, report_pages)
 
 
 def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
@@ -148,21 +151,34 @@ def _write_array_layout_comparisons(
     array_layout_names,
     compact_figures=None,
     comparison_context=None,
+    report_pages=None,
 ):
     """Write comparison products for all selected array layouts."""
     statistics_files = []
     for array_layout_name in array_layout_names:
-        statistics_files.append(
-            _compare_array_layout(
-                production_descriptors,
-                args_dict,
-                array_layout_name,
-                output_directory,
-                compact_figures,
-                comparison_context,
-            )
+        first_figure = len(compact_figures) if report_pages is not None else None
+        statistics_file = _compare_array_layout(
+            production_descriptors,
+            args_dict,
+            array_layout_name,
+            output_directory,
+            compact_figures,
+            comparison_context,
         )
+        statistics_files.append(statistics_file)
+        if report_pages is not None:
+            report_pages[statistics_file] = _figure_pages(compact_figures, first_figure)
     return statistics_files
+
+
+def _figure_pages(figures, first_figure):
+    """Map compact plot names to their one-based page numbers in the combined PDF."""
+    pages = {}
+    for page_number, figure in enumerate(figures[first_figure:], start=first_figure + 1):
+        plot_name = figure.get_label()
+        if plot_name:
+            pages.setdefault(plot_name, []).append(page_number)
+    return pages
 
 
 def _compare_array_layout(
@@ -285,7 +301,7 @@ def _format_configuration_value(value, quantity=None):
     return str(value)
 
 
-def _write_comparison_summary(statistics_files, output_directory):
+def _write_comparison_summary(statistics_files, output_directory, report_pages=None):
     """Combine per-pair statistics into one summary and remove the individual files."""
     comparisons = []
     baseline = None
@@ -297,7 +313,12 @@ def _write_comparison_summary(statistics_files, output_directory):
         baseline = _add_production_summary(baseline, statistics[BASELINE_KEY])
         comparison_sets = _add_comparison_sets(comparison_sets, statistics[COMPARISON_SETS_KEY])
         compact_statistics.extend(
-            _compact_statistic_rows(statistics_file, output_directory, statistics)
+            _compact_statistic_rows(
+                statistics_file,
+                output_directory,
+                statistics,
+                (report_pages or {}).get(statistics_file, {}),
+            )
         )
         statistics_file.unlink()
         _remove_empty_comparison_directories(statistics_file.parent, output_directory)
@@ -321,36 +342,78 @@ def _write_comparison_summary(statistics_files, output_directory):
     _write_compact_statistics_csv(compact_statistics, output_directory)
 
 
-def _compact_statistic_rows(statistics_file, output_directory, statistics):
+def _compact_statistic_rows(statistics_file, output_directory, statistics, report_pages=None):
     """Extract scalar comparison results while excluding histogram arrays."""
     path_parts = statistics_file.relative_to(output_directory).parts
     pair = path_parts[0] if len(path_parts) > 2 else ""
     array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
+    report_pages = report_pages or {}
     rows = []
     for plot_name, plot_statistics in statistics[PLOT_STATISTICS_KEY].items():
-        scope, telescope_type = _statistic_scope(plot_name)
-        for comparison in plot_statistics.get("comparisons", []):
-            for population in ("simulated", "triggered"):
-                result = comparison.get(population)
-                if result is None:
-                    continue
-                rows.append(
-                    _compact_statistic_row(
-                        pair, array_layout, plot_name, scope, telescope_type, population, result
-                    )
+        rows.extend(
+            _compact_plot_statistic_rows(
+                pair,
+                array_layout,
+                plot_name,
+                plot_statistics,
+                report_pages.get(plot_name, []),
+            )
+        )
+    return rows
+
+
+def _compact_plot_statistic_rows(pair, array_layout, plot_name, plot_statistics, report_pages):
+    """Build compact statistic rows for one named plot and its rendered page."""
+    scope, telescope_type = _statistic_scope(plot_name)
+    rows = []
+    for comparison in plot_statistics.get("comparisons", []):
+        rows.extend(
+            _compact_comparison_rows(
+                pair,
+                array_layout,
+                plot_name,
+                scope,
+                telescope_type,
+                comparison,
+                report_pages,
+            )
+        )
+    return rows
+
+
+def _compact_comparison_rows(
+    pair, array_layout, plot_name, scope, telescope_type, comparison, report_pages
+):
+    """Build scalar rows for the population statistics in one comparison."""
+    rows = []
+    for population in ("simulated", "triggered"):
+        result = comparison.get(population)
+        if result is not None:
+            rows.append(
+                _compact_statistic_row(
+                    pair,
+                    array_layout,
+                    plot_name,
+                    scope,
+                    telescope_type,
+                    population,
+                    result,
+                    report_pages,
                 )
-            if "value" in comparison:
-                rows.append(
-                    _compact_statistic_row(
-                        pair,
-                        array_layout,
-                        plot_name,
-                        scope,
-                        telescope_type,
-                        "triggered",
-                        comparison,
-                    )
-                )
+            )
+    if "value" in comparison:
+        rows.append(
+            _compact_statistic_row(
+                pair,
+                array_layout,
+                plot_name,
+                scope,
+                telescope_type,
+                "triggered",
+                comparison,
+                report_pages,
+            )
+        )
     return rows
 
 
@@ -365,13 +428,14 @@ def _statistic_scope(plot_name):
 
 
 def _compact_statistic_row(
-    pair, array_layout, plot_name, scope, telescope_type, population, result
+    pair, array_layout, plot_name, scope, telescope_type, population, result, report_pages
 ):
     """Build one scalar result row for machine-readable acceptance checks."""
     return {
         "pair": pair,
         "array_layout": array_layout,
         "plot": plot_name,
+        REPORT_PAGE_COLUMN: ", ".join(str(page) for page in report_pages),
         "scope": scope,
         "telescope_type": telescope_type,
         "population": population,
@@ -391,6 +455,7 @@ def _write_compact_statistics_csv(rows, output_directory):
         "pair",
         "array_layout",
         "plot",
+        REPORT_PAGE_COLUMN,
         "scope",
         "telescope_type",
         "population",

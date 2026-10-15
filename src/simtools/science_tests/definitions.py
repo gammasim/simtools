@@ -37,6 +37,10 @@ _MODEL_SOURCE_KEYS = (
 
 _SUBMISSION_FILE_NAME = "submission.json"
 
+_ACCEPTANCE_VALUE_FORMAT = ".4g"
+
+_REPORT_PAGE_COLUMN = "report_page"
+
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
@@ -293,12 +297,12 @@ def _evaluate_csv_row(row, metric, field, path):
     """Evaluate a selected CSV row and return its warning, if any."""
     label = f"{row.get('plot')} {row.get('scope')} {row.get('pair')}"
     if row.get("valid", "").casefold() != "true":
-        return f"{label}: invalid statistic ({row.get('reason')})."
+        return f"{label}: invalid statistic ({row.get('reason')}){_report_page_suffix(row)}."
     value, counts = _read_csv_acceptance_values(row, field, path)
     minimum_entries = metric.get("minimum_entries")
     if minimum_entries is not None and min(counts) < minimum_entries:
-        return f"{label}: insufficient statistics ({counts})."
-    return _check_csv_thresholds(value, metric, field, label)
+        return f"{label}: insufficient statistics ({counts}){_report_page_suffix(row)}."
+    return _check_csv_thresholds(value, metric, field, label, row)
 
 
 def _read_csv_acceptance_values(row, field, path):
@@ -313,17 +317,32 @@ def _read_csv_acceptance_values(row, field, path):
     return value, counts
 
 
-def _check_csv_thresholds(value, metric, field, label):
+def _check_csv_thresholds(value, metric, field, label, row):
     """Apply warning and failure thresholds to one valid statistic."""
     warning_limit = metric.get("warning_maximum")
     fail_limit = metric.get("maximum", math.inf)
     if value > fail_limit:
         raise _AcceptanceError(
-            f"Acceptance failed for {label}: {field}={value} exceeds {fail_limit}."
+            f"Acceptance failed for {label}: {field}={_format_acceptance_value(value)} "
+            f"exceeds {_format_acceptance_value(fail_limit)}{_report_page_suffix(row)}."
         )
     if warning_limit is not None and value > warning_limit:
-        return f"{label}: {field}={value} exceeds warning limit {warning_limit}."
+        return (
+            f"{label}: {field}={_format_acceptance_value(value)} exceeds warning limit "
+            f"{_format_acceptance_value(warning_limit)}{_report_page_suffix(row)}."
+        )
     return None
+
+
+def _report_page_suffix(row):
+    """Return a compact PDF page reference when the statistic was rendered."""
+    page = row.get(_REPORT_PAGE_COLUMN)
+    return f" (PDF page {page})" if page else ""
+
+
+def _format_acceptance_value(value):
+    """Render acceptance values to four significant digits for readable reports."""
+    return format(value, _ACCEPTANCE_VALUE_FORMAT)
 
 
 def _csv_value_matches(actual, expected):
@@ -360,7 +379,9 @@ def _check_metric(value, metric):
     if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
         raise ValueError(f"Invalid metric {metric['key']}: {value}")
     if value < metric.get("minimum", -math.inf) or value > metric.get("maximum", math.inf):
-        raise _AcceptanceError(f"Acceptance failed for {metric['key']}: {value}")
+        raise _AcceptanceError(
+            f"Acceptance failed for {metric['key']}: {_format_acceptance_value(value)}"
+        )
 
 
 def _campaign_signature(

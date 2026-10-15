@@ -108,6 +108,22 @@ def test_metadata_suppression_keeps_nonzero_fixed_view_cone(fixed_pair_context):
     ) == {ENERGY}
 
 
+def test_compact_figure_label_identifies_the_report_plot(tmp_test_directory):
+    figure = plt.figure()
+    figures = []
+    token = plot_event_level_production_comparison._COMPACT_FIGURES.set(figures)
+    try:
+        plot_event_level_production_comparison._save_figure(
+            figure, Path(tmp_test_directory), "distribution_core_distance.png"
+        )
+    finally:
+        plot_event_level_production_comparison._COMPACT_FIGURES.reset(token)
+
+    assert figures == [figure]
+    assert figure.get_label() == "distribution_core_distance"
+    plt.close(figure)
+
+
 @pytest.mark.parametrize(
     ("report_mode", "has_metadata"),
     [(COMPACT_REPORT, True), (COMPACT_REPORT, False), ("diagnostic", True)],

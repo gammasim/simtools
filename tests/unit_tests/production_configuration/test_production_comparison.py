@@ -1,5 +1,6 @@
 """Tests for production comparison workflows."""
 
+import csv
 import json
 import logging
 from pathlib import Path
@@ -21,6 +22,7 @@ COMPARISONS_KEY = "comparisons"
 TEXT_ENCODING = "utf-8"
 SIMULATED_EVENT_COUNT_KEY = "simulated_event_count"
 BASELINE_COUNTS_KEY = "baseline_counts"
+REPORT_PAGE_COLUMN = "report_page"
 
 ARRAY_LAYOUT_KEY = "array_layout_name"
 CONFIGURATION_KEY = "configuration"
@@ -192,21 +194,28 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
         "_production_descriptor_pairs_from_metadata",
         return_value=[({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors)],
     )
-    figure = mocker.sentinel.figure
+    figure = mocker.Mock()
+    figure.get_label.return_value = "distribution_core_distance"
+    statistics_file = output_directory / "pair" / "alpha" / "statistics.json"
 
-    def write_pair(*_args, compact_figures=None):
-        compact_figures.append(figure)
+    def write_pair(*args, **_kwargs):
+        args[4].append(figure)
+        return statistics_file
 
-    mocker.patch.object(
-        production_comparison, "_write_array_layout_comparisons", side_effect=write_pair
-    )
+    mocker.patch.object(production_comparison, "_compare_array_layout", side_effect=write_pair)
     save = mocker.patch.object(production_comparison, "save_figures_to_single_document")
+    summary = mocker.patch.object(production_comparison, "_write_comparison_summary")
 
     production_comparison.write_production_comparison(
         {"baseline_path": BASELINE_KEY, "report_mode": "compact"}, output_directory
     )
 
     save.assert_called_once_with([figure], output_directory / "trigger-report.pdf", close=True)
+    summary.assert_called_once_with(
+        [statistics_file],
+        output_directory,
+        {statistics_file: {"distribution_core_distance": [1]}},
+    )
 
 
 def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
@@ -500,7 +509,8 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
         path.parent.mkdir(parents=True)
         path.write_text(statistics_file.read_text(encoding=TEXT_ENCODING), encoding=TEXT_ENCODING)
         statistics_files.append(path)
-    production_comparison._write_comparison_summary(statistics_files, output)
+    report_pages = {path: {"energy": [page]} for page, path in enumerate(statistics_files, start=1)}
+    production_comparison._write_comparison_summary(statistics_files, output, report_pages)
 
     text = (output / statistics_file.name).read_text(encoding=TEXT_ENCODING)
     summary = json.loads(text)
@@ -517,7 +527,13 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
     metrics_file = output / "comparison_metrics.csv"
     assert metrics_file.is_file()
     metrics_text = metrics_file.read_text(encoding=TEXT_ENCODING)
-    assert metrics_text.splitlines()[0].startswith("pair,array_layout,plot,scope,")
+    assert metrics_text.splitlines()[0].startswith(
+        f"pair,array_layout,plot,{REPORT_PAGE_COLUMN},scope,"
+    )
+    metric_rows = list(csv.DictReader(metrics_text.splitlines()))
+    assert metric_rows[0][REPORT_PAGE_COLUMN] == "1"
+    if pair_count > 1:
+        assert metric_rows[2][REPORT_PAGE_COLUMN] == "2"
     assert len(metrics_text.splitlines()) == 2 * pair_count + 1
     assert BASELINE_COUNTS_KEY not in metrics_text
     assert len(text.splitlines()) <= 20
@@ -525,6 +541,20 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
     assert all(not path.exists() for path in statistics_files)
     assert all(not path.parent.exists() for path in statistics_files)
     assert output.is_dir()
+
+
+def test_figure_pages_map_only_figures_from_the_current_pair(mocker):
+    figures = [mocker.Mock(), mocker.Mock(), mocker.Mock()]
+    figures[0].get_label.return_value = "previous_pair_plot"
+    figures[1].get_label.return_value = "distribution_core_distance"
+    figures[2].get_label.return_value = "distribution_core_distance_LSTN"
+
+    pages = production_comparison._figure_pages(figures, first_figure=1)
+
+    assert pages == {
+        "distribution_core_distance": [2],
+        "distribution_core_distance_LSTN": [3],
+    }
 
 
 def test_empty_comparison_cleanup_preserves_plots_and_external_directories(tmp_test_directory):

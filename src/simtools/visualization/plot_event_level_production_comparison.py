@@ -360,6 +360,7 @@ def _save_figure(fig, output_path, filename, figure_format=None):
         plt.close(fig)
         return
     if document is not None:
+        fig.set_label(Path(filename).stem)
         document.append(fig)
         return
     output_file = output_path / Path(filename).with_suffix("")

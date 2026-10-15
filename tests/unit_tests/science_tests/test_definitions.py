@@ -11,6 +11,7 @@ _SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
 _STORAGE_ROOT_PLACEHOLDER = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
 _ENCODING = "utf-8"
 _RELEASE_LABEL_KEY = "release_label"
+_REPORT_PAGE_COLUMN = "report_page"
 
 
 def test_dependency_order_and_invalid_definitions():
@@ -134,9 +135,9 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
     metrics_file = report / "comparison_metrics.csv"
     metrics_file.write_text(
         "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
-        "candidate_count\n"
-        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510\n",
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n",
         encoding=_ENCODING,
     )
     metric = {
@@ -158,11 +159,14 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
 
     metrics_file.write_text(
         "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
-        "candidate_count\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.06,,True,ok,500,510\n",
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,500,510,27\n",
         encoding=_ENCODING,
     )
-    with pytest.raises(science_test_definitions._AcceptanceError, match=r"exceeds 0\.05"):
+    with pytest.raises(
+        science_test_definitions._AcceptanceError,
+        match=r"value=0\.0685(?:3)? exceeds 0\.05 \(PDF page 27\)",
+    ):
         science_test_definitions._evaluate_products(definition, {})
 
 
