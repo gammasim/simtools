@@ -11,6 +11,8 @@ from simtools.science_tests import definitions as science_test_definitions
 from simtools.science_tests import execution as science_test_execution
 
 NOT_RUN_STATUS = "not_run"
+RESULT_STATUS_KEY = "status"
+RESULT_REASON_KEY = "reason"
 
 BASELINE_KEY = "baseline"
 MODEL_REVISION = "v0.18.0"
@@ -138,13 +140,13 @@ def test_setup_overrides_requires_baseline_path():
 
 def test_run_collects_evidence_and_preserves_subset_results(campaign, successful_workflow):
     planned = campaign_runner.run_release(**campaign, dry_run=True)
-    assert all(result["status"] == "planned" for result in planned["results"])
+    assert all(result[RESULT_STATUS_KEY] == "planned" for result in planned["results"])
     assert not planned["qualified"]
     assert successful_workflow == []
     assert not (campaign["release_dir"] / "reports").exists()
 
     north = campaign_runner.run_release(**campaign, sites=["north"], tests=["compare"])
-    assert {r["id"]: r["status"] for r in north["results"]} == {
+    assert {r["id"]: r[RESULT_STATUS_KEY] for r in north["results"]} == {
         "compare.north": "warn",
         "compare.south": NOT_RUN_STATUS,
     }
@@ -159,12 +161,31 @@ def test_run_collects_evidence_and_preserves_subset_results(campaign, successful
     assert not (report / "workflow.yml").exists()
     assert not south["qualified"]
     assert (
-        campaign_runner.run_release(**campaign, dry_run=True)["results"][0]["status"] == "planned"
+        campaign_runner.run_release(**campaign, dry_run=True)["results"][0][RESULT_STATUS_KEY]
+        == "planned"
     )
     assert (
         json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text()) == south
     )
     assert not (campaign["release_dir"] / "reports/north/metrics.json").exists()
+
+
+def test_raise_for_failures_accepts_non_failing_results():
+    campaign_runner._raise_for_failures([{RESULT_STATUS_KEY: "pass"}, {RESULT_STATUS_KEY: "warn"}])
+
+
+@pytest.mark.parametrize(
+    ("result_status", "result", "detail"),
+    [
+        ("fail", {"error": "expected failure"}, "expected failure"),
+        ("incomplete", {RESULT_REASON_KEY: "missing output"}, "missing output"),
+        ("blocked", {}, "blocked"),
+    ],
+)
+def test_raise_for_failures_reports_actionable_details(result_status, result, detail):
+    result.update({"id": "test.north", RESULT_STATUS_KEY: result_status})
+    with pytest.raises(RuntimeError, match=f"Science tests failed: test\\.north: {detail}"):
+        campaign_runner._raise_for_failures([result])
 
 
 @pytest.mark.parametrize(
@@ -181,6 +202,13 @@ def test_missing_unselected_site_fails_preflight(campaign, successful_workflow):
     with pytest.raises(FileNotFoundError):
         campaign_runner.run_release(**campaign, sites=["north"])
     assert successful_workflow == []
+
+
+def test_release_run_requires_a_context_file(campaign):
+    with pytest.raises(ValueError, match="A context_file is required"):
+        campaign_runner._prepare_release_run(
+            campaign["release_dir"], None, None, None, None, False, {}
+        )
 
 
 def test_campaign_signature_keeps_native_steps_across_runtime_choices(
@@ -218,7 +246,7 @@ def test_non_comparison_selection_does_not_require_a_baseline(campaign, successf
     summary = campaign_runner.run_release(**campaign, sites=["north"], tests=["derive"])
 
     assert [
-        result["id"] for result in summary["results"] if result["status"] != NOT_RUN_STATUS
+        result["id"] for result in summary["results"] if result[RESULT_STATUS_KEY] != NOT_RUN_STATUS
     ] == ["derive.north"]
 
 
@@ -250,7 +278,7 @@ def test_configuration_changes_invalidate_results_but_external_file_changes_do_n
         path.write_text(path.read_text() + "# changed workflow\n", encoding=TEXT_ENCODING)
     summary = campaign_runner.run_release(**campaign, sites=["south"])
     expected_status = "warn" if name else NOT_RUN_STATUS
-    assert next(r for r in summary["results"] if r["id"] == "compare.north")["status"] == (
+    assert next(r for r in summary["results"] if r["id"] == "compare.north")[RESULT_STATUS_KEY] == (
         expected_status
     )
 
@@ -274,8 +302,8 @@ def test_rerunning_dependency_invalidates_comparison(campaign, successful_workfl
     campaign_runner.run_release(**campaign, sites=["north"])
     summary = campaign_runner.run_release(**campaign, sites=["north"], tests=["derive"])
     record = next(r for r in summary["results"] if r["id"] == "compare.north")
-    assert record["status"] == NOT_RUN_STATUS
-    assert "Upstream" in record["reason"]
+    assert record[RESULT_STATUS_KEY] == NOT_RUN_STATUS
+    assert "Upstream" in record[RESULT_REASON_KEY]
 
 
 def test_two_checkouts_have_portable_equivalent_plans(campaign, tmp_test_directory):
@@ -287,8 +315,8 @@ def test_two_checkouts_have_portable_equivalent_plans(campaign, tmp_test_directo
         release_dir=root / "release", context_file=campaign["context_file"], dry_run=True
     )
     assert first["campaign_sha256"] == second["campaign_sha256"]
-    assert [(r["id"], r["status"]) for r in first["results"]] == [
-        (r["id"], r["status"]) for r in second["results"]
+    assert [(r["id"], r[RESULT_STATUS_KEY]) for r in first["results"]] == [
+        (r["id"], r[RESULT_STATUS_KEY]) for r in second["results"]
     ]
     assert str(root) not in json.dumps(second)
 
@@ -314,7 +342,10 @@ def test_optional_catalogue_test_can_be_selected(campaign, successful_workflow):
     contracts["tests"]["grid"] = ["__SCIENCE_REPORT_PATH__/metrics.json"]
     _write_yaml(products, contracts)
     summary = campaign_runner.run_release(**campaign, sites=["north"], tests=["grid"], dry_run=True)
-    assert next(r for r in summary["results"] if r["id"] == "grid.north")["status"] == "planned"
+    assert (
+        next(r for r in summary["results"] if r["id"] == "grid.north")[RESULT_STATUS_KEY]
+        == "planned"
+    )
     with pytest.raises(ValueError, match="does not support"):
         campaign_runner.run_release(**campaign, sites=["south"], tests=["grid"], dry_run=True)
     assert successful_workflow == []
