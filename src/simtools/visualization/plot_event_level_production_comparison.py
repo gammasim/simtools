@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 
 from simtools.io import ascii_handler, io_handler
 from simtools.statistics import (
@@ -17,6 +18,31 @@ from simtools.statistics import (
 from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure, save_figures_to_single_document
+
+PLOT_STATISTICS_KEY = "plot_statistics"
+
+ENERGY = "energy"
+ANGULAR_DISTANCE = "angular_distance"
+CORE_DISTANCE = "core_distance"
+COMPACT_REPORT = "compact"
+DIAGNOSTIC_REPORT = "diagnostic"
+QUANTITY_NAME_KEY = "quantity_name"
+CUMULATIVE_KEY = "cumulative"
+VALUE_KEY = "value"
+_COMPACT_STATISTIC_FIELDS = (
+    "metric",
+    "value",
+    "normalized_value",
+    "valid",
+    "reason",
+    "pvalue",
+    "ks_statistic",
+    "ks_pvalue",
+    "jensen_shannon_distance",
+    "wasserstein_distance",
+    "baseline_total",
+    "candidate_total",
+)
 
 _logger = logging.getLogger(__name__)
 _COMPACT_FIGURES = ContextVar("event_comparison_compact_figures", default=None)
@@ -44,9 +70,10 @@ def plot(
     array_layout_name=None,
     bins=40,
     figure_format=None,
-    report_mode="diagnostic",
+    report_mode=DIAGNOSTIC_REPORT,
     compact_figures=None,
     comparison_title=None,
+    comparison_context=None,
 ):
     """Create all event-level production comparison plots.
 
@@ -68,18 +95,22 @@ def plot(
     comparison_title : str, optional
         Context heading shown above each plot, such as the configuration of a
         matched production pair.
+    comparison_context : dict, optional
+        Baseline and candidate configuration metadata. Compact reports omit fixed-energy and
+        on-axis angular distributions when both configurations establish those conditions.
 
     Returns
     -------
     pathlib.Path
         Path to the JSON file containing the comparison statistics.
     """
-    if report_mode not in {"compact", "diagnostic", "none"}:
+    if report_mode not in {COMPACT_REPORT, DIAGNOSTIC_REPORT, "none"}:
         raise ValueError(f"Unsupported report mode: {report_mode}")
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
     output_path = output_path or io_handler.IOHandler().get_output_directory()
     output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
     output_path.mkdir(parents=True, exist_ok=True)
+    suppressed_distributions = _metadata_suppressed_distributions(comparison_context)
 
     with _comparison_report(output_path, report_mode, compact_figures, comparison_title):
         for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
@@ -89,6 +120,8 @@ def plot(
                 plot_function(metrics_per_production, output_path, figure_format=figure_format),
             )
 
+        _record_telescope_type_participation(comparison_statistics, metrics_per_production)
+
         _plot_quantity_comparisons(
             metrics_per_production,
             output_path,
@@ -96,19 +129,71 @@ def plot(
             comparison_statistics,
             figure_format,
             report_mode,
+            suppressed_distributions,
         )
         _plot_per_type_comparisons(
-            metrics_per_production, output_path, bins, comparison_statistics, figure_format
+            metrics_per_production,
+            output_path,
+            bins,
+            comparison_statistics,
+            figure_format,
+            report_mode,
+            suppressed_distributions,
         )
 
+    # Keep JSON scalar-only in every mode; detailed histograms are already in the plots.
+    comparison_statistics[PLOT_STATISTICS_KEY] = _compact_plot_statistics(
+        comparison_statistics[PLOT_STATISTICS_KEY]
+    )
     return _write_comparison_statistics_json(comparison_statistics, output_path)
+
+
+def _compact_plot_statistics(plot_statistics):
+    """Keep JSON scalar-only so diagnostic histogram arrays do not create huge files."""
+    compact = {}
+    for plot_name, statistics in plot_statistics.items():
+        item = {
+            key: statistics[key]
+            for key in (
+                "plot_name",
+                "baseline_label",
+                "metric_type",
+                "metric",
+                QUANTITY_NAME_KEY,
+                CUMULATIVE_KEY,
+            )
+            if key in statistics
+        }
+        item["comparisons"] = [
+            _compact_comparison_statistics(comparison)
+            for comparison in statistics.get("comparisons", [])
+        ]
+        compact[plot_name] = item
+    return compact
+
+
+def _compact_comparison_statistics(comparison):
+    """Retain labels and scalar metric fields from one pair comparison."""
+    compact = {key: value for key, value in comparison.items() if key == "candidate_label"}
+    for population in ("simulated", "triggered"):
+        if population in comparison:
+            compact[population] = {
+                key: comparison[population][key]
+                for key in _COMPACT_STATISTIC_FIELDS
+                if key in comparison[population]
+            }
+    if "metric" in comparison:
+        compact.update(
+            {key: comparison[key] for key in _COMPACT_STATISTIC_FIELDS if key in comparison}
+        )
+    return compact
 
 
 @contextmanager
 def _comparison_report(output_path, report_mode, compact_figures=None, comparison_title=None):
     """Route pages to one compact PDF or suppress rendering without changing metrics."""
     title_token = _COMPARISON_TITLE.set(comparison_title)
-    if report_mode == "compact":
+    if report_mode == COMPACT_REPORT:
         figures = compact_figures if compact_figures is not None else []
         token = _COMPACT_FIGURES.set(figures)
         try:
@@ -130,7 +215,13 @@ def _comparison_report(output_path, report_mode, compact_figures=None, compariso
 
 
 def _plot_quantity_comparisons(
-    metrics_per_production, output_path, bins, comparison_statistics, figure_format, report_mode
+    metrics_per_production,
+    output_path,
+    bins,
+    comparison_statistics,
+    figure_format,
+    report_mode,
+    suppressed_distributions,
 ):
     """Plot quantity-based comparisons and collect their statistics."""
     for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
@@ -161,31 +252,65 @@ def _plot_quantity_comparisons(
                     cumulative=cumulative,
                     figure_format=figure_format,
                     render=_render_quantity(
-                        quantity_name, cumulative, metrics_per_production, report_mode
+                        quantity_name, cumulative, report_mode, suppressed_distributions
                     ),
                 ),
             )
 
 
-def _render_quantity(quantity_name, cumulative, metrics_per_production, report_mode):
-    """Suppress compact pages that have no resolved distribution information."""
-    if report_mode != "compact":
+def _render_quantity(quantity_name, cumulative, report_mode, suppressed_distributions):
+    """Suppress redundant compact pages while retaining their numerical statistics."""
+    if report_mode != COMPACT_REPORT:
         return True
-    if quantity_name == "core_distance" and cumulative:
+    if quantity_name == CORE_DISTANCE and cumulative:
         return False
-    if quantity_name not in {"energy", "angular_distance"}:
-        return True
-    values = [
-        value
-        for metrics in metrics_per_production
-        for value in _get_quantity_arrays(metrics, quantity_name)
-        if value.size
-    ]
-    return bool(values) and any(np.unique(value).size > 1 for value in values)
+    return quantity_name not in suppressed_distributions
+
+
+def _metadata_suppressed_distributions(comparison_context):
+    """Identify constant distributions only when both production metadata entries agree."""
+    configurations = (comparison_context or {}).get("configurations", {})
+    if len(configurations) < 2:
+        return set()
+    suppressed = set()
+    if _constant_metadata_bounds(configurations.values(), "energy_min", "energy_max", u.GeV):
+        suppressed.add(ENERGY)
+    if _constant_metadata_bounds(
+        configurations.values(), "view_cone_min", "view_cone_max", u.deg, target=0.0
+    ):
+        suppressed.add(ANGULAR_DISTANCE)
+    return suppressed
+
+
+def _constant_metadata_bounds(configurations, lower_key, upper_key, unit, target=None):
+    """Compare finite metadata bounds in common units with floating-point tolerance."""
+    bounds = []
+    for configuration in configurations:
+        for key in (lower_key, upper_key):
+            try:
+                value = configuration[key]
+                quantity = (
+                    u.Quantity(value[VALUE_KEY], value["unit"])
+                    if isinstance(value, dict)
+                    else u.Quantity(value, unit)
+                )
+                bounds.append(float(quantity.to_value(unit)))
+            except KeyError, TypeError, ValueError:
+                return False
+    if not bounds or not np.all(np.isfinite(bounds)):
+        return False
+    reference = bounds[0] if target is None else target
+    return bool(np.all(np.isclose(bounds, reference, rtol=1e-8, atol=1e-12)))
 
 
 def _plot_per_type_comparisons(
-    metrics_per_production, output_path, bins, comparison_statistics, figure_format
+    metrics_per_production,
+    output_path,
+    bins,
+    comparison_statistics,
+    figure_format,
+    report_mode,
+    suppressed_distributions,
 ):
     """Plot per-telescope-type comparisons and collect their statistics."""
     all_types = sorted(
@@ -203,12 +328,22 @@ def _plot_per_type_comparisons(
             if tel_type in metrics.per_type
         ]
         for plot_fn in _PER_TYPE_PLOT_FNS:
+            plot_options = {}
+            if (
+                isinstance(plot_fn, functools.partial)
+                and plot_fn.func is _plot_quantity_distribution
+            ):
+                plot_options["render"] = (
+                    report_mode != COMPACT_REPORT
+                    or plot_fn.keywords[QUANTITY_NAME_KEY] not in suppressed_distributions
+                )
             statistics = plot_fn(
                 type_metrics,
                 output_path,
                 suffix=f"_{tel_type}",
                 bins=bins,
                 figure_format=figure_format,
+                **plot_options,
             )
             if statistics is None:
                 continue
@@ -226,6 +361,7 @@ def _save_figure(fig, output_path, filename, figure_format=None):
         plt.close(fig)
         return
     if document is not None:
+        fig.set_label(Path(filename).stem)
         document.append(fig)
         return
     output_file = output_path / Path(filename).with_suffix("")
@@ -633,9 +769,9 @@ def _get_quantity_arrays(metrics, quantity_name):
     tuple[np.ndarray, np.ndarray]
         Simulated and triggered arrays for the requested quantity.
     """
-    if quantity_name == "energy":
+    if quantity_name == ENERGY:
         return metrics.simulated_energies, metrics.triggered_energies
-    if quantity_name == "core_distance":
+    if quantity_name == CORE_DISTANCE:
         return metrics.simulated_core_distances, metrics.triggered_core_distances
     return metrics.simulated_angular_distances, metrics.triggered_angular_distances
 
@@ -758,7 +894,7 @@ def _plot_quantity_distribution(
         )
     else:
         plt.close(fig)
-        statistics["rendering"] = {"rendered": False, "reason": "unresolved_distribution"}
+        statistics["rendering"] = {"rendered": False, "reason": "redundant_distribution"}
     statistics["plot_name"] = f"distribution_{quantity_name}{cum_str}{suffix}"
     return statistics
 
@@ -857,6 +993,41 @@ def _plot_telescope_participation(metrics_per_production, output_path, figure_fo
     return statistics
 
 
+def _record_telescope_type_participation(comparison_statistics, metrics_per_production):
+    """Record participation-fraction comparisons for each telescope type."""
+    telescope_names = sorted(
+        {
+            telescope
+            for metrics in metrics_per_production
+            for telescope in metrics.telescope_participation
+        }
+    )
+    telescope_types = sorted(
+        {names.get_array_element_type_from_name(telescope) for telescope in telescope_names}
+    )
+    for telescope_type in telescope_types:
+        categories = [
+            telescope
+            for telescope in telescope_names
+            if names.get_array_element_type_from_name(telescope) == telescope_type
+        ]
+        counts_per_label = {
+            metrics.label: np.asarray(
+                [metrics.telescope_participation.get(telescope, 0) for telescope in categories],
+                dtype=float,
+            )
+            for metrics in metrics_per_production
+        }
+        statistics = _build_aligned_count_statistics(
+            metrics_per_production,
+            counts_per_label,
+            metadata={"category_count": len(categories)},
+            metric="jensen_shannon",
+        )
+        statistics["plot_name"] = f"telescope_participation_fraction_{telescope_type}"
+        _record_plot_statistics(comparison_statistics, statistics["plot_name"], statistics)
+
+
 def _build_aligned_count_statistics(
     metrics_per_production,
     counts_per_label,
@@ -891,9 +1062,24 @@ def _build_aligned_count_statistics(
         result = {
             **result,
             "candidate_label": metrics.label,
+            "baseline_total": float(np.sum(baseline_counts)),
+            "candidate_total": float(np.sum(candidate_counts)),
             "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
             "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
         }
+        if metric == "wasserstein" and metadata.get("bin_edges") and result.get("valid"):
+            centers = 0.5 * (
+                np.asarray(metadata["bin_edges"], dtype=float)[:-1]
+                + np.asarray(metadata["bin_edges"], dtype=float)[1:]
+            )
+            pooled_counts = np.asarray(baseline_counts) + np.asarray(candidate_counts)
+            pooled_total = float(np.sum(pooled_counts))
+            pooled_mean = (
+                float(np.average(centers, weights=pooled_counts)) if pooled_total > 0 else 0.0
+            )
+            result["normalized_value"] = (
+                float(result["value"]) / pooled_mean if pooled_mean > 0 else None
+            )
         stats_summary["comparisons"].append(result)
     return stats_summary
 
@@ -910,8 +1096,8 @@ def _build_quantity_distribution_statistics(
         "baseline_label": baseline_label,
         "metric_type": "quantity_distribution",
         "metric": "ks",
-        "quantity_name": quantity_name,
-        "cumulative": bool(cumulative),
+        QUANTITY_NAME_KEY: quantity_name,
+        CUMULATIVE_KEY: bool(cumulative),
         "comparisons": [],
     }
     if baseline_label is None or baseline_label not in counts_by_label:
@@ -948,11 +1134,14 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     """Compare either raw sample arrays or pre-binned count arrays."""
     sample_key = f"{event_kind}_samples"
     if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
-        return compare_samples_with_statistics(
+        result = compare_samples_with_statistics(
             baseline_data[sample_key],
             candidate_data[sample_key],
             baseline_data["bin_edges"],
         )
+        result["baseline_total"] = len(baseline_data[sample_key])
+        result["candidate_total"] = len(candidate_data[sample_key])
+        return result
     result = compare_histogram_counts(
         baseline_data[event_kind],
         candidate_data[event_kind],
@@ -961,6 +1150,8 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=int).tolist()
     result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=int).tolist()
     result["bin_edges"] = np.asarray(baseline_data["bin_edges"], dtype=float).tolist()
+    result["baseline_total"] = float(np.sum(baseline_data[event_kind]))
+    result["candidate_total"] = float(np.sum(candidate_data[event_kind]))
     return result
 
 
@@ -1022,8 +1213,8 @@ def _format_metric_value(statistics):
         "ks": "ks_statistic",
         "jensen_shannon": "jensen_shannon_distance",
         "wasserstein": "wasserstein_distance",
-    }.get(metric, "value")
-    value = statistics.get(value_key, statistics.get("value"))
+    }.get(metric, VALUE_KEY)
+    value = statistics.get(value_key, statistics.get(VALUE_KEY))
     return metric_labels.get(metric, metric), _format_statistic_value(value)
 
 
@@ -1045,7 +1236,7 @@ def _initialize_comparison_statistics(metrics_per_production):
             }
             for metrics in metrics_per_production[1:]
         ],
-        "plot_statistics": {},
+        PLOT_STATISTICS_KEY: {},
     }
 
 
@@ -1053,7 +1244,7 @@ def _record_plot_statistics(comparison_statistics, plot_name, statistics):
     """Store plot-level statistics if available."""
     if statistics is None:
         return
-    comparison_statistics["plot_statistics"][plot_name] = statistics
+    comparison_statistics[PLOT_STATISTICS_KEY][plot_name] = statistics
 
 
 def _plot_name_from_statistics(statistics):
@@ -1071,7 +1262,7 @@ def _write_comparison_statistics_json(comparison_statistics, output_path):
 
 def _distribution_cumulative_variants(quantity_name):
     """Return two cumulative slots, using None to disable one for specific quantities."""
-    if quantity_name == "energy":
+    if quantity_name == ENERGY:
         return (False, None)
     return (False, True)
 
@@ -1177,12 +1368,12 @@ def _plot_histogram_error_bars(ax, bin_edges, values, errors, color):
 
 
 _QUANTITY_CONFIGS = [
-    ("energy", "Primary Energy (TeV)", "log"),
-    ("core_distance", "Core Distance (m)", "linear"),
-    ("angular_distance", "Angular Distance (deg)", "linear"),
+    (ENERGY, "Primary Energy (TeV)", "log"),
+    (CORE_DISTANCE, "Core Distance (m)", "linear"),
+    (ANGULAR_DISTANCE, "Angular Distance (deg)", "linear"),
 ]
 
-_HISTOGRAM_STYLE_QUANTITIES = {"energy"}
+_HISTOGRAM_STYLE_QUANTITIES = {ENERGY}
 _TRIGGERED_FRACTION_QUANTITIES = set()
 _SPECIAL_TRIGGER_SUBSETS = {"single_telescope", "mixed_type"}
 

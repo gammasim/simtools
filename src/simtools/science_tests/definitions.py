@@ -1,9 +1,12 @@
 """Load and validate release science-test definitions."""
 
+import csv
+import fnmatch
 import hashlib
 import json
 import logging
 import math
+import os
 import re
 from collections import Counter
 from pathlib import Path
@@ -34,9 +37,15 @@ _MODEL_SOURCE_KEYS = (
 
 _SUBMISSION_FILE_NAME = "submission.json"
 
+_ACCEPTANCE_VALUE_FORMAT = ".4g"
+
+_REPORT_PAGE_COLUMN = "report_page"
+
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
+
+_SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
 
 _PUBLICATION_WARNING_BYTES = 20 * 1024 * 1024
 
@@ -231,19 +240,121 @@ def _evaluate_products(definition, replacements):
     _check_required_products(definition, replacements)
     _check_expected_pair_count(definition, replacements)
     rule = definition.get("rule", {})
+    warnings = []
     for metric in rule.get("metrics", []):
-        pattern = replace_placeholders_recursively(metric["file"], replacements)
-        for path in _matched_files(pattern):
-            value = json.loads(path.read_text(encoding="utf-8"))
-            try:
-                for key in metric["key"].split("."):
-                    value = value[int(key)] if isinstance(value, list) else value[key]
-            except (KeyError, IndexError, TypeError) as exc:
-                raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
-            _check_metric(value, metric)
+        warnings.extend(_evaluate_metric(metric, replacements))
     if rule.get("mode") == "advisory":
         return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
+    if warnings:
+        return {"status": "warn", "reason": "; ".join(dict.fromkeys(warnings))}
     return {"status": "pass"}
+
+
+def _evaluate_metric(metric, replacements):
+    """Evaluate one configured metric over all matching products."""
+    pattern = replace_placeholders_recursively(metric["file"], replacements)
+    warnings = []
+    for path in _matched_files(pattern):
+        if metric.get("format") == "csv":
+            warnings.extend(_evaluate_csv_metric(path, metric))
+        else:
+            _evaluate_json_metric(path, metric)
+    return warnings
+
+
+def _evaluate_json_metric(path, metric):
+    """Read and validate one nested JSON metric."""
+    value = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        for key in metric["key"].split("."):
+            value = value[int(key)] if isinstance(value, list) else value[key]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
+    _check_metric(value, metric)
+
+
+def _evaluate_csv_metric(path, metric):
+    """Apply configured scalar thresholds to selected rows of a compact results table."""
+    selectors = metric.get("select", {})
+    field = metric.get("field", metric["key"])
+    with path.open(encoding="utf-8", newline="") as input_file:
+        rows = [
+            row
+            for row in csv.DictReader(input_file)
+            if all(_csv_value_matches(row.get(key, ""), value) for key, value in selectors.items())
+        ]
+    if not rows:
+        return [f"No comparison rows match {selectors} in {path}."]
+    warnings = []
+    for row in rows:
+        warning = _evaluate_csv_row(row, metric, field, path)
+        if warning:
+            warnings.append(warning)
+    return warnings
+
+
+def _evaluate_csv_row(row, metric, field, path):
+    """Evaluate a selected CSV row and return its warning, if any."""
+    label = f"{row.get('plot')} {row.get('scope')} {row.get('pair')}"
+    if row.get("valid", "").casefold() != "true":
+        return f"{label}: invalid statistic ({row.get('reason')}){_report_page_suffix(row)}."
+    value, counts = _read_csv_acceptance_values(row, field, path)
+    minimum_entries = metric.get("minimum_entries")
+    if minimum_entries is not None and min(counts) < minimum_entries:
+        return f"{label}: insufficient statistics ({counts}){_report_page_suffix(row)}."
+    return _check_csv_thresholds(value, metric, field, label, row)
+
+
+def _read_csv_acceptance_values(row, field, path):
+    """Parse and validate the statistic and sample counts from a CSV row."""
+    try:
+        value = float(row[field])
+        counts = [int(float(row[key])) for key in ("baseline_count", "candidate_count")]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid acceptance value in {path}: {row}") from exc
+    if not math.isfinite(value):
+        raise ValueError(f"Invalid acceptance value in {path}: {row}")
+    return value, counts
+
+
+def _check_csv_thresholds(value, metric, field, label, row):
+    """Apply warning and failure thresholds to one valid statistic."""
+    minimum = metric.get("minimum", -math.inf)
+    if value < minimum:
+        raise _AcceptanceError(
+            f"{label}: {field}={_format_acceptance_value(value)} is below required minimum "
+            f"{_format_acceptance_value(minimum)}{_report_page_suffix(row)}."
+        )
+    warning_limit = metric.get("warning_maximum")
+    fail_limit = metric.get("maximum", math.inf)
+    if value > fail_limit:
+        raise _AcceptanceError(
+            f"Acceptance failed for {label}: {field}={_format_acceptance_value(value)} "
+            f"exceeds {_format_acceptance_value(fail_limit)}{_report_page_suffix(row)}."
+        )
+    if warning_limit is not None and value > warning_limit:
+        return (
+            f"{label}: {field}={_format_acceptance_value(value)} exceeds warning limit "
+            f"{_format_acceptance_value(warning_limit)}{_report_page_suffix(row)}."
+        )
+    return None
+
+
+def _report_page_suffix(row):
+    """Return a compact PDF page reference when the statistic was rendered."""
+    page = row.get(_REPORT_PAGE_COLUMN)
+    return f" (PDF page {page})" if page else ""
+
+
+def _format_acceptance_value(value):
+    """Render acceptance values to four significant digits for readable reports."""
+    return format(value, _ACCEPTANCE_VALUE_FORMAT)
+
+
+def _csv_value_matches(actual, expected):
+    """Match an exact CSV selector or one of its configured glob patterns."""
+    choices = expected if isinstance(expected, list) else [expected]
+    return any(fnmatch.fnmatchcase(actual, str(choice)) for choice in choices)
 
 
 def _check_required_products(definition, replacements):
@@ -274,7 +385,9 @@ def _check_metric(value, metric):
     if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
         raise ValueError(f"Invalid metric {metric['key']}: {value}")
     if value < metric.get("minimum", -math.inf) or value > metric.get("maximum", math.inf):
-        raise _AcceptanceError(f"Acceptance failed for {metric['key']}: {value}")
+        raise _AcceptanceError(
+            f"Acceptance failed for {metric['key']}: {_format_acceptance_value(value)}"
+        )
 
 
 def _campaign_signature(
@@ -376,7 +489,9 @@ def _comparison_settings(release, comparison, kind):
 
 def _validate_rule(rule, rule_id):
     """Fail malformed acceptance rules before any workflow can execute."""
-    if not isinstance(rule, dict) or (rule_id and rule.get("mode") not in {"advisory", "blocking"}):
+    if not isinstance(rule, dict) or (
+        rule_id and rule.get("mode") not in {"advisory", "blocking", "thresholds"}
+    ):
         raise ValueError(f"Invalid acceptance rule: {rule_id}")
     metrics = rule.get("metrics", [])
     if not isinstance(metrics, list):
@@ -393,7 +508,7 @@ def _validate_metric_rule(metric):
         or not isinstance(metric.get("key"), str)
     ):
         raise ValueError("Each acceptance metric needs file and key.")
-    for limit in ("minimum", "maximum"):
+    for limit in ("minimum", "maximum", "warning_maximum"):
         if limit not in metric:
             continue
         value = metric[limit]
@@ -403,6 +518,21 @@ def _validate_metric_rule(metric):
             or not math.isfinite(value)
         ):
             raise ValueError(f"Invalid acceptance {limit}: {value}")
+    selectors = metric.get("select", {})
+    if not isinstance(selectors, dict) or any(
+        not isinstance(key, str)
+        or not isinstance(value, str | list)
+        or (isinstance(value, list) and not all(isinstance(item, str) for item in value))
+        for key, value in selectors.items()
+    ):
+        raise ValueError("CSV acceptance select must map column names to string values.")
+    minimum_entries = metric.get("minimum_entries")
+    if minimum_entries is not None and (
+        isinstance(minimum_entries, bool)
+        or not isinstance(minimum_entries, int)
+        or minimum_entries < 1
+    ):
+        raise ValueError(f"Invalid acceptance minimum_entries: {minimum_entries}")
 
 
 def _model_source_arguments(application_args, context, release):
@@ -549,10 +679,20 @@ def _relative_path(path, root):
 
 
 def _load_context(context_file):
-    """Load the optional science-test context mapping."""
+    """Load context paths, resolving the optional shared storage root."""
     if context_file is None:
         return {}
-    return _load_yaml(Path(context_file))
+    context = _load_yaml(Path(context_file))
+    placeholder = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
+    if not any(isinstance(value, str) and placeholder in value for value in context.values()):
+        return context
+    storage_root = os.environ.get(_SCIENCE_TESTS_ROOT_ENV)
+    if not storage_root or not Path(storage_root).is_absolute():
+        raise ValueError(
+            f"Set {_SCIENCE_TESTS_ROOT_ENV} to a non-empty absolute path "
+            f"before loading {context_file}."
+        )
+    return replace_placeholders_recursively(context, {placeholder: str(Path(storage_root))})
 
 
 def _load_yaml(path):
