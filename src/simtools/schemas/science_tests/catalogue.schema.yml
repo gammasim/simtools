@@ -47,6 +47,9 @@ definitions:
         type: string
       acceptance_rule:
         type: string
+      expected_pair_count:
+        type: integer
+        minimum: 1
     required: [workflow, sites, tier]
   ScienceTestCatalogue:
     oneOf:

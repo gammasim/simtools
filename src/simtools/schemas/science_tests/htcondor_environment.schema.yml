@@ -11,6 +11,7 @@ additionalProperties: false
 definitions:
   HTCondorEnvironment:
     type: object
+    additionalProperties: false
     properties:
       SIMTOOLS_CORSIKA_PATH:
         type: string

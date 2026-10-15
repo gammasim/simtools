@@ -32,6 +32,12 @@ definitions:
       simulation_models_git_revision:
         type: string
         minLength: 1
+      simulation_models_path:
+        type: string
+        minLength: 1
+      simulation_models_git_path:
+        type: string
+        minLength: 1
       model_version:
         type: string
         minLength: 1

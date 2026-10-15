@@ -14,14 +14,18 @@ definitions:
     additionalProperties: false
     properties:
       request_cpus:
-        type: integer
-        minimum: 1
+        oneOf:
+          - type: integer
+            minimum: 1
+          - type: string
       request_memory:
         type: string
       request_disk:
         type: string
       priority:
-        type: integer
+        oneOf:
+          - type: integer
+          - type: string
       container_image:
         type: string
       container_target_dir:
@@ -31,11 +35,16 @@ definitions:
       environment_file:
         type: string
       poll_interval:
-        type: number
-        exclusiveMinimum: 0
+        oneOf:
+          - type: number
+            exclusiveMinimum: 0
+          - type: string
       timeout:
-        type: number
-        exclusiveMinimum: 0
+        oneOf:
+          - type: number
+            exclusiveMinimum: 0
+          - type: string
+          - type: 'null'
       cancel_on_interrupt:
         type: boolean
       keep_successful_artifacts:
