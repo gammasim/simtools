@@ -13,17 +13,19 @@ logger = logging.getLogger()
 @pytest.fixture
 def simtel_runner(corsika_config_mock_array_model):
     return SimulatorArray(
-        corsika_config=corsika_config_mock_array_model,
+        simulation_parameters=corsika_config_mock_array_model.simulation_parameters,
+        array_model=corsika_config_mock_array_model.array_model,
         label="test-simtel-runner",
     )
 
 
 def test_init_simulator_array(corsika_config_mock_array_model):
     simulator = SimulatorArray(
-        corsika_config=corsika_config_mock_array_model,
+        simulation_parameters=corsika_config_mock_array_model.simulation_parameters,
+        array_model=corsika_config_mock_array_model.array_model,
         label="test-label",
     )
-    assert simulator.corsika_config == corsika_config_mock_array_model
+    assert simulator.array_model == corsika_config_mock_array_model.array_model
     assert simulator.label == "test-label"
     assert simulator._log_file is None
 
@@ -87,7 +89,7 @@ def test_prepare_run_keeps_resource_record_for_each_run(simtel_runner, tmp_test_
 def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.load_files.return_value = {}
-    simtel_runner.corsika_config.is_calibration_run = mocker.Mock(return_value=True)
+    simtel_runner.simulation_parameters.is_calibration_run = mocker.Mock(return_value=True)
 
     # Mock the methods
     mocker.patch.object(simtel_runner, "_common_run_command", return_value=["common_command"])
@@ -115,7 +117,7 @@ def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocke
     # Mock site model parameter
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -131,7 +133,7 @@ def test_make_run_command_for_calibration_direct_injection(simtel_runner, mocker
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -198,11 +200,11 @@ def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
     mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
 
     simtel_runner.label = "divergent"
-    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
-    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
-    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
-    simtel_runner.corsika_config.zenith_angle = 25.0
-    simtel_runner.corsika_config.azimuth_angle = 180.0
+    simtel_runner.array_model.get_config_directory.return_value = "/config/dir"
+    simtel_runner.array_model.config_file_path = "/config/file.cfg"
+    simtel_runner.array_model.export_config_files = mocker.Mock()
+    simtel_runner.simulation_parameters.zenith_angle = 25.0
+    simtel_runner.simulation_parameters.azimuth_angle = 180.0
 
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
@@ -229,7 +231,7 @@ def test_make_run_command_for_calibration_simulations_pedestals(simtel_runner, m
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -250,7 +252,7 @@ def test_make_run_command_for_calibration_simulations_pedestals_nsb_only(simtel_
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -271,7 +273,7 @@ def test_make_run_command_for_calibration_simulations_pedestals_dark(simtel_runn
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -290,7 +292,7 @@ def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_ru
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
@@ -309,7 +311,7 @@ def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, 
 
     mock_param = mocker.Mock()
     mock_param.to_value.return_value = 1800.0
-    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+    simtel_runner.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 

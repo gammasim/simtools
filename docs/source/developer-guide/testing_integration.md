@@ -90,12 +90,11 @@ one of these repository sources.
 
 ## Resources
 
-Tests resolve resources from `SIMTOOLS_TESTS_PATH` and
-`SIMTOOLS_TESTS_RESOURCE_VERSION`. The first identifies the `simtools-tests`
-checkout; the second selects the versioned resource directory below it. The
-catalog separately records the Git ref used to obtain the repository and its
-`resource-version`. The corresponding command-line options are
-`--simtools_tests_path` and `--simtools_tests_resource_version`.
+Tests resolve resources from `SIMTOOLS_TESTS_PATH` and the `resource-version`
+in `dependency_versions.yml`. The environment variable identifies the local
+`simtools-tests` checkout; the catalog selects the versioned resource directory
+below it and records the Git ref used to obtain the repository. The corresponding
+command-line option is `--simtools_tests_path`.
 
 CI checks out the configurable `simtools_tests_branch` and `simulation_model_branch`, both
 defaulting to `main`. These branches are independent of the release refs recorded in the
@@ -115,11 +114,11 @@ To select a resource set:
 
 ```bash
 pytest --simtools_tests_path /full/path/to/simtools-tests/simtools-tests \
-  --simtools_tests_resource_version v0.36.0 \
   tests/integration_tests/test_applications_from_config.py
 ```
 
-When no version is specified, simtools uses the version in `dependency_versions.yml`.
+To select another resource directory, update `resource-version` in
+`dependency_versions.yml`.
 
 Versioned resource bundles are archived in
 [`gammasim/simtools-tests`](https://github.com/gammasim/simtools-tests). Use

@@ -15,23 +15,25 @@ class SimulatorArray(SimtelRunner):
 
     Parameters
     ----------
-    corsika_config_data: CorsikaConfig
-        CORSIKA configuration.
+    simulation_parameters : SimulationParameters
+        Physical run settings.
+    array_model : ArrayModel
+        Telescope and site models.
     label: str
         Instance label.
-    use_multipipe: bool
-        Use multipipe to run CORSIKA and sim_telarray.
     """
 
     def __init__(
         self,
-        corsika_config,
+        simulation_parameters,
+        array_model,
         label=None,
     ):
         """Initialize SimulatorArray."""
-        super().__init__(label=label, config=corsika_config)
+        super().__init__(label=label, config=simulation_parameters, array_model=array_model)
 
-        self.corsika_config = corsika_config
+        self.simulation_parameters = simulation_parameters
+        self.array_model = array_model
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
@@ -81,7 +83,7 @@ class SimulatorArray(SimtelRunner):
                     process_resources_file,
                     "sim_telarray",
                     run_number,
-                    model_version=self.corsika_config.array_model.model_version,
+                    model_version=self.array_model.model_version,
                     log_file=log_file,
                     input_file=corsika_file,
                 )
@@ -112,7 +114,7 @@ class SimulatorArray(SimtelRunner):
         self.file_list = self.runner_service.load_files(run_number=run_number)
         command = self._common_run_command(run_number)
 
-        if self.corsika_config.is_calibration_run():
+        if self.simulation_parameters.is_calibration_run():
             command += self._make_run_command_for_calibration_simulations()
         else:
             command += self._make_run_command_for_shower_simulations()
@@ -130,7 +132,7 @@ class SimulatorArray(SimtelRunner):
             Command to run sim_telarray.
         """
         power_law = SimulatorArray.get_power_law_for_sim_telarray_histograms(
-            self.corsika_config.primary_particle
+            self.simulation_parameters.primary_particle
         )
         return [
             "-C",
@@ -140,7 +142,7 @@ class SimulatorArray(SimtelRunner):
     def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
         cfg = settings.config.args
-        altitude = self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
+        altitude = self.array_model.site_model.get_parameter_value_with_unit(
             "reference_point_altitude"
         ).to_value("m")
 
@@ -173,7 +175,7 @@ class SimulatorArray(SimtelRunner):
     def _common_run_command(self, run_number):
         """Build generic run command for sim_telarray."""
         weak_pointing = self._determine_pointing_option()
-        config_dir = self.corsika_config.array_model.get_config_directory()
+        config_dir = self.array_model.get_config_directory()
         self._log_file = self.runner_service.get_file_name(
             file_type="sim_telarray_log", run_number=run_number
         )
@@ -183,17 +185,17 @@ class SimulatorArray(SimtelRunner):
         output_file = self.runner_service.get_file_name(
             file_type="sim_telarray_output", run_number=run_number
         )
-        self.corsika_config.array_model.export_all_simtel_config_files()
+        self.array_model.export_config_files("sim_telarray")
 
         cmd = [
             str(settings.config.sim_telarray_exe),
             "-c",
-            str(self.corsika_config.array_model.config_file_path),
+            str(self.array_model.config_file_path),
             f"-I{config_dir}",
         ]
         weak_options = {
-            "telescope_theta": self.corsika_config.zenith_angle,
-            "telescope_phi": self.corsika_config.azimuth_angle,
+            "telescope_theta": self.simulation_parameters.zenith_angle,
+            "telescope_phi": self.simulation_parameters.azimuth_angle,
         }
         options = {
             "histogram_file": histogram_file,
@@ -202,7 +204,7 @@ class SimulatorArray(SimtelRunner):
         }
 
         try:
-            options["random_seed"] = self.corsika_config.array_model.sim_telarray_seed.seed_string
+            options["random_seed"] = self.array_model.sim_telarray_seed.seed_string
         except AttributeError as exc:
             raise AttributeError("Error setting sim_telarray seed string") from exc
 

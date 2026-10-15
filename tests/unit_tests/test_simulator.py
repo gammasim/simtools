@@ -12,12 +12,14 @@ import pytest
 from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.sim_events import file_info
+from simtools.simulation.parameters import SimulationParameters
 from simtools.simulator import Simulator
 
 logger = logging.getLogger()
 
-CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.CorsikaConfig"
+CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.get_shower_configuration"
 INITIALIZE_RUN_LIST_ERROR_MSG = (
     "Error in initializing run list "
     "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
@@ -66,7 +68,7 @@ def patch_simulator_core(mocker, mock_array_model):
 
     def _apply():
         mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
-        mocker.patch("simtools.simulator.CorsikaConfig")
+        mocker.patch("simtools.simulator.get_shower_configuration")
         mock_runner_service = mocker.patch("simtools.simulator.runner_services.RunnerServices")
         mock_runner_service.return_value.load_files.return_value = {}
         mock_runner_service.return_value.get_file_name.side_effect = (
@@ -299,7 +301,7 @@ def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, 
 
     shower_simulator.run_number = shower_simulator._initialize_from_tool_configuration()
     assert shower_simulator.run_number == 42
-    file_info.get_corsika_run_number.assert_called_once_with(corsika_file)
+    file_info.get_corsika_run_number.assert_called_once_with(corsika_file, file_format="eventio")
 
 
 def test_pack_for_register_with_multiple_versions(
@@ -333,9 +335,12 @@ def test_pack_for_register_with_multiple_versions(
     mock_corsika_config.array_model.layout_name = "test_layout"  # from args
     mock_corsika_config.array_model.model_version = model_versions[0]
     mock_corsika_config.run_mode = None
+    mock_corsika_config.simulation_parameters = SimulationParameters(
+        1, PrimaryParticle("common_name", "proton"), 20, 0, 10, 100, viewcone_max=10, zenith_min=20
+    )
     mock_corsika_config.primary_particle.name = "proton"  # from args
 
-    mocker.patch("simtools.simulator.CorsikaConfig", return_value=mock_corsika_config)
+    mocker.patch("simtools.simulator.get_shower_configuration", return_value=mock_corsika_config)
     mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
 
     mock_config = mocker.Mock()
@@ -458,8 +463,8 @@ def test_reduced_event_lists_sim_telarray(array_simulator, mocker, tmp_test_dire
     array_simulator.save_reduced_event_lists()
 
     assert mock_simtel_io_writer.call_count == 2
-    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
-    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
+    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"], file_format="eventio")
+    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"], file_format="eventio")
 
     assert mock_table_handler.write_table_chunks.call_count == 2
     output_files = {
@@ -494,8 +499,12 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
 
     assert mock_simtel_io_writer.call_count == 2
-    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
-    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
+    mock_simtel_io_writer.assert_any_call(
+        [str(data_dir / "output_file1.simtel.zst")], file_format="eventio"
+    )
+    mock_simtel_io_writer.assert_any_call(
+        [str(data_dir / "output_file2.simtel.gz")], file_format="eventio"
+    )
 
     assert mock_table_handler.write_table_chunks.call_count == 2
     output_files = {
@@ -534,7 +543,7 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
 
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
-    mock_simtel_io_writer.assert_called_once_with([input_file])
+    mock_simtel_io_writer.assert_called_once_with([input_file], file_format="eventio")
     call = mock_table_handler.write_table_chunks.call_args
     assert call.kwargs["output_file"] == data_dir / "output_file3.reduced_event_data.hdf5"
     assert "metadata_documents" in call.kwargs
@@ -586,9 +595,9 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     )
 
     assert mock_simtel_io_writer.call_args_list == [
-        mocker.call(input_files[0:2]),
-        mocker.call(input_files[2:4]),
-        mocker.call(input_files[4:5]),
+        mocker.call(input_files[0:2], file_format="eventio"),
+        mocker.call(input_files[2:4], file_format="eventio"),
+        mocker.call(input_files[4:5], file_format="eventio"),
     ]
     assert [
         call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
@@ -626,8 +635,8 @@ def test_write_reduced_event_lists_from_file_list_pattern(mocker, tmp_test_direc
     )
 
     assert mock_simtel_io_writer.call_args_list == [
-        mocker.call(first_inputs),
-        mocker.call(second_inputs),
+        mocker.call(first_inputs, file_format="eventio"),
+        mocker.call(second_inputs, file_format="eventio"),
     ]
     assert [
         call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
@@ -913,9 +922,7 @@ def test_report(array_simulator, mocker, caplog):
     mock_corsika_config.primary_particle = "gamma"
     mock_corsika_config.azimuth_angle = 180.0
     mock_corsika_config.zenith_angle = 20.0
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_resources_report = "Mean wall time/run [sec]: 123.45, #events/run: 1000"
     mocker.patch.object(
@@ -1227,9 +1234,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
     mock_corsika_config.mc_events = 500
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1270,9 +1275,7 @@ def test_validate_simulations_corsika(shower_simulator, mocker):
     mock_corsika_config.mc_events = 1000
     mock_corsika_config.use_curved_atmosphere = True
 
-    mocker.patch.object(
-        shower_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    shower_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1318,9 +1321,7 @@ def test_validate_simulations_corsika_sim_telarray(
     mock_corsika_config.mc_events = 750
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        shower_array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    shower_array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1368,9 +1369,7 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
     mock_corsika_config.mc_events = 500
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mocker.patch("simtools.simulator.simtel_output_validator.validate_sim_telarray")
     mocker.patch("simtools.simulator.corsika_output_validator.validate_corsika_output")
@@ -1400,4 +1399,21 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
     mock_output_validator.assert_called_once_with(
         data_files=mock_event_data_files,
         expected_mc_events=500,
+    )
+
+
+def test_telescope_only_does_not_create_shower_configuration(array_simulator, mocker):
+    assert array_simulator.corsika_configurations is None
+    assert array_simulator.simulation_parameters[0].shower_events == 10
+    mocker.patch("simtools.simulator.get_shower_configuration", side_effect=AssertionError)
+    array_simulator._initialize_array_models()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    ["run.simtel", "run.simtel.gz", "run.corsika.zst", "run.iact.bz2", "run.example", "run"],
+)
+def test_reduced_filename_is_independent_of_input_format(file_name):
+    assert Simulator._build_output_file_for_input_batch("output", [file_name]) == Path(
+        "output/run.reduced_event_data.hdf5"
     )

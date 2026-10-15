@@ -11,7 +11,6 @@ from simtools import settings
 from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
-from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
@@ -22,6 +21,8 @@ from simtools.sim_events import file_info, output_validator, writer
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.simtel import simtel_output_validator
 from simtools.simtel.simulator_array import SimulatorArray
+from simtools.simulation.configuration import get_shower_configuration
+from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general
 
 
@@ -30,7 +31,9 @@ def _write_reduced_event_list_batch(job_spec):
     input_files, output_file = job_spec[:2]
     metadata_args = job_spec[2] if len(job_spec) > 2 else {}
     model_exports = job_spec[3] if len(job_spec) > 3 else []
-    generator = writer.EventDataWriter(input_files)
+    generator = writer.EventDataWriter(
+        input_files, file_format=metadata_args.get("simulation_file_format", "eventio")
+    )
 
     def build_metadata_documents():
         return {
@@ -88,9 +91,10 @@ class Simulator:
         self._overwrite_flasher_photons_for_direct_injection()
         self._simulation_runner = self._initialize_simulation_runner()
         self.runner_service = runner_services.RunnerServices(
-            self._get_first_corsika_config(),
+            self.simulation_parameters[0],
             "sub",
             label,
+            array_model=self.array_models[0],
         )
         self.file_list = self.runner_service.load_files(self.run_number)
 
@@ -123,7 +127,10 @@ class Simulator:
     def _initialize_from_tool_configuration(self):
         """Initialize simulator from tool configuration."""
         if settings.config.args.get("corsika_file"):
-            run_number = file_info.get_corsika_run_number(settings.config.args["corsika_file"])
+            run_number = file_info.get_corsika_run_number(
+                settings.config.args["corsika_file"],
+                file_format=settings.config.args.get("simulation_file_format", "eventio"),
+            )
         else:
             run_number = settings.config.args.get(
                 "run_number_offset", 0
@@ -143,6 +150,7 @@ class Simulator:
 
         array_model = []
         corsika_configurations = []
+        self.simulation_parameters = []
         model_subdir = f"run{self.run_number:06d}"
 
         for version in versions:
@@ -157,8 +165,18 @@ class Simulator:
                 model_directory_subdir=model_subdir,
                 model_reader=self.model_reader,
             )
-            cfg = CorsikaConfig(array_model=model, label=self.label, run_number=self.run_number)
-            model.initialize_seeds(cfg.zenith_angle, cfg.azimuth_angle)
+            if self.simulation_software == "sim_telarray":
+                cfg = None
+                parameters = SimulationParameters.from_args(
+                    settings.config.args, self.run_number, model.site_model
+                )
+            else:
+                cfg = get_shower_configuration(
+                    array_model=model, label=self.label, run_number=self.run_number
+                )
+                parameters = cfg.simulation_parameters
+            self.simulation_parameters.append(parameters)
+            model.initialize_seeds(parameters.zenith_angle, parameters.azimuth_angle)
 
             array_model.append(model)
             corsika_configurations.append(cfg)
@@ -181,9 +199,14 @@ class Simulator:
         CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
             Simulation runner object.
         """
+        if self.simulation_software == "sim_telarray":
+            return SimulatorArray(
+                simulation_parameters=self.simulation_parameters[0],
+                array_model=self.array_models[0],
+                label=self.label,
+            )
         runner_class = {
             "corsika": corsika_runner.CorsikaRunner,
-            "sim_telarray": SimulatorArray,
             "corsika_sim_telarray": corsika_simtel_runner.CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
@@ -368,11 +391,11 @@ class Simulator:
 
         Includes run time per run only at this point.
         """
-        _corsika_config = self._get_first_corsika_config()
+        parameters = self.simulation_parameters[0]
         self.logger.info(
-            f"Production run complete for primary {_corsika_config.primary_particle} showers "
-            f"from {_corsika_config.azimuth_angle} azimuth and "
-            f"{_corsika_config.zenith_angle} zenith "
+            f"Production run complete for primary {parameters.primary_particle} showers "
+            f"from {parameters.azimuth_angle} azimuth and "
+            f"{parameters.zenith_angle} zenith "
             f"at {self.site} site, using {self.model_version} model."
         )
         self.logger.info(
@@ -427,9 +450,10 @@ class Simulator:
         metadata_args=None,
         array_models=None,
         input_file_list_pattern=None,
+        file_format="eventio",
     ):
         """
-        Write reduced event lists for given sim_telarray output files.
+        Write reduced event lists using the selected simulation-file reader.
 
         Input files can be passed directly or read from one or more text files
         matching a glob pattern. Files are processed in batches, with one output
@@ -438,7 +462,7 @@ class Simulator:
         Parameters
         ----------
         input_files : list
-            List of sim_telarray output files (e.g., ``*.simtel.zst``).
+            List of simulation files in the selected input format.
         output_path : str or Path, optional
             Directory for the output files. Defaults to the same directory as
             each input file.
@@ -446,7 +470,7 @@ class Simulator:
             Explicit output files. When provided, these are used directly and
             zipped with the input file batches.
         input_file_list : str or Path, optional
-            Text file containing one sim_telarray output file per line.
+            Text file containing one simulation file per line.
         files_per_reduced_event_file : int, optional
             Number of input files combined into each output file. Defaults to 1.
         max_workers : int, optional
@@ -457,7 +481,7 @@ class Simulator:
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
         input_file_list_pattern : str, optional
-            Glob pattern matching text files containing one sim_telarray output
+            Glob pattern matching text files containing one simulation
             file per line. Each list is processed independently, while all
             resulting jobs share the same execution submission.
         backend : str, optional
@@ -531,7 +555,7 @@ class Simulator:
             backend=backend,
             backend_config=backend_config,
             wait_for_completion=wait_for_completion,
-            metadata_args=metadata_args,
+            metadata_args={**(metadata_args or {}), "simulation_file_format": file_format},
             array_models=array_models,
         )
 
@@ -612,17 +636,16 @@ class Simulator:
         """Build output filename for a single input batch."""
         input_file = Path(input_file_batch[0])
         output_dir = Path(output_path) if output_path else input_file.parent
-        stem = Simulator._strip_simtel_suffix(input_file.name)
+        stem = Simulator._simulation_file_stem(input_file.name)
         return output_dir / f"{stem}.reduced_event_data.hdf5"
 
     @staticmethod
-    def _strip_simtel_suffix(file_name):
-        """Strip simtel suffix from a file name."""
-        stem = file_name
-        for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
-            if stem.endswith(suffix):
-                return stem[: -len(suffix)]
-        return stem
+    def _simulation_file_stem(file_name):
+        """Remove the input-format suffix and optional compression suffix."""
+        path = Path(file_name)
+        if path.suffix in {".gz", ".zst", ".bz2", ".xz"}:
+            path = path.with_suffix("")
+        return path.stem
 
     @staticmethod
     def _validate_reduced_event_output_count(input_file_batches, output_files):
@@ -800,9 +823,9 @@ class Simulator:
         Validates data, log, and metadata files from CORSIKA, sim_telarray and reduced event lists
         (if saved).
         """
-        _corsika_config = self._get_first_corsika_config()
-        expected_shower_events = _corsika_config.shower_events
-        expected_mc_events = _corsika_config.mc_events
+        parameters = self.simulation_parameters[0]
+        expected_shower_events = parameters.shower_events
+        expected_mc_events = parameters.mc_events
         self.logger.info(
             "Validating simulations "
             f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
@@ -815,7 +838,7 @@ class Simulator:
                 array_models=self.array_models,
                 expected_mc_events=expected_mc_events,
                 expected_shower_events=expected_shower_events,
-                curved_atmo=_corsika_config.use_curved_atmosphere,
+                curved_atmo=parameters.use_curved_atmosphere,
                 allow_for_changes=["nsb_scaling_factor", "stars"],
             )
         if "corsika" in self.simulation_software:
@@ -826,7 +849,7 @@ class Simulator:
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,
-                curved_atmo=_corsika_config.use_curved_atmosphere,
+                curved_atmo=parameters.use_curved_atmosphere,
             )
 
         if settings.config.args.get("reduced_event_lists"):
