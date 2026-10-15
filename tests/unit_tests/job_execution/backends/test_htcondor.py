@@ -116,7 +116,7 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     assert submit_values["container_target_dir"] == "/simtools-run"
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert Path(tmp_test_directory).resolve().parent.as_posix() in bind_paths
-    assert Path.cwd().resolve().as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() not in bind_paths
 
 
 def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_directory):
@@ -140,7 +140,7 @@ def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_
 
 
 def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
-    """Container jobs retain the submitter working directory and bind it."""
+    """Container jobs retain the submitter working directory without binding it twice."""
     work_dir = Path(tmp_test_directory) / "work"
     working_directory = Path.cwd().resolve()
     job = JobSpec("job-000000", 0, command=("echo", "ok"))
@@ -155,7 +155,33 @@ def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test
 
     assert submit_values["initialdir"] == str(working_directory)
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"]
-    assert str(working_directory) in bind_paths.split(",")
+    assert str(working_directory) not in bind_paths.split(",")
+
+
+def test_htcondor_excludes_implicit_working_directory_from_configured_binds(tmp_test_directory):
+    """The starter's working-directory mount is not repeated by the job environment."""
+    root = Path(tmp_test_directory)
+    working_directory = root / "submit"
+    other_bind = root.parent / f"{root.name}-inputs"
+    environment_file = root / "environment"
+    environment_file.write_text(
+        f"APPTAINER_BINDPATH={working_directory},{other_bind},{working_directory}\n",
+        encoding="utf-8",
+    )
+    job = JobSpec("job-000000", 0, command=("echo", "ok"), mount_paths=(working_directory,))
+
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {"container_image": "/shared/simtools.sif", "environment_file": environment_file},
+        [job],
+        root / "work",
+        root / "scheduler.log",
+        working_directory,
+    )
+
+    bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
+    assert str(working_directory) not in bind_paths
+    assert str(other_bind) in bind_paths
+    assert len(bind_paths) == len(set(bind_paths))
 
 
 def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
@@ -173,7 +199,7 @@ def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
 
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert work_dir.resolve().parent.as_posix() in bind_paths
-    assert Path.cwd().resolve().as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() not in bind_paths
 
 
 def test_htcondor_rewrites_controller_python_in_container_commands():
@@ -822,7 +848,10 @@ def test_htcondor_load_results_reports_each_invalid_payload(tmp_test_directory):
     assert "worker failed" in failures[3]
 
 
-def test_htcondor_wait_cleans_transient_artifacts_after_success(monkeypatch, tmp_test_directory):
+@pytest.mark.parametrize("method", ["wait", "collect"])
+def test_htcondor_wait_cleans_transient_artifacts_after_success(
+    monkeypatch, tmp_test_directory, method
+):
     """Successful scheduler runs remove payload and stream artifacts by default."""
     work_dir = Path(tmp_test_directory)
     for directory in ("inputs", "results", "stdout", "stderr"):
@@ -840,7 +869,7 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(monkeypatch, tmp
     monkeypatch.setattr(backend, "_load_htcondor", lambda: object())
     monkeypatch.setattr(backend, "_wait_for_processes", lambda _submission: [])
 
-    assert [result.value for result in backend.wait(submission)] == [4]
+    assert [result.value for result in getattr(backend, method)(submission)] == [4]
     assert not (work_dir / "results").exists()
 
 
@@ -888,3 +917,61 @@ def test_htcondor_cancel_loads_scheduler_for_detached_submission(monkeypatch):
     backend.cancel(SubmissionHandle("htcondor", Path("run"), (), scheduler_id=17))
 
     assert calls == [("remove", "ClusterId == 17")]
+
+
+@pytest.mark.parametrize(
+    ("queued", "history", "expected"),
+    [
+        ([{"ProcId": 0}], [], False),
+        ([], [{"ProcId": 0, "JobStatus": 4}], True),
+        ([], [{"ProcId": 0, "JobStatus": 3}], True),
+        ([], [], None),
+        ([], [{"ProcId": 0, "JobStatus": 5}], None),
+    ],
+)
+def test_is_finished_requires_terminal_history(
+    mocker, queued, history, expected, tmp_test_directory
+):
+    backend = HTCondorBackend()
+    mocker.patch.object(backend, "_load_htcondor")
+    backend._schedd = mocker.Mock()
+    backend._schedd.query.return_value = queued
+    backend._schedd.history.return_value = history
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=Path(tmp_test_directory),
+        job_ids=("job",),
+        scheduler_id=1,
+        process_ids={"job": 0},
+    )
+    if expected is None:
+        with pytest.raises(BackendExecutionError, match="incomplete HTCondor history"):
+            backend.is_finished(submission)
+    else:
+        assert backend.is_finished(submission) is expected
+
+
+def test_is_finished_refuses_unknown_scheduler_state(mocker, tmp_test_directory):
+    backend = HTCondorBackend()
+    submission = SubmissionHandle(
+        backend="htcondor", work_dir=Path(tmp_test_directory), job_ids=("job",)
+    )
+    with pytest.raises(BackendExecutionError, match="missing scheduler identifiers"):
+        backend.is_finished(submission)
+    submission.scheduler_id = 1
+    submission.process_ids = {"job": 0}
+    mocker.patch.object(backend, "_load_htcondor")
+    backend._schedd = mocker.Mock()
+    backend._schedd.query.side_effect = RuntimeError("offline")
+    with pytest.raises(BackendExecutionError, match="Cannot confirm finished HTCondor jobs"):
+        backend.is_finished(submission)
+
+
+def test_collect_reports_failed_workers(mocker, tmp_test_directory):
+    backend = HTCondorBackend()
+    mocker.patch.object(backend, "_load_results", return_value=([], ["worker failed"]))
+    submission = SubmissionHandle(
+        backend="htcondor", work_dir=Path(tmp_test_directory), job_ids=("job",)
+    )
+    with pytest.raises(BackendExecutionError, match="worker failed"):
+        backend.collect(submission)

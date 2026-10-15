@@ -12,6 +12,12 @@ from pathlib import Path
 import yaml
 
 from simtools import version as versioning
+from simtools.model_repository.compatibility import (
+    LEGACY_MODEL_KEY,
+    MODEL_KEY,
+    RANGE_KEY,
+    _contract,
+)
 
 DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
 PYPROJECT_FILENAME = "pyproject.toml"
@@ -25,8 +31,30 @@ SOURCE_REF_PATTERN = re.compile(
 )
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
-READABLE_REF_SCHEMAS = {"0.5.0", "0.6.0", "0.7.0"}
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
+
+
+@cache
+def _dependency_schemas():
+    """Load supported catalog formats and their features from the schema documents."""
+    path = Path(__file__).parent / "schemas" / "dependency_versions.schema.yml"
+    documents = yaml.safe_load_all(path.read_text(encoding="utf-8"))
+    return {document["schema_version"]: document for document in documents}
+
+
+def _readable_ref_schemas():
+    """Return formats whose model declaration uses source refs."""
+    return {
+        version
+        for version, schema in _dependency_schemas().items()
+        if "default-ref" in schema["properties"][MODEL_KEY]["properties"]
+    }
+
+
+def _requires_model_range(schema_version):
+    """Check whether the version's schema requires a model compatibility range."""
+    model_schema = _dependency_schemas()[schema_version]["properties"][MODEL_KEY]
+    return RANGE_KEY in model_schema.get("required", [])
 
 
 def _source_snapshot_image(package, digest, revisions):
@@ -54,7 +82,9 @@ def update_dependency_source_revisions(catalog_path, updates):
         components = {component["source-ref"]: component for component in catalog[section]}
         for source_ref, values in updates[section].items():
             components[source_ref].update(values)
-    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False), encoding="utf-8")
+    catalog_path.write_text(
+        yaml.safe_dump(catalog, sort_keys=False, explicit_start=True), encoding="utf-8"
+    )
 
 
 def _corsika_tag(component):
@@ -147,9 +177,9 @@ def _simtel_build_id(component):
     return _safe_build_id(source_ref, build_id)
 
 
-def _model_revision(catalog):
+def model_repository_revision(catalog):
     """Return the configured simulation-model repository ref or revision."""
-    model = catalog["model-repository"]
+    model = catalog.get("model-repository") or catalog.get("model-database", {})
     return model.get("git-revision") or model.get(
         "default-ref", model.get("default-tag", model.get("default-version"))
     )
@@ -179,12 +209,14 @@ def _dependency_tag(component, new_key, *old_keys):
 
 
 def find_dependency_versions(start_path=None):
-    """Find the nearest root-level dependency version catalog.
+    """Find the dependency catalog matching the running simtools installation.
 
     Parameters
     ----------
     start_path : str or Path, optional
-        Directory from which to start searching.
+        Explicit search directory, taking precedence over bundled catalogs.
+        By default, bundled catalogs take precedence over the working directory.
+        SIMTOOLS_DEPENDENCY_VERSIONS overrides either lookup order.
 
     Returns
     -------
@@ -194,14 +226,21 @@ def find_dependency_versions(start_path=None):
     Raises
     ------
     FileNotFoundError
-        If no matching project file can be found.
+        If an explicit environment override is missing or no catalog can be found.
     """
     configured_path = os.getenv("SIMTOOLS_DEPENDENCY_VERSIONS")
-    candidates = [Path(configured_path)] if configured_path else []
+    if configured_path:
+        catalog = Path(configured_path)
+        if not catalog.is_file():
+            raise FileNotFoundError(f"Configured dependency catalog does not exist: {catalog}")
+        return catalog
+    bundled = [
+        Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME,
+        Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME,
+    ]
     start = Path(start_path or Path.cwd()).resolve()
-    candidates.extend(parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents))
-    candidates.append(Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME)
-    candidates.append(Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME)
+    searched = [parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents)]
+    candidates = bundled + searched if start_path is None else searched + bundled
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -267,6 +306,11 @@ def validate_dependency_catalog(catalog):
     ValueError
         If a required value is missing or invalid.
     """
+    if LEGACY_MODEL_KEY in catalog:
+        if MODEL_KEY in catalog:
+            raise ValueError("Catalog declares both legacy and current model dependency keys.")
+        catalog = dict(catalog)
+        catalog[MODEL_KEY] = catalog.pop(LEGACY_MODEL_KEY)
     required = {
         "schema_version",
         "python",
@@ -284,7 +328,7 @@ def validate_dependency_catalog(catalog):
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
     schema_version = catalog["schema_version"]
-    if schema_version not in {"0.1.0", "0.2.0", "0.3.0", "0.4.0", *READABLE_REF_SCHEMAS}:
+    if schema_version not in set(_dependency_schemas()):
         raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
     if schema_version != "0.1.0" and "simtools-tests" not in catalog:
         raise ValueError("Missing dependency catalog keys: simtools-tests")
@@ -298,7 +342,7 @@ def validate_dependency_catalog(catalog):
 
 def _validate_components(catalog, schema_version):
     """Validate CORSIKA and sim_telarray component records."""
-    readable_refs = schema_version in READABLE_REF_SCHEMAS
+    readable_refs = schema_version in _readable_ref_schemas()
     ref_validator = _validate_source_ref if readable_refs else _validate_release_tag
     interaction_tables = catalog["corsika-interaction-tables"]
     interaction_ref = (
@@ -406,7 +450,7 @@ def _validate_simtel_components(
 def _validate_model_and_test_components(catalog, schema_version):
     """Validate model-repository and simtools-tests catalog values."""
     model = catalog["model-repository"]
-    readable_refs = schema_version in READABLE_REF_SCHEMAS
+    readable_refs = schema_version in _readable_ref_schemas()
     model_version = (
         model["default-ref"]
         if readable_refs
@@ -427,6 +471,7 @@ def _validate_model_and_test_components(catalog, schema_version):
         elif schema_version in {"0.2.0", "0.3.0", "0.4.0"}:
             message = "Invalid simulation-model release tags."
         raise ValueError(message)
+    _validate_model_constraint(catalog, schema_version)
     if model.get("repository-url") is not None:
         _validate_source_url(model["repository-url"], "simulation-model repository")
     if model.get("git-revision") is not None:
@@ -435,6 +480,15 @@ def _validate_model_and_test_components(catalog, schema_version):
         _validate_simtools_tests(
             catalog["simtools-tests"], schema_version == "0.5.0", readable_refs
         )
+
+
+def _validate_model_constraint(catalog, schema_version):
+    """Validate the range declaration without changing historical catalog semantics."""
+    model = catalog[MODEL_KEY]
+    if _requires_model_range(schema_version) and RANGE_KEY not in model:
+        raise ValueError("Missing simulation-model compatible-versions.")
+    if RANGE_KEY in model:
+        _contract(catalog)
 
 
 def _validate_simtools_tests(test_resources, require_revision=False, readable_refs=False):
@@ -764,7 +818,7 @@ def dependency_catalog_summary(catalog):
         ),
         "corsika_tables_revision": catalog["corsika-interaction-tables"].get("revision", ""),
         "model_repository": catalog["model-repository"].get("repository-url", ""),
-        "model_repository_revision": _model_revision(catalog),
+        "model_repository_revision": model_repository_revision(catalog),
         "simtools_tests_repository": test_resources.get("repository", ""),
         "simtools_tests_url": test_resources.get("source-url", ""),
         "simtools_tests_ref": _tests_ref(test_resources) or _tests_tag(test_resources),
@@ -798,10 +852,10 @@ def dependency_catalog_environment(catalog):
         configuration. Local paths and credentials are intentionally omitted.
     """
     environment = {
-        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": _model_revision(catalog),
+        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION": model_repository_revision(catalog),
     }
     if "simtools-tests" in catalog:
-        if catalog["schema_version"] in READABLE_REF_SCHEMAS:
+        if catalog["schema_version"] in _readable_ref_schemas():
             test_environment = {
                 "SIMTOOLS_TESTS_REF": _tests_ref(catalog["simtools-tests"]),
                 "SIMTOOLS_TESTS_RESOURCE_VERSION": _tests_resource_version(
