@@ -28,6 +28,19 @@ def test_science_test_config_schema_rejects_unknown_site_fields():
         )
 
 
+def test_htcondor_environment_schema_accepts_interaction_table_path():
+    science_test_definitions._validate_science_test_config(
+        {
+            "SIMTOOLS_CORSIKA_PATH": "/workdir/simulation_software/corsika7",
+            "SIMTOOLS_SIM_TELARRAY_PATH": "/workdir/simulation_software/sim_telarray",
+            "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": (
+                "/corsika7-interaction-tables/interaction-tables"
+            ),
+        },
+        "htcondor_environment.schema.yml",
+    )
+
+
 def test_dependency_order_and_invalid_definitions():
     assert science_test_definitions._dependency_order(
         ["b", "a"], {"a": {}, "b": {"depends_on": ["a"]}}

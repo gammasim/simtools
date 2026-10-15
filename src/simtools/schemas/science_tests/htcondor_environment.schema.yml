@@ -19,6 +19,9 @@ definitions:
       SIMTOOLS_SIM_TELARRAY_PATH:
         type: string
         minLength: 1
+      SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH:
+        type: string
+        minLength: 1
     required:
       - SIMTOOLS_CORSIKA_PATH
       - SIMTOOLS_SIM_TELARRAY_PATH
