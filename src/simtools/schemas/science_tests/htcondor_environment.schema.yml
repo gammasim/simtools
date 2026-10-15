@@ -1,0 +1,23 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/HTCondorEnvironment'
+title: Science-test HTCondor environment
+description: Environment paths required by science-test HTCondor jobs.
+schema_version: 0.1.0
+schema_name: science_tests/htcondor_environment.schema
+type: object
+additionalProperties: false
+
+definitions:
+  HTCondorEnvironment:
+    type: object
+    properties:
+      SIMTOOLS_CORSIKA_PATH:
+        type: string
+        minLength: 1
+      SIMTOOLS_SIM_TELARRAY_PATH:
+        type: string
+        minLength: 1
+    required:
+      - SIMTOOLS_CORSIKA_PATH
+      - SIMTOOLS_SIM_TELARRAY_PATH
