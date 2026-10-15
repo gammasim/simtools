@@ -20,6 +20,7 @@ PLOT_STATISTICS_KEY = "plot_statistics"
 COMPARISONS_KEY = "comparisons"
 TEXT_ENCODING = "utf-8"
 SIMULATED_EVENT_COUNT_KEY = "simulated_event_count"
+BASELINE_COUNTS_KEY = "baseline_counts"
 
 ARRAY_LAYOUT_KEY = "array_layout_name"
 CONFIGURATION_KEY = "configuration"
@@ -93,7 +94,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
         ),
     ]
     mock_summary.assert_called_once_with(
-        [first_statistics_file, second_statistics_file], output_directory, "diagnostic"
+        [first_statistics_file, second_statistics_file], output_directory
     )
 
 
@@ -466,7 +467,7 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
                         "plot_name": "distribution_energy",
                         "baseline_label": "base",
                         "metric_type": "quantity_distribution",
-                        "baseline_counts": [10] * 1000,
+                        BASELINE_COUNTS_KEY: [10] * 1000,
                         COMPARISONS_KEY: [
                             {
                                 "candidate_label": "candidate",
@@ -499,7 +500,7 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
         path.parent.mkdir(parents=True)
         path.write_text(statistics_file.read_text(encoding=TEXT_ENCODING), encoding=TEXT_ENCODING)
         statistics_files.append(path)
-    production_comparison._write_comparison_summary(statistics_files, output, "compact")
+    production_comparison._write_comparison_summary(statistics_files, output)
 
     text = (output / statistics_file.name).read_text(encoding=TEXT_ENCODING)
     summary = json.loads(text)
@@ -513,6 +514,12 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
     assert summary[COMPARISON_SETS_KEY][0][SIMULATED_EVENT_COUNT_KEY] == 12 * pair_count
     assert summary[PLOT_STATISTICS_KEY] == {}
     assert summary[COMPARISONS_KEY] == []
+    metrics_file = output / "comparison_metrics.csv"
+    assert metrics_file.is_file()
+    metrics_text = metrics_file.read_text(encoding=TEXT_ENCODING)
+    assert metrics_text.splitlines()[0].startswith("pair,array_layout,plot,scope,")
+    assert len(metrics_text.splitlines()) == 2 * pair_count + 1
+    assert BASELINE_COUNTS_KEY not in metrics_text
     assert len(text.splitlines()) <= 20
     assert len(text.encode(TEXT_ENCODING)) < 1024
     assert all(not path.exists() for path in statistics_files)

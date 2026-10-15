@@ -129,6 +129,43 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
         science_test_definitions._evaluate_products(definition, {})
 
 
+def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test_directory):
+    report = Path(tmp_test_directory)
+    metrics_file = report / "comparison_metrics.csv"
+    metrics_file.write_text(
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        "candidate_count\n"
+        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510\n",
+        encoding=_ENCODING,
+    )
+    metric = {
+        "file": str(metrics_file),
+        "key": "value",
+        "format": "csv",
+        "select": {
+            "metric": "ks",
+            "plot": ["distribution_core_distance", "distribution_core_distance_LST?"],
+        },
+        "minimum_entries": 100,
+        "warning_maximum": 0.03,
+        "maximum": 0.05,
+    }
+    definition = {"products": [str(metrics_file)], "rule": {"metrics": [metric]}}
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result["status"] == "warn"
+    assert "insufficient statistics" in result["reason"]
+
+    metrics_file.write_text(
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        "candidate_count\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.06,,True,ok,500,510\n",
+        encoding=_ENCODING,
+    )
+    with pytest.raises(science_test_definitions._AcceptanceError, match=r"exceeds 0\.05"):
+        science_test_definitions._evaluate_products(definition, {})
+
+
 def test_release_acceptance_override_is_rejected(campaign):
     override = campaign["release_dir"] / "acceptance/overrides.yml"
     override.parent.mkdir(parents=True)

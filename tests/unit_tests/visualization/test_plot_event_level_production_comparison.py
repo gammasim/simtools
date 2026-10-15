@@ -25,6 +25,7 @@ VIEW_CONE_MIN_KEY = "view_cone_min"
 VIEW_CONE_MAX_KEY = "view_cone_max"
 VALUE_KEY = "value"
 PLOT_STATISTICS_KEY = "plot_statistics"
+BASELINE_COUNTS_KEY = "baseline_counts"
 TEXT_ENCODING = "utf-8"
 CORE_DISTANCE_FIGURE = "distribution_core_distance.png"
 
@@ -133,7 +134,8 @@ def test_distribution_suppression_covers_overall_and_telescope_types(
     names = {call.args[2] for call in save.call_args_list}
     statistics = json.loads(path.read_text(encoding=TEXT_ENCODING))[PLOT_STATISTICS_KEY]
     if report_mode == COMPACT_REPORT:
-        assert statistics == {}
+        assert statistics
+        assert BASELINE_COUNTS_KEY not in path.read_text(encoding=TEXT_ENCODING)
     recorded_names = {call.args[1] for call in record.call_args_list}
     for quantity in (ENERGY, ANGULAR_DISTANCE):
         variants = ("", "_cumulative") if quantity == ANGULAR_DISTANCE else ("",)
@@ -213,10 +215,15 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         stats_payload[PLOT_STATISTICS_KEY]["trigger_multiplicity"]["comparisons"][0]["metric"]
         == "wasserstein"
     )
+    assert stats_payload[PLOT_STATISTICS_KEY]["trigger_multiplicity"]["comparisons"][0][
+        "normalized_value"
+    ] == pytest.approx(0.0)
     assert (
         stats_payload[PLOT_STATISTICS_KEY]["trigger_combination"]["comparisons"][0]["metric"]
         == "jensen_shannon"
     )
+    participation = stats_payload[PLOT_STATISTICS_KEY]["telescope_participation_fraction_LSTN"]
+    assert participation["comparisons"][0]["value"] == pytest.approx(0.0)
 
 
 def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
@@ -248,7 +255,11 @@ def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory
 
     assert (output_path / "comparison-report.pdf").is_file()
     assert statistics_file.is_file()
-    assert len(statistics_file.read_text(encoding=TEXT_ENCODING).splitlines()) <= 20
+    compact_text = statistics_file.read_text(encoding=TEXT_ENCODING)
+    compact_payload = json.loads(compact_text)
+    assert len(compact_text.splitlines()) < 1000
+    assert compact_payload[PLOT_STATISTICS_KEY]
+    assert BASELINE_COUNTS_KEY not in compact_text
     assert not list(output_path.glob("*.png"))
 
 

@@ -1,5 +1,6 @@
 """Compare trigger-histogram products from simulation productions."""
 
+import csv
 import json
 import logging
 from collections import Counter
@@ -62,9 +63,7 @@ def write_production_comparison(args_dict, output_directory):
         output_directory,
         array_layout_names,
     )
-    _write_comparison_summary(
-        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
-    )
+    _write_comparison_summary(statistics_files, output_directory)
 
 
 def _write_metadata_comparisons(args_dict, output_directory, array_layout_names):
@@ -131,9 +130,7 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
-    _write_comparison_summary(
-        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
-    )
+    _write_comparison_summary(statistics_files, output_directory)
 
 
 def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
@@ -288,28 +285,20 @@ def _format_configuration_value(value, quantity=None):
     return str(value)
 
 
-def _write_comparison_summary(statistics_files, output_directory, report_mode="diagnostic"):
+def _write_comparison_summary(statistics_files, output_directory):
     """Combine per-pair statistics into one summary and remove the individual files."""
     comparisons = []
     baseline = None
     comparison_sets = {}
     plot_statistics = {}
-    compact_report = report_mode == "compact"
+    compact_statistics = []
     for statistics_file in statistics_files:
         statistics = json.loads(statistics_file.read_text(encoding="utf-8"))
         baseline = _add_production_summary(baseline, statistics[BASELINE_KEY])
         comparison_sets = _add_comparison_sets(comparison_sets, statistics[COMPARISON_SETS_KEY])
-        if not compact_report:
-            comparison, pair_name, array_layout = _comparison_summary_entry(
-                statistics_file, output_directory, statistics
-            )
-            comparisons.append(comparison)
-            plot_statistics.update(
-                {
-                    f"{pair_name}/{array_layout}/{name}": value
-                    for name, value in statistics[PLOT_STATISTICS_KEY].items()
-                }
-            )
+        compact_statistics.extend(
+            _compact_statistic_rows(statistics_file, output_directory, statistics)
+        )
         statistics_file.unlink()
         _remove_empty_comparison_directories(statistics_file.parent, output_directory)
 
@@ -329,6 +318,97 @@ def _write_comparison_summary(statistics_files, output_directory, report_mode="d
     (output_directory / "comparison_statistics.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    _write_compact_statistics_csv(compact_statistics, output_directory)
+
+
+def _compact_statistic_rows(statistics_file, output_directory, statistics):
+    """Extract scalar comparison results while excluding histogram arrays."""
+    path_parts = statistics_file.relative_to(output_directory).parts
+    pair = path_parts[0] if len(path_parts) > 2 else ""
+    array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
+    rows = []
+    for plot_name, plot_statistics in statistics[PLOT_STATISTICS_KEY].items():
+        scope, telescope_type = _statistic_scope(plot_name)
+        for comparison in plot_statistics.get("comparisons", []):
+            for population in ("simulated", "triggered"):
+                result = comparison.get(population)
+                if result is None:
+                    continue
+                rows.append(
+                    _compact_statistic_row(
+                        pair, array_layout, plot_name, scope, telescope_type, population, result
+                    )
+                )
+            if "value" in comparison:
+                rows.append(
+                    _compact_statistic_row(
+                        pair,
+                        array_layout,
+                        plot_name,
+                        scope,
+                        telescope_type,
+                        "triggered",
+                        comparison,
+                    )
+                )
+    return rows
+
+
+def _statistic_scope(plot_name):
+    """Map a plot name to whole-array or telescope-type scope."""
+    suffix = plot_name.rsplit("_", 1)[-1]
+    return (
+        ("telescope_type", suffix)
+        if suffix.startswith(("LST", "MST", "SST"))
+        else ("whole_array", "")
+    )
+
+
+def _compact_statistic_row(
+    pair, array_layout, plot_name, scope, telescope_type, population, result
+):
+    """Build one scalar result row for machine-readable acceptance checks."""
+    return {
+        "pair": pair,
+        "array_layout": array_layout,
+        "plot": plot_name,
+        "scope": scope,
+        "telescope_type": telescope_type,
+        "population": population,
+        "metric": result.get("metric"),
+        "value": result.get("value"),
+        "normalized_value": result.get("normalized_value"),
+        "valid": result.get("valid"),
+        "reason": result.get("reason"),
+        "baseline_count": result.get("baseline_total"),
+        "candidate_count": result.get("candidate_total"),
+    }
+
+
+def _write_compact_statistics_csv(rows, output_directory):
+    """Write scalar comparison results without count arrays or expanded JSON."""
+    fields = [
+        "pair",
+        "array_layout",
+        "plot",
+        "scope",
+        "telescope_type",
+        "population",
+        "metric",
+        "value",
+        "normalized_value",
+        "valid",
+        "reason",
+        "baseline_count",
+        "candidate_count",
+    ]
+    output_directory.mkdir(parents=True, exist_ok=True)
+    with (output_directory / "comparison_metrics.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def _remove_empty_comparison_directories(directory, output_directory):
@@ -339,24 +419,6 @@ def _remove_empty_comparison_directories(directory, output_directory):
         except OSError:
             break
         directory = directory.parent
-
-
-def _comparison_summary_entry(statistics_file, output_directory, statistics):
-    """Build one detailed comparison entry for a diagnostic report."""
-    path_parts = statistics_file.relative_to(output_directory).parts
-    pair_name = path_parts[0] if len(path_parts) > 2 else ""
-    array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
-    if array_layout == statistics_file.name:
-        array_layout = ""
-    return (
-        {
-            "pair": pair_name,
-            "array_layout": array_layout,
-            "statistics": statistics,
-        },
-        pair_name,
-        array_layout,
-    )
 
 
 def _add_comparison_sets(comparison_sets, productions):

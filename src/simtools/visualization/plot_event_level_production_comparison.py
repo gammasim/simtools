@@ -29,6 +29,20 @@ DIAGNOSTIC_REPORT = "diagnostic"
 QUANTITY_NAME_KEY = "quantity_name"
 CUMULATIVE_KEY = "cumulative"
 VALUE_KEY = "value"
+_COMPACT_STATISTIC_FIELDS = (
+    "metric",
+    "value",
+    "normalized_value",
+    "valid",
+    "reason",
+    "pvalue",
+    "ks_statistic",
+    "ks_pvalue",
+    "jensen_shannon_distance",
+    "wasserstein_distance",
+    "baseline_total",
+    "candidate_total",
+)
 
 _logger = logging.getLogger(__name__)
 _COMPACT_FIGURES = ContextVar("event_comparison_compact_figures", default=None)
@@ -106,6 +120,8 @@ def plot(
                 plot_function(metrics_per_production, output_path, figure_format=figure_format),
             )
 
+        _record_telescope_type_participation(comparison_statistics, metrics_per_production)
+
         _plot_quantity_comparisons(
             metrics_per_production,
             output_path,
@@ -125,9 +141,51 @@ def plot(
             suppressed_distributions,
         )
 
-    if report_mode == COMPACT_REPORT:
-        comparison_statistics[PLOT_STATISTICS_KEY] = {}
+    comparison_statistics[PLOT_STATISTICS_KEY] = _compact_plot_statistics(
+        comparison_statistics[PLOT_STATISTICS_KEY]
+    )
     return _write_comparison_statistics_json(comparison_statistics, output_path)
+
+
+def _compact_plot_statistics(plot_statistics):
+    """Keep scalar statistics for compact output and omit arrays and categories."""
+    compact = {}
+    for plot_name, statistics in plot_statistics.items():
+        item = {
+            key: statistics[key]
+            for key in (
+                "plot_name",
+                "baseline_label",
+                "metric_type",
+                "metric",
+                QUANTITY_NAME_KEY,
+                CUMULATIVE_KEY,
+            )
+            if key in statistics
+        }
+        item["comparisons"] = [
+            _compact_comparison_statistics(comparison)
+            for comparison in statistics.get("comparisons", [])
+        ]
+        compact[plot_name] = item
+    return compact
+
+
+def _compact_comparison_statistics(comparison):
+    """Retain labels and scalar metric fields from one pair comparison."""
+    compact = {key: value for key, value in comparison.items() if key == "candidate_label"}
+    for population in ("simulated", "triggered"):
+        if population in comparison:
+            compact[population] = {
+                key: comparison[population][key]
+                for key in _COMPACT_STATISTIC_FIELDS
+                if key in comparison[population]
+            }
+    if "metric" in comparison:
+        compact.update(
+            {key: comparison[key] for key in _COMPACT_STATISTIC_FIELDS if key in comparison}
+        )
+    return compact
 
 
 @contextmanager
@@ -933,6 +991,41 @@ def _plot_telescope_participation(metrics_per_production, output_path, figure_fo
     return statistics
 
 
+def _record_telescope_type_participation(comparison_statistics, metrics_per_production):
+    """Record participation-fraction comparisons for each telescope type."""
+    telescope_names = sorted(
+        {
+            telescope
+            for metrics in metrics_per_production
+            for telescope in metrics.telescope_participation
+        }
+    )
+    telescope_types = sorted(
+        {names.get_array_element_type_from_name(telescope) for telescope in telescope_names}
+    )
+    for telescope_type in telescope_types:
+        categories = [
+            telescope
+            for telescope in telescope_names
+            if names.get_array_element_type_from_name(telescope) == telescope_type
+        ]
+        counts_per_label = {
+            metrics.label: np.asarray(
+                [metrics.telescope_participation.get(telescope, 0) for telescope in categories],
+                dtype=float,
+            )
+            for metrics in metrics_per_production
+        }
+        statistics = _build_aligned_count_statistics(
+            metrics_per_production,
+            counts_per_label,
+            metadata={"category_count": len(categories)},
+            metric="jensen_shannon",
+        )
+        statistics["plot_name"] = f"telescope_participation_fraction_{telescope_type}"
+        _record_plot_statistics(comparison_statistics, statistics["plot_name"], statistics)
+
+
 def _build_aligned_count_statistics(
     metrics_per_production,
     counts_per_label,
@@ -967,9 +1060,24 @@ def _build_aligned_count_statistics(
         result = {
             **result,
             "candidate_label": metrics.label,
+            "baseline_total": float(np.sum(baseline_counts)),
+            "candidate_total": float(np.sum(candidate_counts)),
             "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
             "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
         }
+        if metric == "wasserstein" and metadata.get("bin_edges") and result.get("valid"):
+            centers = 0.5 * (
+                np.asarray(metadata["bin_edges"], dtype=float)[:-1]
+                + np.asarray(metadata["bin_edges"], dtype=float)[1:]
+            )
+            pooled_counts = np.asarray(baseline_counts) + np.asarray(candidate_counts)
+            pooled_total = float(np.sum(pooled_counts))
+            pooled_mean = (
+                float(np.average(centers, weights=pooled_counts)) if pooled_total > 0 else 0.0
+            )
+            result["normalized_value"] = (
+                float(result["value"]) / pooled_mean if pooled_mean > 0 else None
+            )
         stats_summary["comparisons"].append(result)
     return stats_summary
 
@@ -1024,11 +1132,14 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     """Compare either raw sample arrays or pre-binned count arrays."""
     sample_key = f"{event_kind}_samples"
     if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
-        return compare_samples_with_statistics(
+        result = compare_samples_with_statistics(
             baseline_data[sample_key],
             candidate_data[sample_key],
             baseline_data["bin_edges"],
         )
+        result["baseline_total"] = len(baseline_data[sample_key])
+        result["candidate_total"] = len(candidate_data[sample_key])
+        return result
     result = compare_histogram_counts(
         baseline_data[event_kind],
         candidate_data[event_kind],
@@ -1037,6 +1148,8 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=int).tolist()
     result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=int).tolist()
     result["bin_edges"] = np.asarray(baseline_data["bin_edges"], dtype=float).tolist()
+    result["baseline_total"] = float(np.sum(baseline_data[event_kind]))
+    result["candidate_total"] = float(np.sum(candidate_data[event_kind]))
     return result
 
 
