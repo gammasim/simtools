@@ -108,6 +108,9 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
 ## Tests And CI
 
 - Plain pytest functions cover meaningful success/error/boundary behavior.
+  Add a specific `match` pattern to `pytest.raises` when the exception type is
+  broad (for example, `ValueError` or `RuntimeError`), so the test verifies the
+  expected failure rather than only that some failure occurred.
   Changed library coverage targets >=90% lines/branches, preferably >=95%;
   inspect/explain gaps without weakening gates.
 - Each library module requires mirrored `test_<module>.py`, except `__init__.py`,

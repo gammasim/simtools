@@ -116,7 +116,7 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     assert submit_values["container_target_dir"] == "/simtools-run"
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert Path(tmp_test_directory).resolve().parent.as_posix() in bind_paths
-    assert Path.cwd().resolve().as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() not in bind_paths
 
 
 def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_directory):
@@ -140,7 +140,7 @@ def test_htcondor_uses_container_simtools_without_submitter_pythonpath(tmp_test_
 
 
 def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
-    """Container jobs retain the submitter working directory and bind it."""
+    """Container jobs retain the submitter working directory without binding it twice."""
     work_dir = Path(tmp_test_directory) / "work"
     working_directory = Path.cwd().resolve()
     job = JobSpec("job-000000", 0, command=("echo", "ok"))
@@ -155,7 +155,33 @@ def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test
 
     assert submit_values["initialdir"] == str(working_directory)
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"]
-    assert str(working_directory) in bind_paths.split(",")
+    assert str(working_directory) not in bind_paths.split(",")
+
+
+def test_htcondor_excludes_implicit_working_directory_from_configured_binds(tmp_test_directory):
+    """The starter's working-directory mount is not repeated by the job environment."""
+    root = Path(tmp_test_directory)
+    working_directory = root / "submit"
+    other_bind = root.parent / f"{root.name}-inputs"
+    environment_file = root / "environment"
+    environment_file.write_text(
+        f"APPTAINER_BINDPATH={working_directory},{other_bind},{working_directory}\n",
+        encoding="utf-8",
+    )
+    job = JobSpec("job-000000", 0, command=("echo", "ok"), mount_paths=(working_directory,))
+
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {"container_image": "/shared/simtools.sif", "environment_file": environment_file},
+        [job],
+        root / "work",
+        root / "scheduler.log",
+        working_directory,
+    )
+
+    bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
+    assert str(working_directory) not in bind_paths
+    assert str(other_bind) in bind_paths
+    assert len(bind_paths) == len(set(bind_paths))
 
 
 def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
@@ -173,7 +199,7 @@ def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
 
     bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert work_dir.resolve().parent.as_posix() in bind_paths
-    assert Path.cwd().resolve().as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() not in bind_paths
 
 
 def test_htcondor_rewrites_controller_python_in_container_commands():

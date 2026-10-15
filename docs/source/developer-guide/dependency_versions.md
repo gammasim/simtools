@@ -106,7 +106,8 @@ the catalog remains the fallback for the model ref.
 ## CI repository branches
 
 Test CI selects the `simulation-models` and `simtools-tests` branches independently of the
-catalog's release refs. Both default to `main`, including release and release-candidate runs.
+catalog's release refs. These workflows default to `main`, including published release runs;
+the test-resource branch remains independently selected.
 Manual unit, integration, benchmark, and production-image test workflows accept
 `simulation_model_branch` and `simtools_tests_branch`. The reusable integration workflow accepts
 the same inputs, and its callers forward both selections.
@@ -132,3 +133,36 @@ fallback when no bundled catalog exists.
 Set `SIMTOOLS_DEPENDENCY_VERSIONS` to explicitly select another catalog, including a mounted host
 catalog. A missing override file raises an error. An explicit `start_path` passed to
 `find_dependency_versions` searches that directory and its parents before bundled catalogs.
+
+## Supported model releases
+
+Starting with schema `0.8.0`, the model dependency declares a supported range:
+
+```yaml
+model-repository:
+  name: CTAO-Simulation-Model
+  default-ref: v0.18.0
+  compatible-versions: "==0.18.0"
+```
+
+`default-ref` selects the recommended release. `compatible-versions` restricts
+accepted releases using Python packaging version specifiers, for example
+`>=0.18.0,<0.19.0`. The stable default must satisfy the range. Expand a range
+only after checking compatibility with the releases it admits.
+
+Catalogs without a range accept only their declared default. This allows a newer
+submission controller to check historical images: simtools v0.37.0 accepts models
+v0.17.1 and rejects v0.17.2. The controller reads the selected image's bundled
+catalog, independently of its own version. Existing images remain unchanged.
+
+Select a Git checkout at an exact stable release tag with
+`--simulation_models_path /path/to/simulation-models`. The check reads Git metadata
+without switching the checkout. Filesystem selections forward only the model path
+to workers. This version check does not verify local edits or model contents.
+Directories without Git release metadata cannot be checked.
+
+Normal output reports the target simtools version, model release and path, allowed
+range, and the reason for rejection. Science-test results also record this decision,
+including dry runs. Direct simulations check against the running installation's
+catalog before loading models. Existing `--test` mode permits development inputs
+with a warning; those inputs are not qualified production releases.

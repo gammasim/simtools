@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import jsonschema
@@ -209,6 +210,12 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
         workflow = science_test_definitions._load_yaml(template / "workflow.yml")
         workflow["runtime_environment"] = {"container_engine": "apptainer", "image": "inline.sif"}
         _write_yaml(template / "workflow.yml", workflow)
+    preview_images = []
+    monkeypatch.setattr(
+        science_test_execution,
+        "_preview",
+        lambda args, image: preview_images.append(image) or {},
+    )
     captured = []
     prepare = science_test_execution.prepare_workflow
 
@@ -237,6 +244,8 @@ def test_run_test_uses_shared_runtime(campaign, monkeypatch, produces_production
     elif not produces_production:
         expected = {"container_engine": "apptainer", "image": "/images/shared.sif"}
     assert captured == [expected]
+    if produces_production:
+        assert preview_images == ["inline.sif" if inline else "/images/shared.sif"]
 
 
 def test_named_artifacts_on_rerun(campaign, successful_workflow, monkeypatch):
@@ -366,6 +375,66 @@ def test_submission_does_not_validate_completed_production(mocker):
     result = science_test_execution._execute_test_workflow({"produces_production": True}, {}, {})
     assert result["status"] == result["execution"] == "submitted"
     run.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("source", "inactive_environment"),
+    [
+        ({"simulation_models_git_path": "/models.git"}, "SIMTOOLS_SIMULATION_MODELS_PATH"),
+        ({"simulation_models_path": "/models"}, "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"),
+    ],
+)
+def test_execution_hides_inactive_model_source_environment(
+    source, inactive_environment, monkeypatch, mocker
+):
+    monkeypatch.setenv(inactive_environment, "/inherited")
+    observed = []
+    mocker.patch.object(
+        science_test_execution,
+        "run_applications",
+        side_effect=lambda *_args, **_kwargs: observed.append(os.environ[inactive_environment]),
+    )
+    mocker.patch.object(
+        science_test_execution, "_evaluate_products", return_value={"status": "pass"}
+    )
+    science_test_execution._execute_test_workflow({}, source, {})
+    assert observed == [""]
+    assert os.environ[inactive_environment] == "/inherited"
+
+
+def test_execution_restores_absent_model_source_environment_after_failure(monkeypatch, mocker):
+    inactive = "SIMTOOLS_SIMULATION_MODELS_PATH"
+    monkeypatch.delenv(inactive, raising=False)
+
+    def fail(*_args, **_kwargs):
+        assert os.environ[inactive] == ""
+        raise RuntimeError("application failed")
+
+    mocker.patch.object(science_test_execution, "run_applications", side_effect=fail)
+    with pytest.raises(RuntimeError, match="application failed"):
+        science_test_execution._execute_test_workflow(
+            {}, {"simulation_models_git_path": "/models.git"}, {}
+        )
+    assert inactive not in os.environ
+
+
+def test_execution_preserves_model_source_environment_when_no_source_is_selected(
+    monkeypatch, mocker
+):
+    variable = "SIMTOOLS_SIMULATION_MODELS_PATH"
+    monkeypatch.setenv(variable, "/inherited")
+    observed = []
+    mocker.patch.object(
+        science_test_execution,
+        "run_applications",
+        side_effect=lambda *_args, **_kwargs: observed.append(os.environ[variable]),
+    )
+    mocker.patch.object(science_test_execution, "_evaluate_products", return_value={})
+
+    science_test_execution._execute_test_workflow({}, {}, {})
+
+    assert observed == ["/inherited"]
+    assert os.environ[variable] == "/inherited"
 
 
 def test_pending_collection_defers_dependent_tests(mocker):
