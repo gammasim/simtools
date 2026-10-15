@@ -303,10 +303,8 @@ def _format_configuration_value(value, quantity=None):
 
 def _write_comparison_summary(statistics_files, output_directory, report_pages=None):
     """Combine per-pair statistics into one summary and remove the individual files."""
-    comparisons = []
     baseline = None
     comparison_sets = {}
-    plot_statistics = {}
     compact_statistics = []
     for statistics_file in statistics_files:
         statistics = json.loads(statistics_file.read_text(encoding="utf-8"))
@@ -332,8 +330,8 @@ def _write_comparison_summary(statistics_files, output_directory, report_pages=N
             "triggered_event_count": 0,
         },
         COMPARISON_SETS_KEY: list(comparison_sets.values()),
-        PLOT_STATISTICS_KEY: plot_statistics,
-        COMPARISONS_KEY: comparisons,
+        PLOT_STATISTICS_KEY: {},
+        COMPARISONS_KEY: [],
     }
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "comparison_statistics.json").write_text(
