@@ -150,6 +150,11 @@ def test_build_command_combinations(command, config, runtime_env, expected):
     assert result == expected
 
 
+def test_build_command_omits_empty_comparison_fields():
+    command = "simtools-compare-productions"
+    assert jm._build_command(command, {"compare_by": []}) == [command]
+
+
 def test_build_command_with_script_file(tmp_path):
     script_file = tmp_path / "test_script.sh"
     script_file.write_text("#!/bin/bash\necho test")

@@ -44,7 +44,7 @@ def test_missing_product_is_recorded(campaign, monkeypatch):
     assert failed["status"] == "incomplete"
 
 
-def test_acceptance_failure_has_completed_execution(campaign, successful_workflow):
+def test_acceptance_limit_is_a_warning_after_completed_execution(campaign, successful_workflow):
     _write_yaml(
         campaign["template_dir"] / "acceptance/thresholds.yml",
         {
@@ -62,12 +62,12 @@ def test_acceptance_failure_has_completed_execution(campaign, successful_workflo
             }
         },
     )
-    with pytest.raises(RuntimeError, match="Science tests failed"):
-        campaign_runner.run_release(**campaign, sites=["north"])
+    campaign_runner.run_release(**campaign, sites=["north"])
     summary = json.loads((campaign["release_dir"] / "reports/release-summary.json").read_text())
-    failed = next(r for r in summary["results"] if r["id"] == "compare.north")
-    assert failed["status"] == "fail"
-    assert failed["execution"] == "completed"
+    warned = next(r for r in summary["results"] if r["id"] == "compare.north")
+    assert warned["status"] == "warn"
+    assert warned["execution"] == "completed"
+    assert "Acceptance warning" in warned["reason"]
 
 
 def test_existing_submission_prevents_resubmission(tmp_test_directory):
@@ -96,6 +96,26 @@ def test_reuse_rejects_unrecorded_partial_output(tmp_test_directory):
     assert not science_test_execution._reuse_derived_product(
         definition, {}, args | {"science_overwrite": True}
     )
+
+
+def test_reused_products_keep_acceptance_breaches_as_warnings(tmp_test_directory, mocker):
+    output = Path(tmp_test_directory) / "derived"
+    output.mkdir()
+    (output / "trigger_histograms.hdf5").touch()
+    provenance = Path(tmp_test_directory) / "workflow.yml"
+    provenance.touch()
+    workflow = {"applications": [{"configuration": {"site": "North"}}]}
+    args = {"science_workflow": workflow, "provenance_path": str(provenance)}
+    mocker.patch.object(science_test_execution, "_load_yaml", return_value=workflow)
+    mocker.patch.object(science_test_execution, "_validate_derived_products")
+    mocker.patch.object(
+        science_test_execution,
+        "_evaluate_products",
+        side_effect=science_test_definitions._AcceptanceError("threshold exceeded"),
+    )
+
+    with pytest.raises(science_test_definitions._AcceptanceError, match="threshold exceeded"):
+        science_test_execution._reuse_derived_product({"derived_output": str(output)}, {}, args)
 
 
 @pytest.mark.parametrize(("writes_log", "raises"), [(False, False), (True, False), (True, True)])
