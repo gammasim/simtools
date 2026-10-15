@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCIENCE_TEST_SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.production_configuration.job_grid_io import read_job_grid
@@ -41,6 +41,7 @@ _ACCEPTANCE_VALUE_FORMAT = ".4g"
 
 _REPORT_PAGE_COLUMN = "report_page"
 
+_SITE_SCHEMA_FILE = "site.schema.yml"
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
@@ -127,6 +128,7 @@ def _load_suites(release_dir, release, catalogue, template_dir=None):
         if not isinstance(site, str) or not _VALID_NAME.fullmatch(site):
             raise ValueError(f"Invalid site name: {site!r}")
         suite = _load_site_suite(release_dir, template_dir, site)
+        _validate_science_test_config(suite, _SITE_SCHEMA_FILE)
         _validate_site_suite(site, suite, catalogue)
         suites[site] = suite
     return suites
@@ -429,10 +431,16 @@ def _campaign_signature(
 
 def _load_acceptance(release_dir, template_dir):
     """Load the shared acceptance contracts and reject unsupported overrides."""
-    products = _load_yaml(template_dir / "acceptance" / "expected-products.yml").get("tests")
-    rules = _load_yaml(template_dir / "acceptance" / "thresholds.yml").get("rules")
+    product_contract = _load_yaml(template_dir / "acceptance" / "expected-products.yml")
+    threshold_contract = _load_yaml(template_dir / "acceptance" / "thresholds.yml")
+    _validate_science_test_config(product_contract, "expected_products.schema.yml")
+    _validate_science_test_config(threshold_contract, "thresholds.schema.yml")
+    products = product_contract.get("tests")
+    rules = threshold_contract.get("rules")
     if not isinstance(products, dict) or not isinstance(rules, dict):
         raise ValueError("Expected products and acceptance rules must be mappings.")
+    for rule_id, rule in rules.items():
+        _validate_rule(rule, rule_id)
     overrides = release_dir / "acceptance" / "overrides.yml"
     if overrides.is_file() and _load_yaml(overrides).get("overrides"):
         raise ValueError(
@@ -625,6 +633,7 @@ def _load_catalogue(release, release_dir, template_dir):
     if not path.is_absolute():
         path = (release_dir / path).resolve()
     data = _load_yaml(path)
+    _validate_science_test_config(data, "catalogue.schema.yml")
     catalogue = data.get("tests", data)
     if not isinstance(catalogue, dict) or not catalogue:
         raise ValueError("Science-test catalogue must be a non-empty mapping.")
@@ -683,6 +692,7 @@ def _load_context(context_file):
     if context_file is None:
         return {}
     context = _load_yaml(Path(context_file))
+    _validate_science_test_config(context, "context.schema.yml")
     placeholder = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
     if not any(isinstance(value, str) and placeholder in value for value in context.values()):
         return context
@@ -693,6 +703,15 @@ def _load_context(context_file):
             f"before loading {context_file}."
         )
     return replace_placeholders_recursively(context, {placeholder: str(Path(storage_root))})
+
+
+def _validate_science_test_config(configuration, schema_file):
+    """Validate one science-test configuration against its packaged schema."""
+    schema.validate_dict_using_schema(
+        configuration,
+        schema_file=SCIENCE_TEST_SCHEMA_PATH / schema_file,
+        offline=True,
+    )
 
 
 def _load_yaml(path):

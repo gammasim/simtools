@@ -24,6 +24,7 @@ from simtools.science_tests.definitions import (
     _select,
     _test_definition,
     _validate_definition,
+    _validate_science_test_config,
     _validate_selected_context,
 )
 from simtools.science_tests.execution import _execute_selection, _run_test
@@ -47,6 +48,7 @@ def _prepare_release_run(
     """Load and validate the shared state required for a release run."""
     release_dir = Path(release_dir).resolve()
     release = _load_yaml(release_dir / _RELEASE_FILE_NAME)
+    _validate_science_test_config(release, "release.schema.yml")
     template_dir = _resolve_template_dir(release_dir, template_dir)
     catalogue = _load_catalogue(release, release_dir, template_dir)
     context = _load_context(context_file)
@@ -173,6 +175,12 @@ def run_release(
     )
     if not dry_run:
         _write_summary(run["release_dir"] / "reports", summary)
+    _raise_for_failures(results)
+    return summary
+
+
+def _raise_for_failures(results):
+    """Raise one actionable error when selected science tests did not complete."""
     failures = [
         result for result in results if result["status"] in {"fail", "incomplete", "blocked"}
     ]
@@ -182,7 +190,6 @@ def run_release(
             for result in failures
         )
         raise RuntimeError(f"Science tests failed: {details}")
-    return summary
 
 
 def _prepare_site_tests(run, site, allow_production, dry_run, run_id):

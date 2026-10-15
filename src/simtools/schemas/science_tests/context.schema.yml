@@ -1,0 +1,20 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ScienceTestContext'
+title: Science-test context
+description: External paths and model source settings for science-test campaigns.
+schema_version: 0.1.0
+schema_name: science_tests/context.schema
+type: object
+additionalProperties:
+  oneOf:
+    - type: string
+    - type: 'null'
+
+definitions:
+  ScienceTestContext:
+    type: object
+    additionalProperties:
+      oneOf:
+        - type: string
+        - type: 'null'
