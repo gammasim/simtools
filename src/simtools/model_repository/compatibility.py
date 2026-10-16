@@ -21,6 +21,7 @@ STATUS_KEY = "status"
 LEGACY_POLICY = "legacy exact-default fallback"
 CATALOG_POLICY = "target catalog range"
 DEVELOPMENT_STATUS = "development; not production-qualified"
+TAG_SELECTION_ERROR = "Tags at selected revision: {tags}. Required: exactly one stable release tag."
 
 
 def _contract(catalog):
@@ -67,7 +68,8 @@ def _validate(path, catalog, revision=None, development=False):
         ).stdout.splitlines()
         versions = {str(Version(tag)) for tag in tags if re.fullmatch(r"v?\d+\.\d+\.\d+", tag)}
         if len(versions) != 1:
-            raise ValueError("Select a checkout at one unambiguous stable release tag.")
+            found_tags = ", ".join(tags) if tags else "none"
+            raise ValueError(TAG_SELECTION_ERROR.format(tags=found_tags))
         result[VERSION_KEY] = versions.pop()
         if not SpecifierSet(contract[ALLOWED_KEY]).contains(result[VERSION_KEY], prereleases=False):
             raise ValueError(

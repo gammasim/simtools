@@ -54,7 +54,7 @@ def test_missing_contract():
         models._contract({})
 
 
-@pytest.mark.parametrize("tags", ["main", "v0.17.1\nv0.17.2"])
+@pytest.mark.parametrize("tags", ["main", "v0.17.1\nv0.17.2", ""])
 @pytest.mark.parametrize("development", [False, True])
 def test_unknown_version(monkeypatch, tmp_test_directory, tags, development):
     monkeypatch.setattr(models.subprocess, "run", Mock(return_value=SimpleNamespace(stdout=tags)))
@@ -62,5 +62,8 @@ def test_unknown_version(monkeypatch, tmp_test_directory, tags, development):
         result = models._validate(tmp_test_directory, CATALOG, development=True)
         assert result[models.STATUS_KEY] == models.DEVELOPMENT_STATUS
     else:
-        with pytest.raises(ValueError, match="unambiguous stable release"):
+        with pytest.raises(ValueError, match="Tags at selected revision") as error:
             models._validate(tmp_test_directory, CATALOG)
+        found_tags = ", ".join(tags.splitlines()) if tags else "none"
+        assert f"Tags at selected revision: {found_tags}." in str(error.value)
+        assert "Required: exactly one stable release tag. Allowed ==0.17.1" in str(error.value)
