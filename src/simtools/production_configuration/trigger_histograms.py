@@ -1216,10 +1216,7 @@ def _validate_derived_group(group, product, configuration):
     if len(output_files) != 1:
         raise ValueError("Expected one histogram per configuration")
     output = product.directory / output_files[0]
-    try:
-        metadata, bins = load_trigger_histograms(output)
-    except (OSError, ValueError, IORegistryError) as exc:
-        raise ValueError(f"Unreadable trigger histogram: {output}") from exc
+    except (KeyError, OSError, ValueError, IORegistryError) as exc:
     if not metadata or not bins:
         raise ValueError("Empty trigger histogram")
     if any(path.stat().st_mtime_ns > output.stat().st_mtime_ns for path in group.file_paths):
