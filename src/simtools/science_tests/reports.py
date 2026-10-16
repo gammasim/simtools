@@ -115,7 +115,8 @@ def _write_test_report(work, report_root, release_dir, result):
         return
     result[_REPORT] = report
     warnings = result.pop("acceptance_warnings", [])
-    if warnings:
+    if not warnings:
+        (work / "acceptance.md").unlink(missing_ok=True)
         work.mkdir(parents=True, exist_ok=True)
         lines = ["# Acceptance deviations", ""]
         for warning in warnings:
