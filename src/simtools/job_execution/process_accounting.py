@@ -176,12 +176,9 @@ def _start_process(command, log_file, input_file, env):
         if log_file:
             log_path = Path(log_file)
             log_path.parent.mkdir(parents=True, exist_ok=True)
-            if log_path.name.endswith(_STDOUT_LOG_SUFFIX):
-                error_path = log_path.with_name(
-                    log_path.name.removesuffix(_STDOUT_LOG_SUFFIX) + _STDERR_LOG_SUFFIX
-                )
-            else:
-                error_path = log_path.with_name(log_path.name + _STDERR_LOG_SUFFIX)
+            error_path = log_path.with_name(
+                log_path.name.removesuffix(_STDOUT_LOG_SUFFIX) + _STDERR_LOG_SUFFIX
+            )
             for path in (log_path, error_path):
                 log_writer = gzip.open(path, "wb")  # pylint: disable=consider-using-with
                 opened_files.append(log_writer)
