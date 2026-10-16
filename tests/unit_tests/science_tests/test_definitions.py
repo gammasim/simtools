@@ -164,7 +164,10 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
     report = Path(tmp_test_directory)
     metrics_file = report / "comparison_metrics.csv"
     metrics_file.write_text(
-        f"plot,scope,metric,value,normalized_value,valid,reason,baseline_count,candidate_count,{_REPORT_PAGE_COLUMN}\ndistribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\ndistribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n",
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n"
         encoding=_ENCODING,
     )
     metric = {
