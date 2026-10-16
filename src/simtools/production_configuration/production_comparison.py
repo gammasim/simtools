@@ -669,7 +669,7 @@ def _validate_comparison_inputs(applications, production_paths):
     """Check source coverage and freshness before trigger-product comparisons."""
     if not any(
         application.get("application") == "simtools-compare-productions"
-        and application.get(_CONFIGURATION_KEY, {}).get("comparison_level") == "events"
+        and application.get(_CONFIGURATION_KEY, {}).get("comparison_level", "events") == "events"
         for application in applications
     ):
         return
