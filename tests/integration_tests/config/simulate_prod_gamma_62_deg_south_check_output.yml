@@ -58,6 +58,12 @@ applications:
     - path_descriptor: grid_output_path
       file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.log.gz
     - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.err.gz
+    - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.corsika.log.gz
+    - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.corsika.err.gz
+    - path_descriptor: grid_output_path
       file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.hdata.zst
     - path_descriptor: grid_output_path
       file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.zst
