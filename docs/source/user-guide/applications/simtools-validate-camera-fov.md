@@ -52,6 +52,40 @@ Expected final print-out message:
 
 ## Command line arguments
 
+To highlight trigger patches, select their model group IDs:
+
+```console
+simtools-validate-camera-fov --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_patches 0 1 2
+```
+
+The plot contains a full-camera overview and a close-up labelled with the selected
+pixels' IDs. Patch colours distinguish membership; striped pixels belong to more
+than one selected patch, retaining each patch's colour. The legend identifies each
+combination. IDs refer
+to `group_id` in the model's `camera_trigger_groups` table, not pixel IDs. Select
+fewer patches by providing fewer IDs. Omitting `--trigger_patches` keeps the
+ordinary camera layout when `--trigger_pixel` is also omitted. In the selected-patch view,
+only the close-up labels
+pixels; `--print_pixels_id` controls the ordinary layout.
+
+The maximum number of selected patches is the largest number of distinct patches
+containing any one pixel in the selected model. For `LSTN-design` model 7.0.0 this
+is six. For example, show all six patches containing pixel 0 with
+`--trigger_patches 0 3 4 33 34 35`. The selected patches need not share a pixel;
+the membership count sets the plotting limit.
+
+Alternatively, select every patch containing a given pixel automatically:
+
+```console
+simtools-validate-camera-fov --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_pixel 75
+```
+
+`--trigger_pixel` accepts a model pixel ID, including zero, and cannot be combined
+with `--trigger_patches`. The selected patch IDs are logged. Unknown pixels and
+pixels without trigger-group membership are rejected.
+
 ```{eval-rst}
 .. simtools-cli-help::
    :application: validate_camera_fov

@@ -4,28 +4,53 @@ applications:
   docs:
     title: Inspect LST trigger mapping with sim_telarray
     summary: >-
-      Generate LED combinations from the exported LST camera and inspect their
-      sim_telarray camera displays in PostScript.
+      Sample central LST groups, compare complete model and simulator memberships,
+      and retain every triggered and non-triggered trial in a compact report.
   configuration:
     site: North
     telescope: LSTN-01
     model_version: 7.0.0
     output_path: simtools-output
-    required_pixels: 1
+    required_pixels: 2
+    max_events: 8
+    max_pixel_radius: 0.2
     events_per_combination: 1
     run_number: 1
   integration_tests:
   - test_outputs:
-    - file: trigger-patches-LSTN-01-run1.ps
+    - file: trigger-patches-LSTN-01-run1.pdf
       path_descriptor: output_path
-      validations:
-      - type: log
-        expected:
-          pattern:
-          - "%%Page:"
     - file: trigger-patches-LSTN-01-run1.simtel.gz
       path_descriptor: output_path
     - file: trigger-patches-LSTN-01-run1.iact.gz
+      path_descriptor: output_path
+    - file: trigger-patches-LSTN-01-run1.events.ecsv
+      path_descriptor: output_path
+      validations:
+      - type: table
+        minimum_rows: 1
+        unique_columns: [event_number]
+        columns:
+          event_number:
+            range:
+              minimum: 1
+              maximum: 8
+          state:
+            allowed_values: [triggered, non_triggered]
+          mapping_status:
+            allowed_values: [consistent, inconclusive]
+    - file: trigger-patches-LSTN-01-run1.groups.ecsv
+      path_descriptor: output_path
+      validations:
+      - type: table
+        minimum_rows: 1
+        unique_columns: [group_id]
+        columns:
+          header_match:
+            allowed_values: [true]
+          model_match:
+            allowed_values: [match]
+    - file: trigger-patches-LSTN-01-run1.summary.json
       path_descriptor: output_path
     - file: trigger-patches-LSTN-01-run1.pixled.stdout.log
       path_descriptor: output_path

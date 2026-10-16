@@ -10,6 +10,24 @@ from astropy.table import QTable
 import simtools.simtel.simtel_file_writer as simtel_file_writer
 import simtools.simtel.table_serializers as table_serializers
 
+ANALOGSUM = "analogsum"
+CAMERA_DAT = "camera.dat"
+DIGITALSUM = "digitalsum"
+FIRST_PIXEL = "first pixel"
+GROUP_ID = "group_id"
+MAJORITY = "majority"
+MEMBER_ORDER = "member_order"
+MESSAGE = "message"
+MULTIPLICITY = "multiplicity"
+PIXEL_ID = "pixel_id"
+PIXEL_ORDER = "pixel_order"
+PIXELS = "pixels"
+REQUIRED = "required"
+TRIGGER_MEMBERS = "trigger_members"
+TRIGGERS = "triggers"
+USE_DEFAULT_MULTIPLICITY = "use_default_multiplicity"
+UTF_8 = "utf-8"
+
 
 def _camera_configuration():
     """Return a minimal complete camera configuration."""
@@ -27,9 +45,9 @@ def _camera_configuration():
                 "funnel_wall_reflectivity": 0.8,
             }
         ],
-        "pixels": [
+        PIXELS: [
             {
-                "pixel_id": 0,
+                PIXEL_ID: 0,
                 "type_id": 1,
                 "x_cm": 0,
                 "y_cm": 0,
@@ -46,8 +64,8 @@ def _camera_configuration():
                 "normal_y": 0,
             }
         ],
-        "triggers": [],
-        "trigger_members": [],
+        TRIGGERS: [],
+        TRIGGER_MEMBERS: [],
     }
 
 
@@ -75,7 +93,7 @@ def test_write_ecsv_table_uses_explicit_filename(tmp_test_directory):
     )
 
     assert result == "pulse.dat"
-    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / result).read_text(encoding=UTF_8).splitlines() == [
         "0.0 0.0",
         "1.0 1.0",
     ]
@@ -115,7 +133,7 @@ def test_write_rpol_table_uses_reflectivity_column(tmp_test_directory):
         ),
     )
 
-    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / result).read_text(encoding=UTF_8).splitlines() == [
         "#@RPOL@[ANGLE=] 2",
         "ANGLE= 0.0 10.0",
         "300.0 0.8 0.7",
@@ -139,7 +157,7 @@ def test_write_rpol_table_preserves_one_dimensional_table(tmp_test_directory):
         ),
     )
 
-    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / result).read_text(encoding=UTF_8).splitlines() == [
         "300.0 0.8",
         "400.0 0.9",
     ]
@@ -168,7 +186,7 @@ def test_write_atmospheric_transmission_groups_rows_by_wavelength(tmp_test_direc
         ),
     )
 
-    assert (tmp_test_directory / result).read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / result).read_text(encoding=UTF_8).splitlines() == [
         "# H2= 1.5, H1= 1.0 2.0",
         "300.0 0.1 0.2",
         "400.0 0.3 0.4",
@@ -196,7 +214,7 @@ def test_write_atmospheric_transmission_writes_opaque_sparse_cells(tmp_test_dire
             float_format=".1f",
         ),
     )
-    assert (tmp_test_directory / "table.dat").read_text(encoding="utf-8").splitlines() == [
+    assert (tmp_test_directory / "table.dat").read_text(encoding=UTF_8).splitlines() == [
         "# H1= 1.0 2.0",
         "300.0 0.1 99999.0",
         "400.0 0.3 0.4",
@@ -224,9 +242,9 @@ def test_write_simtel_table_is_invariant_to_input_row_order(tmp_test_directory):
         second, tmp_test_directory, contract=contract, output_name="second.dat"
     )
 
-    assert (tmp_test_directory / "first.dat").read_text(encoding="utf-8") == (
+    assert (tmp_test_directory / "first.dat").read_text(encoding=UTF_8) == (
         tmp_test_directory / "second.dat"
-    ).read_text(encoding="utf-8")
+    ).read_text(encoding=UTF_8)
 
 
 def test_validate_simtel_serialization_rejects_incomplete_matrix():
@@ -274,9 +292,9 @@ def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory
                 "lightguide_wavelength_file": "wavelength.dat",
             }
         ],
-        "pixels": [
+        PIXELS: [
             {
-                "pixel_id": 0,
+                PIXEL_ID: 0,
                 "type_id": 1,
                 "x_cm": 1.0,
                 "y_cm": 2.0,
@@ -293,7 +311,7 @@ def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory
                 "normal_y": -0.02,
             },
             {
-                "pixel_id": 1,
+                PIXEL_ID: 1,
                 "type_id": 1,
                 "x_cm": 3.0,
                 "y_cm": 4.0,
@@ -310,7 +328,7 @@ def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory
                 "normal_y": -0.02,
             },
             {
-                "pixel_id": 2,
+                PIXEL_ID: 2,
                 "type_id": 1,
                 "x_cm": 5.0,
                 "y_cm": 6.0,
@@ -327,25 +345,25 @@ def test_write_camera_file_preserves_pixel_fields_and_members(tmp_test_directory
                 "normal_y": -0.02,
             },
         ],
-        "triggers": [
+        TRIGGERS: [
             {
-                "group_id": 0,
-                "kind": "majority",
-                "use_default_multiplicity": 1,
-                "multiplicity": 0,
+                GROUP_ID: 0,
+                "kind": MAJORITY,
+                USE_DEFAULT_MULTIPLICITY: 1,
+                MULTIPLICITY: 0,
             }
         ],
-        "trigger_members": [
-            {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": 1},
-            {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 1, "required": 0},
-            {"group_id": 0, "member_order": 1, "pixel_order": 0, "pixel_id": 2, "required": 0},
+        TRIGGER_MEMBERS: [
+            {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0, REQUIRED: 1},
+            {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 1, PIXEL_ID: 1, REQUIRED: 0},
+            {GROUP_ID: 0, MEMBER_ORDER: 1, PIXEL_ORDER: 0, PIXEL_ID: 2, REQUIRED: 0},
         ],
     }
 
-    result = simtel_file_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
+    result = simtel_file_writer.write_camera_file(configuration, tmp_test_directory / CAMERA_DAT)
 
-    assert result == "camera.dat"
-    lines = (tmp_test_directory / result).read_text(encoding="utf-8").splitlines()
+    assert result == CAMERA_DAT
+    lines = (tmp_test_directory / result).read_text(encoding=UTF_8).splitlines()
     assert lines[1] == "Rotate 10.893"
     assert lines[2].endswith('"wavelength.dat"')
     assert lines[3].split() == [
@@ -383,9 +401,9 @@ def test_write_camera_file_rejects_invalid_trigger_and_module_id(tmp_test_direct
                 "lightguide_angle_file": "angle.dat",
             }
         ],
-        "pixels": [
+        PIXELS: [
             {
-                "pixel_id": 0,
+                PIXEL_ID: 0,
                 "type_id": 1,
                 "x_cm": 0,
                 "y_cm": 0,
@@ -402,37 +420,37 @@ def test_write_camera_file_rejects_invalid_trigger_and_module_id(tmp_test_direct
                 "normal_y": 0,
             }
         ],
-        "triggers": [],
-        "trigger_members": [],
+        TRIGGERS: [],
+        TRIGGER_MEMBERS: [],
     }
     with pytest.raises(ValueError, match="Invalid camera module ID"):
-        simtel_file_writer.write_camera_file(configuration, tmp_test_directory / "camera.dat")
+        simtel_file_writer.write_camera_file(configuration, tmp_test_directory / CAMERA_DAT)
 
 
 def test_write_camera_file_supports_transparency_and_rejects_unsafe_path(tmp_test_directory):
     configuration = _camera_configuration()
     result = simtel_file_writer.write_camera_file(
-        configuration, tmp_test_directory / "nested" / "camera.dat"
+        configuration, tmp_test_directory / "nested" / CAMERA_DAT
     )
-    assert "0.9 0.8" in (tmp_test_directory / "nested" / result).read_text(encoding="utf-8")
+    assert "0.9 0.8" in (tmp_test_directory / "nested" / result).read_text(encoding=UTF_8)
 
     with pytest.raises(ValueError, match="Unsafe camera configuration path"):
         simtel_file_writer.write_camera_file(
-            configuration, Path(tmp_test_directory).joinpath("..", "camera.dat")
+            configuration, Path(tmp_test_directory).joinpath("..", CAMERA_DAT)
         )
 
 
 @pytest.mark.parametrize(
-    ("mutation", "message"),
+    ("mutation", MESSAGE),
     [
         (lambda config: config.clear(), "requires pixel types"),
         (
             lambda config: config["pixel_types"].append(deepcopy(config["pixel_types"][0])),
             "type IDs",
         ),
-        (lambda config: config["pixels"][0].update(pixel_id=1), "contiguous"),
-        (lambda config: config["pixels"][0].update(enabled=0), "enabled pixel"),
-        (lambda config: config["pixels"][0].update(type_id=99), "unknown pixel type"),
+        (lambda config: config[PIXELS][0].update(pixel_id=1), "contiguous"),
+        (lambda config: config[PIXELS][0].update(enabled=0), "enabled pixel"),
+        (lambda config: config[PIXELS][0].update(type_id=99), "unknown pixel type"),
     ],
 )
 def test_camera_validation_rejects_invalid_components(mutation, message):
@@ -453,15 +471,13 @@ def test_camera_validation_requires_resolved_pixel_type_data():
 
 
 @pytest.mark.parametrize(
-    ("mutation", "message"),
+    ("mutation", MESSAGE),
     [
-        (lambda config: config.update(triggers=[{"group_id": 1, "kind": "majority"}]), "group IDs"),
+        (lambda config: config.update(triggers=[{GROUP_ID: 1, "kind": MAJORITY}]), "group IDs"),
         (
             lambda config: config.update(
-                triggers=[{"group_id": 0, "kind": "unknown", "use_default_multiplicity": True}],
-                trigger_members=[
-                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
-                ],
+                triggers=[{GROUP_ID: 0, "kind": "unknown", USE_DEFAULT_MULTIPLICITY: True}],
+                trigger_members=[{GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0}],
             ),
             "Unsupported",
         ),
@@ -469,15 +485,13 @@ def test_camera_validation_requires_resolved_pixel_type_data():
             lambda config: config.update(
                 triggers=[
                     {
-                        "group_id": 0,
-                        "kind": "majority",
-                        "use_default_multiplicity": True,
-                        "multiplicity": 1,
+                        GROUP_ID: 0,
+                        "kind": MAJORITY,
+                        USE_DEFAULT_MULTIPLICITY: True,
+                        MULTIPLICITY: 1,
                     }
                 ],
-                trigger_members=[
-                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
-                ],
+                trigger_members=[{GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0}],
             ),
             "must not be positive",
         ),
@@ -485,15 +499,13 @@ def test_camera_validation_requires_resolved_pixel_type_data():
             lambda config: config.update(
                 triggers=[
                     {
-                        "group_id": 0,
-                        "kind": "majority",
-                        "use_default_multiplicity": False,
-                        "multiplicity": 0,
+                        GROUP_ID: 0,
+                        "kind": MAJORITY,
+                        USE_DEFAULT_MULTIPLICITY: False,
+                        MULTIPLICITY: 0,
                     }
                 ],
-                trigger_members=[
-                    {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
-                ],
+                trigger_members=[{GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0}],
             ),
             "must be positive",
         ),
@@ -509,72 +521,64 @@ def test_camera_validation_rejects_invalid_triggers(mutation, message):
 
 def test_camera_validation_rejects_trigger_member_references():
     configuration = _camera_configuration()
-    configuration["triggers"] = [
-        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
-    ]
-    configuration["trigger_members"] = [
-        {"group_id": 1, "member_order": 0, "pixel_order": 0, "pixel_id": 0}
-    ]
+    configuration[TRIGGERS] = [{GROUP_ID: 0, "kind": MAJORITY, USE_DEFAULT_MULTIPLICITY: True}]
+    configuration[TRIGGER_MEMBERS] = [{GROUP_ID: 1, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0}]
     with pytest.raises(ValueError, match="unknown group"):
         simtel_file_writer._validate_camera_components(configuration)
 
-    configuration["trigger_members"][0]["group_id"] = 0
-    configuration["trigger_members"][0]["member_order"] = 1
+    configuration[TRIGGER_MEMBERS][0][GROUP_ID] = 0
+    configuration[TRIGGER_MEMBERS][0][MEMBER_ORDER] = 1
     with pytest.raises(ValueError, match="member orders"):
         simtel_file_writer._validate_camera_components(configuration)
 
 
 def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
     configuration = _camera_configuration()
-    configuration["triggers"] = [
-        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
-    ]
-    configuration["trigger_members"] = [
-        {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0}
-    ]
+    configuration[TRIGGERS] = [{GROUP_ID: 0, "kind": MAJORITY, USE_DEFAULT_MULTIPLICITY: True}]
+    configuration[TRIGGER_MEMBERS] = [{GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 1, PIXEL_ID: 0}]
     with pytest.raises(ValueError, match="pixel orders"):
         simtel_file_writer._validate_camera_components(configuration)
 
-    configuration["trigger_members"] = [
-        {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True},
-        {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0, "required": True},
+    configuration[TRIGGER_MEMBERS] = [
+        {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0, REQUIRED: True},
+        {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 1, PIXEL_ID: 0, REQUIRED: True},
     ]
-    with pytest.raises(ValueError, match="first pixel"):
+    with pytest.raises(ValueError, match=FIRST_PIXEL):
         simtel_file_writer._validate_camera_components(configuration)
 
-    configuration["trigger_members"][1]["required"] = False
-    configuration["trigger_members"][1]["pixel_id"] = 99
+    configuration[TRIGGER_MEMBERS][1][REQUIRED] = False
+    configuration[TRIGGER_MEMBERS][1][PIXEL_ID] = 99
     with pytest.raises(ValueError, match="unknown pixel ID"):
         simtel_file_writer._validate_camera_components(configuration)
 
 
 @pytest.mark.parametrize(
-    ("kind", "members", "message"),
+    ("kind", "members", MESSAGE),
     [
         (
-            "majority",
+            MAJORITY,
             [
-                {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0},
+                {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0},
                 {
-                    "group_id": 0,
-                    "member_order": 0,
-                    "pixel_order": 1,
-                    "pixel_id": 0,
-                    "required": True,
+                    GROUP_ID: 0,
+                    MEMBER_ORDER: 0,
+                    PIXEL_ORDER: 1,
+                    PIXEL_ID: 0,
+                    REQUIRED: True,
                 },
             ],
-            "first pixel",
+            FIRST_PIXEL,
         ),
         (
-            "digitalsum",
-            [{"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": True}],
+            DIGITALSUM,
+            [{GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0, REQUIRED: True}],
             "only valid for majority",
         ),
         (
-            "analogsum",
+            ANALOGSUM,
             [
-                {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0},
-                {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 0},
+                {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0},
+                {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 1, PIXEL_ID: 0},
             ],
             "cannot use pre-sums",
         ),
@@ -582,8 +586,8 @@ def test_camera_validation_rejects_trigger_pixel_order_and_requirements():
 )
 def test_camera_validation_rejects_invalid_trigger_syntax(kind, members, message):
     configuration = _camera_configuration()
-    configuration["triggers"] = [{"group_id": 0, "kind": kind, "use_default_multiplicity": True}]
-    configuration["trigger_members"] = members
+    configuration[TRIGGERS] = [{GROUP_ID: 0, "kind": kind, USE_DEFAULT_MULTIPLICITY: True}]
+    configuration[TRIGGER_MEMBERS] = members
 
     with pytest.raises(ValueError, match=message):
         simtel_file_writer._validate_camera_components(configuration)
@@ -591,44 +595,42 @@ def test_camera_validation_rejects_invalid_trigger_syntax(kind, members, message
 
 def test_camera_validation_rejects_empty_trigger_group():
     configuration = _camera_configuration()
-    configuration["triggers"] = [
-        {"group_id": 0, "kind": "majority", "use_default_multiplicity": True}
-    ]
+    configuration[TRIGGERS] = [{GROUP_ID: 0, "kind": MAJORITY, USE_DEFAULT_MULTIPLICITY: True}]
 
     with pytest.raises(ValueError, match="has no members"):
         simtel_file_writer._validate_camera_components(configuration)
 
 
 @pytest.mark.parametrize(
-    ("kind", "required", "presum", "expected"),
+    ("kind", REQUIRED, "presum", "expected"),
     [
-        ("majority", False, False, "MajorityTrigger 1 of 0"),
-        ("majority", True, False, "MajorityTrigger 1 of +0"),
-        ("majority", False, True, "MajorityTrigger 1 of 0[1]"),
-        ("digitalsum", False, True, "DigitalSumTrigger 1 of 0[1]"),
-        ("analogsum", False, False, "AnalogSumTrigger 1 of 0"),
+        (MAJORITY, False, False, "MajorityTrigger 1 of 0"),
+        (MAJORITY, True, False, "MajorityTrigger 1 of +0"),
+        (MAJORITY, False, True, "MajorityTrigger 1 of 0[1]"),
+        (DIGITALSUM, False, True, "DigitalSumTrigger 1 of 0[1]"),
+        (ANALOGSUM, False, False, "AnalogSumTrigger 1 of 0"),
     ],
 )
 def test_camera_serializes_supported_trigger_tokens(
     tmp_test_directory, kind, required, presum, expected
 ):
     configuration = _camera_configuration()
-    configuration["triggers"] = [
-        {"group_id": 0, "kind": kind, "use_default_multiplicity": False, "multiplicity": 1}
+    configuration[TRIGGERS] = [
+        {GROUP_ID: 0, "kind": kind, USE_DEFAULT_MULTIPLICITY: False, MULTIPLICITY: 1}
     ]
-    configuration["trigger_members"] = [
-        {"group_id": 0, "member_order": 0, "pixel_order": 0, "pixel_id": 0, "required": required}
+    configuration[TRIGGER_MEMBERS] = [
+        {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 0, PIXEL_ID: 0, REQUIRED: required}
     ]
     if presum:
-        pixel = deepcopy(configuration["pixels"][0])
-        pixel["pixel_id"] = 1
-        configuration["pixels"].append(pixel)
-        configuration["trigger_members"].append(
-            {"group_id": 0, "member_order": 0, "pixel_order": 1, "pixel_id": 1, "required": False}
+        pixel = deepcopy(configuration[PIXELS][0])
+        pixel[PIXEL_ID] = 1
+        configuration[PIXELS].append(pixel)
+        configuration[TRIGGER_MEMBERS].append(
+            {GROUP_ID: 0, MEMBER_ORDER: 0, PIXEL_ORDER: 1, PIXEL_ID: 1, REQUIRED: False}
         )
-    output = Path(tmp_test_directory) / "camera.dat"
+    output = Path(tmp_test_directory) / CAMERA_DAT
     simtel_file_writer.write_camera_file(configuration, output)
-    assert output.read_text(encoding="utf-8").splitlines()[-1] == expected
+    assert output.read_text(encoding=UTF_8).splitlines()[-1] == expected
 
 
 def test_camera_helpers_validate_names_and_module_ids():
@@ -651,7 +653,7 @@ def test_write_light_pulse_table_gauss_exp_conv(tmp_test_directory):
     assert output == tmp_test_directory / "pulse.dat"
     assert (
         (tmp_test_directory / "pulse.dat")
-        .read_text(encoding="utf-8")
+        .read_text(encoding=UTF_8)
         .startswith("# time[ns] amplitude\n")
     )
 
@@ -660,7 +662,7 @@ def test_write_light_pulse_table_gauss_exp_conv(tmp_test_directory):
 def test_write_light_pulse_table_requires_shape_parameters(tmp_test_directory, missing):
     width = None if missing == "width" else 1.0
     decay = None if missing == "decay" else 2.0
-    with pytest.raises(ValueError, match="required"):
+    with pytest.raises(ValueError, match=REQUIRED):
         simtel_file_writer.write_light_pulse_table_gauss_exp_conv(
             tmp_test_directory / "pulse.dat", width, decay, fadc_sum_bins=1
         )
@@ -672,7 +674,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     )
 
     assert output == tmp_test_directory / "angles.dat"
-    lines = (tmp_test_directory / "angles.dat").read_text(encoding="utf-8").splitlines()
+    lines = (tmp_test_directory / "angles.dat").read_text(encoding=UTF_8).splitlines()
     assert lines[0] == "# angle[deg] relative_intensity"
     assert lines[-1].endswith("0.00000000")
 
@@ -684,7 +686,7 @@ def test_write_angular_distribution_handles_zero_intensity_maximum(tmp_test_dire
         simtools_table, max_angle_deg=180, n_samples=1
     )
 
-    assert simtools_table.read_text(encoding="utf-8").splitlines()[-1].endswith("0.00000000")
+    assert simtools_table.read_text(encoding=UTF_8).splitlines()[-1].endswith("0.00000000")
 
 
 def test_write_ascii_table_helpers(tmp_test_directory):
@@ -697,5 +699,5 @@ def test_write_ascii_table_helpers(tmp_test_directory):
 
     assert pulse_path.name == "pulse.dat"
     assert angle_path.name == "angles.dat"
-    assert "0.000000 0.50000000" in pulse_path.read_text(encoding="utf-8")
-    assert "10.000000 0.50000000" in angle_path.read_text(encoding="utf-8")
+    assert "0.000000 0.50000000" in pulse_path.read_text(encoding=UTF_8)
+    assert "10.000000 0.50000000" in angle_path.read_text(encoding=UTF_8)

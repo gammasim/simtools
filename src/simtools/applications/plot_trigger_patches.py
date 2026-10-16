@@ -1,4 +1,4 @@
-"""Generate sim_telarray displays for all camera trigger patches."""
+"""Inspect camera trigger groups with a compact simulation report."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -8,38 +8,77 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.trigger_patch_mapping import run_trigger_patch_mapping
 
+ACTION_STORE_TRUE = "store_true"
+
+
+EVENTS_PER_COMBINATION = "events_per_combination"
+INCLUDE_PRESUM_SLAVES = "include_presum_slaves"
+MODEL_VERSION = "model_version"
+OUTPUT_NAME = "output_name"
+PHOTONS_PER_PIXEL = "photons_per_pixel"
+PLOT_TRIGGER_PATCHES = "plot_trigger_patches"
+REQUIRED_PIXELS = "required_pixels"
+RUN_NUMBER = "run_number"
+MAX_EVENTS = "max_events"
+MAX_PLOTTED_EVENTS = "max_plotted_events"
+MAX_PIXEL_RADIUS = "max_pixel_radius"
+EXHAUSTIVE = "exhaustive"
+
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "output_name",
+        MAX_PLOTTED_EVENTS,
+        type=bounded_int(0, 2147483647),
+        default=4,
+        help="Maximum event pages in simulation order; 0 writes only the summary plots.",
+    ),
+    cli.ArgumentDefinition(
+        MAX_EVENTS,
+        type=bounded_int(1, 2147483647),
+        default=None,
+        help="Maximum generated trials, including repetitions; unselected groups remain reported.",
+    ),
+    cli.ArgumentDefinition(
+        MAX_PIXEL_RADIUS,
+        type=float,
+        default=None,
+        help="Select illuminated pixels within this camera-plane radius [m].",
+    ),
+    cli.ArgumentDefinition(
+        EXHAUSTIVE,
+        action=ACTION_STORE_TRUE,
+        help="Enumerate all eligible combinations; default is one deterministic pattern per group.",
+    ),
+    cli.ArgumentDefinition(
+        OUTPUT_NAME,
         type=str,
         default=None,
-        help="PostScript file name; defaults to trigger-patches-<telescope>-run<run>.ps.",
+        help="PDF file name; defaults to trigger-patches-<telescope>-run<run>.pdf.",
     ),
     cli.ArgumentDefinition(
-        "required_pixels",
+        REQUIRED_PIXELS,
         type=bounded_int(1, 2147483647),
-        default=2,
-        help="Number of LEDs required in each pixled trigger combination.",
+        default=None,
+        help="Illuminated masters; omit for whole groups. Independent of trigger_pixels.",
     ),
     cli.ArgumentDefinition(
-        "include_presum_slaves",
-        action="store_true",
+        INCLUDE_PRESUM_SLAVES,
+        action=ACTION_STORE_TRUE,
         help="Fire pre-sum slave pixels whenever their master pixel fires.",
     ),
     cli.ArgumentDefinition(
-        "photons_per_pixel",
+        PHOTONS_PER_PIXEL,
         type=bounded_int(1, 2147483647),
         default=500,
         help="Number of photons emitted by each selected pixled LED.",
     ),
     cli.ArgumentDefinition(
-        "events_per_combination",
+        EVENTS_PER_COMBINATION,
         type=bounded_int(1, 2147483647),
         default=1,
         help="Number of pixled events generated for each trigger combination.",
     ),
     cli.ArgumentDefinition(
-        "run_number",
+        RUN_NUMBER,
         type=bounded_int(1, 2147483647),
         default=1,
         help="Run number recorded in generated LED events.",
@@ -70,16 +109,16 @@ def run(app_context):
     telescope = TelescopeModel(
         site=args["site"],
         telescope_name=args["telescope"],
-        model_version=args["model_version"],
-        label="plot_trigger_patches",
+        model_version=args[MODEL_VERSION],
+        label=PLOT_TRIGGER_PATCHES,
         model_reader=app_context.model_reader,
         model_directory=output_directory,
         overwrite_model_parameter_dict=overrides,
     )
     site = SiteModel(
         site=args["site"],
-        model_version=args["model_version"],
-        label="plot_trigger_patches",
+        model_version=args[MODEL_VERSION],
+        label=PLOT_TRIGGER_PATCHES,
         model_reader=app_context.model_reader,
         model_directory=output_directory,
         overwrite_model_parameter_dict=overrides,
@@ -88,14 +127,18 @@ def run(app_context):
         telescope,
         site,
         output_directory,
-        required_pixels=args["required_pixels"],
-        include_presum_slaves=args["include_presum_slaves"],
-        photons_per_pixel=args["photons_per_pixel"],
-        events_per_combination=args["events_per_combination"],
-        run_number=args["run_number"],
-        output_name=args["output_name"],
+        required_pixels=args[REQUIRED_PIXELS],
+        include_presum_slaves=args[INCLUDE_PRESUM_SLAVES],
+        photons_per_pixel=args[PHOTONS_PER_PIXEL],
+        events_per_combination=args[EVENTS_PER_COMBINATION],
+        run_number=args[RUN_NUMBER],
+        output_name=args[OUTPUT_NAME],
+        max_events=args.get(MAX_EVENTS),
+        max_pixel_radius=args.get(MAX_PIXEL_RADIUS),
+        exhaustive=args.get(EXHAUSTIVE, False),
+        max_plotted_events=args.get(MAX_PLOTTED_EVENTS, 4),
     )
-    app_context.logger.info("Wrote trigger patch display to %s", files.postscript_file)
+    app_context.logger.info("Wrote trigger patch display to %s", files.pdf_file)
     app_context.logger.info("Wrote trigger patch simtel events to %s", files.simtel_file)
     return files
 
