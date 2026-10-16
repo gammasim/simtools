@@ -123,7 +123,10 @@ def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_d
 @pytest.mark.parametrize(_APPLICATION_KEY, [_HISTOGRAM_APPLICATION, "other-application"])
 def test_product_validation_is_selected_by_application(mocker, application):
     validate = mocker.patch.object(trigger_histograms, "_validate_derived_products")
-    configuration = {_PRODUCTION_PATH_KEY: _PRODUCTION}
+    configuration = {
+        _PRODUCTION_PATH_KEY: _PRODUCTION,
+        _OUTPUT_PATH_KEY: _PRODUCTION,
+    }
     trigger_histograms._validate_derived_workflow(
         [{_APPLICATION_KEY: application, _CONFIGURATION_KEY: configuration}]
     )
@@ -131,6 +134,19 @@ def test_product_validation_is_selected_by_application(mocker, application):
         validate.assert_called_once_with(configuration)
     else:
         validate.assert_not_called()
+
+
+def test_product_validation_skips_event_data_application(mocker):
+    validate = mocker.patch.object(trigger_histograms, "_validate_derived_products")
+    trigger_histograms._validate_derived_workflow(
+        [
+            {
+                _APPLICATION_KEY: _HISTOGRAM_APPLICATION,
+                _CONFIGURATION_KEY: {"event_data_directory": _PRODUCTION},
+            }
+        ]
+    )
+    validate.assert_not_called()
 
 
 @pytest.mark.parametrize("duplicate", [False, True])
@@ -191,4 +207,22 @@ def test_derived_products_reject_readable_but_empty_histograms(histogram_product
         file_type="HDF5",
     )
     with pytest.raises(ValueError, match="Empty trigger histogram"):
+        trigger_histograms._validate_derived_group(group, product, config)
+
+
+def test_derived_products_reject_missing_histogram_table(histogram_product):
+    group, product, config, _source, output = histogram_product
+    output.unlink()
+    table_handler.write_tables(
+        [
+            Table(
+                {_COUNT: [1]},
+                meta={"EXTNAME": trigger_histograms.TRIGGER_HISTOGRAM_METADATA_TABLE},
+            )
+        ],
+        output,
+        file_type="HDF5",
+    )
+
+    with pytest.raises(ValueError, match="Unreadable trigger histogram"):
         trigger_histograms._validate_derived_group(group, product, config)

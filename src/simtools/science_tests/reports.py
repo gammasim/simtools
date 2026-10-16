@@ -115,8 +115,7 @@ def _write_test_report(work, report_root, release_dir, result):
         return
     result[_REPORT] = report
     warnings = result.pop("acceptance_warnings", [])
-    if not warnings:
-        (work / "acceptance.md").unlink(missing_ok=True)
+    if warnings:
         work.mkdir(parents=True, exist_ok=True)
         lines = ["# Acceptance deviations", ""]
         for warning in warnings:
@@ -126,6 +125,9 @@ def _write_test_report(work, report_root, release_dir, result):
             lines.append(f"- {warning}")
         (work / "acceptance.md").write_text("\n".join(lines) + "\n", encoding=_ENCODING)
         result[_ACCEPTANCE_REPORT_KEY] = f"{report}/acceptance.md"
+    else:
+        (work / "acceptance.md").unlink(missing_ok=True)
+        result.pop(_ACCEPTANCE_REPORT_KEY, None)
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
     if work.exists():

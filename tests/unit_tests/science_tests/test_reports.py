@@ -11,6 +11,7 @@ _RUN_1 = "run-1"
 _RUN_ID = "run_id"
 
 _ACCEPTANCE_WARNINGS_KEY = "acceptance_warnings"
+_ACCEPTANCE_REPORT_KEY = "acceptance_report"
 _PRODUCTION_HISTORY = "production_history"
 _RELEASE = "release"
 _REPORTS_DIRECTORY = "reports"
@@ -77,6 +78,25 @@ def test_acceptance_deviations_are_published_once_and_linked(tmp_test_directory)
     )
     summary = (root / "reports/release-summary.md").read_text(encoding=TEXT_ENCODING)
     assert "[deviations](north/compare/acceptance.md)" in summary
+
+
+def test_reused_report_removes_stale_acceptance_deviations(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    work = root / "work"
+    work.mkdir()
+    (work / "acceptance.md").write_text("stale warning\n", encoding=TEXT_ENCODING)
+    (work / "metrics.json").write_text("{}", encoding=TEXT_ENCODING)
+    report = root / _REPORTS_DIRECTORY / SITE / COMPARE_TEST
+    result = {
+        STATUS_KEY: "pass",
+        _ACCEPTANCE_REPORT_KEY: "reports/north/compare/acceptance.md",
+    }
+
+    science_test_reports._write_test_report(work, report, root, result)
+
+    assert not (work / "acceptance.md").exists()
+    assert not (report / "acceptance.md").exists()
+    assert _ACCEPTANCE_REPORT_KEY not in result
 
 
 def test_production_history_survives_a_non_production_configuration_change(campaign):

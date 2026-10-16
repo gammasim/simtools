@@ -52,6 +52,7 @@ CONFIGURATION_KEY = "configuration"
 
 CONFIGURATIONS_KEY = "configurations"
 LAYOUT_NAME = "layout-a"
+SELECTION = ["configuration.primary=gamma"]
 
 
 def test_root_comparison_has_no_pair_or_array_layout(tmp_test_directory):
@@ -69,7 +70,7 @@ def test_comparison_product_validation_does_not_depend_on_acceptance_rule(mocker
         [
             {
                 "application": "simtools-compare-productions",
-                CONFIGURATION_KEY: {"comparison_level": level},
+                CONFIGURATION_KEY: {"comparison_level": level, "select": SELECTION},
             }
         ],
         [BASELINE_KEY, _CANDIDATE],
@@ -77,6 +78,7 @@ def test_comparison_product_validation_does_not_depend_on_acceptance_rule(mocker
     if level == _EVENTS:
         assert validate.call_count == 2
         assert validate.call_args.args[0]["production_path"] == _CANDIDATE
+        assert all(call.args[0]["select"] == SELECTION for call in validate.call_args_list)
     else:
         validate.assert_not_called()
 

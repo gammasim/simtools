@@ -26,6 +26,7 @@ _COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
 _CONFIGURATION_KEY = "configuration"
 _OUTPUT_PATH_KEY = "output_path"
 _REPORT_MODE_KEY = "report_mode"
+_SELECT_KEY = "select"
 _ENCODING = "utf-8"
 
 BASELINE_KEY = "baseline"
@@ -667,16 +668,23 @@ def _single_trigger_histogram_file(manifest):
 
 def _validate_comparison_inputs(applications, production_paths):
     """Check source coverage and freshness before trigger-product comparisons."""
-    if not any(
-        application.get("application") == "simtools-compare-productions"
-        and application.get(_CONFIGURATION_KEY, {}).get("comparison_level", "events") == "events"
-        for application in applications
-    ):
+    comparison = next(
+        (
+            application.get(_CONFIGURATION_KEY, {})
+            for application in applications
+            if application.get("application") == "simtools-compare-productions"
+            and application.get(_CONFIGURATION_KEY, {}).get("comparison_level", "events")
+            == "events"
+        ),
+        None,
+    )
+    if comparison is None:
         return
     for production_path in production_paths:
-        _validate_derived_products(
-            {
-                "production_path": production_path,
-                _OUTPUT_PATH_KEY: str(Path(production_path) / "derived/trigger_histograms"),
-            }
-        )
+        configuration = {
+            "production_path": production_path,
+            _OUTPUT_PATH_KEY: str(Path(production_path) / "derived/trigger_histograms"),
+        }
+        if _SELECT_KEY in comparison:
+            configuration[_SELECT_KEY] = comparison[_SELECT_KEY]
+        _validate_derived_products(configuration)
