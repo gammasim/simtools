@@ -1173,8 +1173,12 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
 def _validate_derived_workflow(applications):
     """Check trigger products owned by histogram-writer workflow steps."""
     for application in applications:
-        if application.get("application") == "simtools-write-trigger-histograms":
-            _validate_derived_products(application[_CONFIGURATION_KEY])
+        configuration = application.get(_CONFIGURATION_KEY, {})
+        if (
+            application.get("application") == "simtools-write-trigger-histograms"
+            and _PRODUCTION_PATH_KEY in configuration
+        ):
+            _validate_derived_products(configuration)
 
 
 def _validate_derived_products(configuration):
