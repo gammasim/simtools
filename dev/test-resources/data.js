@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792127121160,
+  "lastUpdate": 1792136631399,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30534,6 +30534,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 434.75390625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3a469cfdcdef1f2f7202bc3c82b10a042d0d9b1b",
+          "message": " Add a clear separation of `stdout` and `stdout` for `CORSIKA` and `sim_telarray` log output. (#2633)\n\n* Preserve LightEmission pipeline failures and verify diagnostic capture\n\n* Separate stderr from stdout\n\n* too much text\n\n* simplification\n\n* Fix stdout to stderr in log output separation\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-10-16T09:34:36+02:00",
+          "tree_id": "b45a794d510900d356897f1c24eeb96237d11113",
+          "url": "https://github.com/gammasim/simtools/commit/3a469cfdcdef1f2f7202bc3c82b10a042d0d9b1b"
+        },
+        "date": 1792136616012,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 55.37145825900001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 55.26,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 437.921875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
