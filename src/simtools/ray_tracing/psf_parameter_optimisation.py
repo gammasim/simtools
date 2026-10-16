@@ -20,7 +20,10 @@ from astropy.table import Table
 from scipy import stats
 
 from simtools.data_model import model_data_writer as writer
+from simtools.io.io_handler import IOHandler
+from simtools.job_execution.backends.base import BackendError
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.ray_tracing.psf_evaluation import _dispatch_evaluations, _psf_worker_count
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.utils import names
@@ -34,6 +37,12 @@ logger = logging.getLogger(__name__)
 RADIUS = "Radius"
 CUMULATIVE_PSF = "Cumulative PSF"
 KS_STATISTIC_NAME = "KS statistic"
+LABEL = "label"
+MODEL_VERSION = "model_version"
+TELESCOPE = "telescope"
+CLEANUP = "cleanup"
+KS_STATISTIC = "ks_statistic"
+INTERMEDIATE_PATTERNS = ("*.log", "*.lis*", "*.dat")
 
 
 @dataclass
@@ -110,11 +119,12 @@ class PSFParameterOptimizer:
         self.data_to_plot = data_to_plot
         self.radius = radius
         self.output_dir = output_dir
-        self.use_ks_statistic = args_dict.get("ks_statistic", False)
+        self.use_ks_statistic = args_dict.get(KS_STATISTIC, False)
         self.fraction = args_dict.get("fraction", DEFAULT_FRACTION)
         self.simulation_cache = {}
         self.cache_hits = 0
         self.cache_misses = 0
+        self.max_workers = _psf_worker_count(args_dict)
 
     def _params_to_cache_key(self, params):
         """Convert parameters dict to a hashable cache key."""
@@ -246,21 +256,66 @@ class PSFParameterOptimizer:
             Dictionary mapping parameter names to their gradient values.
             Returns None if gradient calculation fails for any parameter.
         """
-        gradients = {}
-
-        for param_name, param_values in current_params.items():
-            param_gradient = self._calculate_param_gradient(
-                current_params,
-                current_metric,
-                param_name,
-                param_values,
-                epsilon,
+        perturbations = []
+        for name, values in current_params.items():
+            components = values if isinstance(values, list) else [values]
+            perturbations.extend(
+                _create_perturbed_params(current_params, name, values, index, value, epsilon)
+                for index, value in enumerate(components)
             )
-            if param_gradient is None:
-                return None
-            gradients[param_name] = param_gradient
 
+        results = self._run_parameter_batch(perturbations, use_cache=True)
+        if any(result is None for result in results):
+            return None
+        metrics = iter((result[1] - current_metric) / epsilon for result in results)
+        gradients = {}
+        for name, values in current_params.items():
+            if isinstance(values, list):
+                gradients[name] = [next(metrics) for _ in values]
+            else:
+                gradients[name] = next(metrics)
         return gradients
+
+    def _run_parameter_batch(self, parameters, use_cache):
+        """Evaluate independent parameter sets, preserving order and cached results."""
+        keys, pending, results = self._pending_parameter_evaluations(parameters, use_cache)
+        if pending:
+            evaluated = self._dispatch_parameter_evaluations(list(pending.values()))
+            for key, result in zip(pending, evaluated, strict=True):
+                results[key] = result
+                if use_cache and result is not None:
+                    self.simulation_cache[key] = result
+        return [results[key] for key in keys]
+
+    def _pending_parameter_evaluations(self, parameters, use_cache):
+        """Separate cached results from distinct evaluations that still need to run."""
+        keys = []
+        pending = {}
+        results = {}
+        for index, params in enumerate(parameters):
+            key = self._params_to_cache_key(params) if use_cache else index
+            keys.append(key)
+            if use_cache and key in self.simulation_cache:
+                self.cache_hits += 1
+                results[key] = self.simulation_cache[key]
+            elif key not in pending:
+                pending[key] = params
+                if use_cache:
+                    self.cache_misses += 1
+
+        return keys, pending, results
+
+    def _dispatch_parameter_evaluations(self, parameters):
+        """Submit isolated evaluations to the configured execution backend."""
+        return _dispatch_evaluations(
+            parameters,
+            self.args_dict,
+            self.data_to_plot,
+            self.radius,
+            self.output_dir,
+            self.max_workers,
+            _run_psf_evaluation,
+        )
 
     def apply_gradient_step(self, current_params, gradients, learning_rate):
         """
@@ -312,51 +367,6 @@ class PSFParameterOptimizer:
                 new_params[param_name] = new_value
 
         return new_params
-
-    def _calculate_param_gradient(
-        self, current_params, current_metric, param_name, param_values, epsilon
-    ):
-        """
-        Calculate numerical gradient for a single parameter using finite differences.
-
-        Parameters
-        ----------
-        current_params : dict
-            Dictionary of current parameter values for all optimization parameters.
-        current_metric : float
-            Current RMSD or KS statistic value.
-        param_name : str
-            Name of the parameter for which to calculate the gradient.
-        param_values : float or list
-            Current value(s) of the parameter.
-        epsilon : float
-            Small perturbation value for finite difference calculation.
-
-        Returns
-        -------
-        float or list or None
-            Gradient value(s) for the parameter.
-            Returns None if simulation fails for any component.
-        """
-        param_gradients = []
-        values_list = param_values if isinstance(param_values, list) else [param_values]
-
-        for i, value in enumerate(values_list):
-            perturbed_params = _create_perturbed_params(
-                current_params, param_name, param_values, i, value, epsilon
-            )
-
-            # Calculate gradient for this parameter component using cached simulations
-            try:
-                _, perturbed_metric, _, _ = self.run_simulation(perturbed_params, use_cache=True)
-                gradient = (perturbed_metric - current_metric) / epsilon
-            except (ValueError, RuntimeError) as e:
-                logger.warning(f"Simulation failed for {param_name}[{i}] gradient calculation: {e}")
-                return None
-
-            param_gradients.append(gradient)
-
-        return param_gradients[0] if not isinstance(param_values, list) else param_gradients
 
     def perform_gradient_step_with_retries(
         self, current_params, current_metric, learning_rate, max_retries=3
@@ -432,6 +442,8 @@ class PSFParameterOptimizer:
                 )
                 current_lr = self._reduce_learning_rate(current_lr)
 
+            except BackendError:
+                raise
             except (ValueError, RuntimeError, KeyError) as e:
                 logger.warning(f"Simulation failed on attempt {attempt + 1}: {e}")
                 continue
@@ -651,32 +663,28 @@ class PSFParameterOptimizer:
 
         metric_values, p_values, psf_diameter_values = [], [], []
 
-        for i in range(n_simulations):
-            try:
-                psf_diameter, metric, p_value, _ = self.run_simulation(
-                    initial_params,
-                    use_cache=False,
-                )
+        results = self._run_parameter_batch([initial_params] * n_simulations, use_cache=False)
+        for result in results:
+            if result is not None:
+                psf_diameter, metric, p_value, _ = result
                 metric_values.append(metric)
                 psf_diameter_values.append(psf_diameter)
                 p_values.append(p_value)
-            except (ValueError, RuntimeError) as e:
-                logger.warning(f"WARNING: Simulation {i + 1} failed: {e}")
 
         if not metric_values:
             logger.error("All Monte Carlo simulations failed.")
             return None, None, [], None, None, [], None, None, []
 
-        mean_metric, std_metric = np.mean(metric_values), np.std(metric_values, ddof=1)
+        mean_metric, std_metric = np.mean(metric_values), _sample_standard_deviation(metric_values)
         mean_psf_diameter, std_psf_diameter = (
             np.mean(psf_diameter_values),
-            np.std(psf_diameter_values, ddof=1),
+            _sample_standard_deviation(psf_diameter_values),
         )
 
         if self.use_ks_statistic:
             valid_p_values = [p for p in p_values if p is not None]
             mean_p_value = np.mean(valid_p_values) if valid_p_values else None
-            std_p_value = np.std(valid_p_values, ddof=1) if valid_p_values else None
+            std_p_value = _sample_standard_deviation(valid_p_values) if valid_p_values else None
         else:
             mean_p_value = std_p_value = None
 
@@ -762,29 +770,7 @@ def _are_all_parameters_within_allowed_range(params):
 
 
 def _create_perturbed_params(current_params, param_name, param_values, param_index, value, epsilon):
-    """
-    Create parameter dictionary with one parameter perturbed by epsilon.
-
-    Parameters
-    ----------
-    current_params : dict
-        Dictionary of current parameter values.
-    param_name : str
-        Name of the parameter to perturb.
-    param_values : float or list
-        Current parameter values.
-    param_index : int
-        Index of the parameter to perturb (for list parameters).
-    value : float
-        Current value of the specific parameter component.
-    epsilon : float
-        Perturbation amount.
-
-    Returns
-    -------
-    dict
-        New parameter dictionary with the specified parameter perturbed.
-    """
+    """Copy parameter vectors and perturb one component without changing the input."""
     perturbed_params = {
         k: v.copy() if isinstance(v, list) else v for k, v in current_params.items()
     }
@@ -860,7 +846,7 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        label=args_dict.get("label") or getattr(tel_model, "label", None),
+        label=args_dict.get(LABEL) or getattr(tel_model, LABEL, None),
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=[0.0] * u.deg,
@@ -1366,6 +1352,44 @@ def write_monte_carlo_analysis(
     return mc_file
 
 
+def _sample_standard_deviation(values):
+    """Return an undefined sample deviation when fewer than two samples succeed."""
+    return float(np.std(values, ddof=1)) if len(values) > 1 else float("nan")
+
+
+def _run_psf_evaluation(job):
+    """Evaluate one parameter set and restore paths for direct local execution."""
+    io_handler = IOHandler()
+    original_paths = dict(io_handler.output_path)
+    original_model_path = io_handler.model_path
+    try:
+        io_handler.set_paths(output_path=job.output_dir, model_path=original_model_path)
+        telescope, site, _ = initialize_simulation_models(
+            label=job.args.get(LABEL),
+            site=job.args["site"],
+            telescope_name=job.args[TELESCOPE],
+            model_version=job.args[MODEL_VERSION],
+            model_directory=job.output_dir / "model",
+        )
+        return run_psf_simulation(
+            telescope,
+            site,
+            job.args,
+            job.parameters,
+            job.measured_data,
+            job.radius,
+            use_ks_statistic=job.args.get(KS_STATISTIC, False),
+        )
+    except (ValueError, RuntimeError) as exc:
+        logger.warning("PSF evaluation %s failed: %s", job.output_dir.name, exc)
+        return None
+    finally:
+        io_handler.output_path = original_paths
+        io_handler.model_path = original_model_path
+        if job.args.get(CLEANUP, False):
+            gen.cleanup_intermediate_files(job.output_dir, patterns=INTERMEDIATE_PATTERNS)
+
+
 @dataclass(frozen=True)
 class PSFOptimizationJob:
     """Serializable arguments and output directory for one complete PSF workflow."""
@@ -1375,18 +1399,19 @@ class PSFOptimizationJob:
 
 
 def run_psf_optimization_job(job):
-    """Initialize models and run a complete workflow on the selected worker.
+    """Initialize controller models and run a workflow with backend evaluations.
 
     Parameters
     ----------
     job : PSFOptimizationJob
         Application arguments and output directory for the workflow.
     """
+    _psf_worker_count(job.args)
     tel_model, site_model, _ = initialize_simulation_models(
-        label=job.args.get("label"),
+        label=job.args.get(LABEL),
         site=job.args["site"],
-        telescope_name=job.args["telescope"],
-        model_version=job.args["model_version"],
+        telescope_name=job.args[TELESCOPE],
+        model_version=job.args[MODEL_VERSION],
     )
     run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir)
 
@@ -1465,8 +1490,8 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     if args_dict.get("write_psf_parameters", False):
         logger.info("Exporting best parameters as model files...")
         export_psf_parameters(
-            best_pars, args_dict.get("telescope"), args_dict.get("parameter_version"), output_dir
+            best_pars, args_dict.get(TELESCOPE), args_dict.get("parameter_version"), output_dir
         )
 
-    if args_dict.get("cleanup", False):
-        gen.cleanup_intermediate_files(output_dir, patterns=("*.log", "*.lis*", "*.dat"))
+    if args_dict.get(CLEANUP, False):
+        gen.cleanup_intermediate_files(output_dir, patterns=INTERMEDIATE_PATTERNS)
