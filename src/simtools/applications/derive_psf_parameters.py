@@ -4,13 +4,18 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.job_execution.execution import map_ordered
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
 _ARGUMENTS = (
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.DATA,
+    cli.ArgumentDefinition(
+        "max_workers",
+        type=int,
+        default=None,
+        help="Concurrent local evaluations (default: half the available CPUs, minimum one).",
+    ),
     cli.ArgumentDefinition(
         "plot_all",
         help=(
@@ -101,12 +106,7 @@ def main():
         args=dict(app_context.args),
         output_dir=app_context.io_handler.get_output_directory(),
     )
-    map_ordered(
-        psf_opt.run_psf_optimization_job,
-        [job],
-        backend=app_context.args.get("backend", "local"),
-        backend_config=app_context.args.get("backend_config"),
-    )
+    psf_opt.run_psf_optimization_job(job)
 
 
 if __name__ == "__main__":

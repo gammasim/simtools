@@ -12,6 +12,8 @@ applications:
     site: North
     telescope: LSTN-01
     test: true
+    backend: local
+    max_workers: 2
     zenith_angle: 20
     rmsd_threshold: 0.1
     max_iterations: 20

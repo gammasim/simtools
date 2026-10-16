@@ -112,10 +112,41 @@ Output files include:
 * Optimized simulation model parameter files (if --write_psf_parameters is specified)
 ```
 
-The complete optimization or Monte Carlo uncertainty analysis runs as one job on the
-selected [execution backend](../execution_backends.md). The application waits for the
-job to finish. Individual evaluations remain sequential; local execution runs in the
-main process.
+Independent finite-difference evaluations within each gradient calculation and Monte
+Carlo repetitions run concurrently on the selected
+[execution backend](../execution_backends.md). Gradient-descent iterations remain
+sequential. The controller runs the initial and candidate-step simulations and
+creates the final plots, so it also needs the simulation software and model source.
+HTCondor receives one job per independent evaluation, rather than one job for the
+whole workflow; scheduler latency can outweigh the benefit for short simulations.
+
+Local execution defaults to half the CPUs available to the application, rounded down
+with a minimum of one worker. Set `--max_workers 1` for serial execution or choose a
+positive worker count explicitly. This limit controls local processes; HTCondor
+concurrency is controlled by the scheduler. Each evaluation reconstructs its own
+model and writes under a unique `evaluations/` subdirectory. Allow for additional
+memory and disk use when increasing the number of workers.
+
+To compare serial and concurrent execution, repeat the same command with
+`--max_workers 1` and `--max_workers 4`, using separate output directories. For example:
+
+```bash
+time simtools-derive-psf-parameters --site North --telescope LSTN-01 \
+    --model_version 6.0.2 --data PSFcurve_data_v2.ecsv --test \
+    --rmsd_threshold 0 --max_iterations 2 --backend local \
+    --max_workers 1 --output_path psf-serial
+
+time simtools-derive-psf-parameters --site North --telescope LSTN-01 \
+    --model_version 6.0.2 --data PSFcurve_data_v2.ecsv --test \
+    --rmsd_threshold 0 --max_iterations 2 --backend local \
+    --max_workers 4 --output_path psf-parallel
+```
+
+Supply your model-source configuration as usual. Compare elapsed time across several
+runs and check the logged numbers of simulations evaluated: stochastic convergence
+and rejected steps can change the amount of work. Numerical results need not be
+identical. Startup, model loading, serial steps, and plotting limit overall speedup;
+a short test run may not be faster.
 
 ## Command line arguments
 
