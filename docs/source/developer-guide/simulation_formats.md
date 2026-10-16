@@ -10,6 +10,12 @@ programs `ff-1m` and `xyzls`. The supplied `eventio` reader supports current
 CORSIKA IACT and sim_telarray files. Registration allows a new format to be added;
 it does not add support for running another simulation program.
 
+Shared file suffixes, generated defaults, fixed filenames, and lifecycle labels
+belong in [`resources/file_types.yml`](https://github.com/gammasim/simtools/blob/main/src/simtools/resources/file_types.yml)
+and are schema-validated when loaded. Add an entry when a product is shared by
+multiple producers or consumers; keep parameterized native names, directory
+placement, and cleanup rules with their owning workflow.
+
 ## Shared run settings
 
 `SimulationParameters` holds run number, particle identity, pointing in degrees,

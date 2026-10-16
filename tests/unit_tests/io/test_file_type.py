@@ -31,6 +31,9 @@ def test_product_suffixes_include_compressed_sim_telarray_outputs():
 def test_product_filename_and_unknown_product():
     assert _get_product_filename("submission_manifest") == "submission.json"
 
+    with pytest.raises(ValueError, match="does not define a fixed filename"):
+        _get_product_filename("sim_telarray_output")
+
     with pytest.raises(ValueError, match="Unknown file product 'missing'"):
         _get_product_suffixes("missing")
 

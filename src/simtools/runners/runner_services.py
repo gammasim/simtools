@@ -12,6 +12,7 @@ _RUN_NUMBER = "run_number"
 _SUB_DIRECTORY_TYPE = "sub_dir_type"
 _FILE_SUFFIX = "suffix"
 _SUBMISSION_DIRECTORY = "sub"
+_SIM_TELARRAY_HISTOGRAM_PRODUCT = "sim_telarray_histogram_output"
 
 _RUNNER_FILE_PLACEMENT = {
     "corsika_input": _RUN_NUMBER,
@@ -37,7 +38,7 @@ _RUNNER_FILE_PLACEMENT = {
     "sub_log": _SUBMISSION_DIRECTORY,
     "sub_script": _SUBMISSION_DIRECTORY,
 }
-_RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": "sim_telarray_histogram_output"}
+_RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": _SIM_TELARRAY_HISTOGRAM_PRODUCT}
 FILES_AND_PATHS = {
     file_type: {
         _FILE_SUFFIX: _get_product_value(
