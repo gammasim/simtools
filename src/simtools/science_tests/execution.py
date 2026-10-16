@@ -322,7 +322,7 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
     args["config_file"] = str(_materialize_effective_workflow(work, resolved))
     try:
         result.update(_execute_test_workflow(definition, args, replacements))
-        if definition.get(_DERIVED_OUTPUT):
+        if definition.get(_DERIVED_OUTPUT) and result.get("status") in {"pass", "warn"}:
             _validate_derived_workflow(resolved[_APPLICATIONS_KEY])
     finally:
         log_path = work / _EXECUTION_LOG_FILE_NAME
