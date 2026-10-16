@@ -4,8 +4,10 @@ import hashlib
 import itertools
 import json
 import math
+import os
 import re
 import shlex
+import stat
 from pathlib import Path
 
 import astropy.units as u
@@ -183,7 +185,10 @@ def _pattern_rows(patterns, repetitions, max_events):
 
 
 def write_stimulus_camera(source, destination, patterns, mirror_class):
-    """Write exact patterns and compensate the documented single-mirror bypass transform."""
+    """Write exact patterns beside the source camera, compensating the bypass transform.
+
+    The destination must not be a symlink or an alias of the source camera.
+    """
     _groups, _pixels, rotation = read_camera(source)
     cosine, sine = np.cos(np.deg2rad(rotation)), np.sin(np.deg2rad(rotation))
     lines = []
@@ -201,7 +206,33 @@ def write_stimulus_camera(source, destination, patterns, mirror_class):
     for row in patterns:
         members = " ".join(f"+{pixel}" for pixel in json.loads(row[INPUT_PIXELS]))
         lines.append(f"MajorityTrigger * of {members}")
-    Path(destination).write_text("\n".join(lines) + "\n", encoding=UTF_8)
+    _write_stimulus_text(source, destination, "\n".join(lines) + "\n")
+
+
+def _write_stimulus_text(source, destination, text):
+    """Constrain illumination output to the camera directory and pin it while writing."""
+    source_path = Path(source).resolve(strict=True)
+    requested = Path(destination)
+    if requested.parent.resolve() != source_path.parent or requested.name in {"", ".", ".."}:
+        raise ValueError("Illumination destination must be a file beside the source camera")
+    if requested.is_symlink():
+        raise ValueError("Illumination destination must not be a symbolic link")
+    source_stat = source_path.stat()
+    directory_fd = os.open(source_path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        # Do not truncate until the opened inode has been checked against the camera.
+        flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK
+        output_fd = os.open(requested.name, flags, 0o666, dir_fd=directory_fd)
+        with os.fdopen(output_fd, "w", encoding=UTF_8) as output:
+            output_stat = os.fstat(output.fileno())
+            if not stat.S_ISREG(output_stat.st_mode):
+                raise ValueError("Illumination destination must be a regular file")
+            if (output_stat.st_dev, output_stat.st_ino) == (source_stat.st_dev, source_stat.st_ino):
+                raise ValueError("Illumination output must not overwrite the source camera")
+            output.truncate(0)
+            output.write(text)
+    finally:
+        os.close(directory_fd)
 
 
 def compare_model(groups, group_table, member_table):

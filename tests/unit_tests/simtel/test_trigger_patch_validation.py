@@ -1,6 +1,7 @@
 """Tests for planned trigger stimuli and complete event accounting."""
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,10 @@ NATIVE_CAMERA = (
     "Rotate 90\nPixel 0 1 0 0\nPixel 1 1 10 0\nPixel 2 1 0 20\n"
     "MajorityTrigger 2 of +0 1[2]\nAnalogSumTrigger * of 0 1 2\n"
 )
+STIMULI_FILE = "stimuli.dat"
+PROTECTED_FILE = "protected.dat"
+UNTOUCHED_CONTENT = "untouched content"
+UNSAFE_DESTINATION = "Illumination destination"
 
 
 def _camera(tmp_test_directory):
@@ -113,12 +118,96 @@ def test_single_mirror_stimuli_invert_camera_rotation_and_y_flip(tmp_test_direct
     source = _camera(tmp_test_directory)
     groups, pixels, _rotation = validation.read_camera(source)
     rows = validation.plan_patterns(groups, pixels, 2, 1, False)
-    destination = Path(tmp_test_directory) / "stimuli.dat"
+    destination = Path(tmp_test_directory) / STIMULI_FILE
     validation.write_stimulus_camera(source, destination, rows, mirror_class=0)
     generated_groups, positions, _rotation = validation.read_camera(destination)
     assert positions[1] == pytest.approx((0, -10), abs=1e-10)
     assert generated_groups[0][validation.REQUIRED] == [0, 1]
     assert len(generated_groups) == len(rows)
+
+
+@pytest.mark.parametrize("relative", [False, True])
+def test_stimulus_output_cannot_escape_camera_directory(tmp_test_directory, relative):
+    root = Path(tmp_test_directory)
+    camera_directory = root / "camera"
+    camera_directory.mkdir()
+    source = _camera(camera_directory)
+    destination = root / STIMULI_FILE
+    destination.write_text(UNTOUCHED_CONTENT, encoding=validation.UTF_8)
+    requested = camera_directory / ".." / STIMULI_FILE if relative else destination
+    with pytest.raises(ValueError, match=UNSAFE_DESTINATION):
+        validation.write_stimulus_camera(source, requested, [], mirror_class=0)
+    assert destination.read_text(encoding=validation.UTF_8) == UNTOUCHED_CONTENT
+
+
+def test_stimulus_output_rejects_symlink(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    source = _camera(root)
+    protected = root / PROTECTED_FILE
+    protected.write_text(UNTOUCHED_CONTENT, encoding=validation.UTF_8)
+    destination = root / STIMULI_FILE
+    destination.symlink_to(protected)
+    with pytest.raises(ValueError, match=UNSAFE_DESTINATION):
+        validation.write_stimulus_camera(source, destination, [], mirror_class=0)
+    assert protected.read_text(encoding=validation.UTF_8) == UNTOUCHED_CONTENT
+
+
+@pytest.mark.parametrize("hardlink", [False, True])
+def test_stimulus_output_cannot_overwrite_source_camera(tmp_test_directory, hardlink):
+    source = _camera(tmp_test_directory)
+    destination = source
+    if hardlink:
+        destination = Path(tmp_test_directory) / STIMULI_FILE
+        destination.hardlink_to(source)
+    with pytest.raises(
+        ValueError, match="Illumination output must not overwrite the source camera"
+    ):
+        validation.write_stimulus_camera(source, destination, [], mirror_class=0)
+    assert source.read_text(encoding=validation.UTF_8) == NATIVE_CAMERA
+
+
+def test_stimulus_output_can_replace_an_existing_regular_file(tmp_test_directory):
+    source = _camera(tmp_test_directory)
+    destination = Path(tmp_test_directory) / STIMULI_FILE
+    destination.write_text(UNTOUCHED_CONTENT * 100, encoding=validation.UTF_8)
+    validation.write_stimulus_camera(str(source), str(destination), [], mirror_class=2)
+    assert (
+        destination.read_text(encoding=validation.UTF_8)
+        == NATIVE_CAMERA.split("MajorityTrigger")[0]
+    )
+
+
+def test_stimulus_output_does_not_follow_a_symlink_created_after_validation(
+    tmp_test_directory, monkeypatch
+):
+    root = Path(tmp_test_directory)
+    source = _camera(root)
+    protected = root / PROTECTED_FILE
+    protected.write_text(UNTOUCHED_CONTENT, encoding=validation.UTF_8)
+    destination = root / STIMULI_FILE
+    original_open = os.open
+
+    def replace_destination_before_open(path, flags, mode=0o777, **kwargs):
+        if path == destination.name:
+            destination.symlink_to(protected)
+        return original_open(path, flags, mode, **kwargs)
+
+    monkeypatch.setattr(validation.os, "open", replace_destination_before_open)
+    with pytest.raises(OSError, match="Too many levels of symbolic links"):
+        validation.write_stimulus_camera(source, destination, [], mirror_class=0)
+    assert protected.read_text(encoding=validation.UTF_8) == UNTOUCHED_CONTENT
+
+
+def test_stimulus_output_rejects_nonregular_files(tmp_test_directory):
+    source = _camera(tmp_test_directory)
+    destination = Path(tmp_test_directory) / STIMULI_FILE
+    os.mkfifo(destination)
+    reader_fd = os.open(destination, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        with pytest.raises(ValueError, match="Illumination destination must be a regular file"):
+            validation.write_stimulus_camera(source, destination, [], mirror_class=0)
+    finally:
+        os.close(reader_fd)
 
 
 def test_header_comparison_detects_wrong_membership_and_kind(tmp_test_directory):
