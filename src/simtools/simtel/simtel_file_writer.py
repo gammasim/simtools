@@ -7,10 +7,6 @@ import numpy as np
 
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 
-ANALOGSUM = "analogsum"
-MAJORITY = "majority"
-REQUIRED = "required"
-
 logger = logging.getLogger(__name__)
 
 
@@ -112,8 +108,8 @@ def _trigger_lines(triggers, members_by_group):
 def _trigger_line(trigger, index, members_by_group):
     """Build one trigger line."""
     keyword = {
-        MAJORITY: "MajorityTrigger",
-        ANALOGSUM: "AnalogSumTrigger",
+        "majority": "MajorityTrigger",
+        "analogsum": "AnalogSumTrigger",
         "digitalsum": "DigitalSumTrigger",
     }.get(trigger["kind"].lower())
     if keyword is None:
@@ -138,7 +134,7 @@ def _trigger_member_token(member_rows):
     """Build one scalar or bracketed trigger member token."""
     member_rows.sort(key=lambda row: row["pixel_order"])
     first = member_rows[0]
-    prefix = "+" if bool(first[REQUIRED]) else ""
+    prefix = "+" if bool(first["required"]) else ""
     if len(member_rows) == 1:
         return prefix + str(first["pixel_id"])
     slaves = ",".join(str(row["pixel_id"]) for row in member_rows[1:])
@@ -207,12 +203,12 @@ def _validate_trigger(trigger, members, pixel_ids):
     _validate_trigger_multiplicity(use_default, multiplicity)
     if not members:
         raise ValueError(f"Camera trigger group has no members: {trigger['group_id']}")
-    _validate_trigger_members(members, pixel_ids, trigger["kind"].lower())
+    _validate_trigger_members(members, pixel_ids)
 
 
 def _validate_trigger_kind(trigger):
     """Validate the trigger kind."""
-    if trigger.get("kind", "").lower() not in {MAJORITY, ANALOGSUM, "digitalsum"}:
+    if trigger.get("kind", "").lower() not in {"majority", "analogsum", "digitalsum"}:
         raise ValueError(f"Unsupported camera trigger kind: {trigger.get('kind')}")
 
 
@@ -226,7 +222,7 @@ def _validate_trigger_multiplicity(use_default, multiplicity):
         raise ValueError("Explicit trigger multiplicity must be positive")
 
 
-def _validate_trigger_members(members, pixel_ids, trigger_kind):
+def _validate_trigger_members(members, pixel_ids):
     """Validate normalized trigger member rows."""
     member_orders = sorted({member["member_order"] for member in members})
     if member_orders != list(range(len(member_orders))):
@@ -238,12 +234,8 @@ def _validate_trigger_members(members, pixel_ids, trigger_kind):
         )
         if [row["pixel_order"] for row in rows] != list(range(len(rows))):
             raise ValueError("Camera trigger pixel orders must be contiguous")
-        if any(row.get(REQUIRED, False) for row in rows[1:]):
+        if rows[0]["required"] and any(row["required"] for row in rows[1:]):
             raise ValueError("Only the first pixel of a trigger member may be required")
-        if rows[0].get(REQUIRED, False) and trigger_kind != MAJORITY:
-            raise ValueError("Required trigger pixels are only valid for majority triggers")
-        if len(rows) > 1 and trigger_kind == ANALOGSUM:
-            raise ValueError("Analog-sum trigger members cannot use pre-sums")
         if any(row["pixel_id"] not in pixel_ids for row in rows):
             raise ValueError("Camera trigger contains an unknown pixel ID")
 
