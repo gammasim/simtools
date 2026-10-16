@@ -167,7 +167,7 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
         "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
         f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
         "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n",
         encoding=_ENCODING,
     )
     metric = {
@@ -187,12 +187,45 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
     assert result[_STATUS_KEY] == "warn"
     assert "insufficient statistics" in result[_REASON_KEY]
     metrics_file.write_text(
-        f"plot,scope,metric,value,normalized_value,valid,reason,baseline_count,candidate_count,{_REPORT_PAGE_COLUMN}\ndistribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,500,510,27\n",
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,"
+        "500,510,27\n",
         encoding=_ENCODING,
     )
     result = science_test_definitions._evaluate_products(definition, {})
     assert result[_STATUS_KEY] == "warn"
     assert "value=0.06853 exceeds 0.05 (PDF page 27)" in result[_REASON_KEY]
+
+
+def test_csv_acceptance_keeps_warnings_for_distinct_measurements(tmp_test_directory):
+    report = Path(tmp_test_directory)
+    metrics_file = report / "comparison_metrics.csv"
+    metrics_file.write_text(
+        "pair,array_layout,plot,scope,metric,value,valid,reason,baseline_count,candidate_count\n"
+        "pair-1,layout-a,distribution,whole_array,ks,0.08,True,ok,100,100\n"
+        "pair-1,layout-b,distribution,whole_array,ks,0.08,True,ok,100,100\n",
+        encoding=_ENCODING,
+    )
+    definition = {
+        "products": [str(metrics_file)],
+        "rule": {
+            "metrics": [
+                {
+                    "file": str(metrics_file),
+                    "key": "value",
+                    "format": "csv",
+                    "maximum": 0.05,
+                }
+            ]
+        },
+    }
+
+    result = science_test_definitions._evaluate_products(definition, {})
+
+    assert result[_STATUS_KEY] == "warn"
+    assert len(result["acceptance_warnings"]) == 2
+    assert result["acceptance_warnings"][0] == result["acceptance_warnings"][1]
 
 
 def test_release_acceptance_override_is_rejected(campaign):

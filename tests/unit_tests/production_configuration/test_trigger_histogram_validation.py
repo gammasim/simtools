@@ -17,6 +17,7 @@ _SELECT_FILE_GROUPS = "select_file_groups"
 
 _EXTNAME = "EXTNAME"
 _ANGULAR_DISTANCE_BIN_WIDTH = "angular_distance_bin_width"
+_CORE_DISTANCE_BIN_WIDTH = "core_distance_bin_width"
 _APPLICATION_KEY = "application"
 _CONFIGURATION_KEY = "configuration"
 _COUNT = "count"
@@ -78,6 +79,17 @@ def test_derived_group_checks_readability_runs_settings_and_freshness(histogram_
     product.data[_INPUT_RUN_NUMBERS_KEY] = [1]
     output.write_bytes(b"not HDF5")
     with pytest.raises(ValueError, match="Unreadable trigger histogram"):
+        trigger_histograms._validate_derived_group(group, product, config)
+
+
+def test_derived_group_checks_settings_that_use_application_defaults(histogram_product):
+    group, product, config, _source, _output = histogram_product
+    product.data[_HISTOGRAM_SETTINGS_KEY][_CORE_DISTANCE_BIN_WIDTH] = {
+        _VALUE: 10,
+        "unit": "m",
+    }
+
+    with pytest.raises(ValueError, match="setting changed"):
         trigger_histograms._validate_derived_group(group, product, config)
 
 

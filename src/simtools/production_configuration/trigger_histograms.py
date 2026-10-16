@@ -47,10 +47,21 @@ _GROUPS_KEY = "groups"
 _HISTOGRAM_SETTINGS_KEY = "histogram_settings"
 _INPUT_FILES_KEY = "input_files"
 _INPUT_RUN_NUMBERS_KEY = "input_run_numbers"
+_ENERGY_BINS_PER_DECADE = "energy_bins_per_decade"
+_ANGULAR_DISTANCE_BIN_WIDTH = "angular_distance_bin_width"
+_CORE_DISTANCE_BIN_WIDTH = "core_distance_bin_width"
+_MINIMUM_TRIGGERED_TELESCOPES = "minimum_triggered_telescopes"
 _PRODUCTION_PATH_KEY = "production_path"
 _REDUCED_EVENT_DATA = "reduced_event_data"
 _SELECT_KEY = "select"
 _TRIGGER_HISTOGRAMS = "trigger_histograms"
+
+_DEFAULT_HISTOGRAM_SETTINGS = {
+    _ENERGY_BINS_PER_DECADE: 10,
+    _ANGULAR_DISTANCE_BIN_WIDTH: 0.5 * u.deg,
+    _CORE_DISTANCE_BIN_WIDTH: 20.0 * u.m,
+    _MINIMUM_TRIGGERED_TELESCOPES: 2,
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -983,10 +994,10 @@ def _as_argument_value(value, list_value):
 def _histogram_settings(args_dict):
     """Return settings that define a trigger-histogram product."""
     return {
-        "energy_bins_per_decade": args_dict["energy_bins_per_decade"],
-        "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
-        "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
-        "minimum_triggered_telescopes": args_dict.get("minimum_triggered_telescopes", 2),
+        _ENERGY_BINS_PER_DECADE: args_dict[_ENERGY_BINS_PER_DECADE],
+        _ANGULAR_DISTANCE_BIN_WIDTH: args_dict[_ANGULAR_DISTANCE_BIN_WIDTH],
+        _CORE_DISTANCE_BIN_WIDTH: args_dict.get(_CORE_DISTANCE_BIN_WIDTH),
+        _MINIMUM_TRIGGERED_TELESCOPES: args_dict.get(_MINIMUM_TRIGGERED_TELESCOPES, 2),
     }
 
 
@@ -1210,5 +1221,6 @@ def _validate_derived_group(group, product, configuration):
     if any(path.stat().st_mtime_ns > output.stat().st_mtime_ns for path in group.file_paths):
         raise ValueError("Production inputs changed after derivation")
     for key, value in data[_HISTOGRAM_SETTINGS_KEY].items():
-        if key in configuration and not _values_match(value, str(configuration[key])):
+        expected = configuration.get(key, _DEFAULT_HISTOGRAM_SETTINGS.get(key))
+        if not _values_match(value, str(expected)):
             raise ValueError(f"Histogram setting changed: {key}")

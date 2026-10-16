@@ -264,7 +264,6 @@ def _evaluate_products(definition, replacements):
     if rule.get("mode") == "advisory":
         warnings.append("Numerical acceptance is advisory; review required.")
     if warnings:
-        warnings = list(dict.fromkeys(warnings))
         return {
             _STATUS_KEY: "warn",
             _REASON_KEY: f"Acceptance warning ({len(warnings)}): {warnings[0]}",
