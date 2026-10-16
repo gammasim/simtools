@@ -21,6 +21,19 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.utils.general import replace_placeholders_recursively
 
+_SCIENCE_REPORT_PATH = "__SCIENCE_REPORT_PATH__"
+_JOB_IDS = "job_ids"
+
+_ARRAY_LAYOUT_KEY = "array_layout"
+_COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
+_REASON_KEY = "reason"
+_SCOPE_KEY = "scope"
+_SELECT_KEY = "select"
+_STATUS_KEY = "status"
+_TELESCOPE_TYPE_KEY = "telescope_type"
+_ENCODING = "utf-8"
+_CSV_CONTEXT_KEYS = ("pair", _ARRAY_LAYOUT_KEY, _SCOPE_KEY, _TELESCOPE_TYPE_KEY)
+
 _VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 
 _PATH_KEYS = (
@@ -223,11 +236,11 @@ def _check_inputs(definition, replacements):
 
 def _check_completed_submission(path):
     """Require a completed manifest covering every submitted job's declared files."""
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_text(encoding=_ENCODING))
     metadata = payload.get("metadata", {})
     if metadata.get("state") != "completed":
         raise ValueError(f"Production is not completed: {path}")
-    jobs = payload.get("job_ids", [])
+    jobs = payload.get(_JOB_IDS, [])
     outputs = metadata.get("expected_outputs", {})
     if not jobs or set(jobs) != set(outputs):
         raise ValueError(f"Production has missing expected outputs: {path}")
@@ -244,12 +257,20 @@ def _evaluate_products(definition, replacements):
     rule = definition.get("rule", {})
     warnings = []
     for metric in rule.get("metrics", []):
-        warnings.extend(_evaluate_metric(metric, replacements))
+        try:
+            warnings.extend(_evaluate_metric(metric, replacements))
+        except _AcceptanceError as exc:
+            warnings.append(str(exc))
     if rule.get("mode") == "advisory":
-        return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
+        warnings.append("Numerical acceptance is advisory; review required.")
     if warnings:
-        return {"status": "warn", "reason": "; ".join(dict.fromkeys(warnings))}
-    return {"status": "pass"}
+        warnings = list(dict.fromkeys(warnings))
+        return {
+            _STATUS_KEY: "warn",
+            _REASON_KEY: f"Acceptance warning ({len(warnings)}): {warnings[0]}",
+            "acceptance_warnings": warnings,
+        }
+    return {_STATUS_KEY: "pass"}
 
 
 def _evaluate_metric(metric, replacements):
@@ -266,7 +287,7 @@ def _evaluate_metric(metric, replacements):
 
 def _evaluate_json_metric(path, metric):
     """Read and validate one nested JSON metric."""
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(path.read_text(encoding=_ENCODING))
     try:
         for key in metric["key"].split("."):
             value = value[int(key)] if isinstance(value, list) else value[key]
@@ -277,29 +298,94 @@ def _evaluate_json_metric(path, metric):
 
 def _evaluate_csv_metric(path, metric):
     """Apply configured scalar thresholds to selected rows of a compact results table."""
-    selectors = metric.get("select", {})
     field = metric.get("field", metric["key"])
-    with path.open(encoding="utf-8", newline="") as input_file:
-        rows = [
-            row
-            for row in csv.DictReader(input_file)
-            if all(_csv_value_matches(row.get(key, ""), value) for key, value in selectors.items())
-        ]
+    with path.open(encoding=_ENCODING, newline="") as input_file:
+        all_rows = list(csv.DictReader(input_file))
+    selectors = metric.get(_SELECT_KEY, {})
+    rows = [row for row in all_rows if _csv_row_matches(row, selectors)]
+    counts = Counter(_csv_metric_identity(row) for row in all_rows)
+    duplicates = [identity for identity, count in counts.items() if count > 1]
+    if duplicates:
+        raise ValueError(f"Duplicate comparison metric rows in {path}: {duplicates[:5]}.")
+    warnings = _missing_csv_metrics(path, all_rows, rows, selectors)
     if not rows:
-        return [f"No comparison rows match {selectors} in {path}."]
-    warnings = []
+        return warnings or [f"No comparison rows match {selectors} in {path}."]
     for row in rows:
-        warning = _evaluate_csv_row(row, metric, field, path)
+        try:
+            warning = _evaluate_csv_row(row, metric, field, path)
+        except _AcceptanceError as exc:
+            warning = str(exc)
         if warning:
             warnings.append(warning)
     return warnings
 
 
+def _csv_row_matches(row, selectors):
+    """Apply configured selectors to a scalar result or expected context."""
+    return all(_csv_value_matches(row.get(key, ""), value) for key, value in selectors.items())
+
+
+def _csv_metric_identity(row):
+    """Identify a scalar measurement independently of its value and PDF page."""
+    return tuple(
+        row.get(key, "")
+        for key in (
+            "pair",
+            _ARRAY_LAYOUT_KEY,
+            "plot",
+            _SCOPE_KEY,
+            _TELESCOPE_TYPE_KEY,
+            "population",
+            "metric",
+        )
+    )
+
+
+def _csv_metric_contexts(path, rows):
+    """Use declared pair/type coverage, falling back to older scalar tables."""
+    inventory = path.with_name(_COMPARISON_INVENTORY_FILE)
+    payload = json.loads(inventory.read_text(encoding=_ENCODING)) if inventory.is_file() else {}
+    scopes = payload.get("metric_scopes")
+    if scopes is None:
+        return {tuple(row.get(key, "") for key in _CSV_CONTEXT_KEYS) for row in rows}
+    return {
+        (pair, layout, _TELESCOPE_TYPE_KEY if telescope else "whole_array", telescope)
+        for pair, layouts in scopes.items()
+        for layout, telescopes in layouts.items()
+        for telescope in ("", *telescopes)
+    }
+
+
+def _missing_csv_metrics(path, all_rows, selected, selectors):
+    """Warn for each expected configuration/type without a selected measurement."""
+    observed = {tuple(row.get(key, "") for key in _CSV_CONTEXT_KEYS) for row in selected}
+    context_selectors = {key: value for key, value in selectors.items() if key in _CSV_CONTEXT_KEYS}
+    warnings = []
+    for context in sorted(_csv_metric_contexts(path, all_rows) - observed):
+        row = dict(zip(_CSV_CONTEXT_KEYS, context))
+        if not _csv_row_matches(row, context_selectors):
+            continue
+        telescope = row[_TELESCOPE_TYPE_KEY]
+        plots = selectors.get("plot", [])
+        plots = [plots] if isinstance(plots, str) else plots
+        if (
+            telescope
+            and plots
+            and not any(fnmatch.fnmatchcase(telescope, plot.rsplit("_", 1)[-1]) for plot in plots)
+        ):
+            continue
+        warnings.append(
+            f"Missing comparison metric rows for {row['pair']} {row[_ARRAY_LAYOUT_KEY]} "
+            f"{row[_SCOPE_KEY]} {telescope}: {selectors}."
+        )
+    return warnings
+
+
 def _evaluate_csv_row(row, metric, field, path):
     """Evaluate a selected CSV row and return its warning, if any."""
-    label = f"{row.get('plot')} {row.get('scope')} {row.get('pair')}"
+    label = f"{row.get('plot')} {row.get(_SCOPE_KEY)} {row.get('pair')}"
     if row.get("valid", "").casefold() != "true":
-        return f"{label}: invalid statistic ({row.get('reason')}){_report_page_suffix(row)}."
+        return f"{label}: invalid statistic ({row.get(_REASON_KEY)}){_report_page_suffix(row)}."
     value, counts = _read_csv_acceptance_values(row, field, path)
     minimum_entries = metric.get("minimum_entries")
     if minimum_entries is not None and min(counts) < minimum_entries:
@@ -373,8 +459,8 @@ def _check_expected_pair_count(definition, replacements):
         return
     if isinstance(expected, bool) or not isinstance(expected, int) or expected < 1:
         raise ValueError("expected_pair_count must be a positive integer.")
-    inventory = Path(replacements["__SCIENCE_REPORT_PATH__"]) / "comparison_inventory.json"
-    payload = json.loads(inventory.read_text(encoding="utf-8"))
+    inventory = Path(replacements[_SCIENCE_REPORT_PATH]) / _COMPARISON_INVENTORY_FILE
+    payload = json.loads(inventory.read_text(encoding=_ENCODING))
     observed = payload.get("matched_pair_count")
     if observed != expected:
         raise ValueError(
@@ -416,17 +502,17 @@ def _campaign_signature(
     for definition in catalogue.values():
         payload.append(
             _resolve_workflow(template_dir, release_dir, definition["workflow"]).read_text(
-                encoding="utf-8"
+                encoding=_ENCODING
             )
         )
     runtime_file = template_dir / "run_time.yml"
     if runtime_file.is_file():
-        payload.append(runtime_file.read_text(encoding="utf-8"))
+        payload.append(runtime_file.read_text(encoding=_ENCODING))
     for profile in sorted((template_dir / "profiles").glob("*.yml")):
-        payload.append(profile.read_text(encoding="utf-8"))
+        payload.append(profile.read_text(encoding=_ENCODING))
     for environment_file in sorted((template_dir / "profiles").glob("*.env")):
-        payload.append(environment_file.read_text(encoding="utf-8"))
-    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+        payload.append(environment_file.read_text(encoding=_ENCODING))
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode(_ENCODING)).hexdigest()
 
 
 def _load_acceptance(release_dir, template_dir):
@@ -526,7 +612,7 @@ def _validate_metric_rule(metric):
             or not math.isfinite(value)
         ):
             raise ValueError(f"Invalid acceptance {limit}: {value}")
-    selectors = metric.get("select", {})
+    selectors = metric.get(_SELECT_KEY, {})
     if not isinstance(selectors, dict) or any(
         not isinstance(key, str)
         or not isinstance(value, str | list)
@@ -592,7 +678,7 @@ def _site_replacements(context, site, site_config, work):
             "__SCIENCE_ARRAY_LAYOUT__": site_config["array_layout_name"],
             "__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate_root / site),
             "__SCIENCE_BASELINE_SITE_PATH__": str(baseline_root / site),
-            "__SCIENCE_REPORT_PATH__": str(work),
+            _SCIENCE_REPORT_PATH: str(work),
             "__SCIENCE_COLLECTION_PATH__": str(work),
         }
     )
@@ -756,7 +842,7 @@ def _check_reviewed_production(definition, replacements):
     submitted = []
     for path in _matched_files(str(root / "**" / _SUBMISSION_FILE_NAME)):
         _check_completed_submission(path)
-        submitted.extend(json.loads(path.read_text(encoding="utf-8")).get("job_ids", []))
+        submitted.extend(json.loads(path.read_text(encoding=_ENCODING)).get(_JOB_IDS, []))
     _require_same_ids(expected_ids, submitted, "submitted jobs")
     return {"expected_jobs": len(rows), "observed_jobs": len(manifests)}
 

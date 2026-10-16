@@ -12,6 +12,10 @@ from simtools.data_model import schema
 from simtools.sim_events.production_comparison import ProductionEventMetrics
 from simtools.visualization import plot_event_level_production_comparison
 
+_FIRST = "first"
+_SECOND = "second"
+_RENDERING_KEY = "rendering"
+
 ENERGY = "energy"
 ANGULAR_DISTANCE = "angular_distance"
 CORE_DISTANCE = "core_distance"
@@ -43,13 +47,13 @@ def fixed_pair_context():
 
 def test_metadata_suppression_converts_units_and_tolerates_roundoff(fixed_pair_context):
     maximum = 0.030000000000001
-    assert np.isclose(maximum, 0.03, rtol=1e-6, atol=1e-12)
+    assert maximum == pytest.approx(0.03, rel=1e-6, abs=1e-12)
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][ENERGY_MAX_KEY] = {
         VALUE_KEY: maximum,
         "unit": "TeV",
     }
     offset = 1e-13
-    assert np.isclose(offset, 0.0, rtol=0.0, atol=1e-12)
+    assert offset == pytest.approx(0.0, abs=1e-12)
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][VIEW_CONE_MAX_KEY] = offset
     assert plot_event_level_production_comparison._metadata_suppressed_distributions(
         fixed_pair_context
@@ -279,9 +283,17 @@ def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory
     assert not list(output_path.glob("*.png"))
 
 
-def test_no_plot_mode_retains_statistics(tmp_test_directory):
+def test_no_plot_mode_retains_statistics(tmp_test_directory, monkeypatch):
     output_path = Path(tmp_test_directory)
-    metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
+    metrics = [
+        _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    def reject_figure(*_args, **_kwargs):
+        raise AssertionError("Statistics-only comparison must not allocate figures")
+
+    monkeypatch.setattr(plot_event_level_production_comparison.plt, "subplots", reject_figure)
 
     statistics_file = plot_event_level_production_comparison.plot(
         metrics, output_path=output_path, report_mode="none"
@@ -289,6 +301,46 @@ def test_no_plot_mode_retains_statistics(tmp_test_directory):
 
     assert statistics_file.is_file()
     assert not list(output_path.glob("*.png"))
+
+
+def test_report_modes_keep_identical_scalar_statistics(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
+    ]
+    payloads = []
+    for mode in (COMPACT_REPORT, "none"):
+        path = plot_event_level_production_comparison.plot(
+            metrics, output_path=root / mode, report_mode=mode
+        )
+        payloads.append(json.loads(path.read_text(encoding=TEXT_ENCODING)))
+    for plot_statistics in payloads[1][PLOT_STATISTICS_KEY].values():
+        assert _RENDERING_KEY not in plot_statistics
+    for payload in payloads:
+        for plot_statistics in payload[PLOT_STATISTICS_KEY].values():
+            plot_statistics.pop(_RENDERING_KEY, None)
+    assert payloads[0] == payloads[1]
+
+
+def test_pdf_pages_are_closed_immediately_and_labels_are_retained(tmp_test_directory):
+    output = Path(tmp_test_directory) / "streamed.pdf"
+    with plot_event_level_production_comparison._pdf_report(output) as report:
+        for label in (_FIRST, _SECOND):
+            figure = plot_event_level_production_comparison.plt.figure()
+            figure.set_label(label)
+            report.append(figure)
+            assert not plot_event_level_production_comparison.plt.fignum_exists(figure.number)
+        assert report.page_labels == [_FIRST, _SECOND]
+        assert len(report) == 2
+    assert output.is_file()
+
+
+def test_empty_pdf_report_does_not_create_an_output(tmp_test_directory):
+    output = Path(tmp_test_directory) / "unused" / "report.pdf"
+    with plot_event_level_production_comparison._pdf_report(output):
+        pass
+    assert not output.exists()
 
 
 def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):

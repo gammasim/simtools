@@ -103,6 +103,9 @@ retry with `--allow_production`.
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
 Warnings do not qualify a release; every required test must pass.
+Missing configured comparison metrics produce warnings; duplicate measurements are errors.
+All acceptance deviations are collected in a small `acceptance.md` report linked from the
+release summary, with PDF page links where available. Complete scalar results remain in CSV.
 Reports and the release summary are written under `reports/`; production data remains at the external
 candidate path.
 Summary generation does not scan candidate or baseline data. If those files change outside the

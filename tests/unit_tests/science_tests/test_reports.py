@@ -7,6 +7,14 @@ import yaml
 
 from simtools.science_tests import reports as science_test_reports
 
+_RUN_1 = "run-1"
+_RUN_ID = "run_id"
+
+_ACCEPTANCE_WARNINGS_KEY = "acceptance_warnings"
+_PRODUCTION_HISTORY = "production_history"
+_RELEASE = "release"
+_REPORTS_DIRECTORY = "reports"
+
 DERIVE_TEST = "derive"
 COMPUTING_TEST = "computing"
 CONTAINER_RUNTIME = "container"
@@ -35,6 +43,42 @@ def _write_yaml(path, data):
     path.write_text(yaml.safe_dump(data), encoding=TEXT_ENCODING)
 
 
+def test_acceptance_deviations_are_published_once_and_linked(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    work = root / "work"
+    report = root / _REPORTS_DIRECTORY / SITE / COMPARE_TEST
+    result = {
+        "id": COMPARE_ID,
+        "test": COMPARE_TEST,
+        "site": SITE,
+        STATUS_KEY: "warn",
+        EXECUTION_KEY: COMPLETED_EXECUTION,
+        _ACCEPTANCE_WARNINGS_KEY: [
+            "core whole-array configuration-a: value=0.09 exceeds 0.05 (PDF page 2).",
+            "multiplicity LSTN configuration-b: value=0.08 exceeds 0.05 (PDF page 5).",
+        ],
+    }
+    science_test_reports._write_test_report(work, report, root, result)
+    deviations = (report / "acceptance.md").read_text(encoding=TEXT_ENCODING)
+    assert "configuration-a" in deviations
+    assert "configuration-b" in deviations
+    assert "trigger-report.pdf#page=2" in deviations
+    assert "trigger-report.pdf#page=5" in deviations
+    assert _ACCEPTANCE_WARNINGS_KEY not in result
+    assert len(list(report.iterdir())) == 1
+    science_test_reports._write_summary(
+        root / _REPORTS_DIRECTORY,
+        {
+            _RELEASE: RELEASE_LABEL,
+            QUALIFIED_KEY: False,
+            RESULTS_KEY: [result],
+            _PRODUCTION_HISTORY: [],
+        },
+    )
+    summary = (root / "reports/release-summary.md").read_text(encoding=TEXT_ENCODING)
+    assert "[deviations](north/compare/acceptance.md)" in summary
+
+
 def test_production_history_survives_a_non_production_configuration_change(campaign):
     catalogue_path = campaign["template_dir"] / "catalogue.yml"
     catalogue = yaml.safe_load(catalogue_path.read_text(encoding=TEXT_ENCODING))
@@ -47,14 +91,14 @@ def test_production_history_survives_a_non_production_configuration_change(campa
             {
                 CAMPAIGN_DIGEST_KEY: "old",
                 RESULTS_KEY: [],
-                "production_history": [
+                _PRODUCTION_HISTORY: [
                     {
                         "id": "production.north",
                         "test": "production",
                         "site": SITE,
                         EXECUTION_KEY: "submitted",
                         STATUS_KEY: "submitted",
-                        "run_id": "run-1",
+                        _RUN_ID: _RUN_1,
                     }
                 ],
             }
@@ -72,13 +116,13 @@ def test_production_history_survives_a_non_production_configuration_change(campa
         catalogue["tests"],
     )
 
-    assert summary["production_history"][0]["run_id"] == "run-1"
+    assert summary[_PRODUCTION_HISTORY][0][_RUN_ID] == _RUN_1
 
 
 def test_write_summary_includes_failures_and_production_history(tmp_test_directory):
     report_dir = Path(tmp_test_directory)
     summary = {
-        "release": RELEASE_LABEL,
+        _RELEASE: RELEASE_LABEL,
         QUALIFIED_KEY: False,
         RESULTS_KEY: [
             {
@@ -89,12 +133,12 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
                 "error": "missing report",
             }
         ],
-        "production_history": [
+        _PRODUCTION_HISTORY: [
             {
                 "id": "production.north",
                 EXECUTION_KEY: "submitted",
                 STATUS_KEY: "submitted",
-                "run_id": "run-1",
+                _RUN_ID: _RUN_1,
             }
         ],
     }
@@ -104,7 +148,7 @@ def test_write_summary_includes_failures_and_production_history(tmp_test_directo
     markdown = (report_dir / "release-summary.md").read_text(encoding=TEXT_ENCODING)
     assert "incomplete | missing report" in markdown
     assert "Production history" in markdown
-    assert "run-1" in markdown
+    assert _RUN_1 in markdown
 
 
 def test_publication_filters_evidence_replaces_stale_output_and_warns_when_large(
@@ -124,7 +168,7 @@ def test_publication_filters_evidence_replaces_stale_output_and_warns_when_large
     (work / "comparison_inventory.json").write_text(
         '{"matched_pair_count": 1}', encoding=TEXT_ENCODING
     )
-    release_dir = root / "release"
+    release_dir = root / _RELEASE
     report_root = release_dir / "reports/north/compare"
     report_root.mkdir(parents=True)
     (report_root / "stale.json").touch()
@@ -239,9 +283,9 @@ def test_failed_test_retains_previous_report(tmp_test_directory):
 def test_write_summary_links_report_paths(tmp_test_directory):
     report_dir = Path(tmp_test_directory)
     summary = {
-        "release": RELEASE_LABEL,
+        _RELEASE: RELEASE_LABEL,
         QUALIFIED_KEY: False,
-        "production_history": [],
+        _PRODUCTION_HISTORY: [],
         RESULTS_KEY: [
             {
                 "site": SITE,

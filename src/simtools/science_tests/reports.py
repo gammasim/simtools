@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 import shutil
 from pathlib import Path
 
@@ -13,15 +14,22 @@ from simtools.science_tests.definitions import (
     _dependency_order,
 )
 
+_RELEASE_SUMMARY_JSON = "release-summary.json"
+_REPORT = "report"
+
+_ACCEPTANCE_REPORT_KEY = "acceptance_report"
+_REPORTS_DIRECTORY = "reports"
+_ENCODING = "utf-8"
+
 logger = logging.getLogger(__name__)
 _REDUNDANT_PUBLICATION_FILES = {"effective-settings.json", "inventory.json"}
 
 
 def _release_summary(release_dir, release, suites, results, dry_run, signature, catalogue):
     """Merge compatible subset results into the complete required-site matrix."""
-    path = release_dir / "reports" / "release-summary.json"
+    path = release_dir / _REPORTS_DIRECTORY / _RELEASE_SUMMARY_JSON
     previous = (
-        json.loads(path.read_text(encoding="utf-8")) if path.is_file() and not dry_run else {}
+        json.loads(path.read_text(encoding=_ENCODING)) if path.is_file() and not dry_run else {}
     )
     records = (
         {r["id"]: r for r in previous.get("results", [])}
@@ -41,7 +49,7 @@ def _release_summary(release_dir, release, suites, results, dry_run, signature, 
                     "id": key,
                     "test": test_id,
                     "site": site,
-                    "report": None,
+                    _REPORT: None,
                     "status": "not_run",
                     "execution": "not_run",
                     "reason": "Not selected or not executed.",
@@ -101,11 +109,22 @@ def _write_test_report(work, report_root, release_dir, result):
     """Publish successful collected evidence atomically without per-test wrappers."""
     report = report_root.relative_to(release_dir).as_posix()
     if result["status"] in {"fail", "incomplete", "blocked"}:
-        result["report"] = None
+        result[_REPORT] = None
         if report_root.exists():
             result["previous_report"] = report
         return
-    result["report"] = report
+    result[_REPORT] = report
+    warnings = result.pop("acceptance_warnings", [])
+    if warnings:
+        work.mkdir(parents=True, exist_ok=True)
+        lines = ["# Acceptance deviations", ""]
+        for warning in warnings:
+            warning = re.sub(
+                r"PDF page (\d+)", r"[PDF page \1](trigger-report.pdf#page=\1)", warning
+            )
+            lines.append(f"- {warning}")
+        (work / "acceptance.md").write_text("\n".join(lines) + "\n", encoding=_ENCODING)
+        result[_ACCEPTANCE_REPORT_KEY] = f"{report}/acceptance.md"
     staging = report_root.with_name(f".{report_root.name}.new")
     _clear_test_directory(staging)
     if work.exists():
@@ -120,7 +139,7 @@ def _write_test_report(work, report_root, release_dir, result):
             _copy_report_products(source, destination)
     result["publication"] = _publication_inventory(staging)
     if not staging.exists():
-        result["report"] = None
+        result[_REPORT] = None
         _clear_test_directory(report_root)
         return
     previous = report_root.with_name(f".{report_root.name}.previous")
@@ -158,9 +177,9 @@ def _copy_report_products(source, destination):
 
 def _write_summary(report_dir, summary):
     report_dir.mkdir(parents=True, exist_ok=True)
-    (report_dir / "release-summary.json").write_text(
+    (report_dir / _RELEASE_SUMMARY_JSON).write_text(
         json.dumps(summary, indent=2) + "\n",
-        encoding="utf-8",
+        encoding=_ENCODING,
     )
     lines = [
         f"# Science-test summary: {summary['release']}",
@@ -173,9 +192,14 @@ def _write_summary(report_dir, summary):
     for result in summary["results"]:
         reason = result.get("error") or result.get("reason") or "-"
         report = "-"
-        if result.get("report"):
-            report_path = Path(result["report"]).relative_to("reports").as_posix()
+        if result.get(_REPORT):
+            report_path = Path(result[_REPORT]).relative_to(_REPORTS_DIRECTORY).as_posix()
             report = f"[report]({report_path})"
+        if result.get(_ACCEPTANCE_REPORT_KEY):
+            acceptance_path = (
+                Path(result[_ACCEPTANCE_REPORT_KEY]).relative_to(_REPORTS_DIRECTORY).as_posix()
+            )
+            report += f"; [deviations]({acceptance_path})"
         lines.append(
             f"| {result['site']} | {result['test']} | {result['execution']} | "
             f"{result['status']} | {reason} | {report} |"
@@ -201,4 +225,4 @@ def _write_summary(report_dir, summary):
                 f"- {record['id']}: {record['execution']} ({record['status']}); "
                 f"run ID `{record.get('run_id', 'unknown')}`."
             )
-    (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (report_dir / "release-summary.md").write_text("\n".join(lines) + "\n", encoding=_ENCODING)

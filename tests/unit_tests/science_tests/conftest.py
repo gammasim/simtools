@@ -137,3 +137,8 @@ def successful_workflow(monkeypatch):
 
     monkeypatch.setattr(science_test_execution, "run_applications", execute)
     return calls
+
+
+@pytest.fixture
+def write_science_yaml():
+    return _write_yaml
