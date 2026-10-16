@@ -19,12 +19,13 @@ from simtools.io.file_type import (
 
 
 def test_product_suffixes_include_compressed_sim_telarray_outputs():
-    assert _get_product_suffixes("sim_telarray_output") == (
+    product_id = "sim_telarray_output"
+    assert _get_product_suffixes(product_id) == (
         ".simtel",
         ".simtel.gz",
         ".simtel.zst",
     )
-    assert _get_product_value("sim_telarray_output", "default_suffix") == ".simtel.zst"
+    assert _get_product_value(product_id, "default_suffix") == ".simtel.zst"
 
 
 def test_product_filename_and_unknown_product():
