@@ -619,14 +619,19 @@ def _inspection_summary(rows, groups, unexpected, duplicates, metadata):
     }
 
 
-def _plot_configuration_summary(pdf, camera, groups):
-    """Show configured patch coverage independently of illumination."""
+def _pixel_coverage(camera, pixel_lists):
+    """Count occurrences of each camera pixel across membership or arrival lists."""
     coverage = np.zeros(len(camera.pixels[PIXEL_IDS]))
     pixel_indices = {int(pixel): index for index, pixel in enumerate(camera.pixels[PIXEL_IDS])}
-    for group in groups:
-        members = json.loads(group[validation.MEMBERS])
-        for pixel in members:
+    for pixels in pixel_lists:
+        for pixel in pixels:
             coverage[pixel_indices[pixel]] += 1
+    return coverage
+
+
+def _plot_configuration_summary(pdf, camera, groups):
+    """Show configured patch coverage independently of illumination."""
+    coverage = _pixel_coverage(camera, (json.loads(group[validation.MEMBERS]) for group in groups))
     figure, axis = plt.subplots(figsize=(11, 8), layout=CONSTRAINED_LAYOUT)
     try:
         plot_pixel_layout_with_image(
@@ -676,11 +681,7 @@ def _plot_patch_efficiency(pdf, groups):
 
 def _plot_inspection_summary(pdf, camera, rows, summary):
     """Summarize simulated photoelectron arrivals and trial outcomes on one page."""
-    coverage = np.zeros(len(camera.pixels[PIXEL_IDS]))
-    pixel_indices = {int(pixel): index for index, pixel in enumerate(camera.pixels[PIXEL_IDS])}
-    for row in rows:
-        for pixel in json.loads(row["pe_pixels"]):
-            coverage[pixel_indices[pixel]] += 1
+    coverage = _pixel_coverage(camera, (json.loads(row["pe_pixels"]) for row in rows))
     figure, (axis, text_axis) = plt.subplots(ncols=2, figsize=(11, 8))
     try:
         plot_pixel_layout_with_image(
@@ -758,20 +759,24 @@ def _trigger_event_context(event, telescope_event, telescope_id, trigger_groups,
     return input_pixels, source_pixels, fired_groups, matching_groups
 
 
+def _event_image(event, telescope_event, camera):
+    """Use the integrated readout when available, otherwise show photoelectron counts."""
+    if ADC_SAMPLES in telescope_event:
+        _samples, _pedestals, image = get_trace_data(telescope_event[ADC_SAMPLES])
+        return image, "Integrated signal [d.c.]"
+    image = np.zeros(len(camera.pixels[PIXEL_IDS]))
+    photoelectrons = next(iter(event.get(MC_PHOTOELECTRONS, {}).values()), {})
+    if MC_PHOTOELECTRONS in photoelectrons:
+        image = photoelectrons[MC_PHOTOELECTRONS]
+    return image, "MC photoelectrons (no recorded waveform)"
+
+
 def _plot_trigger_events(events, telescope_id, camera, pdf, trigger_groups, input_patterns):
     """Plot one page per recorded telescope event without accumulating images."""
     page_count = 0
     for event in events:
         telescope_event = event.get(validation.TELESCOPE_EVENTS, {}).get(telescope_id, {})
-        image_label = "Integrated signal [d.c.]"
-        if ADC_SAMPLES in telescope_event:
-            _samples, _pedestals, image = get_trace_data(telescope_event[ADC_SAMPLES])
-        else:
-            image = np.zeros(len(camera.pixels[PIXEL_IDS]))
-            pe_data = next(iter(event.get(MC_PHOTOELECTRONS, {}).values()), {})
-            if MC_PHOTOELECTRONS in pe_data:
-                image = pe_data[MC_PHOTOELECTRONS]
-            image_label = "MC photoelectrons (no recorded waveform)"
+        image, image_label = _event_image(event, telescope_event, camera)
         input_pixels, pe_pixels, fired_groups, matching_groups = _trigger_event_context(
             event, telescope_event, telescope_id, trigger_groups, input_patterns
         )

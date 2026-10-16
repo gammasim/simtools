@@ -235,6 +235,24 @@ def _write_stimulus_text(source, destination, text):
         os.close(directory_fd)
 
 
+def _model_member_roles(rows):
+    """Normalize model members into ordered master, required and slave roles."""
+    members_by_order = {}
+    for row in rows:
+        members_by_order.setdefault(int(row[MEMBER_ORDER]), []).append(row)
+    roles = []
+    for _order, members in sorted(members_by_order.items()):
+        members.sort(key=lambda row: int(row[PIXEL_ORDER]))
+        roles.append(
+            (
+                int(members[0][PIXEL_ID]),
+                bool(members[0][REQUIRED]),
+                tuple(int(row[PIXEL_ID]) for row in members[1:]),
+            )
+        )
+    return roles
+
+
 def compare_model(groups, group_table, member_table):
     """Compare native roles against independent resolved model tables."""
     names = {"majority": 0, "analogsum": 1, "digitalsum": 2}
@@ -245,20 +263,8 @@ def compare_model(groups, group_table, member_table):
             continue
         expected = group_table[index]
         rows = [row for row in member_table if int(row[GROUP_ID]) == index]
-        by_order = {}
-        for row in rows:
-            by_order.setdefault(int(row[MEMBER_ORDER]), []).append(row)
-        roles = []
-        for _order, members in sorted(by_order.items()):
-            members.sort(key=lambda row: int(row[PIXEL_ORDER]))
-            roles.append(
-                (
-                    int(members[0][PIXEL_ID]),
-                    bool(members[0][REQUIRED]),
-                    tuple(int(row[PIXEL_ID]) for row in members[1:]),
-                )
-            )
-        actual = [
+        expected_roles = _model_member_roles(rows)
+        native_roles = [
             (master, master in native[REQUIRED], tuple(native[SLAVES][master]))
             for master in native[MASTERS]
         ]
@@ -266,7 +272,7 @@ def compare_model(groups, group_table, member_table):
         matches.append(
             names[str(expected[KIND]).lower()] == native[KIND]
             and multiplicity == native[MULTIPLICITY]
-            and roles == actual
+            and expected_roles == native_roles
         )
     return matches, len(group_table) == len(groups)
 
