@@ -7,6 +7,9 @@ import yaml
 
 from simtools.science_tests import definitions as science_test_definitions
 
+_REASON_KEY = "reason"
+_STATUS_KEY = "status"
+
 _CONTEXT_FILE_NAME = "context.yml"
 _SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
 _STORAGE_ROOT_PLACEHOLDER = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
@@ -144,16 +147,16 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
             "metrics": [{"file": str(metrics), "key": "results.0.count", "minimum": 2}],
         },
     }
-
-    assert science_test_definitions._evaluate_products(definition, {})["status"] == "warn"
+    assert science_test_definitions._evaluate_products(definition, {})[_STATUS_KEY] == "warn"
     metrics.write_text(json.dumps({"results": [{"count": 1}]}), encoding=_ENCODING)
-    with pytest.raises(science_test_definitions._AcceptanceError, match="Acceptance failed"):
-        science_test_definitions._evaluate_products(definition, {})
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result[_STATUS_KEY] == "warn"
+    assert any("Acceptance failed" in warning for warning in result["acceptance_warnings"])
     metrics.write_text(json.dumps({"results": [{}]}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match=r"Missing metric results.0.count"):
+    with pytest.raises(ValueError, match=r"Missing metric results\.0\.count"):
         science_test_definitions._evaluate_products(definition, {})
     metrics.write_text(json.dumps({"results": [{"count": True}]}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match=r"Invalid metric results.0.count"):
+    with pytest.raises(ValueError, match=r"Invalid metric results\.0\.count"):
         science_test_definitions._evaluate_products(definition, {})
 
 
@@ -181,20 +184,48 @@ def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test
     }
     definition = {"products": [str(metrics_file)], "rule": {"metrics": [metric]}}
     result = science_test_definitions._evaluate_products(definition, {})
-    assert result["status"] == "warn"
-    assert "insufficient statistics" in result["reason"]
-
+    assert result[_STATUS_KEY] == "warn"
+    assert "insufficient statistics" in result[_REASON_KEY]
     metrics_file.write_text(
         "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
         f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,500,510,27\n",
+        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,"
+        "500,510,27\n",
         encoding=_ENCODING,
     )
-    with pytest.raises(
-        science_test_definitions._AcceptanceError,
-        match=r"value=0\.0685(?:3)? exceeds 0\.05 \(PDF page 27\)",
-    ):
-        science_test_definitions._evaluate_products(definition, {})
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result[_STATUS_KEY] == "warn"
+    assert "value=0.06853 exceeds 0.05 (PDF page 27)" in result[_REASON_KEY]
+
+
+def test_csv_acceptance_keeps_warnings_for_distinct_measurements(tmp_test_directory):
+    report = Path(tmp_test_directory)
+    metrics_file = report / "comparison_metrics.csv"
+    metrics_file.write_text(
+        "pair,array_layout,plot,scope,metric,value,valid,reason,baseline_count,candidate_count\n"
+        "pair-1,layout-a,distribution,whole_array,ks,0.08,True,ok,100,100\n"
+        "pair-1,layout-b,distribution,whole_array,ks,0.08,True,ok,100,100\n",
+        encoding=_ENCODING,
+    )
+    definition = {
+        "products": [str(metrics_file)],
+        "rule": {
+            "metrics": [
+                {
+                    "file": str(metrics_file),
+                    "key": "value",
+                    "format": "csv",
+                    "maximum": 0.05,
+                }
+            ]
+        },
+    }
+
+    result = science_test_definitions._evaluate_products(definition, {})
+
+    assert result[_STATUS_KEY] == "warn"
+    assert len(result["acceptance_warnings"]) == 2
+    assert result["acceptance_warnings"][0] == result["acceptance_warnings"][1]
 
 
 def test_release_acceptance_override_is_rejected(campaign):

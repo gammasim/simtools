@@ -15,6 +15,29 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.sim_events.production_comparison import ProductionDescriptor
 
+_FIRST = "first"
+_SECOND = "second"
+
+_COMPARISON_STATISTICS_JSON = "comparison_statistics.json"
+_STATISTICS_JSON = "statistics.json"
+
+_ALPHA = "alpha"
+_COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
+_FILES_KEY = "files"
+_MATCHED_PAIR_COUNT = "matched_pair_count"
+_METRIC_SCOPES = "metric_scopes"
+_TRIGGER_HISTOGRAMS = "trigger_histograms"
+
+_BASELINE_HDF5 = "baseline.hdf5"
+_BASELINE_PATH = "baseline_path"
+_CANDIDATE_HDF5 = "candidate.hdf5"
+_CANDIDATE_PATH = "candidate_path"
+_LABEL = "label"
+_PRODUCTION = "production"
+
+_CANDIDATE = "candidate"
+_EVENTS = "events"
+
 BASELINE_KEY = "baseline"
 COMPARISON_SETS_KEY = "comparison_sets"
 PLOT_STATISTICS_KEY = "plot_statistics"
@@ -29,6 +52,35 @@ CONFIGURATION_KEY = "configuration"
 
 CONFIGURATIONS_KEY = "configurations"
 LAYOUT_NAME = "layout-a"
+SELECTION = ["configuration.primary=gamma"]
+
+
+def test_root_comparison_has_no_pair_or_array_layout(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    assert production_comparison._comparison_coordinates(root / _STATISTICS_JSON, root, None) == (
+        "",
+        "",
+    )
+
+
+@pytest.mark.parametrize("level", [_EVENTS, "computing"])
+def test_comparison_product_validation_does_not_depend_on_acceptance_rule(mocker, level):
+    validate = mocker.patch.object(production_comparison, "_validate_derived_products")
+    production_comparison._validate_comparison_inputs(
+        [
+            {
+                "application": "simtools-compare-productions",
+                CONFIGURATION_KEY: {"comparison_level": level, "select": SELECTION},
+            }
+        ],
+        [BASELINE_KEY, _CANDIDATE],
+    )
+    if level == _EVENTS:
+        assert validate.call_count == 2
+        assert validate.call_args.args[0]["production_path"] == _CANDIDATE
+        assert all(call.args[0]["select"] == SELECTION for call in validate.call_args_list)
+    else:
+        validate.assert_not_called()
 
 
 def test_compare_array_layout_passes_metadata_to_plotting(mocker, tmp_test_directory):
@@ -44,8 +96,8 @@ def test_compare_array_layout_passes_metadata_to_plotting(mocker, tmp_test_direc
 
 def test_write_production_comparison_writes_each_selected_array_layout(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
-    first_statistics_file = output_directory / "first" / "comparison_statistics.json"
-    second_statistics_file = output_directory / "second" / "comparison_statistics.json"
+    first_statistics_file = output_directory / _FIRST / _COMPARISON_STATISTICS_JSON
+    second_statistics_file = output_directory / _SECOND / _COMPARISON_STATISTICS_JSON
     descriptors = mocker.sentinel.production_descriptors
     mocker.patch(
         "simtools.production_configuration.production_comparison.parse_production_arguments",
@@ -66,22 +118,22 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
 
     production_comparison.write_production_comparison(
         {
-            "production": [BASELINE_KEY, "baseline.hdf5", "candidate", "candidate.hdf5"],
-            ARRAY_LAYOUT_KEY: ["first", "second"],
+            _PRODUCTION: [BASELINE_KEY, _BASELINE_HDF5, _CANDIDATE, _CANDIDATE_HDF5],
+            ARRAY_LAYOUT_KEY: [_FIRST, _SECOND],
             "figure_format": ["png"],
         },
         output_directory,
     )
 
     assert mock_collect.call_args_list == [
-        mocker.call(descriptors, array_names="first"),
-        mocker.call(descriptors, array_names="second"),
+        mocker.call(descriptors, array_names=_FIRST),
+        mocker.call(descriptors, array_names=_SECOND),
     ]
     assert mock_plot.call_args_list == [
         mocker.call(
             mocker.sentinel.first_metrics,
             output_path=output_directory,
-            array_layout_name="first",
+            array_layout_name=_FIRST,
             figure_format=["png"],
             report_mode="diagnostic",
             comparison_title="Layout: first",
@@ -89,7 +141,7 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
         mocker.call(
             mocker.sentinel.second_metrics,
             output_path=output_directory,
-            array_layout_name="second",
+            array_layout_name=_SECOND,
             figure_format=["png"],
             report_mode="diagnostic",
             comparison_title="Layout: second",
@@ -115,9 +167,9 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
                     "corsika_he_interaction": interaction,
                 },
                 "histogram_settings": {"minimum_triggered_telescopes": 2},
-                "array_selection": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
-                "files": {
-                    "trigger_histograms": [f"{interaction}_{zenith}.trigger_histograms.hdf5"]
+                "array_selection": [{"array_name": _ALPHA, "telescope_ids": ["LSTN-01"]}],
+                _FILES_KEY: {
+                    _TRIGGER_HISTOGRAMS: [f"{interaction}_{zenith}.trigger_histograms.hdf5"]
                 },
             },
         )
@@ -127,14 +179,14 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
         "_selected_trigger_histogram_manifests",
         side_effect=[
             [manifest(BASELINE_KEY, "qgs3", 20), manifest(BASELINE_KEY, "qgs3", 40)],
-            [manifest("candidate", "epos", 20), manifest("candidate", "epos", 40)],
+            [manifest(_CANDIDATE, "epos", 20), manifest(_CANDIDATE, "epos", 40)],
         ],
     )
 
     pairs = production_comparison._production_descriptor_pairs_from_metadata(
         {
-            "baseline_path": base_directory / BASELINE_KEY,
-            "candidate_path": base_directory / "candidate",
+            _BASELINE_PATH: base_directory / BASELINE_KEY,
+            _CANDIDATE_PATH: base_directory / _CANDIDATE,
             "select": [],
             "compare_by": ["corsika_he_interaction"],
         }
@@ -155,7 +207,7 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
     descriptors = [
         ProductionDescriptor(BASELINE_KEY, [f"{input_stem}.hdf5"]),
-        ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor(_CANDIDATE, [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
         "simtools.production_configuration.production_comparison."
@@ -167,18 +219,18 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
+        {_BASELINE_PATH: BASELINE_KEY, ARRAY_LAYOUT_KEY: [_ALPHA]},
         output_directory,
     )
 
     assert mock_write.call_args.args[:2] == (
         descriptors,
-        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
+        {_BASELINE_PATH: BASELINE_KEY, ARRAY_LAYOUT_KEY: [_ALPHA]},
     )
     assert mock_write.call_args.args[2] == output_directory / input_stem
-    assert mock_write.call_args.args[3] == ["alpha"]
-    inventory = json.loads((output_directory / "comparison_inventory.json").read_text())
-    assert inventory["matched_pair_count"] == 1
+    assert mock_write.call_args.args[3] == [_ALPHA]
+    inventory = json.loads((output_directory / _COMPARISON_INVENTORY_FILE).read_text())
+    assert inventory[_MATCHED_PAIR_COUNT] == 1
     assert inventory["pairing_error_count"] == 0
     assert "pairs" not in inventory
 
@@ -186,8 +238,8 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
 def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
     descriptors = [
-        ProductionDescriptor(BASELINE_KEY, ["baseline.hdf5"]),
-        ProductionDescriptor("candidate", ["candidate.hdf5"]),
+        ProductionDescriptor(BASELINE_KEY, [_BASELINE_HDF5]),
+        ProductionDescriptor(_CANDIDATE, [_CANDIDATE_HDF5]),
     ]
     mocker.patch(
         "simtools.production_configuration.production_comparison."
@@ -196,21 +248,32 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
     )
     figure = mocker.Mock()
     figure.get_label.return_value = "distribution_core_distance"
-    statistics_file = output_directory / "pair" / "alpha" / "statistics.json"
+    statistics_file = output_directory / "pair" / _ALPHA / _STATISTICS_JSON
 
     def write_pair(*args, **_kwargs):
         args[4].append(figure)
         return statistics_file
 
     mocker.patch.object(production_comparison, "_compare_array_layout", side_effect=write_pair)
-    save = mocker.patch.object(production_comparison, "save_figures_to_single_document")
+
+    def append_page(report, page):
+        report.page_labels.append(page.get_label())
+
+    save = mocker.patch.object(
+        production_comparison.plot_event_level_production_comparison._PdfReport,
+        "append",
+        autospec=True,
+        side_effect=append_page,
+    )
     summary = mocker.patch.object(production_comparison, "_write_comparison_summary")
 
     production_comparison.write_production_comparison(
-        {"baseline_path": BASELINE_KEY, "report_mode": "compact"}, output_directory
+        {_BASELINE_PATH: BASELINE_KEY, "report_mode": "compact"}, output_directory
     )
 
-    save.assert_called_once_with([figure], output_directory / "trigger-report.pdf", close=True)
+    save.assert_called_once()
+    assert save.call_args.args[0].path == output_directory / "trigger-report.pdf"
+    assert save.call_args.args[1] is figure
     summary.assert_called_once_with(
         [statistics_file],
         output_directory,
@@ -226,7 +289,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
     input_stem = "gamma-za67.5-qgs3-energy-min-30-gev-ctao-north-alpha.trigger_histograms"
     descriptors = [
         ProductionDescriptor(BASELINE_KEY, [f"{input_stem}.hdf5"]),
-        ProductionDescriptor("candidate", [f"{input_stem}.hdf5"]),
+        ProductionDescriptor(_CANDIDATE, [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
         "simtools.production_configuration.production_comparison."
@@ -241,7 +304,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
     )
 
     production_comparison.write_production_comparison(
-        {"baseline_path": BASELINE_KEY, ARRAY_LAYOUT_KEY: ["alpha"]},
+        {_BASELINE_PATH: BASELINE_KEY, ARRAY_LAYOUT_KEY: [_ALPHA]},
         output_directory,
     )
 
@@ -255,7 +318,7 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
 def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test_directory):
     manifest = ProductionManifest(
         path=Path(tmp_test_directory) / "baseline.yml",
-        data={CONFIGURATION_KEY: {}, "files": {"trigger_histograms": ["baseline.hdf5"]}},
+        data={CONFIGURATION_KEY: {}, _FILES_KEY: {_TRIGGER_HISTOGRAMS: [_BASELINE_HDF5]}},
     )
     mocker.patch(
         "simtools.production_configuration.production_comparison."
@@ -265,7 +328,7 @@ def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test
 
     with pytest.raises(ValueError, match="pairing failed"):
         production_comparison._production_descriptor_pairs_from_metadata(
-            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"}
+            {_BASELINE_PATH: BASELINE_KEY, _CANDIDATE_PATH: _CANDIDATE}
         )
 
 
@@ -279,7 +342,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
             path=base_directory / directory / f"{zenith}.yml",
             data={
                 CONFIGURATION_KEY: {"zenith_angle": {"value": zenith, "unit": "deg"}},
-                "files": {"trigger_histograms": [f"{directory}_{zenith}.hdf5"]},
+                _FILES_KEY: {_TRIGGER_HISTOGRAMS: [f"{directory}_{zenith}.hdf5"]},
             },
         )
 
@@ -288,7 +351,7 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
         "_selected_trigger_histogram_manifests",
         side_effect=[
             [manifest(BASELINE_KEY, 20), manifest(BASELINE_KEY, 40)],
-            [manifest("candidate", 20)],
+            [manifest(_CANDIDATE, 20)],
         ],
     )
     mock_write = mocker.patch(
@@ -297,20 +360,20 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
 
     with caplog.at_level(logging.WARNING, logger=production_comparison.__name__):
         production_comparison.write_production_comparison(
-            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"},
+            {_BASELINE_PATH: BASELINE_KEY, _CANDIDATE_PATH: _CANDIDATE},
             base_directory / "comparison",
         )
 
     mock_write.assert_called_once()
     assert "missing candidates=1, missing baselines=0" in caplog.text
     inventory = json.loads((base_directory / "comparison/comparison_inventory.json").read_text())
-    assert inventory["matched_pair_count"] == 1
+    assert inventory[_MATCHED_PAIR_COUNT] == 1
     assert inventory["pairing_error_count"] == 1
     assert "pairs" not in inventory
     descriptors = mock_write.call_args.args[0]
-    assert [descriptor.label for descriptor in descriptors] == [BASELINE_KEY, "candidate"]
+    assert [descriptor.label for descriptor in descriptors] == [BASELINE_KEY, _CANDIDATE]
     assert descriptors[0].input_files == [str(base_directory / BASELINE_KEY / "baseline_20.hdf5")]
-    assert descriptors[1].input_files == [str(base_directory / "candidate" / "candidate_20.hdf5")]
+    assert descriptors[1].input_files == [str(base_directory / _CANDIDATE / "candidate_20.hdf5")]
 
 
 def test_write_production_comparison_rejects_completely_unmatched_metadata(
@@ -331,7 +394,7 @@ def test_write_production_comparison_rejects_completely_unmatched_metadata(
 
     with pytest.raises(ValueError, match="pairing failed"):
         production_comparison.write_production_comparison(
-            {"baseline_path": BASELINE_KEY, "candidate_path": "candidate"},
+            {_BASELINE_PATH: BASELINE_KEY, _CANDIDATE_PATH: _CANDIDATE},
             Path(tmp_test_directory) / "comparison",
         )
 
@@ -352,7 +415,7 @@ def test_selected_trigger_histogram_manifests_checks_matches(mocker):
         "simtools.production_configuration.production_comparison.check_manifest"
     )
 
-    selected = production_comparison._selected_trigger_histogram_manifests("production", [])
+    selected = production_comparison._selected_trigger_histogram_manifests(_PRODUCTION, [])
 
     assert selected == [manifest]
     mock_check.assert_called_once_with(manifest)
@@ -369,7 +432,7 @@ def test_selected_trigger_histogram_manifests_rejects_empty_selection(mocker):
     )
 
     with pytest.raises(ValueError, match="No trigger-histogram metadata"):
-        production_comparison._selected_trigger_histogram_manifests("production", [])
+        production_comparison._selected_trigger_histogram_manifests(_PRODUCTION, [])
 
 
 def test_unique_manifests_by_pairing_key_rejects_duplicates(tmp_test_directory):
@@ -408,11 +471,11 @@ def test_single_trigger_histogram_file_handles_absolute_and_invalid_manifests(tm
     absolute_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
     manifest = ProductionManifest(
         path=Path(tmp_test_directory) / "manifest.yml",
-        data={"files": {"trigger_histograms": [str(absolute_file)]}},
+        data={_FILES_KEY: {_TRIGGER_HISTOGRAMS: [str(absolute_file)]}},
     )
     assert production_comparison._single_trigger_histogram_file(manifest) == absolute_file
 
-    empty_manifest = ProductionManifest(path=manifest.path, data={"files": {}})
+    empty_manifest = ProductionManifest(path=manifest.path, data={_FILES_KEY: {}})
     with pytest.raises(ValueError, match="Expected exactly one"):
         production_comparison._single_trigger_histogram_file(empty_manifest)
 
@@ -428,7 +491,7 @@ def test_comparison_title_formats_shared_and_different_configuration_values():
             "azimuth_angle": {"value": 0, "unit": "deg"},
             "corsika_he_interaction": "qgs3",
         },
-        "candidate": {
+        _CANDIDATE: {
             "primary": "gamma",
             "site": "North",
             "energy_min": {"value": 30, "unit": "GeV"},
@@ -454,25 +517,31 @@ def test_comparison_title_formats_shared_and_different_configuration_values():
 @pytest.mark.parametrize("pair_count", [1, 100])
 def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
     output = Path(tmp_test_directory)
-    statistics_file = output / "pair" / "alpha" / "comparison_statistics.json"
+    inventory_file = output / _COMPARISON_INVENTORY_FILE
+    inventory_file.write_text(json.dumps({_MATCHED_PAIR_COUNT: pair_count}), encoding=TEXT_ENCODING)
+    statistics_file = output / "pair" / _ALPHA / _COMPARISON_STATISTICS_JSON
     statistics_file.parent.mkdir(parents=True)
     statistics_file.write_text(
         json.dumps(
             {
                 "format_version": 1,
                 BASELINE_KEY: {
-                    "label": "base",
+                    _LABEL: "base",
                     SIMULATED_EVENT_COUNT_KEY: 10,
                     "triggered_event_count": 5,
                 },
                 COMPARISON_SETS_KEY: [
                     {
-                        "label": "candidate",
+                        _LABEL: _CANDIDATE,
                         SIMULATED_EVENT_COUNT_KEY: 12,
                         "triggered_event_count": 6,
                     }
                 ],
                 PLOT_STATISTICS_KEY: {
+                    "telescope_participation_fraction": {
+                        "telescope_types": ["LSTN", "MSTN"],
+                        COMPARISONS_KEY: [],
+                    },
                     "energy": {
                         "plot_name": "distribution_energy",
                         "baseline_label": "base",
@@ -480,7 +549,7 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
                         BASELINE_COUNTS_KEY: [10] * 1000,
                         COMPARISONS_KEY: [
                             {
-                                "candidate_label": "candidate",
+                                "candidate_label": _CANDIDATE,
                                 "simulated": {
                                     "metric": "ks",
                                     "valid": True,
@@ -497,7 +566,7 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
                                 },
                             }
                         ],
-                    }
+                    },
                 },
             }
         ),
@@ -506,12 +575,17 @@ def test_compact_comparison_summary_stays_small(tmp_test_directory, pair_count):
 
     statistics_files = [statistics_file]
     for index in range(1, pair_count):
-        path = output / f"pair-{index}" / "alpha" / statistics_file.name
+        path = output / f"pair-{index}" / _ALPHA / statistics_file.name
         path.parent.mkdir(parents=True)
         path.write_text(statistics_file.read_text(encoding=TEXT_ENCODING), encoding=TEXT_ENCODING)
         statistics_files.append(path)
     report_pages = {path: {"energy": [page]} for page, path in enumerate(statistics_files, start=1)}
     production_comparison._write_comparison_summary(statistics_files, output, report_pages)
+    inventory = json.loads(inventory_file.read_text(encoding=TEXT_ENCODING))
+    assert inventory[_MATCHED_PAIR_COUNT] == pair_count
+    assert len(inventory[_METRIC_SCOPES]) == pair_count
+    assert inventory[_METRIC_SCOPES]["pair"][_ALPHA] == ["LSTN", "MSTN"]
+    assert len(inventory_file.read_bytes()) < pair_count * 200 + 100
 
     text = (output / statistics_file.name).read_text(encoding=TEXT_ENCODING)
     summary = json.loads(text)
@@ -579,7 +653,7 @@ def test_version_one_report_remains_valid_under_current_schema():
         {
             "format_version": 1,
             BASELINE_KEY: {
-                "label": BASELINE_KEY,
+                _LABEL: BASELINE_KEY,
                 SIMULATED_EVENT_COUNT_KEY: 10,
                 "triggered_event_count": 5,
             },
