@@ -227,6 +227,7 @@ class _PdfReport:
     def __init__(self, path):
         self.path = path
         self.page_labels = []
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.document = PdfPages(path)
 
     def __len__(self):
