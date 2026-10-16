@@ -65,6 +65,11 @@ Patch IDs are `group_id` values from the model. The plot shows an overview and a
 labelled close-up; overlaps use stripes. The options are mutually exclusive. For
 LSTN-design model 7.0.0, select at most six patches per plot.
 
+| Telescope and selection | Telescope and selection |
+| --- | --- |
+| LSTN-design (North), groups 0, 3, 4<br>![LSTN-design trigger patches](images/trigger-patch-examples/LSTN-design.png) | MSTx-FlashCam (North), groups 0, 2, 3<br>![MSTx-FlashCam trigger patches](images/trigger-patch-examples/MSTx-FlashCam.png) |
+| MSTx-NectarCam (North), groups 924, 925, 926<br>![MSTx-NectarCam trigger patches](images/trigger-patch-examples/MSTx-NectarCam.png) | SSTS-design (South), groups 0, 1<br>![SSTS-design trigger patches](images/trigger-patch-examples/SSTS-design.png) |
+
 ```{eval-rst}
 .. simtools-cli-help::
    :application: validate_camera_fov

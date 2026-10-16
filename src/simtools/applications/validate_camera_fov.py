@@ -8,11 +8,12 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.visualization.plot_camera import plot_camera_pixel_layout_from_args
 
 _TRIGGER_SELECTION = "trigger selection"
+_MAX_PIXEL_ID = (1 << 63) - 1
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "trigger_pixel",
-        type=bounded_int(0, 2147483647),
+        type=bounded_int(0, _MAX_PIXEL_ID),
         default=None,
         exclusive_group=_TRIGGER_SELECTION,
         help="Highlight every trigger patch containing this model pixel ID.",
