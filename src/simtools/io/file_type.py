@@ -79,7 +79,10 @@ def _get_product_suffixes(product_id):
 
 def _get_product_filename(product_id):
     """Return a fixed filename for one registered file product."""
-    filename = _get_product_value(product_id, _FILENAME)
+    catalog = _file_catalog()
+    if product_id not in catalog[_PRODUCTS]:
+        raise ValueError(_UNKNOWN_PRODUCT.format(product_id=product_id))
+    filename = catalog[_PRODUCTS][product_id].get(_FILENAME)
     if filename is None:
         raise ValueError(f"File product '{product_id}' does not define a fixed filename.")
     return filename
