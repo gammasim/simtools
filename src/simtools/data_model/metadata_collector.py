@@ -40,7 +40,7 @@ _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
 def _matches_catalog_product(file_path, product_id):
     """Match a product using the caller's existing case-sensitive behavior."""
     file_name = Path(file_path).name
-    return any(file_name.endswith(suffix) for suffix in _get_product_suffixes(product_id))
+    return file_name.endswith(_get_product_suffixes(product_id))
 
 
 class MetadataCollector:
