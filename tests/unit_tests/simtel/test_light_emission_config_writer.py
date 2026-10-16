@@ -1,3 +1,4 @@
+import shlex
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -7,6 +8,8 @@ import pytest
 
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.simulation.configuration import get_light_source_writer
+
+LOG_FILE_OPTION = "--log-file"
 
 
 def test__get_angular_distribution_string_for_sim_telarray(simulator_instance):
@@ -748,9 +751,11 @@ def test__make_light_emission_script(simulator_instance):
 
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
-            "--photons 1000000 -o /output/ff-1m.iact.gz 2>&1 | gzip > /output/ff-1m.log.gz\n"
+            "--photons 1000000 -o /output/ff-1m.iact.gz"
         )
-        assert result == expected
+        arguments = shlex.split(result)
+        assert arguments[arguments.index("--") + 1 :] == shlex.split(expected)
+        assert LOG_FILE_OPTION in arguments
 
         # Verify method calls
         mock_app_name.assert_called_once()
@@ -796,9 +801,11 @@ def test__make_light_emission_script(simulator_instance):
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
-            "-o /output/illuminator-app.iact.gz 2>&1 | gzip > /output/illuminator-app.log.gz\n"
+            "-o /output/illuminator-app.iact.gz"
         )
-        assert result == expected
+        arguments = shlex.split(result)
+        assert arguments[arguments.index("--") + 1 :] == shlex.split(expected)
+        assert LOG_FILE_OPTION in arguments
         simulator_instance.site_model.get_parameter_value.assert_called_once_with(
             "atmospheric_profile"
         )

@@ -735,7 +735,11 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        files_to_copy = log_files + histogram_files + corsika_log_files + resource_files
+        stderr_files = general.ensure_list(self.get_files(file_type="sim_telarray_err"))
+        stderr_files += general.ensure_list(self.get_files(file_type="corsika_err"))
+        files_to_copy = (
+            log_files + histogram_files + corsika_log_files + resource_files + stderr_files
+        )
         for model in self.array_models:
             files_to_copy += general.ensure_list(model.pack_model_files())
 

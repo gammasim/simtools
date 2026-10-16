@@ -213,7 +213,7 @@ class SimulatorRayTracing(SimtelRunner):
             cmd.extend(["-C", f"{key}={value}"])
         cmd.append(str(settings.config.corsika_dummy_file))
 
-        return cmd, self._log_file, self._log_file
+        return cmd, self._log_file, self._log_file.with_suffix(".err")
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """

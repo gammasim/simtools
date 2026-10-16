@@ -166,7 +166,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
         f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off_x+0.000_y+0.000deg_{LABEL}.log"
     )
     assert stdout_file.name == log_file
-    assert stderr_file.name == log_file
+    assert stderr_file == stdout_file.with_suffix(".err")
 
 
 def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, mocker):

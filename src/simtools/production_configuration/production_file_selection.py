@@ -31,14 +31,14 @@ def _with_compression_suffixes(*suffixes):
 _FILE_TYPE_SUFFIXES = {
     "reduced_event_data": _with_compression_suffixes(".reduced_event_data.hdf5"),
     "sim_telarray": _with_compression_suffixes(".simtel"),
-    "sim_telarray_log": _with_compression_suffixes(".simtel.log"),
+    "sim_telarray_log": _with_compression_suffixes(".simtel.log", ".simtel.err"),
     "sim_telarray_histogram": _with_compression_suffixes(
         ".hdata",
         ".histogram",
         ".histogram.hdf5",
     ),
     "corsika": _with_compression_suffixes(".corsika"),
-    "corsika_log": _with_compression_suffixes(".corsika.log"),
+    "corsika_log": _with_compression_suffixes(".corsika.log", ".corsika.err"),
     "trigger_histograms": _with_compression_suffixes(".trigger_histograms.hdf5"),
 }
 _MANIFEST_SCHEMAS = {

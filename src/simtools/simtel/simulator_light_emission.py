@@ -1,6 +1,7 @@
 """Light emission simulation (e.g. illuminators or flashers)."""
 
 import logging
+import shlex
 from pathlib import Path
 
 import astropy.units as u
@@ -10,6 +11,7 @@ from simtools import settings
 from simtools.application.model_reader import require_model_reader
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import (
     initialize_simulation_models,
@@ -262,6 +264,7 @@ class SimulatorLightEmission(SimtelRunner):
         iact_output = self.runner_service.get_file_name(file_type="iact_output")
         return [
             "#!/usr/bin/env bash\n",
+            "set -e -o pipefail\n",
             f"{get_light_source_writer(self).make_command(iact_output)}\n\n",
             (
                 f"[ -s '{iact_output}' ] || "
@@ -497,7 +500,8 @@ class SimulatorLightEmission(SimtelRunner):
         parts = [
             simtel_bin,
             f"-I{self.telescope_model.config_file_directory}",
-            f"-c {self.telescope_model.config_file_path}",
+            "-c",
+            str(self.telescope_model.config_file_path),
             "-DNUM_TELESCOPES=1",
         ]
 
@@ -541,11 +545,19 @@ class SimulatorLightEmission(SimtelRunner):
             ("histogram_file", f"{histo_file}"),
         ]
 
-        parts += [f"-C {key}={value}" for key, value in options]
+        for key, value in options:
+            parts.extend(["-C", f"{key}={value}"])
 
         log_file = self.runner_service.get_file_name(file_type="sim_telarray_log")
 
-        return sim_telarray_env_as_string() + " ".join(parts) + f" 2>&1 | gzip > {log_file}\n"
+        command = build_accounting_command(
+            parts,
+            self.runner_service.get_file_name(file_type="sim_telarray_resources"),
+            "sim_telarray",
+            self.light_emission_config.get("run_number", 1),
+            log_file=log_file,
+        )
+        return sim_telarray_env_as_string() + shlex.join(command) + "\n"
 
     def calculate_distance_focal_plane_calibration_device(self):
         """

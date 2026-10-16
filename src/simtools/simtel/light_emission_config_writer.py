@@ -1,11 +1,13 @@
 """Translate calibration-source settings into LightEmission configuration."""
 
 import logging
+import shlex
 import shutil
 
 import astropy.units as u
 
 from simtools import settings
+from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -92,7 +94,7 @@ class LightEmissionConfigWriter:
 
         app = self.get_light_emission_application_name()
         cmd = [
-            str(settings.config.sim_telarray_path / "LightEmission" / app),
+            shlex.quote(str(settings.config.sim_telarray_path / "LightEmission" / app)),
             *self.get_site_command(app, config_directory, obs_level),
             *self.get_light_source_command(),
         ]
@@ -101,14 +103,26 @@ class LightEmissionConfigWriter:
             cmd += [
                 "-A",
                 (
-                    f"{config_directory}/"
-                    f"{self.simulation.site_model.get_parameter_value('atmospheric_profile')}"
+                    shlex.quote(
+                        f"{config_directory}/"
+                        f"{self.simulation.site_model.get_parameter_value('atmospheric_profile')}"
+                    )
                 ),
             ]
 
-        cmd += ["-o", str(iact_output)]
+        cmd += ["-o", shlex.quote(str(iact_output))]
         log_file = self.simulation.runner_service.get_file_name(file_type="light_emission_log")
-        return " ".join(cmd) + f" 2>&1 | gzip > {log_file}\n"
+        resources_file = self.simulation.runner_service.get_file_name(
+            file_type="light_emission_resources"
+        )
+        command = build_accounting_command(
+            shlex.split(" ".join(cmd)),
+            resources_file,
+            LIGHT_EMISSION_OUTPUT_DIRECTORY,
+            self.simulation.light_emission_config.get("run_number", 1),
+            log_file=log_file,
+        )
+        return shlex.join(command) + "\n"
 
     def get_site_command(self, app_name, config_directory, corsika_observation_level):
         """Return site command with altitude, atmosphere and telescope_position handling."""
