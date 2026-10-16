@@ -3,6 +3,7 @@
 import logging
 
 from simtools.io import io_handler
+from simtools.io.file_type import _get_product_value
 from simtools.simulation.parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)
@@ -10,103 +11,41 @@ _DIRAC_MAX_FILENAME_LENGTH = 128
 _RUN_NUMBER = "run_number"
 _SUB_DIRECTORY_TYPE = "sub_dir_type"
 _FILE_SUFFIX = "suffix"
+_SUBMISSION_DIRECTORY = "sub"
 
-
+_RUNNER_FILE_PLACEMENT = {
+    "corsika_input": _RUN_NUMBER,
+    "corsika_output": _RUN_NUMBER,
+    "corsika_log": _RUN_NUMBER,
+    "corsika_err": _RUN_NUMBER,
+    "corsika_resources": _RUN_NUMBER,
+    "iact_output": _RUN_NUMBER,
+    "sim_telarray_output": _RUN_NUMBER,
+    "sim_telarray_histogram": _RUN_NUMBER,
+    "sim_telarray_log": _RUN_NUMBER,
+    "sim_telarray_err": _RUN_NUMBER,
+    "sim_telarray_event_data": _RUN_NUMBER,
+    "sim_telarray_resources": _RUN_NUMBER,
+    "light_emission_log": _RUN_NUMBER,
+    "light_emission_err": _RUN_NUMBER,
+    "light_emission_resources": _RUN_NUMBER,
+    "multi_pipe_config": _RUN_NUMBER,
+    "multi_pipe_script": _RUN_NUMBER,
+    "multi_pipe_resources": _RUN_NUMBER,
+    "sub_out": _SUBMISSION_DIRECTORY,
+    "sub_err": _SUBMISSION_DIRECTORY,
+    "sub_log": _SUBMISSION_DIRECTORY,
+    "sub_script": _SUBMISSION_DIRECTORY,
+}
+_RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": "sim_telarray_histogram_output"}
 FILES_AND_PATHS = {
-    # CORSIKA
-    "corsika_input": {
-        _FILE_SUFFIX: ".corsika.input",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "corsika_output": {
-        _FILE_SUFFIX: ".corsika.zst",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "corsika_log": {
-        _FILE_SUFFIX: ".corsika.log.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "corsika_err": {
-        _FILE_SUFFIX: ".corsika.err.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "corsika_resources": {
-        _FILE_SUFFIX: ".corsika.resources.json",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    # Generic iact output
-    "iact_output": {
-        _FILE_SUFFIX: ".iact.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    # sim_telarray
-    "sim_telarray_output": {
-        _FILE_SUFFIX: ".simtel.zst",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "sim_telarray_histogram": {
-        _FILE_SUFFIX: ".hdata.zst",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "sim_telarray_log": {
-        _FILE_SUFFIX: ".simtel.log.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "sim_telarray_err": {
-        _FILE_SUFFIX: ".simtel.err.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "sim_telarray_event_data": {
-        _FILE_SUFFIX: ".reduced_event_data.hdf5",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "sim_telarray_resources": {
-        _FILE_SUFFIX: ".simtel.resources.json",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    # light_emission
-    "light_emission_log": {
-        _FILE_SUFFIX: ".light_emission.log.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "light_emission_err": {
-        _FILE_SUFFIX: ".light_emission.err.gz",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "light_emission_resources": {
-        _FILE_SUFFIX: ".light_emission.resources.json",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    # multipipe
-    "multi_pipe_config": {
-        _FILE_SUFFIX: ".multi_pipe.cfg",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "multi_pipe_script": {
-        _FILE_SUFFIX: ".multi_pipe.sh",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    "multi_pipe_resources": {
-        _FILE_SUFFIX: ".multipipe.resources.json",
-        _SUB_DIRECTORY_TYPE: _RUN_NUMBER,
-    },
-    # job submission
-    "sub_out": {
-        _FILE_SUFFIX: ".out",
-        _SUB_DIRECTORY_TYPE: "sub",
-    },
-    "sub_err": {
-        _FILE_SUFFIX: ".err",
-        _SUB_DIRECTORY_TYPE: "sub",
-    },
-    "sub_log": {
-        _FILE_SUFFIX: ".log",
-        _SUB_DIRECTORY_TYPE: "sub",
-    },
-    "sub_script": {
-        _FILE_SUFFIX: ".sh",
-        _SUB_DIRECTORY_TYPE: "sub",
-    },
+    file_type: {
+        _FILE_SUFFIX: _get_product_value(
+            _RUNNER_PRODUCT_IDS.get(file_type, file_type), "default_suffix"
+        ),
+        _SUB_DIRECTORY_TYPE: directory_type,
+    }
+    for file_type, directory_type in _RUNNER_FILE_PLACEMENT.items()
 }
 
 
