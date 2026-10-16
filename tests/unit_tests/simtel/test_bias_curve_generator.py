@@ -1,5 +1,6 @@
 """Unit tests for bias_curve_generator."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -338,16 +339,14 @@ def test_calculate_trigger_threshold_success():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Lower NSB to ensure sign change
     }
     proton_stats = {
-        220: {"rate_hz": 1100.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 11000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     args = {"scaling_factor": 1.35}
     threshold = bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
-    # Should find intersection between 250 and 280
-    assert threshold is not None
-    assert 250 <= threshold <= 280
+    assert threshold == pytest.approx(231.81755150982445)
 
 
 def test_calculate_trigger_threshold_no_valid_points():
@@ -356,7 +355,7 @@ def test_calculate_trigger_threshold_no_valid_points():
     nsb_stats = {}
     proton_stats = {}
 
-    with pytest.raises(ValueError, match="No valid threshold points with both NSB and proton data"):
+    with pytest.raises(ValueError, match="At least two finite positive rates"):
         bias_curve_generator._calculate_trigger_threshold(args, nsb_stats, proton_stats)
 
 
@@ -389,9 +388,9 @@ def test_calculate_trigger_threshold_with_nan_values():
         280: {"rate_hz": 400.0, "error_hz": 20.0},  # Valid - adjusted to create sign change
     }
     proton_stats = {
-        220: {"rate_hz": 700.0, "error_hz": 40.0},
-        250: {"rate_hz": 740.0, "error_hz": 25.0},
-        280: {"rate_hz": 370.0, "error_hz": 15.0},
+        220: {"rate_hz": 7000.0, "error_hz": 40.0},
+        250: {"rate_hz": 7400.0, "error_hz": 25.0},
+        280: {"rate_hz": 3700.0, "error_hz": 15.0},
     }
 
     # Should work with the valid points (250, 280) and find intersection
@@ -684,3 +683,32 @@ def test_group_hdf5_files_skips_missing_metadata(tmp_test_directory):
 
     result = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
     assert result == {}  # File skipped due to missing threshold/run
+
+
+@pytest.mark.parametrize("scaling_factor", [1.0, 1.35, 2.0])
+def test_trigger_threshold_matches_scaled_fitted_curves(scaling_factor):
+    nsb = {t: {"rate_hz": 100 * 10 ** (-(t - 7))} for t in (7, 7.2, 7.4, 8, 9)}
+    proton = {t: {"rate_hz": 100.0} for t in (7.1, 7.3, 8.1, 9.1)}
+    threshold = bias_curve_generator._calculate_trigger_threshold(
+        {"scaling_factor": scaling_factor}, nsb, proton
+    )
+    assert threshold == pytest.approx(8 - np.log10(scaling_factor))
+
+
+def test_group_proton_files_preserves_decimal_thresholds(tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    expected = {}
+    for threshold in (7, 7.2, 7.4, 8, 9):
+        file_path = tmp_test_directory / f"proton_asum{threshold}.reduced_event_data.hdf5"
+        _write_file_info_hdf5(file_path, f"proton_run000001_asum{threshold}.simtel.zst")
+        expected[threshold] = {1: file_path}
+    assert (
+        bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_test_directory) == expected
+    )
+
+
+def test_trigger_threshold_rejects_intersection_outside_data_range():
+    nsb = {7: {"rate_hz": 1000}, 8: {"rate_hz": 100}}
+    proton = {7: {"rate_hz": 1}, 8: {"rate_hz": 1}}
+    with pytest.raises(ValueError, match="shared threshold range"):
+        bias_curve_generator._calculate_trigger_threshold({}, nsb, proton)
