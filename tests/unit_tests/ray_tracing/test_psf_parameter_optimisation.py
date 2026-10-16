@@ -27,6 +27,29 @@ def make_mirror_align_random_parameters():
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
 
+@pytest.mark.parametrize("monte_carlo_analysis", [False, True])
+def test_run_psf_optimization_job(mocker, tmp_test_directory, monte_carlo_analysis):
+    args = {
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.0",
+        "label": "psf",
+        "monte_carlo_analysis": monte_carlo_analysis,
+    }
+    telescope, site = object(), object()
+    initialize = mocker.patch.object(
+        psf_opt, "initialize_simulation_models", return_value=(telescope, site, None)
+    )
+    workflow = mocker.patch.object(psf_opt, "run_psf_optimization_workflow")
+
+    psf_opt.run_psf_optimization_job(psf_opt.PSFOptimizationJob(args, tmp_test_directory))
+
+    initialize.assert_called_once_with(
+        label="psf", site="North", telescope_name="LSTN-01", model_version="6.0.0"
+    )
+    workflow.assert_called_once_with(telescope, site, args, tmp_test_directory)
+
+
 @pytest.fixture
 def mock_telescope_model():
     """Create a mock telescope model."""
