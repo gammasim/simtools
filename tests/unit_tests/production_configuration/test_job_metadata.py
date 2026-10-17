@@ -11,7 +11,9 @@ from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_metadata import (
     REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS,
     _add_optional_configuration_value,
+    _primary_name,
     _resolved_model_parameter_overrides,
+    _showers_per_run,
     build_production_job_manifest,
     build_simulation_job_metadata,
     get_sim_telarray_event_counts,
@@ -79,6 +81,17 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
         "dec": -45.0,
         "ha": 123.0,
     }
+
+
+def test_sim_telarray_only_metadata_uses_resolved_simulation_parameters():
+    simulator = _simulator("MSTS-01")
+    simulator.corsika_configurations = [None]
+    simulator.simulation_parameters = [
+        SimpleNamespace(primary_particle=SimpleNamespace(name="gamma"), shower_events=10)
+    ]
+
+    assert _primary_name({"primary": None}, simulator) == "gamma"
+    assert _showers_per_run({"showers_per_run": None}, simulator) == 10
 
 
 def test_build_simulation_job_metadata_rounds_angles_to_two_decimal_places():
@@ -351,6 +364,29 @@ def test_build_production_job_manifest_records_resolved_overrides_and_atmosphere
     assert configuration["atmosphere"]["site_parameters"]["atmospheric_profile"] == (
         "prod-atmosphere"
     )
+
+
+def test_telescope_only_manifest_uses_resolved_atmosphere_parameter(tmp_test_directory):
+    simulator = SimpleNamespace(
+        array_models=[],
+        corsika_configurations=[None],
+        simulation_parameters=[SimpleNamespace(use_curved_atmosphere=True)],
+        run_number=12,
+        get_files=lambda file_type: [],
+    )
+
+    manifest = build_production_job_manifest(
+        _args(
+            simulation_software="sim_telarray",
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+        ),
+        simulator,
+        tmp_test_directory,
+    )
+
+    assert manifest["configuration"]["atmosphere"]["use_curved_atmosphere"] is True
 
 
 def test_resolved_model_parameter_overrides_keeps_values_by_model_version():

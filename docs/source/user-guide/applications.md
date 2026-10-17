@@ -70,6 +70,7 @@ simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape-parameters>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-derive-telescope-sphere-radius <applications/simtools-derive-telescope-sphere-radius>
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>

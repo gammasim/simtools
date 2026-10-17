@@ -26,6 +26,9 @@ Typical outputs are:
 - copied grid output files, including logs, histogram files, model archives, moved event files,
   and `simtools.log.gz`, when `--grid_output_path` is configured
 
+CORSIKA and sim_telarray stdout is saved in `.log.gz` files; matching `.err.gz` files
+contain stderr. Both streams are retained when packaging grid outputs and inspecting logs.
+
 Example command:
 
 ```bash

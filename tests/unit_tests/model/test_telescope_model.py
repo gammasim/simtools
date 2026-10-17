@@ -8,6 +8,7 @@ import pytest
 
 import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 
@@ -45,12 +46,14 @@ def test_get_single_mirror_list_file(telescope_model_lst, monkeypatch):
     tel_model = telescope_model_lst
     export_single_mirror_list_file_mock = Mock()
     monkeypatch.setattr(
-        tel_model, "export_single_mirror_list_file", export_single_mirror_list_file_mock
+        get_model_writer(tel_model),
+        "export_single_mirror_list_file",
+        export_single_mirror_list_file_mock,
     )
 
     mirror_number = 1
     set_focal_length_to_zero = True
-    tel_model._single_mirror_list_file_paths = {mirror_number: "test_path"}
+    get_model_writer(tel_model).single_mirror_list_file_paths = {mirror_number: "test_path"}
 
     # Call the method
     result = tel_model.get_single_mirror_list_file(mirror_number, set_focal_length_to_zero)
@@ -276,13 +279,14 @@ def test_export_single_mirror_list_file(telescope_model_lst, caplog):
 
     # Mock simtel_config_writer
     mock_writer = Mock()
-    tel_model._load_simtel_config_writer = Mock()
-    tel_model.simtel_config_writer = mock_writer
+    exporter = get_model_writer(tel_model)
+    exporter._load_simtel_config_writer = Mock()
+    exporter.config_writer = mock_writer
 
     # Test valid mirror number
     tel_model.export_single_mirror_list_file(mirror_number=1, set_focal_length_to_zero=True)
     assert mock_writer.write_single_mirror_list_file.called
-    assert 1 in tel_model._single_mirror_list_file_paths
+    assert 1 in get_model_writer(tel_model).single_mirror_list_file_paths
 
     # Test invalid mirror number (too high)
     with caplog.at_level(logging.ERROR):

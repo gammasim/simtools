@@ -1,0 +1,55 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/HTCondorBackendConfiguration'
+title: Science-test HTCondor backend configuration
+description: Resource and runtime settings for HTCondor science-test jobs.
+schema_version: 0.1.0
+schema_name: science_tests/htcondor_backend.schema
+type: object
+additionalProperties: false
+
+definitions:
+  HTCondorBackendConfiguration:
+    type: object
+    additionalProperties: false
+    properties:
+      request_cpus:
+        oneOf:
+          - type: integer
+            minimum: 1
+          - type: string
+      request_memory:
+        type: string
+      request_disk:
+        type: string
+      priority:
+        oneOf:
+          - type: integer
+          - type: string
+      container_image:
+        type: string
+      container_target_dir:
+        type: string
+      python_executable:
+        type: string
+      environment_file:
+        type: string
+      poll_interval:
+        oneOf:
+          - type: number
+            exclusiveMinimum: 0
+          - type: string
+      timeout:
+        oneOf:
+          - type: number
+            exclusiveMinimum: 0
+          - type: string
+          - type: 'null'
+      cancel_on_interrupt:
+        type: boolean
+      keep_successful_artifacts:
+        type: boolean
+      extra_submit_attributes:
+        type: object
+      log_path:
+        type: string

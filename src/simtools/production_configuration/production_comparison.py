@@ -1,11 +1,10 @@
 """Compare trigger-histogram products from simulation productions."""
 
+import csv
 import json
 import logging
 from collections import Counter
 from pathlib import Path
-
-import numpy as np
 
 from simtools.production_configuration.production_file_selection import (
     check_manifest,
@@ -14,13 +13,31 @@ from simtools.production_configuration.production_file_selection import (
     normalize_for_comparison,
     stable_configuration_hash,
 )
+from simtools.production_configuration.trigger_histograms import _validate_derived_products
 from simtools.sim_events.production_comparison import (
     ProductionDescriptor,
     collect_production_metrics,
     parse_production_arguments,
 )
 from simtools.visualization import plot_event_level_production_comparison
-from simtools.visualization.visualize import save_figures_to_single_document
+from simtools.visualization.plot_event_level_production_comparison import _pdf_report, _PdfReport
+
+_COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
+_CONFIGURATION_KEY = "configuration"
+_OUTPUT_PATH_KEY = "output_path"
+_REPORT_MODE_KEY = "report_mode"
+_SELECT_KEY = "select"
+_ENCODING = "utf-8"
+
+BASELINE_KEY = "baseline"
+COMPARISON_SETS_KEY = "comparison_sets"
+PLOT_STATISTICS_KEY = "plot_statistics"
+COMPARISONS_KEY = "comparisons"
+
+COMPARISON_CONTEXT_KEY = "comparison_context"
+
+ARRAY_LAYOUT_KEY = "array_layout_name"
+REPORT_PAGE_COLUMN = "report_page"
 
 _logger = logging.getLogger(__name__)
 
@@ -43,7 +60,7 @@ def write_production_comparison(args_dict, output_directory):
     output_directory : pathlib.Path
         Directory in which comparison products are written.
     """
-    array_layout_names = args_dict.get("array_layout_name") or [None]
+    array_layout_names = args_dict.get(ARRAY_LAYOUT_KEY) or [None]
     if args_dict.get("baseline_path"):
         _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
         return
@@ -55,9 +72,7 @@ def write_production_comparison(args_dict, output_directory):
         output_directory,
         array_layout_names,
     )
-    _write_comparison_summary(
-        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
-    )
+    _write_comparison_summary(statistics_files, output_directory)
 
 
 def _write_metadata_comparisons(args_dict, output_directory, array_layout_names):
@@ -76,41 +91,36 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     ]
     stem_counts = Counter(output_stems)
     statistics_files = []
-    compact_figures = [] if args_dict.get("report_mode") == "compact" else None
-    for (pairing_key, production_descriptors), output_stem in zip(descriptor_pairs, output_stems):
-        pair_output_directory = _metadata_pair_output_directory(
-            output_directory,
-            pairing_key,
-            output_stem,
-            stem_counts,
-        )
-        comparison_kwargs = {}
-        if "configurations" in pairing_key:
-            comparison_kwargs["comparison_context"] = pairing_key
-        if compact_figures is None:
-            pair_statistics = _write_array_layout_comparisons(
-                production_descriptors,
-                args_dict,
-                pair_output_directory,
-                array_layout_names,
-                **comparison_kwargs,
+    comparison_labels = {}
+    report_pages = {}
+    with _pdf_report(
+        output_directory / "trigger-report.pdf", args_dict.get(_REPORT_MODE_KEY) == "compact"
+    ) as compact_figures:
+        for (pairing_key, production_descriptors), output_stem in zip(
+            descriptor_pairs, output_stems
+        ):
+            pair_output_directory = _metadata_pair_output_directory(
+                output_directory,
+                pairing_key,
+                output_stem,
+                stem_counts,
             )
-        else:
             pair_statistics = _write_array_layout_comparisons(
                 production_descriptors,
                 args_dict,
                 pair_output_directory,
                 array_layout_names,
                 compact_figures=compact_figures,
-                **comparison_kwargs,
+                comparison_context=pairing_key,
+                report_pages=report_pages if compact_figures is not None else None,
             )
-        statistics_files.extend(pair_statistics or [])
-    if compact_figures:
-        save_figures_to_single_document(
-            compact_figures, output_directory / "trigger-report.pdf", close=True
-        )
+            statistics_files.extend(pair_statistics or [])
+            if array_layout_names == [None]:
+                comparison_labels.update(
+                    dict.fromkeys(pair_statistics or [], (pair_output_directory.name, ""))
+                )
     output_directory.mkdir(parents=True, exist_ok=True)
-    (output_directory / "comparison_inventory.json").write_text(
+    (output_directory / _COMPARISON_INVENTORY_FILE).write_text(
         json.dumps(
             {
                 "format_version": 1,
@@ -120,13 +130,19 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
             indent=2,
         )
         + "\n",
-        encoding="utf-8",
+        encoding=_ENCODING,
     )
     if pairing_error is not None:
         _logger.warning(str(pairing_error))
-    _write_comparison_summary(
-        statistics_files, output_directory, args_dict.get("report_mode", "diagnostic")
-    )
+    if comparison_labels:
+        _write_comparison_summary(
+            statistics_files,
+            output_directory,
+            report_pages,
+            comparison_labels=comparison_labels,
+        )
+    else:
+        _write_comparison_summary(statistics_files, output_directory, report_pages)
 
 
 def _metadata_pair_output_directory(output_directory, pairing_key, output_stem, stem_counts):
@@ -144,21 +160,37 @@ def _write_array_layout_comparisons(
     array_layout_names,
     compact_figures=None,
     comparison_context=None,
+    report_pages=None,
 ):
     """Write comparison products for all selected array layouts."""
     statistics_files = []
     for array_layout_name in array_layout_names:
-        statistics_files.append(
-            _compare_array_layout(
-                production_descriptors,
-                args_dict,
-                array_layout_name,
-                output_directory,
-                compact_figures,
-                comparison_context,
-            )
+        first_figure = len(compact_figures) if report_pages is not None else None
+        statistics_file = _compare_array_layout(
+            production_descriptors,
+            args_dict,
+            array_layout_name,
+            output_directory,
+            compact_figures,
+            comparison_context,
         )
+        statistics_files.append(statistics_file)
+        if report_pages is not None:
+            report_pages[statistics_file] = _figure_pages(compact_figures, first_figure)
     return statistics_files
+
+
+def _figure_pages(figures, first_figure):
+    """Map compact plot names to their one-based page numbers in the combined PDF."""
+    pages = {}
+    if isinstance(figures, _PdfReport):
+        labels = figures.page_labels[first_figure:]
+    else:
+        labels = [figure.get_label() for figure in figures[first_figure:]]
+    for page_number, plot_name in enumerate(labels, start=first_figure + 1):
+        if plot_name:
+            pages.setdefault(plot_name, []).append(page_number)
+    return pages
 
 
 def _compare_array_layout(
@@ -175,14 +207,16 @@ def _compare_array_layout(
         array_names=array_layout_name,
     )
     plot_args = {
-        "output_path": output_directory,
-        "array_layout_name": array_layout_name,
+        _OUTPUT_PATH_KEY: output_directory,
+        ARRAY_LAYOUT_KEY: array_layout_name,
         "figure_format": args_dict.get("figure_format"),
-        "report_mode": args_dict.get("report_mode", "diagnostic"),
+        _REPORT_MODE_KEY: args_dict.get(_REPORT_MODE_KEY, "diagnostic"),
         "comparison_title": _comparison_title(comparison_context, array_layout_name),
     }
     if compact_figures is not None:
         plot_args["compact_figures"] = compact_figures
+    if comparison_context is not None:
+        plot_args[COMPARISON_CONTEXT_KEY] = comparison_context
     return plot_event_level_production_comparison.plot(
         metrics_per_production,
         **plot_args,
@@ -279,79 +313,220 @@ def _format_configuration_value(value, quantity=None):
     return str(value)
 
 
-def _write_comparison_summary(statistics_files, output_directory, report_mode="diagnostic"):
+def _write_comparison_summary(
+    statistics_files, output_directory, report_pages=None, comparison_labels=None
+):
     """Combine per-pair statistics into one summary and remove the individual files."""
-    comparisons = []
     baseline = None
     comparison_sets = {}
-    plot_statistics = {}
-    compact_plot_statistics = {}
-    compact_report = report_mode == "compact"
+    compact_statistics = []
+    metric_scopes = {}
     for statistics_file in statistics_files:
-        statistics = json.loads(statistics_file.read_text(encoding="utf-8"))
-        comparison, pair_name, array_layout = _comparison_summary_entry(
-            statistics_file, output_directory, statistics, compact_report
+        statistics = json.loads(statistics_file.read_text(encoding=_ENCODING))
+        baseline = _add_production_summary(baseline, statistics[BASELINE_KEY])
+        comparison_sets = _add_comparison_sets(comparison_sets, statistics[COMPARISON_SETS_KEY])
+        label = _comparison_coordinates(
+            statistics_file, output_directory, (comparison_labels or {}).get(statistics_file)
         )
-        comparisons.append(comparison)
-        baseline = _add_production_summary(baseline, statistics["baseline"])
-        comparison_sets = _add_comparison_sets(comparison_sets, statistics["comparison_sets"])
-        _collect_plot_statistics(
-            statistics["plot_statistics"],
-            pair_name,
-            array_layout,
-            compact_report,
-            plot_statistics,
-            compact_plot_statistics,
+        pair, layout = label
+        metric_scopes.setdefault(pair, {})[layout] = (
+            statistics[PLOT_STATISTICS_KEY]
+            .get("telescope_participation_fraction", {})
+            .get("telescope_types", [])
+        )
+        compact_statistics.extend(
+            _compact_statistic_rows(
+                statistics_file,
+                output_directory,
+                statistics,
+                (report_pages or {}).get(statistics_file, {}),
+                label,
+            )
         )
         statistics_file.unlink()
+        _remove_empty_comparison_directories(statistics_file.parent, output_directory)
 
-    if compact_report:
-        plot_statistics = _finalize_compact_plot_statistics(compact_plot_statistics)
     summary = {
         "format_version": 2,
-        "baseline": baseline
+        BASELINE_KEY: baseline
         or {
             "label": None,
             "simulated_event_count": 0,
             "triggered_event_count": 0,
         },
-        "comparison_sets": list(comparison_sets.values()),
-        "plot_statistics": plot_statistics,
-        "comparisons": comparisons,
+        COMPARISON_SETS_KEY: list(comparison_sets.values()),
+        PLOT_STATISTICS_KEY: {},
+        COMPARISONS_KEY: [],
     }
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "comparison_statistics.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding=_ENCODING
     )
+    _write_compact_statistics_csv(compact_statistics, output_directory)
+    inventory = output_directory / _COMPARISON_INVENTORY_FILE
+    if inventory.is_file():
+        payload = json.loads(inventory.read_text(encoding=_ENCODING))
+        payload["metric_scopes"] = metric_scopes
+        inventory.write_text(json.dumps(payload, indent=2) + "\n", encoding=_ENCODING)
 
 
-def _comparison_summary_entry(statistics_file, output_directory, statistics, compact_report):
-    """Build one comparison entry, omitting duplicated plot data in compact mode."""
+def _compact_statistic_rows(
+    statistics_file, output_directory, statistics, report_pages=None, comparison_label=None
+):
+    """Extract scalar comparison results while excluding histogram arrays."""
+    pair, array_layout = _comparison_coordinates(
+        statistics_file, output_directory, comparison_label
+    )
+    report_pages = report_pages or {}
+    rows = []
+    for plot_name, plot_statistics in statistics[PLOT_STATISTICS_KEY].items():
+        rows.extend(
+            _compact_plot_statistic_rows(
+                pair,
+                array_layout,
+                plot_name,
+                plot_statistics,
+                report_pages.get(plot_name, []),
+            )
+        )
+    return rows
+
+
+def _comparison_coordinates(statistics_file, output_directory, comparison_label):
+    """Identify one pair/layout consistently for scalar rows and coverage checks."""
     path_parts = statistics_file.relative_to(output_directory).parts
-    pair_name = path_parts[0] if len(path_parts) > 2 else ""
-    array_layout = path_parts[1] if len(path_parts) > 2 else path_parts[0]
-    if array_layout == statistics_file.name:
-        array_layout = ""
-    pair_statistics = statistics
-    if compact_report:
-        pair_statistics = {
-            "format_version": statistics.get("format_version", 1),
-            "baseline": statistics["baseline"],
-            "comparison_sets": statistics["comparison_sets"],
-            "plot_statistics": {
-                name: _scalar_plot_statistics(value)
-                for name, value in statistics["plot_statistics"].items()
-            },
-        }
+    if comparison_label is not None:
+        pair, array_layout = comparison_label
+        return pair, array_layout
+    if len(path_parts) > 2:
+        return path_parts[0], path_parts[1]
+    if len(path_parts) == 1:
+        return "", ""
+    return "", path_parts[0]
+
+
+def _compact_plot_statistic_rows(pair, array_layout, plot_name, plot_statistics, report_pages):
+    """Build compact statistic rows for one named plot and its rendered page."""
+    scope, telescope_type = _statistic_scope(plot_name)
+    rows = []
+    for comparison in plot_statistics.get("comparisons", []):
+        rows.extend(
+            _compact_comparison_rows(
+                pair,
+                array_layout,
+                plot_name,
+                scope,
+                telescope_type,
+                comparison,
+                report_pages,
+            )
+        )
+    return rows
+
+
+def _compact_comparison_rows(
+    pair, array_layout, plot_name, scope, telescope_type, comparison, report_pages
+):
+    """Build scalar rows for the population statistics in one comparison."""
+    rows = []
+    for population in ("simulated", "triggered"):
+        result = comparison.get(population)
+        if result is not None:
+            rows.append(
+                _compact_statistic_row(
+                    pair,
+                    array_layout,
+                    plot_name,
+                    scope,
+                    telescope_type,
+                    population,
+                    result,
+                    report_pages,
+                )
+            )
+    if "value" in comparison:
+        rows.append(
+            _compact_statistic_row(
+                pair,
+                array_layout,
+                plot_name,
+                scope,
+                telescope_type,
+                "triggered",
+                comparison,
+                report_pages,
+            )
+        )
+    return rows
+
+
+def _statistic_scope(plot_name):
+    """Map a plot name to whole-array or telescope-type scope."""
+    suffix = plot_name.rsplit("_", 1)[-1]
     return (
-        {
-            "pair": pair_name,
-            "array_layout": array_layout,
-            "statistics": pair_statistics,
-        },
-        pair_name,
-        array_layout,
+        ("telescope_type", suffix)
+        if suffix.startswith(("LST", "MST", "SST"))
+        else ("whole_array", "")
     )
+
+
+def _compact_statistic_row(
+    pair, array_layout, plot_name, scope, telescope_type, population, result, report_pages
+):
+    """Build one scalar result row for machine-readable acceptance checks."""
+    return {
+        "pair": pair,
+        "array_layout": array_layout,
+        "plot": plot_name,
+        REPORT_PAGE_COLUMN: ", ".join(str(page) for page in report_pages),
+        "scope": scope,
+        "telescope_type": telescope_type,
+        "population": population,
+        "metric": result.get("metric"),
+        "value": result.get("value"),
+        "normalized_value": result.get("normalized_value"),
+        "valid": result.get("valid"),
+        "reason": result.get("reason"),
+        "baseline_count": result.get("baseline_total"),
+        "candidate_count": result.get("candidate_total"),
+    }
+
+
+def _write_compact_statistics_csv(rows, output_directory):
+    """Write scalar comparison results without count arrays or expanded JSON."""
+    fields = [
+        "pair",
+        "array_layout",
+        "plot",
+        REPORT_PAGE_COLUMN,
+        "scope",
+        "telescope_type",
+        "population",
+        "metric",
+        "value",
+        "normalized_value",
+        "valid",
+        "reason",
+        "baseline_count",
+        "candidate_count",
+    ]
+    output_directory.mkdir(parents=True, exist_ok=True)
+    with (output_directory / "comparison_metrics.csv").open(
+        "w", encoding=_ENCODING, newline=""
+    ) as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _remove_empty_comparison_directories(directory, output_directory):
+    """Remove emptied per-pair directories without touching plots or the report root."""
+    while directory != output_directory and directory.is_relative_to(output_directory):
+        try:
+            directory.rmdir()
+        except OSError:
+            break
+        directory = directory.parent
 
 
 def _add_comparison_sets(comparison_sets, productions):
@@ -360,80 +535,6 @@ def _add_comparison_sets(comparison_sets, productions):
         label = production["label"]
         comparison_sets[label] = _add_production_summary(comparison_sets.get(label), production)
     return comparison_sets
-
-
-def _collect_plot_statistics(
-    statistics, pair_name, array_layout, compact_report, plot_statistics, compact_statistics
-):
-    """Collect full per-pair statistics or compact per-plot metric summaries."""
-    for name, values in statistics.items():
-        if compact_report:
-            plot_name = values.get("plot_name", name)
-            _add_compact_plot_statistics(compact_statistics, plot_name, values)
-        else:
-            plot_statistics[f"{pair_name}/{array_layout}/{name}"] = values
-
-
-def _add_compact_plot_statistics(compact_statistics, plot_name, statistics):
-    """Accumulate plot metric results without retaining histogram arrays."""
-    entry = compact_statistics.setdefault(
-        plot_name,
-        {
-            "baseline_label": statistics.get("baseline_label"),
-            "metric_type": statistics["metric_type"],
-            "comparisons": [],
-            "metadata": {"compact": True, "pair_count": 0, "results": {}},
-        },
-    )
-    for key in ("metric", "quantity_name", "cumulative"):
-        if key in statistics:
-            entry[key] = statistics[key]
-    entry["metadata"]["pair_count"] += 1
-    for comparison in statistics.get("comparisons", []):
-        candidate_label = comparison.get("candidate_label", "candidate")
-        result_groups = {
-            key: comparison[key] for key in ("simulated", "triggered") if key in comparison
-        }
-        if not result_groups:
-            result_groups = {"result": comparison}
-        for group_name, result in result_groups.items():
-            result_key = f"{candidate_label}:{group_name}"
-            _record_compact_metric_result(entry["metadata"]["results"], result_key, result)
-
-
-def _record_compact_metric_result(results, group_name, result):
-    """Accumulate counts and scalar metric values for one distribution result."""
-    summary = results.setdefault(
-        group_name,
-        {"result_count": 0, "valid_count": 0, "invalid_reasons": {}, "values": []},
-    )
-    summary["result_count"] += 1
-    if result.get("valid"):
-        summary["valid_count"] += 1
-        value = result.get("value")
-        if isinstance(value, int | float):
-            summary["values"].append(value)
-    else:
-        reason = result.get("reason", "unspecified")
-        summary["invalid_reasons"][reason] = summary["invalid_reasons"].get(reason, 0) + 1
-
-
-def _finalize_compact_plot_statistics(compact_statistics):
-    """Return small per-plot metric summaries for the release report."""
-    for entry in compact_statistics.values():
-        results = entry["metadata"]["results"]
-        for summary in results.values():
-            values = summary.pop("values")
-            summary["invalid_count"] = summary["result_count"] - summary["valid_count"]
-            if values:
-                summary["minimum"] = min(values)
-                summary["median"] = float(np.median(values))
-                summary["maximum"] = max(values)
-            else:
-                summary["minimum"] = None
-                summary["median"] = None
-                summary["maximum"] = None
-    return compact_statistics
 
 
 def _add_production_summary(total, production):
@@ -454,7 +555,7 @@ def _production_descriptor_pairs_from_metadata(args_dict):
         args_dict["candidate_path"], args_dict.get("select")
     )
     compare_by = {field.removeprefix("configuration.") for field in args_dict.get("compare_by", [])}
-    baseline_by_key = _unique_manifests_by_pairing_key(baseline, compare_by, "baseline")
+    baseline_by_key = _unique_manifests_by_pairing_key(baseline, compare_by, BASELINE_KEY)
     candidate_by_key = _unique_manifests_by_pairing_key(candidate, compare_by, "candidate")
 
     missing_candidates = sorted(set(baseline_by_key) - set(candidate_by_key))
@@ -462,7 +563,7 @@ def _production_descriptor_pairs_from_metadata(args_dict):
     descriptor_pairs = _matched_descriptor_pairs(
         baseline_by_key,
         candidate_by_key,
-        args_dict.get("baseline_label", "baseline"),
+        args_dict.get("baseline_label", BASELINE_KEY),
         args_dict.get("candidate_label", "candidate"),
     )
     if missing_candidates or missing_baselines:
@@ -483,8 +584,8 @@ def _matched_descriptor_pairs(baseline_by_key, candidate_by_key, baseline_label,
             {
                 "pairing_key": key,
                 "configurations": {
-                    baseline_label: baseline_by_key[key].data.get("configuration", {}),
-                    candidate_label: candidate_by_key[key].data.get("configuration", {}),
+                    baseline_label: baseline_by_key[key].data.get(_CONFIGURATION_KEY, {}),
+                    candidate_label: candidate_by_key[key].data.get(_CONFIGURATION_KEY, {}),
                 },
             },
             [
@@ -536,13 +637,16 @@ def _unique_manifests_by_pairing_key(manifests, compare_by, label):
 
 def _pairing_key(manifest, compare_by):
     """Return normalized configuration fields used for baseline/candidate pairing."""
-    configuration = manifest.get("configuration", {})
+    configuration = manifest.get(_CONFIGURATION_KEY, {})
     paired_configuration = {
         key: value for key, value in configuration.items() if key not in compare_by
     }
+    layout = paired_configuration.get(ARRAY_LAYOUT_KEY)
+    if isinstance(layout, (list, tuple)) and len(layout) == 1:
+        paired_configuration[ARRAY_LAYOUT_KEY] = layout[0]
     return normalize_for_comparison(
         {
-            "configuration": paired_configuration,
+            _CONFIGURATION_KEY: paired_configuration,
             "histogram_settings": manifest.get("histogram_settings", {}),
             "array_selection": manifest.get("array_selection", []),
         }
@@ -562,28 +666,25 @@ def _single_trigger_histogram_file(manifest):
     return manifest.directory / path
 
 
-def _scalar_plot_statistics(statistics):
-    """Retain metric results and validity without distribution arrays."""
-    summary = {
-        key: value
-        for key, value in statistics.items()
-        if key
-        in {"baseline_label", "metric_type", "metric", "quantity_name", "cumulative", "rendering"}
-    }
-    summary["comparisons"] = [
-        _scalar_metric_result(value) for value in statistics.get("comparisons", [])
-    ]
-    return summary
-
-
-def _scalar_metric_result(result):
-    """Keep small scalar results, including nested simulated/triggered metrics."""
-    summary = {}
-    for key, value in result.items():
-        if key in {"baseline", "candidate", "metadata"}:
-            continue
-        if isinstance(value, dict):
-            summary[key] = _scalar_metric_result(value)
-        elif isinstance(value, (str, int, float, bool, type(None))):
-            summary[key] = value
-    return summary
+def _validate_comparison_inputs(applications, production_paths):
+    """Check source coverage and freshness before trigger-product comparisons."""
+    comparison = next(
+        (
+            application.get(_CONFIGURATION_KEY, {})
+            for application in applications
+            if application.get("application") == "simtools-compare-productions"
+            and application.get(_CONFIGURATION_KEY, {}).get("comparison_level", "events")
+            == "events"
+        ),
+        None,
+    )
+    if comparison is None:
+        return
+    for production_path in production_paths:
+        configuration = {
+            "production_path": production_path,
+            _OUTPUT_PATH_KEY: str(Path(production_path) / "derived/trigger_histograms"),
+        }
+        if _SELECT_KEY in comparison:
+            configuration[_SELECT_KEY] = comparison[_SELECT_KEY]
+        _validate_derived_products(configuration)

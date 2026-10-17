@@ -92,6 +92,7 @@ scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:
 scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
 scripts.simtools-derive-pulse-shape-parameters = "simtools.applications.derive_pulse_shape_parameters:main"
+scripts.simtools-derive-telescope-sphere-radius = "simtools.applications.derive_telescope_sphere_radius:main"
 scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
 scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
 scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
@@ -171,6 +172,7 @@ package-data.simtools = [
   "schemas/*.yml",
   "schemas/input/*.yml",
   "schemas/model_parameters/*.yml",
+  "schemas/science_tests/*.yml",
 ]
 data-files.simtools = [ "dependency_versions.yml" ]
 

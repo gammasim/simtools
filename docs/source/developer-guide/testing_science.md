@@ -26,11 +26,41 @@ paths; a baseline path is required only for comparison tests.
 Create a release directory from the shared templates:
 
 ```console
-simtools-run-science-tests --release_dir /path/to/release/science_tests --setup
+simtools-run-science-tests --release_dir /path/to/release/science_tests --setup \
+  --baseline_version v0.38.0 --simulation_models_git_revision v0.18.0
 ```
 
-This copies `release.yml`, every `sites/*.yml` template, and `context.yml`. Edit `context.yml` and
+This copies `release.yml`, every `sites/*.yml` template, and `context.yml`. The optional setup
+values set the baseline and model ref in `release.yml`, and the baseline directory in `context.yml`.
+Edit `context.yml` and
 review the release and site settings. The runner uses `<release_dir>/context.yml` by default.
+
+Set an absolute shared storage root in your local environment before running:
+
+```console
+export SIMTOOLS_SCIENCE_TESTS_ROOT=/path/to/shared/science_tests
+```
+
+Alternatively, set `SIMTOOLS_SCIENCE_TESTS_ROOT=/path/to/shared/science_tests` in an untracked `.env`
+in the working directory, or use `--env_file` to select a different environment file. Keep the
+filesystem-specific root in local configuration and reference it in the committed context:
+
+```yaml
+__SCIENCE_CANDIDATE_PATH__: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/vX.Y.Z
+__SCIENCE_BASELINE_PATH__: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/vA.B.C
+__PRODUCTION_CONFIGURATION_PATH__: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/production-configuration/data
+__SCIENCE_CONTAINER_IMAGE_PATH__: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/vX.Y.Z/simtools-vX.Y.Z.sif
+__CORSIKA_INTERACTION_TABLE_PATH__: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/corsika7-interaction-tables/interaction-tables
+simulation_models_git_path: ${SIMTOOLS_SCIENCE_TESTS_ROOT}/simulation-models
+```
+
+Replace the release versions and image filename with the intended candidate and baseline. For a
+checked-out model repository, use `simulation_models_path` instead of `simulation_models_git_path`.
+The runner resolves `${SIMTOOLS_SCIENCE_TESTS_ROOT}` when loading the context, before path
+validation, preflight, and workflow preparation. An unset, empty, or relative root is an error when
+referenced; contexts using explicit absolute paths remain supported. The effective workflows
+record the resolved paths. All paths must be accessible at the same location on the submit host
+and inside Apptainer on the workers; use `--preflight` to check this before production submission.
 
 ```console
 # Validate definitions without execution.
@@ -44,7 +74,7 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
 # Submit production only after grid review.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --context_file /path/to/release/science_tests/context.yml \
-  --test production.gamma --allow_production
+  --test production.gamma --allow_production --preflight
 
 # Collect finished jobs, validate their products, and update the release report.
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
@@ -58,6 +88,10 @@ simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --test compare.trigger_histograms --test compare.compute_resources
 ```
 
+`--preflight` is recommended before production. It validates all configured host paths, then runs
+one high-priority worker-side Apptainer canary per selected site using the production container
+setup. If omitted, production still proceeds with a warning.
+
 Repeat `--site` or `--test` to narrow execution. Only named tests run; prerequisites must be selected
 explicitly or their required products must already exist. Selected prerequisites run in dependency
 order, and missing or incomplete inputs block dependents. Production submission returns `submitted`.
@@ -67,8 +101,14 @@ while jobs remain pending. `--overwrite` archives a failed, finished production 
 retry with `--allow_production`.
 
 Expected products and acceptance rules are declared in the template. Missing products are
-`incomplete`; failed numerical limits are `fail`; advisory limits are `warn` and require review.
+`incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
+Warnings do not qualify a release; every required test must pass.
+Missing configured comparison metrics produce warnings; duplicate measurements are errors.
+All acceptance deviations are collected in a small `acceptance.md` report linked from the
+release summary, with PDF page links where available. Complete scalar results remain in CSV.
 Reports and the release summary are written under `reports/`; production data remains at the external
 candidate path.
+Summary generation does not scan candidate or baseline data. If those files change outside the
+runner, rerun the affected tests to refresh their results.
 
 The runner records effective execution settings with each external workflow.
