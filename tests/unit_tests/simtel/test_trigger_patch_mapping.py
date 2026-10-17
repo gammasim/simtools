@@ -10,6 +10,7 @@ from astropy.table import Table
 
 import simtools.simtel.trigger_patch_mapping as mapping
 from simtools.simtel import trigger_patch_validation as validation
+from simtools.visualization import plot_trigger_patches as plots
 
 PIXLED_LOG_FILE = "pixled.log"
 FIRING_PAIR = "Firing #0 (pixel 0) #1 (pixel 1)\n"
@@ -33,8 +34,6 @@ LIST_TRGSECT = "list_trgsect"
 PHOTOELECTRONS = "photoelectrons"
 PIXEL_LIST = "pixel_list"
 PIXEL_LISTS = "pixel_lists"
-PIXEL_SHAPE = "pixel_shape"
-PIXEL_DIAMETER = "pixel_diameter"
 SAVEFIG = "savefig"
 LIMIT = "limit"
 IMAGE = "image"
@@ -474,7 +473,7 @@ def test_group_size_requires_trigger_definitions(tmp_test_directory):
         mapping._validate_trigger_group_sizes(camera_file, 1)
 
 
-def test_parse_trigger_groups_and_event_context(tmp_test_directory):
+def test_parse_trigger_groups_and_pixled_patterns(tmp_test_directory):
     camera_file = Path(tmp_test_directory) / CAMERA_TEST_DAT
     camera_file.write_text(
         "AnalogSumTrigger * of 4 16 7\nMajorityTrigger * of +4 20[21,22] 16\n",
@@ -485,31 +484,12 @@ def test_parse_trigger_groups_and_event_context(tmp_test_directory):
     log_file = Path(tmp_test_directory) / PIXLED_LOG_FILE
     log_file.write_text("Firing #0 (pixel 4) #1 (pixel 16)\n", encoding=UTF_8)
     input_patterns = mapping._read_pixled_input_patterns(log_file)
-    photoelectrons = np.zeros(17, dtype=int)
-    photoelectrons[[4, 16]] = [3, 4]
-    context = mapping._trigger_event_context(
-        {
-            MC_EVENT: {SHOWER_NUMBER: 1},
-            PHOTOELECTRONS: {0: {PHOTOELECTRONS: photoelectrons}},
-        },
-        {HEADER: {LIST_TRGSECT: np.array([0, 1])}},
-        1,
-        groups,
-        input_patterns,
-    )
-    assert context == (
-        [4, 16],
-        [4, 16],
-        [0, 1],
-        [0, 1],
-    )
+    assert groups == [{4, 16, 7}, {4, 20, 16}]
+    assert input_patterns == [[4, 16]]
 
 
-def test_trigger_event_context_handles_missing_input_metadata(tmp_test_directory):
-    missing_log = Path(tmp_test_directory) / "missing.log"
-    assert mapping._read_pixled_input_patterns(missing_log) == []
-    context = mapping._trigger_event_context({}, {HEADER: {}}, 1, [{0}], [])
-    assert context == ([], [], [], [])
+def test_read_pixled_patterns_handles_missing_log(tmp_test_directory):
+    assert mapping._read_pixled_input_patterns(tmp_test_directory / "missing.log") == []
 
 
 def _pdf_files(tmp_test_directory):
@@ -602,10 +582,10 @@ def test_write_pdf_uses_simtools_analysis_and_plotting(tmp_test_directory, mocke
             },
         ],
     )
-    plot = mocker.spy(mapping, PLOT_PIXEL_LAYOUT_WITH_IMAGE)
-    overlay = mocker.spy(mapping, "_overlay_trigger_groups")
-    pages = mocker.spy(mapping.PdfPages, SAVEFIG)
-    open_figures = mapping.plt.get_fignums()
+    plot = mocker.spy(plots, PLOT_PIXEL_LAYOUT_WITH_IMAGE)
+    overlay = mocker.spy(plots, "_overlay_trigger_groups")
+    pages = mocker.spy(plots.PdfPages, SAVEFIG)
+    open_figures = plots.plt.get_fignums()
     mapping._write_pdf(files, LSTN_01)
     assert files.pdf_file.read_bytes().startswith(b"%PDF-")
     assert pages.call_count == 6
@@ -615,7 +595,7 @@ def test_write_pdf_uses_simtools_analysis_and_plotting(tmp_test_directory, mocke
     assert plot.call_args.kwargs[IMAGE] == pytest.approx([80.0, 0.0])
     assert overlay.call_count == 3
     assert overlay.call_args.args[3:] == ([0], [0, 1])
-    assert mapping.plt.get_fignums() == open_figures
+    assert plots.plt.get_fignums() == open_figures
 
 
 @pytest.mark.parametrize(LIMIT, [0, 1, 2, 5])
@@ -625,81 +605,10 @@ def test_pdf_event_page_limit_does_not_limit_accounting(tmp_test_directory, mock
         mocker,
         [{EVENT_ID: number * 100, MC_EVENT: {SHOWER_NUMBER: number}} for number in (1, 2, 3)],
     )
-    pages = mocker.spy(mapping.PdfPages, SAVEFIG)
+    pages = mocker.spy(plots.PdfPages, SAVEFIG)
     mapping._write_pdf(files, LSTN_01, max_plotted_events=limit)
     assert pages.call_count == 3 + min(limit, 3)
     assert len(Table.read(files.pdf_file.with_suffix(validation.EVENTS_SUFFIX))) == 3
-
-
-def test_fired_patch_outlines_enclose_whole_patches_without_pixel_edges():
-    camera = Mock(
-        pixels={
-            mapping.PIXEL_IDS: [0, 1, 2],
-            "x": [0, 1, 2],
-            "y": [0, 0, 0],
-            PIXEL_SHAPE: 2,
-            PIXEL_DIAMETER: 1,
-        }
-    )
-    figure, axis = mapping.plt.subplots()
-    try:
-        mapping._overlay_trigger_groups(axis, camera, [{0, 1}, {1, 2}], [0, 1, 99], [1])
-        assert len(axis.patches) == 2
-        assert axis.patches[0].get_edgecolor() != axis.patches[1].get_edgecolor()
-        assert [patch.get_label() for patch in axis.patches] == ["Patch 0", "Patch 1"]
-        for patch, left in zip(axis.patches, [-0.5, 0.5]):
-            vertices = patch.get_xy()
-            assert len(vertices) == 5
-            assert vertices[:, 0].min() == pytest.approx(left)
-            assert vertices[:, 0].max() == pytest.approx(left + 2)
-            assert vertices[:, 1].min() == pytest.approx(-0.5)
-            assert vertices[:, 1].max() == pytest.approx(0.5)
-        assert len(axis.collections) == 1
-        assert np.asarray(axis.collections[0].get_offsets()) == pytest.approx(np.array([[1, 0]]))
-    finally:
-        mapping.plt.close(figure)
-
-
-def test_patch_outline_skips_empty_or_unsupported_pixel_shapes():
-    camera = Mock(pixels={mapping.PIXEL_IDS: [0], "x": [0], "y": [0], PIXEL_SHAPE: 0})
-    figure, axis = mapping.plt.subplots()
-    try:
-        mapping._outline_patch(axis, camera, {0})
-        mapping._outline_patch(axis, camera, set())
-        assert not axis.patches
-    finally:
-        mapping.plt.close(figure)
-
-
-def test_patch_palette_cycles_with_distinct_line_styles():
-    camera = Mock(
-        pixels={
-            mapping.PIXEL_IDS: [0],
-            "x": [0],
-            "y": [0],
-            PIXEL_SHAPE: 2,
-            PIXEL_DIAMETER: 1,
-        }
-    )
-    figure, axis = mapping.plt.subplots()
-    try:
-        mapping._overlay_trigger_groups(axis, camera, [{0}] * 6, range(6), [])
-        assert len({patch.get_edgecolor() for patch in axis.patches}) == 3
-        assert axis.patches[0].get_linestyle() != axis.patches[3].get_linestyle()
-        assert axis.get_legend() is not None
-    finally:
-        mapping.plt.close(figure)
-
-
-def test_observed_patch_efficiency_excludes_untested_groups():
-    groups = [
-        {validation.GROUP_ID: 0, validation.OBSERVED: 4, validation.INTENDED_SECTOR_FIRED: 3},
-        {validation.GROUP_ID: 1, validation.OBSERVED: 0, validation.INTENDED_SECTOR_FIRED: 0},
-        {validation.GROUP_ID: 2, validation.OBSERVED: 2, validation.INTENDED_SECTOR_FIRED: 0},
-    ]
-    assert mapping._observed_patch_efficiency(groups) == pytest.approx(
-        [0.75, np.nan, 0], nan_ok=True
-    )
 
 
 @pytest.mark.parametrize("description_count", [0, 2])
@@ -774,13 +683,13 @@ def test_pdf_plot_failure_closes_figure_and_removes_partial_pdf(tmp_test_directo
         ],
     )
     failure = ValueError(INVALID_CAMERA_GEOMETRY)
-    mocker.patch.object(mapping, PLOT_PIXEL_LAYOUT_WITH_IMAGE, side_effect=failure)
-    open_figures = mapping.plt.get_fignums()
+    mocker.patch.object(plots, PLOT_PIXEL_LAYOUT_WITH_IMAGE, side_effect=failure)
+    open_figures = plots.plt.get_fignums()
     with pytest.raises(mapping.job_manager.JobExecutionError, match=INVALID_CAMERA_GEOMETRY) as exc:
         mapping._write_pdf(files, LSTN_01)
     assert exc.value.__cause__ is failure
     assert not files.pdf_file.exists()
-    assert mapping.plt.get_fignums() == open_figures
+    assert plots.plt.get_fignums() == open_figures
 
 
 def test_pixled_finds_atmosphere_outside_installation_directory(

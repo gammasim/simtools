@@ -168,3 +168,10 @@ the visualization module.
 .. automodule:: visualization.matplotlib_backend
    :members:
 ```
+
+## plot_trigger_patches
+
+```{eval-rst}
+.. automodule:: visualization.plot_trigger_patches
+   :members:
+```
