@@ -9,6 +9,7 @@ from astropy.table import Table
 
 from simtools.data_model import model_data_writer
 from simtools.io import io_handler
+from simtools.io.file_type import _get_product_value
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
@@ -20,7 +21,7 @@ from simtools.visualization import plot_tables
 
 _logger = logging.getLogger(__name__)
 
-_REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
+_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
 
 
 def generate_bias_curves(args):

@@ -8,7 +8,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -47,7 +47,7 @@ jobs:
       - name: Set up simtools tests
         uses: ./.github/actions/setup-simtools-tests
         with:
-          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
           simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
       - name: Run unit resource benchmark
@@ -73,7 +73,7 @@ jobs:
       contents: read
     with:
       benchmark: true
-      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
       simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
       model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}

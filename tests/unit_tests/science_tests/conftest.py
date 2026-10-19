@@ -16,6 +16,20 @@ def _write_yaml(path, data):
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
 
 
+def _skip_comparison_input_validation(_applications, _production_paths):
+    """Keep science execution unit tests independent of production metadata trees."""
+
+
+@pytest.fixture(autouse=True)
+def mock_comparison_input_validation(monkeypatch):
+    """Mock production metadata validation while testing science orchestration."""
+    monkeypatch.setattr(
+        science_test_execution,
+        "_validate_comparison_inputs",
+        _skip_comparison_input_validation,
+    )
+
+
 @pytest.fixture
 def campaign(tmp_test_directory):
     root = Path(tmp_test_directory)
@@ -137,3 +151,8 @@ def successful_workflow(monkeypatch):
 
     monkeypatch.setattr(science_test_execution, "run_applications", execute)
     return calls
+
+
+@pytest.fixture
+def write_science_yaml():
+    return _write_yaml

@@ -37,6 +37,11 @@ from simtools.production_configuration.production_file_selection import (
     write_selection_file,
 )
 
+SIM_TELARRAY_LOG_TYPE = "sim_telarray_log"
+CORSIKA_LOG_TYPE = "corsika_log"
+SIMTEL_SOFTWARE = "simtel"
+CORSIKA_SOFTWARE = "corsika"
+
 
 def _write_manifest(base, job_name, run_number, he_interaction="qgs3", zenith=None):
     base = Path(base)
@@ -276,7 +281,7 @@ def test_inventory_production_files_discovers_nested_simulation_outputs(tmp_test
     assert inventory_production_files(job_directory) == {
         "reduced_event_data": ["sim_telarray/run000001/gamma_run000001.reduced_event_data.hdf5"],
         "sim_telarray": ["sim_telarray/run000001/gamma_run000001.simtel.zst"],
-        "sim_telarray_log": ["sim_telarray/run000001/gamma_run000001.simtel.log.gz"],
+        SIM_TELARRAY_LOG_TYPE: ["sim_telarray/run000001/gamma_run000001.simtel.log.gz"],
     }
 
 
@@ -335,7 +340,7 @@ def test_validate_required_production_outputs_rejects_incomplete_job(tmp_test_di
 
 def test_validate_required_production_outputs_accepts_required_output(tmp_test_directory):
     validate_required_production_outputs(
-        {"corsika": ["shower.corsika.zst"]}, "corsika", tmp_test_directory
+        {CORSIKA_SOFTWARE: ["shower.corsika.zst"]}, CORSIKA_SOFTWARE, tmp_test_directory
     )
 
 
@@ -398,7 +403,7 @@ def test_group_selected_files_rejects_missing_file_type(tmp_test_directory):
     manifest = load_manifest(manifest_path)
 
     with pytest.raises(ValueError, match="lists no files"):
-        group_selected_files([manifest], file_type="corsika")
+        group_selected_files([manifest], file_type=CORSIKA_SOFTWARE)
 
 
 def test_write_selection_file_and_summary(tmp_test_directory):
@@ -524,10 +529,12 @@ def test_manifest_path_and_file_suffix_validation(tmp_test_directory):
     [
         ("reduced_event_data", ".reduced_event_data.hdf5"),
         ("sim_telarray", ".simtel"),
-        ("sim_telarray_log", ".simtel.log"),
+        (SIM_TELARRAY_LOG_TYPE, ".simtel.log"),
+        (SIM_TELARRAY_LOG_TYPE, ".simtel.err"),
         ("sim_telarray_histogram", ".hdata"),
-        ("corsika", ".corsika"),
-        ("corsika_log", ".corsika.log"),
+        (CORSIKA_SOFTWARE, ".corsika"),
+        (CORSIKA_LOG_TYPE, ".corsika.log"),
+        (CORSIKA_LOG_TYPE, ".corsika.err"),
         ("trigger_histograms", ".trigger_histograms.hdf5"),
     ],
 )
@@ -574,3 +581,11 @@ def test_empty_selection_summary_has_no_missing_runs():
 )
 def test_selection_matches_list_members(value, expected, matches):
     assert _values_match(value, expected) is matches
+
+
+@pytest.mark.parametrize("software", [SIMTEL_SOFTWARE, CORSIKA_SOFTWARE])
+def test_inventory_production_files_includes_stderr(tmp_test_directory, software):
+    stderr = Path(tmp_test_directory) / f"run000001.{software}.err.gz"
+    stderr.touch()
+    key = SIM_TELARRAY_LOG_TYPE if software == SIMTEL_SOFTWARE else CORSIKA_LOG_TYPE
+    assert inventory_production_files(tmp_test_directory) == {key: [stderr.name]}

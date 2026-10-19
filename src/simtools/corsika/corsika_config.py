@@ -13,6 +13,8 @@ from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
+from simtools.simulation.configuration import get_model_writer
+from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general as gen
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
@@ -56,6 +58,22 @@ class CorsikaConfig:
         self.interaction_table_path = settings.config.corsika_interaction_table_path
         self.config = self._fill_corsika_configuration(settings.config.args)
         self._initialize_from_config(settings.config.args)
+
+    @property
+    def simulation_parameters(self):
+        """Return physical run settings without CORSIKA steering cards."""
+        return SimulationParameters(
+            run_number=self.run_number,
+            primary_particle=self.primary_particle,
+            zenith_angle=self.zenith_angle,
+            azimuth_angle=self.azimuth_angle,
+            shower_events=self.shower_events,
+            mc_events=self.mc_events,
+            viewcone_max=self.get_config_parameter("VIEWCONE")[1],
+            zenith_min=self.get_config_parameter("THETAP")[0],
+            run_mode=self.run_mode,
+            use_curved_atmosphere=self.use_curved_atmosphere,
+        )
 
     @property
     def primary_particle(self):
@@ -834,3 +852,36 @@ class CorsikaConfig:
             "pedestals_nsb_only",
             "direct_injection",
         ]
+
+
+def get_site_config_parameters(site_model, model_directory=None):
+    """Translate site quantities into CORSIKA7 configuration parameters.
+
+    Parameters
+    ----------
+    site_model : SiteModel
+        Resolved site model with atmosphere and geomagnetic field.
+    model_directory : pathlib.Path, optional
+        Directory containing the atmospheric profile.
+
+    Returns
+    -------
+    dict
+        Native CORSIKA7 site configuration.
+    """
+    model_directory = model_directory or Path()
+    return {
+        "OBSLEV": [
+            site_model.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
+        ],
+        # We always use a custom profile by filename, so this has to be set to 99
+        "ATMOSPHERE": [99, "Y"],
+        "IACT ATMOFILE": [
+            model_directory / get_model_writer(site_model).get_atmospheric_profile_file_name()
+        ],
+        "MAGNET": [
+            site_model.get_parameter_value("geomag_horizontal"),
+            site_model.get_parameter_value("geomag_vertical"),
+        ],
+        "ARRANG": [site_model.get_parameter_value("geomag_rotation")],
+    }

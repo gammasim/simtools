@@ -2,92 +2,51 @@
 
 import logging
 
-from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler
+from simtools.io.file_type import _get_product_value
+from simtools.simulation.parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)
 _DIRAC_MAX_FILENAME_LENGTH = 128
+_RUN_NUMBER = "run_number"
+_SUB_DIRECTORY_TYPE = "sub_dir_type"
+_FILE_SUFFIX = "suffix"
+_SUBMISSION_DIRECTORY = "sub"
+_SIM_TELARRAY_HISTOGRAM_PRODUCT = "sim_telarray_histogram_output"
 
-
+_RUNNER_FILE_PLACEMENT = {
+    "corsika_input": _RUN_NUMBER,
+    "corsika_output": _RUN_NUMBER,
+    "corsika_log": _RUN_NUMBER,
+    "corsika_err": _RUN_NUMBER,
+    "corsika_resources": _RUN_NUMBER,
+    "iact_output": _RUN_NUMBER,
+    "sim_telarray_output": _RUN_NUMBER,
+    "sim_telarray_histogram": _RUN_NUMBER,
+    "sim_telarray_log": _RUN_NUMBER,
+    "sim_telarray_err": _RUN_NUMBER,
+    "sim_telarray_event_data": _RUN_NUMBER,
+    "sim_telarray_resources": _RUN_NUMBER,
+    "light_emission_log": _RUN_NUMBER,
+    "light_emission_err": _RUN_NUMBER,
+    "light_emission_resources": _RUN_NUMBER,
+    "multi_pipe_config": _RUN_NUMBER,
+    "multi_pipe_script": _RUN_NUMBER,
+    "multi_pipe_resources": _RUN_NUMBER,
+    "sub_out": _SUBMISSION_DIRECTORY,
+    "sub_err": _SUBMISSION_DIRECTORY,
+    "sub_log": _SUBMISSION_DIRECTORY,
+    "sub_script": _SUBMISSION_DIRECTORY,
+}
+_RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": _SIM_TELARRAY_HISTOGRAM_PRODUCT}
 FILES_AND_PATHS = {
-    # CORSIKA
-    "corsika_input": {
-        "suffix": ".corsika.input",
-        "sub_dir_type": "run_number",
-    },
-    "corsika_output": {
-        "suffix": ".corsika.zst",
-        "sub_dir_type": "run_number",
-    },
-    "corsika_log": {
-        "suffix": ".corsika.log.gz",
-        "sub_dir_type": "run_number",
-    },
-    "corsika_resources": {
-        "suffix": ".corsika.resources.json",
-        "sub_dir_type": "run_number",
-    },
-    # Generic iact output
-    "iact_output": {
-        "suffix": ".iact.gz",
-        "sub_dir_type": "run_number",
-    },
-    # sim_telarray
-    "sim_telarray_output": {
-        "suffix": ".simtel.zst",
-        "sub_dir_type": "run_number",
-    },
-    "sim_telarray_histogram": {
-        "suffix": ".hdata.zst",
-        "sub_dir_type": "run_number",
-    },
-    "sim_telarray_log": {
-        "suffix": ".simtel.log.gz",
-        "sub_dir_type": "run_number",
-    },
-    "sim_telarray_event_data": {
-        "suffix": ".reduced_event_data.hdf5",
-        "sub_dir_type": "run_number",
-    },
-    "sim_telarray_resources": {
-        "suffix": ".simtel.resources.json",
-        "sub_dir_type": "run_number",
-    },
-    # light_emission
-    "light_emission_log": {
-        "suffix": ".light_emission.log.gz",
-        "sub_dir_type": "run_number",
-    },
-    # multipipe
-    "multi_pipe_config": {
-        "suffix": ".multi_pipe.cfg",
-        "sub_dir_type": "run_number",
-    },
-    "multi_pipe_script": {
-        "suffix": ".multi_pipe.sh",
-        "sub_dir_type": "run_number",
-    },
-    "multi_pipe_resources": {
-        "suffix": ".multipipe.resources.json",
-        "sub_dir_type": "run_number",
-    },
-    # job submission
-    "sub_out": {
-        "suffix": ".out",
-        "sub_dir_type": "sub",
-    },
-    "sub_err": {
-        "suffix": ".err",
-        "sub_dir_type": "sub",
-    },
-    "sub_log": {
-        "suffix": ".log",
-        "sub_dir_type": "sub",
-    },
-    "sub_script": {
-        "suffix": ".sh",
-        "sub_dir_type": "sub",
-    },
+    file_type: {
+        _FILE_SUFFIX: _get_product_value(
+            _RUNNER_PRODUCT_IDS.get(file_type, file_type), "default_suffix"
+        ),
+        _SUB_DIRECTORY_TYPE: directory_type,
+    }
+    for file_type, directory_type in _RUNNER_FILE_PLACEMENT.items()
 }
 
 
@@ -154,11 +113,12 @@ class RunnerServices:
         Label.
     """
 
-    def __init__(self, config, run_type, label=None):
+    def __init__(self, config, run_type, label=None, array_model=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
-        self.config = config
+        self.array_model = array_model or getattr(config, "array_model", None)
+        self.config = getattr(config, "simulation_parameters", config)
         self.run_type = run_type
         self.directory = self.load_data_directory()
 
@@ -217,8 +177,8 @@ class RunnerServices:
         str
             Base name for the simulation files.
         """
-        if isinstance(self.config, CorsikaConfig):
-            return self._get_file_base_name_from_corsika_config(run_number, is_multi_pipe)
+        if isinstance(self.config, SimulationParameters):
+            return self._get_file_base_name_from_simulation_parameters(run_number, is_multi_pipe)
         if isinstance(self.config, dict):
             return self._get_file_base_name_from_core_config()
         raise ValueError(f"Invalid configuration type: {type(self.config)}")
@@ -237,7 +197,7 @@ class RunnerServices:
 
         parts = [
             f"{run_mode}_" if run_mode else "",
-            f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
+            f"{self._get_run_number_string(cfg.get(_RUN_NUMBER))}_" if _RUN_NUMBER in cfg else "",
             f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else "",
             f"azm{round(azimuth_angle):03}deg_" if isinstance(azimuth_angle, (int, float)) else "",
             f"{cfg['site']}_" if cfg.get("site") else "",
@@ -248,15 +208,17 @@ class RunnerServices:
         ]
         return "".join(parts)
 
-    def _get_file_base_name_from_corsika_config(self, run_number, is_multi_pipe=False):
-        """Get file base name from CORSIKA configuration."""
-        zenith = self.config.get_config_parameter("THETAP")[0]
-        vc_high = self.config.get_config_parameter("VIEWCONE")[1]
+    def _get_file_base_name_from_simulation_parameters(self, run_number, is_multi_pipe=False):
+        """Get file base name from physical simulation settings."""
+        zenith = self.config.zenith_min
+        vc_high = self.config.viewcone_max
 
         if self.config.run_mode is not None and self.config.run_mode != "":
             primary_name = self.config.run_mode
         else:
-            primary_name = self.config.primary_particle.name
+            primary_name = (
+                self.config.primary_particle.name if self.config.primary_particle else None
+            )
             if primary_name == "gamma" and vc_high > 0:
                 primary_name = "gamma_diffuse"
 
@@ -268,13 +230,9 @@ class RunnerServices:
             prefix
             + f"za{round(zenith):02}deg_"
             + f"azm{round(self.config.azimuth_angle):03}deg_"
-            + f"{self.config.array_model.site}_"
-            + (
-                f"{self.config.array_model.layout_name}_"
-                if self.config.array_model.layout_name
-                else ""
-            )
-            + (self.config.array_model.model_version if not is_multi_pipe else "")
+            + f"{self.array_model.site}_"
+            + (f"{self.array_model.layout_name}_" if self.array_model.layout_name else "")
+            + (self.array_model.model_version if not is_multi_pipe else "")
             + file_label
         )
 
@@ -326,11 +284,11 @@ class RunnerServices:
         except KeyError as exc:
             raise ValueError(f"Unknown file type: {file_type}") from exc
 
-        if desc["sub_dir_type"] == "run_number":
+        if desc[_SUB_DIRECTORY_TYPE] == _RUN_NUMBER:
             dir_path = self._get_sub_directory(run_number, self.directory)
         else:
             dir_path = self.directory
-        output_file_name = f"{file_name}{desc['suffix']}"
+        output_file_name = f"{file_name}{desc[_FILE_SUFFIX]}"
         warn_if_file_name_exceeds_dirac_limit(output_file_name, file_type)
         return dir_path / output_file_name
 
@@ -367,10 +325,10 @@ class RunnerServices:
         dict
             run time and number of simulated events
         """
-        if isinstance(self.config, CorsikaConfig):
+        if isinstance(self.config, SimulationParameters):
             return {
                 "runtime": runtime,
-                "n_events": int(self.config.get_config_parameter("NSHOW")),
+                "n_events": int(self.config.shower_events),
             }
         self._logger.warning("Number of events cannot be determined from non-CORSIKA config.")
         return {"runtime": runtime, "n_events": None}
