@@ -12,6 +12,7 @@ from astropy import units as u
 from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.io import ascii_handler, io_handler
+from simtools.io.file_type import _get_product_filename
 from simtools.statistics import (
     compare_histogram_counts,
     compare_samples_with_statistics,
@@ -1326,7 +1327,7 @@ def _plot_name_from_statistics(statistics):
 
 def _write_comparison_statistics_json(comparison_statistics, output_path):
     """Write comparison statistics JSON file in the output directory."""
-    output_file = output_path / "comparison_statistics.json"
+    output_file = output_path / _get_product_filename("comparison_statistics")
     _logger.info(f"Writing comparison statistics: {output_file}")
     ascii_handler.write_data_to_file(comparison_statistics, output_file, sort_keys=True)
     return output_file

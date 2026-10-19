@@ -6,6 +6,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 
+from simtools.io.file_type import _get_product_filename
 from simtools.production_configuration.production_file_selection import (
     check_manifest,
     discover_product_manifests,
@@ -22,7 +23,9 @@ from simtools.sim_events.production_comparison import (
 from simtools.visualization import plot_event_level_production_comparison
 from simtools.visualization.plot_event_level_production_comparison import _pdf_report, _PdfReport
 
-_COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
+_COMPARISON_INVENTORY_FILE = _get_product_filename("comparison_inventory")
+_COMPARISON_STATISTICS_FILE = _get_product_filename("comparison_statistics")
+_COMPARISON_METRICS_FILE = _get_product_filename("comparison_metrics")
 _CONFIGURATION_KEY = "configuration"
 _OUTPUT_PATH_KEY = "output_path"
 _REPORT_MODE_KEY = "report_mode"
@@ -359,7 +362,7 @@ def _write_comparison_summary(
         COMPARISONS_KEY: [],
     }
     output_directory.mkdir(parents=True, exist_ok=True)
-    (output_directory / "comparison_statistics.json").write_text(
+    (output_directory / _COMPARISON_STATISTICS_FILE).write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding=_ENCODING
     )
     _write_compact_statistics_csv(compact_statistics, output_directory)
@@ -511,7 +514,7 @@ def _write_compact_statistics_csv(rows, output_directory):
         "candidate_count",
     ]
     output_directory.mkdir(parents=True, exist_ok=True)
-    with (output_directory / "comparison_metrics.csv").open(
+    with (output_directory / _COMPARISON_METRICS_FILE).open(
         "w", encoding=_ENCODING, newline=""
     ) as output_file:
         writer = csv.DictWriter(output_file, fieldnames=fields)

@@ -16,7 +16,7 @@ from astropy.table import Table, vstack
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.io.file_type import validate_file_type
+from simtools.io.file_type import _get_product_value, validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.production_event_data_helpers import (
@@ -72,7 +72,7 @@ TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
-_REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
+_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
 _PART_SUFFIX_PATTERN = re.compile(r"\.part\d+$")
 
 

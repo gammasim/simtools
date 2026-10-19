@@ -293,7 +293,7 @@ def test_no_plot_mode_retains_statistics(tmp_test_directory, monkeypatch):
     def reject_figure(*_args, **_kwargs):
         raise AssertionError("Statistics-only comparison must not allocate figures")
 
-    monkeypatch.setattr(plot_event_level_production_comparison.plt, "subplots", reject_figure)
+    monkeypatch.setattr(plt, "subplots", reject_figure)
 
     statistics_file = plot_event_level_production_comparison.plot(
         metrics, output_path=output_path, report_mode="none"
