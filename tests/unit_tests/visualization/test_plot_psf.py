@@ -322,8 +322,8 @@ def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
     }
 
     with (
-        patch("matplotlib.pyplot.subplots") as mock_subplots,
-        patch("matplotlib.pyplot.close"),
+        patch("simtools.visualization.plot_psf.plt.subplots") as mock_subplots,
+        patch("simtools.visualization.plot_psf.plt.close"),
     ):
         mock_fig = MagicMock()
         mock_ax = MagicMock()
