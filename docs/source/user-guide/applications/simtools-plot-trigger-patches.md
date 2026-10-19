@@ -52,4 +52,7 @@ one patch; it does not validate firing or trigger eligibility. Use
 .. simtools-cli-help::
    :application: plot_trigger_patches
    :no-heading:
+
+.. simtools-integration-example::
+    :file: plot_trigger_patches.yml
 ```
