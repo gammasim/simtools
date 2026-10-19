@@ -392,8 +392,8 @@ def _configure_mirror_plot(ax, x_pos, y_pos):
     x_min, x_max = np.min(x_pos), np.max(x_pos)
     y_min, y_max = np.min(y_pos), np.max(y_pos)
 
-    x_padding = (x_max - x_min) * 0.15
-    y_padding = (y_max - y_min) * 0.15
+    x_padding = max((x_max - x_min) * 0.15, abs(x_min) * 0.15, 1.0)
+    y_padding = max((y_max - y_min) * 0.15, abs(y_min) * 0.15, 1.0)
 
     ax.set_xlim(x_min - x_padding, x_max + x_padding)
     ax.set_ylim(y_min - y_padding, y_max + y_padding)

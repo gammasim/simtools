@@ -1,7 +1,7 @@
-# simtools-validate-camera-fov
+# simtools-plot-camera
 
 ```{eval-rst}
-.. automodule:: simtools.applications.validate_camera_fov
+.. automodule:: simtools.applications.plot_camera
    :members:
    :exclude-members: main
 ```
@@ -37,17 +37,17 @@ LST - 5.0.0
 
 .. code-block:: console
 
-    simtools-validate-camera-fov --site North \\
+    simtools-plot-camera --site North \\
         --telescope LSTN-01 --model_version 5.0.0
 
-The output is saved in simtools-output/validate_camera_fov.
+The output is saved in simtools-output/plot_camera.
 
 Expected final print-out message:
 
 .. code-block:: console
 
-    Saved camera plot in /workdir/external/simtools/simtools-output/validate_camera_fov\\
-    /application-plots/validate_camera_fov_LST-1_pixel_layout.png
+    Saved camera plot in /workdir/external/simtools/simtools-output/plot_camera\\
+    /application-plots/plot_camera_LST-1_pixel_layout.png
 ```
 
 ## Trigger-patch plots
@@ -55,9 +55,9 @@ Expected final print-out message:
 Select patch group IDs directly, or show all patches containing a pixel:
 
 ```console
-simtools-validate-camera-fov --site North --telescope LSTN-design \
+simtools-plot-camera --site North --telescope LSTN-design \
   --model_version 7.0.0 --trigger_patches 0 1 2
-simtools-validate-camera-fov --site North --telescope LSTN-design \
+simtools-plot-camera --site North --telescope LSTN-design \
   --model_version 7.0.0 --trigger_pixel 75
 ```
 
@@ -106,7 +106,7 @@ pixels without trigger-group membership are rejected.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :application: validate_camera_fov
+   :application: plot_camera
    :no-heading:
 ```
 
@@ -114,5 +114,5 @@ pixels without trigger-group membership are rejected.
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: validate_camera_fov_run.yml
+    :file: plot_camera_run.yml
 ```

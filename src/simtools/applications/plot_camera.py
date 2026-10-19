@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Calculate the camera FoV of the telescope requested and plot the camera."""
+"""Plot the camera of the requested telescope."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

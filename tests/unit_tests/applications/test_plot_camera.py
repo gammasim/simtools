@@ -2,7 +2,7 @@
 
 import pytest
 
-from simtools.applications.validate_camera_fov import _MAX_PIXEL_ID, APPLICATION
+from simtools.applications.plot_camera import _MAX_PIXEL_ID, APPLICATION
 
 TRIGGER_PIXEL_OPTION = "--trigger_pixel"
 
