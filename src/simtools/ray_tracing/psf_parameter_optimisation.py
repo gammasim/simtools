@@ -22,8 +22,9 @@ from scipy import stats
 from simtools.data_model import model_data_writer as writer
 from simtools.io.io_handler import IOHandler
 from simtools.job_execution.backends.base import BackendError
+from simtools.job_execution.backends.local import determine_max_workers
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing.psf_evaluation import _dispatch_evaluations, _psf_worker_count
+from simtools.ray_tracing.psf_evaluation import _dispatch_evaluations
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.utils import names
@@ -124,7 +125,7 @@ class PSFParameterOptimizer:
         self.simulation_cache = {}
         self.cache_hits = 0
         self.cache_misses = 0
-        self.max_workers = _psf_worker_count(args_dict)
+        self.max_workers = determine_max_workers(args_dict.get("max_workers"), default_fraction=0.5)
 
     def _params_to_cache_key(self, params):
         """Convert parameters dict to a hashable cache key."""
@@ -1404,7 +1405,6 @@ def run_psf_optimization_job(job):
     job : PSFOptimizationJob
         Application arguments and output directory for the workflow.
     """
-    _psf_worker_count(job.args)
     tel_model, site_model, _ = initialize_simulation_models(
         label=job.args.get(LABEL),
         site=job.args["site"],

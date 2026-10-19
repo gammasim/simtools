@@ -205,3 +205,12 @@ def test_serial_and_parallel_gradient_match_analytic_result(optimizer, monkeypat
     gradient = optimizer.calculate_gradient({SIGMA: 2.0, OTHER_PARAMETER: 0.0}, 6.0)
     assert gradient[SIGMA] == pytest.approx(3.0)
     assert gradient[OTHER_PARAMETER] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize(("workers", "expected"), [(None, 4), (1, 1), (7, 7), (0, 8), (-1, 8)])
+def test_optimizer_uses_shared_worker_limits(mocker, tmp_test_directory, workers, expected):
+    mocker.patch("simtools.job_execution.backends.local.os.cpu_count", return_value=8)
+    optimizer = psf.PSFParameterOptimizer(
+        object(), object(), {"max_workers": workers}, {}, np.array([]), Path(tmp_test_directory)
+    )
+    assert optimizer.max_workers == expected

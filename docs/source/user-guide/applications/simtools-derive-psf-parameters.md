@@ -120,9 +120,9 @@ creates the final plots, so it also needs the simulation software and model sour
 HTCondor receives one job per independent evaluation, rather than one job for the
 whole workflow; scheduler latency can outweigh the benefit for short simulations.
 
-Local execution defaults to half the CPUs available to the application, rounded down
+Local execution defaults to half the system CPUs, rounded down
 with a minimum of one worker. Set `--max_workers 1` for serial execution or choose a
-positive worker count explicitly. This limit controls local processes; HTCondor
+positive worker count explicitly. Zero or negative values use all system CPUs. This limit controls local processes; HTCondor
 concurrency is controlled by the scheduler. Each evaluation reconstructs its own
 model and writes under a unique `parallel_evaluations/` subdirectory. With `--cleanup`,
 all evaluation files are removed when the batch finishes, including failed

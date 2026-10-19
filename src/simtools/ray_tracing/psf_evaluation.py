@@ -1,7 +1,6 @@
 """Prepare isolated PSF evaluation jobs for local and remote execution."""
 
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
@@ -14,18 +13,7 @@ from simtools.settings import config
 from simtools.utils.general import cleanup_intermediate_files
 
 logger = logging.getLogger(__name__)
-MAX_WORKERS = "max_workers"
 JOB_PREFIX = "evaluation-"
-
-
-def _psf_worker_count(args):
-    """Use half the available CPUs unless a positive worker count is supplied."""
-    workers = args.get(MAX_WORKERS)
-    if workers is None:
-        return max(1, (os.process_cpu_count() or 1) // 2)
-    if workers < 1:
-        raise ValueError("max_workers must be a positive integer")
-    return workers
 
 
 @dataclass(frozen=True)

@@ -14,7 +14,10 @@ _ARGUMENTS = (
         "max_workers",
         type=int,
         default=None,
-        help="Concurrent local evaluations (default: half the available CPUs, minimum one).",
+        help=(
+            "Concurrent local evaluations (default: half the system CPUs, minimum one; "
+            "zero or negative: all CPUs)."
+        ),
     ),
     cli.ArgumentDefinition(
         "plot_all",
