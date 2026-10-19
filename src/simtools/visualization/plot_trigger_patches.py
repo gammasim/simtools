@@ -13,49 +13,20 @@ from simtools.visualization.plot_camera import plot_pixel_layout_with_image
 
 GROUP_ID = "group_id"
 GROUP_KIND = "kind"
-MEMBER_PIXEL_ID = "pixel_id"
 PIXEL_IDS = "pix_id"
 PATCH_COUNT = "patch_count"
 PATCH_IDS = "patch_ids"
 PATCH_ID_SEPARATOR = ","
 TYPICAL_DISTANCE = "typical_distance_cm"
-TRIGGER_STATUS = "trigger_status"
 DISTANCE_STATUS = "distance_status"
 MEDIAN_PAIR_DISTANCE = "median_pair_distance_cm"
 MAX_PAIR_DISTANCE = "max_pair_distance_cm"
 CONNECTED_COMPONENTS = "connected_components"
-PATCH_CONFIGURATION_TITLE = "patch configuration"
-PATCH_DISTANCE_TITLE = "typical distance to pixels in the same patch"
-PATCH_COVERAGE_LABEL = "Configured patches per pixel"
-PATCH_DISTANCE_LABEL = "Typical distance to pixels in the same patch [cm]"
-PATCH_CONFIGURATION_SUBTITLE = "Color shows how many configured trigger patches contain each pixel."
-PATCH_DISTANCE_SUBTITLE = "Median camera-plane distance to the other pixels in each patch."
-UNCLASSIFIED = "unclassified"
-CONFIGURED = "configured"
-DISTANCE_AVAILABLE = "available"
-NO_PATCH_MEMBERSHIP = "no patch membership"
-NO_PATCH_PEERS = "no other members in patch"
-EQUAL_ASPECT = "equal"
 REPORT_INK = "#17324d"
 REPORT_MUTED = "#5c7186"
-REPORT_PANEL = "#f1f5f9"
-REPORT_BORDER = "#d7e1eb"
-REPORT_UNDEFINED = "#aeb9c5"
 REPORT_BACKGROUND = "white"
 SUMMARY_ID_INDENT = "  IDs: "
-GROUP_PIXEL_INDENT = "  pixels: "
-GROUP_PIXEL_CONTINUATION_INDENT = "    "
-GROUP_PIXEL_WRAP_WIDTH = 39
 DISTANCE_REPORT_PRECISION = 2
-OUTLIER_QUARTILES = (25, 75)
-OUTLIER_IQR_MULTIPLIER = 1.5
-REPORT_TOP = 0.84
-REPORT_BOTTOM = 0.08
-REPORT_LEFT = 0.055
-REPORT_RIGHT = 0.97
-REPORT_WSPACE = 0.10
-CAMERA_X_LABEL = "Camera x [cm]"
-CAMERA_Y_LABEL = "Camera y [cm]"
 
 
 def analyze_trigger_patch_configuration(camera, trigger_groups, trigger_members):
@@ -100,15 +71,47 @@ def analyze_trigger_patch_configuration(camera, trigger_groups, trigger_members)
         group_members,
         neighbors,
     )
-    pixel_rows = _build_pixel_rows(
-        pixel_ids,
-        x_coordinates,
-        y_coordinates,
-        pixel_group_distances,
-        pixel_group_ids,
+    pixel_rows = []
+    for index, pixel_id in enumerate(pixel_ids):
+        distances = pixel_group_distances[index]
+        selected_groups = sorted(pixel_group_ids[index])
+        pixel_rows.append(
+            (
+                int(pixel_id),
+                float(x_coordinates[index]),
+                float(y_coordinates[index]),
+                len(selected_groups),
+                float(np.median(distances)) if distances else np.nan,
+                ",".join(map(str, selected_groups)),
+                "configured" if selected_groups else "unclassified",
+                _distance_status(selected_groups, distances),
+            )
+        )
+
+    pixel_table = Table(
+        rows=pixel_rows,
+        names=(
+            PIXEL_IDS,
+            "x_cm",
+            "y_cm",
+            PATCH_COUNT,
+            TYPICAL_DISTANCE,
+            PATCH_IDS,
+            "trigger_status",
+            DISTANCE_STATUS,
+        ),
     )
-    pixel_table = _build_pixel_table(pixel_rows)
-    group_table = _build_group_table(group_rows)
+    group_table = Table(
+        rows=group_rows,
+        names=(
+            GROUP_ID,
+            GROUP_KIND,
+            "pixel_count",
+            MEDIAN_PAIR_DISTANCE,
+            MAX_PAIR_DISTANCE,
+            CONNECTED_COMPONENTS,
+        ),
+    )
     return pixel_table, group_table
 
 
@@ -129,12 +132,11 @@ def _analyze_groups(
     for group_id, group_kind in zip(group_ids, group_kinds):
         group_id = int(group_id)
         indices = sorted(pixel_indices[pixel_id] for pixel_id in group_members[group_id])
-        distances = _pairwise_distances(x_coordinates, y_coordinates, indices)
+        distances, pairwise_values = _group_distances(x_coordinates, y_coordinates, indices)
         for index in indices:
             pixel_group_ids[index].append(group_id)
             if index in distances:
                 pixel_group_distances[index].append(distances[index])
-        pairwise_values = _all_pairwise_distances(x_coordinates, y_coordinates, indices)
         group_rows.append(
             (
                 group_id,
@@ -148,66 +150,13 @@ def _analyze_groups(
     return group_rows, pixel_group_distances, pixel_group_ids
 
 
-def _build_pixel_rows(pixel_ids, x_coordinates, y_coordinates, group_distances, group_ids):
-    """Build diagnostic rows for all camera pixels."""
-    pixel_rows = []
-    for index, pixel_id in enumerate(pixel_ids):
-        distances = group_distances[index]
-        selected_groups = sorted(group_ids[index])
-        pixel_rows.append(
-            (
-                int(pixel_id),
-                float(x_coordinates[index]),
-                float(y_coordinates[index]),
-                len(selected_groups),
-                float(np.median(distances)) if distances else np.nan,
-                ",".join(map(str, selected_groups)),
-                CONFIGURED if selected_groups else UNCLASSIFIED,
-                _distance_status(selected_groups, distances),
-            )
-        )
-    return pixel_rows
-
-
-def _build_pixel_table(pixel_rows):
-    """Build the output table containing per-pixel diagnostics."""
-    return Table(
-        rows=pixel_rows,
-        names=(
-            PIXEL_IDS,
-            "x_cm",
-            "y_cm",
-            PATCH_COUNT,
-            TYPICAL_DISTANCE,
-            PATCH_IDS,
-            TRIGGER_STATUS,
-            DISTANCE_STATUS,
-        ),
-    )
-
-
-def _build_group_table(group_rows):
-    """Build the output table containing per-group diagnostics."""
-    return Table(
-        rows=group_rows,
-        names=(
-            GROUP_ID,
-            GROUP_KIND,
-            "pixel_count",
-            MEDIAN_PAIR_DISTANCE,
-            MAX_PAIR_DISTANCE,
-            CONNECTED_COMPONENTS,
-        ),
-    )
-
-
 def _distance_status(selected_groups, distances):
     """Describe why a per-pixel patch distance is or is not available."""
     if not selected_groups:
-        return NO_PATCH_MEMBERSHIP
+        return "no patch membership"
     if not distances:
-        return NO_PATCH_PEERS
-    return DISTANCE_AVAILABLE
+        return "no other members in patch"
+    return "available"
 
 
 def _camera_geometry(camera):
@@ -229,7 +178,7 @@ def _validated_group_membership(trigger_groups, trigger_members, pixel_indices):
     group_ids = _required_column(trigger_groups, GROUP_ID)
     group_kinds = _required_column(trigger_groups, GROUP_KIND)
     member_groups = _required_column(trigger_members, GROUP_ID)
-    member_pixels = _required_column(trigger_members, MEMBER_PIXEL_ID)
+    member_pixels = _required_column(trigger_members, "pixel_id")
     if len(set(map(int, group_ids))) != len(group_ids):
         raise ValueError("Trigger group IDs must be unique")
     if not group_ids:
@@ -259,25 +208,18 @@ def _required_column(table, column_name):
         raise ValueError(f"Trigger configuration is missing required column {column_name}") from exc
 
 
-def _pairwise_distances(x_coordinates, y_coordinates, indices):
-    """Return each group's per-pixel median distance to its other members."""
+def _group_distances(x_coordinates, y_coordinates, indices):
+    """Return per-pixel medians and unique distances within one group."""
     if len(indices) < 2:
-        return {}
+        return {}, []
     points = np.column_stack((x_coordinates[indices], y_coordinates[indices]))
     distance_matrix = np.linalg.norm(points[:, np.newaxis] - points[np.newaxis, :], axis=2)
-    return {
+    pixel_medians = {
         indices[index]: float(np.median(np.delete(distance_matrix[index], index)))
         for index in range(len(indices))
     }
-
-
-def _all_pairwise_distances(x_coordinates, y_coordinates, indices):
-    """Return unique pairwise distances for one trigger group."""
-    if len(indices) < 2:
-        return []
-    points = np.column_stack((x_coordinates[indices], y_coordinates[indices]))
-    distance_matrix = np.linalg.norm(points[:, np.newaxis] - points[np.newaxis, :], axis=2)
-    return distance_matrix[np.triu_indices(len(indices), k=1)].tolist()
+    unique_distances = distance_matrix[np.triu_indices(len(indices), k=1)].tolist()
+    return pixel_medians, unique_distances
 
 
 def _count_connected_components(indices, neighbors):
@@ -316,142 +258,108 @@ def write_trigger_patch_report(camera, pixel_table, group_table, pdf_path):
     """
     pdf_path = Path(pdf_path)
     page_summary = format_trigger_patch_summary(pixel_table, group_table)
+    distance_map = np.ma.masked_invalid(np.asarray(pixel_table[TYPICAL_DISTANCE], dtype=float))
+    colormap = plt.get_cmap("viridis").with_extremes(bad="#aeb9c5")
     with PdfPages(pdf_path) as pdf:
-        _write_coverage_page(pdf, camera, pixel_table)
-        _write_distance_page(pdf, camera, pixel_table, page_summary)
+        _write_report_page(
+            pdf,
+            camera,
+            "patch configuration",
+            "Color shows how many configured trigger patches contain each pixel.",
+            np.asarray(pixel_table[PATCH_COUNT]),
+            "Configured patches per pixel",
+        )
+        _write_report_page(
+            pdf,
+            camera,
+            "typical distance to pixels in the same patch",
+            "Median camera-plane distance to the other pixels in each patch.",
+            distance_map,
+            "Typical distance to pixels in the same patch [cm]",
+            page_summary,
+            colormap,
+        )
     return page_summary
 
 
-def _write_coverage_page(pdf, camera, pixel_table):
-    """Write the existing patch-coverage map as the first report page."""
+def _write_report_page(
+    pdf, camera, title, subtitle, image, color_bar_label, summary=None, colormap=None
+):
+    """Write one camera map and, when provided, its summary panel."""
     figure, (axis, details_axis) = plt.subplots(
         ncols=2,
         figsize=(15, 9),
         gridspec_kw={"width_ratios": [3.5, 1.5]},
     )
     figure.subplots_adjust(
-        top=REPORT_TOP,
-        bottom=REPORT_BOTTOM,
-        left=REPORT_LEFT,
-        right=REPORT_RIGHT,
-        wspace=REPORT_WSPACE,
+        top=0.84,
+        bottom=0.08,
+        left=0.055,
+        right=0.97,
+        wspace=0.10,
     )
     try:
-        _style_report_figure(
-            figure,
-            f"{camera.telescope_name}: {PATCH_CONFIGURATION_TITLE}",
-            PATCH_CONFIGURATION_SUBTITLE,
-        )
-        plot_pixel_layout_with_image(
-            camera,
-            image=np.asarray(pixel_table[PATCH_COUNT]),
-            ax=axis,
-            color_bar_label=PATCH_COVERAGE_LABEL,
-        )
-        axis.set_aspect(EQUAL_ASPECT, adjustable="box")
-        axis.set_xlabel(CAMERA_X_LABEL)
-        axis.set_ylabel(CAMERA_Y_LABEL)
-        _style_camera_axis(axis)
-        details_axis.axis("off")
-        pdf.savefig(figure, facecolor=REPORT_BACKGROUND)
-    finally:
-        plt.close(figure)
-
-
-def _write_distance_page(pdf, camera, pixel_table, page_summary):
-    """Write per-pixel physical distances and a compact group summary."""
-    distance_map = np.ma.masked_invalid(np.asarray(pixel_table[TYPICAL_DISTANCE], dtype=float))
-    colormap = plt.get_cmap("viridis").with_extremes(bad=REPORT_UNDEFINED)
-    figure, (axis, details_axis) = plt.subplots(
-        ncols=2,
-        figsize=(15, 9),
-        gridspec_kw={"width_ratios": [3.5, 1.5]},
-    )
-    figure.subplots_adjust(
-        top=REPORT_TOP,
-        bottom=REPORT_BOTTOM,
-        left=REPORT_LEFT,
-        right=REPORT_RIGHT,
-        wspace=REPORT_WSPACE,
-    )
-    try:
-        _style_report_figure(
-            figure,
-            f"{camera.telescope_name}: {PATCH_DISTANCE_TITLE}",
-            PATCH_DISTANCE_SUBTITLE,
-        )
-        plot_pixel_layout_with_image(
-            camera,
-            image=distance_map,
-            colormap=colormap,
-            ax=axis,
-            color_bar_label=PATCH_DISTANCE_LABEL,
-        )
-        axis.set_aspect(EQUAL_ASPECT, adjustable="box")
-        axis.set_xlabel(CAMERA_X_LABEL)
-        axis.set_ylabel(CAMERA_Y_LABEL)
-        _style_camera_axis(axis)
-        details_axis.axis("off")
-        details_axis.add_patch(
-            Rectangle(
-                (0, 0),
-                1,
-                1,
-                transform=details_axis.transAxes,
-                facecolor=REPORT_PANEL,
-                edgecolor=REPORT_BORDER,
-                linewidth=1,
-                zorder=-1,
-            )
-        )
-        details_axis.text(
-            0.06,
-            0.96,
-            page_summary,
+        figure.patch.set_facecolor(REPORT_BACKGROUND)
+        figure.suptitle(
+            f"{camera.telescope_name}: {title}",
+            x=0.055,
+            y=0.98,
+            ha="left",
             va="top",
-            transform=details_axis.transAxes,
-            wrap=True,
-            fontsize=9.5,
-            linespacing=1.4,
+            fontsize=19,
+            fontweight="bold",
             color=REPORT_INK,
-            family="DejaVu Sans Mono",
         )
+        figure.text(
+            0.057,
+            0.935,
+            subtitle,
+            ha="left",
+            va="top",
+            fontsize=10.5,
+            color=REPORT_MUTED,
+        )
+        plot_kwargs = {"ax": axis, "color_bar_label": color_bar_label}
+        if colormap is not None:
+            plot_kwargs["colormap"] = colormap
+        plot_pixel_layout_with_image(camera, image=image, **plot_kwargs)
+        axis.set_aspect("equal", adjustable="box")
+        axis.set_xlabel("Camera x [cm]")
+        axis.set_ylabel("Camera y [cm]")
+        axis.tick_params(axis="both", labelsize=9, colors=REPORT_MUTED)
+        axis.xaxis.label.set_color(REPORT_MUTED)
+        axis.yaxis.label.set_color(REPORT_MUTED)
+        axis.xaxis.label.set_size(10)
+        axis.yaxis.label.set_size(10)
+        details_axis.axis("off")
+        if summary is not None:
+            details_axis.add_patch(
+                Rectangle(
+                    (0, 0),
+                    1,
+                    1,
+                    transform=details_axis.transAxes,
+                    facecolor="#f1f5f9",
+                    edgecolor="#d7e1eb",
+                    linewidth=1,
+                    zorder=-1,
+                )
+            )
+            details_axis.text(
+                0.06,
+                0.96,
+                summary,
+                va="top",
+                transform=details_axis.transAxes,
+                wrap=True,
+                fontsize=9.5,
+                linespacing=1.4,
+                color=REPORT_INK,
+                family="DejaVu Sans Mono",
+            )
         pdf.savefig(figure, facecolor=REPORT_BACKGROUND)
     finally:
         plt.close(figure)
-
-
-def _style_report_figure(figure, title, subtitle):
-    """Apply consistent title and subtitle styling to report pages."""
-    figure.patch.set_facecolor(REPORT_BACKGROUND)
-    figure.suptitle(
-        title,
-        x=0.055,
-        y=0.98,
-        ha="left",
-        va="top",
-        fontsize=19,
-        fontweight="bold",
-        color=REPORT_INK,
-    )
-    figure.text(
-        0.057,
-        0.935,
-        subtitle,
-        ha="left",
-        va="top",
-        fontsize=10.5,
-        color=REPORT_MUTED,
-    )
-
-
-def _style_camera_axis(axis):
-    """Polish camera-map labels without changing the plotted values."""
-    axis.tick_params(axis="both", labelsize=9, colors=REPORT_MUTED)
-    axis.xaxis.label.set_color(REPORT_MUTED)
-    axis.yaxis.label.set_color(REPORT_MUTED)
-    axis.xaxis.label.set_size(10)
-    axis.yaxis.label.set_size(10)
 
 
 def format_trigger_patch_summary(pixel_table, group_table):
@@ -506,9 +414,9 @@ def format_trigger_patch_summary(pixel_table, group_table):
         lines.append(
             textwrap.fill(
                 ", ".join(map(str, pixel_ids)),
-                width=GROUP_PIXEL_WRAP_WIDTH,
-                initial_indent=GROUP_PIXEL_INDENT,
-                subsequent_indent=GROUP_PIXEL_CONTINUATION_INDENT,
+                width=39,
+                initial_indent="  pixels: ",
+                subsequent_indent="    ",
             )
         )
     if len(sorted_groups) > 5:
@@ -529,8 +437,8 @@ def _distance_outlier_group_ids(group_table):
 
     outlier_group_ids = set()
     for kind, distances in distances_by_kind.items():
-        first_quartile, third_quartile = np.percentile(distances, OUTLIER_QUARTILES)
-        upper_fence = third_quartile + OUTLIER_IQR_MULTIPLIER * (third_quartile - first_quartile)
+        first_quartile, third_quartile = np.percentile(distances, (25, 75))
+        upper_fence = third_quartile + 1.5 * (third_quartile - first_quartile)
         for row in group_table:
             maximum_distance = float(row[MAX_PAIR_DISTANCE])
             if (

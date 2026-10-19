@@ -20,28 +20,8 @@ TELESCOPE = "telescope"
 MODEL_VERSION = "model_version"
 OUTPUT_NAME = "output_name"
 OVERWRITE_MODEL_PARAMETERS = "overwrite_model_parameters"
-APP_LABEL = "plot_trigger_patches"
-TRIGGER_GROUPS = "camera_trigger_groups"
-TRIGGER_MEMBERS = "camera_trigger_members"
-PIXEL_FILE_SUFFIX = ".pixels.ecsv"
-GROUP_FILE_SUFFIX = ".groups.ecsv"
-SUMMARY_FILE_SUFFIX = ".summary.json"
-COORDINATE_UNIT = "cm"
-NOT_TESTED = "not tested"
-REVIEW = "review"
-PASS = "pass"
 ECSV_FORMAT = "ascii.ecsv"
 TEXT_ENCODING = "utf-8"
-
-_ARGUMENTS = (
-    cli.ArgumentDefinition(
-        OUTPUT_NAME,
-        type=str,
-        default=None,
-        help="Base name for the PDF and companion tables; defaults to trigger-patches-<telescope>.",
-    ),
-)
-
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
@@ -49,7 +29,12 @@ APPLICATION = ApplicationDefinition.for_module(
     resolve_sim_software_executables=False,
     validate_simulation_dependencies=False,
     arguments=(
-        *_ARGUMENTS,
+        cli.ArgumentDefinition(
+            OUTPUT_NAME,
+            type=str,
+            default=None,
+            help="Base name output files; defaults: trigger-patches-<telescope>.",
+        ),
         cli.MODEL_VERSION(required=True, nargs=None),
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE(required=True),
@@ -66,7 +51,7 @@ def run(app_context):
         site=args[SITE],
         telescope_name=args[TELESCOPE],
         model_version=args[MODEL_VERSION],
-        label=APP_LABEL,
+        label="plot_trigger_patches",
         model_reader=app_context.model_reader,
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(
             args[OVERWRITE_MODEL_PARAMETERS]
@@ -74,8 +59,8 @@ def run(app_context):
     )
     pixel_table, group_table = analyze_trigger_patch_configuration(
         telescope.camera,
-        telescope.get_parameter_table(TRIGGER_GROUPS),
-        telescope.get_parameter_table(TRIGGER_MEMBERS),
+        telescope.get_parameter_table("camera_trigger_groups"),
+        telescope.get_parameter_table("camera_trigger_members"),
     )
 
     output_name = args.get(OUTPUT_NAME) or f"trigger-patches-{telescope.name}"
@@ -86,9 +71,9 @@ def run(app_context):
         group_table,
         pdf_path,
     )
-    pixels_path = pdf_path.with_name(f"{pdf_path.stem}{PIXEL_FILE_SUFFIX}")
-    groups_path = pdf_path.with_name(f"{pdf_path.stem}{GROUP_FILE_SUFFIX}")
-    summary_path = pdf_path.with_name(f"{pdf_path.stem}{SUMMARY_FILE_SUFFIX}")
+    pixels_path = pdf_path.with_suffix(".pixels.ecsv")
+    groups_path = pdf_path.with_suffix(".groups.ecsv")
+    summary_path = pdf_path.with_suffix(".summary.json")
     pixel_table.write(pixels_path, format=ECSV_FORMAT, overwrite=True)
     group_table.write(groups_path, format=ECSV_FORMAT, overwrite=True)
     summary = _build_summary(args, pixel_table, group_table)
@@ -117,11 +102,11 @@ def _build_summary(args, pixel_table, group_table):
         MODEL_VERSION: args[MODEL_VERSION],
         "pixel_count": len(pixel_table),
         "trigger_group_count": len(group_table),
-        "coordinate_unit": COORDINATE_UNIT,
+        "coordinate_unit": "cm",
         "patch_configuration_sha256": configuration_digest.hexdigest(),
         "unclassified_pixel_ids": pixel_table[PIXEL_IDS][uncovered].tolist(),
-        "membership_coverage_status": REVIEW if uncovered.any() else PASS,
-        "runtime_trigger_status": NOT_TESTED,
+        "membership_coverage_status": "review" if uncovered.any() else "pass",
+        "runtime_trigger_status": "not tested",
         "simulation_executed": False,
     }
 
