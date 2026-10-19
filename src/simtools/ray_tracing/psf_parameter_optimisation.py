@@ -1386,8 +1386,6 @@ def _run_psf_evaluation(job):
     finally:
         io_handler.output_path = original_paths
         io_handler.model_path = original_model_path
-        if job.args.get(CLEANUP, False):
-            gen.cleanup_intermediate_files(job.output_dir, patterns=INTERMEDIATE_PATTERNS)
 
 
 @dataclass(frozen=True)

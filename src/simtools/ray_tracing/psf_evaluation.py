@@ -11,6 +11,7 @@ import numpy as np
 from simtools.job_execution.execution import execute_jobs, options_from_args
 from simtools.job_execution.job import JobSpec
 from simtools.settings import config
+from simtools.utils.general import cleanup_intermediate_files
 
 logger = logging.getLogger(__name__)
 MAX_WORKERS = "max_workers"
@@ -40,7 +41,7 @@ class _PSFEvaluationJob:
 
 def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, max_workers, worker):
     """Execute a batch with independent output paths and portable runtime settings."""
-    directory = Path(output_dir) / "evaluations" / uuid4().hex
+    directory = Path(output_dir) / "parallel_evaluations" / uuid4().hex
     runtime_args = dict(config.args)
     source_config = (
         dict(config.model_reader.source_config) if config.model_reader is not None else None
@@ -69,4 +70,10 @@ def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, m
         options.backend,
         options.max_workers,
     )
-    return [result.value for result in execute_jobs(jobs, options)]
+    try:
+        return [result.value for result in execute_jobs(jobs, options)]
+    finally:
+        if args.get("cleanup", False):
+            cleanup_intermediate_files(
+                directory, patterns=("**/*",), directories=(directory, directory.parent)
+            )

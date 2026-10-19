@@ -131,7 +131,7 @@ def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
     assert initialize.call_args.kwargs["model_directory"] == output_dir / "model"
     assert handler.output_path == before_paths
     assert handler.model_path == before_model
-    cleanup.assert_called_once_with(output_dir, patterns=psf.INTERMEDIATE_PATTERNS)
+    cleanup.assert_not_called()
 
 
 def test_worker_restores_paths_after_unexpected_failure(optimizer, mocker):
