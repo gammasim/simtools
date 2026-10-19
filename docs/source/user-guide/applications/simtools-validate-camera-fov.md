@@ -50,7 +50,25 @@ Expected final print-out message:
     /application-plots/validate_camera_fov_LST-1_pixel_layout.png
 ```
 
-## Command line arguments
+## Trigger-patch plots
+
+Select patch group IDs directly, or show all patches containing a pixel:
+
+```console
+simtools-validate-camera-fov --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_patches 0 1 2
+simtools-validate-camera-fov --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_pixel 75
+```
+
+Patch IDs are `group_id` values from the model. The plot shows an overview and a
+labelled close-up; overlaps use stripes. The options are mutually exclusive. For
+LSTN-design model 7.0.0, select at most six patches per plot.
+
+| Telescope and selection | Telescope and selection |
+| --- | --- |
+| LSTN-design (North), groups 0, 3, 4<br>![LSTN-design trigger patches](images/trigger-patch-examples/LSTN-design.png) | MSTx-FlashCam (North), groups 0, 2, 3<br>![MSTx-FlashCam trigger patches](images/trigger-patch-examples/MSTx-FlashCam.png) |
+| MSTx-NectarCam (North), groups 924, 925, 926<br>![MSTx-NectarCam trigger patches](images/trigger-patch-examples/MSTx-NectarCam.png) | SSTS-design (South), groups 0, 1<br>![SSTS-design trigger patches](images/trigger-patch-examples/SSTS-design.png) |
 
 ```{eval-rst}
 .. simtools-cli-help::
