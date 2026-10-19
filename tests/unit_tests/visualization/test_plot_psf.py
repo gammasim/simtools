@@ -461,7 +461,7 @@ def test_psf_difference_is_displayed_as_percentage(data_to_plot, sample_psf_data
     fig, ax = plot_psf._create_base_plot_figure(data_to_plot, simulated)
     try:
         difference_ax = fig.get_axes()[1]
-        assert difference_ax.get_ylabel() == "Relative difference [%]"
+        assert difference_ax.get_ylabel() == "Difference\n[%]"
         assert difference_ax.lines[1].get_ydata() == pytest.approx(np.ones(len(simulated)))
         assert ax.lines[1].get_ydata() == pytest.approx(simulated[plot_psf.CUMULATIVE_PSF])
         lower, upper = difference_ax.get_ylim()
