@@ -26,16 +26,18 @@ def test_get_mirrored_option_prefers_command_line(monkeypatch):
 
 
 def test_get_mirrored_option_uses_environment(monkeypatch):
-    """Use the environment value when the pytest option is absent."""
-    monkeypatch.setenv("SIMTOOLS_TESTS_RESOURCE_VERSION", "v0.38.0")
+    """Use the environment value when a mirrored pytest option is absent."""
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", "/environment")
 
-    assert options.get_mirrored_option(_Config({}), "simtools_tests_resource_version") == "v0.38.0"
+    assert options.get_mirrored_option(_Config({}), "simtools_tests_path") == "/environment"
 
 
 def test_add_mirrored_options_registers_options():
     """Register every mirrored option with its name and a None default."""
     parser = pytest.Parser(_ispytest=True)
     options.add_mirrored_options(parser)
+
+    assert "simtools_tests_resource_version" not in options.MIRRORED_OPTIONS
 
     defaults = parser.parse_known_args([])
     assert {name: getattr(defaults, name) for name in options.MIRRORED_OPTIONS} == dict.fromkeys(

@@ -2,9 +2,13 @@
 
 import copy
 import logging
+from itertools import pairwise
 
 import numpy as np
 from matplotlib.collections import PatchCollection
+from matplotlib.legend_handler import HandlerTuple
+from matplotlib.patches import Patch, PathPatch
+from matplotlib.transforms import Bbox
 
 from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.model.telescope_model import TelescopeModel
@@ -22,6 +26,14 @@ from simtools.visualization.visualize import save_figure
 
 logger = logging.getLogger(__name__)
 mcolors = lazy_module("matplotlib.colors")
+_GROUP_ID = "group_id"
+_CENTER = "center"
+_PIXEL_IDS = "pix_id"
+_SKY_COORDINATES = "camera_in_sky_coor"
+_TRIGGER_PATCH = "Trigger patch"
+_MEMBER_PIXEL_ID = "pixel_id"
+_TRIGGER_MEMBERS = "camera_trigger_members"
+_PIXEL_LABEL = "Pixel"
 
 
 def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
@@ -59,7 +71,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
 
     on_pixels, edge_pixels, off_pixels = create_pixel_patches_by_type(plot_camera)
     for i_pix, (x, y) in enumerate(zip(plot_camera.pixels["x"], plot_camera.pixels["y"])):
-        if plot_camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
+        if plot_camera.pixels[_PIXEL_IDS][i_pix] < pixels_id_to_print + 1:
             font_size = (
                 4
                 if "SCT" in names.get_array_element_type_from_name(plot_camera.telescope_name)
@@ -68,9 +80,9 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
             plt.text(
                 x,
                 y,
-                plot_camera.pixels["pix_id"][i_pix],
-                ha="center",
-                va="center",
+                plot_camera.pixels[_PIXEL_IDS][i_pix],
+                ha=_CENTER,
+                va=_CENTER,
                 fontsize=font_size,
             )
     add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels)
@@ -379,8 +391,8 @@ def _plot_one_axis_def(plot, **kwargs):
         xy=(x_pos, y_pos),
         xytext=(x_text1, y_text1),
         xycoords="axes fraction",
-        ha="center",
-        va="center",
+        ha=_CENTER,
+        va=_CENTER,
         size="xx-large",
         arrowprops={
             "arrowstyle": "<|-",
@@ -396,8 +408,8 @@ def _plot_one_axis_def(plot, **kwargs):
         xy=(x_pos, y_pos),
         xytext=(x_text2, y_text2),
         xycoords="axes fraction",
-        ha="center",
-        va="center",
+        ha=_CENTER,
+        va=_CENTER,
         size="xx-large",
         arrowprops={
             "arrowstyle": "<|-",
@@ -445,10 +457,166 @@ def plot_camera_pixel_layout_from_args(app_context):
 
     pixel_ids_to_print = _parse_pixel_ids_to_print(args_dict["print_pixels_id"], camera)
 
-    fig = plot_pixel_layout(camera, args_dict["camera_in_sky_coor"], pixel_ids_to_print)
+    patch_ids = args_dict.get("trigger_patches")
+    trigger_pixel = args_dict.get("trigger_pixel")
+    if trigger_pixel is not None:
+        if patch_ids is not None:
+            raise ValueError("Use either --trigger_pixel or --trigger_patches, not both")
+        patch_ids = _trigger_patches_for_pixel(
+            tel_model, trigger_pixel, set(camera.pixels[_PIXEL_IDS])
+        )
+    if patch_ids is None:
+        fig = plot_pixel_layout(camera, args_dict[_SKY_COORDINATES], pixel_ids_to_print)
+    else:
+        groups = _read_selected_trigger_patches(
+            tel_model, patch_ids, set(camera.pixels[_PIXEL_IDS])
+        )
+        fig = _plot_selected_trigger_patches(camera, groups, args_dict[_SKY_COORDINATES])
     output_dir = io_handler.get_output_directory()
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
+
+
+def _trigger_patches_for_pixel(telescope, pixel_id, camera_pixels):
+    """Find distinct model group IDs containing the requested camera pixel."""
+    if pixel_id not in camera_pixels:
+        raise ValueError(f"{_PIXEL_LABEL} {pixel_id} is not in the camera; choose a model pixel ID")
+    members = telescope.get_parameter_table(_TRIGGER_MEMBERS)
+    patch_ids = sorted(set(map(int, members[_GROUP_ID][members[_MEMBER_PIXEL_ID] == pixel_id])))
+    if not patch_ids:
+        raise ValueError(f"{_PIXEL_LABEL} {pixel_id} belongs to no trigger patches in this model")
+    logger.info("Trigger patches containing pixel %s: %s", pixel_id, patch_ids)
+    return patch_ids
+
+
+def _read_selected_trigger_patches(telescope, patch_ids, camera_pixels):
+    """Resolve groups, limiting selection to the model's maximum patches per pixel."""
+    if not patch_ids:
+        raise ValueError("Select at least one trigger patch with --trigger_patches")
+    if len(set(patch_ids)) != len(patch_ids):
+        raise ValueError("Trigger patch IDs must be distinct")
+    definitions = telescope.get_parameter_table("camera_trigger_groups")
+    members = telescope.get_parameter_table(_TRIGGER_MEMBERS)
+    maximum = max(1, _maximum_patch_membership(members))
+    if len(patch_ids) > maximum:
+        raise ValueError(
+            f"Select at most {maximum} trigger patches: this model's maximum patches per pixel"
+        )
+    available = set(definitions[_GROUP_ID])
+    groups = {}
+    for group_id in patch_ids:
+        if group_id not in available:
+            raise ValueError(f"Unknown trigger patch {group_id}; choose a group_id from the model")
+        pixels = set(map(int, members[_MEMBER_PIXEL_ID][members[_GROUP_ID] == group_id]))
+        if not pixels:
+            raise ValueError(f"{_TRIGGER_PATCH} {group_id} has no members in the model")
+        missing = pixels - camera_pixels
+        if missing:
+            raise ValueError(
+                f"{_TRIGGER_PATCH} {group_id} references pixels absent from the camera: "
+                f"{sorted(missing)}"
+            )
+        groups[group_id] = pixels
+    return groups
+
+
+def _maximum_patch_membership(members):
+    """Count distinct groups per pixel, including each group only once per pixel."""
+    memberships = {}
+    for row in members:
+        memberships.setdefault(int(row[_MEMBER_PIXEL_ID]), set()).add(int(row[_GROUP_ID]))
+    return max(map(len, memberships.values()), default=0)
+
+
+def _plot_selected_trigger_patches(camera, groups, sky_coordinates):
+    """Draw selected groups on a camera overview and a labelled close-up of their union."""
+    plot_camera = copy.copy(camera)
+    plot_camera.pixels = dict(camera.pixels)
+    if not is_two_mirror_telescope(camera.telescope_name) and not sky_coordinates:
+        plot_camera.pixels["y"] = -np.asarray(camera.pixels["y"])
+    memberships, selected_positions = _selected_patch_positions(plot_camera, groups)
+    fig, axes = plt.subplots(1, 2, figsize=(14, 7), layout="constrained")
+    _draw_patch_memberships(axes, plot_camera, groups, memberships)
+    for ax in axes:
+        ax.autoscale_view()
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_xlabel("Camera x [cm]")
+        ax.set_ylabel("Camera y [cm]")
+    axes[0].set_title(f"{camera.telescope_name}: full camera")
+    axes[1].set_title("Selected trigger patches (pixel IDs)")
+    for pixel_id, x, y in selected_positions:
+        axes[1].text(x, y, str(pixel_id), ha=_CENTER, va=_CENTER, fontsize=7)
+    coordinates = np.asarray([(x, y) for _, x, y in selected_positions])
+    margin = 2 * camera.pixels["pixel_diameter"]
+    axes[1].set_xlim(coordinates[:, 0].min() - margin, coordinates[:, 0].max() + margin)
+    axes[1].set_ylim(coordinates[:, 1].min() - margin, coordinates[:, 1].max() + margin)
+    return fig
+
+
+def _selected_patch_positions(camera, groups):
+    """Partition camera pixels by their exact membership in the selected groups."""
+    memberships = {}
+    selected_positions = []
+    for pixel_id, x, y in zip(camera.pixels[_PIXEL_IDS], camera.pixels["x"], camera.pixels["y"]):
+        membership = tuple(group_id for group_id, pixels in groups.items() if pixel_id in pixels)
+        memberships.setdefault(membership, []).append((pixel_id, x, y))
+        if membership:
+            selected_positions.append((pixel_id, x, y))
+    return memberships, selected_positions
+
+
+def _draw_patch_memberships(axes, camera, groups, memberships):
+    """Show intersections as stripes retaining each contributing patch's colour."""
+    palette = ("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9")
+    if len(groups) > len(palette):
+        palette = plt.get_cmap("turbo")(np.linspace(0, 1, len(groups)))
+    colours = dict(zip(groups, palette))
+    handles = []
+    for membership, positions in memberships.items():
+        member_colours = ["0.92"]
+        if membership:
+            member_colours = [colours[group_id] for group_id in membership]
+            label = "Patch " + str(membership[0])
+            if len(membership) > 1:
+                label = "Patches " + " + ".join(map(str, membership))
+            handles.append(tuple(Patch(facecolor=colour) for colour in member_colours))
+            handles[-1][0].set_label(label)
+        for ax in axes:
+            patches, facecolours = _striped_pixel_shapes(camera, positions, member_colours)
+            ax.add_collection(PatchCollection(patches, facecolor=facecolours, edgecolor="none"))
+    for ax in axes:
+        outlines = [
+            pixel_shape(camera, x, y) for x, y in zip(camera.pixels["x"], camera.pixels["y"])
+        ]
+        ax.add_collection(
+            PatchCollection(outlines, facecolor="none", edgecolor="0.45", linewidth=0.5)
+        )
+    axes[0].legend(
+        handles=handles,
+        labels=[handle[0].get_label() for handle in handles],
+        handler_map={tuple: HandlerTuple(ndivide=None, pad=0)},
+        loc="upper left",
+        fontsize=9,
+    )
+
+
+def _striped_pixel_shapes(camera, positions, colours):
+    """Clip repeating vertical colour bands to each pixel's actual outline."""
+    shapes, facecolours = [], []
+    for _, x, y in positions:
+        pixel = pixel_shape(camera, x, y)
+        path = pixel.get_path().transformed(pixel.get_transform())
+        if len(colours) == 1:
+            shapes.append(PathPatch(path))
+            facecolours.append(colours[0])
+            continue
+        bounds = path.get_extents()
+        edges = np.linspace(bounds.xmin, bounds.xmax, 3 * len(colours) + 1)
+        for index, (left, right) in enumerate(pairwise(edges)):
+            stripe = path.clip_to_bbox(Bbox.from_extents(left, bounds.ymin, right, bounds.ymax))
+            shapes.append(PathPatch(stripe))
+            facecolours.append(colours[index % len(colours)])
+    return shapes, facecolours
 
 
 def _parse_pixel_ids_to_print(print_pixels_id_arg, camera):

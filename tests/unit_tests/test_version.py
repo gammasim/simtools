@@ -22,21 +22,22 @@ def simtools__version():
     return "simtools._version"
 
 
-def test_import_dev_version(monkeypatch, mocker, simtools__version, simtools_version):
+def test_import_dev_version(monkeypatch, mocker, simtools_dev_version, simtools_version):
 
     # Ensure previous imports are cleared safely
     monkeypatch.delitem(sys.modules, simtools_version, raising=False)
-    monkeypatch.delitem(sys.modules, simtools__version, raising=False)
+    monkeypatch.delitem(sys.modules, simtools_dev_version, raising=False)
 
     # Mock _dev_version before importing
     mock_dev_version = mocker.Mock()
     mock_dev_version.version = "1.2.3"
 
-    monkeypatch.setitem(sys.modules, simtools__version, mock_dev_version)
+    monkeypatch.setitem(sys.modules, simtools_dev_version, mock_dev_version)
 
-    from simtools.version import __version__
+    from simtools.version import __version__, is_development_build
 
     assert __version__ == "1.2.3"
+    assert is_development_build
 
 
 def test_import_release_version(
@@ -55,9 +56,24 @@ def test_import_release_version(
     monkeypatch.setitem(sys.modules, simtools_dev_version, None)
     monkeypatch.setitem(sys.modules, simtools__version, mock_version)
 
-    from simtools.version import __version__
+    from simtools.version import __version__, is_development_build
 
     assert __version__ == "2.3.4"
+    assert not is_development_build
+
+
+def test_development_release_version_detected_without_scm(
+    monkeypatch, mocker, simtools__version, simtools_dev_version, simtools_version
+):
+    monkeypatch.delitem(sys.modules, simtools_version, raising=False)
+    monkeypatch.setitem(sys.modules, simtools_dev_version, None)
+    mock_version = mocker.Mock()
+    mock_version.version = "2.3.4.dev1"
+    monkeypatch.setitem(sys.modules, simtools__version, mock_version)
+
+    from simtools.version import is_development_build
+
+    assert is_development_build
 
 
 def test_both_imports_fail(
@@ -70,12 +86,13 @@ def test_both_imports_fail(
     mocker.patch.dict("sys.modules", {simtools_dev_version: None, simtools__version: None})
     mock_warn = mocker.patch("warnings.warn")
 
-    from simtools.version import __version__
+    from simtools.version import __version__, is_development_build
 
     mock_warn.assert_called_once_with(
         "Could not determine simtools version; this indicates a broken installation."
     )
     assert __version__ == "0.0.0"
+    assert not is_development_build
 
 
 def test_resolve_version_to_latest_patch():

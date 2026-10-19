@@ -74,3 +74,13 @@ python src/simtools/applications/write_reduced_event_lists.py \
 .. simtools-integration-example::
     :file: write_reduced_event_lists.yml
 ```
+
+## Input file format
+
+`simulation_file_format` selects the reader used for the input simulation files.
+The default `eventio` supports current CORSIKA IACT and sim_telarray files,
+including their supported compression formats. The reduced HDF5 tables keep
+fixed fields and units independently of the input format.
+
+See [configuration and file formats](../../developer-guide/simulation_formats.md)
+for adding another reader. Only `eventio` is supplied currently.

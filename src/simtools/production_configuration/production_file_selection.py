@@ -12,6 +12,7 @@ import astropy.units as u
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.io.file_type import _get_product_suffixes
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
@@ -19,27 +20,18 @@ SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 _RUN_NUMBER_PATTERN = re.compile(r"(?:^|_)run0*(\d+)(?:_|\.|$)")
 
 
-def _with_compression_suffixes(*suffixes):
-    """Return suffixes with supported compression extensions."""
-    return tuple(
-        compressed_suffix
-        for suffix in suffixes
-        for compressed_suffix in (f"{suffix}.zst", f"{suffix}.gz", suffix)
-    )
-
-
+_FILE_TYPE_PRODUCTS = {
+    "reduced_event_data": "production_reduced_event_data",
+    "sim_telarray": "production_sim_telarray",
+    "sim_telarray_log": "production_sim_telarray_log",
+    "sim_telarray_histogram": "production_sim_telarray_histogram",
+    "corsika": "production_corsika",
+    "corsika_log": "production_corsika_log",
+    "trigger_histograms": "trigger_histograms",
+}
 _FILE_TYPE_SUFFIXES = {
-    "reduced_event_data": _with_compression_suffixes(".reduced_event_data.hdf5"),
-    "sim_telarray": _with_compression_suffixes(".simtel"),
-    "sim_telarray_log": _with_compression_suffixes(".simtel.log"),
-    "sim_telarray_histogram": _with_compression_suffixes(
-        ".hdata",
-        ".histogram",
-        ".histogram.hdf5",
-    ),
-    "corsika": _with_compression_suffixes(".corsika"),
-    "corsika_log": _with_compression_suffixes(".corsika.log"),
-    "trigger_histograms": _with_compression_suffixes(".trigger_histograms.hdf5"),
+    file_type: _get_product_suffixes(product_id)
+    for file_type, product_id in _FILE_TYPE_PRODUCTS.items()
 }
 _MANIFEST_SCHEMAS = {
     "simulate_prod_job": "simulate_prod_job_metadata.schema.yml",

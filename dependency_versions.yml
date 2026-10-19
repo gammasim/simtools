@@ -1,5 +1,5 @@
 ---
-schema_version: 0.7.0
+schema_version: 0.8.0
 python: '3.14'
 apptainer: 1.5.0
 cpu-variants:
@@ -24,12 +24,13 @@ corsika-interaction-tables:
 model-repository:
   name: CTAO-Simulation-Model
   default-ref: v0.18.0
+  compatible-versions: "==0.18.0"
   repository-url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git
 simtools-tests:
   repository: gammasim/simtools-tests
   source-url: https://github.com/gammasim/simtools-tests.git
   ref: main
-  resource-version: v0.38.0
+  resource-version: v0.39.0
 production-combinations:
 - corsika: v7.8010
   sim-telarray: v2025-11-30-rc

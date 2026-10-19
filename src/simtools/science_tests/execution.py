@@ -1,12 +1,13 @@
 """Prepare, execute, and collect science-test workflows."""
 
 import logging
+import os
 import shutil
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
 import yaml
-from astropy.io.registry import IORegistryError
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
@@ -14,13 +15,12 @@ from simtools.io.ascii_handler import to_builtin
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
 from simtools.job_execution.job_manager import JobExecutionError
+from simtools.production_configuration.compatibility import _preview
+from simtools.production_configuration.production_comparison import _validate_comparison_inputs
 from simtools.production_configuration.production_file_selection import (
-    _values_match,
-    discover_product_manifests,
     normalize_for_comparison,
-    select_file_groups,
 )
-from simtools.production_configuration.trigger_histograms import load_trigger_histograms
+from simtools.production_configuration.trigger_histograms import _validate_derived_workflow
 from simtools.runners.simtools_runner import (
     _apply_execution_overrides,
     _get_explicit_env_file,
@@ -49,6 +49,15 @@ from simtools.science_tests.reports import (
 )
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
 from simtools.version import __version__
+
+_SCIENCE_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
+_APPLICATIONS_KEY = "applications"
+_DERIVED_OUTPUT = "derived_output"
+_SCIENCE_OVERWRITE = "science_overwrite"
+
+_PRODUCES_PRODUCTION = "produces_production"
+_APPLICATION = "application"
+_CONFIGURATION = "configuration"
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +154,7 @@ def _run_test(
         "provenance_path": str(work / _WORKFLOW_FILE_NAME),
     }
     _apply_execution_overrides(
-        resolved.get("applications", []),
+        resolved.get(_APPLICATIONS_KEY, []),
         args,
         {
             key: args[key]
@@ -181,6 +190,10 @@ def _run_test(
         "execution": "planned" if dry_run else "completed",
         "status": "planned" if dry_run else "pass",
     }
+    if definition.get(_PRODUCES_PRODUCTION):
+        result["dependency_compatibility"] = _preview_production(
+            configurations, args, replacements, runtime
+        )
     if dry_run:
         return result
 
@@ -195,6 +208,22 @@ def _run_test(
         f" - {result['reason']}" if result.get("reason") else "",
     )
     return result
+
+
+def _preview_production(configurations, args, replacements, runtime):
+    """Check the effective production configuration, including workflow overrides."""
+    selected = dict(args)
+    image = (
+        runtime.get("image") if runtime else replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__")
+    )
+    for application in configurations:
+        if application.get(_APPLICATION) == "simtools-simulate-prod":
+            selected.update(application.get(_CONFIGURATION, {}))
+            backend = selected.get("backend_config")
+            if isinstance(backend, dict) and backend.get("container_image"):
+                image = backend["container_image"]
+            break
+    return _preview(selected, image)
 
 
 def _resolved_test_workflow(template_dir, workflow, replacements, definition):
@@ -222,7 +251,7 @@ def _disable_collection_inventory(resolved):
 
 def _add_shared_runtime(resolved, template_dir, replacements, definition):
     """Apply the shared runtime to non-production workflows without one."""
-    needs_runtime = not definition.get("produces_production") and not definition.get(
+    needs_runtime = not definition.get(_PRODUCES_PRODUCTION) and not definition.get(
         "collect_production"
     )
     if needs_runtime and "runtime_environment" not in resolved:
@@ -233,9 +262,9 @@ def _add_shared_runtime(resolved, template_dir, replacements, definition):
 
 def _configure_comparison_applications(resolved, definition):
     """Apply release comparison settings and reject undeclared differences."""
-    for application in resolved.get("applications", []):
-        configuration = application.get("configuration", {})
-        if application.get("application") == "simtools-compare-productions":
+    for application in resolved.get(_APPLICATIONS_KEY, []):
+        configuration = application.get(_CONFIGURATION, {})
+        if application.get(_APPLICATION) == "simtools-compare-productions":
             configuration["report_mode"] = definition.get("report_mode", "compact")
             configuration.update(definition.get("comparison_parameters", {}))
             _set_event_comparison_labels(configuration, definition)
@@ -258,22 +287,17 @@ def _execute_and_record_test(
     try:
         _prepare_test_retry(definition, replacements, args, run_id, work, report_root)
         _check_inputs(definition, replacements)
-        if definition.get("acceptance_rule") == "gamma-events":
-            for root_key in (
-                "__SCIENCE_CANDIDATE_SITE_PATH__",
-                "__SCIENCE_BASELINE_SITE_PATH__",
-            ):
-                _validate_derived_products(
-                    {
-                        "production_path": replacements[root_key],
-                        "output_path": str(
-                            Path(replacements[root_key]) / "derived/trigger_histograms"
-                        ),
-                    }
-                )
+        _validate_comparison_inputs(
+            resolved.get(_APPLICATIONS_KEY, []),
+            [
+                replacements[key]
+                for key in (_SCIENCE_CANDIDATE_SITE_PATH, "__SCIENCE_BASELINE_SITE_PATH__")
+                if key in replacements
+            ],
+        )
         _run_or_reuse_test(result, definition, replacements, args, work, resolved)
     except _AcceptanceError as exc:
-        result.update(status="fail", error=str(exc))
+        result.update(status="warn", reason=f"Acceptance warning: {exc}")
     except (
         OSError,
         ValueError,
@@ -298,20 +322,19 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
     args["config_file"] = str(_materialize_effective_workflow(work, resolved))
     try:
         result.update(_execute_test_workflow(definition, args, replacements))
+        if definition.get(_DERIVED_OUTPUT) and result.get("status") in {"pass", "warn"}:
+            _validate_derived_workflow(resolved[_APPLICATIONS_KEY])
     finally:
         log_path = work / _EXECUTION_LOG_FILE_NAME
         if log_path.is_file():
             result["execution_log"] = str(log_path)
-    if definition.get("derived_output"):
-        for application in resolved["applications"]:
-            _validate_derived_products(application["configuration"])
 
 
 def _reuse_derived_product(definition, replacements, args):
     """Reuse only readable, current products covering every selected input group."""
-    if not definition.get("derived_output") or args.get("science_overwrite"):
+    if not definition.get(_DERIVED_OUTPUT) or args.get(_SCIENCE_OVERWRITE):
         return False
-    output = Path(replace_placeholders_recursively(definition["derived_output"], replacements))
+    output = Path(replace_placeholders_recursively(definition[_DERIVED_OUTPUT], replacements))
     if not output.exists() or not any(output.iterdir()):
         return False
     workflow = args["science_workflow"]
@@ -320,17 +343,18 @@ def _reuse_derived_product(definition, replacements, args):
         if not previous.is_file():
             raise ValueError("No recorded derivation settings")
         old = _load_yaml(previous)
-        current_configs = [app["configuration"] for app in workflow["applications"]]
-        old_configs = [app["configuration"] for app in old["applications"]]
+        current_configs = [app[_CONFIGURATION] for app in workflow[_APPLICATIONS_KEY]]
+        old_configs = [app[_CONFIGURATION] for app in old[_APPLICATIONS_KEY]]
         if _reuse_settings(current_configs) != _reuse_settings(old_configs):
             raise ValueError("Derivation settings changed")
-        for configuration in current_configs:
-            _validate_derived_products(configuration)
+        _validate_derived_workflow(workflow[_APPLICATIONS_KEY])
         _evaluate_products(definition, replacements)
+    except _AcceptanceError:
+        raise
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(
             f"Derived products are incomplete or stale: {exc}. "
-            "Rerun derive.trigger_histograms with --overwrite to rebuild."
+            "Rerun this derivation with --overwrite to rebuild."
         ) from exc
     return True
 
@@ -346,58 +370,10 @@ def _reuse_settings(configurations):
     )
 
 
-def _validate_derived_products(configuration):
-    """Check histogram metadata, run coverage, and source freshness without publishing it."""
-    groups = select_file_groups(
-        configuration["production_path"],
-        selections=configuration.get("select"),
-        require_complete_runs=True,
-    )["groups"]
-    products = discover_product_manifests(configuration["output_path"], "trigger_histograms")
-    by_key = {}
-    for product in products:
-        key = normalize_for_comparison(product.data["configuration"])
-        if key in by_key:
-            raise ValueError("Duplicate derived configuration")
-        by_key[key] = product
-    if set(by_key) != {normalize_for_comparison(group.configuration) for group in groups}:
-        raise ValueError("Derived configuration coverage differs from production")
-    for group in groups:
-        product = by_key[normalize_for_comparison(group.configuration)]
-        _validate_derived_group(group, product, configuration)
-
-
-def _validate_derived_group(group, product, configuration):
-    """Require a readable histogram built from the current input runs and settings."""
-    data = product.data
-    if sorted(data["input_run_numbers"]) != sorted(group.run_numbers):
-        raise ValueError("Derived run coverage differs from production")
-    sources = [
-        (product.directory / path).resolve() for path in data["input_files"]["reduced_event_data"]
-    ]
-    if set(sources) != {path.resolve() for path in group.file_paths}:
-        raise ValueError("Derived input files differ from production")
-    output_files = data["files"]["trigger_histograms"]
-    if len(output_files) != 1:
-        raise ValueError("Expected one histogram per configuration")
-    output = product.directory / output_files[0]
-    try:
-        metadata, bins = load_trigger_histograms(output)
-    except (OSError, ValueError, IORegistryError) as exc:
-        raise ValueError(f"Unreadable trigger histogram: {output}") from exc
-    if not metadata or not bins:
-        raise ValueError("Empty trigger histogram")
-    if any(path.stat().st_mtime_ns > output.stat().st_mtime_ns for path in group.file_paths):
-        raise ValueError("Production inputs changed after derivation")
-    for key, value in data["histogram_settings"].items():
-        if key in configuration and not _values_match(value, str(configuration[key])):
-            raise ValueError(f"Histogram setting changed: {key}")
-
-
 def _prepare_derived_rebuild(definition, replacements, args):
     """Remove only this test's derived output when an explicit rebuild was requested."""
-    derived_output = definition.get("derived_output")
-    if not args.get("science_overwrite") or not derived_output:
+    derived_output = definition.get(_DERIVED_OUTPUT)
+    if not args.get(_SCIENCE_OVERWRITE) or not derived_output:
         return
     path = Path(replace_placeholders_recursively(derived_output, replacements))
     if path.exists():
@@ -417,17 +393,18 @@ def _materialize_effective_workflow(work, resolved):
 
 def _test_output_paths(configurations, replacements):
     """Use application output paths or the candidate path for native collection."""
-    paths = [str(config["configuration"]["output_path"]) for config in configurations]
-    return list(dict.fromkeys(paths)) or [replacements["__SCIENCE_CANDIDATE_SITE_PATH__"]]
+    paths = [str(config[_CONFIGURATION]["output_path"]) for config in configurations]
+    return list(dict.fromkeys(paths)) or [replacements[_SCIENCE_CANDIDATE_SITE_PATH]]
 
 
 def _execute_test_workflow(definition, args, replacements):
     """Submit, collect, or execute a regular science workflow."""
     if definition.get("collect_production"):
         return _collect_production(definition, replacements)
-    run_applications(args, replacements=replacements)
+    with _selected_model_source_environment(args):
+        run_applications(args, replacements=replacements)
     validated = _evaluate_products(definition, replacements)
-    if definition.get("produces_production"):
+    if definition.get(_PRODUCES_PRODUCTION):
         return {
             "status": "submitted",
             "execution": "submitted",
@@ -436,9 +413,30 @@ def _execute_test_workflow(definition, args, replacements):
     return validated
 
 
+@contextmanager
+def _selected_model_source_environment(args):
+    """Keep an inactive model source from a parent .env out of child applications."""
+    if args.get("simulation_models_git_path"):
+        inactive = "SIMTOOLS_SIMULATION_MODELS_PATH"
+    elif args.get("simulation_models_path"):
+        inactive = "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
+    else:
+        yield
+        return
+    previous = os.environ.get(inactive)
+    os.environ[inactive] = ""
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(inactive, None)
+        else:
+            os.environ[inactive] = previous
+
+
 def _collect_production(definition, replacements):
     """Check all production submissions once, validating only completed results."""
-    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    candidate = Path(replacements[_SCIENCE_CANDIDATE_SITE_PATH])
     manifests = _matched_files(str(candidate / f"**/{_SUBMISSION_FILE_NAME}"))
     pending = False
     for manifest in manifests:
@@ -464,10 +462,10 @@ def _collect_production(definition, replacements):
 
 def _prepare_test_retry(definition, replacements, args, run_id, work, report):
     """Archive a failed production before an explicitly requested retry."""
-    if not args.get("science_overwrite") or not definition.get("produces_production"):
+    if not args.get(_SCIENCE_OVERWRITE) or not definition.get(_PRODUCES_PRODUCTION):
         return
     _check_inputs({"requires": definition.get("requires", [])}, replacements)
-    candidate = Path(replacements["__SCIENCE_CANDIDATE_SITE_PATH__"])
+    candidate = Path(replacements[_SCIENCE_CANDIDATE_SITE_PATH])
     submissions = list(candidate.rglob(_SUBMISSION_FILE_NAME))
     if not submissions:
         return

@@ -9,11 +9,15 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+from simtools.io.file_type import _get_product_value
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 _THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
+_DEFAULT_REDUCED_EVENT_DATA_PATTERN = (
+    f"*{_get_product_value('sim_telarray_event_data', 'default_suffix')}"
+)
 
 
 def extract_run_number(file_path):
@@ -145,7 +149,10 @@ def parse_nsb_hdf5_files(file_list):
     return data
 
 
-def find_hdf5_files(root_dir, pattern="*.reduced_event_data.hdf5"):
+def find_hdf5_files(
+    root_dir,
+    pattern=_DEFAULT_REDUCED_EVENT_DATA_PATTERN,
+):
     """Recursively find reduced event-data HDF5 files matching the pattern."""
     return sorted(general.resolve_file_patterns(Path(root_dir) / "**" / pattern))
 
@@ -405,7 +412,7 @@ def derive_nsb_triggers(args):
     ValueError
         If time_window is missing/invalid or if no files could be parsed successfully.
     """
-    pattern = args.get("pattern", "*.reduced_event_data.hdf5")
+    pattern = args.get("pattern", _DEFAULT_REDUCED_EVENT_DATA_PATTERN)
     time_window = args.get("time_window")
 
     if time_window is None:

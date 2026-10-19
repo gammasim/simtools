@@ -10,12 +10,13 @@ from pathlib import Path
 import astropy.units as u
 import h5py
 import numpy as np
+from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.io.file_type import validate_file_type
+from simtools.io.file_type import _get_product_value, validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.production_event_data_helpers import (
@@ -25,8 +26,11 @@ from simtools.production_configuration.production_event_data_helpers import (
 )
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
+    _values_match,
     check_manifest,
+    discover_product_manifests,
     get_manifest_schema_metadata,
+    normalize_for_comparison,
     select_file_groups,
     selection_summary,
     stable_configuration_hash,
@@ -34,6 +38,30 @@ from simtools.production_configuration.production_file_selection import (
 from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
+
+_RUN_NUMBERS = "run_numbers"
+
+_CONFIGURATION_KEY = "configuration"
+_FILES_KEY = "files"
+_GROUPS_KEY = "groups"
+_HISTOGRAM_SETTINGS_KEY = "histogram_settings"
+_INPUT_FILES_KEY = "input_files"
+_INPUT_RUN_NUMBERS_KEY = "input_run_numbers"
+_ENERGY_BINS_PER_DECADE = "energy_bins_per_decade"
+_ANGULAR_DISTANCE_BIN_WIDTH = "angular_distance_bin_width"
+_CORE_DISTANCE_BIN_WIDTH = "core_distance_bin_width"
+_MINIMUM_TRIGGERED_TELESCOPES = "minimum_triggered_telescopes"
+_PRODUCTION_PATH_KEY = "production_path"
+_REDUCED_EVENT_DATA = "reduced_event_data"
+_SELECT_KEY = "select"
+_TRIGGER_HISTOGRAMS = "trigger_histograms"
+
+_DEFAULT_HISTOGRAM_SETTINGS = {
+    _ENERGY_BINS_PER_DECADE: 10,
+    _ANGULAR_DISTANCE_BIN_WIDTH: 0.5 * u.deg,
+    _CORE_DISTANCE_BIN_WIDTH: 20.0 * u.m,
+    _MINIMUM_TRIGGERED_TELESCOPES: 2,
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -44,7 +72,7 @@ TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
-_REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
+_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
 _PART_SUFFIX_PATTERN = re.compile(r"\.part\d+$")
 
 
@@ -612,7 +640,7 @@ def _write_trigger_histogram_product(
             "METADATA": build_standard_metadata(
                 args_dict,
                 output_file,
-                product_data_name="trigger_histograms",
+                product_data_name=_TRIGGER_HISTOGRAMS,
             ),
         },
     )
@@ -626,23 +654,23 @@ def _write_trigger_histogram_metadata(args_dict, output_file, product_metadata):
     """Write a neighboring YAML manifest for a trigger-histogram product."""
     output_file = Path(output_file)
     metadata_file = output_file.with_suffix(".yml")
-    manifest_schema = get_manifest_schema_metadata("trigger_histograms")
+    manifest_schema = get_manifest_schema_metadata(_TRIGGER_HISTOGRAMS)
     manifest = {
         **manifest_schema,
-        "product_type": "trigger_histograms",
+        "product_type": _TRIGGER_HISTOGRAMS,
         "status": "complete",
-        "configuration": product_metadata["configuration"],
-        "histogram_settings": _histogram_settings(args_dict),
+        _CONFIGURATION_KEY: product_metadata[_CONFIGURATION_KEY],
+        _HISTOGRAM_SETTINGS_KEY: _histogram_settings(args_dict),
         "array_selection": product_metadata["array_selection"],
-        "input_run_numbers": product_metadata["run_numbers"],
-        "input_files": {
-            "reduced_event_data": [
+        _INPUT_RUN_NUMBERS_KEY: product_metadata[_RUN_NUMBERS],
+        _INPUT_FILES_KEY: {
+            _REDUCED_EVENT_DATA: [
                 _relative_to_directory(path, metadata_file.parent)
-                for path in product_metadata["input_files"]
+                for path in product_metadata[_INPUT_FILES_KEY]
             ],
         },
-        "files": {
-            "trigger_histograms": [_relative_to_directory(output_file, metadata_file.parent)],
+        _FILES_KEY: {
+            _TRIGGER_HISTOGRAMS: [_relative_to_directory(output_file, metadata_file.parent)],
         },
     }
     check_manifest(ProductionManifest(path=metadata_file, data=manifest))
@@ -702,32 +730,32 @@ def _write_directory_products(args_dict):
 
 def _write_production_selection_products(args_dict):
     """Submit one trigger-histogram product per selected production configuration group."""
-    if args_dict.get("file_type", "reduced_event_data") != "reduced_event_data":
+    if args_dict.get("file_type", _REDUCED_EVENT_DATA) != _REDUCED_EVENT_DATA:
         raise ValueError("Production metadata input requires file_type='reduced_event_data'.")
     output_directory = io_handler.IOHandler().get_output_directory()
     selection_result = select_file_groups(
-        args_dict["production_path"],
-        selections=args_dict.get("select"),
-        file_type="reduced_event_data",
+        args_dict[_PRODUCTION_PATH_KEY],
+        selections=args_dict.get(_SELECT_KEY),
+        file_type=_REDUCED_EVENT_DATA,
         require_complete_runs=args_dict.get("require_complete_runs", False),
     )
     _logger.info("\n%s", selection_summary(selection_result))
-    if not selection_result["groups"]:
+    if not selection_result[_GROUPS_KEY]:
         raise ValueError("Production metadata selection did not match any files.")
 
-    production_path = Path(args_dict["production_path"]).resolve()
+    production_path = Path(args_dict[_PRODUCTION_PATH_KEY]).resolve()
     runtime_args = (
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
     products = []
-    for group in selection_result["groups"]:
+    for group in selection_result[_GROUPS_KEY]:
         telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
         product_identity = {
-            "histogram_settings": _histogram_settings(args_dict),
+            _HISTOGRAM_SETTINGS_KEY: _histogram_settings(args_dict),
             "array_selection": telescope_configs,
         }
         output_stem = _group_output_stem(
-            group, product_identity, selections=args_dict.get("select"), include_hash=False
+            group, product_identity, selections=args_dict.get(_SELECT_KEY), include_hash=False
         )
         products.append((group, telescope_configs, product_identity, output_stem))
 
@@ -738,7 +766,7 @@ def _write_production_selection_products(args_dict):
             output_stem = _group_output_stem(
                 group,
                 product_identity,
-                selections=args_dict.get("select"),
+                selections=args_dict.get(_SELECT_KEY),
                 include_hash=True,
             )
         output_file = validate_file_type(
@@ -758,9 +786,9 @@ def _write_production_selection_products(args_dict):
                     "event_data_files": [str(file_path) for file_path in group.file_paths],
                     "output_file": output_file,
                     "product_metadata": {
-                        "configuration": group.configuration,
-                        "run_numbers": group.run_numbers,
-                        "input_files": group.file_paths,
+                        _CONFIGURATION_KEY: group.configuration,
+                        _RUN_NUMBERS: group.run_numbers,
+                        _INPUT_FILES_KEY: group.file_paths,
                         "array_selection": telescope_configs,
                     },
                     "telescope_configs": telescope_configs,
@@ -797,7 +825,7 @@ def write_trigger_histograms(args_dict):
     """
     if args_dict.get("event_data_directory"):
         return _write_directory_products(args_dict)
-    if args_dict.get("production_path"):
+    if args_dict.get(_PRODUCTION_PATH_KEY):
         return _write_production_selection_products(args_dict)
 
     production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
@@ -837,7 +865,7 @@ def _group_output_stem(group, product_identity=None, selections=None, include_ha
         parts.append(
             stable_configuration_hash(
                 {
-                    "configuration": configuration,
+                    _CONFIGURATION_KEY: configuration,
                     **(product_identity or {}),
                 }
             )
@@ -966,10 +994,10 @@ def _as_argument_value(value, list_value):
 def _histogram_settings(args_dict):
     """Return settings that define a trigger-histogram product."""
     return {
-        "energy_bins_per_decade": args_dict["energy_bins_per_decade"],
-        "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
-        "core_distance_bin_width": args_dict.get("core_distance_bin_width"),
-        "minimum_triggered_telescopes": args_dict.get("minimum_triggered_telescopes", 2),
+        _ENERGY_BINS_PER_DECADE: args_dict[_ENERGY_BINS_PER_DECADE],
+        _ANGULAR_DISTANCE_BIN_WIDTH: args_dict[_ANGULAR_DISTANCE_BIN_WIDTH],
+        _CORE_DISTANCE_BIN_WIDTH: args_dict.get(_CORE_DISTANCE_BIN_WIDTH),
+        _MINIMUM_TRIGGERED_TELESCOPES: args_dict.get(_MINIMUM_TRIGGERED_TELESCOPES, 2),
     }
 
 
@@ -1140,3 +1168,63 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
             )
         )
     return loaded
+
+
+def _validate_derived_workflow(applications):
+    """Check trigger products owned by histogram-writer workflow steps."""
+    for application in applications:
+        configuration = application.get(_CONFIGURATION_KEY, {})
+        if (
+            application.get("application") == "simtools-write-trigger-histograms"
+            and _PRODUCTION_PATH_KEY in configuration
+        ):
+            _validate_derived_products(configuration)
+
+
+def _validate_derived_products(configuration):
+    """Check histogram metadata, run coverage, and source freshness without publishing it."""
+    groups = select_file_groups(
+        configuration[_PRODUCTION_PATH_KEY],
+        selections=configuration.get(_SELECT_KEY),
+        require_complete_runs=True,
+    )[_GROUPS_KEY]
+    products = discover_product_manifests(configuration["output_path"], _TRIGGER_HISTOGRAMS)
+    by_key = {}
+    for product in products:
+        key = normalize_for_comparison(product.data[_CONFIGURATION_KEY])
+        if key in by_key:
+            raise ValueError("Duplicate derived configuration")
+        by_key[key] = product
+    if set(by_key) != {normalize_for_comparison(group.configuration) for group in groups}:
+        raise ValueError("Derived configuration coverage differs from production")
+    for group in groups:
+        product = by_key[normalize_for_comparison(group.configuration)]
+        _validate_derived_group(group, product, configuration)
+
+
+def _validate_derived_group(group, product, configuration):
+    """Require a readable histogram built from the current input runs and settings."""
+    data = product.data
+    if sorted(data[_INPUT_RUN_NUMBERS_KEY]) != sorted(group.run_numbers):
+        raise ValueError("Derived run coverage differs from production")
+    sources = [
+        (product.directory / path).resolve() for path in data[_INPUT_FILES_KEY][_REDUCED_EVENT_DATA]
+    ]
+    if set(sources) != {path.resolve() for path in group.file_paths}:
+        raise ValueError("Derived input files differ from production")
+    output_files = data[_FILES_KEY][_TRIGGER_HISTOGRAMS]
+    if len(output_files) != 1:
+        raise ValueError("Expected one histogram per configuration")
+    output = product.directory / output_files[0]
+    try:
+        metadata, bins = load_trigger_histograms(output)
+    except (KeyError, OSError, ValueError, IORegistryError) as exc:
+        raise ValueError(f"Unreadable trigger histogram: {output}") from exc
+    if not metadata or not bins:
+        raise ValueError("Empty trigger histogram")
+    if any(path.stat().st_mtime_ns > output.stat().st_mtime_ns for path in group.file_paths):
+        raise ValueError("Production inputs changed after derivation")
+    for key, value in data[_HISTOGRAM_SETTINGS_KEY].items():
+        expected = configuration.get(key, _DEFAULT_HISTOGRAM_SETTINGS.get(key))
+        if not _values_match(value, str(expected)):
+            raise ValueError(f"Histogram setting changed: {key}")

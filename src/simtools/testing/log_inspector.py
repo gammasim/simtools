@@ -4,11 +4,15 @@ import gzip
 import logging
 import re
 import tarfile
+from pathlib import Path
 
 from simtools.utils import general as gen
 from simtools.utils.general import is_safe_tar_member
 
 _logger = logging.getLogger(__name__)
+
+_GZIP_LOG_SUFFIX = ".log.gz"
+_GZIP_STDERR_SUFFIX = ".err.gz"
 
 
 ERROR_PATTERNS = [
@@ -94,7 +98,7 @@ def check_tar_logs(tar_file, file_test):
     found_forbidden = set()
     with tarfile.open(tar_file, "r:*") as tar:
         for member in tar.getmembers():
-            if not member.name.endswith(".log.gz"):
+            if not _is_valid_log_member(member):
                 continue
             if not is_safe_tar_member(member.name):
                 _logger.warning(f"Skipping potentially unsafe tar member: {member.name}")
@@ -109,7 +113,7 @@ def check_tar_logs(tar_file, file_test):
 
 def _is_valid_log_member(member):
     """Validate member suffix for tar log scanning."""
-    return member.name.endswith(".log.gz")
+    return member.name.endswith((_GZIP_LOG_SUFFIX, _GZIP_STDERR_SUFFIX))
 
 
 def _read_log(member, tar):
@@ -144,7 +148,7 @@ def check_plain_logs(log_files, file_test):
     if wanted is None and forbidden is None:
         return True
 
-    log_files = gen.ensure_list(log_files)
+    log_files = _include_stderr_logs(gen.ensure_list(log_files))
 
     def file_open(file):
         if file.suffix == ".gz":
@@ -165,6 +169,25 @@ def check_plain_logs(log_files, file_test):
         bad |= _find_patterns(text, forbidden)
 
     return _validate_patterns(found, bad, wanted)
+
+
+def _include_stderr_logs(log_files):
+    """Include existing stderr siblings without requiring them for older logs."""
+    paths = []
+    for log_file in log_files:
+        path = Path(log_file)
+        if path not in paths:
+            paths.append(path)
+        for stdout_suffix, stderr_suffix in (
+            (_GZIP_LOG_SUFFIX, _GZIP_STDERR_SUFFIX),
+            (".log", ".err"),
+        ):
+            if path.name.endswith(stdout_suffix):
+                sibling = path.with_name(path.name.removesuffix(stdout_suffix) + stderr_suffix)
+                if sibling.is_file() and sibling not in paths:
+                    paths.append(sibling)
+                break
+    return paths
 
 
 def _get_expected_patterns(file_test):

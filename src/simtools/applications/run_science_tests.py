@@ -7,6 +7,11 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.science_tests.campaign import run_release, setup_release
 
+RELEASE_DIR = "release_dir"
+CONTEXT_FILE = "context_file"
+TEMPLATE_DIR = "template_dir"
+BASELINE_VERSION = "baseline_version"
+
 
 def _post_parse(args_dict, _config_sources, _parser):
     """Keep validation-only commands free of log-file writes."""
@@ -18,9 +23,12 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(
-        cli.ArgumentDefinition("release_dir", type=str, required=True),
-        cli.ArgumentDefinition("context_file", type=str),
-        cli.ArgumentDefinition("template_dir", type=str),
+        cli.ArgumentDefinition(RELEASE_DIR, type=str, required=True),
+        cli.ArgumentDefinition(CONTEXT_FILE, type=str),
+        cli.ArgumentDefinition(TEMPLATE_DIR, type=str),
+        cli.ArgumentDefinition(
+            BASELINE_VERSION, type=str, help="Baseline release label to write during --setup."
+        ),
         cli.ArgumentDefinition("site", action="append", help="Select a required site."),
         cli.ArgumentDefinition(
             "test",
@@ -37,6 +45,11 @@ APPLICATION = ApplicationDefinition.for_module(
             "allow_production",
             action="store_true",
             help="Allow explicitly selected production after grid review.",
+        ),
+        cli.ArgumentDefinition(
+            "preflight",
+            action="store_true",
+            help="Recommended: check paths and worker container access before production.",
         ),
         cli.ArgumentDefinition(
             "setup",
@@ -57,20 +70,23 @@ def main():
     args = APPLICATION.start().args
     if args.get("setup"):
         setup_release(
-            args["release_dir"],
-            template_dir=args.get("template_dir"),
-            context_file=args.get("context_file"),
+            args[RELEASE_DIR],
+            template_dir=args.get(TEMPLATE_DIR),
+            context_file=args.get(CONTEXT_FILE),
+            baseline_version=args.get(BASELINE_VERSION),
+            simulation_models_git_revision=args.get("simulation_models_git_revision"),
         )
         return
-    context_file = args.get("context_file") or str(Path(args["release_dir"]) / "context.yml")
+    context_file = args.get(CONTEXT_FILE) or str(Path(args[RELEASE_DIR]) / "context.yml")
     run_release(
-        args["release_dir"],
+        args[RELEASE_DIR],
         context_file=context_file,
-        template_dir=args.get("template_dir"),
+        template_dir=args.get(TEMPLATE_DIR),
         sites=args.get("site"),
         tests=args.get("test"),
         dry_run=args.get("dry_run", False),
         allow_production=args.get("allow_production", False),
+        preflight=args.get("preflight", False),
         overwrite=args.get("overwrite", False),
         application_args=args,
     )

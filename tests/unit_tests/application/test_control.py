@@ -16,6 +16,8 @@ from simtools.application.control import (
 )
 from simtools.settings import config
 
+_DEVELOPMENT = "development"
+
 
 def _reset_stream(handler):
     """Helper to reset stream for reading output."""
@@ -449,3 +451,47 @@ def test_setup_logging_with_file_handler(tmp_test_directory):
         for handler in logger.handlers[:]:
             handler.close()
             logger.removeHandler(handler)
+
+
+@pytest.mark.parametrize(_DEVELOPMENT, [False, True])
+def test_direct_simulations_check_selected_model_contract(
+    tmp_test_directory, monkeypatch, development
+):
+    from simtools.application import control
+
+    captured = []
+    proof = {"status": "compatible"}
+    monkeypatch.setattr(control.version, "is_development_build", False)
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
+    monkeypatch.setattr(
+        control, "_validate", lambda *args, **kwargs: captured.append(kwargs) or proof
+    )
+    args = {"simulation_models_path": str(tmp_test_directory), "test": development}
+    control._validate_model_compatibility(args)
+    assert captured == [{"revision": None, _DEVELOPMENT: development}]
+    assert args["_dependency_compatibility"] == proof
+
+
+def test_development_build_accepts_unreleased_model_without_test_flag(
+    tmp_test_directory, monkeypatch
+):
+    from simtools.application import control
+
+    captured = []
+    monkeypatch.setattr(control.version, "is_development_build", True)
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: {})
+    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    control._validate_model_compatibility({"simulation_models_path": str(tmp_test_directory)})
+    assert captured == [{"revision": None, _DEVELOPMENT: True}]
+
+
+def test_direct_git_simulation_checks_catalog_revision(tmp_test_directory, monkeypatch):
+    from simtools.application import control
+
+    catalog = {"model-repository": {"git-revision": "v0.18.0", "default-ref": "main"}}
+    captured = []
+    monkeypatch.setattr(control.version, "is_development_build", False)
+    monkeypatch.setattr(control.dependency_versions, "load_dependency_catalog", lambda: catalog)
+    monkeypatch.setattr(control, "_validate", lambda *args, **kwargs: captured.append(kwargs))
+    control._validate_model_compatibility({"simulation_models_git_path": str(tmp_test_directory)})
+    assert captured == [{"revision": "v0.18.0", _DEVELOPMENT: False}]

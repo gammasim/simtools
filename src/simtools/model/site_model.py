@@ -2,13 +2,12 @@
 """Definition of site model."""
 
 import logging
-from pathlib import Path
 
 import numpy as np
 from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
-from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 
 
@@ -110,22 +109,10 @@ class SiteModel(ModelParameter):
             Site-related CORSIKA parameters.
         """
         if config_file_style:
-            model_directory = model_directory or Path()
-            return {
-                "OBSLEV": [
-                    self.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
-                ],
-                # We always use a custom profile by filename, so this has to be set to 99
-                "ATMOSPHERE": [99, "Y"],
-                "IACT ATMOFILE": [
-                    model_directory / self._get_atmospheric_profile_simtel_file_name()
-                ],
-                "MAGNET": [
-                    self.get_parameter_value("geomag_horizontal"),
-                    self.get_parameter_value("geomag_vertical"),
-                ],
-                "ARRANG": [self.get_parameter_value("geomag_rotation")],
-            }
+            # pylint: disable-next=import-outside-toplevel
+            from simtools.corsika.corsika_config import get_site_config_parameters
+
+            return get_site_config_parameters(self, model_directory)
 
         return {
             "corsika_observation_level": self.get_parameter_value_with_unit(
@@ -243,31 +230,13 @@ class SiteModel(ModelParameter):
         model_directory: Path
             Model directory to export the file to.
         """
-        atmospheric_profile = self.parameters["atmospheric_profile"].copy()
-        atmospheric_profile["qualify_filename"] = False
-        self.model_reader.export_model_files(
-            parameters={"atmospheric_profile": atmospheric_profile},
-            dest=model_directory,
-        )
-        self._export_ecsv_as_simtel_table(
-            parameter_name="atmospheric_profile",
-            parameter=atmospheric_profile,
-            model_directory=model_directory,
-            table_format="plain",
-            output_name=self._get_atmospheric_profile_simtel_file_name(atmospheric_profile),
+        return get_model_writer(self).export_atmospheric_transmission_file(
+            model_directory=model_directory
         )
 
     def _get_atmospheric_profile_simtel_file_name(self, parameter=None):
         """Return the native filename used for the CORSIKA atmospheric profile."""
-        parameter = (parameter or self.parameters["atmospheric_profile"]).copy()
-        parameter["qualify_filename"] = False
-        file_name = get_simtel_table_file_name(parameter)
-        if file_name is not None:
-            return file_name
-        value_path = Path(parameter["value"])
-        if value_path.suffix.lower() == ".ecsv":
-            return value_path.with_suffix(".dat").name
-        return value_path.name
+        return get_model_writer(self).get_atmospheric_profile_file_name(parameter=parameter)
 
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """

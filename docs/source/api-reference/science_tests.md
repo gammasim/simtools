@@ -26,6 +26,13 @@ their reports.
    :members:
 ```
 
+## preflight
+
+```{eval-rst}
+.. automodule:: science_tests.preflight
+   :members:
+```
+
 ## reports
 
 ```{eval-rst}

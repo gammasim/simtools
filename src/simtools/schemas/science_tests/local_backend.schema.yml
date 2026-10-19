@@ -1,0 +1,22 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/LocalBackendConfiguration'
+title: Science-test local backend configuration
+description: Runtime settings for local science-test jobs.
+schema_version: 0.1.0
+schema_name: science_tests/local_backend.schema
+type: object
+additionalProperties: false
+
+definitions:
+  LocalBackendConfiguration:
+    type: object
+    additionalProperties: false
+    properties:
+      backend:
+        const: local
+      max_workers:
+        type: integer
+        minimum: 1
+      mp_start_method:
+        type: string

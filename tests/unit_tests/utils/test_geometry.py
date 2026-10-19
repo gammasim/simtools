@@ -5,6 +5,12 @@ from astropy.units import UnitsError
 
 import simtools.utils.geometry as transf
 
+_RADIAL_EXTENT = "radial_extent"
+_AXIAL_EXTENT = "axial_extent"
+_AXES_OFFSETS = "axes_offsets"
+_ZENITH_RANGE = "zenith_range"
+_MIRROR_OFFSET = "mirror_offset"
+
 
 def test_rotate_telescope_position(caplog) -> None:
     x = np.array([-10, -10, 10, 10]).astype(float)
@@ -129,3 +135,93 @@ def test_geographic_to_corsika_azimuth_is_self_inverse():
         assert transf.geographic_to_corsika_azimuth(
             transf.geographic_to_corsika_azimuth(az)
         ) % 360 == pytest.approx(az % 360)
+
+
+@pytest.mark.parametrize(
+    ("radius", "height", "offsets", "mirror_offset", "expected"),
+    [
+        (6.90, 1.28, [1.60, 0.0], -1.775, 1.60 + np.hypot(6.90, 3.055)),
+        (4.83, 0.37, [1.60, 0.0], -2.03, 1.60 + np.hypot(4.83, 2.40)),
+        (2.12, 0.0, [0.70, 0.70], 0.0, np.hypot(2.82, 0.70)),
+        (2.12, 0.0, [0.305, 0.705], 0.0, np.hypot(2.825, 0.305)),
+    ],
+)
+def test_telescope_fiducial_sphere_reference_enclosures(
+    radius, height, offsets, mirror_offset, expected
+):
+    result = transf.telescope_fiducial_sphere_radius(
+        [radius] * u.m, [[0, height]] * u.m, offsets * u.m, mirror_offset * u.m
+    )
+    assert result.to_value(u.m) == pytest.approx(expected)
+
+
+def test_telescope_fiducial_sphere_multiple_elements_and_units():
+    result = transf.telescope_fiducial_sphere_radius(
+        [300, 100] * u.cm,
+        [[0, 400], [0, 1000]] * u.cm,
+        [0, 0] * u.cm,
+        margin=5 * u.cm,
+    )
+    assert result.to_value(u.m) == pytest.approx(np.hypot(1, 10) + 0.05)
+
+
+def test_telescope_fiducial_sphere_contains_transformed_cylinder():
+    # Independently transform a full cylinder boundary over its pointing range.
+    radius, low, high = 2.0, -1.0, 3.0
+    offset_1, offset_2 = -0.8, 0.4
+    result = transf.telescope_fiducial_sphere_radius(
+        [radius] * u.m,
+        [[low, high]] * u.m,
+        [offset_1, offset_2] * u.m,
+        zenith_range=[10, 170] * u.deg,
+    ).to_value(u.m)
+    azimuths = np.linspace(0, 2 * np.pi, 101)
+    zeniths = np.deg2rad(np.linspace(10, 170, 161))[:, None]
+    x = radius * np.cos(azimuths) - offset_2
+    y = radius * np.sin(azimuths)
+    maximum_distance = 0.0
+    for z in (low, high):
+        ground_x = x * np.cos(zeniths) + z * np.sin(zeniths) + offset_1
+        ground_z = -x * np.sin(zeniths) + z * np.cos(zeniths)
+        distances = np.sqrt(ground_x**2 + y**2 + ground_z**2)
+        assert np.max(distances) <= result + 1e-12
+        maximum_distance = max(maximum_distance, np.max(distances))
+    assert result - maximum_distance < 0.001
+
+
+@pytest.mark.parametrize(
+    ("keyword", "value", "message"),
+    [
+        (_RADIAL_EXTENT, [] * u.m, "one radial extent"),
+        (_RADIAL_EXTENT, [[1]] * u.m, "one radial extent"),
+        (_RADIAL_EXTENT, [-1] * u.m, "nonnegative"),
+        (_AXIAL_EXTENT, [[2, 1]] * u.m, "ordered"),
+        (_AXIAL_EXTENT, [[0, np.nan]] * u.m, "finite"),
+        (_AXES_OFFSETS, [0] * u.m, "two axes offsets"),
+        (_ZENITH_RANGE, [90, 0] * u.deg, "Zenith-angle bounds"),
+        (_ZENITH_RANGE, [-1, 90] * u.deg, "Zenith-angle bounds"),
+        (_ZENITH_RANGE, [0, 181] * u.deg, "Zenith-angle bounds"),
+        ("margin", -1 * u.m, "nonnegative margin"),
+        (_MIRROR_OFFSET, np.inf * u.m, "must be finite"),
+    ],
+)
+def test_telescope_fiducial_sphere_invalid_bounds(keyword, value, message):
+    kwargs = {
+        _RADIAL_EXTENT: [1] * u.m,
+        _AXIAL_EXTENT: [[0, 1]] * u.m,
+        _AXES_OFFSETS: [0, 0] * u.m,
+        keyword: value,
+    }
+    with pytest.raises(ValueError, match=message):
+        transf.telescope_fiducial_sphere_radius(**kwargs)
+
+
+@pytest.mark.parametrize(("zenith", "expected"), [(0, 2.12), (90, np.hypot(2.82, 0.70))])
+def test_telescope_fiducial_sphere_fixed_pointing(zenith, expected):
+    result = transf.telescope_fiducial_sphere_radius(
+        [2.12] * u.m,
+        [[0, 0]] * u.m,
+        [0.70, 0.70] * u.m,
+        zenith_range=[zenith, zenith] * u.deg,
+    )
+    assert result.to_value(u.m) == pytest.approx(expected)

@@ -12,6 +12,8 @@ from astropy.table import Table
 
 from simtools.visualization import plot_mirrors
 
+PYPLOT_SUBPLOTS_TARGET = "simtools.visualization.plot_mirrors.plt.subplots"
+
 
 @mock.patch("simtools.visualization.plot_mirrors.plot_mirror_layout")
 @mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
@@ -188,7 +190,7 @@ def test__create_mirror_patches():
     assert colors == list(focal_lengths)
 
 
-@mock.patch("matplotlib.pyplot.subplots")
+@mock.patch(PYPLOT_SUBPLOTS_TARGET)
 def test_plot_mirror_layout(mock_subplots, tmp_path):
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
@@ -264,6 +266,17 @@ def test__configure_mirror_plot():
         mock_xlabel.assert_called_once()
         mock_ylabel.assert_called_once()
         mock_tick_params.assert_called_once()
+
+
+def test__configure_mirror_plot_single_position_uses_nonzero_limits():
+    mock_ax = mock.MagicMock()
+
+    plot_mirrors._configure_mirror_plot(mock_ax, np.array([100.0]), np.array([0.0]))
+
+    x_limits = mock_ax.set_xlim.call_args.args
+    y_limits = mock_ax.set_ylim.call_args.args
+    assert x_limits[0] < x_limits[1]
+    assert y_limits[0] < y_limits[1]
 
 
 @pytest.mark.parametrize(
@@ -355,7 +368,7 @@ def test__read_ring_segmentation_data(tmp_path):
     assert rings[1]["rmax"] == pytest.approx(300.0)
 
 
-@mock.patch("matplotlib.pyplot.subplots")
+@mock.patch(PYPLOT_SUBPLOTS_TARGET)
 def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
@@ -378,7 +391,7 @@ def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
         mock_ax.set_ylim.assert_called_once()
 
 
-@mock.patch("matplotlib.pyplot.subplots")
+@mock.patch(PYPLOT_SUBPLOTS_TARGET)
 def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
@@ -683,7 +696,7 @@ def test_plot_mirror_layout_mst_mirror_ids(tmp_path):
         ),
     ],
 )
-@mock.patch("matplotlib.pyplot.subplots")
+@mock.patch(PYPLOT_SUBPLOTS_TARGET)
 def test_telescope_rotation(mock_subplots, tmp_path, telescope, plot_function, file_content):
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
