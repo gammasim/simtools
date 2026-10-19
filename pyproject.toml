@@ -125,6 +125,7 @@ scripts.simtools-maintain-simulation-model-write-array-element-positions = """\
   simtools.applications.maintain_simulation_model_write_array_element_positions:main\
   """
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-plot-camera = "simtools.applications.plot_camera:main"
 scripts.simtools-plot-corsika-limits = "simtools.applications.plot_corsika_limits:main"
 scripts.simtools-plot-production-grid = "simtools.applications.plot_production_grid:main"
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
@@ -152,7 +153,6 @@ scripts.simtools-submit-model-parameter-from-external = """\
   simtools.applications.submit_model_parameter_from_external:main\
   """
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
-scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
