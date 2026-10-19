@@ -72,6 +72,6 @@ def test_dispatch_mounts_external_model_and_output_roots(tmp_test_directory, moc
     expected = (output, model) if source else (output,)
     assert jobs[0].mount_paths == expected
     working = root / "working"
-    binds = HTCondorBackend._build_container_bind_paths(True, None, working / "runs", working, jobs)
+    binds = HTCondorBackend._build_container_bind_paths(True, None, working / "runs", jobs)
     assert output in binds
     assert (model in binds) == bool(source)
