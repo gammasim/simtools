@@ -44,6 +44,12 @@ This module include I/O related functionality.
 
 ## file_type
 
+Shared simulation file formats and product suffixes, generated default suffixes,
+fixed filenames, and descriptive lifecycle roles are declared in
+`src/simtools/resources/file_types.yml`. Keep product-specific placement and
+workflow cleanup behavior with their owning modules; the registry does not
+enforce deletion or content validation.
+
 ```{eval-rst}
 .. automodule:: simtools.io.file_type
    :members:
