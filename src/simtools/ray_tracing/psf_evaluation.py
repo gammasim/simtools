@@ -41,11 +41,17 @@ class _PSFEvaluationJob:
 
 def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, max_workers, worker):
     """Execute a batch with independent output paths and portable runtime settings."""
-    directory = Path(output_dir) / "parallel_evaluations" / uuid4().hex
+    output_root = Path(output_dir).expanduser().resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    directory = output_root / "parallel_evaluations" / uuid4().hex
     runtime_args = dict(config.args)
     source_config = (
         dict(config.model_reader.source_config) if config.model_reader is not None else None
     )
+    mount_paths = [output_root]
+    for key in ("path", "repository"):
+        if source_config and source_config.get(key):
+            mount_paths.append(Path(source_config[key]).expanduser().resolve())
     jobs = [
         JobSpec(
             job_id=f"{JOB_PREFIX}{index:06d}",
@@ -60,6 +66,7 @@ def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, m
             ),
             runtime_args=runtime_args,
             model_source_config=source_config,
+            mount_paths=tuple(mount_paths),
         )
         for index, params in enumerate(parameters)
     ]
