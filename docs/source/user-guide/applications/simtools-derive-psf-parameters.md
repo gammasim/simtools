@@ -124,29 +124,12 @@ Local execution defaults to half the CPUs available to the application, rounded 
 with a minimum of one worker. Set `--max_workers 1` for serial execution or choose a
 positive worker count explicitly. This limit controls local processes; HTCondor
 concurrency is controlled by the scheduler. Each evaluation reconstructs its own
-model and writes under a unique `evaluations/` subdirectory. Allow for additional
-memory and disk use when increasing the number of workers.
+model and writes under a unique `parallel_evaluations/` subdirectory. With `--cleanup`,
+all evaluation files are removed when the batch finishes, including failed
+evaluations and backend errors. Without it, evaluation files are retained.
+Final application outputs are preserved. Allow for additional memory and temporary
+disk use when increasing the number of workers.
 
-To compare serial and concurrent execution, repeat the same command with
-`--max_workers 1` and `--max_workers 4`, using separate output directories. For example:
-
-```bash
-time simtools-derive-psf-parameters --site North --telescope LSTN-01 \
-    --model_version 6.0.2 --data PSFcurve_data_v2.ecsv --test \
-    --rmsd_threshold 0 --max_iterations 2 --backend local \
-    --max_workers 1 --output_path psf-serial
-
-time simtools-derive-psf-parameters --site North --telescope LSTN-01 \
-    --model_version 6.0.2 --data PSFcurve_data_v2.ecsv --test \
-    --rmsd_threshold 0 --max_iterations 2 --backend local \
-    --max_workers 4 --output_path psf-parallel
-```
-
-Supply your model-source configuration as usual. Compare elapsed time across several
-runs and check the logged numbers of simulations evaluated: stochastic convergence
-and rejected steps can change the amount of work. Numerical results need not be
-identical. Startup, model loading, serial steps, and plotting limit overall speedup;
-a short test run may not be faster.
 
 ## Command line arguments
 
