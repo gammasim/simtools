@@ -14,8 +14,8 @@ from simtools.science_tests.camera_efficiency_results import (
     write_json,
 )
 from simtools.visualization.plot_science_comparison import (
+    _plot_efficiency_components_for_channel,
     plot_comparison,
-    plot_efficiency_component_comparisons,
     plot_wavelength_comparisons,
 )
 
@@ -243,15 +243,19 @@ def _plot_tables(baseline, candidate, comparison, output, args, report):
     plots = []
     if len(missing) < len(_WAVELENGTH_CHANNELS):
         plots.append((plot_wavelength_comparisons, baseline_paths, candidate_paths))
-    if _SHOWER_CHANNEL not in missing:
+    for channel in _WAVELENGTH_CHANNELS:
+        if channel in missing:
+            continue
         plots.append(
             (
-                plot_efficiency_component_comparisons,
-                baseline_paths[_SHOWER_CHANNEL],
-                candidate_paths[_SHOWER_CHANNEL],
+                _plot_efficiency_components_for_channel,
+                baseline_paths[channel],
+                candidate_paths[channel],
+                channel,
             )
         )
-    for plot, before, after in plots:
+    for entry in plots:
+        plot, before, after, *channel = entry
         try:
             _, diagnostic = plot(
                 before,
@@ -261,6 +265,7 @@ def _plot_tables(baseline, candidate, comparison, output, args, report):
                 candidate_label=args[_CANDIDATE_LABEL_ARGUMENT],
                 pdf_pages=report,
                 telescope=baseline.get(_CASE_KEY, {}).get(_TELESCOPE_KEY),
+                **({"channel": channel[0]} if channel else {}),
             )
         except (OSError, ValueError) as exc:
             diagnostic = f"Cannot plot efficiency tables: {exc}"

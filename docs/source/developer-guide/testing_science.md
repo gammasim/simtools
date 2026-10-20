@@ -100,31 +100,28 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
-Camera-efficiency site definitions can list several telescopes in `camera_telescopes`. The baseline,
-candidate, and comparison workflows then process the list in one campaign command. Each telescope's
-simulation output and manifest are stored below its external baseline or candidate directory.
-The combined `report.pdf` and `science-comparison.json` are published to
-`reports/<site>/compare.camera_efficiency/` in the release directory in the `simtools-tests`
-repository. Validator outputs are not published there. Execution logs and effective workflows
-remain below `$SIMTOOLS_SCIENCE_TESTS_ROOT/<candidate>/work/science-tests/`.
-
-Configure the baseline, candidate, and analysis images in the context. The baseline validator uses
-the filesystem model directory below the baseline root; the candidate uses the model source from
-the context. The analysis image must contain `simtools-compare-science-results` from the checkout
-being evaluated. For example, after setting the site's telescope list:
+Camera-efficiency site definitions can list several telescopes in `camera_telescopes`:
 
 ```yaml
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
 
-select the baseline, candidate, and comparison tests together to run them in dependency order:
+Run `camera_efficiency` separately for each release, using that release's science-test directory,
+context, container image, and model source. Each run writes telescope results and manifests under
+its configured release data directory. For example, select a site and run:
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --context_file /path/to/release/science_tests/context.yml --site north \
-  --test camera_efficiency.baseline --test camera_efficiency.candidate \
-  --test compare.camera_efficiency
+  --test camera_efficiency
 ```
+
+Once both releases have results, configure the baseline and candidate paths in the candidate
+release context and run `--test compare.camera_efficiency`. The comparison reads the existing
+results and publishes `report.pdf` and `science-comparison.json` to
+`reports/<site>/compare.camera_efficiency/` in that release directory. Its analysis image must
+contain `simtools-compare-science-results`. Execution logs and effective workflows remain below
+`$SIMTOOLS_SCIENCE_TESTS_ROOT/<release>/work/science-tests/`.
 
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.

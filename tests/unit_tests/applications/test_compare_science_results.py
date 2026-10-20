@@ -8,6 +8,7 @@ import yaml
 from simtools.applications import compare_science_results as application
 from simtools.science_tests.camera_efficiency_results import load_manifest
 
+_CHANNEL_KEY = "channel"
 _SUMMARY_FILE = "camera_efficiency_summary.yml"
 _MANIFEST_FILE = "camera_efficiency_manifest.json"
 _FIRST_TELESCOPE = "LSTN-01"
@@ -176,7 +177,7 @@ def test_plot_tables_preserves_metrics_when_tables_cannot_be_read(monkeypatch):
         raise ValueError(_INVALID_TABLE_ERROR)
 
     monkeypatch.setattr(application, "plot_wavelength_comparisons", invalid_table)
-    monkeypatch.setattr(application, "plot_efficiency_component_comparisons", invalid_table)
+    monkeypatch.setattr(application, "_plot_efficiency_components_for_channel", invalid_table)
     application._plot_tables(
         {},
         {},
@@ -264,3 +265,31 @@ def test_multiple_telescopes_produce_a_pdf_accepted_by_campaign(tmp_test_directo
     assert all("cam_eff" in warning for warning in warnings)
     assert (output / "report.pdf").is_file()
     assert not list(output.rglob("*.png"))
+
+
+def test_plot_tables_adds_component_pages_for_each_channel(monkeypatch):
+    comparison = {_STATUS_KEY: _COMPLETE_STATUS, _DIAGNOSTICS_KEY: []}
+    monkeypatch.setattr(application, "_artifact_path", lambda _manifest, name: Path(name))
+    monkeypatch.setattr(application, "plot_wavelength_comparisons", lambda *_a, **_k: (None, None))
+    calls = []
+
+    def capture_components(*args, **kwargs):
+        calls.append((args, kwargs))
+        return None, None
+
+    monkeypatch.setattr(application, "_plot_efficiency_components_for_channel", capture_components)
+    application._plot_tables(
+        {"case": {"telescope": _FIRST_TELESCOPE}},
+        {},
+        comparison,
+        Path(),
+        {_REQUIRE_TABLES_KEY: True, _BASELINE_LABEL_KEY: "old", _CANDIDATE_LABEL_KEY: "new"},
+        None,
+    )
+
+    assert [kwargs[_CHANNEL_KEY] for _, kwargs in calls] == ["shower", "muon", "nsb"]
+    for args, kwargs in calls:
+        assert kwargs[_CHANNEL_KEY] in str(args[0])
+        assert kwargs[_CHANNEL_KEY] in str(args[1])
+        assert kwargs["telescope"] == _FIRST_TELESCOPE
+    assert comparison[_DIAGNOSTICS_KEY] == []

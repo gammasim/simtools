@@ -247,6 +247,31 @@ def test_efficiency_component_comparison_adds_two_pdf_pages_without_pngs(
     _assert_top_row_wavelength_axes(figures[0])
 
 
+def test_component_comparison_titles_identify_channel(tmp_test_directory, monkeypatch):
+    from astropy.table import Table
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    root = Path(tmp_test_directory)
+    columns = {"wl": [300, 400]}
+    for _, components in plots._EFFICIENCY_COMPONENT_GROUPS:
+        for _, names in components:
+            for name in names:
+                columns[name] = [0.4, 0.5]
+    table = root / _BASELINE_TABLE_NAME
+    Table(columns).write(table, format=_ECSV_FORMAT)
+    figures = _capture_figures(monkeypatch)
+    with PdfPages(root / _REPORT_PDF) as report:
+        for channel in ("shower", "muon", "nsb"):
+            _, diagnostic = plots._plot_efficiency_components_for_channel(
+                table, table, root, "old", "new", report, "LSTN-02", channel
+            )
+            assert diagnostic is None
+    assert len(figures) == 6
+    titles = [figure._suptitle.get_text() for figure in figures]
+    for index, channel in enumerate(("Shower", "Muon", "NSB")):
+        assert all(channel in title for title in titles[index * 2 : index * 2 + 2])
+
+
 @pytest.mark.parametrize(
     ("baseline_table", "candidate_table", "message"),
     [

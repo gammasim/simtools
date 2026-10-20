@@ -20,8 +20,9 @@ _LABEL_KEY = "label"
 _VALUE_KEY = "value"
 _UNKNOWN_VALUE = "unknown"
 _SHOWER_CHANNEL = "shower"
+_NSB_CHANNEL = "nsb"
 _TELESCOPE_KEY = "telescope"
-_WAVELENGTH_CHANNELS = (_SHOWER_CHANNEL, "muon", "nsb")
+_WAVELENGTH_CHANNELS = (_SHOWER_CHANNEL, "muon", _NSB_CHANNEL)
 _RELATIVE_CHANGE_LABEL = "Relative change (%)"
 _REFERENCE_LINE_COLOR = "black"
 _CENTER_ALIGNMENT = "center"
@@ -213,6 +214,29 @@ def plot_efficiency_component_comparisons(
     telescope=None,
 ):
     """Plot wavelength-dependent throughput components for each telescope."""
+    return _plot_efficiency_components_for_channel(
+        baseline_path,
+        candidate_path,
+        output_path,
+        baseline_label,
+        candidate_label,
+        pdf_pages,
+        telescope,
+        channel=None,
+    )
+
+
+def _plot_efficiency_components_for_channel(
+    baseline_path,
+    candidate_path,
+    output_path,
+    baseline_label,
+    candidate_label,
+    pdf_pages,
+    telescope,
+    channel,
+):
+    """Plot component comparisons for one wavelength-table channel."""
     baseline = _read_wavelength_table(baseline_path)
     candidate = _read_wavelength_table(candidate_path)
     aligned, diagnostic = _aligned_wavelengths(baseline, candidate)
@@ -239,6 +263,8 @@ def plot_efficiency_component_comparisons(
         return None, str(exc)
     title = f"{baseline_label} vs {candidate_label}"
     title = f"{telescope}: {title}" if telescope else title
+    if channel:
+        title = f"{title}: {channel.upper() if channel == _NSB_CHANNEL else channel.title()}"
     _plot_efficiency_component_page(
         wavelength, unit, component_values, title, output_path, pdf_pages, relative=False
     )
@@ -345,7 +371,7 @@ def _wavelength_arrays(baseline, candidate, channel):
     if diagnostic:
         return None, diagnostic
     wavelength, unit = aligned
-    if channel == "nsb":
+    if channel == _NSB_CHANNEL:
         columns = ("nsb_detected", "N4")
         ordinate = "Detected NSB [1e9 ph / (nm s m2 sr)]"
     else:

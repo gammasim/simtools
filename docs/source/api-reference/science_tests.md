@@ -5,6 +5,13 @@
 Modules for loading release definitions, coordinating selected test runs, and publishing
 their reports.
 
+## camera_efficiency_results
+
+```{eval-rst}
+.. automodule:: simtools.science_tests.camera_efficiency_results
+   :members:
+```
+
 ## campaign
 
 ```{eval-rst}
