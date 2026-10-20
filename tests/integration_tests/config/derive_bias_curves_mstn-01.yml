@@ -45,6 +45,6 @@ applications:
       output_sub_path: MSTN-01/discriminator_threshold
       file: discriminator_threshold-1.0.0.json
   model_version_use_current: true
-  test_name: derive_bias_curves_lstn-01
+  test_name: derive_bias_curves_mstn-01
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0
