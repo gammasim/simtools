@@ -27,9 +27,10 @@ on:
           - avx512f
           - sse4
   push:
+    branches:
+      - main
     tags:
       - 'v*-rc*'
-  pull_request:
     paths:
       - docker/Dockerfile-simtools-prod
       - pyproject.toml

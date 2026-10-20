@@ -5,9 +5,10 @@ name: build-simtools-dev
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*-rc*'
-  pull_request:
     paths:
       - docker/Dockerfile-simtools-dev
       - pyproject.toml
