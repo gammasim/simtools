@@ -48,3 +48,10 @@ parameters, production tables, and referenced files.
 .. automodule:: application.model_reader
    :members:
 ```
+
+## Compatibility
+
+```{eval-rst}
+.. automodule:: model_repository.compatibility
+   :members:
+```

@@ -7,8 +7,13 @@ import pathlib
 import pytest
 
 import simtools.runners.runner_services as runner_services
+from simtools.corsika.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
+
+
+CORSIKA = "corsika"
+SIM_TELARRAY = "sim_telarray"
 
 
 @pytest.fixture
@@ -17,7 +22,7 @@ def runner_service(corsika_runner_mock_array_model):
     _runner_service = runner_services.RunnerServices(
         config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
-        run_type="corsika",
+        run_type=CORSIKA,
     )
     _runner_service.load_data_directory()
     return _runner_service
@@ -29,7 +34,7 @@ def runner_service_mock_array_model(corsika_runner_mock_array_model):
     _runner_service = runner_services.RunnerServices(
         config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
-        run_type="corsika",
+        run_type=CORSIKA,
     )
     _runner_service.load_data_directory()
     return _runner_service
@@ -41,7 +46,7 @@ def runner_service_config_only(corsika_config_mock_array_model):
     return runner_services.RunnerServices(
         config=corsika_config_mock_array_model,
         label="test-corsika-runner",
-        run_type="corsika",
+        run_type=CORSIKA,
     )
 
 
@@ -68,7 +73,7 @@ def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
     return runner_services.RunnerServices(
         config=corsika_config_mock_array_model,
         label="test-corsika-runner",
-        run_type="corsika",
+        run_type=CORSIKA,
     )
 
 
@@ -93,11 +98,8 @@ def test_get_file_basename(runner_service, file_base_name, model_version):
         f"run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
-    _runner_service_copy.config.primary_particle = {
-        "primary_id_type": "common_name",
-        "primary": "gamma",
-    }
-    _runner_service_copy.config.config["USER_INPUT"]["VIEWCONE"] = [0, 5]
+    _runner_service_copy.config.primary_particle = PrimaryParticle("common_name", "gamma")
+    _runner_service_copy.config.viewcone_max = 5
     assert _runner_service_copy._get_file_basename(1) == (
         f"gamma_diffuse_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
@@ -229,7 +231,7 @@ def test_get_file_base_name_from_core_config_full():
     runner_service = runner_services.RunnerServices(
         config=config,
         label="test-label",
-        run_type="corsika",
+        run_type=CORSIKA,
     )
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "test_mode_run000005_za20deg_azm046deg_South_test_layout_1.0.0_test-label"
@@ -243,7 +245,7 @@ def test_get_file_base_name_from_core_config_minimal():
     runner_service = runner_services.RunnerServices(
         config=config,
         label=None,
-        run_type="corsika",
+        run_type=CORSIKA,
     )
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "test_mode_1.0.0"
@@ -259,8 +261,17 @@ def test_get_file_base_name_from_core_config_illuminator_with_light_source():
     runner_service = runner_services.RunnerServices(
         config=config,
         label="simulate_illuminator_MSTN-04",
-        run_type="sim_telarray",
+        run_type=SIM_TELARRAY,
     )
 
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-04"
+
+
+@pytest.mark.parametrize("prefix", [CORSIKA, SIM_TELARRAY, "light_emission"])
+def test_stderr_file_matches_stdout_name(runner_service, prefix):
+    stdout_file = runner_service.get_file_name(f"{prefix}_log", run_number=1)
+    stderr_file = runner_service.get_file_name(f"{prefix}_err", run_number=1)
+    assert stderr_file == stdout_file.with_name(
+        stdout_file.name.removesuffix(".log.gz") + ".err.gz"
+    )
