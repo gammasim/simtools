@@ -7,6 +7,7 @@ model versions, energy ranges, and run counts into a complete job parameter set.
 import itertools
 import logging
 import shlex
+from dataclasses import dataclass
 
 import numpy as np
 from astropy import units as u
@@ -38,6 +39,18 @@ TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT = 20
 MAX_SHOWERS_PER_RUN_ARGUMENT = "max_showers_per_run"
 NUMBER_OF_RUNS_ARGUMENT = "number_of_runs"
 TOTAL_SHOWERS_ARGUMENT = "total_showers"
+
+
+@dataclass
+class _RunAllocationConfig:
+    """Run-count settings shared across all energy ranges at one grid point."""
+
+    total_showers: int | None = None
+    total_showers_scaling: str = "fixed"
+    zenith_angle_scaling_factor: float = defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT
+    max_showers_per_run: int | None = None
+    rounding_warning_state: dict | None = None
+
 
 _GRID_AXES = [
     "primary",
@@ -868,27 +881,26 @@ def _allow_total_showers_rounding_warning(rounding_warning_state):
 
 
 def _compute_per_point_runs(
-    total_showers,
+    run_allocation,
     zenith_angle,
-    total_showers_scaling,
     selected_showers_per_run,
-    zenith_angle_scaling_factor,
-    max_showers_per_run=None,
-    rounding_warning_state=None,
 ):
     """Compute the number of runs per point considering total-showers constraints."""
     effective_total_showers = _scale_total_showers(
-        total_showers,
+        run_allocation.total_showers,
         zenith_angle,
-        total_showers_scaling,
-        cos_scaling_factor=zenith_angle_scaling_factor,
+        run_allocation.total_showers_scaling,
+        cos_scaling_factor=run_allocation.zenith_angle_scaling_factor,
     )
     if effective_total_showers <= 0:
         return 0, selected_showers_per_run
-    if max_showers_per_run is not None:
-        if max_showers_per_run < 1:
+    if run_allocation.max_showers_per_run is not None:
+        if run_allocation.max_showers_per_run < 1:
             raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
-        showers_per_run_limit = min(selected_showers_per_run, max_showers_per_run)
+        showers_per_run_limit = min(
+            selected_showers_per_run,
+            run_allocation.max_showers_per_run,
+        )
         per_point_number_of_runs = int(np.ceil(effective_total_showers / showers_per_run_limit))
         selected_showers_per_run = int(np.ceil(effective_total_showers / per_point_number_of_runs))
         return per_point_number_of_runs, selected_showers_per_run
@@ -898,7 +910,7 @@ def _compute_per_point_runs(
     per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
     if remainder_showers > 0:
         adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
-        if _allow_total_showers_rounding_warning(rounding_warning_state):
+        if _allow_total_showers_rounding_warning(run_allocation.rounding_warning_state):
             logger.warning(
                 "total_showers=%s is not divisible by showers_per_run=%s; "
                 "adjusting to %s to keep equal showers per run.",
@@ -916,14 +928,10 @@ def _build_rows_for_point(
     showers_per_run,
     showers_per_run_power_law,
     number_of_runs,
-    total_showers,
-    total_showers_scaling,
     run_number,
+    run_allocation,
     showers_per_run_scaling="fixed",
     energy_max_scaling=None,
-    zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
-    max_showers_per_run=None,
-    rounding_warning_state=None,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
     rows = []
@@ -949,15 +957,11 @@ def _build_rows_for_point(
         )
 
         per_point_number_of_runs = number_of_runs
-        if total_showers is not None:
+        if run_allocation.total_showers is not None:
             per_point_number_of_runs, selected_showers_per_run = _compute_per_point_runs(
-                total_showers,
+                run_allocation,
                 zenith_angle,
-                total_showers_scaling,
                 selected_showers_per_run,
-                zenith_angle_scaling_factor,
-                max_showers_per_run=max_showers_per_run,
-                rounding_warning_state=rounding_warning_state,
             )
 
         for i in range(per_point_number_of_runs):
@@ -1216,19 +1220,25 @@ def build_simulation_jobs(args_dict):
             defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
         )
     )
-    rounding_warning_state = {
-        "emitted_warnings": 0,
-        "max_warnings": max(
-            0,
-            int(
-                args_dict.get(
-                    "max_total_showers_rounding_warnings",
-                    TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
-                )
+    run_allocation = _RunAllocationConfig(
+        total_showers=total_showers,
+        total_showers_scaling=total_showers_scaling,
+        zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+        max_showers_per_run=args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT),
+        rounding_warning_state={
+            "emitted_warnings": 0,
+            "max_warnings": max(
+                0,
+                int(
+                    args_dict.get(
+                        "max_total_showers_rounding_warnings",
+                        TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
+                    )
+                ),
             ),
-        ),
-        "suppression_warning_emitted": False,
-    }
+            "suppression_warning_emitted": False,
+        },
+    )
     energy_max_scaling = _resolve_energy_max_scaling(args_dict)
 
     if total_showers is not None and args_dict.get(NUMBER_OF_RUNS_ARGUMENT) is not None:
@@ -1303,13 +1313,9 @@ def build_simulation_jobs(args_dict):
                     showers_per_run_power_law=showers_per_run_power_law,
                     showers_per_run_scaling=showers_per_run_scaling,
                     number_of_runs=number_of_runs,
-                    total_showers=total_showers,
-                    total_showers_scaling=total_showers_scaling,
                     run_number=run_number,
+                    run_allocation=run_allocation,
                     energy_max_scaling=energy_max_scaling,
-                    zenith_angle_scaling_factor=zenith_angle_scaling_factor,
-                    max_showers_per_run=args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT),
-                    rounding_warning_state=rounding_warning_state,
                 )
             )
     _log_generated_row_summary(rows)

@@ -24,6 +24,7 @@ from simtools.production_configuration.simulation_jobs import (
     _resolve_coordinate_system,
     _resolve_energy_max_scaling,
     _resolve_shower_params,
+    _RunAllocationConfig,
     _scale_total_showers,
     build_axes_dict_from_cli_args,
     build_job_grid_metadata,
@@ -908,9 +909,8 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
         showers_per_run=5,
         showers_per_run_power_law=None,
         number_of_runs=2,
-        total_showers=None,
-        total_showers_scaling="fixed",
         run_number=10,
+        run_allocation=_RunAllocationConfig(),
     )
 
     assert [row["run_number"] for row in rows] == [10, 11]
@@ -928,9 +928,8 @@ def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
         showers_per_run=1000,
         showers_per_run_power_law=None,
         number_of_runs=2,
-        total_showers=2500,
-        total_showers_scaling="fixed",
         run_number=1,
+        run_allocation=_RunAllocationConfig(total_showers=2500),
     )
 
     assert [row["showers_per_run"] for row in rows] == [1000, 1000, 1000]
@@ -946,10 +945,11 @@ def test_build_rows_for_point_uses_equal_runs_below_maximum():
         showers_per_run=1000,
         showers_per_run_power_law=None,
         number_of_runs=1,
-        total_showers=2500,
-        total_showers_scaling="fixed",
         run_number=1,
-        max_showers_per_run=1000,
+        run_allocation=_RunAllocationConfig(
+            total_showers=2500,
+            max_showers_per_run=1000,
+        ),
     )
 
     assert [row["showers_per_run"] for row in rows] == [834, 834, 834]
@@ -964,10 +964,11 @@ def test_build_rows_for_point_preserves_zenith_scaling_with_showers_cap():
         showers_per_run_power_law=(1.0, 100 * u.GeV),
         showers_per_run_scaling=COSINE_ZENITH_SCALING,
         number_of_runs=1,
-        total_showers=2500,
-        total_showers_scaling="fixed",
         run_number=1,
-        max_showers_per_run=1000,
+        run_allocation=_RunAllocationConfig(
+            total_showers=2500,
+            max_showers_per_run=1000,
+        ),
     )
 
     assert [row["showers_per_run"] for row in rows] == [250] * 10
@@ -983,14 +984,15 @@ def test_build_rows_for_point_caps_total_showers_rounding_warnings(caplog):
         showers_per_run=1000,
         showers_per_run_power_law=None,
         number_of_runs=1,
-        total_showers=2500,
-        total_showers_scaling="fixed",
         run_number=1,
-        rounding_warning_state={
-            "emitted_warnings": 0,
-            "max_warnings": 2,
-            "suppression_warning_emitted": False,
-        },
+        run_allocation=_RunAllocationConfig(
+            total_showers=2500,
+            rounding_warning_state={
+                "emitted_warnings": 0,
+                "max_warnings": 2,
+                "suppression_warning_emitted": False,
+            },
+        ),
     )
 
     detailed_warning_messages = [
@@ -1016,9 +1018,11 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
         showers_per_run=200,
         showers_per_run_power_law=None,
         number_of_runs=1,
-        total_showers=2500,
-        total_showers_scaling="zenith_scaled",
         run_number=1,
+        run_allocation=_RunAllocationConfig(
+            total_showers=2500,
+            total_showers_scaling="zenith_scaled",
+        ),
     )
 
     assert [row["showers_per_run"] for row in rows] == [200, 200]
@@ -1329,9 +1333,8 @@ def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
         showers_per_run=1000,
         showers_per_run_power_law=None,
         number_of_runs=1,
-        total_showers=0,
-        total_showers_scaling="fixed",
         run_number=1,
+        run_allocation=_RunAllocationConfig(total_showers=0),
     )
 
     assert rows == []
