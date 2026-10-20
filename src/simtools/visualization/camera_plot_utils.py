@@ -210,7 +210,7 @@ def setup_camera_axis_properties(
         ax.set_xlim(x_min - padding, x_max + padding)
         ax.set_ylim(y_min - padding, y_max + padding)
 
-    ax.set_aspect("equal", "datalim")
+    ax.set_aspect("equal", adjustable="box")
 
     if grid:
         if grid_alpha is not None:

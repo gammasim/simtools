@@ -6,6 +6,12 @@
    :exclude-members: main
 ```
 
+Use `--pedestal_source monitoring` to use the per-pixel high-gain pedestal stored
+in sim_telarray camera monitoring data for pedestal plots and signal integration.
+The default, `waveform`, estimates the pedestal separately for each event from the
+last 10 waveform samples; a pulse tail in that window can bias the estimate.
+The monitoring option requires valid monitoring data for every selected event.
+
 ```{eval-rst}
 Produces diagnostic figures from sim_telarray (.simtel.zst) files.
 Meant to run after simulations (e.g., simtools-simulate-flasher,
