@@ -17,6 +17,8 @@ from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 
 CATALOG_SITE_NAMES = {"North": "LaPalma", "South": "Paranal"}
+SIMULATION_PARAMETERS = "simulation_parameters"
+USE_CURVED_ATMOSPHERE = "use_curved_atmosphere"
 REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
     "primary",
     "azimuth_angle",
@@ -294,8 +296,17 @@ def _resolved_atmosphere_configuration(args_dict, simulator):
         for configuration in corsika_configurations
         if configuration is not None
     }
+    if not curved_values:
+        simulation_parameters = getattr(simulator, SIMULATION_PARAMETERS, [])
+        if not isinstance(simulation_parameters, list):
+            simulation_parameters = [simulation_parameters]
+        curved_values = {
+            bool(getattr(parameters, USE_CURVED_ATMOSPHERE))
+            for parameters in simulation_parameters
+            if parameters is not None and hasattr(parameters, USE_CURVED_ATMOSPHERE)
+        }
     if len(curved_values) == 1:
-        atmosphere["use_curved_atmosphere"] = curved_values.pop()
+        atmosphere[USE_CURVED_ATMOSPHERE] = curved_values.pop()
 
     site_parameters = {}
     for model in simulator.array_models:
@@ -333,6 +344,15 @@ def _primary_name(args_dict, simulator):
         if primary_name:
             return str(primary_name).lower()
 
+    simulation_parameters = getattr(simulator, SIMULATION_PARAMETERS, [])
+    if not isinstance(simulation_parameters, list):
+        simulation_parameters = [simulation_parameters]
+    for parameters in simulation_parameters:
+        primary_particle = getattr(parameters, "primary_particle", None)
+        primary_name = getattr(primary_particle, "name", None)
+        if primary_name:
+            return str(primary_name).lower()
+
     raise ValueError("Unable to determine the primary particle for production metadata.")
 
 
@@ -355,6 +375,17 @@ def _showers_per_run(args_dict, simulator):
         configuration.shower_events
         for configuration in corsika_configurations
         if configuration is not None and getattr(configuration, "shower_events", None) is not None
+    }
+    if len(shower_counts) == 1:
+        return shower_counts.pop()
+
+    simulation_parameters = getattr(simulator, SIMULATION_PARAMETERS, [])
+    if not isinstance(simulation_parameters, list):
+        simulation_parameters = [simulation_parameters]
+    shower_counts = {
+        parameters.shower_events
+        for parameters in simulation_parameters
+        if getattr(parameters, "shower_events", None) is not None
     }
     if len(shower_counts) == 1:
         return shower_counts.pop()

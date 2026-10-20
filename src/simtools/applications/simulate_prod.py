@@ -14,6 +14,7 @@ from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
+from simtools.production_configuration.compatibility import _prepare_jobs
 from simtools.production_configuration.job_grid_io import (
     _resolve_job_grid_arguments,
     build_simulate_prod_job_specs,
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 _JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
 _ARGUMENTS = (
+    cli.SIMULATION_FILE_FORMAT,
     cli.ArgumentDefinition(
         "list_available_corsika_models",
         help="List interaction-model variants available in the CORSIKA installation and exit.",
@@ -166,6 +168,7 @@ def _execute_job_grid(args_dict):
         args_dict,
         work_dir=Path(args_dict["output_path"]),
     )
+    job_specs = _prepare_jobs(job_specs, args_dict, options)
     if args_dict.get("wait", False):
         execute_jobs(job_specs, options)
     else:

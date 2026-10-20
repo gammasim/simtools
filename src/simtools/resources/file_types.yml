@@ -1,0 +1,167 @@
+---
+formats:
+  hdf5: [.hdf5, .h5]
+  json_or_yaml: [.json, .yml, .yaml]
+  table: [.ecsv, .fits, .fits.gz]
+  sim_telarray: [.simtel, .simtel.gz, .simtel.zst]
+  corsika: [.corsika, .corsika.gz, .corsika.zst]
+products:
+  corsika_input:
+    suffixes: [.corsika.input]
+    default_suffix: .corsika.input
+    role: input
+    retention: persistent
+  corsika_output:
+    suffixes_from: corsika
+    default_suffix: .corsika.zst
+    role: result
+    retention: persistent
+  corsika_log:
+    suffixes: [.corsika.log, .corsika.log.gz, .corsika.log.zst]
+    default_suffix: .corsika.log.gz
+    role: diagnostic
+    retention: persistent
+  corsika_err:
+    suffixes: [.corsika.err, .corsika.err.gz, .corsika.err.zst]
+    default_suffix: .corsika.err.gz
+    role: diagnostic
+    retention: persistent
+  corsika_resources:
+    suffixes: [.corsika.resources.json]
+    default_suffix: .corsika.resources.json
+    role: metadata
+    retention: persistent
+  iact_output:
+    suffixes: [.iact.gz]
+    default_suffix: .iact.gz
+    role: intermediate
+    retention: temporary
+    note: Light-emission handoff consumed by sim_telarray.
+  sim_telarray_output:
+    suffixes_from: sim_telarray
+    default_suffix: .simtel.zst
+    role: result
+    retention: persistent
+  sim_telarray_histogram_output:
+    suffixes: [.hdata, .hdata.gz, .hdata.zst]
+    default_suffix: .hdata.zst
+    role: result
+    retention: persistent
+  sim_telarray_log:
+    suffixes: [.simtel.log, .simtel.log.gz, .simtel.log.zst]
+    default_suffix: .simtel.log.gz
+    role: diagnostic
+    retention: persistent
+  sim_telarray_err:
+    suffixes: [.simtel.err, .simtel.err.gz, .simtel.err.zst]
+    default_suffix: .simtel.err.gz
+    role: diagnostic
+    retention: persistent
+  sim_telarray_event_data:
+    suffixes: [.reduced_event_data.hdf5, .reduced_event_data.hdf5.gz, .reduced_event_data.hdf5.zst]
+    default_suffix: .reduced_event_data.hdf5
+    role: result
+    retention: persistent
+  sim_telarray_resources:
+    suffixes: [.simtel.resources.json]
+    default_suffix: .simtel.resources.json
+    role: metadata
+    retention: persistent
+  light_emission_log:
+    suffixes: [.light_emission.log.gz]
+    default_suffix: .light_emission.log.gz
+    role: diagnostic
+    retention: persistent
+  light_emission_err:
+    suffixes: [.light_emission.err.gz]
+    default_suffix: .light_emission.err.gz
+    role: diagnostic
+    retention: persistent
+  light_emission_resources:
+    suffixes: [.light_emission.resources.json]
+    default_suffix: .light_emission.resources.json
+    role: metadata
+    retention: persistent
+  multi_pipe_config:
+    suffixes: [.multi_pipe.cfg]
+    default_suffix: .multi_pipe.cfg
+    role: intermediate
+    retention: persistent
+  multi_pipe_script:
+    suffixes: [.multi_pipe.sh]
+    default_suffix: .multi_pipe.sh
+    role: intermediate
+    retention: persistent
+  multi_pipe_resources:
+    suffixes: [.multipipe.resources.json]
+    default_suffix: .multipipe.resources.json
+    role: metadata
+    retention: persistent
+  sub_out:
+    suffixes: [.out]
+    default_suffix: .out
+    role: diagnostic
+    retention: persistent
+  sub_err:
+    suffixes: [.err]
+    default_suffix: .err
+    role: diagnostic
+    retention: persistent
+  sub_log:
+    suffixes: [.log]
+    default_suffix: .log
+    role: diagnostic
+    retention: persistent
+  sub_script:
+    suffixes: [.sh]
+    default_suffix: .sh
+    role: intermediate
+    retention: persistent
+  production_reduced_event_data:
+    suffixes_from: sim_telarray_event_data
+    role: result
+    retention: persistent
+  production_sim_telarray:
+    suffixes_from: sim_telarray_output
+    role: result
+    retention: persistent
+  production_sim_telarray_log:
+    suffixes: [.simtel.log, .simtel.log.gz, .simtel.log.zst, .simtel.err, .simtel.err.gz, .simtel.err.zst]
+    role: diagnostic
+    retention: persistent
+  production_sim_telarray_histogram:
+    suffixes: [.hdata, .hdata.gz, .hdata.zst, .histogram, .histogram.gz, .histogram.zst, .histogram.hdf5, .histogram.hdf5.gz, .histogram.hdf5.zst]
+    role: result
+    retention: persistent
+  production_corsika:
+    suffixes_from: corsika_output
+    role: result
+    retention: persistent
+  production_corsika_log:
+    suffixes: [.corsika.log, .corsika.log.gz, .corsika.log.zst, .corsika.err, .corsika.err.gz, .corsika.err.zst]
+    role: diagnostic
+    retention: persistent
+  trigger_histograms:
+    suffixes: [.trigger_histograms.hdf5, .trigger_histograms.hdf5.gz, .trigger_histograms.hdf5.zst]
+    role: result
+    retention: persistent
+  submission_manifest:
+    filename: submission.json
+    role: metadata
+    retention: persistent
+  comparison_inventory:
+    filename: comparison_inventory.json
+    role: metadata
+    retention: persistent
+  comparison_statistics:
+    filename: comparison_statistics.json
+    role: result
+    retention: persistent
+  comparison_metrics:
+    filename: comparison_metrics.csv
+    role: result
+    retention: persistent
+  resource_requirements:
+    filename: resource_requirements.json
+    role: result
+    retention: persistent

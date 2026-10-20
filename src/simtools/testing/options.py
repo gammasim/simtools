@@ -19,10 +19,6 @@ MIRRORED_OPTIONS = {
         "SIMTOOLS_TESTS_PATH",
         "Root of the versioned simtools-tests repository.",
     ),
-    "simtools_tests_resource_version": (
-        "SIMTOOLS_TESTS_RESOURCE_VERSION",
-        "Versioned simtools-tests resource directory.",
-    ),
 }
 
 

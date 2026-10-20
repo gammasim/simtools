@@ -55,12 +55,7 @@ _ARGUMENTS = (
         type=str,
         required=False,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "compare_by",
         help="Configuration field allowed to differ between baseline and candidate.",
@@ -72,6 +67,12 @@ _ARGUMENTS = (
         choices=["events", "signal", "computing"],
         default="events",
         help="Comparison level to execute.",
+    ),
+    cli.ArgumentDefinition(
+        "report_mode",
+        choices=["compact", "diagnostic", "none"],
+        default="diagnostic",
+        help="Render compact PDF panels, full diagnostics, or no figures while retaining metrics.",
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
@@ -118,8 +119,6 @@ def _validate_computing_arguments(args_dict, parser):
 
 def _validate_non_computing_arguments(args_dict, parser):
     """Validate arguments specific to event and signal comparisons."""
-    if args_dict.get("baseline_label") or args_dict.get("candidate_label"):
-        parser.error("Production labels can only be used with '--comparison_level computing'.")
     has_legacy_input = bool(args_dict.get("production"))
     has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
     if has_legacy_input == has_metadata_input:
@@ -130,6 +129,11 @@ def _validate_non_computing_arguments(args_dict, parser):
         parser.error("'--baseline_path' and '--candidate_path' must be used together.")
     if args_dict.get("comparison_level") == "signal" and not has_legacy_input:
         parser.error("Signal-level comparison requires '--production' sim_telarray inputs.")
+    if has_metadata_input and args_dict.get("comparison_level") == "events":
+        baseline_label = args_dict.get("baseline_label") or "baseline"
+        candidate_label = args_dict.get("candidate_label") or "candidate"
+        if baseline_label == candidate_label:
+            parser.error("'--baseline_label' and '--candidate_label' must be different.")
 
 
 APPLICATION = ApplicationDefinition.for_module(

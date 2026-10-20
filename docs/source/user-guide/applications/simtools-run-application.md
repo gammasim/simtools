@@ -76,6 +76,20 @@ step 2 and 3 (useful for debugging):
     simtools-run-application --config_file config_file_name --steps 2 3
 ```
 
+## Workflow placeholders and collection
+
+Pass a YAML mapping with `--context_file` and override individual entries using repeatable
+`--replace KEY=VALUE` arguments. Command-line replacements take precedence. The runner supplies
+`__CONFIG_DIRECTORY__` automatically and resolves placeholders in referenced backend profiles.
+Unresolved placeholders fail before execution. Resolved execution configuration is saved under
+the first application output directory's `provenance/` directory.
+
+Collection entries can set `write_inventory: true` to write relative source/destination paths and
+SHA-256 checksums to `inventory.json`. Set
+`preserve_relative_paths: true` to retain comparison-pair subdirectories rather than flattening
+filenames. Literal filenames must match uniquely; use explicit glob patterns for multiple pairs.
+In-place collection records the file without copying it onto itself.
+
 ## Command line arguments
 
 ```{eval-rst}
