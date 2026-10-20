@@ -55,8 +55,11 @@ patterns so the application can expand them:
         --telescope_name LSTN-01 \
         --output_path flasher-comparison
 
-The ``signals.png`` plot compares integrated-signal distributions across pixels and events, with
-each production's mean shown in the legend. It does not match pixels between the two files. See
+The ``signals.png`` plot compares integrated-signal distributions across pixels and events.
+Its legend identifies productions only; it does not display means or match pixels between files.
+For mean-based scaling, use
+``simtools.sim_events.production_comparison.collect_signal_metrics`` and calculate
+``metrics.signals.mean()`` for each returned production metric, grouped by telescope. See
 :doc:`simtools-compare-productions` for comparison options and outputs.
 
 **Example Usage**
