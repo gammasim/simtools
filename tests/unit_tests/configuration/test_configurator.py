@@ -14,12 +14,16 @@ from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
+    SITE,
     STANDARD_ARGUMENTS,
+    TELESCOPE,
+    TELESCOPES,
     ArgumentDefinition,
 )
 from simtools.configuration.configurator import Configurator
 
 logger = logging.getLogger()
+LSTN_DESIGN = "LSTN-design"
 
 
 @pytest.fixture
@@ -63,6 +67,69 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
     # Command-line values should take precedence
     assert config["label"] == "cli_label"
     assert config["log_level"] == "info"
+
+
+@pytest.mark.parametrize(
+    ("telescope_argument", "telescope_name", "site"),
+    [
+        (TELESCOPE, LSTN_DESIGN, "South"),
+        (TELESCOPE, "LSFS-design", "North"),
+        (TELESCOPES, "SSTS-25", "North"),
+    ],
+)
+def test_configure_rejects_telescope_from_different_site(
+    telescope_argument, telescope_name, site, monkeypatch
+):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((SITE, telescope_argument))
+    option = "--telescopes" if telescope_argument is TELESCOPES else "--telescope"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", "--site", site, option, telescope_name],
+    )
+
+    with pytest.raises(SystemExit, match="2"):
+        config_builder.configure()
+
+
+def test_configure_accepts_matching_telescope_and_site(monkeypatch):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, TELESCOPE))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", "--site", "North", "--telescope", LSTN_DESIGN],
+    )
+
+    assert config_builder.configure()["telescope"] == LSTN_DESIGN
+
+
+def test_configure_rejects_light_source_from_different_site(monkeypatch):
+    light_source = ArgumentDefinition("light_source", type=str)
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, light_source))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", "--site", "North", "--light_source", "LSFS-design"],
+    )
+
+    with pytest.raises(SystemExit, match="2"):
+        config_builder.configure()
+
+
+def test_configure_accepts_shared_light_source_at_either_site(monkeypatch):
+    light_source = ArgumentDefinition("light_source", type=str)
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, light_source))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", "--site", "North", "--light_source", "MSFx-FlashCam"],
+    )
+
+    assert config_builder.configure()["light_source"] == "MSFx-FlashCam"
 
 
 def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory):

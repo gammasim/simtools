@@ -14,6 +14,7 @@ import simtools.version as simtools_version
 from simtools import constants, dependency_versions
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
+from simtools.utils import names
 
 
 class Configurator:
@@ -123,6 +124,7 @@ class Configurator:
                 )
             )
         )
+        self._validate_site_telescope_consistency()
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
         if self.config["label"] is None:
@@ -133,6 +135,25 @@ class Configurator:
             self._initialize_output()
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config
+
+    def _validate_site_telescope_consistency(self):
+        """Reject telescope selections that belong to a different configured site."""
+        site = self.config.get("site")
+        if site is None:
+            return
+
+        array_elements = list(self.config.get("telescopes") or [])
+        for argument_name in ("telescope", "light_source"):
+            array_element = self.config.get(argument_name)
+            if array_element is not None:
+                array_elements.append(array_element)
+        for array_element in array_elements:
+            element_sites = names.get_site_from_array_element_name(array_element)
+            if site not in gen.ensure_list(element_sites):
+                self.parser.error(
+                    f"array element {array_element} belongs to site {element_sites}, "
+                    f"but site {site} was selected"
+                )
 
     def _parser_defaults(self):
         """Return parser defaults as a configuration source mapping."""
