@@ -174,6 +174,58 @@ def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
 
 
+def test_plot_shower_statistics_creates_zenith_profiles(tmp_test_directory):
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_showers.ecsv",
+        [
+            {
+                "azimuth_angle": 180.0,
+                "zenith_angle": 20.0,
+                "showers_per_run": 100,
+            },
+            {
+                "azimuth_angle": 180.0,
+                "zenith_angle": 20.0,
+                "showers_per_run": 100,
+            },
+            {
+                "azimuth_angle": 180.0,
+                "zenith_angle": 40.0,
+                "showers_per_run": 60,
+            },
+            {
+                "azimuth_angle": 0.0,
+                "zenith_angle": 20.0,
+                "showers_per_run": 80,
+            },
+        ],
+    )
+    output_path = Path(tmp_test_directory) / "output"
+    plotter = _create_plotter(grid_file=grid_file, output_path=output_path)
+
+    plotter.plot_shower_statistics_vs_zenith()
+
+    assert (output_path / "showers_vs_zenith_az180_width1deg.png").exists()
+    assert (output_path / "showers_vs_zenith_all_azimuths.png").exists()
+    assert (output_path / "showers_per_run_vs_zenith_single_row.png").exists()
+
+
+def test_plot_shower_statistics_requires_positive_azimuth_width(tmp_test_directory):
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_showers.ecsv",
+        [{"azimuth_angle": 180.0, "zenith_angle": 20.0, "showers_per_run": 100}],
+    )
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    with pytest.raises(ValueError, match="azimuth_width must be positive"):
+        plotter.plot_shower_statistics_vs_zenith(azimuth_width=0)
+
+
 def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory):
     """Write the sky projection plot with both Alt/Az and HA/Dec data."""
     grid_file = _write_grid_file(

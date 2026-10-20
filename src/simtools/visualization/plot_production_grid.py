@@ -28,6 +28,10 @@ PLOT_VALUE_KEYS = tuple(
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
+AZIMUTH_ANGLE_COLUMN = "azimuth_angle"
+ZENITH_ANGLE_COLUMN = "zenith_angle"
+SHOWERS_PER_RUN_COLUMN = "showers_per_run"
+TOTAL_SHOWERS_LABEL = "Total showers per pointing"
 
 
 def _azimuth_zenith_output_file_stem(value_key):
@@ -673,3 +677,94 @@ class ProductionGridPlotter:
         figure.savefig(output_file, bbox_inches="tight", dpi=300)
         logger.info(f"Saved zenith profile plot to {output_file}")
         plt.close(figure)
+
+    def _plot_shower_statistics(self, points, output_stem, title, y_label):
+        """Plot shower counts versus zenith with azimuth encoded by color."""
+        zenith_values, azimuth_values, shower_values = zip(*points)
+        figure, axis = plt.subplots(figsize=(9, 5.5), constrained_layout=True)
+        scatter = axis.scatter(
+            zenith_values,
+            shower_values,
+            c=azimuth_values,
+            cmap="viridis",
+            s=24,
+            alpha=0.8,
+            linewidths=0,
+        )
+        axis.set_xlabel("Zenith angle (deg)")
+        axis.set_ylabel(y_label)
+        axis.set_title(title)
+        axis.grid(True, alpha=0.25)
+        figure.colorbar(scatter, ax=axis).set_label("Azimuth angle (deg)")
+        output_file = self.output_path / f"{output_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, dpi=180)
+        plt.close(figure)
+        logger.info("Saved shower statistics plot to %s", output_file)
+
+    def plot_shower_statistics_vs_zenith(self, azimuth_center=180.0, azimuth_width=1.0):
+        """Plot total and per-run showers against zenith angle.
+
+        Parameters
+        ----------
+        azimuth_center : float, optional
+            Center of the azimuth interval used for the selected-azimuth plot.
+        azimuth_width : float, optional
+            Width in degrees of the selected azimuth interval.
+
+        Raises
+        ------
+        ValueError
+            If ``azimuth_width`` is not positive.
+        """
+        if azimuth_width <= 0:
+            raise ValueError("azimuth_width must be positive")
+
+        grouped_rows = {}
+        for point in self.grid_points:
+            azimuth = self._extract_quantity_value(point, AZIMUTH_ANGLE_COLUMN)
+            zenith = self._extract_quantity_value(point, ZENITH_ANGLE_COLUMN)
+            showers = point.get(SHOWERS_PER_RUN_COLUMN)
+            if azimuth is not None and zenith is not None and showers is not None:
+                grouped_rows.setdefault((azimuth, zenith), []).append(int(showers))
+
+        if not grouped_rows:
+            logger.warning("No Alt/Az shower statistics available for zenith plotting")
+            return
+
+        total_points = [
+            (zenith, azimuth, sum(showers)) for (azimuth, zenith), showers in grouped_rows.items()
+        ]
+        single_run_points = [
+            (zenith, azimuth, showers[0]) for (azimuth, zenith), showers in grouped_rows.items()
+        ]
+        lower_azimuth = azimuth_center - azimuth_width / 2
+        upper_azimuth = azimuth_center + azimuth_width / 2
+        selected_points = [
+            point for point in total_points if lower_azimuth <= point[1] < upper_azimuth
+        ]
+        if not selected_points:
+            logger.warning(
+                "No shower statistics in azimuth interval %s to %s deg",
+                lower_azimuth,
+                upper_azimuth,
+            )
+        else:
+            self._plot_shower_statistics(
+                selected_points,
+                f"showers_vs_zenith_az{azimuth_center:g}_width{azimuth_width:g}deg",
+                f"Total showers per pointing, azimuth {lower_azimuth:g} to {upper_azimuth:g} deg",
+                TOTAL_SHOWERS_LABEL,
+            )
+
+        self._plot_shower_statistics(
+            total_points,
+            "showers_vs_zenith_all_azimuths",
+            "Total showers per pointing, all azimuths",
+            TOTAL_SHOWERS_LABEL,
+        )
+        self._plot_shower_statistics(
+            single_run_points,
+            "showers_per_run_vs_zenith_single_row",
+            "Showers in one row per pointing, all azimuths",
+            "Showers per run (one row)",
+        )

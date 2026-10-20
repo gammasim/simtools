@@ -69,6 +69,12 @@ _GRID_ARGUMENTS = (
         default=None,
     ),
     cli.ArgumentDefinition(
+        "max_showers_per_run",
+        help="Maximum equal shower count per run when total_showers is configured.",
+        type=scientific_int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
         "total_showers_scaling",
         help=(
             "Total-shower zenith scaling. zenith_scaled applies "
@@ -138,7 +144,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.PRIMARY_ID_TYPE,
         cli.AZIMUTH_ANGLE,
         cli.ZENITH_ANGLE,
-        cli.SHOWERS_PER_RUN(required=True),
+        cli.SHOWERS_PER_RUN(),
         cli.RUN_NUMBER_OFFSET,
         cli.RUN_NUMBER,
         cli.EVENT_NUMBER_FIRST_SHOWER,

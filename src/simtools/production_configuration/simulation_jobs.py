@@ -35,6 +35,7 @@ from simtools.utils.value_conversion import get_value_as_quantity
 logger = logging.getLogger(__name__)
 
 TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT = 20
+MAX_SHOWERS_PER_RUN_ARGUMENT = "max_showers_per_run"
 
 _GRID_AXES = [
     "primary",
@@ -764,7 +765,11 @@ def _parse_power_index_quantity(tokens, parameter_name):
 
 def _resolve_shower_params(args_dict):
     """Extract and convert shower-statistics parameters from an args dict."""
-    showers_per_run = args_dict["showers_per_run"]
+    showers_per_run = args_dict.get("showers_per_run")
+    if showers_per_run is None:
+        showers_per_run = args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT)
+    if showers_per_run is None:
+        raise ValueError("showers_per_run is required unless max_showers_per_run is configured.")
     showers_per_run_power_law = args_dict.get("showers_per_run_power_law")
     showers_per_run_scaling = args_dict.get("showers_per_run_scaling", "fixed")
     total_showers = args_dict.get("total_showers")
@@ -843,12 +848,30 @@ def _apply_clipping_chain(
     )
 
 
+def _allow_total_showers_rounding_warning(rounding_warning_state):
+    """Return whether to log a warning and update its suppression state."""
+    if rounding_warning_state is None:
+        return True
+    if rounding_warning_state["emitted_warnings"] < rounding_warning_state["max_warnings"]:
+        rounding_warning_state["emitted_warnings"] += 1
+        return True
+    if not rounding_warning_state.get("suppression_warning_emitted", False):
+        logger.warning(
+            "Reached max_total_showers_rounding_warnings=%s; further total_showers "
+            "rounding warnings will be suppressed.",
+            rounding_warning_state["max_warnings"],
+        )
+        rounding_warning_state["suppression_warning_emitted"] = True
+    return False
+
+
 def _compute_per_point_runs(
     total_showers,
     zenith_angle,
     total_showers_scaling,
     selected_showers_per_run,
     zenith_angle_scaling_factor,
+    max_showers_per_run=None,
     rounding_warning_state=None,
 ):
     """Compute the number of runs per point considering total-showers constraints."""
@@ -859,27 +882,20 @@ def _compute_per_point_runs(
         cos_scaling_factor=zenith_angle_scaling_factor,
     )
     if effective_total_showers <= 0:
-        return 0
+        return 0, selected_showers_per_run
+    if max_showers_per_run is not None:
+        if max_showers_per_run < 1:
+            raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
+        per_point_number_of_runs = int(np.ceil(effective_total_showers / max_showers_per_run))
+        selected_showers_per_run = int(np.ceil(effective_total_showers / per_point_number_of_runs))
+        return per_point_number_of_runs, selected_showers_per_run
     number_of_full_runs, remainder_showers = divmod(
         effective_total_showers, selected_showers_per_run
     )
     per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
     if remainder_showers > 0:
         adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
-        should_log_warning = True
-        if rounding_warning_state is not None:
-            if rounding_warning_state["emitted_warnings"] >= rounding_warning_state["max_warnings"]:
-                should_log_warning = False
-                if not rounding_warning_state.get("suppression_warning_emitted", False):
-                    logger.warning(
-                        "Reached max_total_showers_rounding_warnings=%s; further total_showers "
-                        "rounding warnings will be suppressed.",
-                        rounding_warning_state["max_warnings"],
-                    )
-                    rounding_warning_state["suppression_warning_emitted"] = True
-            else:
-                rounding_warning_state["emitted_warnings"] += 1
-        if should_log_warning:
+        if _allow_total_showers_rounding_warning(rounding_warning_state):
             logger.warning(
                 "total_showers=%s is not divisible by showers_per_run=%s; "
                 "adjusting to %s to keep equal showers per run.",
@@ -887,7 +903,7 @@ def _compute_per_point_runs(
                 selected_showers_per_run,
                 adjusted_total_showers,
             )
-    return per_point_number_of_runs
+    return per_point_number_of_runs, selected_showers_per_run
 
 
 def _build_rows_for_point(
@@ -903,6 +919,7 @@ def _build_rows_for_point(
     showers_per_run_scaling="fixed",
     energy_max_scaling=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    max_showers_per_run=None,
     rounding_warning_state=None,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
@@ -930,12 +947,13 @@ def _build_rows_for_point(
 
         per_point_number_of_runs = number_of_runs
         if total_showers is not None:
-            per_point_number_of_runs = _compute_per_point_runs(
+            per_point_number_of_runs, selected_showers_per_run = _compute_per_point_runs(
                 total_showers,
                 zenith_angle,
                 total_showers_scaling,
                 selected_showers_per_run,
                 zenith_angle_scaling_factor,
+                max_showers_per_run=max_showers_per_run,
                 rounding_warning_state=rounding_warning_state,
             )
 
@@ -1212,6 +1230,13 @@ def build_simulation_jobs(args_dict):
 
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
+    if args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT) is not None and total_showers is None:
+        raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} requires total_showers.")
+    if (
+        args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT) is not None
+        and int(args_dict[MAX_SHOWERS_PER_RUN_ARGUMENT]) < 1
+    ):
+        raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
 
     number_of_runs = int(args_dict.get("number_of_runs") or 1)
     run_number = int(args_dict.get("run_number") or 1)
@@ -1280,6 +1305,7 @@ def build_simulation_jobs(args_dict):
                     run_number=run_number,
                     energy_max_scaling=energy_max_scaling,
                     zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+                    max_showers_per_run=args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT),
                     rounding_warning_state=rounding_warning_state,
                 )
             )
