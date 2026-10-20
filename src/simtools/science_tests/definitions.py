@@ -14,6 +14,7 @@ from pathlib import Path
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCIENCE_TEST_SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.io.file_type import _get_product_filename
 from simtools.production_configuration.job_grid_io import read_job_grid
 from simtools.production_configuration.production_file_selection import (
     discover_manifests,
@@ -27,7 +28,7 @@ _CAMERA_TELESCOPES_KEY = "camera_telescopes"
 _JOB_IDS = "job_ids"
 
 _ARRAY_LAYOUT_KEY = "array_layout"
-_COMPARISON_INVENTORY_FILE = "comparison_inventory.json"
+_COMPARISON_INVENTORY_FILE = _get_product_filename("comparison_inventory")
 _REASON_KEY = "reason"
 _SCOPE_KEY = "scope"
 _SELECT_KEY = "select"
@@ -51,7 +52,7 @@ _MODEL_SOURCE_KEYS = (
 )
 _RUNTIME_ROLE_ERROR = "No runtime environment configured for role"
 
-_SUBMISSION_FILE_NAME = "submission.json"
+_SUBMISSION_FILE_NAME = _get_product_filename("submission_manifest")
 
 _ACCEPTANCE_VALUE_FORMAT = ".4g"
 

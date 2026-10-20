@@ -12,6 +12,7 @@ from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.io import io_handler, table_handler
+from simtools.io.file_type import _get_product_value
 from simtools.job_execution import job_manager
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
@@ -24,6 +25,8 @@ from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulation.configuration import get_shower_configuration
 from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general
+
+_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
 
 
 def _write_reduced_event_list_batch(job_spec):
@@ -614,7 +617,7 @@ class Simulator:
         """Build output files using a file-list stem plus part index."""
         output_dir = Path(output_path) if output_path else input_file_list.parent
         return [
-            output_dir / f"{input_file_list.stem}.part{index:04d}.reduced_event_data.hdf5"
+            output_dir / f"{input_file_list.stem}.part{index:04d}{_REDUCED_EVENT_DATA_SUFFIX}"
             for index in range(1, len(input_file_batches) + 1)
         ]
 
@@ -637,7 +640,7 @@ class Simulator:
         input_file = Path(input_file_batch[0])
         output_dir = Path(output_path) if output_path else input_file.parent
         stem = Simulator._simulation_file_stem(input_file.name)
-        return output_dir / f"{stem}.reduced_event_data.hdf5"
+        return output_dir / f"{stem}{_REDUCED_EVENT_DATA_SUFFIX}"
 
     @staticmethod
     def _simulation_file_stem(file_name):
