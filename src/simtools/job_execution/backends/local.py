@@ -6,6 +6,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import get_all_start_methods, get_context
 from pathlib import Path
 
+from simtools.constants import SCIENCE_TEST_SCHEMA_PATH
+from simtools.data_model import schema
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.job import JobResult, SubmissionHandle
 from simtools.job_execution.worker import execute_job_spec
@@ -89,14 +91,18 @@ class LocalBackend:
             names = ", ".join(sorted(unknown))
             raise BackendConfigurationError(f"Unknown local backend configuration key(s): {names}.")
         start_method = config.get("mp_start_method")
-        if start_method is None:
-            return
-        available_methods = get_all_start_methods()
-        if not isinstance(start_method, str) or start_method not in available_methods:
-            available = ", ".join(available_methods)
-            raise BackendConfigurationError(
-                f"Invalid mp_start_method {start_method!r}. Available methods: {available}."
-            )
+        if start_method is not None:
+            available_methods = get_all_start_methods()
+            if not isinstance(start_method, str) or start_method not in available_methods:
+                available = ", ".join(available_methods)
+                raise BackendConfigurationError(
+                    f"Invalid mp_start_method {start_method!r}. Available methods: {available}."
+                )
+        schema.validate_dict_using_schema(
+            config,
+            schema_file=SCIENCE_TEST_SCHEMA_PATH / "local_backend.schema.yml",
+            offline=True,
+        )
 
     def wait(self, submission):
         """Collect local results in input order."""

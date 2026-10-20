@@ -6,6 +6,7 @@ from pathlib import Path
 
 import yaml
 
+from simtools.io.file_type import _get_product_filename
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.settings import config
@@ -54,7 +55,7 @@ def submit_jobs(job_specs, options=None):
                 "Submitted %d job(s) with backend %s; manifest: %s",
                 len(jobs),
                 options.backend,
-                submission.work_dir / "submission.json",
+                submission.work_dir / _get_product_filename("submission_manifest"),
             )
         else:
             logger.info(
@@ -80,6 +81,34 @@ def wait_for_submission(submission, *, options=None, backend=None):
         raise
     _mark_submission(submission, "completed")
     return sorted(results, key=lambda result: result.index)
+
+
+def collect_submission(submission, *, backend=None):
+    """Collect finished scheduler jobs without waiting for active jobs.
+
+    Parameters
+    ----------
+    submission : SubmissionHandle
+        Persisted scheduler submission to inspect.
+    backend : object or None
+        Execution backend; constructed from the submission when omitted.
+
+    Returns
+    -------
+    list[JobResult] or None
+        Completed results, or None while jobs remain in the scheduler queue.
+    """
+    backend = backend or get_backend(submission.backend)
+    if not backend.is_finished(submission):
+        return None
+    try:
+        results = backend.collect(submission)
+        _validate_manifest_outputs(submission)
+    except Exception:
+        _mark_submission(submission, "failed")
+        raise
+    _mark_submission(submission, "completed")
+    return results
 
 
 def load_submission(path):
@@ -228,7 +257,7 @@ def _load_backend_config(config_value):
 def _write_manifest(submission):
     """Write a durable submission manifest."""
     submission.work_dir.mkdir(parents=True, exist_ok=True)
-    manifest = submission.work_dir / "submission.json"
+    manifest = submission.work_dir / _get_product_filename("submission_manifest")
     temporary = manifest.with_suffix(".tmp")
     temporary.write_text(
         json.dumps(submission.as_dict(), indent=2, default=str) + "\n",

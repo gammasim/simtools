@@ -407,7 +407,10 @@ class EventDataReader:
 
     def _validate_event_data_tables(self, tables, event_data_file, table_names, get_name):
         """Validate reduced event-data table presence, row counts, and numeric dtypes."""
-        empty_tables = [name for name in table_names if len(tables[name]) == 0]
+        trigger_table_name = get_name("TRIGGERS")
+        empty_tables = [
+            name for name in table_names if name != trigger_table_name and len(tables[name]) == 0
+        ]
         if empty_tables:
             raise ValueError(
                 f"Reduced event data file '{event_data_file}' has empty required "

@@ -17,7 +17,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -29,7 +29,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -262,8 +262,9 @@ jobs:
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
-          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
         run: |
+          BRANCH="${BRANCH:-$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION}"
           git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"

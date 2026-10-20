@@ -10,6 +10,10 @@ from astropy import units as u
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
 
+HORIZONTAL = "horizontal"
+VERTICAL = "vertical"
+BATCH_METHOD = "_run_parameter_batch"
+
 _MIRROR_ALIGN_RANDOM = (0.004, 28.0, 0.0, 0.0)
 
 
@@ -25,6 +29,29 @@ def make_mirror_align_random_parameters():
 
 
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
+
+
+@pytest.mark.parametrize("monte_carlo_analysis", [False, True])
+def test_run_psf_optimization_job(mocker, tmp_test_directory, monte_carlo_analysis):
+    args = {
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.0",
+        "label": "psf",
+        "monte_carlo_analysis": monte_carlo_analysis,
+    }
+    telescope, site = object(), object()
+    initialize = mocker.patch.object(
+        psf_opt, "initialize_simulation_models", return_value=(telescope, site, None)
+    )
+    workflow = mocker.patch.object(psf_opt, "run_psf_optimization_workflow")
+
+    psf_opt.run_psf_optimization_job(psf_opt.PSFOptimizationJob(args, tmp_test_directory))
+
+    initialize.assert_called_once_with(
+        label="psf", site="North", telescope_name="LSTN-01", model_version="6.0.0"
+    )
+    workflow.assert_called_once_with(telescope, site, args, tmp_test_directory)
 
 
 @pytest.fixture
@@ -426,78 +453,28 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
         )
 
 
-def test__calculate_param_gradient_success(optimizer):
-    current_params = {"mirror_align_random_horizontal": mirror_align_random_values()}
-    current_metric = 0.1
+@pytest.mark.parametrize("failed", [False, True])
+def test_calculate_gradient(optimizer, mocker, failed):
+    parameters = {HORIZONTAL: [2.0, 3.0], VERTICAL: 4.0}
+    results = [(1.0, value, None, None) for value in [11.0, 12.0, 13.0]]
+    if failed:
+        results[1] = None
+    batch = mocker.patch.object(optimizer, BATCH_METHOD, return_value=results)
 
-    with patch.object(optimizer, "run_simulation") as mock_sim:
-        mock_sim.return_value = (None, 0.095, None, None)
+    gradients = optimizer.calculate_gradient(parameters, 10.0, epsilon=0.5)
 
-        gradient = optimizer._calculate_param_gradient(
-            current_params,
-            current_metric,
-            "mirror_align_random_horizontal",
-            mirror_align_random_values(),
-            0.0005,
-        )
-
-        assert gradient is not None
-        assert isinstance(gradient, list)
-        assert len(gradient) == 4
-        assert all(isinstance(g, float) for g in gradient)
-
-
-def test__calculate_param_gradient_simulation_failure(optimizer):
-
-    current_params = {"mirror_align_random_horizontal": mirror_align_random_values()}
-
-    with patch.object(optimizer, "run_simulation") as mock_sim:
-        # First call succeeds, second fails
-        mock_sim.side_effect = ValueError("Simulation failed")
-
-        gradient = optimizer._calculate_param_gradient(
-            current_params,
-            0.1,
-            "mirror_align_random_horizontal",
-            mirror_align_random_values(),
-            0.0005,
-        )
-        # Should return None when simulation fails
-        assert gradient is None
-
-
-def test_calculate_gradient(optimizer, sample_parameters):
-
-    with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
-        mock_grad.return_value = [-0.1, 0.05, -0.02, 0.0]
-
-        gradients = optimizer.calculate_gradient(
-            sample_parameters,
-            0.1,
-        )
-        assert "mirror_align_random_horizontal" in gradients
-        assert "mirror_align_random_vertical" in gradients
-
-
-def test_calculate_gradient_returns_none_on_failure(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, tmp_path
-):
-    data_to_plot = {"measured": sample_data}
-    radius = sample_data[psf_opt.RADIUS]
-
-    optimizer = psf_opt.PSFParameterOptimizer(
-        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, tmp_path
+    batch.assert_called_once_with(
+        [
+            {HORIZONTAL: [2.5, 3.0], VERTICAL: 4.0},
+            {HORIZONTAL: [2.0, 3.5], VERTICAL: 4.0},
+            {HORIZONTAL: [2.0, 3.0], VERTICAL: 4.5},
+        ],
+        use_cache=True,
     )
-
-    current_params = make_mirror_align_random_parameters()
-
-    with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
-        # First parameter succeeds, second fails
-        mock_grad.side_effect = [[-0.1, 0.05, -0.02, 0.0], None]
-
-        gradients = optimizer.calculate_gradient(current_params, 0.1)
-        # Should return None when any gradient calculation fails
+    if failed:
         assert gradients is None
+    else:
+        assert gradients == {HORIZONTAL: [2.0, 4.0], VERTICAL: 6.0}
 
 
 def test_apply_gradient_step(optimizer):
@@ -806,10 +783,10 @@ def test_analyze_monte_carlo_error(
     # Test 1: Normal case
     with (
         patch.object(optimizer, "get_initial_parameters") as mock_prev,
-        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, BATCH_METHOD) as mock_sim,
     ):
         mock_prev.return_value = make_mirror_align_random_parameters()
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
+        mock_sim.return_value = [(3.5, 0.1, 0.8, sample_data)] * 2
 
         result = optimizer.analyze_monte_carlo_error(n_simulations=2)
         assert len(result) == 9  # All MC statistics
@@ -826,10 +803,10 @@ def test_analyze_monte_carlo_error(
     # Test 3: All simulations fail
     with (
         patch.object(optimizer, "get_initial_parameters") as mock_prev,
-        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, BATCH_METHOD) as mock_sim,
     ):
         mock_prev.return_value = make_mirror_align_random_parameters()
-        mock_sim.side_effect = RuntimeError("All simulations failed")
+        mock_sim.return_value = [None, None]
 
         result = optimizer.analyze_monte_carlo_error(n_simulations=2)
 
@@ -844,10 +821,12 @@ def test_analyze_monte_carlo_error(
     )
     with (
         patch.object(optimizer_ks, "get_initial_parameters") as mock_prev,
-        patch.object(optimizer_ks, "run_simulation") as mock_sim,
+        patch.object(optimizer_ks, BATCH_METHOD) as mock_sim,
     ):
         mock_prev.return_value = make_mirror_align_random_parameters()
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
+        mock_sim.return_value = [
+            (3.5, 0.1, 0.8, sample_data)
+        ] * 2  # psf_diameter, metric, p_value, data
 
         result = optimizer_ks.analyze_monte_carlo_error(n_simulations=2)
 

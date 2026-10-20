@@ -203,6 +203,15 @@ OUTPUT_ARGUMENTS = (
     SKIP_OUTPUT_VALIDATION,
 )
 
+SELECT = _argument(
+    "select",
+    "application",
+    help="Selection expression as dotted.path=value. Can be repeated.",
+    action="extend",
+    nargs="+",
+    default=[],
+)
+
 RUNTIME_ENVIRONMENT_FILE = _argument(
     "runtime_environment_file",
     _RUN_TIME_GROUP,
@@ -547,6 +556,13 @@ SIMULATION_SOFTWARE = _argument(
     type=str,
     choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
     default=defaults.SIMULATION_SOFTWARE_DEFAULT,
+)
+
+SIMULATION_FILE_FORMAT = _argument(
+    "simulation_file_format",
+    _SIMULATION_CONFIGURATION_GROUP,
+    help="Simulation input format. Current IACT and sim_telarray files use 'eventio'.",
+    default="eventio",
 )
 
 PRIMARY = _argument(

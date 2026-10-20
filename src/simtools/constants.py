@@ -16,6 +16,7 @@ METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
 # Path to run time environment json schema
 RUN_TIME_ENVIRONMENT_SCHEMA = SCHEMA_PATH / "run_time_environment.schema.yml"
+SCIENCE_TEST_SCHEMA_PATH = SCHEMA_PATH / "science_tests"
 # Path to model parameter metaschema
 MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 # Path to model parameter description metaschema

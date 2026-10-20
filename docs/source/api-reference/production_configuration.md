@@ -153,3 +153,10 @@ related production-configuration helpers used by the supported workflows.
 .. automodule:: production_configuration.simulation_jobs
    :members:
 ```
+
+## Dependency compatibility
+
+```{eval-rst}
+.. automodule:: production_configuration.compatibility
+   :members:
+```

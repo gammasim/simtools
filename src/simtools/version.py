@@ -14,9 +14,13 @@ MAJOR_MINOR = "major.minor"
 MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
+is_development_build = False
+
 try:
     try:
         from ._dev_version import version
+
+        is_development_build = True
     except ImportError:
         from ._version import version
 except Exception:  # pylint: disable=broad-except
@@ -27,6 +31,7 @@ except Exception:  # pylint: disable=broad-except
     version = "0.0.0"  # pylint: disable=invalid-name
 
 __version__ = version
+is_development_build = is_development_build or Version(__version__).is_devrelease
 
 
 def resolve_version_to_latest_patch(partial_version, available_versions):
