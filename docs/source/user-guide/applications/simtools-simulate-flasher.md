@@ -12,8 +12,9 @@ The flasher simulation allows for two different run modes:
 1. Direct injection of light into the camera (bypassing the telescope optics).
 2. Simulation of light emission from the source using the light-emission package from sim_telarray.
 
-Full-simulation flat-fielding models light emission toward the camera, not necessarily propagation
-through telescope optics. Both modes produce sim_telarray events for standard analysis or
+Full-simulation flat-fielding uses the source geometry and angular distribution to illuminate
+the camera, but sets ``Bypass_Optics=1`` in sim_telarray, bypassing telescope optics in this case.
+Both modes produce sim_telarray events for standard analysis or
 visualization with 'simtools-plot-simtel-events'.
 
 **Photon counts and matching run modes**
