@@ -7,7 +7,10 @@ import numpy as np
 from matplotlib import colormaps
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import save_figure
+from simtools.visualization.visualize import (
+    save_figure,
+    save_figures_to_single_document,
+)
 
 _ROLE_STYLE = {
     "sim_telarray": {"marker": "s", "zorder": 3},
@@ -22,6 +25,7 @@ _SIMTELARRAY_STORAGE_LABEL = "sim_telarray storage"
 _SIMTELARRAY_OUTPUT_LABEL = "sim_telarray output"
 _REDUCED_EVENT_DATA_LABEL = "reduced event data"
 _SIMTELARRAY_HISTOGRAM_LABEL = "sim_telarray histogram"
+_ENERGY_MIDPOINT_LABEL = "Energy midpoint (GeV)"
 _BYTE_PLOT_COLUMNS = frozenset(
     {
         "peak_rss_bytes",
@@ -44,7 +48,7 @@ _BYTE_PLOT_COLUMNS = frozenset(
 _logger = logging.getLogger(__name__)
 
 
-def plot(rows, output_path, figure_format=None):
+def plot(rows, output_path, figure_format=None, report_mode="diagnostic"):
     """Write resource plots versus energy.
 
     Parameters
@@ -71,8 +75,14 @@ def plot(rows, output_path, figure_format=None):
     plots show candidate-to-baseline ratios for matching primary, site, layout,
     and model-version configurations.
     """
+    if report_mode not in {"compact", "diagnostic", "none"}:
+        raise ValueError(f"Unsupported report mode: {report_mode}")
     rows = list(rows)
     output_path = Path(output_path)
+    if report_mode == "none":
+        return []
+    if report_mode == "compact":
+        return _write_compact_report(rows, output_path)
     plots = (
         ("wall_time_seconds", "Wall time (s/run)", "resource_wall_time_run", None),
         ("cpu_time_seconds", "CPU time (s/run)", "resource_cpu_time_run", None),
@@ -176,6 +186,11 @@ def plot(rows, output_path, figure_format=None):
             "sim_telarray",
         ),
     )
+    return _write_diagnostic_plots(rows, output_path, figure_format, plots)
+
+
+def _write_diagnostic_plots(rows, output_path, figure_format, plots):
+    """Write detailed absolute and ratio figures for the configured resource metrics."""
     output_files = []
     for column, label, filename, required_role in plots:
         available = [
@@ -194,51 +209,108 @@ def plot(rows, output_path, figure_format=None):
         zenith_colors = _zenith_colors(zenith_values)
         for role in sorted({row["role"] for row in available}):
             role_rows = [row for row in available if row["role"] == role]
-            fig, axis = plt.subplots(figsize=(8, 5))
-            _plot_role(
-                axis,
-                role_rows,
-                column,
-                zenith_colors,
-                value_scale=value_scale,
+            output_files.append(
+                _write_resource_role_plot(
+                    role_rows,
+                    output_path,
+                    column,
+                    filename,
+                    plot_label,
+                    value_scale,
+                    zenith_colors,
+                    role,
+                    figure_format,
+                )
             )
+            ratio_output = _write_resource_ratio_plot(
+                role_rows,
+                output_path,
+                column,
+                filename,
+                plot_label,
+                zenith_colors,
+                role,
+                figure_format,
+            )
+            if ratio_output is not None:
+                output_files.append(ratio_output)
+    return output_files
+
+
+def _write_resource_role_plot(
+    rows, output_path, column, filename, plot_label, value_scale, zenith_colors, role, figure_format
+):
+    """Write one absolute resource plot for a process role."""
+    fig, axis = plt.subplots(figsize=(8, 5))
+    _plot_role(axis, rows, column, zenith_colors, value_scale=value_scale)
+    axis.set_xscale("log")
+    axis.set_yscale(_resource_y_scale(rows, column))
+    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
+    axis.set_ylabel(plot_label)
+    axis.set_title(f"{plot_label}: {role}")
+    axis.grid(alpha=0.25)
+    axis.legend()
+    output_file = output_path / f"{filename}_{role}"
+    save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
+    return output_file
+
+
+def _write_resource_ratio_plot(
+    rows, output_path, column, filename, plot_label, zenith_colors, role, figure_format
+):
+    """Write a candidate-to-baseline ratio plot when both roles have valid data."""
+    labels = _comparison_display_labels(rows)
+    ratio_series = _ratio_series(rows, column) if {"baseline", "candidate"} <= set(labels) else {}
+    if not ratio_series:
+        return None
+    fig, axis = plt.subplots(figsize=(8, 5))
+    _plot_ratio(axis, ratio_series, role, zenith_colors)
+    ratio_label = f"{labels['candidate']} / {labels['baseline']}"
+    _warn_on_large_changes(ratio_series, plot_label, role, ratio_label)
+    axis.set_xscale("log")
+    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
+    axis.set_ylabel(ratio_label)
+    axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
+    axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
+    axis.grid(alpha=0.25)
+    axis.legend()
+    output_file = output_path / f"{filename}_ratio_{role}"
+    save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
+    return output_file
+
+
+def _write_compact_report(rows, output_path):
+    """Write a short multipage resource report without diagnostic image files."""
+    output_file = output_path / "resources-report.pdf"
+    selected = (
+        ("wall_time_seconds_per_event", "Wall time (s/event)"),
+        ("cpu_time_seconds_per_event", "CPU time (s/event)"),
+        ("peak_rss_bytes", "Peak RSS (bytes)"),
+        ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
+    )
+    figures = []
+    for column, label in selected:
+        available = [row for row in rows if row.get(column) is not None]
+        if not available:
+            continue
+        roles = sorted({row["role"] for row in available})
+        fig, axes = plt.subplots(1, len(roles), figsize=(9, 5), squeeze=False)
+        for role, axis in zip(roles, axes[0]):
+            role_rows = [row for row in available if row["role"] == role]
+            zeniths = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in role_rows})
+            _plot_role(axis, role_rows, column, _zenith_colors(zeniths))
             axis.set_xscale("log")
             axis.set_yscale(_resource_y_scale(role_rows, column))
-            axis.set_xlabel("Energy midpoint (GeV)")
-            axis.set_ylabel(plot_label)
-            axis.set_title(f"{plot_label}: {role}")
+            axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
+            axis.set_ylabel(label)
+            axis.set_title(role)
             axis.grid(alpha=0.25)
-            axis.legend()
-            output_file = output_path / f"{filename}_{role}"
-            save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
-            output_files.append(output_file)
-            comparison_labels = _comparison_display_labels(role_rows)
-            if set(comparison_labels) >= {"baseline", "candidate"}:
-                ratio_series = _ratio_series(role_rows, column)
-                if ratio_series:
-                    ratio_fig, ratio_axis = plt.subplots(figsize=(8, 5))
-                    _plot_ratio(ratio_axis, ratio_series, role, zenith_colors)
-                    ratio_axis.set_xscale("log")
-                    ratio_axis.set_xlabel("Energy midpoint (GeV)")
-                    baseline_label = comparison_labels["baseline"]
-                    candidate_label = comparison_labels["candidate"]
-                    ratio_label = f"{candidate_label} / {baseline_label}"
-                    _warn_on_large_changes(ratio_series, plot_label, role, ratio_label)
-                    ratio_axis.set_ylabel(ratio_label)
-                    ratio_axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
-                    ratio_axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
-                    ratio_axis.grid(alpha=0.25)
-                    ratio_axis.legend()
-                    ratio_output_file = output_path / f"{filename}_ratio_{role}"
-                    save_figure(
-                        ratio_fig,
-                        ratio_output_file,
-                        figure_format=figure_format,
-                        dpi=300,
-                        close=True,
-                    )
-                    output_files.append(ratio_output_file)
-    return output_files
+            axis.legend(fontsize=6)
+        fig.suptitle(label)
+        fig.tight_layout()
+        figures.append(fig)
+    save_figures_to_single_document(figures, output_file, close=True)
+    return [output_file]
 
 
 def _resource_y_scale(rows, column):
@@ -450,7 +522,8 @@ def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
     )
     role = rows[0]["role"]
     show_production_labels = any(row.get("production_label") for row in rows)
-    has_baseline = "baseline" in {_comparison_role(row) for row in rows}
+    comparison_roles = {_comparison_role(row) for row in rows}
+    is_comparison = {"baseline", "candidate"} <= comparison_roles
     seen_series = set()
     for series_index, (production, version, production_id, zenith) in enumerate(labels):
         series_rows = [
@@ -467,9 +540,11 @@ def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
         color = zenith_colors[zenith]
         series_key = (production, zenith)
         comparison_role = _comparison_role(series_rows[0])
-        if series_key in seen_series or (has_baseline and comparison_role != "baseline"):
+        if series_key in seen_series:
             legend_label = "_nolegend_"
-        elif has_baseline:
+        elif is_comparison:
+            legend_label = f"{production}: za={zenith:g} deg"
+        elif "baseline" in comparison_roles:
             legend_label = f"za={zenith:g} deg"
         elif show_production_labels:
             legend_label = f"{production}: za={zenith:g} deg"
@@ -485,6 +560,7 @@ def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
             legend_label,
             series_index,
             value_scale,
+            comparison_role,
         )
 
 
@@ -497,6 +573,7 @@ def _plot_averages(
     legend_label,
     series_index=0,
     value_scale=1.0,
+    comparison_role=None,
 ):
     """Overlay one mean and RMS error bar for each energy in a series."""
     grouped = {}
@@ -518,7 +595,9 @@ def _plot_averages(
         color=color,
         markerfacecolor=color,
         markeredgecolor="black",
-        linestyle=("-", "--", ":", "-.")[series_index % 4],
+        linestyle={"baseline": "-", "candidate": "--"}.get(
+            comparison_role, ("-", "--", ":", "-.")[series_index % 4]
+        ),
         markersize=8,
         capsize=3,
         linewidth=1.0,

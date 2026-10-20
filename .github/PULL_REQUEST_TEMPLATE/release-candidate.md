@@ -14,8 +14,8 @@ If test resources must be updated:
 - [ ] Update its workflow configuration to use the release-candidate `simtools-prod` image, including the required image variant and tag.
 - [ ] Generate the new resources with `simtools-resources-test-generate` and commit them to `simtools-tests`.
 - [ ] Run unit and integration tests with the new resources using
-      `--simtools_tests_path /full/path/to/simtools-tests/simtools-tests` and
-      `--simtools_tests_resource_version <version>`.
+      `--simtools_tests_path /full/path/to/simtools-tests/simtools-tests` after
+      updating `resource-version` in `dependency_versions.yml`.
 
 ## Release Preparation Checklist
 
