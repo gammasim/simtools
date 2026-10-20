@@ -12,13 +12,15 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
+AZIMUTH_ANGLE_COLUMN = "azimuth_angle"
+ZENITH_ANGLE_COLUMN = "zenith_angle"
 PLOT_VALUE_KEYS = tuple(
     key
     for key in JOB_GRID_SCHEMA.column_units
     if key
     not in (
-        "azimuth_angle",
-        "zenith_angle",
+        AZIMUTH_ANGLE_COLUMN,
+        ZENITH_ANGLE_COLUMN,
         "ha",
         "dec",
         "view_cone_min",
@@ -28,8 +30,6 @@ PLOT_VALUE_KEYS = tuple(
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
-AZIMUTH_ANGLE_COLUMN = "azimuth_angle"
-ZENITH_ANGLE_COLUMN = "zenith_angle"
 SHOWERS_PER_RUN_COLUMN = "showers_per_run"
 TOTAL_SHOWERS_LABEL = "Total showers per pointing"
 
@@ -185,9 +185,12 @@ class ProductionGridPlotter:
         """
         azimuth = self._extract_first_available_quantity_value(
             point,
-            ("azimuth_angle",),
+            (AZIMUTH_ANGLE_COLUMN,),
         )
-        zenith = self._extract_first_available_quantity_value(point, ("zenith_angle",))
+        zenith = self._extract_first_available_quantity_value(
+            point,
+            (ZENITH_ANGLE_COLUMN,),
+        )
         hour_angle = self._extract_quantity_value(point, "ha")
         declination = self._extract_quantity_value(point, "dec")
         value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
@@ -737,22 +740,24 @@ class ProductionGridPlotter:
         single_run_points = [
             (zenith, azimuth, showers[0]) for (azimuth, zenith), showers in grouped_rows.items()
         ]
-        lower_azimuth = azimuth_center - azimuth_width / 2
-        upper_azimuth = azimuth_center + azimuth_width / 2
         selected_points = [
-            point for point in total_points if lower_azimuth <= point[1] < upper_azimuth
+            point
+            for point in total_points
+            if self._circular_azimuth_difference_degrees(point[1], azimuth_center)
+            <= azimuth_width / 2
         ]
         if not selected_points:
             logger.warning(
-                "No shower statistics in azimuth interval %s to %s deg",
-                lower_azimuth,
-                upper_azimuth,
+                "No shower statistics within %s deg of azimuth %s deg",
+                azimuth_width / 2,
+                azimuth_center,
             )
         else:
             self._plot_shower_statistics(
                 selected_points,
                 f"showers_vs_zenith_az{azimuth_center:g}_width{azimuth_width:g}deg",
-                f"Total showers per pointing, azimuth {lower_azimuth:g} to {upper_azimuth:g} deg",
+                f"Total showers per pointing, azimuth {azimuth_center:g} +/- "
+                f"{azimuth_width / 2:g} deg",
                 TOTAL_SHOWERS_LABEL,
             )
 

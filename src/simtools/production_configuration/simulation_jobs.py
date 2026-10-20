@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 
 TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT = 20
 MAX_SHOWERS_PER_RUN_ARGUMENT = "max_showers_per_run"
+NUMBER_OF_RUNS_ARGUMENT = "number_of_runs"
+TOTAL_SHOWERS_ARGUMENT = "total_showers"
 
 _GRID_AXES = [
     "primary",
@@ -772,7 +774,7 @@ def _resolve_shower_params(args_dict):
         raise ValueError("showers_per_run is required unless max_showers_per_run is configured.")
     showers_per_run_power_law = args_dict.get("showers_per_run_power_law")
     showers_per_run_scaling = args_dict.get("showers_per_run_scaling", "fixed")
-    total_showers = args_dict.get("total_showers")
+    total_showers = args_dict.get(TOTAL_SHOWERS_ARGUMENT)
     total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
 
     if showers_per_run_power_law is not None:
@@ -886,7 +888,8 @@ def _compute_per_point_runs(
     if max_showers_per_run is not None:
         if max_showers_per_run < 1:
             raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
-        per_point_number_of_runs = int(np.ceil(effective_total_showers / max_showers_per_run))
+        showers_per_run_limit = min(selected_showers_per_run, max_showers_per_run)
+        per_point_number_of_runs = int(np.ceil(effective_total_showers / showers_per_run_limit))
         selected_showers_per_run = int(np.ceil(effective_total_showers / per_point_number_of_runs))
         return per_point_number_of_runs, selected_showers_per_run
     number_of_full_runs, remainder_showers = divmod(
@@ -1061,7 +1064,7 @@ def _log_generated_row_summary(rows):
     )
     logger.info(
         "Total showers for the entire production: %d.",
-        summary["total_showers"],
+        summary[TOTAL_SHOWERS_ARGUMENT],
     )
 
 
@@ -1228,7 +1231,7 @@ def build_simulation_jobs(args_dict):
     }
     energy_max_scaling = _resolve_energy_max_scaling(args_dict)
 
-    if total_showers is not None and args_dict.get("number_of_runs") is not None:
+    if total_showers is not None and args_dict.get(NUMBER_OF_RUNS_ARGUMENT) is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
     if args_dict.get(MAX_SHOWERS_PER_RUN_ARGUMENT) is not None and total_showers is None:
         raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} requires total_showers.")
@@ -1238,7 +1241,7 @@ def build_simulation_jobs(args_dict):
     ):
         raise ValueError(f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer.")
 
-    number_of_runs = int(args_dict.get("number_of_runs") or 1)
+    number_of_runs = int(args_dict.get(NUMBER_OF_RUNS_ARGUMENT) or 1)
     run_number = int(args_dict.get("run_number") or 1)
 
     core_scatter = args_dict["core_scatter"]

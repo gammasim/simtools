@@ -8,6 +8,9 @@ from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 from simtools.production_configuration.simulation_jobs import (
+    MAX_SHOWERS_PER_RUN_ARGUMENT,
+    NUMBER_OF_RUNS_ARGUMENT,
+    TOTAL_SHOWERS_ARGUMENT,
     _build_rows_for_point,
     _clip_energy_range_from_threshold,
     _clip_energy_range_to_configured_bounds,
@@ -41,13 +44,16 @@ from simtools.production_configuration.simulation_jobs import (
     scale_energy_max_for_zenith_angle,
 )
 
+ZENITH_ANGLE_KEY = "zenith_angle"
+COSINE_ZENITH_SCALING = "cosine_zenith"
+
 
 def _base_simulation_jobs_args():
     return {
         "site": "North",
         "primary": ["gamma"],
         "azimuth_angle": [180 * u.deg],
-        "zenith_angle": [20 * u.deg],
+        ZENITH_ANGLE_KEY: [20 * u.deg],
         "model_version": ["6.3.0"],
         "corsika_le_interaction": "urqmd",
         "corsika_he_interaction": "epos",
@@ -55,7 +61,7 @@ def _base_simulation_jobs_args():
         "core_scatter": [10, 200 * u.m],
         "view_cone": [0 * u.deg, 5 * u.deg],
         "showers_per_run": 5,
-        "number_of_runs": 1,
+        NUMBER_OF_RUNS_ARGUMENT: 1,
         "run_number": 11,
         "array_layout_name": "alpha",
     }
@@ -69,7 +75,7 @@ def _two_model_versions_grid_axes():
     return {
         "model_version": ["6.3.0", "7.0.0"],
         "azimuth_angle": [0 * u.deg],
-        "zenith_angle": [20 * u.deg],
+        ZENITH_ANGLE_KEY: [20 * u.deg],
     }
 
 
@@ -102,7 +108,7 @@ def test_build_axes_dict_from_cli_args_builds_horizontal_grid():
     )
 
     assert "azimuth" in axes
-    assert "zenith_angle" in axes
+    assert ZENITH_ANGLE_KEY in axes
     assert "ha" not in axes
     assert "dec" not in axes
 
@@ -121,7 +127,7 @@ def test_build_axes_dict_from_cli_args_accepts_compact_axis_definitions():
     assert axes == {
         "offset": {"range": [0.0, 10.0], "binning": 2, "scaling": "linear", "units": "deg"},
         "azimuth": {"range": [310.0, 20.0], "binning": 3, "scaling": "linear", "units": "deg"},
-        "zenith_angle": {
+        ZENITH_ANGLE_KEY: {
             "range": [30.0, 40.0],
             "binning": 2,
             "scaling": "linear",
@@ -143,7 +149,7 @@ def test_build_axes_dict_from_cli_args_derives_horizontal_binning_from_density()
     )
 
     assert axes["azimuth"]["binning"] == 41
-    assert axes["zenith_angle"]["binning"] == 10
+    assert axes[ZENITH_ANGLE_KEY]["binning"] == 10
 
 
 def test_build_axes_dict_from_cli_args_accepts_density_with_unit():
@@ -209,7 +215,7 @@ def test_build_axes_dict_from_cli_args_keeps_horizontal_constraints_in_hadec_mod
 
     assert "ha" in axes
     assert "dec" in axes
-    assert "zenith_angle" not in axes
+    assert ZENITH_ANGLE_KEY not in axes
     assert "azimuth" not in axes
     assert axes["ha"]["local_zenith_range"] == pytest.approx([0.0, 70.0])
     assert axes["ha"]["local_azimuth_range"] == pytest.approx([300.0, 60.0])
@@ -241,7 +247,7 @@ def test_build_axes_dict_from_cli_args_accepts_config_wrapped_axis_strings():
     )
 
     assert axes["azimuth"]["range"] == [310.0, 20.0]
-    assert axes["zenith_angle"]["binning"] == 2
+    assert axes[ZENITH_ANGLE_KEY]["binning"] == 2
 
 
 def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
@@ -258,7 +264,7 @@ def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
     )
 
     assert axes["azimuth"]["range"] == [310.0, 20.0]
-    assert axes["zenith_angle"]["binning"] == 2
+    assert axes[ZENITH_ANGLE_KEY]["binning"] == 2
     assert axes["offset"]["range"] == [0.0, 10.0]
 
 
@@ -417,7 +423,7 @@ def test_build_production_grid_engine_resolves_layout_name(
                 "scaling": "linear",
                 "units": "deg",
             },
-            "zenith_angle": {
+            ZENITH_ANGLE_KEY: {
                 "range": [30.0, 40.0],
                 "binning": 2,
                 "scaling": "linear",
@@ -485,7 +491,7 @@ def test_normalize_grid_axes_applies_defaults():
         {
             "primary": "gamma",
             "azimuth_angle": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
+            ZENITH_ANGLE_KEY: 20 * u.deg,
             "model_version": "7.0.0",
         }
     )
@@ -704,17 +710,19 @@ def test_calculate_zenith_scaled_showers_per_run_returns_baseline_for_fixed_mode
 
 def test_calculate_zenith_scaled_showers_per_run_scales_with_cosine():
     expected = int(np.ceil(1000 * np.round(np.cos(np.radians(60)), decimals=12)))
-    assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "cosine_zenith") == expected
+    assert (
+        calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, COSINE_ZENITH_SCALING) == expected
+    )
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baseline():
     with pytest.raises(ValueError, match="positive integer"):
-        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, "cosine_zenith")
+        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, COSINE_ZENITH_SCALING)
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_at_zenith_90():
     with pytest.raises(ValueError, match="at least 1"):
-        calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, "cosine_zenith")
+        calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, COSINE_ZENITH_SCALING)
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_for_invalid_mode():
@@ -886,15 +894,15 @@ def test_resolve_shower_params_accepts_showers_per_run_scaling():
     ) = _resolve_shower_params(
         {
             "showers_per_run": 5,
-            "showers_per_run_scaling": "cosine_zenith",
+            "showers_per_run_scaling": COSINE_ZENITH_SCALING,
         }
     )
-    assert showers_per_run_scaling == "cosine_zenith"
+    assert showers_per_run_scaling == COSINE_ZENITH_SCALING
 
 
 def test_build_rows_for_point_skips_energy_ranges_below_threshold():
     rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 40 * u.GeV), (50 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=45 * u.GeV,
         showers_per_run=5,
@@ -914,7 +922,7 @@ def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
     caplog.set_level("WARNING")
 
     rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
@@ -932,7 +940,7 @@ def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
 
 def test_build_rows_for_point_uses_equal_runs_below_maximum():
     rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
@@ -947,11 +955,29 @@ def test_build_rows_for_point_uses_equal_runs_below_maximum():
     assert [row["showers_per_run"] for row in rows] == [834, 834, 834]
 
 
+def test_build_rows_for_point_preserves_zenith_scaling_with_showers_cap():
+    rows = _build_rows_for_point(
+        point_base={ZENITH_ANGLE_KEY: 60 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
+        lower_energy_threshold=None,
+        showers_per_run=1000,
+        showers_per_run_power_law=(1.0, 100 * u.GeV),
+        showers_per_run_scaling=COSINE_ZENITH_SCALING,
+        number_of_runs=1,
+        total_showers=2500,
+        total_showers_scaling="fixed",
+        run_number=1,
+        max_showers_per_run=1000,
+    )
+
+    assert [row["showers_per_run"] for row in rows] == [250] * 10
+
+
 def test_build_rows_for_point_caps_total_showers_rounding_warnings(caplog):
     caplog.set_level("WARNING")
 
     _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)] * 4,
         lower_energy_threshold=None,
         showers_per_run=1000,
@@ -984,7 +1010,7 @@ def test_build_rows_for_point_caps_total_showers_rounding_warnings(caplog):
 
 def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
     rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
+        point_base={ZENITH_ANGLE_KEY: 60 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=200,
@@ -1100,7 +1126,7 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
             "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
+            ZENITH_ANGLE_KEY: 20 * u.deg,
             "ha": 123 * u.deg,
             "dec": -45 * u.deg,
             "lower_energy_limit": 40 * u.GeV,
@@ -1109,7 +1135,7 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
         }
     )
     args_dict = _base_simulation_jobs_args()
-    args_dict["number_of_runs"] = 2
+    args_dict[NUMBER_OF_RUNS_ARGUMENT] = 2
     rows = build_simulation_jobs(args_dict)
 
     assert [row["run_number"] for row in rows] == [11, 12]
@@ -1129,7 +1155,7 @@ def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
             "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
+            ZENITH_ANGLE_KEY: 20 * u.deg,
             "lower_energy_limit": 40 * u.GeV,
             "upper_radius_limit": 100 * u.m,
             "viewcone_radius": 2 * u.deg,
@@ -1149,7 +1175,7 @@ def test_build_simulation_jobs_propagates_explicit_hadronic_transition_energy(
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
             "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
+            ZENITH_ANGLE_KEY: 20 * u.deg,
             "lower_energy_limit": 40 * u.GeV,
             "upper_radius_limit": 100 * u.m,
             "viewcone_radius": 2 * u.deg,
@@ -1169,10 +1195,35 @@ def test_build_simulation_jobs_raises_for_total_showers_and_number_of_runs(
 ):
     mock_generate_observation_grids_per_layout.return_value = ({"alpha": []}, {"6.3.0": "alpha"})
     args_dict = _base_simulation_jobs_args()
-    args_dict["number_of_runs"] = 2
-    args_dict["total_showers"] = 100
+    args_dict[NUMBER_OF_RUNS_ARGUMENT] = 2
+    args_dict[TOTAL_SHOWERS_ARGUMENT] = 100
 
     with pytest.raises(ValueError, match="total_showers and number_of_runs"):
+        build_simulation_jobs(args_dict)
+
+
+def test_build_simulation_jobs_requires_total_showers_for_maximum():
+    args_dict = _base_simulation_jobs_args()
+    args_dict[MAX_SHOWERS_PER_RUN_ARGUMENT] = 1000
+
+    with pytest.raises(
+        ValueError,
+        match=f"{MAX_SHOWERS_PER_RUN_ARGUMENT} requires {TOTAL_SHOWERS_ARGUMENT}",
+    ):
+        build_simulation_jobs(args_dict)
+
+
+@pytest.mark.parametrize("maximum", [0, -1])
+def test_build_simulation_jobs_rejects_non_positive_maximum(maximum):
+    args_dict = _base_simulation_jobs_args()
+    args_dict[TOTAL_SHOWERS_ARGUMENT] = 2500
+    args_dict[NUMBER_OF_RUNS_ARGUMENT] = None
+    args_dict[MAX_SHOWERS_PER_RUN_ARGUMENT] = maximum
+
+    with pytest.raises(
+        ValueError,
+        match=f"{MAX_SHOWERS_PER_RUN_ARGUMENT} must be a positive integer",
+    ):
         build_simulation_jobs(args_dict)
 
 
@@ -1272,7 +1323,7 @@ def test_scale_total_showers_raises_for_unknown_mode():
 
 def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
     rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        point_base={"primary": "gamma", ZENITH_ANGLE_KEY: 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,

@@ -226,6 +226,24 @@ def test_plot_shower_statistics_requires_positive_azimuth_width(tmp_test_directo
         plotter.plot_shower_statistics_vs_zenith(azimuth_width=0)
 
 
+def test_plot_shower_statistics_azimuth_interval_wraps_at_zero(tmp_test_directory):
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_showers_wrap.ecsv",
+        [
+            {"azimuth_angle": 359.0, "zenith_angle": 20.0, "showers_per_run": 100},
+            {"azimuth_angle": 1.0, "zenith_angle": 20.0, "showers_per_run": 100},
+            {"azimuth_angle": 2.0, "zenith_angle": 20.0, "showers_per_run": 100},
+        ],
+    )
+    output_path = Path(tmp_test_directory) / "output"
+    plotter = _create_plotter(grid_file=grid_file, output_path=output_path)
+
+    plotter.plot_shower_statistics_vs_zenith(azimuth_center=0.0, azimuth_width=2.0)
+
+    assert (output_path / "showers_vs_zenith_az0_width2deg.png").exists()
+
+
 def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory):
     """Write the sky projection plot with both Alt/Az and HA/Dec data."""
     grid_file = _write_grid_file(
