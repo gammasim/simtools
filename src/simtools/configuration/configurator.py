@@ -147,8 +147,21 @@ class Configurator:
             array_element = self.config.get(argument_name)
             if array_element is not None:
                 array_elements.append(array_element)
+        for layout in gen.ensure_list(self.config.get("array_layout_name") or []):
+            try:
+                array_elements.append(names.validate_array_element_name(layout))
+            except ValueError:
+                continue
         for array_element in array_elements:
+            self._validate_array_element_site(array_element, site)
+
+    def _validate_array_element_site(self, array_element, site):
+        """Report invalid array elements and site mismatches as parser errors."""
+        try:
             element_sites = names.get_site_from_array_element_name(array_element)
+        except ValueError as exc:
+            self.parser.error(str(exc))
+        else:
             if site not in gen.ensure_list(element_sites):
                 self.parser.error(
                     f"array element {array_element} belongs to site {element_sites}, "
