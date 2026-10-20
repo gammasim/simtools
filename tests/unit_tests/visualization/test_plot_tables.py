@@ -12,6 +12,10 @@ from astropy.table import Table
 from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.visualization import plot_tables
 
+PLOT_INTERSECTION_PROTON_CURVE = (
+    "simtools.visualization.plot_tables._plot_intersection_proton_curve"
+)
+
 
 @mock.patch("simtools.visualization.plot_tables.visualize")
 @mock.patch("simtools.visualization.plot_tables.read_table_data")
@@ -613,7 +617,7 @@ def test_resolve_plot_output_path_file_and_directory(tmp_path):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
-@mock.patch("simtools.visualization.plot_tables._plot_intersection_proton_curve")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -806,6 +810,7 @@ def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -815,6 +820,7 @@ def test_plot_bias_curves_with_trigger_threshold(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -838,6 +844,7 @@ def test_plot_bias_curves_with_trigger_threshold(
         trigger_threshold,
     )
 
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_axis.axvline.assert_called_once()
     call_kwargs = mock_axis.axvline.call_args[1]
     assert call_kwargs["x"] == pytest.approx(trigger_threshold)
@@ -848,6 +855,7 @@ def test_plot_bias_curves_with_trigger_threshold(
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -857,6 +865,7 @@ def test_plot_bias_curves_without_trigger_threshold(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -878,6 +887,7 @@ def test_plot_bias_curves_without_trigger_threshold(
         trigger_threshold=None,  # No threshold provided
     )
 
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_axis.axvline.assert_not_called()
 
 

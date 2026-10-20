@@ -10,6 +10,8 @@ from astropy.table import Table
 
 from simtools.simtel import bias_curve_generator
 
+PARAMETER_NAME = "parameter_name"
+
 
 def _base_args(tmp_path):
     return {
@@ -427,7 +429,7 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         # Verify the model parameter was written with correct values
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["parameter_name"] == "dsum_threshold"
+        assert call_kwargs[PARAMETER_NAME] == "dsum_threshold"
         assert call_kwargs["value"] == 250  # int for DigitalSum
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
@@ -435,8 +437,14 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         assert call_kwargs["check_for_existing_parameter"] is False
 
 
-def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
-    """Test that asum_threshold is used when default_trigger is AnalogSum."""
+@pytest.mark.parametrize(
+    ("default_trigger", PARAMETER_NAME),
+    [("AnalogSum", "asum_threshold"), ("Majority", "discriminator_threshold")],
+)
+def test_export_trigger_threshold_in_millivolts(
+    tmp_test_directory, default_trigger, parameter_name
+):
+    """Export rounded floating-point thresholds for AnalogSum and Majority."""
     args = {
         "telescope": "LSTN-01",
         "site": "North",
@@ -445,23 +453,24 @@ def test_export_trigger_threshold_uses_asum_for_analog_sum(tmp_path):
     }
 
     with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+        mock_io.return_value.get_output_directory.return_value = tmp_test_directory
 
         with patch(
             "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
         ) as mock_write:
             with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
                 mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "AnalogSum"
+                mock_model.get_parameter_value.return_value = default_trigger
                 mock_tel.return_value = mock_model
 
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.5)
+                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.567)
 
-        # Verify the model parameter was written with correct values for AnalogSum
+        # Verify the parameter, unit, type, and rounding for each trigger.
         mock_write.assert_called_once()
         call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["parameter_name"] == "asum_threshold"
-        assert call_kwargs["value"] == pytest.approx(250.5, rel=0.01)  # Float for AnalogSum
+        assert call_kwargs[PARAMETER_NAME] == parameter_name
+        assert isinstance(call_kwargs["value"], float)
+        assert call_kwargs["value"] == pytest.approx(250.57, abs=1e-9)
         assert call_kwargs["instrument"] == "LSTN-01"
         assert call_kwargs["parameter_version"] == "1.0.0"
         assert call_kwargs["unit"] == "mV"
