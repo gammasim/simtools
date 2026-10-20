@@ -404,20 +404,13 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
             raise ValueError("At least two finite positive rates per curve are required.")
         fits.append(fit)
 
-    nsb_thresholds, nsb_fit = fits[0]
-    proton_thresholds, proton_fit = fits[1]
+    _, nsb_fit = fits[0]
+    _, proton_fit = fits[1]
     slope_difference = nsb_fit[0] - proton_fit[0]
     if np.isclose(slope_difference, 0):
         raise ValueError("Could not find intersection point between parallel fitted curves.")
 
     trigger_threshold = (proton_fit[1] - nsb_fit[1]) / slope_difference
-    lower = max(min(nsb_thresholds), min(proton_thresholds))
-    upper = min(max(nsb_thresholds), max(proton_thresholds))
-    if not lower <= trigger_threshold <= upper:
-        raise ValueError(
-            "Could not find intersection point between NSB and scaled proton fitted curves "
-            "within their shared threshold range."
-        )
     _logger.info(f"Calculated trigger threshold: {trigger_threshold}")
     return float(trigger_threshold)
 

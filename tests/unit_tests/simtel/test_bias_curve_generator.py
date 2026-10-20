@@ -716,8 +716,12 @@ def test_group_proton_files_preserves_decimal_thresholds(tmp_test_directory):
     )
 
 
-def test_trigger_threshold_rejects_intersection_outside_data_range():
-    nsb = {7: {"rate_hz": 1000}, 8: {"rate_hz": 100}}
-    proton = {7: {"rate_hz": 1}, 8: {"rate_hz": 1}}
-    with pytest.raises(ValueError, match="shared threshold range"):
-        bias_curve_generator._calculate_trigger_threshold({}, nsb, proton)
+def test_trigger_threshold_extrapolates_intersection_outside_data_range():
+    nsb = {220: {"rate_hz": 1000}, 230: {"rate_hz": 100}}
+    proton_rate = 10 / (1.35 * bias_curve_generator.plot_tables.PROTON_INTERSECTION_FRACTION)
+    proton = {220: {"rate_hz": proton_rate}, 230: {"rate_hz": proton_rate}}
+
+    threshold = bias_curve_generator._calculate_trigger_threshold({}, nsb, proton)
+
+    assert threshold == pytest.approx(240)
+    assert threshold > 230
