@@ -37,10 +37,27 @@ numeric values do not produce a matched simulation, and dividing by the number o
 does not provide a general conversion.
 
 For a matched comparison, determine the expected camera illumination for the chosen source,
-wavelength, pulse, and telescope, then derive and validate the direct per-pixel setting using signal
-distributions and per-pixel means and variances. The conversion is setup-specific; do not infer a
-general factor by forcing signal plots to agree. See `issue #2015
-<https://github.com/gammasim/simtools/issues/2015>`_.
+wavelength, pulse, and telescope, then derive the direct per-pixel setting. Validate it with signal
+distributions and a separate per-pixel mean and variance analysis; the comparison below summarizes
+signals across pixels and events.
+
+**Comparing signal outputs**
+
+Compare the sim_telarray files with ``simtools-compare-productions`` in signal mode. Quote file
+patterns so the application can expand them:
+
+.. code-block:: console
+
+    simtools-compare-productions \
+        --comparison_level signal \
+        --production direct_injection "/path/to/direct/*.simtel.zst" \
+        --production full_simulation "/path/to/full/*.simtel.zst" \
+        --telescope_name LSTN-01 \
+        --output_path flasher-comparison
+
+The ``signals.png`` plot compares integrated-signal distributions across pixels and events, with
+each production's mean shown in the legend. It does not match pixels between the two files. See
+:doc:`simtools-compare-productions` for comparison options and outputs.
 
 **Example Usage**
 
