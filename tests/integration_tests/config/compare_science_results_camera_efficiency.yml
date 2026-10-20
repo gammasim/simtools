@@ -15,9 +15,7 @@ applications:
     - path_descriptor: output_path
       file: science-comparison.json
     - path_descriptor: output_path
-      file: science-comparison.png
-    - path_descriptor: output_path
-      file: science-comparison.pdf
+      file: report.pdf
   test_name: camera_efficiency_artifacts
 schema_name: application_workflow.metaschema
 schema_version: 0.6.0

@@ -100,14 +100,40 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
+Camera-efficiency site definitions can list several telescopes in `camera_telescopes`. The baseline,
+candidate, and comparison workflows then process the list in one campaign command. Each telescope's
+simulation output and manifest are stored below its external baseline or candidate directory.
+The combined `report.pdf` and `science-comparison.json` are published to
+`reports/<site>/compare.camera_efficiency/` in the release directory in the `simtools-tests`
+repository. Validator outputs are not published there. Execution logs and effective workflows
+remain below `$SIMTOOLS_SCIENCE_TESTS_ROOT/<candidate>/work/science-tests/`.
+
+Configure the baseline, candidate, and analysis images in the context. The baseline validator uses
+the filesystem model directory below the baseline root; the candidate uses the model source from
+the context. The analysis image must contain `simtools-compare-science-results` from the checkout
+being evaluated. For example, after setting the site's telescope list:
+
+```yaml
+camera_telescopes: [LSTN-01, LSTN-02]
+```
+
+select the baseline, candidate, and comparison tests together to run them in dependency order:
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml --site north \
+  --test camera_efficiency.baseline --test camera_efficiency.candidate \
+  --test compare.camera_efficiency
+```
+
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
 Warnings do not qualify a release; every required test must pass.
 Missing configured comparison metrics produce warnings; duplicate measurements are errors.
 All acceptance deviations are collected in a small `acceptance.md` report linked from the
 release summary, with PDF page links where available. Complete scalar results remain in CSV.
-Reports and the release summary are written under `reports/`; production data remains at the external
-candidate path.
+The release summary and small acceptance reports are written under `reports/`; production data and
+science-test artifacts remain under the external candidate or baseline paths.
 Summary generation does not scan candidate or baseline data. If those files change outside the
 runner, rerun the affected tests to refresh their results.
 

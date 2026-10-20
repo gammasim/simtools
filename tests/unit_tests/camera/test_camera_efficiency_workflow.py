@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -65,6 +66,8 @@ def test_run_camera_efficiency_reuses_models_and_exports_products(tmp_test_direc
 
     assert result["summary_path"] == output / "summary.yml"
     assert result["results"] == {"shower": {"value": 1}, "nsb": {"value": 1}, "muon": {"value": 1}}
+    manifest = json.loads(result["manifest_path"].read_text(encoding="utf-8"))
+    assert manifest["software"]["simtools_version"] == workflow.__version__
     assert len([call for call in calls if call[0] == "simulate"]) == 3
     assert ("nsb",) in calls
     assert ("muon",) in calls

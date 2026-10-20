@@ -13,6 +13,8 @@ from simtools.science_tests.camera_efficiency_results import (
     write_json,
 )
 from simtools.utils import names
+from simtools.version import __version__
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 
 def run_camera_efficiency(
@@ -48,7 +50,7 @@ def run_camera_efficiency(
         site_model = site_model or initialized_site
 
     results = {}
-    generated = []
+    wavelength_tables = []
     for efficiency_type in ("Shower", "NSB", "Muon"):
         efficiency = CameraEfficiency(
             label=label,
@@ -60,8 +62,9 @@ def run_camera_efficiency(
         efficiency.simulate()
         efficiency.analyze(force=True)
         results |= efficiency.results_summary()
-        efficiency.plot_efficiency(save_fig=True)
-        generated.append(_result_path(efficiency))
+        figure = efficiency.plot_efficiency(save_fig=True)
+        plt.close(figure)
+        wavelength_tables.append(_result_path(efficiency))
         if efficiency.efficiency_type == "nsb":
             efficiency.dump_nsb_pixel_rate()
         if efficiency.efficiency_type == "muon":
@@ -78,29 +81,29 @@ def run_camera_efficiency(
     )
     logger.info("Writing results summary to %s", summary_path)
     write_data_to_file(results, summary_path, unique_lines=True)
-    generated.extend(
+    plot_paths = sorted(
         path for path in output_path.iterdir() if path.suffix.lower() in {".png", ".pdf", ".svg"}
     )
-    wavelength_tables = [path for path in generated if path.suffix.lower() == ".ecsv"]
-    plot_paths = [path for path in generated if path.suffix.lower() in {".png", ".pdf", ".svg"}]
-    artifact_paths = {"summary": summary_path}
-    if wavelength_tables:
-        artifact_paths["wavelength_table"] = wavelength_tables[0]
-    artifact_paths["wavelength_tables"] = wavelength_tables
-    artifact_paths["native_plots"] = plot_paths
+    artifact_paths = {
+        "summary": summary_path,
+        "wavelength_table": wavelength_tables[0],
+        "wavelength_tables": wavelength_tables,
+        "native_plots": plot_paths,
+    }
     manifest = create_manifest(
         normalize_summary(results),
         config,
         output_path,
         artifacts=artifact_paths,
         image_identity=os.environ.get("SIMTOOLS_IMAGE_ID"),
+        simtools_version=__version__,
     )
     manifest_path = output_path / "camera_efficiency_manifest.json"
     write_json(manifest_path, manifest)
     return {
         "results": results,
         "summary_path": summary_path,
-        "artifacts": sorted(set(generated)),
+        "artifacts": sorted(set(wavelength_tables + plot_paths)),
         "manifest_path": manifest_path,
     }
 

@@ -4,6 +4,8 @@
 import math
 from pathlib import Path
 
+from matplotlib.backends.backend_pdf import PdfPages
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.science_tests.camera_efficiency_results import (
@@ -13,38 +15,74 @@ from simtools.science_tests.camera_efficiency_results import (
 )
 from simtools.visualization.plot_science_comparison import (
     plot_comparison,
-    plot_wavelength_comparison,
+    plot_efficiency_component_comparisons,
+    plot_wavelength_comparisons,
 )
+
+_TOLERANCE_ARGUMENT = "tolerance"
+_TELESCOPES_ARGUMENT = "telescopes"
+_COMPARE_BY_ARGUMENT = "compare_by"
+_REQUIRE_WAVELENGTH_TABLES_ARGUMENT = "require_wavelength_tables"
+_APPEND_ACTION = "append"
+_BASELINE_ARGUMENT = "baseline_path"
+_CANDIDATE_ARGUMENT = "candidate_path"
+_BASELINE_LABEL_ARGUMENT = "baseline_label"
+_CANDIDATE_LABEL_ARGUMENT = "candidate_label"
+_BASELINE_KEY = "baseline"
+_CANDIDATE_KEY = "candidate"
+_LABEL_KEY = "label"
+_CASE_KEY = "case"
+_SOFTWARE_KEY = "software"
+_TELESCOPE_KEY = "telescope"
+_CHANGES_KEY = "changes"
+_DIAGNOSTICS_KEY = "diagnostics"
+_PLOTS_KEY = "plots"
+_STATUS_KEY = "status"
+_INCOMPLETE_STATUS = "incomplete"
+_SCHEMA_VERSION_KEY = "schema_version"
+_REPORT_PDF = "report.pdf"
+_WAVELENGTH_TABLE_SUFFIX = "_wavelength_table"
+_LEGACY_WAVELENGTH_TABLE_KEY = "wavelength_table"
+_SHOWER_CHANNEL = "shower"
+_WAVELENGTH_CHANNELS = (_SHOWER_CHANNEL, "muon", "nsb")
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "baseline_path",
+        _BASELINE_ARGUMENT,
         type=str,
         required=True,
         help="Camera-efficiency manifest, legacy summary, or artifact directory for baseline.",
     ),
     cli.ArgumentDefinition(
-        "candidate_path",
+        _CANDIDATE_ARGUMENT,
         type=str,
         required=True,
         help="Camera-efficiency manifest, legacy summary, or artifact directory for candidate.",
     ),
-    cli.ArgumentDefinition("baseline_label", type=str, default="baseline"),
-    cli.ArgumentDefinition("candidate_label", type=str, default="candidate"),
+    cli.ArgumentDefinition(_BASELINE_LABEL_ARGUMENT, type=str, default=_BASELINE_KEY),
+    cli.ArgumentDefinition(_CANDIDATE_LABEL_ARGUMENT, type=str, default=_CANDIDATE_KEY),
     cli.ArgumentDefinition(
-        "compare_by",
-        action="append",
+        _TELESCOPES_ARGUMENT,
+        type=str,
+        nargs="+",
+        default=[],
+        help="Restrict a directory comparison to these telescope names.",
+    ),
+    cli.ArgumentDefinition(
+        _COMPARE_BY_ARGUMENT,
+        action=_APPEND_ACTION,
         default=[],
         help="Exact manifest field path allowed to differ; repeat for each field.",
     ),
     cli.ArgumentDefinition(
-        "tolerance",
-        action="append",
+        _TOLERANCE_ARGUMENT,
+        action=_APPEND_ACTION,
+        nargs="+",
         default=[],
-        help="Advisory relative tolerance as METRIC=VALUE; repeat for each metric.",
+        help="Advisory relative tolerances as METRIC=VALUE; provide one or more values.",
     ),
     cli.ArgumentDefinition(
-        "require_wavelength_tables",
+        _REQUIRE_WAVELENGTH_TABLES_ARGUMENT,
         action="store_true",
         help="Require wavelength ECSV tables for both cases.",
     ),
@@ -65,42 +103,19 @@ def main():
     args = context.args
     output = context.io_handler.get_output_directory()
     try:
-        baseline = load_manifest(args["baseline_path"])
-        candidate = load_manifest(args["candidate_path"])
-        tolerances = _parse_tolerances(args.get("tolerance", []))
-        comparison = compare_manifests(baseline, candidate, args.get("compare_by"), tolerances)
-        plots, diagnostics = plot_comparison(
-            comparison["changes"],
-            {
-                "label": args["baseline_label"],
-                "case": baseline.get("case", {}),
-                "software": baseline.get("software", {}),
-            },
-            {
-                "label": args["candidate_label"],
-                "case": candidate.get("case", {}),
-                "software": candidate.get("software", {}),
-            },
-            output,
-        )
-        comparison["plots"].update(plots)
-        comparison["diagnostics"].extend(diagnostics)
-        _plot_wavelengths(
-            baseline,
-            candidate,
-            comparison,
-            output,
-            args.get("require_wavelength_tables", False),
-        )
+        baselines = _load_manifest_set(args[_BASELINE_ARGUMENT])
+        candidates = _load_manifest_set(args[_CANDIDATE_ARGUMENT])
+        tolerances = _parse_tolerances(args.get(_TOLERANCE_ARGUMENT, []))
+        comparison = _compare_manifest_sets(baselines, candidates, args, tolerances, output)
     except (OSError, ValueError) as exc:
         comparison = {
-            "schema_version": 1,
-            "status": "incomplete",
-            "baseline": {"label": args["baseline_label"]},
-            "candidate": {"label": args["candidate_label"]},
-            "changes": {},
-            "diagnostics": [str(exc)],
-            "plots": {},
+            _SCHEMA_VERSION_KEY: 1,
+            _STATUS_KEY: _INCOMPLETE_STATUS,
+            _BASELINE_KEY: {_LABEL_KEY: args[_BASELINE_LABEL_ARGUMENT]},
+            _CANDIDATE_KEY: {_LABEL_KEY: args[_CANDIDATE_LABEL_ARGUMENT]},
+            _CHANGES_KEY: {},
+            _DIAGNOSTICS_KEY: [str(exc)],
+            _PLOTS_KEY: {},
         }
     write_json(output / "science-comparison.json", comparison)
 
@@ -108,7 +123,10 @@ def main():
 def _parse_tolerances(values):
     """Parse repeated METRIC=VALUE advisory tolerances."""
     tolerances = {}
-    for item in values:
+    flattened_values = [
+        item for value in values for item in (value if isinstance(value, list) else [value])
+    ]
+    for item in flattened_values:
         metric, separator, raw_value = item.partition("=")
         if not separator or metric not in {
             "reflectivity",
@@ -127,31 +145,157 @@ def _parse_tolerances(values):
     return tolerances
 
 
-def _plot_wavelengths(baseline, candidate, comparison, output, required):
-    """Plot wavelength tables when both manifests reference them."""
-    baseline_path = _artifact_path(baseline, "wavelength_table")
-    candidate_path = _artifact_path(candidate, "wavelength_table")
-    if baseline_path is None or candidate_path is None:
-        if required:
-            comparison["status"] = "incomplete"
-            comparison["diagnostics"].append("Required wavelength tables are missing.")
-        else:
-            comparison["diagnostics"].append(
-                "Wavelength comparison unavailable for legacy artifact."
+def _load_manifest_set(path):
+    """Load a single manifest or all telescope manifests below a result directory."""
+    root = Path(path)
+    direct = root if root.is_file() else root / "camera_efficiency_manifest.json"
+    manifests = ([direct] if direct.is_file() else []) + sorted(
+        root.glob("*/camera_efficiency_manifest.json")
+    )
+    if not manifests:
+        manifests = [root]
+    loaded = {}
+    timestamps = {}
+    for manifest_path in manifests:
+        manifest = load_manifest(manifest_path)
+        telescope = manifest.get(_CASE_KEY, {}).get(_TELESCOPE_KEY) or manifest_path.parent.name
+        if not isinstance(telescope, str):
+            raise ValueError(f"Manifest telescope must be a name: {manifest_path}")
+        timestamp = manifest_path.stat().st_mtime_ns
+        if telescope not in timestamps or timestamp >= timestamps[telescope]:
+            loaded[telescope] = manifest
+            timestamps[telescope] = timestamp
+    return loaded
+
+
+def _compare_manifest_sets(baselines, candidates, args, tolerances, output):
+    """Compare every telescope pair and write all plot pages into one PDF."""
+    telescopes = args.get(_TELESCOPES_ARGUMENT) or sorted(set(baselines) | set(candidates))
+    missing = sorted(set(telescopes) - set(baselines) | set(telescopes) - set(candidates))
+    if missing:
+        raise ValueError(f"Baseline and candidate telescope sets differ: {', '.join(missing)}.")
+    comparisons = {}
+    with PdfPages(output / _REPORT_PDF) as report:
+        for telescope in telescopes:
+            baseline, candidate = baselines[telescope], candidates[telescope]
+            current = compare_manifests(
+                baseline, candidate, args.get(_COMPARE_BY_ARGUMENT), tolerances
             )
-        return
-    path, diagnostic = plot_wavelength_comparison(baseline_path, candidate_path, output)
-    if diagnostic:
-        comparison["diagnostics"].append(diagnostic)
-        if required:
-            comparison["status"] = "incomplete"
+            if current[_CHANGES_KEY]:
+                plot_comparison(
+                    current[_CHANGES_KEY],
+                    _plot_identity(baseline, args[_BASELINE_LABEL_ARGUMENT]),
+                    _plot_identity(candidate, args[_CANDIDATE_LABEL_ARGUMENT]),
+                    output,
+                    figure_format=(),
+                    pdf_pages=report,
+                )
+            _plot_tables(baseline, candidate, current, output, args, report)
+            comparisons[telescope] = current
+    if len(comparisons) == 1:
+        result = next(iter(comparisons.values()))
     else:
-        comparison["plots"]["wavelength"] = path
+        statuses = {item[_STATUS_KEY] for item in comparisons.values()}
+        result = {
+            _SCHEMA_VERSION_KEY: 1,
+            _STATUS_KEY: _INCOMPLETE_STATUS if _INCOMPLETE_STATUS in statuses else "complete",
+            _BASELINE_KEY: {_LABEL_KEY: args[_BASELINE_LABEL_ARGUMENT]},
+            _CANDIDATE_KEY: {_LABEL_KEY: args[_CANDIDATE_LABEL_ARGUMENT]},
+            _CHANGES_KEY: {},
+            _DIAGNOSTICS_KEY: [
+                f"{telescope}: {diagnostic}"
+                for telescope, item in comparisons.items()
+                for diagnostic in item[_DIAGNOSTICS_KEY]
+            ],
+            "comparisons": comparisons,
+            _PLOTS_KEY: {},
+        }
+    result[_PLOTS_KEY]["report"] = str(output / _REPORT_PDF)
+    return result
+
+
+def _plot_identity(manifest, label):
+    """Return the provenance shown in a comparison plot."""
+    return {
+        _LABEL_KEY: label,
+        _CASE_KEY: manifest.get(_CASE_KEY, {}),
+        _SOFTWARE_KEY: manifest.get(_SOFTWARE_KEY, {}),
+    }
+
+
+def _plot_tables(baseline, candidate, comparison, output, args, report):
+    """Add spectrum and component pages using the same artifacts and plot labels."""
+    baseline_paths = _wavelength_paths(baseline)
+    candidate_paths = _wavelength_paths(candidate)
+    required = args.get(_REQUIRE_WAVELENGTH_TABLES_ARGUMENT, False)
+    missing = [
+        channel
+        for channel in _WAVELENGTH_CHANNELS
+        if not baseline_paths[channel] or not candidate_paths[channel]
+    ]
+    if missing:
+        requirement = "Required " if required else ""
+        _record_plot_diagnostic(
+            comparison,
+            f"{requirement}wavelength tables are missing for: {', '.join(missing)}.",
+            required,
+        )
+    plots = []
+    if len(missing) < len(_WAVELENGTH_CHANNELS):
+        plots.append((plot_wavelength_comparisons, baseline_paths, candidate_paths))
+    if _SHOWER_CHANNEL not in missing:
+        plots.append(
+            (
+                plot_efficiency_component_comparisons,
+                baseline_paths[_SHOWER_CHANNEL],
+                candidate_paths[_SHOWER_CHANNEL],
+            )
+        )
+    for plot, before, after in plots:
+        try:
+            _, diagnostic = plot(
+                before,
+                after,
+                output,
+                baseline_label=args[_BASELINE_LABEL_ARGUMENT],
+                candidate_label=args[_CANDIDATE_LABEL_ARGUMENT],
+                pdf_pages=report,
+                telescope=baseline.get(_CASE_KEY, {}).get(_TELESCOPE_KEY),
+            )
+        except (OSError, ValueError) as exc:
+            diagnostic = f"Cannot plot efficiency tables: {exc}"
+        _record_plot_diagnostic(comparison, diagnostic, required)
+
+
+def _record_plot_diagnostic(comparison, diagnostic, required):
+    """Record table problems without discarding the scalar comparison."""
+    if diagnostic:
+        comparison[_DIAGNOSTICS_KEY].append(diagnostic)
+        if required:
+            comparison[_STATUS_KEY] = _INCOMPLETE_STATUS
+
+
+def _wavelength_paths(manifest):
+    """Resolve spectrum tables, including the legacy shower-table artifact."""
+    paths = {
+        channel: _artifact_path(manifest, f"{channel}{_WAVELENGTH_TABLE_SUFFIX}")
+        for channel in _WAVELENGTH_CHANNELS
+    }
+    if not paths[_SHOWER_CHANNEL]:
+        paths[_SHOWER_CHANNEL] = _artifact_path(manifest, _LEGACY_WAVELENGTH_TABLE_KEY)
+    return paths
 
 
 def _artifact_path(manifest, name):
     """Resolve a declared result artifact relative to its source manifest."""
-    artifact = manifest.get("artifacts", {}).get(name)
+    artifacts = manifest.get("artifacts", {})
+    artifact = artifacts.get(name)
+    if artifact is None and name.endswith(_WAVELENGTH_TABLE_SUFFIX):
+        channel = name.removesuffix(_WAVELENGTH_TABLE_SUFFIX)
+        artifact = next(
+            (path for path in artifacts.get("wavelength_tables", []) if channel in path.lower()),
+            None,
+        )
     root = manifest.get("_root")
     if artifact is None or root is None:
         return None

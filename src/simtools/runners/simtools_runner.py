@@ -24,9 +24,11 @@ from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
 logger = logging.getLogger(__name__)
+_SIMULATION_MODELS_PATH = "simulation_models_path"
+_SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 _MODEL_SOURCE_OPTIONS = (
-    "simulation_models_path",
-    "simulation_models_git_path",
+    _SIMULATION_MODELS_PATH,
+    _SIMULATION_MODELS_GIT_PATH,
     "simulation_models_git_revision",
 )
 
@@ -463,7 +465,11 @@ def _apply_model_source_options(application, configuration, source_options):
     """Apply inherited model-source options to applications that accept them."""
     if not _application_accepts_model_source_options(application, source_options):
         return
+    if configuration.get(_SIMULATION_MODELS_PATH):
+        return
     for key, value in source_options.items():
+        if key == _SIMULATION_MODELS_PATH and configuration.get(_SIMULATION_MODELS_GIT_PATH):
+            continue
         if configuration.get(key) is None:
             configuration[key] = value
 

@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import jsonschema
 import pytest
@@ -10,6 +11,15 @@ from simtools.science_tests import campaign as campaign_runner
 from simtools.science_tests import definitions as science_test_definitions
 from simtools.science_tests import execution as science_test_execution
 
+_COMPLETE_STATUS = "complete"
+_ENCODING = "utf-8"
+_VALIDATOR_FAILURE = "Validator failed"
+_RESULT_TYPE_KEY = "result_type"
+_CAMERA_RESULT_TYPE = "camera_efficiency"
+_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-camera-efficiency"
+_TELESCOPE_KEY = "telescope"
+_SECOND_TELESCOPE = "LSTN-02"
+
 _SCIENCE_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
 
 _PRODUCES_PRODUCTION = "produces_production"
@@ -17,6 +27,22 @@ _PRODUCES_PRODUCTION = "produces_production"
 _DEPENDS_ON = "depends_on"
 _HTCONDOR = "htcondor"
 _WORKFLOW_YML = "workflow.yml"
+_CAMERA_METRICS = (
+    "reflectivity",
+    "cam_eff",
+    "tel_eff",
+    "tot_sens",
+    "nsb_rate",
+    "nsb_ref",
+    "muon_frac",
+)
+_RUNTIME_IMAGE = "runtime.sif"
+_OLD_SIMTOOLS_VERSION = "0.37.0"
+_CURRENT_SIMTOOLS_VERSION = "0.38.1"
+_MISSING_DEPENDENCY_MANIFEST = "manifest missing"
+_CAMERA_MANIFEST_NAME = "camera_efficiency_manifest.json"
+_APPTAINER = "apptainer"
+_SIMTOOLS_PACKAGE = "simtools"
 
 _COLLECT = "collect"
 _COMPARE = "compare"
@@ -58,7 +84,7 @@ _STATUS_KEY = "status"
 
 def _write_yaml(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    path.write_text(yaml.safe_dump(data), encoding=_ENCODING)
 
 
 def test_new_derivations_must_validate_products_before_passing(tmp_test_directory, mocker):
@@ -142,7 +168,7 @@ def test_acceptance_limit_is_a_warning_after_completed_execution(campaign, succe
 
 def test_existing_submission_prevents_resubmission(tmp_test_directory):
     root = Path(tmp_test_directory)
-    (root / "submission.json").write_text("{}", encoding="utf-8")
+    (root / "submission.json").write_text("{}", encoding=_ENCODING)
     with pytest.raises(ValueError, match="Production submission blocked") as error:
         science_test_definitions._check_inputs(
             {_PRODUCES_PRODUCTION: True}, {_SCIENCE_CANDIDATE_SITE_PATH: str(root)}
@@ -195,11 +221,11 @@ def test_execution_log_is_recorded_only_for_current_execution(
     work = Path(tmp_test_directory) / "work"
     work.mkdir()
     log_path = work / science_test_definitions._EXECUTION_LOG_FILE_NAME
-    log_path.write_text("stale log", encoding="utf-8")
+    log_path.write_text("stale log", encoding=_ENCODING)
 
     def execute(_definition, args, _replacements):
         if writes_log:
-            log_path.write_text("current log", encoding="utf-8")
+            log_path.write_text("current log", encoding=_ENCODING)
         if raises:
             raise RuntimeError("execution failed")
         return {_STATUS_KEY: "pass", _EXECUTION: _COMPLETED}
@@ -280,6 +306,307 @@ def test_shared_runtime_environment(tmp_test_directory, present):
         }
     else:
         assert runtime is None
+
+
+def test_shared_runtime_environment_selects_role(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(
+        template / "run_time.yml",
+        {
+            "runtime_environment": {"image": "default.sif"},
+            "runtime_environments": {
+                "baseline": {"image": "baseline.sif"},
+                "candidate": {"image": "candidate.sif"},
+            },
+        },
+    )
+
+    assert science_test_definitions._shared_runtime_environment(template, {}, "baseline") == {
+        "image": "baseline.sif"
+    }
+
+
+def test_shared_runtime_environment_rejects_missing_role(tmp_test_directory):
+    template = Path(tmp_test_directory)
+    _write_yaml(
+        template / "run_time.yml",
+        {"runtime_environments": {"candidate": {"image": "candidate.sif"}}},
+    )
+
+    with pytest.raises(ValueError, match="No runtime environment configured"):
+        science_test_definitions._shared_runtime_environment(template, {}, "baseline")
+
+
+def test_collect_camera_efficiency_results_records_runtime(tmp_test_directory, monkeypatch):
+    image = Path(tmp_test_directory) / _RUNTIME_IMAGE
+    image.write_bytes(b"container image")
+    monkeypatch.setattr(
+        science_test_execution,
+        "_runtime_simtools_version",
+        lambda _runtime: _CURRENT_SIMTOOLS_VERSION,
+    )
+    output = Path(tmp_test_directory) / "camera"
+    output.mkdir()
+    (output / "camera_efficiency_summary_legacy.yml").write_text(
+        yaml.safe_dump(
+            {
+                "meta": {"tel": "MSTN-01", "model_version": "7.0.0"},
+                **{metric: {"value": 0.5} for metric in _CAMERA_METRICS},
+            }
+        ),
+        encoding=_ENCODING,
+    )
+    configuration = {
+        "output_path": str(output),
+        "site": "North",
+        _TELESCOPE_KEY: "MSTN-01",
+        "model_version": "7.0.0",
+        "zenith_angle": 0,
+        "azimuth_angle": 0,
+    }
+    args = {
+        "science_workflow": {
+            "applications": [
+                {
+                    "application": _CAMERA_VALIDATOR_APPLICATION,
+                    "configuration": configuration,
+                }
+            ]
+        },
+        "runtime_environment": {"image": str(image)},
+        "provenance_path": str(Path(tmp_test_directory) / "work" / "resolved.yml"),
+    }
+
+    science_test_execution._collect_camera_efficiency_results(args)
+
+    manifest_path = output / _CAMERA_MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text(encoding=_ENCODING))
+    assert manifest["status"] == _COMPLETE_STATUS
+    assert manifest["image"] == f"sha256:{science_test_execution.sha256_file(image)}"
+    assert manifest["software"]["simtools_version"] == _CURRENT_SIMTOOLS_VERSION
+    report_work = Path(args["provenance_path"]).parent
+    assert not (report_work / "camera-efficiency").exists()
+
+
+def test_execute_camera_workflow_collects_results_after_application(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        science_test_execution, "run_applications", lambda *_args, **_kwargs: calls.append("run")
+    )
+    monkeypatch.setattr(
+        science_test_execution,
+        "_collect_camera_efficiency_results",
+        lambda _args: calls.append("collect"),
+    )
+    monkeypatch.setattr(
+        science_test_execution,
+        "_evaluate_products",
+        lambda *_args: {"status": "pass"},
+    )
+
+    result = science_test_execution._execute_test_workflow(
+        {_RESULT_TYPE_KEY: _CAMERA_RESULT_TYPE},
+        {"science_workflow": {}, "ignore_runtime_environment": True},
+        {},
+    )
+
+    assert result == {"status": "pass"}
+    assert calls == ["run", "collect"]
+
+
+def test_collect_camera_efficiency_requires_validator_application():
+    with pytest.raises(ValueError, match="requires its validation application"):
+        science_test_execution._collect_camera_efficiency_results(
+            {"science_workflow": {"applications": []}}
+        )
+
+
+def test_camera_workflow_expands_one_application_per_telescope():
+    workflow = {
+        "applications": [
+            {
+                "application": _CAMERA_VALIDATOR_APPLICATION,
+                "configuration": {"output_path": "/results/camera_efficiency"},
+            },
+            {
+                "application": "simtools-compare-science-results",
+                "configuration": {},
+            },
+        ]
+    }
+
+    science_test_execution._expand_camera_efficiency_telescopes(
+        workflow, {"camera_telescopes": ["LSTN-01", _SECOND_TELESCOPE]}, {}
+    )
+
+    applications = workflow["applications"]
+    validators = applications[:2]
+    assert [item["configuration"][_TELESCOPE_KEY] for item in validators] == [
+        "LSTN-01",
+        _SECOND_TELESCOPE,
+    ]
+    assert [item["configuration"]["output_path"] for item in validators] == [
+        "/results/camera_efficiency/LSTN-01",
+        "/results/camera_efficiency/LSTN-02",
+    ]
+    assert applications[-1]["configuration"]["telescopes"] == ["LSTN-01", _SECOND_TELESCOPE]
+
+
+def test_camera_workflow_keeps_single_legacy_output_path():
+    workflow = {
+        "applications": [
+            {
+                "application": _CAMERA_VALIDATOR_APPLICATION,
+                "configuration": {"output_path": "/results/camera_efficiency"},
+            }
+        ]
+    }
+
+    science_test_execution._expand_camera_efficiency_telescopes(
+        workflow, {}, {"__SCIENCE_CAMERA_TELESCOPE__": _SECOND_TELESCOPE}
+    )
+
+    configuration = workflow["applications"][0]["configuration"]
+    assert configuration[_TELESCOPE_KEY] == _SECOND_TELESCOPE
+    assert configuration["output_path"] == "/results/camera_efficiency"
+
+
+def test_comparison_workflow_receives_site_telescope_list():
+    workflow = {
+        "applications": [
+            {
+                "application": "simtools-compare-science-results",
+                "configuration": {},
+            }
+        ]
+    }
+
+    science_test_execution._expand_camera_efficiency_telescopes(
+        workflow, {"camera_telescopes": ["LSTN-01", _SECOND_TELESCOPE]}, {}
+    )
+
+    assert workflow["applications"][0]["configuration"]["telescopes"] == [
+        "LSTN-01",
+        _SECOND_TELESCOPE,
+    ]
+
+
+def test_camera_workflow_rejects_invalid_telescope_list():
+    workflow = {"applications": [{"application": _CAMERA_VALIDATOR_APPLICATION}]}
+
+    with pytest.raises(ValueError, match="non-empty camera_telescopes list"):
+        science_test_execution._expand_camera_efficiency_telescopes(
+            workflow, {"camera_telescopes": []}, {}
+        )
+
+
+def test_runtime_simtools_version_uses_container_manifest(monkeypatch):
+    monkeypatch.setattr(
+        science_test_execution,
+        "read_runtime_environment",
+        lambda _runtime: [_APPTAINER, "exec", _RUNTIME_IMAGE],
+    )
+    monkeypatch.setattr(
+        science_test_execution.dependencies,
+        "get_dependency_manifest",
+        lambda _command: {_SIMTOOLS_PACKAGE: {"version": _CURRENT_SIMTOOLS_VERSION}},
+    )
+
+    assert (
+        science_test_execution._runtime_simtools_version({"image": _RUNTIME_IMAGE})
+        == _CURRENT_SIMTOOLS_VERSION
+    )
+
+
+def test_runtime_simtools_version_probes_old_image(monkeypatch):
+    def missing_manifest(_command):
+        raise FileNotFoundError(_MISSING_DEPENDENCY_MANIFEST)
+
+    monkeypatch.setattr(
+        science_test_execution,
+        "read_runtime_environment",
+        lambda _runtime: [_APPTAINER, "exec", _RUNTIME_IMAGE],
+    )
+    monkeypatch.setattr(
+        science_test_execution.dependencies,
+        "get_dependency_manifest",
+        missing_manifest,
+    )
+    monkeypatch.setattr(
+        science_test_execution.subprocess,
+        "run",
+        lambda command, **_kwargs: science_test_execution.subprocess.CompletedProcess(
+            command, 0, stdout=f"{_OLD_SIMTOOLS_VERSION}\n", stderr=""
+        ),
+    )
+
+    assert (
+        science_test_execution._runtime_simtools_version({"image": _RUNTIME_IMAGE})
+        == _OLD_SIMTOOLS_VERSION
+    )
+
+
+def test_runtime_simtools_version_uses_host_when_no_container(monkeypatch):
+    def missing_manifest(_command):
+        raise FileNotFoundError(_MISSING_DEPENDENCY_MANIFEST)
+
+    monkeypatch.setattr(
+        science_test_execution.dependencies, "get_dependency_manifest", missing_manifest
+    )
+
+    assert (
+        science_test_execution._runtime_simtools_version(None) == science_test_execution.__version__
+    )
+
+
+def test_runtime_simtools_version_returns_none_when_old_image_cannot_be_probed(monkeypatch):
+    def missing_manifest(_command):
+        raise FileNotFoundError(_MISSING_DEPENDENCY_MANIFEST)
+
+    monkeypatch.setattr(
+        science_test_execution,
+        "read_runtime_environment",
+        lambda _runtime: [_APPTAINER, "exec", _RUNTIME_IMAGE],
+    )
+    monkeypatch.setattr(
+        science_test_execution.dependencies,
+        "get_dependency_manifest",
+        missing_manifest,
+    )
+    monkeypatch.setattr(
+        science_test_execution.subprocess,
+        "run",
+        lambda command, **_kwargs: science_test_execution.subprocess.CompletedProcess(
+            command, 1, stdout="", stderr="probe failed"
+        ),
+    )
+
+    assert science_test_execution._runtime_simtools_version({"image": _RUNTIME_IMAGE}) is None
+
+
+def test_runtime_simtools_version_accepts_legacy_manifest_value(monkeypatch):
+    monkeypatch.setattr(
+        science_test_execution,
+        "read_runtime_environment",
+        lambda _runtime: [_APPTAINER, "exec", _RUNTIME_IMAGE],
+    )
+    monkeypatch.setattr(
+        science_test_execution.dependencies,
+        "get_dependency_manifest",
+        lambda _command: {_SIMTOOLS_PACKAGE: _OLD_SIMTOOLS_VERSION},
+    )
+
+    assert (
+        science_test_execution._runtime_simtools_version({"image": _RUNTIME_IMAGE})
+        == _OLD_SIMTOOLS_VERSION
+    )
+
+
+def test_local_image_identity_returns_none_for_nonlocal_path(tmp_test_directory):
+    assert (
+        science_test_execution._local_image_identity(str(Path(tmp_test_directory) / "missing.sif"))
+        is None
+    )
 
 
 def test_shared_runtime_environment_invalid(tmp_test_directory):
@@ -557,7 +884,73 @@ def test_materialize_effective_workflow_serializes_model_paths(tmp_test_director
         ]
     }
     path = science_test_execution._materialize_effective_workflow(work, resolved)
-    recorded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    recorded = yaml.safe_load(path.read_text(encoding=_ENCODING))
     assert recorded[_APPLICATIONS_KEY][0][_CONFIGURATION_KEY][_SIMULATION_MODELS_PATH] == str(
         models
     )
+
+
+@pytest.mark.parametrize("manifest", [{}, {_SIMTOOLS_PACKAGE: {}}])
+def test_runtime_version_probes_image_when_manifest_has_no_version(monkeypatch, manifest):
+    monkeypatch.setattr(
+        science_test_execution, "read_runtime_environment", lambda _runtime: [_APPTAINER]
+    )
+    monkeypatch.setattr(
+        science_test_execution.dependencies, "get_dependency_manifest", lambda _command: manifest
+    )
+    monkeypatch.setattr(
+        science_test_execution.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=0, stdout=_CURRENT_SIMTOOLS_VERSION),
+    )
+
+    assert science_test_execution._runtime_simtools_version({"image": _RUNTIME_IMAGE}) == (
+        _CURRENT_SIMTOOLS_VERSION
+    )
+
+
+def test_science_comparison_labels_follow_release_definition():
+    workflow = {
+        _APPLICATIONS_KEY: [
+            {_APPLICATION_KEY: "simtools-compare-science-results", _CONFIGURATION_KEY: {}}
+        ]
+    }
+    science_test_execution._configure_comparison_applications(
+        workflow, {"baseline": "reference", "release_label": "candidate"}
+    )
+
+    assert workflow[_APPLICATIONS_KEY][0][_CONFIGURATION_KEY] == {
+        "baseline_label": "reference",
+        "candidate_label": "candidate",
+    }
+
+
+def test_failed_validator_invalidates_previous_manifest(tmp_test_directory, monkeypatch):
+    output = Path(tmp_test_directory)
+    manifest = output / _CAMERA_MANIFEST_NAME
+    manifest.write_text(json.dumps({_STATUS_KEY: _COMPLETE_STATUS}), encoding=_ENCODING)
+    args = {
+        _SCIENCE_WORKFLOW: {
+            _APPLICATIONS_KEY: [
+                {
+                    _APPLICATION_KEY: _CAMERA_VALIDATOR_APPLICATION,
+                    _CONFIGURATION_KEY: {
+                        _OUTPUT_PATH_KEY: str(output),
+                        _TELESCOPE_KEY: _SECOND_TELESCOPE,
+                    },
+                }
+            ]
+        }
+    }
+
+    def fail_validation(*_args, **_kwargs):
+        assert json.loads(manifest.read_text(encoding=_ENCODING))[_STATUS_KEY] == _INCOMPLETE
+        raise RuntimeError(_VALIDATOR_FAILURE)
+
+    monkeypatch.setattr(science_test_execution, "run_applications", fail_validation)
+    with pytest.raises(RuntimeError, match=_VALIDATOR_FAILURE):
+        science_test_execution._execute_test_workflow(
+            {_RESULT_TYPE_KEY: _CAMERA_RESULT_TYPE}, args, {}
+        )
+
+    assert json.loads(manifest.read_text(encoding=_ENCODING))[_STATUS_KEY] == _INCOMPLETE

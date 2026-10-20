@@ -3,6 +3,84 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/ScienceTestCatalogue'
 title: Science-test catalogue
 description: Test definitions and dependencies for science-test campaigns.
+schema_version: 0.2.0
+schema_name: science_tests/catalogue.schema
+type: object
+additionalProperties: false
+
+definitions:
+  TestDefinition:
+    type: object
+    additionalProperties: false
+    properties:
+      workflow:
+        type: string
+        minLength: 1
+      sites:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+      tier:
+        enum: [smoke, release-light, release-prod]
+      depends_on:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+      requires:
+        type: array
+        items:
+          type: string
+      produces_production:
+        type: boolean
+      affects_production:
+        type: boolean
+      collect_production:
+        type: boolean
+      requires_completed_production:
+        type: boolean
+      reviewed_grid:
+        type: string
+      derived_output:
+        type: string
+      acceptance_rule:
+        type: string
+      runtime_role:
+        type: string
+        minLength: 1
+      result_type:
+        enum: [camera_efficiency]
+      result_status_file:
+        type: string
+        minLength: 1
+      publish_report:
+        type: boolean
+      expected_pair_count:
+        type: integer
+        minimum: 1
+    required: [workflow, sites, tier]
+  ScienceTestCatalogue:
+    oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          tests:
+            type: object
+            minProperties: 1
+            additionalProperties:
+              $ref: '#/definitions/TestDefinition'
+        required: [tests]
+      - type: object
+        minProperties: 1
+        additionalProperties:
+          $ref: '#/definitions/TestDefinition'
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ScienceTestCatalogue'
+title: Science-test catalogue
+description: Test definitions and dependencies for science-test campaigns.
 schema_version: 0.1.0
 schema_name: science_tests/catalogue.schema
 type: object

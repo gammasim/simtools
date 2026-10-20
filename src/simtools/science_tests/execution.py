@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 
+from simtools import dependencies
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io.ascii_handler import to_builtin
@@ -25,7 +26,13 @@ from simtools.runners.simtools_runner import (
     _apply_execution_overrides,
     _get_explicit_env_file,
     prepare_workflow,
+    read_runtime_environment,
     run_applications,
+)
+from simtools.science_tests.camera_efficiency_results import (
+    collect_legacy_results,
+    sha256_file,
+    write_json,
 )
 from simtools.science_tests.definitions import (
     _EXECUTION_LOG_FILE_NAME,
@@ -47,8 +54,27 @@ from simtools.science_tests.reports import (
     _clear_test_directory,
     _write_test_report,
 )
+from simtools.utils import names
 from simtools.utils.general import get_uuid, replace_placeholders_recursively
 from simtools.version import __version__
+
+_STATUS_KEY = "status"
+_INCOMPLETE_STATUS = "incomplete"
+_SCHEMA_VERSION_KEY = "schema_version"
+_DIAGNOSTICS_KEY = "diagnostics"
+_TELESCOPE_KEY = "telescope"
+
+_MODEL_VERSION_KEY = "model_version"
+_IGNORE_RUNTIME_KEY = "ignore_runtime_environment"
+_SCIENCE_WORKFLOW_KEY = "science_workflow"
+_RUNTIME_ENVIRONMENT_KEY = "runtime_environment"
+_BASELINE_KEY = "baseline"
+_RELEASE_LABEL_KEY = "release_label"
+_GIT_MODELS_PATH_KEY = "simulation_models_git_path"
+_MODELS_PATH_KEY = "simulation_models_path"
+_MODELS_REVISION_KEY = "simulation_models_git_revision"
+_WRITE_INVENTORY_KEY = "write_inventory"
+_OUTPUT_PATH_KEY = "output_path"
 
 _SCIENCE_CANDIDATE_SITE_PATH = "__SCIENCE_CANDIDATE_SITE_PATH__"
 _APPLICATIONS_KEY = "applications"
@@ -58,6 +84,12 @@ _SCIENCE_OVERWRITE = "science_overwrite"
 _PRODUCES_PRODUCTION = "produces_production"
 _APPLICATION = "application"
 _CONFIGURATION = "configuration"
+_CAMERA_TELESCOPES_KEY = "camera_telescopes"
+_CAMERA_RESULT_TYPE = "camera_efficiency"
+_CAMERA_MANIFEST_FILE = "camera_efficiency_manifest.json"
+_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-camera-efficiency"
+_SCIENCE_COMPARISON_APPLICATION = "simtools-compare-science-results"
+_SIMTOOLS_KEY = "simtools"
 
 logger = logging.getLogger(__name__)
 
@@ -70,13 +102,15 @@ def _execute_selection(prepared, dry_run, run_id, application_args, catalogue):
             _log_test_execution(planned, "Planned")
             results.append(planned)
             continue
-        dependencies = _selected_ancestor_ids(planned, results, catalogue)
-        if any(r["id"] in dependencies and r["status"] not in {"pass", "warn"} for r in results):
-            status = _dependency_status(results, dependencies)
+        dependency_ids = _selected_ancestor_ids(planned, results, catalogue)
+        if any(
+            r["id"] in dependency_ids and r[_STATUS_KEY] not in {"pass", "warn"} for r in results
+        ):
+            status = _dependency_status(results, dependency_ids)
             results.append(
                 {
                     **planned,
-                    "status": status,
+                    _STATUS_KEY: status,
                     "execution": status,
                     "reason": "Dependency failed or is not yet complete.",
                 }
@@ -97,12 +131,12 @@ def _selected_ancestor_ids(planned, results, catalogue):
     return {f"{test_id}.{planned['site']}" for test_id in ancestors & selected}
 
 
-def _dependency_status(results, dependencies):
+def _dependency_status(results, dependency_ids):
     """Distinguish queued dependencies from failed dependencies."""
     if all(
-        r["status"] in {"pass", "warn", "submitted", "pending"}
+        r[_STATUS_KEY] in {"pass", "warn", "submitted", "pending"}
         for r in results
-        if r["id"] in dependencies
+        if r["id"] in dependency_ids
     ):
         return "pending"
     return "blocked"
@@ -140,12 +174,14 @@ def _run_test(
     work = Path(context["__SCIENCE_CANDIDATE_PATH__"]) / "work" / "science-tests" / site / test_id
     workflow = _resolve_workflow(template_dir, release_dir, definition["workflow"])
     replacements = _site_replacements(context, site, site_config, work)
-    if definition.get("model_version"):
-        replacements["__SCIENCE_MODEL_VERSION__"] = str(definition["model_version"])
+    if definition.get(_MODEL_VERSION_KEY):
+        replacements["__SCIENCE_MODEL_VERSION__"] = str(definition[_MODEL_VERSION_KEY])
     replacements["__CONFIG_DIRECTORY__"] = str(workflow.parent.resolve())
-    resolved = _resolved_test_workflow(template_dir, workflow, replacements, definition)
+    resolved = _resolved_test_workflow(
+        template_dir, workflow, replacements, definition, site_config
+    )
     args = {
-        "ignore_runtime_environment": False,
+        _IGNORE_RUNTIME_KEY: False,
         "ignore_existing_parameter_version": False,
         **(application_args or {}),
         "config_file": str(workflow),
@@ -159,16 +195,16 @@ def _run_test(
         {
             key: args[key]
             for key in (
-                "simulation_models_path",
-                "simulation_models_git_path",
-                "simulation_models_git_revision",
+                _MODELS_PATH_KEY,
+                _GIT_MODELS_PATH_KEY,
+                _MODELS_REVISION_KEY,
             )
             if args.get(key)
         },
         _get_explicit_env_file(args),
     )
-    args["science_workflow"] = resolved
-    args.setdefault("runtime_environment", resolved.get("runtime_environment"))
+    args[_SCIENCE_WORKFLOW_KEY] = resolved
+    args.setdefault(_RUNTIME_ENVIRONMENT_KEY, resolved.get(_RUNTIME_ENVIRONMENT_KEY))
     configurations, runtime, *_ = prepare_workflow(args, replacements=replacements)
 
     result = {
@@ -176,19 +212,19 @@ def _run_test(
         "test": test_id,
         "site": site,
         "workflow": _relative_path(workflow, template_dir),
-        "baseline": definition.get("baseline"),
-        "candidate": definition.get("release_label"),
+        _BASELINE_KEY: definition.get(_BASELINE_KEY),
+        "candidate": definition.get(_RELEASE_LABEL_KEY),
         "execution_provenance": str(work),
         "report": None,
         "run_id": run_id,
-        "runtime": _runtime_description(runtime, args["ignore_runtime_environment"]),
+        "runtime": _runtime_description(runtime, args[_IGNORE_RUNTIME_KEY]),
         "software": {
-            "simtools": __version__,
-            "simulation_models": (application_args or {}).get("simulation_models_git_revision"),
+            _SIMTOOLS_KEY: __version__,
+            "simulation_models": (application_args or {}).get(_MODELS_REVISION_KEY),
         },
         "output_paths": _test_output_paths(configurations, replacements),
         "execution": "planned" if dry_run else "completed",
-        "status": "planned" if dry_run else "pass",
+        _STATUS_KEY: "planned" if dry_run else "pass",
     }
     if definition.get(_PRODUCES_PRODUCTION):
         result["dependency_compatibility"] = _preview_production(
@@ -200,11 +236,17 @@ def _run_test(
     _execute_and_record_test(
         result, definition, replacements, args, run_id, work, report_root, resolved
     )
-    _write_test_report(work, report_root, release_dir, result)
+    _write_test_report(
+        work,
+        report_root,
+        release_dir,
+        result,
+        publish=definition.get("publish_report", True),
+    )
     logger.info(
         "%s: %s%s",
         result["id"],
-        result["status"],
+        result[_STATUS_KEY],
         f" - {result['reason']}" if result.get("reason") else "",
     )
     return result
@@ -226,9 +268,10 @@ def _preview_production(configurations, args, replacements, runtime):
     return _preview(selected, image)
 
 
-def _resolved_test_workflow(template_dir, workflow, replacements, definition):
+def _resolved_test_workflow(template_dir, workflow, replacements, definition, site_config=None):
     """Resolve, customize, and validate one workflow before it is prepared."""
     resolved = replace_placeholders_recursively(_load_yaml(workflow), replacements)
+    _expand_camera_efficiency_telescopes(resolved, site_config or {}, replacements)
     _add_shared_runtime(resolved, template_dir, replacements, definition)
     _configure_comparison_applications(resolved, definition)
     _disable_collection_inventory(resolved)
@@ -238,15 +281,60 @@ def _resolved_test_workflow(template_dir, workflow, replacements, definition):
     return resolved
 
 
+def _expand_camera_efficiency_telescopes(resolved, site_config, replacements):
+    """Create one isolated validator application for each configured telescope."""
+    applications = resolved.get(_APPLICATIONS_KEY, [])
+    expanded = []
+    for application in applications:
+        configuration = application.get(_CONFIGURATION, {})
+        if application.get(_APPLICATION) == _SCIENCE_COMPARISON_APPLICATION:
+            telescopes = site_config.get(_CAMERA_TELESCOPES_KEY)
+            if telescopes:
+                configuration["telescopes"] = telescopes
+        if application.get(_APPLICATION) != _CAMERA_VALIDATOR_APPLICATION:
+            expanded.append(application)
+            continue
+        telescopes = _camera_telescopes(site_config, replacements)
+        base_output = Path(configuration[_OUTPUT_PATH_KEY])
+        for telescope in telescopes:
+            selected = {**application, _CONFIGURATION: dict(configuration)}
+            selected_config = selected[_CONFIGURATION]
+            selected_config[_TELESCOPE_KEY] = telescope
+            if len(telescopes) > 1:
+                selected_config[_OUTPUT_PATH_KEY] = str(base_output / telescope)
+            expanded.append(selected)
+    resolved[_APPLICATIONS_KEY] = expanded
+
+
+def _camera_telescopes(site_config, replacements):
+    """Normalize the configured telescope list and reject duplicate output targets."""
+    telescopes = site_config.get(_CAMERA_TELESCOPES_KEY)
+    if telescopes is None:
+        telescope = replacements.get("__SCIENCE_CAMERA_TELESCOPE__")
+        telescopes = [telescope] if telescope else []
+    if (
+        not isinstance(telescopes, list)
+        or not telescopes
+        or any(not isinstance(telescope, str) or not telescope for telescope in telescopes)
+    ):
+        raise ValueError(
+            f"Camera-efficiency tests require a non-empty {_CAMERA_TELESCOPES_KEY} list."
+        )
+    telescopes = [names.validate_array_element_name(telescope) for telescope in telescopes]
+    if len(telescopes) != len(set(telescopes)):
+        raise ValueError("Camera-efficiency telescope names must be unique after normalization.")
+    return telescopes
+
+
 def _disable_collection_inventory(resolved):
     """Avoid a redundant checksum inventory for in-place science-test collection."""
     collection = resolved.get("collection")
     if isinstance(collection, dict):
-        collection["write_inventory"] = False
+        collection[_WRITE_INVENTORY_KEY] = False
     elif isinstance(collection, list):
         for entry in collection:
             if isinstance(entry, dict):
-                entry["write_inventory"] = False
+                entry[_WRITE_INVENTORY_KEY] = False
 
 
 def _add_shared_runtime(resolved, template_dir, replacements, definition):
@@ -254,10 +342,12 @@ def _add_shared_runtime(resolved, template_dir, replacements, definition):
     needs_runtime = not definition.get(_PRODUCES_PRODUCTION) and not definition.get(
         "collect_production"
     )
-    if needs_runtime and "runtime_environment" not in resolved:
-        runtime = _shared_runtime_environment(template_dir, replacements)
+    if needs_runtime and _RUNTIME_ENVIRONMENT_KEY not in resolved:
+        runtime = _shared_runtime_environment(
+            template_dir, replacements, definition.get("runtime_role")
+        )
         if runtime is not None:
-            resolved["runtime_environment"] = runtime
+            resolved[_RUNTIME_ENVIRONMENT_KEY] = runtime
 
 
 def _configure_comparison_applications(resolved, definition):
@@ -268,6 +358,8 @@ def _configure_comparison_applications(resolved, definition):
             configuration["report_mode"] = definition.get("report_mode", "compact")
             configuration.update(definition.get("comparison_parameters", {}))
             _set_event_comparison_labels(configuration, definition)
+        if application.get(_APPLICATION) == _SCIENCE_COMPARISON_APPLICATION:
+            _set_comparison_labels(configuration, definition)
         allowed = configuration.get("compare_by", [])
         if set(allowed) - set(definition.get("expected_changes", [])):
             raise ValueError(f"Undeclared expected comparison differences: {allowed}")
@@ -276,8 +368,13 @@ def _configure_comparison_applications(resolved, definition):
 def _set_event_comparison_labels(configuration, definition):
     """Use release identities in event-comparison legends."""
     if configuration.get("comparison_level") in {"events", "computing"}:
-        configuration["baseline_label"] = definition["baseline"]
-        configuration["candidate_label"] = definition["release_label"]
+        _set_comparison_labels(configuration, definition)
+
+
+def _set_comparison_labels(configuration, definition):
+    """Use the selected release labels consistently in every comparison."""
+    configuration["baseline_label"] = definition[_BASELINE_KEY]
+    configuration["candidate_label"] = definition[_RELEASE_LABEL_KEY]
 
 
 def _execute_and_record_test(
@@ -305,7 +402,7 @@ def _execute_and_record_test(
         subprocess.SubprocessError,
         JobExecutionError,
     ) as exc:
-        result.update(status="incomplete", execution="failed", error=str(exc))
+        result.update(status=_INCOMPLETE_STATUS, execution="failed", error=str(exc))
 
 
 def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
@@ -322,7 +419,7 @@ def _run_or_reuse_test(result, definition, replacements, args, work, resolved):
     args["config_file"] = str(_materialize_effective_workflow(work, resolved))
     try:
         result.update(_execute_test_workflow(definition, args, replacements))
-        if definition.get(_DERIVED_OUTPUT) and result.get("status") in {"pass", "warn"}:
+        if definition.get(_DERIVED_OUTPUT) and result.get(_STATUS_KEY) in {"pass", "warn"}:
             _validate_derived_workflow(resolved[_APPLICATIONS_KEY])
     finally:
         log_path = work / _EXECUTION_LOG_FILE_NAME
@@ -337,7 +434,7 @@ def _reuse_derived_product(definition, replacements, args):
     output = Path(replace_placeholders_recursively(definition[_DERIVED_OUTPUT], replacements))
     if not output.exists() or not any(output.iterdir()):
         return False
-    workflow = args["science_workflow"]
+    workflow = args[_SCIENCE_WORKFLOW_KEY]
     previous = Path(args["provenance_path"])
     try:
         if not previous.is_file():
@@ -393,7 +490,7 @@ def _materialize_effective_workflow(work, resolved):
 
 def _test_output_paths(configurations, replacements):
     """Use application output paths or the candidate path for native collection."""
-    paths = [str(config[_CONFIGURATION]["output_path"]) for config in configurations]
+    paths = [str(config[_CONFIGURATION][_OUTPUT_PATH_KEY]) for config in configurations]
     return list(dict.fromkeys(paths)) or [replacements[_SCIENCE_CANDIDATE_SITE_PATH]]
 
 
@@ -401,24 +498,105 @@ def _execute_test_workflow(definition, args, replacements):
     """Submit, collect, or execute a regular science workflow."""
     if definition.get("collect_production"):
         return _collect_production(definition, replacements)
+    camera_efficiency = definition.get("result_type") == _CAMERA_RESULT_TYPE
+    if camera_efficiency:
+        _invalidate_camera_efficiency_results(args)
     with _selected_model_source_environment(args):
         run_applications(args, replacements=replacements)
+    if camera_efficiency:
+        _collect_camera_efficiency_results(args)
     validated = _evaluate_products(definition, replacements)
     if definition.get(_PRODUCES_PRODUCTION):
         return {
-            "status": "submitted",
+            _STATUS_KEY: "submitted",
             "execution": "submitted",
             "reason": "Jobs submitted; run --test production.gamma.collect to collect results.",
         }
     return validated
 
 
+def _camera_validation_configurations(args):
+    """Return the effective configurations of this workflow's camera validators."""
+    return [
+        item.get(_CONFIGURATION, {})
+        for item in args[_SCIENCE_WORKFLOW_KEY].get(_APPLICATIONS_KEY, [])
+        if item.get(_APPLICATION) == _CAMERA_VALIDATOR_APPLICATION
+    ]
+
+
+def _invalidate_camera_efficiency_results(args):
+    """Mark previous evidence incomplete before any validator can overwrite its tables."""
+    for configuration in _camera_validation_configurations(args):
+        write_json(
+            Path(configuration[_OUTPUT_PATH_KEY]) / _CAMERA_MANIFEST_FILE,
+            {
+                _SCHEMA_VERSION_KEY: 1,
+                _STATUS_KEY: _INCOMPLETE_STATUS,
+                "case": {_TELESCOPE_KEY: configuration.get(_TELESCOPE_KEY)},
+                _DIAGNOSTICS_KEY: ["Camera-efficiency execution has not completed successfully."],
+            },
+        )
+
+
+def _collect_camera_efficiency_results(args):
+    """Normalize camera outputs and record the software and image that ran them."""
+    validations = _camera_validation_configurations(args)
+    if not validations:
+        raise ValueError("Camera-efficiency result type requires its validation application.")
+    runtime = None if args.get(_IGNORE_RUNTIME_KEY) else args.get(_RUNTIME_ENVIRONMENT_KEY)
+    image = runtime.get("image") if runtime else None
+    image_identity = _local_image_identity(image)
+    simtools_version = _runtime_simtools_version(runtime)
+    for configuration in validations:
+        output = Path(configuration[_OUTPUT_PATH_KEY])
+        manifest = collect_legacy_results(output, configuration, image_identity, simtools_version)
+        manifest_path = output / _CAMERA_MANIFEST_FILE
+        write_json(manifest_path, manifest)
+
+
+def _local_image_identity(image):
+    """Hash a local runtime image when its file is available to the host."""
+    if not image or not Path(image).is_file():
+        return None
+    return f"sha256:{sha256_file(image)}"
+
+
+def _runtime_simtools_version(runtime):
+    """Read the installed simtools version from the selected runtime manifest."""
+    runtime_command = read_runtime_environment(runtime) if runtime else None
+    if runtime_command is None:
+        return __version__
+    try:
+        manifest = dependencies.get_dependency_manifest(runtime_command)
+        software = manifest.get(_SIMTOOLS_KEY, {})
+        version = software.get("version") if isinstance(software, dict) else software
+        if version:
+            return version
+    except OSError, ValueError, subprocess.SubprocessError:
+        pass
+    result = subprocess.run(
+        [
+            *runtime_command,
+            "python",
+            "-c",
+            "from simtools.version import __version__; print(__version__)",
+        ],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if result.returncode == 0 and result.stdout.strip():
+        return result.stdout.strip()
+    logger.warning("Could not read simtools version from the selected runtime.")
+    return None
+
+
 @contextmanager
 def _selected_model_source_environment(args):
     """Keep an inactive model source from a parent .env out of child applications."""
-    if args.get("simulation_models_git_path"):
+    if args.get(_GIT_MODELS_PATH_KEY):
         inactive = "SIMTOOLS_SIMULATION_MODELS_PATH"
-    elif args.get("simulation_models_path"):
+    elif args.get(_MODELS_PATH_KEY):
         inactive = "SIMTOOLS_SIMULATION_MODELS_GIT_PATH"
     else:
         yield
@@ -447,7 +625,7 @@ def _collect_production(definition, replacements):
             pending = collect_submission(submission) is None or pending
     if pending:
         return {
-            "status": "pending",
+            _STATUS_KEY: "pending",
             "execution": "pending",
             "reason": "Production jobs are still queued; rerun collection after they finish.",
         }
