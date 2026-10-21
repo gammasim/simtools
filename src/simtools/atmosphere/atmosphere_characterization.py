@@ -80,7 +80,7 @@ def characterize_atmospheres(
     """
     if not atmospheres:
         raise ValueError("At least one atmosphere is required.")
-    if relative_difference_limit <= 0:
+    if not np.isfinite(relative_difference_limit) or relative_difference_limit <= 0:
         raise ValueError("Relative difference limit must be positive.")
     labels = [item[_LABEL] for item in atmospheres]
     if len(set(labels)) != len(labels):
