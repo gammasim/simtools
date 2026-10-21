@@ -6,7 +6,7 @@
    :exclude-members: main
 ```
 
-Compare exported camera-efficiency results without running a calculation. Each input may be a
+Compare exported telescope-throughput results without running a calculation. Each input may be a
 manifest, a legacy summary, or a directory containing one manifest per telescope. Use
 `--telescopes` to select telescope names from those directories.
 The JSON report records metric values, units, absolute and relative changes, compatibility
