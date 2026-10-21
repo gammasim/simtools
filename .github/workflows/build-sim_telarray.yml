@@ -131,6 +131,9 @@ jobs:
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/simtel-source.tar.gz" simtel-source.tar.gz
           docker cp "$container_id:/input/simtel-source.tar.gz.sha256" simtel-source.tar.gz.sha256
+          # Older snapshots record the archive path relative to the snapshot build context.
+          sed -i 's|  input/simtel-source\.tar\.gz$|  simtel-source.tar.gz|' \
+            simtel-source.tar.gz.sha256
           echo "Restored sim_telarray sources from $SOURCE_SNAPSHOT."
 
       - name: Prepare sim_telarray sources
