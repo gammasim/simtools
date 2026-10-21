@@ -270,7 +270,9 @@ class CameraEfficiency:
 
         summary = self.results_summary()
         self._logger.info(f"\n{summary}")
-        if self.efficiency_type == "shower" and {"cam_eff", "tot_sens"} <= summary.keys():
+        if self.efficiency_type == "shower" and all(
+            key in summary for key in ("cam_eff", "tot_sens")
+        ):
             camera_efficiency = summary["cam_eff"]["value"]
             self._logger.info(
                 "Photon detection efficiency (300-550 nm; weighted by Cherenkov spectrum): "

@@ -3,6 +3,7 @@
 from unittest import mock
 
 import matplotlib.patches as mpatches
+import pytest
 
 from simtools.visualization.camera_plot_utils import (
     add_pixel_legend,
@@ -11,6 +12,7 @@ from simtools.visualization.camera_plot_utils import (
     pixel_shape,
     setup_camera_axis_properties,
 )
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 
 def test_pixel_shape_hexagon():
@@ -113,3 +115,24 @@ def test_setup_camera_axis_properties_padding():
 
     ax.set_xlim.assert_called_once()
     ax.set_ylim.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("scale", "padding", "expected_x", "expected_y"),
+    [
+        (1, 1, (-2, 2), (-3, 3)),
+        (2, 0, (-1, 1), (-4, 4)),
+    ],
+)
+def test_camera_axis_preserves_limits_when_drawn(scale, padding, expected_x, expected_y, caplog):
+    camera = mock.MagicMock()
+    camera.pixels = {"x": [-1, 1], "y": [-2, 2]}
+    fig, ax = plt.subplots(figsize=(8, 3))
+    try:
+        setup_camera_axis_properties(ax, camera, y_scale_factor=scale, padding=padding)
+        fig.canvas.draw()
+        assert ax.get_xlim() == pytest.approx(expected_x)
+        assert ax.get_ylim() == pytest.approx(expected_y)
+        assert "Ignoring fixed" not in caplog.text
+    finally:
+        plt.close(fig)
