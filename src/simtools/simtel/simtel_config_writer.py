@@ -1082,6 +1082,8 @@ class SimtelConfigWriter:
             "camera_config_file": f"{telescope_name}_single_pixel_camera.dat",
             "discriminator_pulse_shape": f"{telescope_name}_pulse.dat",
             "fadc_pulse_shape": f"{telescope_name}_pulse.dat",
+            "fadc_hg_pulse_shape": "none",
+            "fadc_lg_pulse_shape": "none",
             "mirror_list": f"{telescope_name}_single_12m_mirror.dat",
             "mirror_reflectivity": f"{telescope_name}_reflectivity.dat",
             "camera_pixels": 1,

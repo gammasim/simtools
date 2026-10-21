@@ -31,3 +31,27 @@ version should be reproducible and attributable.
 :maxdepth: 1
 manage_simulation_models/model_import.md
 ```
+
+## Intensity-dependent readout pulse templates
+
+`fadc_hg_pulse_shape` and `fadc_lg_pulse_shape` are optional, independent ECSV
+model parameters for complete narrow-pulse responses. Keep `fadc_pulse_shape`
+for the linear single-photoelectron response. The existing table exporter writes
+three columns, ordered by intensity and time: `intensity` (fluctuated p.e. sum),
+`time` (ns relative to the median photoelectron arrival including transit delay),
+and `amplitude` (complete baseline-subtracted waveform relative to the nominal
+single-photoelectron peak of that gain). Amplitudes include the intensity
+response; the exporter preserves their scale. A complete shared time grid is
+required and validated before serialization.
+
+The generated detector keys are `FADC_HG_PULSE_SHAPE` and
+`FADC_LG_PULSE_SHAPE`. sim_telarray retains linear pulses at or below the lowest
+intensity, interpolates linearly between templates, and holds the last waveform
+above the largest intensity. Only Cherenkov readout is replaced; NSB is added
+separately and the trigger remains linear. This whole-pixel approximation is
+intended for narrow illumination and cannot resolve separated components.
+Dummy telescopes disable both responses.
+
+The LST templates in development model 8.0.0 are synthetic examples for testing,
+with provenance and validity information in their ECSV metadata. Replace them
+with calibrated, versioned templates before scientific use.
