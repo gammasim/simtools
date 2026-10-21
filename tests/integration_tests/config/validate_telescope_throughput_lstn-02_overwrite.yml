@@ -1,8 +1,8 @@
 ---
 applications:
-- application: simtools-validate-camera-efficiency
+- application: simtools-validate-telescope-throughput
   docs:
-    title: Validate the LSTN-02 camera efficiency
+    title: Validate the LSTN-02 telescope throughput
     summary: >-
       Calculate the LSTN-02 optical throughput and reference NSB rate after applying model-parameter
       overrides.

@@ -18,6 +18,7 @@ _RELEASE_SUMMARY_JSON = "release-summary.json"
 _REPORT = "report"
 
 _ACCEPTANCE_REPORT_KEY = "acceptance_report"
+_PREVIOUS_REPORT_KEY = "previous_report"
 _REPORTS_DIRECTORY = "reports"
 _ENCODING = "utf-8"
 
@@ -105,15 +106,26 @@ def _clear_test_directory(path):
         shutil.rmtree(path)
 
 
-def _write_test_report(work, report_root, release_dir, result):
+def _write_test_report(work, report_root, release_dir, result, publish=True):
     """Publish successful collected evidence atomically without per-test wrappers."""
+    if not publish:
+        result[_REPORT] = None
+        result.pop(_PREVIOUS_REPORT_KEY, None)
+        _clear_test_directory(report_root)
+        return
     report = report_root.relative_to(release_dir).as_posix()
     if result["status"] in {"fail", "incomplete", "blocked"}:
         result[_REPORT] = None
         if report_root.exists():
-            result["previous_report"] = report
+            result[_PREVIOUS_REPORT_KEY] = report
         return
     result[_REPORT] = report
+    _publish_test_report(work, report_root, result)
+
+
+def _publish_test_report(work, report_root, result):
+    """Publish successful evidence and its acceptance notes using a staging directory."""
+    report = result[_REPORT]
     warnings = result.pop("acceptance_warnings", [])
     if warnings:
         work.mkdir(parents=True, exist_ok=True)
@@ -216,9 +228,9 @@ def _write_summary(report_dir, summary):
             f"[log]({result['execution_log']}); "
             f"work: `{result['execution_provenance']}`."
         )
-        if result.get("previous_report"):
+        if result.get(_PREVIOUS_REPORT_KEY):
             lines.append(
-                f"  Previous successful output: `{result['previous_report']}` "
+                f"  Previous successful output: `{result[_PREVIOUS_REPORT_KEY]}` "
                 "(not evidence for this failed attempt)."
             )
     if summary["production_history"]:

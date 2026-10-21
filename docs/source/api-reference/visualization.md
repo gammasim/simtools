@@ -150,6 +150,13 @@ the visualization module.
    :members:
 ```
 
+## plot_science_comparison
+
+```{eval-rst}
+.. automodule:: visualization.plot_science_comparison
+   :members:
+```
+
 (plot-production-grid)=
 
 ## plot_production_grid

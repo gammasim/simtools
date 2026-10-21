@@ -100,14 +100,37 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
+Telescope-throughput site definitions can list several telescopes in `camera_telescopes`:
+
+```yaml
+camera_telescopes: [LSTN-01, LSTN-02]
+```
+
+Run `telescope_throughput` separately for each release, using that release's science-test directory,
+context, container image, and model source. Each run writes telescope results and manifests under
+its configured release data directory. For example, select a site and run:
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --context_file /path/to/release/science_tests/context.yml --site north \
+  --test telescope_throughput
+```
+
+Once both releases have results, configure the baseline and candidate paths in the candidate
+release context and run `--test compare.telescope_throughput`. The comparison reads the existing
+results and publishes `report.pdf` and `science-comparison.json` to
+`reports/<site>/compare.telescope_throughput/` in that release directory. Its analysis image must
+contain `simtools-compare-science-results`. Execution logs and effective workflows remain below
+`$SIMTOOLS_SCIENCE_TESTS_ROOT/<release>/work/science-tests/`.
+
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
 Warnings do not qualify a release; every required test must pass.
 Missing configured comparison metrics produce warnings; duplicate measurements are errors.
 All acceptance deviations are collected in a small `acceptance.md` report linked from the
 release summary, with PDF page links where available. Complete scalar results remain in CSV.
-Reports and the release summary are written under `reports/`; production data remains at the external
-candidate path.
+The release summary and small acceptance reports are written under `reports/`; production data and
+science-test artifacts remain under the external candidate or baseline paths.
 Summary generation does not scan candidate or baseline data. If those files change outside the
 runner, rerun the affected tests to refresh their results.
 

@@ -80,6 +80,23 @@ def test_acceptance_deviations_are_published_once_and_linked(tmp_test_directory)
     assert "[deviations](north/compare/acceptance.md)" in summary
 
 
+def test_report_publication_can_be_disabled_for_external_artifacts(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    work = root / "work"
+    report = root / _REPORTS_DIRECTORY / SITE / COMPARE_TEST
+    work.mkdir()
+    (work / "report.pdf").write_bytes(b"report")
+    report.mkdir(parents=True)
+    (report / "camera-efficiency-artifacts.md").write_text("stale", encoding=TEXT_ENCODING)
+    result = {"status": "pass"}
+
+    science_test_reports._write_test_report(work, report, root, result, publish=False)
+
+    assert result[REPORT_KEY] is None
+    assert (work / "report.pdf").is_file()
+    assert not report.exists()
+
+
 def test_reused_report_removes_stale_acceptance_deviations(tmp_test_directory):
     root = Path(tmp_test_directory)
     work = root / "work"
