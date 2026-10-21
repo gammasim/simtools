@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-validate-camera-efficiency
+- application: simtools-validate-telescope-throughput
   docs:
     title: Validate the LSTS-02 camera efficiency
     summary: >-
@@ -27,7 +27,7 @@ applications:
       file: camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
       validations:
       - type: reference
-        file: ${generated:camera_efficiency/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
+        file: ${generated:telescope_throughput/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
         tolerance: 0.005
   model_version_use_current: true
   test_name: LSTS

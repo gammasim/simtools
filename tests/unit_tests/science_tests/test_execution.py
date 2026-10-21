@@ -16,7 +16,7 @@ _ENCODING = "utf-8"
 _VALIDATOR_FAILURE = "Validator failed"
 _RESULT_TYPE_KEY = "result_type"
 _CAMERA_RESULT_TYPE = "camera_efficiency"
-_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-camera-efficiency"
+_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-telescope-throughput"
 _TELESCOPE_KEY = "telescope"
 _SECOND_TELESCOPE = "LSTN-02"
 
@@ -426,7 +426,7 @@ def test_camera_workflow_expands_one_application_per_telescope():
         "applications": [
             {
                 "application": _CAMERA_VALIDATOR_APPLICATION,
-                "configuration": {"output_path": "/results/camera_efficiency"},
+                "configuration": {"output_path": "/results/telescope_throughput"},
             },
             {
                 "application": "simtools-compare-science-results",
@@ -446,8 +446,8 @@ def test_camera_workflow_expands_one_application_per_telescope():
         _SECOND_TELESCOPE,
     ]
     assert [item["configuration"]["output_path"] for item in validators] == [
-        "/results/camera_efficiency/LSTN-01",
-        "/results/camera_efficiency/LSTN-02",
+        "/results/telescope_throughput/LSTN-01",
+        "/results/telescope_throughput/LSTN-02",
     ]
     assert applications[-1]["configuration"]["telescopes"] == ["LSTN-01", _SECOND_TELESCOPE]
 
@@ -457,7 +457,7 @@ def test_camera_workflow_keeps_single_legacy_output_path():
         "applications": [
             {
                 "application": _CAMERA_VALIDATOR_APPLICATION,
-                "configuration": {"output_path": "/results/camera_efficiency"},
+                "configuration": {"output_path": "/results/telescope_throughput"},
             }
         ]
     }
@@ -468,7 +468,7 @@ def test_camera_workflow_keeps_single_legacy_output_path():
 
     configuration = workflow["applications"][0]["configuration"]
     assert configuration[_TELESCOPE_KEY] == _SECOND_TELESCOPE
-    assert configuration["output_path"] == "/results/camera_efficiency"
+    assert configuration["output_path"] == "/results/telescope_throughput"
 
 
 def test_comparison_workflow_receives_site_telescope_list():

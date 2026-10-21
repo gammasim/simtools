@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-validate-camera-efficiency
+- application: simtools-validate-telescope-throughput
   docs:
     title: Validate the MSTx-NectarCam camera efficiency
     summary: >-
@@ -30,13 +30,13 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-NectarCam_nsb.pdf
+      file: validate_telescope_throughput_MSTx-NectarCam_nsb.pdf
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-NectarCam_nsb.png
+      file: validate_telescope_throughput_MSTx-NectarCam_nsb.png
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-NectarCam_shower.png
+      file: validate_telescope_throughput_MSTx-NectarCam_shower.png
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-NectarCam_shower.pdf
+      file: validate_telescope_throughput_MSTx-NectarCam_shower.pdf
     - path_descriptor: output_path
       output_sub_path: MSTx-NectarCam/nsb_pixel_rate
       file: nsb_pixel_rate-0.0.99.json
@@ -48,7 +48,7 @@ applications:
       file: camera_efficiency_summary_North_MSTx-NectarCam_za0.0deg_azm000deg.yml
       validations:
       - type: reference
-        file: ${generated:camera_efficiency/camera_efficiency_summary_North_MSTx-NectarCam_za0.0deg_azm000deg.yml}
+        file: ${generated:telescope_throughput/camera_efficiency_summary_North_MSTx-NectarCam_za0.0deg_azm000deg.yml}
         tolerance: 0.005
   model_version_use_current: true
   test_name: MSTN

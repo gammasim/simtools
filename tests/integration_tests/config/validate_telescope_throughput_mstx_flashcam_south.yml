@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-validate-camera-efficiency
+- application: simtools-validate-telescope-throughput
   docs:
     title: Validate the MSTx-FlashCam camera efficiency
     summary: >-
@@ -30,13 +30,13 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-FlashCam_nsb.pdf
+      file: validate_telescope_throughput_MSTx-FlashCam_nsb.pdf
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-FlashCam_nsb.png
+      file: validate_telescope_throughput_MSTx-FlashCam_nsb.png
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-FlashCam_shower.png
+      file: validate_telescope_throughput_MSTx-FlashCam_shower.png
     - path_descriptor: output_path
-      file: validate_camera_efficiency_MSTx-FlashCam_shower.pdf
+      file: validate_telescope_throughput_MSTx-FlashCam_shower.pdf
     - path_descriptor: output_path
       file: camera_efficiency_South_MSTx-FlashCam_za0.0deg_azm000deg_shower.ecsv
     - path_descriptor: output_path
@@ -50,7 +50,7 @@ applications:
       file: camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml
       validations:
       - type: reference
-        file: ${generated:camera_efficiency/camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml}
+        file: ${generated:telescope_throughput/camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml}
         tolerance: 0.005
   model_version_use_current: true
   test_name: MSTS

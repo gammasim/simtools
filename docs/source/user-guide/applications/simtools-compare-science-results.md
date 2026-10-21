@@ -46,5 +46,5 @@ simtools-compare-science-results \
 
 ```{eval-rst}
 .. simtools-integration-example::
-   :file: compare_science_results_camera_efficiency.yml
+   :file: compare_science_results_telescope_throughput.yml
 ```
