@@ -131,10 +131,6 @@ def _add_unit(title, array):
         Title with units.
     """
     if title and "[" in title and "]" in title:
-        _logger.debug(
-            "Tried to add a unit from astropy.unit, "
-            "but axis already has an explicit unit. Left axis title as is."
-        )
         return title
 
     if not isinstance(array, u.Quantity) or not str(array[0].unit):

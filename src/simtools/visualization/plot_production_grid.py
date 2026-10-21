@@ -12,13 +12,15 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
+AZIMUTH_ANGLE_COLUMN = "azimuth_angle"
+ZENITH_ANGLE_COLUMN = "zenith_angle"
 PLOT_VALUE_KEYS = tuple(
     key
     for key in JOB_GRID_SCHEMA.column_units
     if key
     not in (
-        "azimuth_angle",
-        "zenith_angle",
+        AZIMUTH_ANGLE_COLUMN,
+        ZENITH_ANGLE_COLUMN,
         "ha",
         "dec",
         "view_cone_min",
@@ -28,6 +30,8 @@ PLOT_VALUE_KEYS = tuple(
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
+SHOWERS_PER_RUN_COLUMN = "showers_per_run"
+TOTAL_SHOWERS_LABEL = "Total showers per pointing"
 
 
 def _azimuth_zenith_output_file_stem(value_key):
@@ -181,9 +185,12 @@ class ProductionGridPlotter:
         """
         azimuth = self._extract_first_available_quantity_value(
             point,
-            ("azimuth_angle",),
+            (AZIMUTH_ANGLE_COLUMN,),
         )
-        zenith = self._extract_first_available_quantity_value(point, ("zenith_angle",))
+        zenith = self._extract_first_available_quantity_value(
+            point,
+            (ZENITH_ANGLE_COLUMN,),
+        )
         hour_angle = self._extract_quantity_value(point, "ha")
         declination = self._extract_quantity_value(point, "dec")
         value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
@@ -673,3 +680,96 @@ class ProductionGridPlotter:
         figure.savefig(output_file, bbox_inches="tight", dpi=300)
         logger.info(f"Saved zenith profile plot to {output_file}")
         plt.close(figure)
+
+    def _plot_shower_statistics(self, points, output_stem, title, y_label):
+        """Plot shower counts versus zenith with azimuth encoded by color."""
+        zenith_values, azimuth_values, shower_values = zip(*points)
+        figure, axis = plt.subplots(figsize=(9, 5.5), constrained_layout=True)
+        scatter = axis.scatter(
+            zenith_values,
+            shower_values,
+            c=azimuth_values,
+            cmap="viridis",
+            s=24,
+            alpha=0.8,
+            linewidths=0,
+        )
+        axis.set_xlabel("Zenith angle (deg)")
+        axis.set_ylabel(y_label)
+        axis.set_title(title)
+        axis.grid(True, alpha=0.25)
+        figure.colorbar(scatter, ax=axis).set_label("Azimuth angle (deg)")
+        output_file = self.output_path / f"{output_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, dpi=180)
+        plt.close(figure)
+        logger.info("Saved shower statistics plot to %s", output_file)
+
+    def plot_shower_statistics_vs_zenith(self, azimuth_center=180.0, azimuth_width=1.0):
+        """Plot total and per-run showers against zenith angle.
+
+        Parameters
+        ----------
+        azimuth_center : float, optional
+            Center of the azimuth interval used for the selected-azimuth plot.
+        azimuth_width : float, optional
+            Width in degrees of the selected azimuth interval.
+
+        Raises
+        ------
+        ValueError
+            If ``azimuth_width`` is not positive.
+        """
+        if azimuth_width <= 0:
+            raise ValueError("azimuth_width must be positive")
+
+        grouped_rows = {}
+        for point in self.grid_points:
+            azimuth = self._extract_quantity_value(point, AZIMUTH_ANGLE_COLUMN)
+            zenith = self._extract_quantity_value(point, ZENITH_ANGLE_COLUMN)
+            showers = point.get(SHOWERS_PER_RUN_COLUMN)
+            if azimuth is not None and zenith is not None and showers is not None:
+                grouped_rows.setdefault((azimuth, zenith), []).append(int(showers))
+
+        if not grouped_rows:
+            logger.warning("No Alt/Az shower statistics available for zenith plotting")
+            return
+
+        total_points = [
+            (zenith, azimuth, sum(showers)) for (azimuth, zenith), showers in grouped_rows.items()
+        ]
+        single_run_points = [
+            (zenith, azimuth, showers[0]) for (azimuth, zenith), showers in grouped_rows.items()
+        ]
+        selected_points = [
+            point
+            for point in total_points
+            if self._circular_azimuth_difference_degrees(point[1], azimuth_center)
+            <= azimuth_width / 2
+        ]
+        if not selected_points:
+            logger.warning(
+                "No shower statistics within %s deg of azimuth %s deg",
+                azimuth_width / 2,
+                azimuth_center,
+            )
+        else:
+            self._plot_shower_statistics(
+                selected_points,
+                f"showers_vs_zenith_az{azimuth_center:g}_width{azimuth_width:g}deg",
+                f"Total showers per pointing, azimuth {azimuth_center:g} +/- "
+                f"{azimuth_width / 2:g} deg",
+                TOTAL_SHOWERS_LABEL,
+            )
+
+        self._plot_shower_statistics(
+            total_points,
+            "showers_vs_zenith_all_azimuths",
+            "Total showers per pointing, all azimuths",
+            TOTAL_SHOWERS_LABEL,
+        )
+        self._plot_shower_statistics(
+            single_run_points,
+            "showers_per_run_vs_zenith_single_row",
+            "Showers in one row per pointing, all azimuths",
+            "Showers per run (one row)",
+        )
