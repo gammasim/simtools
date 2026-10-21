@@ -9,8 +9,8 @@ from simtools.applications import compare_science_results as application
 from simtools.science_tests.camera_efficiency_results import load_manifest
 
 _CHANNEL_KEY = "channel"
-_SUMMARY_FILE = "camera_efficiency_summary.yml"
-_MANIFEST_FILE = "camera_efficiency_manifest.json"
+_SUMMARY_FILE = "telescope_throughput_summary.yml"
+_MANIFEST_FILE = "telescope_throughput_manifest.json"
 _FIRST_TELESCOPE = "LSTN-01"
 _SECOND_TELESCOPE = "LSTN-02"
 _STATUS_KEY = "status"

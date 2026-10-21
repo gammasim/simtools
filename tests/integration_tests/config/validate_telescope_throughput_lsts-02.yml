@@ -24,10 +24,10 @@ applications:
         reference_parameter_name: nsb_pixel_rate
         tolerance: 0.1
     - path_descriptor: output_path
-      file: camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
+      file: telescope_throughput_summary_South_LSTS-02_za0.0deg_azm000deg.yml
       validations:
       - type: reference
-        file: ${generated:telescope_throughput/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
+        file: ${generated:telescope_throughput/telescope_throughput_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
         tolerance: 0.005
   model_version_use_current: true
   test_name: LSTS

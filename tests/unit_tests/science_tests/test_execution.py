@@ -40,7 +40,7 @@ _RUNTIME_IMAGE = "runtime.sif"
 _OLD_SIMTOOLS_VERSION = "0.37.0"
 _CURRENT_SIMTOOLS_VERSION = "0.38.1"
 _MISSING_DEPENDENCY_MANIFEST = "manifest missing"
-_CAMERA_MANIFEST_NAME = "camera_efficiency_manifest.json"
+_CAMERA_MANIFEST_NAME = "telescope_throughput_manifest.json"
 _APPTAINER = "apptainer"
 _SIMTOOLS_PACKAGE = "simtools"
 
@@ -347,7 +347,7 @@ def test_collect_camera_efficiency_results_records_runtime(tmp_test_directory, m
     )
     output = Path(tmp_test_directory) / "camera"
     output.mkdir()
-    (output / "camera_efficiency_summary_legacy.yml").write_text(
+    (output / "telescope_throughput_summary_legacy.yml").write_text(
         yaml.safe_dump(
             {
                 "meta": {"tel": "MSTN-01", "model_version": "7.0.0"},

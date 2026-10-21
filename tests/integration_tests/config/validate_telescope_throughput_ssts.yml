@@ -28,7 +28,7 @@ applications:
     - path_descriptor: output_path
       file: validate_telescope_throughput_SSTS-design_shower.pdf
     - path_descriptor: output_path
-      file: camera_efficiency_South_SSTS-design_za20.0deg_azm000deg_shower.ecsv
+      file: telescope_throughput_South_SSTS-design_za20.0deg_azm000deg_shower.ecsv
     - path_descriptor: output_path
       output_sub_path: SSTS-design/nsb_pixel_rate
       file: nsb_pixel_rate-0.0.99.json
@@ -37,10 +37,10 @@ applications:
         reference_parameter_name: nsb_pixel_rate
         tolerance: 0.1
     - path_descriptor: output_path
-      file: camera_efficiency_summary_South_SSTS-design_za20.0deg_azm000deg.yml
+      file: telescope_throughput_summary_South_SSTS-design_za20.0deg_azm000deg.yml
       validations:
       - type: reference
-        file: ${generated:telescope_throughput/camera_efficiency_summary_South_SSTS-design_za20.0deg_azm000deg.yml}
+        file: ${generated:telescope_throughput/telescope_throughput_summary_South_SSTS-design_za20.0deg_azm000deg.yml}
         tolerance: 0.005
   model_version_use_current: true
   test_name: SSTS

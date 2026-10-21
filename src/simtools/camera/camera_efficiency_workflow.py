@@ -72,7 +72,7 @@ def run_camera_efficiency(
 
     output_path = Path(output_directory)
     summary_path = output_path / names.generate_file_name(
-        file_type="camera_efficiency_summary",
+        file_type="telescope_throughput_summary",
         suffix=".yml",
         site=config["site"],
         telescope_model_name=config["telescope"],
@@ -98,7 +98,7 @@ def run_camera_efficiency(
         image_identity=os.environ.get("SIMTOOLS_IMAGE_ID"),
         simtools_version=__version__,
     )
-    manifest_path = output_path / "camera_efficiency_manifest.json"
+    manifest_path = output_path / "telescope_throughput_manifest.json"
     write_json(manifest_path, manifest)
     return {
         "results": results,
@@ -111,7 +111,7 @@ def run_camera_efficiency(
 def _result_path(efficiency):
     """Return the public result location using the calculator's file-name contract."""
     return efficiency.output_dir / names.generate_file_name(
-        file_type="camera_efficiency",
+        file_type="telescope_throughput",
         suffix=".ecsv",
         site=efficiency.telescope_model.site,
         telescope_model_name=efficiency.telescope_model.name,

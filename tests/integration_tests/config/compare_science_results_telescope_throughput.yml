@@ -5,8 +5,8 @@ applications:
     title: Compare telescope-throughput science results
     summary: Compare exported telescope-throughput evidence without rerunning calculations.
   configuration:
-    baseline_path: ${generated:telescope_throughput/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
-    candidate_path: ${generated:telescope_throughput/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    baseline_path: ${generated:telescope_throughput/telescope_throughput_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    candidate_path: ${generated:telescope_throughput/telescope_throughput_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
     baseline_label: reference
     candidate_label: candidate
     output_path: science-comparison

@@ -123,7 +123,7 @@ class CameraEfficiency:
     def _load_files(self):
         """Define the camera-efficiency result file name."""
         file_name = names.generate_file_name(
-            file_type="camera_efficiency",
+            file_type="telescope_throughput",
             suffix=ECSV_SUFFIX,
             site=self.telescope_model.site,
             telescope_model_name=self.telescope_model.name,
