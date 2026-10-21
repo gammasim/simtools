@@ -1,105 +1,104 @@
-"""Pre-submission checks for science-test production runs."""
+"""Pre-submission path checks for science-test production runs.
 
+Checks run on the submit host and in one high-priority worker job using the production
+backend configuration. Checked are all absolute context paths and the absolute ``*_PATH``
+entries of the job environment file.
+"""
+
+import copy
 import shlex
 from pathlib import Path
-
-import yaml
 
 from simtools.job_execution.execution import submit_jobs, wait_for_submission
 from simtools.job_execution.job import ExecutionOptions, JobSpec
 from simtools.runners.simtools_runner import _resolve_nested_configuration_files
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.science_tests.acceptance import nonempty
 
-_DIRECTORY_CONTEXT_PATHS = (
-    "__SCIENCE_CANDIDATE_PATH__",
-    "__SCIENCE_BASELINE_PATH__",
-    "__PRODUCTION_CONFIGURATION_PATH__",
-    "__CORSIKA_INTERACTION_TABLE_PATH__",
-    "simulation_models_path",
-    "simulation_models_git_path",
-)
-_CONTAINER_DIRECTORY_PATHS = (
-    "/workdir/simulation_software/corsika7",
-    "/workdir/simulation_software/sim_telarray",
-)
-_CONTAINER_IMAGE_CONTEXT_KEYS = (
-    "__SCIENCE_CONTAINER_IMAGE_PATH__",
-    "__SCIENCE_BASELINE_IMAGE_PATH__",
-    "__SCIENCE_ANALYSIS_IMAGE_PATH__",
-)
 PREFLIGHT_PRIORITY = 1_000_000
+_CHECK_PATH_FUNCTION = (
+    "check_path() {\n"
+    '  if ! test -r "$2" || ! find -L "$2" -type f -size +0c -print -quit | grep -q .; then\n'
+    '    echo "PREFLIGHT_FAILED: $1 ($2)" >&2; exit 1\n'
+    "  fi\n"
+    '  echo "PREFLIGHT_OK: $1 ($2)"\n'
+    "}"
+)
+
+
+def context_paths(context):
+    """Return the absolute paths configured in a science-test context.
+
+    Parameters
+    ----------
+    context : dict
+        Science-test context.
+
+    Returns
+    -------
+    dict
+        Absolute paths by context key.
+    """
+    return {
+        key: Path(value).expanduser()
+        for key, value in context.items()
+        if isinstance(value, str) and Path(value).expanduser().is_absolute()
+    }
 
 
 def validate_context_paths(context):
-    """Validate configured host paths before submitting any worker jobs."""
-    errors = []
-    for key in _DIRECTORY_CONTEXT_PATHS:
-        value = context.get(key)
-        if not value:
-            continue
-        path = Path(value).expanduser()
-        if not path.is_dir():
-            errors.append(f"{key} directory does not exist: {path}")
-        elif not any(item.is_file() and item.stat().st_size > 0 for item in path.rglob("*")):
-            errors.append(f"{key} directory contains no non-empty files: {path}")
-    for key in _CONTAINER_IMAGE_CONTEXT_KEYS:
-        image = context.get(key)
-        if image:
-            image_path = Path(image).expanduser()
-            if not image_path.is_file() or image_path.stat().st_size == 0:
-                errors.append(f"{key} is not a non-empty file: {image_path}")
+    """Require every absolute context path to be a non-empty file or directory.
+
+    Parameters
+    ----------
+    context : dict
+        Science-test context.
+    """
+    errors = [
+        f"{key} is missing or empty: {path}"
+        for key, path in context_paths(context).items()
+        if not nonempty(path)
+    ]
     if errors:
         raise ValueError("Science-test preflight failed:\n- " + "\n- ".join(errors))
 
 
-def _canary_config(template_dir, workflow, context):
-    """Resolve the HTCondor configuration used by a production workflow."""
-    workflow_path = Path(template_dir) / workflow
-    values = {key: value for key, value in context.items() if value is not None}
-    values["__CONFIG_DIRECTORY__"] = str(workflow_path.parent.resolve())
-    resolved = replace_placeholders_recursively(
-        yaml.safe_load(workflow_path.read_text(encoding="utf-8")), values
-    )
-    _resolve_nested_configuration_files(resolved["applications"], values)
-    application = resolved["applications"][0]["configuration"]
-    config = application.get("backend_config")
-    if not isinstance(config, dict):
-        raise ValueError(f"Preflight requires backend_config in {workflow_path}")
-    return config
+def run_worker_canary(test, context, work_dir):
+    """Run one worker job checking the context and environment paths in the container.
 
-
-def run_worker_canary(template_dir, workflow, context, work_dir):
-    """Run one worker-side filesystem check with the production container setup."""
-    config = _canary_config(template_dir, workflow, context)
+    Parameters
+    ----------
+    test : simtools.science_tests.execution.PreparedTest
+        Prepared production test whose first application defines ``backend_config``.
+    context : dict
+        Science-test context.
+    work_dir : pathlib.Path
+        Work directory for the canary job.
+    """
+    applications = copy.deepcopy(test.workflow["applications"][:1])
+    _resolve_nested_configuration_files(applications, test.replacements)
+    config = applications[0]["configuration"].get("backend_config") if applications else None
+    if not isinstance(config, dict) or not config.get("container_image"):
+        raise ValueError(
+            f"Preflight requires a backend_config with container_image: {test.result['id']}"
+        )
     config["priority"] = PREFLIGHT_PRIORITY
-    image = config.get("container_image")
-    if not image:
-        raise ValueError(f"Preflight workflow has no container image: {workflow}")
-    checks = [
-        "check_path() {",
-        "  name=$1; path=$2",
-        '  if ! test -d "$path" || ! test -r "$path" || ',
-        '! find -L "$path" -type f -size +0c -print -quit | grep -q .; then',
-        '    echo "PREFLIGHT_FAILED: $name ($path)" >&2',
-        "    exit 1",
-        "  fi",
-        '  echo "PREFLIGHT_OK: $name ($path)"',
-        "}",
-    ]
-    for key in _DIRECTORY_CONTEXT_PATHS:
-        value = context.get(key)
-        if value:
-            checks.append(f"check_path {shlex.quote(key)} {shlex.quote(str(value))}")
-    for path in _CONTAINER_DIRECTORY_PATHS:
-        checks.append(f"check_path container:{shlex.quote(path)} {shlex.quote(path)}")
-    command = ("sh", "-c", "set -eu\n" + "\n".join(checks))
-    options = ExecutionOptions(
-        backend="htcondor",
-        work_dir=Path(work_dir),
-        backend_config=config,
-    )
-    submission = submit_jobs(
-        [JobSpec("science-preflight", 0, command=command)],
-        options,
-    )
+    paths = {key: str(path) for key, path in context_paths(context).items() if path.is_dir()}
+    paths |= _environment_paths(config.get("environment_file"))
+    checks = [f"check_path {shlex.quote(key)} {shlex.quote(path)}" for key, path in paths.items()]
+    command = ("sh", "-c", "\n".join(["set -eu", _CHECK_PATH_FUNCTION, *checks]))
+    options = ExecutionOptions(backend="htcondor", work_dir=Path(work_dir), backend_config=config)
+    submission = submit_jobs([JobSpec("science-preflight", 0, command=command)], options)
     wait_for_submission(submission, options=options)
+
+
+def _environment_paths(environment_file):
+    """Return absolute ``*_PATH`` entries of a job environment file."""
+    if not environment_file:
+        return {}
+    paths = {}
+    for line in Path(environment_file).read_text(encoding="utf-8").splitlines():
+        key, separator, value = line.strip().removeprefix("export ").partition("=")
+        key, value = key.strip(), value.strip()
+        if separator and key.endswith("_PATH") and value.startswith("/") and "$" not in value:
+            paths[key] = value
+    return paths

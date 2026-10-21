@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 
 from simtools.applications import run_science_tests
 
@@ -14,7 +13,7 @@ PARSED_MODEL_REVISION = "v0.19.0"
 SETUP_KEY = "setup"
 
 
-def test_main_uses_release_context_by_default(mocker):
+def test_main_forwards_optional_context(mocker):
     args = {
         RELEASE_DIR: RELEASE_PATH,
         CONTEXT_FILE: None,
@@ -27,9 +26,8 @@ def test_main_uses_release_context_by_default(mocker):
 
     run_science_tests.main()
 
-    assert run_release.call_args.kwargs[CONTEXT_FILE] == str(
-        Path(args[RELEASE_DIR]) / "context.yml"
-    )
+    assert run_release.call_args.args == (RELEASE_PATH,)
+    assert run_release.call_args.kwargs[CONTEXT_FILE] is None
 
 
 def test_parser_allows_setup_release_settings(monkeypatch):
