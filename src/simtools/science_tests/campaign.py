@@ -82,9 +82,14 @@ def run_release(
     production = [
         test_id for _, test_id in pairs if bundle.catalogue[test_id].get(_PRODUCES_PRODUCTION)
     ]
-if production and not dry_run and not (
-        allow_production and set(production) <= set(selected_tests or [])
+    if (
+        production
+        and not dry_run
+        and not (allow_production and set(production) <= set(selected_tests or []))
     ):
+        raise ValueError(
+            f"Select production tests {sorted(set(production))} explicitly with --test and "
+            "--allow_production after reviewing the generated grid."
         )
     defs.validate_context(
         bundle, any(defs.test_definition(bundle, test_id)["uses_baseline"] for _, test_id in pairs)
