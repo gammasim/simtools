@@ -32,11 +32,6 @@ The ``flasher_photons`` setting has a different meaning in each run mode:
    * - ``full_simulation``
      - Sets the number of photons emitted by the flasher source and passed to sim_telarray.
 
-These values are not interchangeable: source geometry and angular distribution determine the
-full-simulation illumination, while direct injection uses one uniform value per pixel. Equal
-numeric values do not produce a matched simulation, and dividing by the number of camera pixels
-does not provide a general conversion.
-
 For a matched comparison, determine the expected camera illumination for the chosen source,
 wavelength, pulse, and telescope, then derive the direct per-pixel setting. Validate it with signal
 distributions and a separate per-pixel mean and variance analysis; the comparison below summarizes
