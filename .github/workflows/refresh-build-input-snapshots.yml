@@ -178,7 +178,10 @@ jobs:
             tar -czf input/corsika7-source.tar.gz \
               corsika7 corsika_revision corsika7-config corsika_config_revision \
               corsika-opt-patches corsika_opt_patch_revision
-            sha256sum input/corsika7-source.tar.gz > input/corsika7-source.tar.gz.sha256
+            (
+              cd input
+              sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
+            )
             snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg source "$source_revision" \
               --arg config "$config_revision" --arg patch "$patch_revision" --arg digest "$snapshot_digest" \
@@ -232,7 +235,10 @@ jobs:
             rm -rf sim_telarray/.git hessio/.git stdtools/.git
             tar -czf input/simtel-source.tar.gz \
               sim_telarray simtel_revision hessio hessio_revision stdtools stdtools_revision
-            sha256sum input/simtel-source.tar.gz > input/simtel-source.tar.gz.sha256
+            (
+              cd input
+              sha256sum simtel-source.tar.gz > simtel-source.tar.gz.sha256
+            )
             snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg simtel "$simtel_revision" \
               --arg hessio "$hessio_revision" --arg stdtools "$stdtools_revision" --arg digest "$snapshot_digest" \
