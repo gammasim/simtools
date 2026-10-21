@@ -77,7 +77,7 @@ def write_test_report(work, report_root, release_dir, result, publish=True):
         _write_acceptance_report(staging, warnings)
         result[_ACCEPTANCE_REPORT] = f"{report}/{ACCEPTANCE_FILE}"
     _remove(report_root)
-    if not staging.is_dir() or not any(staging.rglob("*")):
+    if not staging.is_dir() or not any(path.is_file() for path in staging.rglob("*")):
         _remove(staging)
         return
     staging.rename(report_root)

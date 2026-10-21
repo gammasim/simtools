@@ -10,6 +10,8 @@ _WAVELENGTH_COLUMN = "wl"
 _EFFICIENCY_LABEL = "Efficiency"
 _RELATIVE_CHANGE_LABEL = "Relative change (%)"
 _DEFAULT_DETECTED_COLUMN = "cherenkov_detected"
+# Optical throughput, compared when tables have no detected spectrum.
+_THROUGHPUT_COLUMN = "eff"
 _NSB_DETECTED_COLUMN = "nsb_detected"
 _DETECTED_COLUMNS = {"nsb": _NSB_DETECTED_COLUMN}
 # Column names written by earlier sim_telarray versions.
@@ -94,11 +96,13 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
     channels = sorted(set(baseline_tables) & set(candidate_tables))
     curves, diagnostics = {}, []
     for channel in channels:
-        column = _DETECTED_COLUMNS.get(channel, _DEFAULT_DETECTED_COLUMN)
         try:
             wavelength, unit, before, after = _read_pair(
                 baseline_tables[channel], candidate_tables[channel]
             )
+            column = _DETECTED_COLUMNS.get(channel, _DEFAULT_DETECTED_COLUMN)
+            if column not in before.colnames and column not in after.colnames:
+                column = _THROUGHPUT_COLUMN
             curves[channel] = (wavelength, unit, _curve(before, column), _curve(after, column))
         except (KeyError, OSError, ValueError, u.UnitsError) as exc:
             diagnostics.append(f"Cannot compare {channel} spectrum: {exc}")
@@ -185,15 +189,23 @@ def _read_pair(baseline_path, candidate_path):
     baseline, candidate = _read_table(baseline_path), _read_table(candidate_path)
     unit = baseline[_WAVELENGTH_COLUMN].unit or u.nm
     wavelength = np.asarray(baseline[_WAVELENGTH_COLUMN], dtype=float)
+    if wavelength.ndim != 1 or not wavelength.size or not np.all(np.isfinite(wavelength)):
+        raise ValueError("wavelength grid must be a finite, non-empty list")
+    if np.any(np.diff(wavelength) <= 0):
+        raise ValueError("wavelength grid must be strictly increasing")
     other = u.Quantity(candidate[_WAVELENGTH_COLUMN], candidate[_WAVELENGTH_COLUMN].unit or u.nm)
-    if wavelength.shape != other.shape or not np.allclose(wavelength, other.to_value(unit)):
+    other = other.to_value(unit)
+    if wavelength.shape != other.shape or not np.allclose(wavelength, other, rtol=1e-12, atol=0):
         raise ValueError("wavelength grids differ")
     return wavelength, unit, baseline, candidate
 
 
 def _curve(table, *columns):
     """Return the product of finite numeric table columns."""
-    values = np.prod([np.asarray(table[column], dtype=float) for column in columns], axis=0)
+    arrays = [np.asarray(table[column], dtype=float) for column in columns]
+    if any(array.ndim != 1 for array in arrays):
+        raise ValueError(f"column(s) {', '.join(columns)} must be one-dimensional")
+    values = np.prod(arrays, axis=0)
     if not np.all(np.isfinite(values)):
         raise ValueError(f"non-finite values in column(s) {', '.join(columns)}")
     return values

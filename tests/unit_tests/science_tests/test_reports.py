@@ -98,6 +98,12 @@ def test_write_test_report_without_products_or_publication(report_dirs):
     assert empty[REPORT] is None
     assert not report_root.exists()
 
+    only_directories = work.parent / "only-directories"
+    (only_directories / NESTED).mkdir(parents=True)
+    reports.write_test_report(only_directories, report_root, release, empty)
+    assert empty[REPORT] is None
+    assert not report_root.exists()
+
 
 def test_publication_size_warns_for_large_reports(tmp_test_directory, caplog, monkeypatch):
     monkeypatch.setattr(reports, "_PUBLICATION_WARNING_FILES", 0)

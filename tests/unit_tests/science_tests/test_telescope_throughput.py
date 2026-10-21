@@ -7,6 +7,8 @@ import yaml
 
 from simtools.science_tests import telescope_throughput as throughput
 
+INVALID_METRIC_VALUE = "Invalid metric value"
+
 MSTN_01 = "MSTN-01"
 ADVISORY = "advisory"
 CHANGES = "changes"
@@ -59,7 +61,7 @@ def test_read_result_requires_one_summary_and_finite_metrics(tmp_test_directory)
     (directory / TELESCOPE / SUMMARY_NAME).write_text(
         yaml.safe_dump({CAM_EFF: {VALUE: "text"}}), encoding=UTF_8
     )
-    with pytest.raises(ValueError, match="Invalid metric value"):
+    with pytest.raises(ValueError, match=INVALID_METRIC_VALUE):
         throughput.read_result(directory / TELESCOPE)
     (directory / TELESCOPE / SUMMARY_NAME).write_text("- list\n", encoding=UTF_8)
     with pytest.raises(ValueError, match="must be a mapping"):
@@ -88,10 +90,10 @@ def test_compare_results_converts_units_and_flags_tolerances(tmp_test_directory)
     comparison = throughput.compare_results(baseline, candidate, {CAM_EFF: 0.1, NSB_RATE: 0.1})
 
     assert comparison[STATUS] == throughput.COMPLETE
-    assert comparison[CHANGES][CAM_EFF][RELATIVE] == pytest.approx(0.2)
+    assert math.isclose(comparison[CHANGES][CAM_EFF][RELATIVE], 0.2)
     assert comparison[CHANGES][CAM_EFF][ADVISORY] is True
     assert comparison[CHANGES][NSB_RATE]["unit"] == "GHz"
-    assert comparison[CHANGES][NSB_RATE]["candidate"] == pytest.approx(0.25)
+    assert math.isclose(comparison[CHANGES][NSB_RATE]["candidate"], 0.25)
     assert comparison[CHANGES][NSB_RATE][ADVISORY] is False
     json.dumps(comparison)
 
@@ -126,3 +128,25 @@ def test_write_json_creates_directory(tmp_test_directory):
     path = Path(tmp_test_directory) / "new" / "result.json"
     throughput.write_json(path, {"path": Path("x")})
     assert json.loads(path.read_text(encoding=UTF_8)) == {"path": "x"}
+
+
+def test_read_result_rejects_boolean_metrics_and_invalid_metadata(tmp_test_directory):
+    directory = write_result(Path(tmp_test_directory) / "invalid" / TELESCOPE)
+    summary = directory / SUMMARY_NAME
+    summary.write_text(yaml.safe_dump({CAM_EFF: {VALUE: True}}), encoding=UTF_8)
+    with pytest.raises(ValueError, match=INVALID_METRIC_VALUE):
+        throughput.read_result(directory)
+    summary.write_text(yaml.safe_dump({"meta": ["tel"]}), encoding=UTF_8)
+    with pytest.raises(ValueError, match="metadata must be a mapping"):
+        throughput.read_result(directory)
+
+
+def test_compare_results_rejects_overflowing_changes(tmp_test_directory):
+    root = Path(tmp_test_directory) / "overflow"
+    baseline = throughput.read_result(write_result(root / "a" / TELESCOPE, cam_eff=-1.7e308))
+    candidate = throughput.read_result(write_result(root / "b" / TELESCOPE, cam_eff=1.7e308))
+
+    comparison = throughput.compare_results(baseline, candidate)
+
+    assert CAM_EFF not in comparison[CHANGES]
+    assert "cam_eff: change is not finite" in comparison[DIAGNOSTICS][0]

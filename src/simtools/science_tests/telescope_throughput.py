@@ -87,6 +87,8 @@ def read_result(path):
     if not isinstance(summary, dict):
         raise ValueError(f"Telescope-throughput summary must be a mapping: {path}")
     case = summary.pop(_META_KEY, {})
+    if not isinstance(case, dict):
+        raise ValueError(f"Telescope-throughput summary metadata must be a mapping: {path}")
     return {
         TELESCOPE: case.get(_TELESCOPE_META_KEY) or path.parent.name,
         "case": case,
@@ -180,6 +182,8 @@ def _metric_change(before, after, tolerance):
     before, after = float(before.value), float(after.to_value(before.unit))
     delta = after - before
     relative = delta / before if before else None
+    if not math.isfinite(delta) or (relative is not None and not math.isfinite(relative)):
+        raise ValueError("change is not finite")
     return {
         BASELINE: before,
         CANDIDATE: after,
@@ -194,12 +198,17 @@ def _metric_change(before, after, tolerance):
 def _quantity(item):
     """Convert a summary entry ``{value: number | {value, unit}}`` to a finite quantity."""
     value = item.get(_VALUE_KEY) if isinstance(item, dict) else item
+    if isinstance(value, dict):
+        value, unit = value.get(_VALUE_KEY), value.get(_UNIT_KEY, "")
+    else:
+        unit = ""
+    invalid = f"Invalid metric value: {item!r}"
+    if isinstance(value, bool):
+        raise ValueError(invalid)
     try:
-        if isinstance(value, dict):
-            value = value.get(_VALUE_KEY) * u.Unit(value.get(_UNIT_KEY, ""))
-        quantity = u.Quantity(value, dtype=float)
+        quantity = u.Quantity(value, u.Unit(unit), dtype=float)
     except (TypeError, ValueError) as exc:
-        raise ValueError(f"Invalid metric value: {item!r}") from exc
+        raise ValueError(invalid) from exc
     if not quantity.isscalar or not math.isfinite(quantity.value):
         raise ValueError(f"Metric value must be a finite scalar: {item!r}")
     return quantity

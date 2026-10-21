@@ -98,7 +98,7 @@ def _environment_paths(environment_file):
     paths = {}
     for line in Path(environment_file).read_text(encoding="utf-8").splitlines():
         key, separator, value = line.strip().removeprefix("export ").partition("=")
-        key, value = key.strip(), value.strip()
+        key, value = key.strip(), value.strip().strip("'\"")
         if separator and key.endswith("_PATH") and value.startswith("/") and "$" not in value:
             paths[key] = value
     return paths

@@ -55,7 +55,8 @@ def test_worker_canary_checks_context_and_environment_paths(paths, mocker):
     root, context = paths
     environment = root / "job.env"
     environment.write_text(
-        "SIMTOOLS_CORSIKA_PATH=/workdir/corsika\nSIMTOOLS_OTHER_PATH=${ROOT}/x\nNAME=value\n",
+        "SIMTOOLS_CORSIKA_PATH=/workdir/corsika\nSIMTOOLS_OTHER_PATH=${ROOT}/x\nNAME=value\n"
+        'export SIMTOOLS_SIM_TELARRAY_PATH="/workdir/sim_telarray"\n',
         encoding=ENCODING,
     )
     backend = root / BACKEND_YML
@@ -75,6 +76,7 @@ def test_worker_canary_checks_context_and_environment_paths(paths, mocker):
     assert options.backend_config[PRIORITY] == preflight.PREFLIGHT_PRIORITY
     assert f"check_path __DATA__ {context[DATA]}" in script
     assert "check_path SIMTOOLS_CORSIKA_PATH /workdir/corsika" in script
+    assert "check_path SIMTOOLS_SIM_TELARRAY_PATH /workdir/sim_telarray" in script
     assert "OTHER" not in script
     assert IMAGE not in script
     wait.assert_called_once()
