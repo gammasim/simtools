@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Characterize and compare atmospheric model parameters."""
+"""Compare atmospheric profile and transmission model parameters."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.application.model_reader import require_model_reader
@@ -29,7 +29,7 @@ APPLICATION = ApplicationDefinition.for_module(
             _RELATIVE_DIFFERENCE_LIMIT,
             type=float,
             default=_DEFAULT_RELATIVE_DIFFERENCE_LIMIT,
-            help="Symmetric relative-difference axis limit in percent (default: 35).",
+            help="Symmetric relative-difference axis limit in percent.",
         ),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
@@ -37,7 +37,7 @@ APPLICATION = ApplicationDefinition.for_module(
 
 
 def main():
-    """Execute atmospheric characterization using the configured model repository."""
+    """Compare atmospheres using the configured model repository."""
     context = APPLICATION.start()
     reader = require_model_reader(context.model_reader)
     output_path = context.io_handler.get_output_directory()

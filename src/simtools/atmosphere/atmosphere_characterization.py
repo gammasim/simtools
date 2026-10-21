@@ -23,6 +23,7 @@ _THICKNESS = "thickness"
 _PROFILE_VERSION = "profile_version"
 _TRANSMISSION_VERSION = "transmission_version"
 _OBSERVATION_LEVEL = "observation_level_km"
+_OBSERVATORY_LEVEL = "observatory_level"
 _HEIGHT = "height"
 _SAMPLE = "sample"
 _WAVELENGTH = "wavelength"
@@ -36,6 +37,8 @@ _SUMMARY = "atmosphere_summary.json"
 _SAMPLE_HEIGHT = 10 * u.km
 _TOP_OF_ATMOSPHERE = "Top of atmosphere (a.s.l.)"
 _DEFAULT_RELATIVE_DIFFERENCE_LIMIT = 35.0
+_RELATIVE_DIFFERENCE_LABEL = "Relative difference [%]"
+_GRID_ALPHA = 0.25
 _UNITS = {
     _DENSITY: u.g / u.cm**3,
     _THICKNESS: u.g / u.cm**2,
@@ -95,55 +98,43 @@ def characterize_atmospheres(
 
 def _observation_level(item):
     """Return the recorded observatory level in kilometres."""
-    endpoint = item[_TRANSMISSION].meta.get("observatory_level")
+    endpoint = item[_TRANSMISSION].meta.get(_OBSERVATORY_LEVEL)
     if endpoint is None:
-        raise ValueError("Transmission metadata must define observatory_level.")
+        raise ValueError(f"Transmission metadata must define {_OBSERVATORY_LEVEL}.")
     return u.Quantity(endpoint).to(u.km)
 
 
 def _transmission_levels(highest_observation_level):
     """Return common transmission levels above sea level."""
+    levels = (
+        20 * u.km,
+        _SAMPLE_HEIGHT,
+        5 * u.km,
+        highest_observation_level + 1.5 * u.km,
+        highest_observation_level + 0.5 * u.km,
+    )
     return (
         (_TOP_OF_ATMOSPHERE, None),
-        ("20 km a.s.l.", 20 * u.km),
-        ("10 km a.s.l.", 10 * u.km),
-        ("5 km a.s.l.", 5 * u.km),
-        (
-            f"{(highest_observation_level + 1.5 * u.km).to_value(u.km):g} km a.s.l.",
-            highest_observation_level + 1.5 * u.km,
-        ),
-        (
-            f"{(highest_observation_level + 0.5 * u.km).to_value(u.km):g} km a.s.l.",
-            highest_observation_level + 0.5 * u.km,
-        ),
+        *((f"{level.to_value(u.km):g} km a.s.l.", level) for level in levels),
     )
 
 
-def _prepare_atmosphere(item, transmission_levels=None):
+def _prepare_atmosphere(item, transmission_levels):
     """Validate and convert a pair of atmospheric tables for plotting."""
     profile = item[_PROFILE].copy()
     for name, unit in _UNITS.items():
         profile[name] = _column_values(profile, name, unit) * unit
     samples = _profile_samples(profile, _SAMPLE_HEIGHT)
-    sample_wavelength, sample_transmission = _transmission_slice(
-        item[_TRANSMISSION], _SAMPLE_HEIGHT
-    )
+    transmission_table = item[_TRANSMISSION]
+    sample_wavelength, sample_transmission = _transmission_slice(transmission_table, _SAMPLE_HEIGHT)
     heights = _column_values(profile, _ALTITUDE, u.km)
     order = np.argsort(heights)
-    endpoint = item[_TRANSMISSION].meta.get("observatory_level")
-    observation_level = u.Quantity(endpoint).to(u.km) if endpoint is not None else None
-    if transmission_levels is None:
-        if observation_level is None:
-            raise ValueError("Transmission metadata must define observatory_level.")
-        transmission_levels = _transmission_levels(observation_level)
+    top_of_atmosphere = np.max(_column_values(transmission_table, _ALTITUDE, u.km)) * u.km
     prepared_transmissions = {}
-    table_heights = _column_values(item[_TRANSMISSION], _ALTITUDE, u.km)
     for label, level in transmission_levels:
-        if level is None:
-            target = np.max(table_heights) * u.km
-        else:
-            target = level
-        wavelength, transmission = _transmission_at_altitude(item[_TRANSMISSION], target)
+        wavelength, transmission = _transmission_at_altitude(
+            transmission_table, top_of_atmosphere if level is None else level
+        )
         prepared_transmissions[label] = {
             _WAVELENGTH: wavelength.to_value(u.nm),
             _TRANSMISSION: transmission,
@@ -153,9 +144,7 @@ def _prepare_atmosphere(item, transmission_levels=None):
         _SITE: item.get(_SITE),
         _PROFILE_VERSION: item.get(_PROFILE_VERSION),
         _TRANSMISSION_VERSION: item.get(_TRANSMISSION_VERSION),
-        _OBSERVATION_LEVEL: float(observation_level.to_value(u.km))
-        if endpoint is not None
-        else None,
+        _OBSERVATION_LEVEL: float(_observation_level(item).to_value(u.km)),
         _HEIGHT: heights[order],
         _PROFILE: {name: _column_values(profile, name)[order] for name in _PROFILE_COLUMNS},
         _SAMPLE: samples,
@@ -199,14 +188,8 @@ def _summarize(inputs):
     return {
         "reference": reference[_LABEL],
         "emission_altitude_km_asl": float(_SAMPLE_HEIGHT.to_value(u.km)),
-        "profile_units": {
-            _DENSITY: "g/cm3",
-            _THICKNESS: "g/cm2",
-            "refractive_index": "n-1",
-            "temperature": "K",
-            "pressure": "mbar",
-            "water_vapor_partial_pressure": "p_w/p",
-        },
+        "profile_units": {name: unit.to_string() for name, unit in _UNITS.items()}
+        | {"refractive_index": "n-1", "water_vapor_partial_pressure": "p_w/p"},
         "transmission_definition": "exp(-vertical optical depth) to each table observation level",
         "atmospheres": data,
     }
@@ -294,12 +277,12 @@ def _plot_profiles(inputs, output_path, relative_difference_limit):
         difference_axis.set_ylabel(f"Difference: {title}")
         relative.set(
             xlabel="Altitude a.s.l. [km]",
-            ylabel="Relative difference [%]",
+            ylabel=_RELATIVE_DIFFERENCE_LABEL,
             ylim=(-relative_difference_limit, relative_difference_limit),
         )
-        upper.grid(True, alpha=0.25)
-        difference_axis.grid(True, alpha=0.25)
-        relative.grid(True, alpha=0.25)
+        upper.grid(True, alpha=_GRID_ALPHA)
+        difference_axis.grid(True, alpha=_GRID_ALPHA)
+        relative.grid(True, alpha=_GRID_ALPHA)
     axes[0, 0].legend(fontsize=_SMALL)
     visualize.save_figure(fig, output_path / "atmosphere_profiles", close=True)
 
@@ -325,12 +308,12 @@ def _plot_transmission(inputs, output_path, relative_difference_limit):
             difference_axis.scatter(common, relative_difference, label=item[_LABEL], s=3)
         direct_axis.set(ylabel="Direct transmission", ylim=(0, 1.02), title=level)
         difference_axis.set(
-            ylabel="Relative difference [%]",
+            ylabel=_RELATIVE_DIFFERENCE_LABEL,
             ylim=(-relative_difference_limit, relative_difference_limit),
         )
         for axis in (direct_axis, difference_axis):
             axis.legend(fontsize=_SMALL)
-            axis.grid(True, alpha=0.25)
-    axes[-1, 0].set_xlabel("Wavelength [nm]")
-    axes[-1, 1].set_xlabel("Wavelength [nm]")
+            axis.grid(True, alpha=_GRID_ALPHA)
+    for axis in axes[-1]:
+        axis.set_xlabel("Wavelength [nm]")
     visualize.save_figure(fig, output_path / "atmosphere_transmission", close=True)

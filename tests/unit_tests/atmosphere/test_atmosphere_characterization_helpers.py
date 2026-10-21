@@ -1,5 +1,7 @@
 """Tests for internal atmospheric characterization calculations."""
 
+import math
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -51,7 +53,7 @@ def transmission():
 
 def test_profile_samples_interpolate_and_reject_extrapolation(profile):
     result = _profile_samples(profile, 1000 * u.m)
-    assert result[_DENSITY] == pytest.approx(3)
+    assert math.isclose(result[_DENSITY], 3.0)
     with pytest.raises(ValueError, match="outside the profile range"):
         _profile_samples(profile, 3 * u.km)
 
@@ -108,3 +110,33 @@ def test_transmission_rejects_nonfinite_data(transmission):
     transmission[_EXTINCTION][0] = np.nan
     with pytest.raises(ValueError, match="must be finite"):
         _transmission_slice(transmission, 10 * u.km)
+
+
+def test_transmission_at_altitude_extrapolates_and_clips(transmission):
+    _, values = _transmission_at_altitude(transmission, 12.5 * u.km)
+    assert np.allclose(values, [1, np.exp(-1.5 * np.log(2))])
+    _, values = _transmission_at_altitude(transmission, 2.5 * u.km)
+    assert np.allclose(values, [np.exp(-1.5), 1])
+    _, values = _transmission_at_altitude(transmission, 20 * u.km)
+    assert np.allclose(values[0], 1)
+
+
+def test_transmission_at_altitude_skips_single_altitude_wavelengths(transmission):
+    transmission.add_row([5 * u.km, 500 * u.nm, 0.1])
+    wavelength, _ = _transmission_at_altitude(transmission, 7.5 * u.km)
+    assert_quantity_allclose(wavelength, [300, 400] * u.nm)
+    with pytest.raises(ValueError, match="at least two altitudes"):
+        _transmission_at_altitude(transmission[-1:], 7.5 * u.km)
+
+
+def test_transmission_at_altitude_rejects_duplicate_altitudes(transmission):
+    transmission[_ALTITUDE][0] = 5 * u.km
+    transmission[_WAVELENGTH][0] = 300 * u.nm
+    with pytest.raises(ValueError, match="once per altitude"):
+        _transmission_at_altitude(transmission, 7.5 * u.km)
+
+
+def test_transmission_rejects_nonfinite_axes(transmission):
+    transmission[_WAVELENGTH][0] = np.nan * u.nm
+    with pytest.raises(ValueError, match="altitude and wavelength must be finite"):
+        _transmission_at_altitude(transmission, 7.5 * u.km)

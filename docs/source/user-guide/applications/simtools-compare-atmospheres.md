@@ -1,7 +1,7 @@
-# simtools-characterize-atmosphere
+# simtools-compare-atmospheres
 
 ```{eval-rst}
-.. automodule:: simtools.applications.characterize_atmosphere
+.. automodule:: simtools.applications.compare_atmospheres
    :members:
    :exclude-members: main
 ```
@@ -38,7 +38,7 @@ instrument response.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :application: characterize_atmosphere
+   :application: compare_atmospheres
    :no-heading:
 ```
 
@@ -46,5 +46,5 @@ instrument response.
 
 ```{eval-rst}
 .. simtools-integration-example::
-   :file: characterize_atmosphere_comparison.yml
+   :file: compare_atmospheres_north_south.yml
 ```

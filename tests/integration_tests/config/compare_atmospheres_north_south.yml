@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-characterize-atmosphere
+- application: simtools-compare-atmospheres
   docs:
     title: Compare atmospheric models
     summary: Compare North and South profiles and their atmospheric transmission.
@@ -21,6 +21,6 @@ applications:
       validations:
       - type: format
         format: json
-  test_name: comparison
+  test_name: north_south
 schema_name: application_workflow.metaschema
 schema_version: 0.6.0

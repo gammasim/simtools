@@ -13,7 +13,7 @@ Tools to handle atmospheric models and related calculations.
 
 ```
 
-## atmosphere.atmosphere_characterization
+## atmosphere_characterization
 
 ```{eval-rst}
 .. automodule:: simtools.atmosphere.atmosphere_characterization

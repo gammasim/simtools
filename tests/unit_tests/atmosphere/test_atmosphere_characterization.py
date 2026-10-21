@@ -1,6 +1,7 @@
 """Tests for atmospheric characterization reports."""
 
 import json
+import math
 from pathlib import Path
 
 import astropy.units as u
@@ -9,14 +10,17 @@ import pytest
 from astropy.table import QTable
 
 from simtools.atmosphere.atmosphere_characterization import (
+    _TOP_OF_ATMOSPHERE,
     _plot_profiles,
     _plot_transmission,
     _prepare_atmosphere,
     _profile_difference,
     _profile_relative_difference,
+    _transmission_levels,
     _transmission_relative_difference,
     characterize_atmospheres,
 )
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _DENSITY = "density"
 _HEIGHT = "height"
@@ -35,6 +39,7 @@ _PROFILE = "profile"
 _TRANSMISSION = "transmission"
 _ALTITUDE = "altitude"
 _LABEL = "label"
+_LEVELS = _transmission_levels(2 * u.km)
 
 
 @pytest.fixture
@@ -70,14 +75,14 @@ def atmospheres():
 
 
 def test_characterize_writes_plots_and_summary(atmospheres, tmp_test_directory):
-    tmp_test_directory = Path(str(tmp_test_directory))
+    tmp_test_directory = Path(tmp_test_directory)
     atmospheres[1][_TRANSMISSION][_EXTINCTION][1] = 0
     result = characterize_atmospheres(atmospheres, tmp_test_directory)
     assert result[_REFERENCE] == _REFERENCE
     candidate = result[_ATMOSPHERES][1][_TRANSMISSION_DIFFERENCE]
     assert candidate["common_wavelength_count"] == 2
-    assert candidate["max_absolute_difference"] == pytest.approx(0.5)
-    assert result[_ATMOSPHERES][0]["observation_level_km"] == pytest.approx(2)
+    assert math.isclose(candidate["max_absolute_difference"], 0.5)
+    assert math.isclose(result[_ATMOSPHERES][0]["observation_level_km"], 2.0)
     for name in (
         "atmosphere_profiles.png",
         "atmosphere_transmission.png",
@@ -115,8 +120,8 @@ def test_profile_differences_interpolate_only_over_overlap():
 
 
 def test_profile_relative_differences_are_percentages():
-    reference = {"height": np.array([0, 2]), _PROFILE: {_DENSITY: np.array([2, 4])}}
-    candidate = {"height": np.array([0, 2]), _PROFILE: {_DENSITY: np.array([3, 2])}}
+    reference = {_HEIGHT: np.array([0, 2]), _PROFILE: {_DENSITY: np.array([2, 4])}}
+    candidate = {_HEIGHT: np.array([0, 2]), _PROFILE: {_DENSITY: np.array([3, 2])}}
     altitude, percentage = _profile_relative_difference(reference, candidate, _DENSITY)
     assert np.array_equal(altitude, [0, 2])
     assert np.allclose(percentage, [50, -50])
@@ -139,7 +144,7 @@ def test_profile_figure_has_altitude_and_reference_differences(
     second[_SITE] = "South"
     second[_PROFILE_VERSION] = _VERSION
     second[_PROFILE][_DENSITY] *= 2
-    prepared = [_prepare_atmosphere(item) for item in atmospheres]
+    prepared = [_prepare_atmosphere(item, _LEVELS) for item in atmospheres]
     save = mocker.patch("simtools.atmosphere.atmosphere_characterization.visualize.save_figure")
     _plot_profiles(prepared, tmp_test_directory, _RELATIVE_DIFFERENCE_LIMIT)
     figure = save.call_args.args[0]
@@ -156,23 +161,37 @@ def test_profile_figure_has_altitude_and_reference_differences(
     ]
     assert np.allclose(figure.axes[6].lines[1].get_ydata(), [0.7, 0.4, 0.2])
     assert np.allclose(figure.axes[6].lines[0].get_ydata(), 0)
-    from simtools.visualization.matplotlib_backend import pyplot as plt
-
     plt.close(figure)
 
 
 def test_transmission_figure_has_requested_levels(atmospheres, mocker, tmp_test_directory):
-    prepared = [_prepare_atmosphere(item) for item in atmospheres]
+    prepared = [_prepare_atmosphere(item, _LEVELS) for item in atmospheres]
     save = mocker.patch("simtools.atmosphere.atmosphere_characterization.visualize.save_figure")
     _plot_transmission(prepared, tmp_test_directory, _RELATIVE_DIFFERENCE_LIMIT)
     figure = save.call_args.args[0]
     assert len(figure.axes) == 12
-    assert figure.axes[0].get_title() == "Top of atmosphere (a.s.l.)"
+    assert figure.axes[0].get_title() == _TOP_OF_ATMOSPHERE
     assert figure.axes[8].get_title() == "3.5 km a.s.l."
     assert figure.axes[10].get_title() == "2.5 km a.s.l."
     assert figure.axes[10].get_xlabel() == "Wavelength [nm]"
     assert figure.axes[11].get_ylabel() == "Relative difference [%]"
     assert figure.axes[11].get_ylim() == (-35.0, 35.0)
-    from simtools.visualization.matplotlib_backend import pyplot as plt
-
     plt.close(figure)
+
+
+def test_transmission_levels_use_highest_observation_level():
+    labels = [label for label, _ in _transmission_levels(2.2 * u.km)]
+    assert labels == [
+        _TOP_OF_ATMOSPHERE,
+        "20 km a.s.l.",
+        "10 km a.s.l.",
+        "5 km a.s.l.",
+        "3.7 km a.s.l.",
+        "2.7 km a.s.l.",
+    ]
+
+
+def test_prepare_atmosphere_requires_observatory_level(atmospheres):
+    atmospheres[0][_TRANSMISSION].meta.clear()
+    with pytest.raises(ValueError, match="must define observatory_level"):
+        _prepare_atmosphere(atmospheres[0], _LEVELS)
