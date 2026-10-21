@@ -22,6 +22,11 @@ DUMMY_CONFIG_FILE = "dummy.yml"
 TEST_WORKDIR = "/workdir/external/"
 TEST_FILE1 = "file1.txt"
 TEST_FILE2 = "file2.txt"
+SIMULATION_MODELS_PATH = "simulation_models_path"
+SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
+SIMULATION_MODELS_GIT_REVISION = "simulation_models_git_revision"
+BASELINE_MODELS_PATH = "/baseline/simulation-models"
+TELESCOPE_THROUGHPUT_APPLICATION = "simtools-validate-telescope-throughput"
 
 
 def test_collection_preserves_pair_paths_and_checksums(tmp_test_directory):
@@ -343,9 +348,9 @@ def test_read_application_configuration_resolves_collection_path(monkeypatch):
 
 def test_model_source_options_only_reach_model_aware_applications():
     source_options = {
-        "simulation_models_path": "/models",
-        "simulation_models_git_path": "/models.git",
-        "simulation_models_git_revision": "main",
+        SIMULATION_MODELS_PATH: "/models",
+        SIMULATION_MODELS_GIT_PATH: "/models.git",
+        SIMULATION_MODELS_GIT_REVISION: "main",
     }
     derive_configuration = {}
     submit_configuration = {}
@@ -363,6 +368,29 @@ def test_model_source_options_only_reach_model_aware_applications():
 
     assert derive_configuration == {}
     assert submit_configuration == source_options
+
+
+def test_explicit_filesystem_model_source_overrides_inherited_git_options():
+    configuration = {SIMULATION_MODELS_PATH: BASELINE_MODELS_PATH}
+    candidate_configuration = {}
+    source_options = {
+        SIMULATION_MODELS_GIT_PATH: "/candidate/simulation-models",
+        SIMULATION_MODELS_GIT_REVISION: "main",
+    }
+
+    simtools_runner._apply_model_source_options(
+        TELESCOPE_THROUGHPUT_APPLICATION,
+        configuration,
+        source_options,
+    )
+    simtools_runner._apply_model_source_options(
+        TELESCOPE_THROUGHPUT_APPLICATION,
+        candidate_configuration,
+        source_options,
+    )
+
+    assert configuration == {SIMULATION_MODELS_PATH: BASELINE_MODELS_PATH}
+    assert candidate_configuration == source_options
 
 
 def test_read_application_configuration_selected_steps(
@@ -1390,7 +1418,7 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
             "runtime_environment": {"image": "unused"},
             "provenance_path": str(provenance),
             "log_file": str(Path(tmp_test_directory) / "execution.log"),
-            "simulation_models_git_revision": "v1.2.3",
+            SIMULATION_MODELS_GIT_REVISION: "v1.2.3",
             "env_file": "explicit.env",
             "_metadata_configuration_sources": {"cli": ["env_file"]},
         }
@@ -1398,7 +1426,7 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
     payload = yaml.safe_load(provenance.read_text())
     assert payload["runtime_environment"] is None
     assert payload["applications"][0]["configuration"]["env_file"] == "explicit.env"
-    assert payload["applications"][0]["configuration"]["simulation_models_git_revision"] == "v1.2.3"
+    assert payload["applications"][0]["configuration"][SIMULATION_MODELS_GIT_REVISION] == "v1.2.3"
 
 
 def test_resolved_workflow_serializes_path_values(tmp_test_directory):
@@ -1407,14 +1435,14 @@ def test_resolved_workflow_serializes_path_values(tmp_test_directory):
     destination = output / "resolved.yml"
     simtools_runner._write_resolved_workflow(
         "workflow.yml",
-        [{"configuration": {"output_path": output, "simulation_models_git_path": repository}}],
+        [{"configuration": {"output_path": output, SIMULATION_MODELS_GIT_PATH: repository}}],
         None,
         None,
         provenance_path=destination,
     )
 
     resolved = yaml.safe_load(destination.read_text(encoding="utf-8"))
-    assert resolved["applications"][0]["configuration"]["simulation_models_git_path"] == str(
+    assert resolved["applications"][0]["configuration"][SIMULATION_MODELS_GIT_PATH] == str(
         repository
     )
 
@@ -1438,3 +1466,14 @@ def test_run_applications_without_host_simulation_executables(mocker, tmp_test_d
     content = log_file.read_text(encoding="utf-8")
     assert "simtools version" in content
     assert "Runtime simtools: test" in content
+
+
+def test_explicit_git_model_source_excludes_inherited_filesystem_source():
+    configuration = {SIMULATION_MODELS_GIT_PATH: "selected-models"}
+    simtools_runner._apply_model_source_options(
+        TELESCOPE_THROUGHPUT_APPLICATION,
+        configuration,
+        {SIMULATION_MODELS_PATH: "inherited-models"},
+    )
+
+    assert configuration == {SIMULATION_MODELS_GIT_PATH: "selected-models"}

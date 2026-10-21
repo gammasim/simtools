@@ -7,6 +7,12 @@ import yaml
 
 from simtools.science_tests import definitions as science_test_definitions
 
+_CAMERA_EFFICIENCY_METRIC = "cam_eff"
+_COMPLETE_STATUS = "complete"
+_INCOMPLETE_STATUS = "incomplete"
+_CHANGES_KEY = "changes"
+_ADVISORY_KEY = "advisory"
+
 _REASON_KEY = "reason"
 _STATUS_KEY = "status"
 
@@ -111,7 +117,7 @@ def test_test_definition_applies_release_comparison_contract():
     definition = science_test_definitions._test_definition(
         test_id,
         {test_id: {"acceptance_rule": "limits"}},
-        {"products": {test_id: ["metrics.json"]}, "rules": {"limits": {"mode": "advisory"}}},
+        {"products": {test_id: ["metrics.json"]}, "rules": {"limits": {"mode": _ADVISORY_KEY}}},
         {
             "expected_changes": ["configuration.azimuth_angle"],
             "comparison_parameters": {"events": {"compare_by": ["configuration.azimuth_angle"]}},
@@ -120,7 +126,7 @@ def test_test_definition_applies_release_comparison_contract():
 
     assert definition["comparison_parameters"] == {"compare_by": ["configuration.azimuth_angle"]}
     assert definition["expected_changes"] == ["configuration.azimuth_angle"]
-    assert definition["rule"]["mode"] == "advisory"
+    assert definition["rule"]["mode"] == _ADVISORY_KEY
 
 
 def test_expected_pair_count_blocks_an_incomplete_comparison(tmp_test_directory):
@@ -143,7 +149,7 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
     definition = {
         "products": [str(metrics)],
         "rule": {
-            "mode": "advisory",
+            "mode": _ADVISORY_KEY,
             "metrics": [{"file": str(metrics), "key": "results.0.count", "minimum": 2}],
         },
     }
@@ -158,6 +164,63 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
     metrics.write_text(json.dumps({"results": [{"count": True}]}), encoding=_ENCODING)
     with pytest.raises(ValueError, match=r"Invalid metric results\.0\.count"):
         science_test_definitions._evaluate_products(definition, {})
+
+
+def test_result_status_file_blocks_incomplete_and_reports_advisory(tmp_test_directory):
+    result_file = Path(tmp_test_directory) / "comparison.json"
+    definition = {"result_status_file": str(result_file)}
+    result_file.write_text(
+        json.dumps(
+            {
+                "status": _COMPLETE_STATUS,
+                _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: True}},
+            }
+        ),
+        encoding=_ENCODING,
+    )
+
+    result = science_test_definitions._evaluate_products(definition, {})
+
+    assert result[_STATUS_KEY] == "warn"
+    assert "Advisory tolerance exceeded for cam_eff." in result["acceptance_warnings"]
+    result_file.write_text(json.dumps({"status": _INCOMPLETE_STATUS}), encoding=_ENCODING)
+    with pytest.raises(ValueError, match="Science-test result is incomplete"):
+        science_test_definitions._evaluate_products(definition, {})
+
+
+@pytest.mark.parametrize("child_status", [_COMPLETE_STATUS, _INCOMPLETE_STATUS])
+def test_result_status_file_handles_multiple_telescopes(tmp_test_directory, child_status):
+    result_file = Path(tmp_test_directory) / "comparison.json"
+    result_file.write_text(
+        json.dumps(
+            {
+                "status": _COMPLETE_STATUS,
+                _CHANGES_KEY: {},
+                "comparisons": {
+                    "LSTN-01": {
+                        "status": child_status,
+                        _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: True}},
+                    },
+                    "LSTN-02": {
+                        "status": _COMPLETE_STATUS,
+                        _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: False}},
+                    },
+                },
+            }
+        ),
+        encoding=_ENCODING,
+    )
+    definition = {"result_status_file": str(result_file)}
+
+    if child_status == _INCOMPLETE_STATUS:
+        with pytest.raises(ValueError, match="telescope result is incomplete"):
+            science_test_definitions._evaluate_products(definition, {})
+    else:
+        result = science_test_definitions._evaluate_products(definition, {})
+        assert result[_STATUS_KEY] == "warn"
+        assert result["acceptance_warnings"] == [
+            "LSTN-01: Advisory tolerance exceeded for cam_eff."
+        ]
 
 
 def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test_directory):
@@ -370,6 +433,37 @@ def test_site_cannot_override_context_root(tmp_test_directory):
     }
     with pytest.raises(ValueError, match="reserved context key"):
         science_test_definitions._site_replacements(context, "north", suite, root)
+
+
+def test_site_replacements_expose_selected_model_source(tmp_test_directory):
+    replacements = science_test_definitions._site_replacements(
+        {
+            "simulation_models_git_path": "/models",
+            "__SCIENCE_CANDIDATE_PATH__": "/candidate",
+            "__SCIENCE_BASELINE_PATH__": "/baseline",
+        },
+        "north",
+        {"array_layout_name": "CTAO-North-Alpha"},
+        Path(tmp_test_directory),
+    )
+
+    assert replacements["__SCIENCE_MODELS_SOURCE_PATH__"] == "/models"
+
+
+def test_site_replacements_use_first_camera_telescope_for_workflow_resolution(
+    tmp_test_directory,
+):
+    replacements = science_test_definitions._site_replacements(
+        {"__SCIENCE_CANDIDATE_PATH__": "/candidate"},
+        "north",
+        {
+            "array_layout_name": "CTAO-North-Alpha",
+            "camera_telescopes": ["LSTN-01", "LSTN-02"],
+        },
+        Path(tmp_test_directory),
+    )
+
+    assert replacements["__SCIENCE_CAMERA_TELESCOPE__"] == "LSTN-01"
 
 
 @pytest.mark.parametrize(
