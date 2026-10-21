@@ -6,10 +6,18 @@
    :exclude-members: main
 ```
 
-Compare one or more atmospheric profile and transmission model parameters from the
-configured simulation-model repository. Give the site, profile parameter version,
-and transmission parameter version for each atmosphere. The first atmosphere is
-the reference. Repeating the same combination is not supported.
+Compare one or more atmospheric profile and transmission model parameters. Give the
+site, profile, and transmission for each atmosphere. Profile and transmission are each
+either a parameter version read from the configured simulation-model repository or a
+path to an ECSV file (suffix `.ecsv`); any mix is allowed. ECSV files are validated
+against the model-parameter schema. The first atmosphere is the reference. Repeating
+the same combination is not supported.
+
+```console
+simtools-compare-atmospheres \
+    --atmosphere North 1.0.0 1.0.0 \
+    --atmosphere North path/to/atmospheric_profile.ecsv 2.0.0
+```
 
 The application writes profile figures for density, atmospheric depth, refractivity,
 temperature, pressure, and water-vapor partial pressure against altitude, with
