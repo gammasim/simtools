@@ -90,6 +90,16 @@ def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
+def test_prepared_nsb_spectrum_placeholder_uses_site_model_default(
+    camera_efficiency_lst, config_data_lst
+):
+    config = camera_efficiency_lst._configuration(
+        config_data_lst | {"nsb_spectrum": "${prepared:nsb_reference_spectrum.ecsv}"}
+    )
+
+    assert config["nsb_spectrum"] is None
+
+
 def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):
     telescope_model = MagicMock(site="North", name="LSTN-01")
     site_model = MagicMock()
