@@ -110,7 +110,7 @@ def test_publication_size_warns_for_large_reports(tmp_test_directory, caplog, mo
     directory = Path(tmp_test_directory) / "large"
     directory.mkdir()
     (directory / "file.txt").write_text("x", encoding=ENCODING)
-    with caplog.at_level(logging.WARNING):
+with caplog.at_level("WARNING"):
         size = reports._publication_size(directory)
     assert "warning" in size
     assert "is large" in caplog.text
