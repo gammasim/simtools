@@ -48,5 +48,5 @@ The input files can be generated using `simtools-generate-bias-curve-submissions
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: derive_bias_curves_mstn-01.yml
+    :file: derive_bias_curves_lstn-01.yml
 ```

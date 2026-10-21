@@ -4,7 +4,7 @@
 
 ### camera_efficiency
 
-The `camera_efficiency` module calculates optical throughput and NSB rates from validated model
+The `camera_efficiency` module calculates telescope throughput and NSB rates from validated model
 tables. A {ref}`TelescopeModel <telescope-model>` and a few physical parameters (zenith angle,
 etc.) are required inputs.
 
