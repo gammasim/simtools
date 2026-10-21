@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792579027760,
+  "lastUpdate": 1792586202259,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31076,6 +31076,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 459.84375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06198bdc466e81acf1335558e8f3d9bb4262137f",
+          "message": "Add a science tests camera efficiency (#2645)\n\n* Science tests running\n\n* science tests\n\n* changelog\n\n* improved documentation\n\n* improved documentation\n\n* better naming\n\n* labels\n\n* labels\n\n* printouts\n\n* remove uuid directory\n\n* add overwrite and collect\n\n* sonar must be happy\n\n* fix file checking\n\n* version setup\n\n* add select CL; allow empty TRIGGERS\n\n* sonar\n\n* obsolete tests\n\n* simplification\n\n* fix trigger comparison\n\n* compact plotting\n\n* production history\n\n* simpler docs\n\n* simplify plotting\n\n* sonar\n\n* integration test\n\n* unit tests\n\n* tests\n\n* simplified output\n\n* sonar corrections\n\n* simplification\n\n* simplification\n\n* simplify output\n\n* sonar\n\n* tests\n\n* docu\n\n* float\n\n* tests\n\n* unit tests\n\n* docu\n\n* simplification\n\n* improve doc\n\n* First step for camera efficiency tests\n\n* Improved science tests (efficiency)\n\n* simplified plotting\n\n* changelog\n\n* Rename camera efficiency validation to telescope throughput (#2652)\n\n* Rename camera efficiency validation to telescope throughput\n\n* Add throughput rename changelog fragment\n\n* Document camera efficiency compatibility command\n\n* Add compatibility command to application index\n\n* Align comparison config with JSON-only fixture output\n\n* Describe science result docs as telescope throughput\n\n* application renaming\n\n* renaming\n\n* tmp test\n\n* fix integration tests\n\n* tmp branch\n\n* telescope throughput\n\n* ci from main\n\n* not soure why",
+          "timestamp": "2026-10-21T14:21:15+02:00",
+          "tree_id": "6175cdb6325119096da4c033e4e572a2094487ee",
+          "url": "https://github.com/gammasim/simtools/commit/06198bdc466e81acf1335558e8f3d9bb4262137f"
+        },
+        "date": 1792586184364,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 54.581726715,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 53.04,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 464.84765625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
           }
