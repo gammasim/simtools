@@ -26,6 +26,7 @@ SIMULATION_MODELS_PATH = "simulation_models_path"
 SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 SIMULATION_MODELS_GIT_REVISION = "simulation_models_git_revision"
 BASELINE_MODELS_PATH = "/baseline/simulation-models"
+TELESCOPE_THROUGHPUT_APPLICATION = "simtools-validate-telescope-throughput"
 
 
 def test_collection_preserves_pair_paths_and_checksums(tmp_test_directory):
@@ -378,12 +379,12 @@ def test_explicit_filesystem_model_source_overrides_inherited_git_options():
     }
 
     simtools_runner._apply_model_source_options(
-        "simtools-validate-camera-efficiency",
+        TELESCOPE_THROUGHPUT_APPLICATION,
         configuration,
         source_options,
     )
     simtools_runner._apply_model_source_options(
-        "simtools-validate-camera-efficiency",
+        TELESCOPE_THROUGHPUT_APPLICATION,
         candidate_configuration,
         source_options,
     )
@@ -1470,7 +1471,7 @@ def test_run_applications_without_host_simulation_executables(mocker, tmp_test_d
 def test_explicit_git_model_source_excludes_inherited_filesystem_source():
     configuration = {SIMULATION_MODELS_GIT_PATH: "selected-models"}
     simtools_runner._apply_model_source_options(
-        "simtools-validate-camera-efficiency",
+        TELESCOPE_THROUGHPUT_APPLICATION,
         configuration,
         {SIMULATION_MODELS_PATH: "inherited-models"},
     )

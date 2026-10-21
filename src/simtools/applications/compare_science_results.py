@@ -28,6 +28,7 @@ _BASELINE_ARGUMENT = "baseline_path"
 _CANDIDATE_ARGUMENT = "candidate_path"
 _BASELINE_LABEL_ARGUMENT = "baseline_label"
 _CANDIDATE_LABEL_ARGUMENT = "candidate_label"
+_MANIFEST_FILE_NAME = "telescope_throughput_manifest.json"
 _BASELINE_KEY = "baseline"
 _CANDIDATE_KEY = "candidate"
 _LABEL_KEY = "label"
@@ -148,9 +149,9 @@ def _parse_tolerances(values):
 def _load_manifest_set(path):
     """Load a single manifest or all telescope manifests below a result directory."""
     root = Path(path)
-    direct = root if root.is_file() else root / "camera_efficiency_manifest.json"
+    direct = root if root.is_file() else root / _MANIFEST_FILE_NAME
     manifests = ([direct] if direct.is_file() else []) + sorted(
-        root.glob("*/camera_efficiency_manifest.json")
+        root.glob(f"*/{_MANIFEST_FILE_NAME}")
     )
     if not manifests:
         manifests = [root]

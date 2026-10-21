@@ -106,20 +106,20 @@ Camera-efficiency site definitions can list several telescopes in `camera_telesc
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
 
-Run `camera_efficiency` separately for each release, using that release's science-test directory,
+Run `telescope_throughput` separately for each release, using that release's science-test directory,
 context, container image, and model source. Each run writes telescope results and manifests under
 its configured release data directory. For example, select a site and run:
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
   --context_file /path/to/release/science_tests/context.yml --site north \
-  --test camera_efficiency
+  --test telescope_throughput
 ```
 
 Once both releases have results, configure the baseline and candidate paths in the candidate
-release context and run `--test compare.camera_efficiency`. The comparison reads the existing
+release context and run `--test compare.telescope_throughput`. The comparison reads the existing
 results and publishes `report.pdf` and `science-comparison.json` to
-`reports/<site>/compare.camera_efficiency/` in that release directory. Its analysis image must
+`reports/<site>/compare.telescope_throughput/` in that release directory. Its analysis image must
 contain `simtools-compare-science-results`. Execution logs and effective workflows remain below
 `$SIMTOOLS_SCIENCE_TESTS_ROOT/<release>/work/science-tests/`.
 

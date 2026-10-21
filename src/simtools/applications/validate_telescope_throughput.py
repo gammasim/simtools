@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Calculate on-axis telescope throughput and NSB pixels rates."""
+"""Calculate total on-axis telescope throughput, including optics and shadowing."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.camera.camera_efficiency_workflow import run_camera_efficiency

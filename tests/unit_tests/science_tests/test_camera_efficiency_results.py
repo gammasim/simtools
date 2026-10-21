@@ -20,6 +20,8 @@ _DIAGNOSTICS_KEY = "diagnostics"
 
 _DEFAULT_NSB_SPECTRUM = "default sim_telarray spectrum"
 _SUMMARY_FILE_NAME = "summary.yml"
+_SUMMARY_FILE_PREFIX = "telescope_throughput_summary"
+_MANIFEST_FILE_NAME = "telescope_throughput_manifest.json"
 _NSB_RATE_METRIC = "nsb_rate"
 _METRIC_VALUE_KEY = "value"
 _METRIC_UNIT_KEY = "unit"
@@ -177,7 +179,7 @@ def test_collect_legacy_results_fills_case_and_indexes_products(tmp_test_directo
         "nsb": str(root / "spectrum.ecsv"),
     }
     (root / "spectrum.ecsv").write_text("350 1\n", encoding=_ENCODING)
-    (root / "camera_efficiency_summary.yml").write_text(
+    (root / f"{_SUMMARY_FILE_PREFIX}.yml").write_text(
         yaml.safe_dump(summary_values), encoding=_ENCODING
     )
     Table({"wl": [300], "eff": [0.5]}).write(root / "shower.ecsv", format="ascii.ecsv")
@@ -196,7 +198,7 @@ def test_collect_legacy_results_fills_case_and_indexes_products(tmp_test_directo
 def test_collect_legacy_results_requires_one_summary(tmp_test_directory, count):
     root = Path(tmp_test_directory)
     for index in range(count):
-        (root / f"camera_efficiency_summary_{index}.yml").write_text("{}", encoding=_ENCODING)
+        (root / f"{_SUMMARY_FILE_PREFIX}_{index}.yml").write_text("{}", encoding=_ENCODING)
 
     with pytest.raises(ValueError, match="Expected one"):
         results.collect_legacy_results(root, {}, "image", "0.38.1")
@@ -294,13 +296,13 @@ def test_json_writer(tmp_test_directory):
 def test_load_manifest_adapts_legacy_directory_and_checks_schema(tmp_test_directory):
     root = Path(tmp_test_directory)
     summary = {name: {_METRIC_VALUE_KEY: 0.5} for name in results._METRIC_UNITS}
-    (root / "camera_efficiency_summary.yml").write_text(yaml.safe_dump(summary))
+    (root / f"{_SUMMARY_FILE_PREFIX}.yml").write_text(yaml.safe_dump(summary))
 
     legacy = results.load_manifest(root)
     assert legacy["status"] == "incomplete"
     assert legacy["_root"] == root
 
-    manifest_path = root / "camera_efficiency_manifest.json"
+    manifest_path = root / _MANIFEST_FILE_NAME
     manifest_path.write_text(json.dumps({_SCHEMA_VERSION_KEY: 99}))
     with pytest.raises(ValueError, match="Unsupported"):
         results.load_manifest(root)
@@ -308,7 +310,7 @@ def test_load_manifest_adapts_legacy_directory_and_checks_schema(tmp_test_direct
 
 def test_load_manifest_reads_supported_json_manifest(tmp_test_directory):
     root = Path(tmp_test_directory)
-    path = root / "camera_efficiency_manifest.json"
+    path = root / _MANIFEST_FILE_NAME
     path.write_text(json.dumps({_SCHEMA_VERSION_KEY: 1, "status": "complete"}))
 
     manifest = results.load_manifest(root)

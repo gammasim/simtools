@@ -22,7 +22,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'science-tests-telescope-throughput-integration-tests'
   workflow_call:
     inputs:
       simulation_model_branch:
@@ -34,7 +34,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'science-tests-telescope-throughput-integration-tests'
       container_image:
         description: 'Container image to use for tests'
         required: false
@@ -387,7 +387,9 @@ jobs:
       - name: Set test resource checkout
         id: test_resources
         env:
-          BRANCH: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
+          BRANCH: >-
+            ${{ inputs.simtools_tests_branch ||
+            'science-tests-telescope-throughput-integration-tests' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
