@@ -15,7 +15,9 @@ _COMPLETE_STATUS = "complete"
 _ENCODING = "utf-8"
 _VALIDATOR_FAILURE = "Validator failed"
 _RESULT_TYPE_KEY = "result_type"
-_CAMERA_RESULT_TYPE = "camera_efficiency"
+_CAMERA_RESULT_TYPE = "telescope_throughput"
+_LEGACY_CAMERA_RESULT_TYPE = "camera_efficiency"
+_LEGACY_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-camera-efficiency"
 _CAMERA_VALIDATOR_APPLICATION = "simtools-validate-telescope-throughput"
 _TELESCOPE_KEY = "telescope"
 _SECOND_TELESCOPE = "LSTN-02"
@@ -388,7 +390,11 @@ def test_collect_camera_efficiency_results_records_runtime(tmp_test_directory, m
     assert not (report_work / "camera-efficiency").exists()
 
 
-def test_execute_camera_workflow_collects_results_after_application(monkeypatch):
+@pytest.mark.parametrize(
+    "result_type",
+    [_LEGACY_CAMERA_RESULT_TYPE, _CAMERA_RESULT_TYPE],
+)
+def test_execute_camera_workflow_collects_results_after_application(monkeypatch, result_type):
     calls = []
     monkeypatch.setattr(
         science_test_execution, "run_applications", lambda *_args, **_kwargs: calls.append("run")
@@ -405,7 +411,7 @@ def test_execute_camera_workflow_collects_results_after_application(monkeypatch)
     )
 
     result = science_test_execution._execute_test_workflow(
-        {_RESULT_TYPE_KEY: _CAMERA_RESULT_TYPE},
+        {_RESULT_TYPE_KEY: result_type},
         {"science_workflow": {}, "ignore_runtime_environment": True},
         {},
     )
@@ -419,6 +425,21 @@ def test_collect_camera_efficiency_requires_validator_application():
         science_test_execution._collect_camera_efficiency_results(
             {"science_workflow": {"applications": []}}
         )
+
+
+@pytest.mark.parametrize(
+    "validator_application",
+    [_LEGACY_CAMERA_VALIDATOR_APPLICATION, _CAMERA_VALIDATOR_APPLICATION],
+)
+def test_camera_result_collection_recognizes_validator_aliases(validator_application):
+    configuration = {"output_path": "/results"}
+    args = {
+        "science_workflow": {
+            "applications": [{"application": validator_application, "configuration": configuration}]
+        }
+    }
+
+    assert science_test_execution._camera_validation_configurations(args) == [configuration]
 
 
 def test_camera_workflow_expands_one_application_per_telescope():
@@ -450,6 +471,33 @@ def test_camera_workflow_expands_one_application_per_telescope():
         "/results/telescope_throughput/LSTN-02",
     ]
     assert applications[-1]["configuration"]["telescopes"] == ["LSTN-01", _SECOND_TELESCOPE]
+
+
+@pytest.mark.parametrize(
+    "validator_application",
+    [_LEGACY_CAMERA_VALIDATOR_APPLICATION, _CAMERA_VALIDATOR_APPLICATION],
+)
+def test_camera_workflow_expands_validator_aliases(validator_application):
+    workflow = {
+        "applications": [
+            {
+                "application": validator_application,
+                "configuration": {"output_path": "/results/telescope_throughput"},
+            }
+        ]
+    }
+
+    science_test_execution._expand_camera_efficiency_telescopes(
+        workflow, {"camera_telescopes": ["LSTN-01", _SECOND_TELESCOPE]}, {}
+    )
+
+    validators = workflow["applications"]
+    assert len(validators) == 2
+    assert all(item["application"] == validator_application for item in validators)
+    assert [item["configuration"][_TELESCOPE_KEY] for item in validators] == [
+        "LSTN-01",
+        _SECOND_TELESCOPE,
+    ]
 
 
 def test_camera_workflow_keeps_single_legacy_output_path():

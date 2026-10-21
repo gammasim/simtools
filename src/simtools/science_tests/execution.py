@@ -85,9 +85,16 @@ _PRODUCES_PRODUCTION = "produces_production"
 _APPLICATION = "application"
 _CONFIGURATION = "configuration"
 _CAMERA_TELESCOPES_KEY = "camera_telescopes"
-_CAMERA_RESULT_TYPE = "camera_efficiency"
+_CAMERA_RESULT_TYPE = "telescope_throughput"
+_LEGACY_CAMERA_RESULT_TYPE = "camera_efficiency"
+_CAMERA_RESULT_TYPES = {_CAMERA_RESULT_TYPE, _LEGACY_CAMERA_RESULT_TYPE}
 _CAMERA_MANIFEST_FILE = "telescope_throughput_manifest.json"
+_LEGACY_CAMERA_VALIDATOR_APPLICATION = "simtools-validate-camera-efficiency"
 _CAMERA_VALIDATOR_APPLICATION = "simtools-validate-telescope-throughput"
+_CAMERA_VALIDATOR_APPLICATIONS = {
+    _LEGACY_CAMERA_VALIDATOR_APPLICATION,
+    _CAMERA_VALIDATOR_APPLICATION,
+}
 _SCIENCE_COMPARISON_APPLICATION = "simtools-compare-science-results"
 _SIMTOOLS_KEY = "simtools"
 
@@ -291,7 +298,7 @@ def _expand_camera_efficiency_telescopes(resolved, site_config, replacements):
             telescopes = site_config.get(_CAMERA_TELESCOPES_KEY)
             if telescopes:
                 configuration["telescopes"] = telescopes
-        if application.get(_APPLICATION) != _CAMERA_VALIDATOR_APPLICATION:
+        if application.get(_APPLICATION) not in _CAMERA_VALIDATOR_APPLICATIONS:
             expanded.append(application)
             continue
         telescopes = _camera_telescopes(site_config, replacements)
@@ -498,7 +505,7 @@ def _execute_test_workflow(definition, args, replacements):
     """Submit, collect, or execute a regular science workflow."""
     if definition.get("collect_production"):
         return _collect_production(definition, replacements)
-    camera_efficiency = definition.get("result_type") == _CAMERA_RESULT_TYPE
+    camera_efficiency = definition.get("result_type") in _CAMERA_RESULT_TYPES
     if camera_efficiency:
         _invalidate_camera_efficiency_results(args)
     with _selected_model_source_environment(args):
@@ -520,7 +527,7 @@ def _camera_validation_configurations(args):
     return [
         item.get(_CONFIGURATION, {})
         for item in args[_SCIENCE_WORKFLOW_KEY].get(_APPLICATIONS_KEY, [])
-        if item.get(_APPLICATION) == _CAMERA_VALIDATOR_APPLICATION
+        if item.get(_APPLICATION) in _CAMERA_VALIDATOR_APPLICATIONS
     ]
 
 

@@ -100,7 +100,7 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
-Camera-efficiency site definitions can list several telescopes in `camera_telescopes`:
+Telescope-throughput site definitions can list several telescopes in `camera_telescopes`:
 
 ```yaml
 camera_telescopes: [LSTN-01, LSTN-02]

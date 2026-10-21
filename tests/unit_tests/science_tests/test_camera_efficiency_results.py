@@ -21,6 +21,8 @@ _DIAGNOSTICS_KEY = "diagnostics"
 _DEFAULT_NSB_SPECTRUM = "default sim_telarray spectrum"
 _SUMMARY_FILE_NAME = "summary.yml"
 _SUMMARY_FILE_PREFIX = "telescope_throughput_summary"
+_LEGACY_SUMMARY_FILE_PREFIX = "camera_efficiency_summary"
+_SUMMARY_FILE_PREFIXES = (_SUMMARY_FILE_PREFIX, _LEGACY_SUMMARY_FILE_PREFIX)
 _MANIFEST_FILE_NAME = "telescope_throughput_manifest.json"
 _NSB_RATE_METRIC = "nsb_rate"
 _METRIC_VALUE_KEY = "value"
@@ -163,7 +165,10 @@ def test_manifest_does_not_hash_default_spectrum_label(tmp_test_directory):
     assert manifest[_DIAGNOSTICS_KEY] == []
 
 
-def test_collect_legacy_results_fills_case_and_indexes_products(tmp_test_directory):
+@pytest.mark.parametrize("summary_file_prefix", _SUMMARY_FILE_PREFIXES)
+def test_collect_legacy_results_fills_case_and_indexes_products(
+    tmp_test_directory, summary_file_prefix
+):
     from astropy.table import Table
 
     root = Path(tmp_test_directory)
@@ -179,7 +184,7 @@ def test_collect_legacy_results_fills_case_and_indexes_products(tmp_test_directo
         "nsb": str(root / "spectrum.ecsv"),
     }
     (root / "spectrum.ecsv").write_text("350 1\n", encoding=_ENCODING)
-    (root / f"{_SUMMARY_FILE_PREFIX}.yml").write_text(
+    (root / f"{summary_file_prefix}.yml").write_text(
         yaml.safe_dump(summary_values), encoding=_ENCODING
     )
     Table({"wl": [300], "eff": [0.5]}).write(root / "shower.ecsv", format="ascii.ecsv")

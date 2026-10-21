@@ -35,7 +35,10 @@ _SPECTRUM_KEY = "spectrum"
 _SHA256_KEY = "sha256"
 _SHOWER_CHANNEL = "shower"
 _MANIFEST_FILE_NAME = "telescope_throughput_manifest.json"
-_SUMMARY_FILE_PATTERN = "*telescope_throughput_summary*.yml"
+_SUMMARY_FILE_PATTERNS = (
+    "*telescope_throughput_summary*.yml",
+    "*camera_efficiency_summary*.yml",
+)
 
 _METRIC_UNITS = {
     "reflectivity": "",
@@ -369,7 +372,7 @@ def load_manifest(path):
 
 def _summary_path(output):
     """Require one combined legacy summary within a telescope's output directory."""
-    summaries = sorted(output.glob(_SUMMARY_FILE_PATTERN))
+    summaries = sorted(path for pattern in _SUMMARY_FILE_PATTERNS for path in output.glob(pattern))
     if len(summaries) != 1:
         raise ValueError(f"Expected one camera-efficiency summary in {output}.")
     return summaries[0]

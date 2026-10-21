@@ -26,8 +26,8 @@ collected into `report.pdf`; the application does not write separate PNG files.
 
 ```console
 simtools-compare-science-results \
-    --baseline_path /data/baseline/camera_efficiency \
-    --candidate_path /data/candidate/camera_efficiency \
+    --baseline_path /data/baseline/telescope_throughput \
+    --candidate_path /data/candidate/telescope_throughput \
     --telescopes LSTN-01 LSTN-02 \
     --compare_by case.model_version \
     --tolerance cam_eff=0.05 \
