@@ -22,6 +22,7 @@ from simtools.utils import names
 from simtools.visualization import visualize
 
 ECSV_SUFFIX = ".ecsv"
+_PREPARED_RESOURCE_PLACEHOLDER = "${prepared:"
 
 
 _SPECTRAL_STAGE_DESCRIPTIONS = {
@@ -110,10 +111,20 @@ class CameraEfficiency:
         dict
             Configuration data.
         """
+        nsb_spectrum = config_data.get("nsb_spectrum")
+        if isinstance(nsb_spectrum, str) and nsb_spectrum.startswith(
+            _PREPARED_RESOURCE_PLACEHOLDER
+        ):
+            self._logger.info(
+                "Prepared NSB spectrum is unavailable in direct application mode; "
+                "using the site model reference spectrum."
+            )
+            nsb_spectrum = None
+
         return {
             "zenith_angle": config_data["zenith_angle"].to("deg").value,
             "azimuth_angle": config_data["azimuth_angle"].to("deg").value,
-            "nsb_spectrum": config_data.get("nsb_spectrum", None),
+            "nsb_spectrum": nsb_spectrum,
             "skip_correction_to_nsb_spectrum": config_data.get(
                 "skip_correction_to_nsb_spectrum", False
             ),
@@ -257,7 +268,18 @@ class CameraEfficiency:
 
         self.nsb_pixel_pe_per_ns, self.nsb_rate_ref_conditions = self.calc_nsb_rate()
 
-        self._logger.info(f"\n{self.results_summary()}")
+        summary = self.results_summary()
+        self._logger.info(f"\n{summary}")
+        if self.efficiency_type == "shower" and {"cam_eff", "tot_sens"} <= summary:
+            camera_efficiency = summary["cam_eff"]["value"]
+            self._logger.info(
+                "Photon detection efficiency (300-550 nm; weighted by Cherenkov spectrum): "
+                f"{camera_efficiency:.1%}"
+            )
+            self._logger.info(
+                "Signal-to-noise efficiency (Cherenkov / sqrt(reference night-sky spectrum; "
+                f"albedo excluded)): {summary['tot_sens']['value']:.4f}"
+            )
 
         if export:
             self.export_results()
@@ -454,11 +476,6 @@ class CameraEfficiency:
         cherenkov_detected_total = np.sum(self._results["cherenkov_detected"])
         # (no need to apply masts or fill factors as in calc_tel_efficiency, they cancel out)
 
-        self._logger.info(
-            f"Fraction of light in the wavelength range {lambda_min}-{lambda_max} nm: "
-            f"{cherenkov_detected_sum / cherenkov_detected_total:.4f}"
-        )
-
         return cherenkov_detected_sum / cherenkov_detected_total
 
     def calc_reflectivity(self):
@@ -544,8 +561,6 @@ class CameraEfficiency:
         fig
             The figure instance of pyplot
         """
-        self._logger.info(f"Plotting {self.efficiency_type} efficiency vs wavelength")
-
         if self.efficiency_type in ("shower", "muon"):
             spectrum = "cherenkov"
             initial_column = "cherenkov_at_ground"
