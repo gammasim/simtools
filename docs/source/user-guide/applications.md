@@ -59,6 +59,7 @@ finite choices declared by argparse.
 
 simtools-compare-atmospheres <applications/simtools-compare-atmospheres>
 simtools-compare-productions <applications/simtools-compare-productions>
+simtools-compare-science-results <applications/simtools-compare-science-results>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-create-setting-workflow <applications/simtools-create-setting-workflow>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
@@ -114,10 +115,10 @@ simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
-simtools-validate-camera-efficiency <applications/simtools-validate-camera-efficiency>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-validate-telescope-throughput <applications/simtools-validate-telescope-throughput>
 simtools-validate-repository-consistency <applications/simtools-validate-repository-consistency>
 simtools-write-production-metadata <applications/simtools-write-production-metadata>
 simtools-write-reduced-event-lists <applications/simtools-write-reduced-event-lists>

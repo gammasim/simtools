@@ -23,6 +23,8 @@ from simtools.production_configuration.production_file_selection import (
 from simtools.utils.general import replace_placeholders_recursively
 
 _SCIENCE_REPORT_PATH = "__SCIENCE_REPORT_PATH__"
+_SCIENCE_CAMERA_TELESCOPE = "__SCIENCE_CAMERA_TELESCOPE__"
+_CAMERA_TELESCOPES_KEY = "camera_telescopes"
 _JOB_IDS = "job_ids"
 
 _ARRAY_LAYOUT_KEY = "array_layout"
@@ -48,6 +50,7 @@ _MODEL_SOURCE_KEYS = (
     "simulation_models_git_path",
     "simulation_models_git_revision",
 )
+_RUNTIME_ROLE_ERROR = "No runtime environment configured for role"
 
 _SUBMISSION_FILE_NAME = _get_product_filename("submission_manifest")
 
@@ -256,7 +259,7 @@ def _evaluate_products(definition, replacements):
     _check_required_products(definition, replacements)
     _check_expected_pair_count(definition, replacements)
     rule = definition.get("rule", {})
-    warnings = []
+    warnings = _comparison_status_warnings(definition, replacements)
     for metric in rule.get("metrics", []):
         try:
             warnings.extend(_evaluate_metric(metric, replacements))
@@ -271,6 +274,45 @@ def _evaluate_products(definition, replacements):
             "acceptance_warnings": warnings,
         }
     return {_STATUS_KEY: "pass"}
+
+
+def _comparison_status_warnings(definition, replacements):
+    """Require a complete result-status JSON and report advisory metric changes."""
+    status_file = definition.get("result_status_file")
+    if not status_file:
+        return []
+    path = Path(replace_placeholders_recursively(status_file, replacements))
+    try:
+        result = json.loads(path.read_text(encoding=_ENCODING))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Cannot read result status file {path}: {exc}") from exc
+    if not isinstance(result, dict) or result.get(_STATUS_KEY) != "complete":
+        status = result.get(_STATUS_KEY) if isinstance(result, dict) else "invalid"
+        raise ValueError(f"Science-test result is {status}: {path}")
+    comparisons = result.get("comparisons")
+    if comparisons is None:
+        return _comparison_metric_warnings(result, path)
+    if not isinstance(comparisons, dict) or not comparisons:
+        raise ValueError(f"Science-test result has no telescope comparisons: {path}")
+    return [
+        f"{telescope}: {warning}"
+        for telescope, comparison in comparisons.items()
+        for warning in _comparison_metric_warnings(comparison, path)
+    ]
+
+
+def _comparison_metric_warnings(result, path):
+    """Validate one telescope's result and collect advisory metric warnings."""
+    if not isinstance(result, dict) or result.get(_STATUS_KEY) != "complete":
+        raise ValueError(f"Science-test telescope result is incomplete: {path}")
+    changes = result.get("changes", {})
+    if not isinstance(changes, dict) or not changes:
+        raise ValueError(f"Science-test result has no metric changes: {path}")
+    return [
+        f"Advisory tolerance exceeded for {metric}."
+        for metric, change in changes.items()
+        if isinstance(change, dict) and change.get("advisory") is True
+    ]
 
 
 def _evaluate_metric(metric, replacements):
@@ -651,10 +693,12 @@ def _model_source_arguments(application_args, context, release):
     return args
 
 
-def _shared_runtime_environment(template_dir, replacements):
+def _shared_runtime_environment(template_dir, replacements, runtime_role=None):
     """Load shared runtime settings with paths relative to the runtime file."""
     runtime_file = template_dir / "run_time.yml"
     if not runtime_file.is_file():
+        if runtime_role:
+            raise ValueError(f"{_RUNTIME_ROLE_ERROR} {runtime_role!r}.")
         return None
     runtime_replacements = dict(replacements)
     runtime_replacements["__CONFIG_DIRECTORY__"] = str(runtime_file.parent.resolve())
@@ -662,7 +706,16 @@ def _shared_runtime_environment(template_dir, replacements):
     schema.validate_dict_using_schema(
         configuration, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
     )
-    return configuration["runtime_environment"]
+    if runtime_role:
+        runtimes = configuration.get("runtime_environments", {})
+        if runtime_role not in runtimes:
+            raise ValueError(f"{_RUNTIME_ROLE_ERROR} {runtime_role!r}.")
+        runtime = runtimes[runtime_role]
+    else:
+        runtime = configuration.get("runtime_environment")
+    if runtime and "__SCIENCE_" in json.dumps(runtime):
+        raise ValueError(f"Unresolved runtime setting for role {runtime_role!r}.")
+    return runtime
 
 
 def _site_replacements(context, site, site_config, work):
@@ -671,6 +724,11 @@ def _site_replacements(context, site, site_config, work):
     candidate_root = Path(context.get("__SCIENCE_CANDIDATE_PATH__", ""))
     baseline_root = Path(context.get("__SCIENCE_BASELINE_PATH__", ""))
     replacements = dict(context)
+    model_source = context.get("simulation_models_path") or context.get(
+        "simulation_models_git_path"
+    )
+    if model_source:
+        replacements["__SCIENCE_MODELS_SOURCE_PATH__"] = str(model_source)
     replacements.update(
         {
             "__SCIENCE_SITE_KEY__": site,
@@ -686,6 +744,9 @@ def _site_replacements(context, site, site_config, work):
         if key in replacements:
             raise ValueError(f"Site replacements cannot override reserved context key: {key}")
         replacements[key] = value
+    telescopes = site_config.get(_CAMERA_TELESCOPES_KEY)
+    if telescopes:
+        replacements[_SCIENCE_CAMERA_TELESCOPE] = telescopes[0]
     return {str(key): str(value) for key, value in replacements.items()}
 
 

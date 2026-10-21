@@ -1,0 +1,19 @@
+---
+applications:
+- application: simtools-compare-science-results
+  docs:
+    title: Compare telescope-throughput science results
+    summary: Compare exported telescope-throughput evidence without rerunning calculations.
+  configuration:
+    baseline_path: ${generated:telescope_throughput/telescope_throughput_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    candidate_path: ${generated:telescope_throughput/telescope_throughput_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
+    baseline_label: reference
+    candidate_label: candidate
+    output_path: science-comparison
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: science-comparison.json
+  test_name: telescope_throughput_artifacts
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

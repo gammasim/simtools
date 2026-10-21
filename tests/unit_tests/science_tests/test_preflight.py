@@ -6,6 +6,7 @@ import pytest
 from simtools.science_tests import preflight
 
 _CONTAINER_IMAGE_CONTEXT_KEY = "__SCIENCE_CONTAINER_IMAGE_PATH__"
+_ANALYSIS_IMAGE_CONTEXT_KEY = "__SCIENCE_ANALYSIS_IMAGE_PATH__"
 _WORKFLOW_FILE_NAME = "workflow.yml"
 _CONTAINER_IMAGE_PATH = "/image.sif"
 _BACKEND_FILE_NAME = "backend.yml"
@@ -35,7 +36,7 @@ def test_validate_context_paths_reports_missing_paths(tmp_test_directory):
         )
 
 
-def test_validate_context_paths_reports_empty_directories_and_image(tmp_test_directory):
+def test_validate_context_paths_reports_empty_directories_and_analysis_image(tmp_test_directory):
     root = Path(tmp_test_directory)
     empty = root / "empty"
     empty.mkdir()
@@ -48,13 +49,13 @@ def test_validate_context_paths_reports_empty_directories_and_image(tmp_test_dir
         preflight.validate_context_paths(
             {
                 "simulation_models_path": str(empty),
-                _CONTAINER_IMAGE_CONTEXT_KEY: str(image),
+                _ANALYSIS_IMAGE_CONTEXT_KEY: str(image),
             }
         )
 
     message = str(error.value)
     assert "simulation_models_path directory contains no non-empty files" in message
-    assert f"{_CONTAINER_IMAGE_CONTEXT_KEY} is not a non-empty file" in message
+    assert f"{_ANALYSIS_IMAGE_CONTEXT_KEY} is not a non-empty file" in message
 
 
 def test_canary_config_ignores_null_context_values(tmp_test_directory):

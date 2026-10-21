@@ -387,7 +387,9 @@ jobs:
       - name: Set test resource checkout
         id: test_resources
         env:
-          BRANCH: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
+          BRANCH: >-
+            ${{ inputs.simtools_tests_branch ||
+            'main' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
