@@ -15,7 +15,7 @@ applications:
     title: MSTN-01 Trigger Rate Bias Curves
     site: North
     telescope: MSTN-01
-    model_version: 6.0.1
+    model_version: 7.0.0
     parameter_version: 1.0.0
     output_path: simtools-output
   integration_tests:
