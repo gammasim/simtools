@@ -51,31 +51,27 @@ class ArgumentDefinition:
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
-        """Return a copy with application-local argparse overrides."""
-        return ArgumentDefinition(
-            self.name,
-            group=self.group,
-            exclusive_group=self.exclusive_group,
-            exclusive_group_required=self.exclusive_group_required,
-            preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
-            **{**self.kwargs, **overrides},
-        )
+        """Return a copy with application-local definition and argparse overrides.
+
+        Overrides named like a definition field (for example ``exclusive_group`` or
+        ``aliases``) replace that field; all other overrides replace argparse keywords.
+        """
+        fields = {field: overrides.pop(field, getattr(self, field)) for field in _DEFINITION_FIELDS}
+        return ArgumentDefinition(self.name, **fields, **{**self.kwargs, **overrides})
 
     def without_requiredness(self):
         """Return a copy whose required constraints can be validated after parsing."""
-        kwargs = dict(self.kwargs)
-        if "required" in kwargs:
-            kwargs["required"] = False
-        return ArgumentDefinition(
-            self.name,
-            group=self.group,
-            exclusive_group=self.exclusive_group,
-            exclusive_group_required=False,
-            preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
-            **kwargs,
-        )
+        required_override = {"required": False} if "required" in self.kwargs else {}
+        return self(exclusive_group_required=False, **required_override)
+
+
+_DEFINITION_FIELDS = (
+    "group",
+    "exclusive_group",
+    "exclusive_group_required",
+    "preserve_by_version",
+    "aliases",
+)
 
 
 def _argument(name, group, **kwargs):
@@ -170,6 +166,17 @@ BACKEND_CONFIG = _argument(
 )
 
 BACKEND_ARGUMENTS = (BACKEND, BACKEND_CONFIG)
+
+MAX_WORKERS = _argument(
+    "max_workers",
+    "execution",
+    help=(
+        "Maximum number of parallel local worker processes: 0 or negative uses all CPU "
+        "cores, 1 runs serially, unset uses a fraction of the CPU cores."
+    ),
+    type=int,
+    default=None,
+)
 
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
@@ -332,7 +339,10 @@ IGNORE_EXISTING_PARAMETER_VERSION = _argument(
     "ignore_existing_parameter_version",
     "execution",
     action="store_true",
-    help="skip checking for an existing model parameter version in the model repository",
+    help=(
+        "Skip the check for an existing model parameter version in the model repository "
+        "before writing model parameters."
+    ),
 )
 
 VERSION = _argument(
@@ -362,7 +372,6 @@ EXECUTION_ARGUMENTS = (
     FIGURE_FORMAT,
     FIGURE_DPI,
     EXPORT_BUILD_INFO,
-    IGNORE_EXISTING_PARAMETER_VERSION,
     VERSION,
     BUILD_INFO,
 )
@@ -855,6 +864,14 @@ OFFSET_STEP = _argument(
     default=0.25 * u.deg,
 )
 
+PSF_CONTAINMENT_FRACTION = _argument(
+    "fraction",
+    "application",
+    help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
+    type=helpers.efficiency_interval,
+    default=0.8,
+)
+
 ALL_MODEL_VERSIONS = _argument(
     "all_model_versions",
     "application",
@@ -908,14 +925,7 @@ def corsika_configuration_arguments(*, primary_required=True):
 
 def _layout_argument(argument, *, required):
     """Put an argument in the shared array-layout selection group."""
-    return ArgumentDefinition(
-        argument.name,
-        group=argument.group,
-        exclusive_group="array layout",
-        exclusive_group_required=required,
-        preserve_by_version=argument.preserve_by_version,
-        **argument.kwargs,
-    )
+    return argument(exclusive_group="array layout", exclusive_group_required=required)
 
 
 def layout_selection_arguments(

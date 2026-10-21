@@ -7,16 +7,14 @@ from simtools.io import ascii_handler
 from simtools.simtel import simtel_validate_metadata
 
 _ARGUMENTS = (
-    cli.ArgumentDefinition("output_file", help="Output file name", type=str, required=False),
+    cli.ArgumentDefinition("output_file", help="Output file name", type=str, required=True),
     cli.ArgumentDefinition(
         "source_type",
         help="Metadata source type to export",
         choices=simtel_validate_metadata.META_PARAMETER_SOURCE_TYPES,
         default="all",
     ),
-    cli.ArgumentDefinition(
-        "schema_version", help="Registry schema version", type=str, required=False
-    ),
+    cli.ArgumentDefinition("schema_version", help="Registry schema version", type=str),
 )
 
 

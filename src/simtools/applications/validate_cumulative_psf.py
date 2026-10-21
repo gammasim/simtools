@@ -9,13 +9,7 @@ from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 _ARGUMENTS = (
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
-    cli.ArgumentDefinition(
-        "data",
-        group="application",
-        help="Measured cumulative PSF data file.",
-        type=str,
-        required=True,
-    ),
+    cli.DATA(help="Measured cumulative PSF data file.", required=True),
 )
 
 

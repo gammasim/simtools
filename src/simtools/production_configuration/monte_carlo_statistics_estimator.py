@@ -736,7 +736,7 @@ def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
 
     selected_references = _select_reference_rows(
         metadata_table,
-        args_dict.get("array_layout_name") or args_dict.get("array_names"),
+        args_dict.get("array_layout_name"),
     )
     if args_dict.get("plot_diagnostics") and len(selected_references) > 0:
         _logger.info(

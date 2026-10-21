@@ -13,7 +13,12 @@ _DEFAULT_OUTPUT = Path("/opt/simtools/provenance/dependency-manifest.json")
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
-        cli.ArgumentDefinition("output_file", type=Path, default=_DEFAULT_OUTPUT),
+        cli.ArgumentDefinition(
+            "output_file",
+            type=Path,
+            default=_DEFAULT_OUTPUT,
+            help="Dependency manifest JSON file to write.",
+        ),
         cli.ArgumentDefinition(
             "development",
             action="store_true",

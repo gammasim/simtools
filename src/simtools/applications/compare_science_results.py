@@ -60,15 +60,19 @@ _ARGUMENTS = (
         required=True,
         help="Camera-efficiency manifest, legacy summary, or artifact directory for candidate.",
     ),
-    cli.ArgumentDefinition(_BASELINE_LABEL_ARGUMENT, type=str, default=_BASELINE_KEY),
-    cli.ArgumentDefinition(_CANDIDATE_LABEL_ARGUMENT, type=str, default=_CANDIDATE_KEY),
     cli.ArgumentDefinition(
-        _TELESCOPES_ARGUMENT,
+        _BASELINE_LABEL_ARGUMENT,
         type=str,
-        nargs="+",
-        default=[],
-        help="Restrict a directory comparison to these telescope names.",
+        default=_BASELINE_KEY,
+        help="Display label for the baseline in plots and the comparison JSON.",
     ),
+    cli.ArgumentDefinition(
+        _CANDIDATE_LABEL_ARGUMENT,
+        type=str,
+        default=_CANDIDATE_KEY,
+        help="Display label for the candidate in plots and the comparison JSON.",
+    ),
+    cli.TELESCOPES(default=[], help="Restrict a directory comparison to these telescope names."),
     cli.ArgumentDefinition(
         _COMPARE_BY_ARGUMENT,
         action=_APPEND_ACTION,
@@ -94,7 +98,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(*_ARGUMENTS, *cli.OUTPUT_PATH_ARGUMENTS),
     initialize_output=True,
     initialize_model_reader=False,
-    excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    excluded_standard_arguments=("test",),
 )
 
 

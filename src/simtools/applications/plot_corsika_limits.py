@@ -22,9 +22,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
     initialize_model_reader=False,
 )
 
