@@ -172,6 +172,8 @@ def _component_page(wavelength, unit, groups, relative, labels):
                 axis.plot(wavelength, before, linestyle="--", label=f"{label} {labels[0]}")
                 axis.plot(wavelength, after, label=f"{label} {labels[1]}")
         axis.set_ylabel(_RELATIVE_CHANGE_LABEL if relative else _EFFICIENCY_LABEL)
+        if not relative:
+            axis.set_ylim(top=1.0)
         axis.legend(fontsize="small")
         _label_wavelength_axis(axis, unit)
     axes.flat[-1].axis("off")

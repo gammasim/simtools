@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import astropy.units as u
@@ -80,6 +81,15 @@ def test_plot_components_writes_absolute_and_relative_pages(tmp_test_directory):
     with PdfPages(root / REPORT_PDF) as pdf:
         assert plots.plot_components(baseline, candidate, TITLE, LABELS, pdf) is None
         assert pdf.get_pagecount() == 2
+
+
+def test_component_page_limits_absolute_efficiency_to_one():
+    wavelength = np.array([300.0, 400.0])
+    groups = {"Mirrors": {"Reflectivity": (np.array([0.2, 0.5]), np.array([0.3, 0.6]))}}
+    absolute = plots._component_page(wavelength, u.nm, groups, False, LABELS)
+    relative = plots._component_page(wavelength, u.nm, groups, True, LABELS)
+    assert math.isclose(absolute.axes[0].get_ylim()[1], 1.0)
+    assert relative.axes[0].get_ylim()[1] > 1.0
 
 
 def test_plot_components_reports_missing_or_invalid_columns(tmp_test_directory):
