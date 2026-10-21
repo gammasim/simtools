@@ -33,7 +33,7 @@ def validate_corsika_output(data_files, log_files, expected_shower_events=None, 
     )
 
 
-def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3):
+def validate_event_numbers(data_files, expected_shower_events=None, tolerance=1.0e-3):
     """
     Validate the number of simulated events in CORSIKA output files.
 
@@ -49,6 +49,9 @@ def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3)
     ValueError
         If the number of simulated events does not match the expected number.
     """
+    if expected_shower_events is None:
+        _logger.info("Skipping CORSIKA event-count validation: no expected count was supplied.")
+        return
 
     def consistent(a, b, tol):
         return abs(a - b) / max(a, b) <= tol
@@ -76,9 +79,6 @@ def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3)
             )
 
     if event_errors:
-        _logger.error("Inconsistent event counts found in CORSIKA output:")
-        for error in event_errors:
-            _logger.error(f" - {error}")
         error_message = "Inconsistent event counts found in CORSIKA output:\n" + "\n".join(
             f" - {error}" for error in event_errors
         )

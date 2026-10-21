@@ -4,20 +4,22 @@ The simtools continuous integration tests, lints, and builds code, documentation
 
 ## Summary
 
-| Workflow | PR | PR (path filter) | PR (types) | release | schedule |
-|---|---:|---:|---:|---:|---:|
-| `CI-docs` | x | - | opened, ready_for_review | x | - |
-| `CI-linter` | x | - | opened, synchronize | - | nightly |
-| `CI-unittests` | x | `docs/**`, `tests/integration_tests/**` |  opened, synchronize | x | nightly |
-| `CI-integrationtests` | x |  `docs/**`, `tests/unit_tests/**` | opened, synchronize | x | nightly |
-| `CI-test-benchmarks` | - | - | - | - | nightly, main |
-| `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - |
-| `CI-software-update` | - | - | - | - | monthly |
-| `build-corsika-simtel` | x | `docker/Dockerfile-corsika-simtel` | - | x | weekly (no deploy) |
-| `build-simtools` | x | `docker/Dockerfile-prod-opt` | - | x | weekly (no deploy) |
-| `build-simtools-dev` | x | `docker/Dockerfile-dev` | - | x | weekly (no deploy) |
-| `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - |
-| `pypi` | - | - | - | x | - |
+| Workflow | PR | PR (path filter) | PR (types) | Push | Release | Schedule |
+|---|---:|---:|---:|---|---:|---:|
+| `CI-docs` | x | - | opened, ready_for_review | - | x | - |
+| `CI-linter` | x | - | opened, synchronize | - | - | nightly |
+| `CI-unittests` | x | `docs/**`, `tests/integration_tests/**` | opened, synchronize | - | x | nightly |
+| `CI-integrationtests` | x | `docs/**`, `tests/unit_tests/**` | opened, synchronize | - | x | nightly |
+| `CI-test-benchmarks` | - | - | - | main | - | nightly |
+| `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - | - |
+| `CI-software-update` | - | - | - | - | - | monthly |
+| `Refresh build-input snapshots` | - | - | - | - | - | weekly |
+| `build-corsika7` | x | `docker/Dockerfile-corsika7` | - | - | - | monthly (no deploy) |
+| `build-simtel_array` | x | `docker/Dockerfile-simtel_array` | - | - | - | monthly (no deploy) |
+| `build-simtools-prod` | - | - | - | `main` (path filter), RC tags | x | weekly (no deploy) |
+| `build-simtools-dev` | - | - | - | `main` (path filter), RC tags | x | weekly (no deploy) |
+| `changelog` | x | - | opened, labeled, unlabeled, ready_for_review | - | - | - |
+| `pypi` | - | - | - | - | x | - |
 
 All workflows can be triggered manually (`workflow_dispatch`).
 
@@ -80,8 +82,10 @@ The documentation is built into the [CI-docs.yml](.github/workflows/CI-docs.yml)
 
 Binary builds are done in two ways:
 
-- containers for CORSIKA and sim_telarray, see [build-corsika-simtel.yml](.github/workflows/build-corsika-simtel.yml)
-- containers for simtools, see [build-simtools.yml](.github/workflows/build-simtools.yml)
+- containers for CORSIKA, see [build-corsika7.yml](.github/workflows/build-corsika7.yml)
+- containers for sim_telarray, see [build-sim_telarray.yml](.github/workflows/build-sim_telarray.yml)
+- private source snapshots, see [refresh-build-input-snapshots.yml](.github/workflows/refresh-build-input-snapshots.yml)
+- production containers for simtools, see [build-simtools-prod.yml](.github/workflows/build-simtools-prod.yml)
 - containers for simtools development, see [build-simtools-dev.yml](.github/workflows/build-simtools-dev.yml)
 
 Builds are done for the platforms: linux/amd64,linux/arm64/v8 (the latter only for non-vector-optimized builds).

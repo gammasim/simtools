@@ -105,15 +105,13 @@ def test_plot_1d_legend_fontsize_setting():
     plt.close(fig)
 
 
-def test_add_unit(caplog, wavelength):
+def test_add_unit(wavelength):
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == wavelength
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
-    with caplog.at_level(logging.DEBUG):
-        assert visualize._add_unit(wavelength, value_with_unit)
-    assert "Tried to add a unit from astropy.unit" in caplog.text
+    assert visualize._add_unit(wavelength, value_with_unit) == wavelength
 
     value_with_unit = [30, 40] * u.cm**2
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
@@ -346,14 +344,34 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-def test_save_figures_to_single_document(tmp_test_directory):
+@pytest.mark.parametrize("figure_container", [list, iter])
+def test_save_figures_to_single_document(tmp_test_directory, figure_container):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
     output_pdf = tmp_test_directory / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document([fig1, fig2], output_pdf, close=True)
+    visualize.save_figures_to_single_document(
+        figure_container([fig1, fig2]), output_pdf, close=True
+    )
     assert output_pdf.exists()
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
     plt.close("all")
+
+
+def test_save_figures_to_single_document_closes_pdf_after_generator_error(
+    tmp_test_directory, mocker
+):
+    mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
+    figure = mocker.Mock()
+
+    def figures():
+        yield figure
+        raise RuntimeError("Cannot create figure")
+
+    with pytest.raises(RuntimeError, match="Cannot create figure"):
+        visualize.save_figures_to_single_document(figures(), tmp_test_directory / "images.pdf")
+
+    mock_pdf.return_value.__enter__.return_value.savefig.assert_called_once_with(figure)
+    mock_pdf.return_value.__exit__.assert_called_once()

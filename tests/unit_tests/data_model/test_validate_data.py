@@ -1144,3 +1144,28 @@ def test__check_site_and_array_element_consistency():
 
     with pytest.raises(ValueError, match=r"Site .* and instrument site .* are inconsistent"):
         data_validator._check_site_and_array_element_consistency(["LSTN-01", "MSTN-01"], "South")
+
+
+@pytest.mark.parametrize("required_range", [False, True])
+def test_empty_table_columns_validate_units_without_value_ranges(required_range):
+    validator = validate_data.DataValidator()
+    column_description = {
+        "name": "distance",
+        "required": True,
+        "type": "double",
+        "unit": "m",
+        "allowed_range": {"min": 0, "max": 10},
+    }
+    if required_range:
+        column_description["required_range"] = {"min": 0, "max": 10}
+    validator._data_description = [column_description]
+    validator.data_table = Table({"distance": Column([], dtype="float64", unit="cm")})
+    if required_range:
+        with pytest.raises(
+            ValueError, match="Empty column 'distance' cannot cover its required range"
+        ):
+            validator._validate_data_columns()
+    else:
+        validator._validate_data_columns()
+        assert validator.data_table["distance"].unit == u.m
+        assert len(validator.data_table) == 0

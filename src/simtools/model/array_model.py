@@ -6,7 +6,6 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools import settings
 from simtools.application.model_reader import require_model_reader
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
@@ -16,7 +15,7 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel import simtel_config_writer, simtel_seeds
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import general, names
 
 
@@ -86,8 +85,7 @@ class ArrayModel:
             for model in models:
                 model._config_file_directory = self._config_file_directory
 
-        self._telescope_model_files_exported = False
-        self._array_model_file_exported = False
+        self.configuration_writers = {}
         self.sim_telarray_seed = None
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
@@ -314,42 +312,23 @@ class ArrayModel:
         for tel_name, data in self.telescope_models.items():
             print(f"Name: {tel_name}\t Model: {data.name}")
 
+    def export_config_files(self, simulation_software="sim_telarray"):
+        """Export array and telescope configurations for selected software.
+
+        Parameters
+        ----------
+        simulation_software : str
+            Registered configuration format.
+        """
+        return get_model_writer(self, simulation_software).export_config_files()
+
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
-        exported_models = []
-        for tel_model in self.telescope_models.values():
-            name = tel_model.name
-            if name not in exported_models:
-                tel_model.write_sim_telarray_config_file(
-                    additional_models=self.calibration_models.get(tel_model.name)
-                )
-                exported_models.append(name)
-            else:
-                self._logger.debug(
-                    f"Configuration file for telescope {name} already exists - skipping"
-                )
-
-        self._telescope_model_files_exported = True
+        return get_model_writer(self).export_simtel_telescope_config_files()
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        self.site_model.export_model_files()
-
-        self._logger.info(f"Writing array configuration file into {self.config_file_path}")
-        simtel_writer = simtel_config_writer.SimtelConfigWriter(
-            site=self.site_model.site,
-            layout_name=self.layout_name,
-            model_version=self.model_version,
-            label=self.label,
-            model_reader=self.model_reader,
-        )
-        simtel_writer.write_array_config_file(
-            config_file_path=self.config_file_path,
-            telescope_model=self.telescope_models,
-            site_model=self.site_model,
-            additional_metadata=self._get_additional_simtel_metadata(),
-        )
-        self._array_model_file_exported = True
+        return get_model_writer(self).export_sim_telarray_config_file()
 
     def export_all_simtel_config_files(self):
         """
@@ -357,10 +336,7 @@ class ArrayModel:
 
         Config files are exported into the output model directory.
         """
-        if not self._telescope_model_files_exported:
-            self.export_simtel_telescope_config_files()
-        if not self._array_model_file_exported:
-            self.export_sim_telarray_config_file()
+        return get_model_writer(self).export_all_simtel_config_files()
 
     def get_config_directory(self):
         """
@@ -598,38 +574,8 @@ class ArrayModel:
         table.sort("telescope_name")
         return table
 
-    def _get_additional_simtel_metadata(self):
-        """
-        Collect additional metadata to be included in sim_telarray output.
-
-        Returns
-        -------
-        dict
-            Dictionary with additional metadata.
-        """
-        metadata = {
-            "nsb_integrated_flux": self.site_model.get_nsb_integrated_flux(),
-        }
-        for metadata_key, args_key in {
-            "primary": "primary",
-            "azimuth_angle": "azimuth_angle",
-            "zenith_angle": "zenith_angle",
-            "ha_angle": "ha",
-            "dec_angle": "dec",
-        }.items():
-            value = settings.config.args.get(args_key)
-            if value is not None:
-                metadata[metadata_key] = (
-                    value.to_value(u.deg) if hasattr(value, "to_value") else value
-                )
-        return metadata
-
     def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
         """Initialize sim_telarray seeds for instrument and shower simulations."""
-        self.sim_telarray_seed = simtel_seeds.SimtelSeeds(
-            output_path=self.get_config_directory(),
-            site=self.site_model.site,
-            model_version=self.model_version,
-            zenith_angle=zenith_angle,
-            azimuth_angle=azimuth_angle,
+        return get_model_writer(self).initialize_seeds(
+            zenith_angle=zenith_angle, azimuth_angle=azimuth_angle
         )

@@ -1,14 +1,20 @@
 #!/usr/bin/python3
 
+import logging
 from pathlib import Path
 from unittest import mock
 
 import numpy as np
 import pytest
+from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.visualization import plot_tables
+
+PLOT_INTERSECTION_PROTON_CURVE = (
+    "simtools.visualization.plot_tables._plot_intersection_proton_curve"
+)
 
 
 @mock.patch("simtools.visualization.plot_tables.visualize")
@@ -58,6 +64,16 @@ def test_read_astropy_table_data_from_file(mock_read_table):
     mock_read_table.assert_called_once_with("test_file.ecsv", format="ascii.ecsv")
     np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
     np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
+
+
+def test_select_values_from_table_accepts_unitless_schema_value_for_unit_column():
+    table = Table({"altitude": [15.0, 30.0] * u.km, "extinction": [0.1, 0.2]})
+
+    selected = plot_tables._select_values_from_table(table, "altitude", 30.0)
+
+    assert len(selected) == 1
+    assert selected["altitude"].unit == u.km
+    np.testing.assert_allclose(selected["altitude"][0], 30.0)
 
 
 def test_read_ecsv_table_data_from_file(tmp_test_directory):
@@ -601,6 +617,7 @@ def test_resolve_plot_output_path_file_and_directory(tmp_path):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -610,6 +627,7 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -627,7 +645,8 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
     mock_plot_nsb_curve.assert_called_once_with(mock_axis, nsb_stats)
     mock_plot_proton_curve.assert_called_once_with(mock_axis, proton_stats)
-    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats)
+    mock_plot_scaled_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
     mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
@@ -635,8 +654,8 @@ def test_plot_bias_curves_saves_and_closes_figure(
     assert output_path.parent.exists()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_nsb_curve_draws_errorbar_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     nsb_stats = {
         240: {"rate_hz": 200.0, "error_hz": 10.0},
@@ -654,21 +673,21 @@ def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
         color="tab:blue",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_nsb_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_nsb_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_nsb_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_proton_curve_draws_points_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     proton_stats = {
         240: {"rate_hz": 20.0, "error_hz": 2.0},
@@ -686,21 +705,21 @@ def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
         color="tab:orange",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_proton_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_proton_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_scaled_proton_curve_draws_points_and_fit(mock_plot_fit):
     axis = mock.MagicMock()
     proton_stats = {
         240: {"rate_hz": 20.0, "error_hz": 2.0},
@@ -719,32 +738,34 @@ def test_plot_scaled_proton_curve_draws_points_and_trend(mock_plot_trend):
         color="tab:red",
         capsize=3,
     )
-    mock_plot_trend.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
+    mock_plot_fit.assert_called_once_with(axis, [220, 240], [13.5, 27.0], color="tab:red")
 
 
-@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
-def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_trend):
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_fit")
+def test_plot_scaled_proton_curve_returns_early_when_empty(mock_plot_fit):
     axis = mock.MagicMock()
 
     plot_tables._plot_scaled_proton_curve(axis, {})
 
     axis.errorbar.assert_not_called()
-    mock_plot_trend.assert_not_called()
+    mock_plot_fit.assert_not_called()
 
 
-def test_plot_log_linear_trend_returns_without_plot_for_insufficient_data():
+def test_plot_log_linear_fit_returns_without_plot_for_insufficient_data(caplog):
     axis = mock.MagicMock()
+    caplog.set_level(logging.INFO, logger="simtools.visualization.plot_tables")
 
-    plot_tables._plot_log_linear_trend(axis, [220], [10.0], color="tab:blue")
-    plot_tables._plot_log_linear_trend(axis, [220, 240], [0.0, -1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220], [10.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240], [0.0, -1.0], color="tab:blue")
 
     axis.plot.assert_not_called()
+    assert caplog.text.count("need at least two distinct thresholds") == 2
 
 
-def test_plot_log_linear_trend_plots_for_valid_positive_rates():
+def test_plot_log_linear_fit_plots_for_valid_positive_rates():
     axis = mock.MagicMock()
 
-    plot_tables._plot_log_linear_trend(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
+    plot_tables._plot_log_linear_fit(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
 
     axis.plot.assert_called_once()
     args, kwargs = axis.plot.call_args
@@ -789,6 +810,7 @@ def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -798,6 +820,7 @@ def test_plot_bias_curves_with_trigger_threshold(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -821,6 +844,7 @@ def test_plot_bias_curves_with_trigger_threshold(
         trigger_threshold,
     )
 
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_axis.axvline.assert_called_once()
     call_kwargs = mock_axis.axvline.call_args[1]
     assert call_kwargs["x"] == pytest.approx(trigger_threshold)
@@ -831,6 +855,7 @@ def test_plot_bias_curves_with_trigger_threshold(
 
 
 @mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch(PLOT_INTERSECTION_PROTON_CURVE)
 @mock.patch("simtools.visualization.plot_tables._plot_scaled_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
 @mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
@@ -840,6 +865,7 @@ def test_plot_bias_curves_without_trigger_threshold(
     mock_plot_nsb_curve,
     mock_plot_proton_curve,
     mock_plot_scaled_proton_curve,
+    mock_plot_intersection_proton_curve,
     mock_configure_axis,
     tmp_path,
 ):
@@ -861,4 +887,20 @@ def test_plot_bias_curves_without_trigger_threshold(
         trigger_threshold=None,  # No threshold provided
     )
 
+    mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_axis.axvline.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "rates"), [([7], [10]), ([7, 7], [10, 20]), ([7, 8], [0, -1])]
+)
+def test_fit_bias_curve_insufficient_points(thresholds, rates):
+    assert plot_tables.fit_bias_curve(thresholds, rates) is None
+
+
+def test_fit_bias_curve_filters_invalid_points():
+    thresholds, coefficients = plot_tables.fit_bias_curve(
+        [7, 7.2, 8, 9, 10, np.inf], [100, 0, 10, np.nan, np.inf, 1]
+    )
+    assert thresholds == pytest.approx([7, 8])
+    assert coefficients == pytest.approx([-1, 9])

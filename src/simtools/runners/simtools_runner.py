@@ -1,12 +1,19 @@
 """Tools for running applications in the simtools framework."""
 
 import glob
+import hashlib
+import importlib
+import json
 import logging
 import os
+import re
 import shutil
+import subprocess
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
+
+import yaml
 
 import simtools.utils.general as gen
 from simtools import dependencies
@@ -14,14 +21,51 @@ from simtools import version as simtools_version
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
+from simtools.io.file_type import _get_product_filename
 from simtools.job_execution import job_manager
 
 logger = logging.getLogger(__name__)
+_SIMULATION_MODELS_PATH = "simulation_models_path"
+_SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
 _MODEL_SOURCE_OPTIONS = (
-    "simulation_models_path",
-    "simulation_models_git_path",
+    _SIMULATION_MODELS_PATH,
+    _SIMULATION_MODELS_GIT_PATH,
     "simulation_models_git_revision",
 )
+
+
+def prepare_workflow(args_dict, replacements=None):
+    """Resolve a workflow and its backend configuration without executing it.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Runner arguments, including config_file and optional steps and overrides.
+    replacements : dict or None
+        Placeholder values; the configuration directory is supplied automatically.
+
+    Returns
+    -------
+    tuple
+        Applications, runtime environment, log path, activity ID, and collection.
+    """
+    replacements = dict(replacements or {})
+    replacements.setdefault(
+        "__CONFIG_DIRECTORY__", str(Path(args_dict["config_file"]).resolve().parent)
+    )
+    configurations, runtime, log_file, activity, collection = _read_application_configuration(
+        args_dict["config_file"],
+        args_dict.get("steps"),
+        args_dict.get("activity_id"),
+        replacements=replacements,
+    )
+    _resolve_nested_configuration_files(configurations, replacements)
+    if args_dict.get("runtime_environment") is not None:
+        runtime = args_dict["runtime_environment"]
+    if args_dict.get("log_file") is not None:
+        log_file = args_dict["log_file"]
+    _validate_resolved_configuration(configurations, runtime, collection)
+    return configurations, runtime, log_file, activity, collection
 
 
 def run_applications(args_dict, run_time=None, replacements=None):
@@ -40,6 +84,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
         the runtime environment from the workflow configuration.
     replacements : dict or None
         Placeholder replacements applied recursively to the workflow configuration.
+        The configuration directory is added automatically as
+        __CONFIG_DIRECTORY__ when not supplied.
     """
     (
         configurations,
@@ -47,17 +93,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
         log_file,
         workflow_activity_id,
         collection_config,
-    ) = _read_application_configuration(
-        args_dict["config_file"],
-        args_dict.get("steps"),
-        args_dict.get("activity_id"),
-        replacements=replacements,
-    )
-    if args_dict.get("log_file") is not None:
-        log_file = args_dict["log_file"]
-    if args_dict.get("runtime_environment") is not None:
-        runtime_environment = args_dict["runtime_environment"]
-
+    ) = prepare_workflow(args_dict, replacements=replacements)
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
@@ -65,6 +101,15 @@ def run_applications(args_dict, run_time=None, replacements=None):
     model_source_options = _model_source_options(args_dict)
     explicit_env_file = _get_explicit_env_file(args_dict)
 
+    _apply_execution_overrides(configurations, args_dict, model_source_options, explicit_env_file)
+    effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
+    _write_resolved_workflow(
+        args_dict["config_file"],
+        configurations,
+        effective_runtime,
+        collection_config,
+        provenance_path=args_dict.get("provenance_path"),
+    )
     if args_dict["ignore_runtime_environment"]:
         run_time = []
     elif run_time is None:
@@ -74,7 +119,18 @@ def run_applications(args_dict, run_time=None, replacements=None):
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(run_time, include_software_versions=False))
+        try:
+            versions = dependencies.get_version_string(run_time, include_software_versions=True)
+        except FileNotFoundError as exc:
+            logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
+            versions = dependencies.get_version_string(run_time, include_software_versions=False)
+        file.write(versions)
+        try:
+            manifest = dependencies.get_dependency_manifest(run_time or None)
+            file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
+            file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            file.write(f"Runtime identity unavailable: {exc}\n")
         try:
             for config in configurations:
                 app = config.get("application")
@@ -83,11 +139,6 @@ def run_applications(args_dict, run_time=None, replacements=None):
                     continue
 
                 app_configuration = config.get("configuration", {})
-                _apply_model_source_options(app_configuration, model_source_options)
-                if args_dict.get("ignore_existing_parameter_version"):
-                    app_configuration["ignore_existing_parameter_version"] = True
-                if explicit_env_file is not None:
-                    app_configuration["env_file"] = explicit_env_file
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
@@ -170,16 +221,28 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
         )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
-        for pattern in files:
-            _copy_pattern_files(
-                pattern,
-                source_directories,
-                collection_output_path,
-                overwrite_files=overwrite_files,
+        inventory = []
+        for file_spec in files:
+            inventory.extend(
+                _copy_pattern_files(
+                    file_spec,
+                    source_directories,
+                    collection_output_path,
+                    overwrite_files=overwrite_files,
+                    preserve_relative_paths=entry.get("preserve_relative_paths", False),
+                )
             )
+        if entry.get("write_inventory"):
+            inventory_path = Path(
+                entry.get("inventory_file", collection_output_path / "inventory.json")
+            )
+            inventory_path.parent.mkdir(parents=True, exist_ok=True)
+            inventory_path.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
 
 
-def _copy_pattern_files(pattern, source_directories, destination, overwrite_files=False):
+def _copy_pattern_files(
+    pattern, source_directories, destination, overwrite_files=False, preserve_relative_paths=False
+):
     """Copy all files matching *pattern* from source directories into *destination*.
 
     Parameters
@@ -192,20 +255,98 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
         Target directory (must already exist).
     overwrite_files : bool
         If True, overwrite existing destination files.
+    preserve_relative_paths : bool
+        Preserve each matched file's path relative to its source directory.
 
     Raises
     ------
     FileExistsError
         When a source file would overwrite a different file with the same name.
     """
-    for source_file in _find_collection_files(pattern, source_directories):
-        dest = destination / source_file.name
+    inventory = []
+    destination_name = None
+    if isinstance(pattern, dict):
+        destination_name = pattern.get("destination")
+        pattern = pattern["source"]
+
+    _validate_collection_destination_name(destination_name)
+
+    if pattern == "**/comparison_statistics.meta.yml" and any(
+        (source_directory / _get_product_filename("comparison_statistics")).is_file()
+        for source_directory in source_directories
+    ):
+        return inventory
+
+    source_files = _find_collection_files(pattern, source_directories)
+    if destination_name is not None and len(source_files) != 1:
+        raise FileExistsError(
+            f"Collection destination '{destination_name}' requires exactly one source file, "
+            f"but pattern '{pattern}' matched {len(source_files)} files."
+        )
+
+    for source_file in source_files:
+        relative_path = _collection_relative_path(source_file, source_directories)
+        name = relative_path if preserve_relative_paths else source_file.name
+        dest = destination / (destination_name or name)
         if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
             raise FileExistsError(
                 f"Filename collision in collection: '{source_file.name}' would be "
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
             )
-        shutil.copy2(source_file, dest)
+        if dest.resolve() != source_file.resolve():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source_file, dest)
+        inventory.append(
+            {
+                "source": str(relative_path),
+                "destination": str(dest.relative_to(destination)),
+                "sha256": _sha256(source_file),
+            }
+        )
+    return inventory
+
+
+def _collection_relative_path(source_file, source_directories):
+    """Return a portable path within the matching collection source root."""
+    for root in source_directories:
+        if source_file.resolve().is_relative_to(root.resolve()):
+            return source_file.resolve().relative_to(root.resolve())
+    raise ValueError(f"Collection source is outside its declared roots: {source_file}")
+
+
+def _sha256(path):
+    """Return the SHA-256 checksum of one collected artifact."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _validate_collection_destination_name(destination_name):
+    """Validate an optional collection destination as a plain filename."""
+    if destination_name is None:
+        return
+    if not isinstance(destination_name, str):
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if not destination_name or destination_name in {".", ".."}:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if Path(destination_name).name != destination_name:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
+    if "/" in destination_name or "\\" in destination_name:
+        raise ValueError(
+            "Collection destination must be a non-empty filename without path separators: "
+            f"{destination_name!r}"
+        )
 
 
 def _collect_source_directories(configurations, source_directory=None):
@@ -306,9 +447,30 @@ def _model_source_options(args_dict):
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
 
-def _apply_model_source_options(configuration, source_options):
-    """Apply inherited model-source options without overriding app settings."""
+def _application_accepts_model_source_options(application, source_options):
+    """Return whether a simtools application accepts all model-source options."""
+    if not application.startswith("simtools-"):
+        return False
+
+    module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
+    try:
+        definition = importlib.import_module(module_name).APPLICATION
+    except ImportError, AttributeError:
+        return False
+
+    argument_names = {argument.name for argument in definition.all_arguments}
+    return set(source_options) <= argument_names
+
+
+def _apply_model_source_options(application, configuration, source_options):
+    """Apply inherited model-source options to applications that accept them."""
+    if not _application_accepts_model_source_options(application, source_options):
+        return
+    if configuration.get(_SIMULATION_MODELS_PATH):
+        return
     for key, value in source_options.items():
+        if key == _SIMULATION_MODELS_PATH and configuration.get(_SIMULATION_MODELS_GIT_PATH):
+            continue
         if configuration.get(key) is None:
             configuration[key] = value
 
@@ -414,6 +576,10 @@ def _read_application_configuration(
     )
     derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
+    collection_config = gen.replace_placeholders_recursively(
+        job_configuration.get("collection"),
+        {"__SETTING_WORKFLOW__": setting_workflow},
+    )
 
     output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
@@ -436,15 +602,93 @@ def _read_application_configuration(
     else:
         first_app_output = configurations[0].get("configuration", {}).get("output_path")
         log_path = Path(first_app_output) if first_app_output else derived_output_path
-    logger.info(f"Setting workflow output path to {log_path}")
+    logger.debug(f"Setting workflow output path to {log_path}")
 
     return (
         configurations,
         job_configuration.get("runtime_environment"),
         log_path / "simtools.log",
         workflow_activity_id,
-        job_configuration.get("collection"),
+        collection_config,
     )
+
+
+_SCIENCE_PLACEHOLDER = re.compile(r"__[A-Z][A-Z0-9_]+__")
+
+
+def _validate_resolved_configuration(configurations, runtime_environment, collection_config):
+    """Reject unresolved workflow placeholders before starting an application."""
+    values = [configurations, runtime_environment, collection_config]
+    unresolved = sorted(
+        {match.group(0) for value in values for match in _iter_placeholder_matches(value)}
+    )
+    if unresolved:
+        raise ValueError("Unresolved workflow placeholder(s): " + ", ".join(unresolved))
+
+
+def _resolve_nested_configuration_files(configurations, replacements):
+    """Resolve placeholders in referenced backend configuration files."""
+    for config in configurations:
+        app_configuration = config.get("configuration", {})
+        backend_config = app_configuration.get("backend_config")
+        if not isinstance(backend_config, (str, Path)):
+            continue
+        backend_path = Path(backend_config)
+        if not backend_path.is_absolute():
+            backend_path = Path(replacements["__CONFIG_DIRECTORY__"]) / backend_path
+        if not backend_path.is_file():
+            raise FileNotFoundError(f"Backend configuration not found: {backend_path}")
+        backend_values = ascii_handler.collect_data_from_file(backend_path)
+        if not isinstance(backend_values, dict):
+            raise ValueError(f"Backend configuration must contain a mapping: {backend_path}")
+        app_configuration["backend_config"] = gen.replace_placeholders_recursively(
+            backend_values,
+            replacements,
+        )
+
+
+def _iter_placeholder_matches(value):
+    """Yield placeholder matches from nested workflow values."""
+    if isinstance(value, str):
+        yield from _SCIENCE_PLACEHOLDER.finditer(value)
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _iter_placeholder_matches(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _iter_placeholder_matches(item)
+
+
+def _write_resolved_workflow(
+    configuration_file, configurations, runtime_environment, collection, provenance_path=None
+):
+    """Write execution provenance at an explicit path or below the first output."""
+    output_path = next(
+        (
+            config.get("configuration", {}).get("output_path")
+            for config in configurations
+            if config.get("configuration", {}).get("output_path")
+        ),
+        None,
+    )
+    if output_path is None and provenance_path is None:
+        return
+    provenance_path = (
+        Path(provenance_path)
+        if provenance_path
+        else Path(output_path) / "provenance" / "resolved-workflow.yml"
+    )
+    provenance_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "configuration_file": Path(configuration_file).name,
+        "applications": configurations,
+        "runtime_environment": runtime_environment,
+        "collection": collection,
+    }
+    with provenance_path.open("w", encoding="utf-8") as file:
+        yaml.safe_dump(
+            ascii_handler.to_builtin(payload), file, sort_keys=False, explicit_start=True
+        )
 
 
 def _get_application_log_file(application, app_configuration, counter):
@@ -586,10 +830,6 @@ def _set_input_output_directories(path):
         setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
     except ValueError:
         setting_workflow = str(path.parent) if path.parent != Path() else path.stem
-        logger.info(
-            "Could not derive setting workflow from 'input' anchor; "
-            f"using fallback '{setting_workflow}'"
-        )
 
     output_path = Path("simtools-output") / Path(setting_workflow)
     return output_path, setting_workflow
@@ -616,6 +856,9 @@ def read_runtime_environment(runtime_environment):
     engine = runtime_environment.get("container_engine", "docker")
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
+    if Path(engine).name == "apptainer":
+        return _read_apptainer_runtime_environment(runtime_environment, engine)
+
     cmd = [engine, "run", "--rm"]
 
     if options := runtime_environment.get("options"):
@@ -631,6 +874,20 @@ def read_runtime_environment(runtime_environment):
     cmd.append(runtime_environment["image"])
     _pull_image(engine, runtime_environment["image"])
 
+    return cmd
+
+
+def _read_apptainer_runtime_environment(runtime_environment, engine):
+    """Build an Apptainer execution command from a runtime configuration."""
+    image = runtime_environment["image"]
+    cmd = [engine, "exec"]
+    for option in runtime_environment.get("options", []):
+        cmd.extend(option.split())
+    if environment_file := runtime_environment.get("environment_file"):
+        cmd.extend(["--env-file", environment_file])
+    if runtime_environment.get("network"):
+        raise ValueError("Apptainer runtime environments do not support the network option.")
+    cmd.append(image)
     return cmd
 
 
@@ -685,3 +942,14 @@ def _pull_image(engine, image):
         job_manager.submit([engine, "pull", image], capture_output=False)
     except job_manager.JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc
+
+
+def _apply_execution_overrides(configurations, args, model_source, env_file):
+    """Apply inherited settings before recording or running applications."""
+    for config in configurations:
+        configuration = config.get("configuration", {})
+        _apply_model_source_options(config.get("application"), configuration, model_source)
+        if args.get("ignore_existing_parameter_version"):
+            configuration["ignore_existing_parameter_version"] = True
+        if env_file is not None:
+            configuration["env_file"] = env_file

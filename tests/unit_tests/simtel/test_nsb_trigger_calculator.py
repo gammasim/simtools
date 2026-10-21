@@ -147,6 +147,28 @@ def test_group_by_threshold_and_run():
     }
 
 
+def test_group_by_threshold_and_run_rejects_duplicate_runs():
+    with pytest.raises(ValueError, match=r"Duplicate NSB input.*first\.hdf5.*second\.hdf5"):
+        nsb_trigger_calculator.group_by_threshold_and_run(
+            [
+                {
+                    "threshold": 220,
+                    "run": 1,
+                    "triggers": 10,
+                    "events": 100,
+                    "file_path": "first.hdf5",
+                },
+                {
+                    "threshold": 220,
+                    "run": 1,
+                    "triggers": 20,
+                    "events": 100,
+                    "file_path": "second.hdf5",
+                },
+            ]
+        )
+
+
 def test_calculate_statistics_with_multiple_runs():
     stats = nsb_trigger_calculator.calculate_statistics(
         {
@@ -182,6 +204,43 @@ def test_calculate_statistics_with_no_events_returns_zero_rate():
     assert stats[220]["rate_hz"] == 0
     assert stats[220]["error_hz"] == 0
     assert stats[220]["num_runs"] == 0
+
+
+def test_calculate_statistics_excludes_zero_event_runs():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 0}, 2: {"triggers": 20, "events": 100}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {2: 20}
+    assert stats[220]["num_runs"] == 1
+
+
+@pytest.mark.parametrize("events", [float("nan"), float("inf")])
+def test_calculate_statistics_excludes_nonfinite_event_counts(events):
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": events}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {}
+    assert stats[220]["num_runs"] == 0
+
+
+def test_calculate_statistics_has_no_error_for_equal_rates_with_unequal_exposure():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {220: {1: {"triggers": 10, "events": 100}, 2: {"triggers": 100, "events": 1000}}},
+        time_window=0.001,
+    )
+
+    assert stats[220]["rate_hz"] == pytest.approx(100.0)
+    assert stats[220]["error_hz"] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("time_window", [0, -1, float("nan"), float("inf")])
+def test_calculate_statistics_rejects_invalid_time_window(time_window):
+    with pytest.raises(ValueError, match="time_window must be finite and positive"):
+        nsb_trigger_calculator.calculate_statistics({}, time_window=time_window)
 
 
 def test_generate_ecsv_output_writes_table(tmp_path):
@@ -268,9 +327,9 @@ def test_derive_nsb_triggers_raises_for_missing_time_window(tmp_path):
         nsb_trigger_calculator.derive_nsb_triggers({"root_dir": tmp_path})
 
 
-@pytest.mark.parametrize("time_window", [0, -1e-9])
-def test_derive_nsb_triggers_raises_for_non_positive_time_window(tmp_path, time_window):
-    with pytest.raises(ValueError, match="Argument 'time_window' must be > 0"):
+@pytest.mark.parametrize("time_window", [0, -1e-9, float("nan"), float("inf")])
+def test_derive_nsb_triggers_raises_for_invalid_time_window(tmp_path, time_window):
+    with pytest.raises(ValueError, match="Argument 'time_window' must be finite and > 0"):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": time_window}
         )
@@ -281,3 +340,22 @@ def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": "not-a-number"}
         )
+
+
+@pytest.mark.parametrize("label", ["asum", "dsum", "discriminator"])
+@pytest.mark.parametrize("threshold", [7, 7.2, 7.4, 8, 9])
+def test_extract_threshold_preserves_decimals(tmp_test_directory, label, threshold):
+    file_path = tmp_test_directory / "events.hdf5"
+    _write_file_info_hdf5(file_path, f"gamma_run000001_{label}{threshold}.simtel.zst")
+    assert nsb_trigger_calculator.extract_threshold(file_path) == pytest.approx(threshold)
+
+
+def test_nsb_grouping_preserves_decimal_thresholds(tmp_test_directory):
+    parsed = []
+    for threshold in (7, 7.2, 7.4):
+        file_path = tmp_test_directory / f"gamma_asum{threshold}.hdf5"
+        _write_nsb_hdf5(file_path, n_showers=10, n_triggers=2, threshold=threshold)
+        parsed.append(nsb_trigger_calculator.parse_nsb_hdf5_file(file_path))
+    grouped = nsb_trigger_calculator.group_by_threshold_and_run(parsed)
+    assert set(grouped) == {7, 7.2, 7.4}
+    assert all(data[1]["triggers"] == 2 for data in grouped.values())

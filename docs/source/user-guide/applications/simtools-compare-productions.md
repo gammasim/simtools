@@ -21,30 +21,20 @@ The application supports event-level and signal-level comparisons. Trigger-histo
 normally be produced with
 [simtools-write-trigger-histograms](simtools-write-trigger-histograms).
 
-For production resource requirements, use `--comparison_level computing` with a production root in
-`--baseline_path`. This mode discovers selected job manifests and their CORSIKA and sim_telarray
-resource records. It writes `resource_requirements.ecsv` (one normalized process row per job and
-process role), a
-grouped `resource_requirements.md` report, and time, memory, and storage plots. Storage plots
-include the combined sim_telarray total plus separate plots for CORSIKA output, sim_telarray
-event output, reduced event data, and sim_telarray histograms when those files are available.
-Time, CPU, and output sizes are normalized by `showers_per_run`; peak resident memory remains a
-per-process maximum. Byte-based quantities in plots use decimal MB or GB, selected according to
-the values shown; the ECSV resource table retains raw byte values. For sim_telarray, additional
-plots normalize time and output sizes by the
-number of triggered events recorded in the job metadata. Sim_telarray storage includes simtel event
-files, reduced event data, and histogram files. New job manifests record these counts under
-`statistics`; when processing older manifests, the computing comparison can recover the count from
-the reduced-event HDF5 table or the sim_telarray log without opening the `.simtel.zst` file.
-Piped CORSIKA jobs have no retained CORSIKA output size and report it as missing. An optional
-`--candidate_path` overlays a second production. When both productions are provided, each
-available resource plot also has a `candidate / baseline` ratio plot with propagated errors and a
-horizontal reference line at one. The ratio errors propagate the uncertainty of each production
-mean from its run-to-run RMS. A warning is logged when the ratio differs by a factor of 1.25 or
-more; changes by a factor of 1.5 or more are marked as major. Use `--baseline_label` and
-`--candidate_label` to replace the default display labels. Ratio points are matched by primary,
-site, layout, and model version; separate series are shown when these dimensions vary. Repeated
-`--select` expressions filter both production manifests.
+Metadata-based event comparisons write pair coverage to `comparison_inventory.json`. Compact
+reports keep only aggregate event counts and labels in `comparison_statistics.json`; plot metrics
+are annotated in the PDF. Check pairing errors before interpreting the results.
+Use `--report_mode diagnostic` to retain histogram arrays and detailed figures.
+Compact reports omit energy distributions for fixed-energy pairs and angular-distance distributions
+for on-axis pairs when both productions' metadata confirms those conditions. This applies to
+telescope-type plots too. Missing metadata keeps the
+distributions visible.
+
+For computing summaries, use `--comparison_level computing --baseline_path <production-root>`.
+Add `--candidate_path` to compare a second production and repeated `--select` options to filter
+both. Outputs include `resource_requirements.md`, `resource_requirements.json`, and resource plots
+for CORSIKA and sim_telarray. Time and storage are normalized per event; peak memory is per process.
+Diagnostic mode also retains detailed ECSV records.
 
 ```console
 simtools-compare-productions \
@@ -105,7 +95,6 @@ simtools-compare-productions \
 | Input | `telescope_name` | Telescope name(s) | Optional alias for signal-level telescope selection. |
 | Output | `output_path` | Directory | Directory for figures and the statistics report. |
 | Output | `comparison_statistics.json` | JSON | Machine-readable comparison statistics. |
-| Output | `comparison_statistics.meta.yml` | YAML | Metadata sidecar for the statistics report. |
 
 Event-level comparisons include trigger multiplicity, trigger combinations, single-telescope and
 mixed-type trigger distributions, telescope participation, and simulated/triggered distributions

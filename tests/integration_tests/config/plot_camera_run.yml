@@ -1,0 +1,25 @@
+---
+applications:
+- application: simtools-plot-camera
+  docs:
+    title: Plot the NectarCam camera
+    summary: >-
+      Compare the MST NectarCam pixel layout with the simulated camera field of view and produce
+      diagnostic plots.
+  configuration:
+    figure_format:
+    - pdf
+    - png
+    model_version: 6.0.2
+    output_path: simtools-output
+    site: North
+    telescope: MSTx-NectarCam
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.pdf
+    - path_descriptor: output_path
+      file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.png
+  test_name: fov-run
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

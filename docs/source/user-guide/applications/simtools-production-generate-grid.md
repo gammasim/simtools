@@ -29,7 +29,8 @@ The application reads and writes the following user-visible files:
 
 ## Defining the number of showers
 
-`showers_per_run` is required and defines the baseline number of CORSIKA showers in one job.
+`showers_per_run` defines the baseline number of CORSIKA showers in one job. It is required unless
+`max_showers_per_run` is used with `total_showers`.
 For every combination of primary, model version, interaction model, pointing, and energy interval,
 the application first determines the showers in each generated job and then determines how many jobs
 to create. The resulting value is written to the `showers_per_run` column; the unscaled configured
@@ -42,7 +43,13 @@ Choose one of the following allocation modes:
 | Fixed number of jobs | Set `number_of_runs`. | Creates that many jobs for every grid point and energy interval. The total is `number_of_runs * showers_per_run` after any per-run scaling. If omitted, one job is created. |
 | Target number of showers | Set `total_showers`. | Creates enough equal-sized jobs to meet the target at every grid point and energy interval. This cannot be used with `number_of_runs`. |
 
-With `total_showers`, the target is rounded up to a whole number of jobs. For example,
+Add `max_showers_per_run` with `total_showers` to choose the smallest number of equal-sized jobs
+that stays at or below the cap. The generated total is rounded up only enough to keep every job
+equal. For example, a target of 2500 with a cap of 1000 creates three jobs of 834 showers (2502
+showers total). This option can be set in YAML or passed as `--max_showers_per_run`.
+
+Without `max_showers_per_run`, `total_showers` uses `showers_per_run` as the fixed job size and
+rounds the target up to a whole number of jobs. For example,
 `total_showers: 2500` and `showers_per_run: 1000` create three jobs of 1000 showers, for an actual
 total of 3000. A warning reports each such adjustment; `max_total_showers_rounding_warnings` limits
 how many of these warnings are emitted (20 by default).

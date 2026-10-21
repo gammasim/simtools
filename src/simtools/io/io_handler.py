@@ -153,11 +153,13 @@ class IOHandler(metaclass=IOHandlerSingleton):
         -------
         Path
         """
-        return (
+        output_file = (
             self.get_output_directory(sub_dir, output_path_label=output_path_label)
             .joinpath(file_name)
             .absolute()
         )
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        return output_file
 
     def get_test_data_file(self, file_name=None, sub_dir=("static", "generated")):
         """

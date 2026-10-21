@@ -131,10 +131,6 @@ def _add_unit(title, array):
         Title with units.
     """
     if title and "[" in title and "]" in title:
-        _logger.debug(
-            "Tried to add a unit from astropy.unit, "
-            "but axis already has an explicit unit. Left axis title as is."
-        )
         return title
 
     if not isinstance(array, u.Quantity) or not str(array[0].unit):
@@ -706,19 +702,17 @@ def save_figures_to_single_document(figs, output_file_name, close=False):
 
     Parameters
     ----------
-    figs: list
-        List of plt.figure instances to save.
+    figs: iterable
+        Matplotlib figures to save, optionally generated one at a time.
     output_file_name: Path, str
         PDF file name
     close : bool, optional
         Close each figure after saving. Defaults to False.
     """
-    _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
-    pdf_pages = pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix())
-    for fig in figs:
-        fig.tight_layout()
-        pdf_pages.savefig(fig)
-        if close:
-            plt.close(fig)
-
-    pdf_pages.close()
+    _logger.info(f"Saving figures to {output_file_name}")
+    with pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix()) as pdf_pages:
+        for fig in figs:
+            fig.tight_layout()
+            pdf_pages.savefig(fig)
+            if close:
+                plt.close(fig)
