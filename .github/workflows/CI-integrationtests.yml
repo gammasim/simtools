@@ -22,7 +22,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'trigger-bugfixes'
   workflow_call:
     inputs:
       simulation_model_branch:
@@ -34,7 +34,7 @@ on:
         description: 'simtools-tests branch'
         required: false
         type: string
-        default: 'main'
+        default: 'trigger-bugfixes'
       container_image:
         description: 'Container image to use for tests'
         required: false
