@@ -1,0 +1,26 @@
+---
+applications:
+- application: simtools-characterize-atmosphere
+  docs:
+    title: Compare atmospheric models
+    summary: Compare North and South profiles and their atmospheric transmission.
+  configuration:
+    atmosphere:
+    - [North, 1.0.0, 1.0.0]
+    - [South, 1.0.0, 1.0.0]
+    figure_format: [png]
+    output_path: simtools-output
+  integration_tests:
+  - test_outputs:
+    - file: atmosphere_profiles.png
+      path_descriptor: output_path
+    - file: atmosphere_transmission.png
+      path_descriptor: output_path
+    - file: atmosphere_summary.json
+      path_descriptor: output_path
+      validations:
+      - type: format
+        format: json
+  test_name: comparison
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

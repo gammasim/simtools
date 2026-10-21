@@ -57,6 +57,7 @@ finite choices declared by argparse.
 :glob: true
 :maxdepth: 1
 
+simtools-characterize-atmosphere <applications/simtools-characterize-atmosphere>
 simtools-compare-productions <applications/simtools-compare-productions>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-create-setting-workflow <applications/simtools-create-setting-workflow>

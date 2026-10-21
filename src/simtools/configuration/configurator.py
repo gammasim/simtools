@@ -16,6 +16,8 @@ from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 from simtools.utils import names
 
+_APPEND_ACTION = "_AppendAction"
+
 
 class Configurator:
     """
@@ -445,6 +447,13 @@ class Configurator:
         """Convert a list-valued configuration entry to command-line tokens."""
         if not value:
             return [option] if action is not None and action.nargs == "*" else []
+        if (
+            action is not None
+            and action.__class__.__name__ == _APPEND_ACTION
+            and action.nargs is not None
+            and all(isinstance(item, list) for item in value)
+        ):
+            return [token for item in value for token in (option, *map(str, item))]
         if Configurator._is_repeatable_single_value(action):
             return [token for item in value for token in (option, str(item))]
         return [option, *map(str, value)]
@@ -454,7 +463,7 @@ class Configurator:
         """Return whether an argparse action appends one value per occurrence."""
         return (
             action is not None
-            and action.__class__.__name__ == "_AppendAction"
+            and action.__class__.__name__ == _APPEND_ACTION
             and action.nargs is None
         )
 
