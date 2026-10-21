@@ -8,7 +8,7 @@ def test_corsika_defaults():
         defaults.CORSIKA_INTERACTION_TABLE_PATH
         == "/workdir/external/simpipe/simulation_software/corsika7-interaction-tables/interaction-tables/"
     )
-    assert defaults.CORSIKA_HE_INTERACTION == "qgs3"
+    assert defaults.CORSIKA_HE_INTERACTION == "epos"
     assert defaults.CORSIKA_LE_INTERACTION == "urqmd"
 
 
