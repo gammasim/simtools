@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792576512057,
+  "lastUpdate": 1792579027760,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31034,6 +31034,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 456.21875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "94466479+EshitaJoshi@users.noreply.github.com",
+            "name": "Eshita Joshi",
+            "username": "EshitaJoshi"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4cd30afa05acc30ccc9ed42f85113abb03898faf",
+          "message": "Merge pull request #2622 from gammasim/trigger-bugfixes\n\nTrigger bugfixes",
+          "timestamp": "2026-10-21T12:21:56+02:00",
+          "tree_id": "72971707d168a842b1e1221b323fdedc639ef852",
+          "url": "https://github.com/gammasim/simtools/commit/4cd30afa05acc30ccc9ed42f85113abb03898faf"
+        },
+        "date": 1792579015888,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 88.98509227999999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 91.83000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 459.84375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
           }
