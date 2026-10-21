@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792572954295,
+  "lastUpdate": 1792572981426,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -30952,6 +30952,48 @@ window.BENCHMARK_DATA = {
             "value": 441.14453125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6039ba1e5db596b8a9b11ec48411d3b411246ea1",
+          "message": "Improve `simtools-production-generate-grid` to allow for a smooth total number of events distribution as function of zenith angle. (#2650)\n\n* Improve `simtools-production-generate-grid` to allow for a smooth total number of events distribution as function of zenith angle.\n\n* reviewers comments\n\n* sonar",
+          "timestamp": "2026-10-21T10:40:12+02:00",
+          "tree_id": "60b3501e5be9eb94368dc9466d24afd4fb6ecca0",
+          "url": "https://github.com/gammasim/simtools/commit/6039ba1e5db596b8a9b11ec48411d3b411246ea1"
+        },
+        "date": 1792572966738,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 70.63681063700001,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 69.00999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 457.92578125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.8 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
