@@ -1,0 +1,61 @@
+%YAML 1.2
+---
+title: Schema for fadc_lg_pulse_shape model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: "https://raw.githubusercontent.com/gammasim/\
+  simtools/main/src/simtools/schemas/\
+  model_parameter_and_data_schema.metaschema.yml"
+meta_schema_version: 0.1.0
+name: fadc_lg_pulse_shape
+description: >-
+  Complete narrow-illumination low-gain FADC pulse templates versus fluctuated
+  pixel intensity. Each row gives the input intensity in photoelectron units,
+  time relative to the pixel-pulse reference time, and waveform amplitude in
+  units of the nominal one-photoelectron FADC peak. The table is used only
+  above its lowest intensity; lower signals retain the linear pulse path.
+  Amplitudes include the full intensity response and must not be normalized
+  independently at each intensity. Time zero is the median photoelectron
+  arrival time including pixel transit delay. Templates must share a time
+  grid. Linear interpolation is used between intensities; above the largest
+  intensity the last waveform is held fixed. Baseline-subtracted templates
+  affect Cherenkov readout only; NSB and trigger pulses remain linear.
+  This approximation does not describe broad or separated light components.
+short_description: Intensity-dependent low-gain FADC pulse templates.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: intensity
+        description: Fluctuated pixel signal
+        type: float64
+        unit: dimensionless
+        required: true
+      - name: time
+        description: Time relative to the pixel-pulse reference time
+        type: float64
+        unit: ns
+        required: true
+      - name: amplitude
+        description: Complete-pulse amplitude relative to the one-p.e. FADC peak
+        type: float64
+        unit: dimensionless
+        required: true
+instrument:
+  class: Camera
+activity:
+  setting: [SetReadoutPulseShape]
+  validation: [ValidateCameraChargeResponse, ValidateCameraTimeResponse]
+source: [Calibration]
+simulation_software:
+  - name: sim_telarray
+    table_format: plain
+    meta_parameter_mode: add
+    serialization:
+      columns: [intensity, time, amplitude]
+      allowed_columns: [intensity, time, amplitude]
+      row_sort_keys: [intensity, time]
+      matrix_axes: [intensity, time]
+      value_column: amplitude
+      float_format: ".12g"
+      write_comments: false

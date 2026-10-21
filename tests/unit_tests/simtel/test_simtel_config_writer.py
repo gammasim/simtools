@@ -8,6 +8,7 @@ from unittest import mock
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import QTable
 
 import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
@@ -553,12 +554,20 @@ def test_write_dummy_telescope_configuration_includes_camera_file(
     config_file = Path(tmp_test_directory) / "InvalidTelescope.cfg"
 
     simtel_config_writer.write_dummy_telescope_configuration_file(
-        {"num_gains": {"value": 1}}, config_file, "InvalidTelescope"
+        {
+            "num_gains": {"value": 1},
+            "fadc_hg_pulse_shape": {"value": "unused.ecsv"},
+            "fadc_lg_pulse_shape": {"value": "unused.ecsv"},
+        },
+        config_file,
+        "InvalidTelescope",
     )
 
     lines = config_file.read_text(encoding="utf-8").splitlines()
     assert "camera_config_file = InvalidTelescope_single_pixel_camera.dat" in lines
     assert "metaparam telescope add camera_config_file" in lines
+    assert "fadc_hg_pulse_shape = none" in lines
+    assert "fadc_lg_pulse_shape = none" in lines
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
@@ -1285,3 +1294,44 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     last_line_large = content_large[-1].split()
     assert float(last_line_large[0]) == pytest.approx(180.0)
     assert float(last_line_large[1]) == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("gain", ["hg", "lg"])
+def test_saturation_template_config_export(simtel_config_writer, tmp_test_directory, mocker, gain):
+    """Gain templates use the schema contract without normalizing their amplitudes."""
+    parameter = f"fadc_{gain}_pulse_shape"
+    record = {
+        "parameter": parameter,
+        "parameter_version": "1.0.0",
+        "instrument": "LSTN-design",
+        "site": "North",
+        "value": f"{parameter}-1.0.0.ecsv",
+        "model_parameter_schema_version": "0.1.0",
+    }
+    table = QTable(
+        {
+            "intensity": [200.0, 100.0, 200.0, 100.0, 200.0, 100.0],
+            "time": [1.0, -1.0, -1.0, 0.0, 0.0, 1.0] * u.ns,
+            "amplitude": [20.0, 0.0, 0.0, 100.0, 150.0, 10.0],
+        }
+    )
+    simtel_config_writer._model_reader = mocker.Mock()
+    simtel_config_writer._model_reader.get_parameter_table.return_value = table
+    config_path = Path(tmp_test_directory) / "LSTN-01.cfg"
+    result = simtel_config_writer._get_parameters_for_sim_telarray({parameter: record}, config_path)
+    output = Path(tmp_test_directory) / result[parameter]
+    assert output.read_text().splitlines() == [
+        "100 -1 0",
+        "100 0 100",
+        "100 1 10",
+        "200 -1 0",
+        "200 0 150",
+        "200 1 20",
+    ]
+    table.remove_row(0)
+    record["parameter_version"] = "2.0.0"
+    record["value"] = f"{parameter}-2.0.0.ecsv"
+    with pytest.raises(ValueError, match="complete Cartesian grid"):
+        simtel_config_writer._get_parameters_for_sim_telarray(
+            {parameter: record}, config_path.with_name("LSTN-02.cfg")
+        )
