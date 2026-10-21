@@ -2,16 +2,22 @@
 """Plot sim_telarray events."""
 
 import logging
+from contextlib import closing
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from eventio import SimTelFile
 
 from simtools.camera import trace_analysis as trace
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.camera import Camera
 from simtools.simtel.simtel_event_reader import read_events
+from simtools.simtel.simtel_io_metadata import (
+    get_sim_telarray_telescope_id_to_telescope_name_mapping,
+)
 from simtools.utils import general as gen
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
@@ -22,6 +28,11 @@ _logger = logging.getLogger(__name__)
 TIME_NS_LABEL = "time [ns]"
 R1_SAMPLES_LABEL = "R1 samples [d.c.]"
 PIXEL_LABEL = "N pixels"
+NO_FIGURES_MESSAGE = "No figures produced for %s"
+SAVED_PDF_MESSAGE = "Saved PDF: %s"
+PEDESTAL_SOURCE_WAVEFORM = "waveform"
+PEDESTAL_SOURCE_MONITORING = "monitoring"
+EVENT_ID_KEY = "event_id"
 
 PEDESTAL_WINDOW_START = trace.PEDESTAL_WINDOW_START
 INTEGRATION_WINDOW_START = trace.INTEGRATION_WINDOW_START
@@ -56,21 +67,61 @@ def generate_and_save_plots(plots, args, ioh):
     ioh : IOHandler
         IOHandler for managing output paths and metadata.
     """
-    plotter = PlotSimtelEvent(
+    plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
-        event_ids=gen.ensure_list(args.get("event_id", None)),
+        event_ids=gen.ensure_list(args.get(EVENT_ID_KEY, None)),
         max_events=args.get("max_events", None),
     )
+    if args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM) == PEDESTAL_SOURCE_MONITORING:
+        _apply_monitoring_pedestals(plotter)
     output_file = plotter.make_output_paths(ioh, args.get("output_file"))
-    plotter.plot(
-        plots,
-        args,
-        output_file,
-        save_png=bool(args.get("save_pngs", False)),
-        dpi=int(args.get("dpi", 300)),
-    )
-    plotter.save(args, output_file)
+    with closing(plotter.stream_figures(plots, args, output_file)) as figures:
+        first = next(figures, None)
+        if first is None:
+            _logger.warning(NO_FIGURES_MESSAGE, plotter.file_name)
+            return
+        save_figures_to_single_document(chain([first], figures), output_file)
+    _logger.info(SAVED_PDF_MESSAGE, output_file)
+    MetadataCollector.dump(args, output_file, add_activity_name=True)
+
+
+def _apply_monitoring_pedestals(plotter):
+    """Apply high-gain monitoring pedestals to the selected event waveforms."""
+    tel_map = get_sim_telarray_telescope_id_to_telescope_name_mapping(plotter.file_name)
+    tel_id = next((key for key, name in tel_map.items() if name == plotter.telescope), None)
+    if tel_id is None:
+        raise ValueError(f"Telescope {plotter.telescope!r} is not present in the sim_telarray file")
+    remaining = set(plotter.event_data)
+    with SimTelFile(plotter.file_name, skip_calibration=False) as simtel_file:
+        for event in simtel_file:
+            event_id = event[EVENT_ID_KEY]
+            if event_id not in remaining:
+                continue
+            monitoring = event.get("camera_monitorings", {}).get(tel_id)
+            data = plotter.event_data[event_id]
+            pedestals = _monitoring_pedestals(monitoring, data.number_of_pixels, event_id)
+            data.pedestals = pedestals
+            data.image = trace.trace_integration(
+                data.adc_samples, pedestals, (INTEGRATION_WINDOW_START, data.n_samples)
+            )
+            remaining.remove(event_id)
+            if not remaining:
+                return
+    if remaining:
+        raise ValueError(f"No monitoring pedestal found for event IDs {sorted(remaining)}")
+
+
+def _monitoring_pedestals(monitoring, number_of_pixels, event_id):
+    """Extract calibrated per-sample high-gain pedestal values."""
+    try:
+        n_slices = monitoring["n_ped_slices"]
+        values = np.asarray(monitoring["pedestal"], dtype=float)[0]
+        if n_slices <= 0 or values.shape != (number_of_pixels,) or not np.all(np.isfinite(values)):
+            raise ValueError
+        return values / n_slices
+    except (KeyError, TypeError, IndexError, ValueError) as exc:
+        raise ValueError(f"Missing or invalid monitoring pedestal for event {event_id}") from exc
 
 
 @dataclass
@@ -229,10 +280,10 @@ class PlotSimtelEvent:
     def save(self, args, output_file):
         """Save generated plots to files."""
         if not self.figures:
-            _logger.warning("No figures produced for %s", self.file_name)
+            _logger.warning(NO_FIGURES_MESSAGE, self.file_name)
             return
         save_figures_to_single_document(self.figures, output_file)
-        _logger.info("Saved PDF: %s", output_file)
+        _logger.info(SAVED_PDF_MESSAGE, output_file)
         MetadataCollector.dump(args, output_file, add_activity_name=True)
 
     def _plots_to_run(self, plots):
@@ -594,3 +645,23 @@ class PlotSimtelEvent:
         if value is None:
             return default
         return max(1, int(value))
+
+
+class _StreamingPlotter(PlotSimtelEvent):
+    """Generate figures one at a time for the application output."""
+
+    def stream_figures(self, plots, args, output_file):
+        """Generate and close each figure after it has been saved to the PDF."""
+        for plot_name in self._plots_to_run(plots):
+            for event_index in self.event_data:
+                fig = self._generate_single_plot(plot_name, event_index, args)
+                if fig is None:
+                    continue
+                try:
+                    yield fig
+                    if args.get("save_pngs", False):
+                        self._save_plot_as_png(
+                            fig, output_file, plot_name, event_index, int(args.get("dpi", 300))
+                        )
+                finally:
+                    plt.close(fig)

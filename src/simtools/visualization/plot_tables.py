@@ -17,6 +17,9 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 
+# Fraction of the scaled proton rate that is intersected with the NSB rate
+PROTON_INTERSECTION_FRACTION = 0.1
+
 
 def plot(config, output_file, data_path=None, model_reader=None):
     """
@@ -350,7 +353,7 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
     proton_stats : dict
         Proton statistics by threshold.
     config : dict
-        Plot configuration with title, ymin, and ymax.
+        Plot configuration with title, ymin, ymax, and scaling_factor.
     output_path : Path or str
         Output path for plot image.
     trigger_threshold : float, optional
@@ -360,7 +363,9 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
 
     _plot_nsb_curve(axis, nsb_stats)
     _plot_proton_curve(axis, proton_stats)
-    _plot_scaled_proton_curve(axis, proton_stats)
+    scaling_factor = config.get("scaling_factor", 1.35)
+    _plot_scaled_proton_curve(axis, proton_stats, scaling_factor)
+    _plot_intersection_proton_curve(axis, proton_stats, scaling_factor)
 
     # Add vertical line at trigger threshold if provided (before legend creation)
     if trigger_threshold is not None:
@@ -401,7 +406,7 @@ def _plot_nsb_curve(axis, nsb_stats):
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, nsb_thresholds, nsb_rates, color="tab:blue")
+    _plot_log_linear_fit(axis, nsb_thresholds, nsb_rates, color="tab:blue")
 
 
 def _plot_proton_curve(axis, proton_stats):
@@ -423,52 +428,92 @@ def _plot_proton_curve(axis, proton_stats):
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
+    _plot_log_linear_fit(axis, proton_thresholds, proton_rates, color="tab:orange")
 
 
-def _plot_scaled_proton_curve(axis, proton_stats):
-    """Plot 1.35 * proton trigger rates for bias curve intersection."""
+def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
+    """Plot scaled proton trigger rates."""
+    _plot_rescaled_proton_curve(
+        axis, proton_stats, scaling_factor, f"{scaling_factor} x Proton", "^", "tab:red"
+    )
+
+
+def _plot_intersection_proton_curve(axis, proton_stats, scaling_factor=1.35):
+    """Plot the fraction of the scaled proton rates that is intersected with the NSB rates."""
+    _plot_rescaled_proton_curve(
+        axis,
+        proton_stats,
+        scaling_factor * PROTON_INTERSECTION_FRACTION,
+        f"{PROTON_INTERSECTION_FRACTION} x {scaling_factor} x Proton",
+        "v",
+        "tab:green",
+    )
+
+
+def _plot_rescaled_proton_curve(axis, proton_stats, scale, label, fmt, color):
+    """Plot proton trigger rates multiplied by a scale, with log-linear fit."""
     if not proton_stats:
         return
 
     proton_thresholds = sorted(proton_stats.keys())
-    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
-    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
-
-    # Scale by 1.35
-    scaled_proton_rates = [1.35 * r for r in proton_rates]
-    scaled_proton_errors = [1.35 * e for e in proton_errors]
+    scaled_rates = [scale * proton_stats[t]["rate_hz"] for t in proton_thresholds]
+    scaled_errors = [scale * proton_stats[t]["error_hz"] for t in proton_thresholds]
 
     axis.errorbar(
         proton_thresholds,
-        scaled_proton_rates,
-        yerr=scaled_proton_errors,
-        fmt="^",
-        label="1.35 x Proton",
-        color="tab:red",
+        scaled_rates,
+        yerr=scaled_errors,
+        fmt=fmt,
+        label=label,
+        color=color,
         capsize=3,
     )
 
-    _plot_log_linear_trend(axis, proton_thresholds, scaled_proton_rates, color="tab:red")
+    _plot_log_linear_fit(axis, proton_thresholds, scaled_rates, color=color)
 
 
-def _plot_log_linear_trend(axis, thresholds, rates, color):
-    """Plot a log-linear trend line when at least two positive rates are available."""
-    if len(thresholds) < 2:
+def _plot_log_linear_fit(axis, thresholds, rates, color):
+    """Plot a log-linear fit when at least two distinct valid thresholds are available."""
+    fit = fit_bias_curve(thresholds, rates)
+    if fit is None:
+        _logger.info(
+            "Skipping log-linear fit: need at least two distinct thresholds with "
+            "finite, positive rates."
+        )
         return
-
-    valid_mask = np.array(rates) > 0
-    if np.sum(valid_mask) < 2:
-        return
-
-    fit_thresholds = np.array(thresholds)[valid_mask]
-    fit_rates = np.array(rates)[valid_mask]
-
-    coeffs = np.polyfit(fit_thresholds, np.log10(fit_rates), 1)
+    fit_thresholds, coeffs = fit
     x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
     y_fit = 10 ** (coeffs[0] * x_fit + coeffs[1])
 
     axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
+
+
+def fit_bias_curve(thresholds, rates):
+    """
+    Fit log10(rate) as a linear function of threshold.
+
+    Parameters
+    ----------
+    thresholds : array-like
+        Trigger thresholds.
+    rates : array-like
+        Trigger rates; only finite positive values are used.
+
+    Returns
+    -------
+    tuple or None
+        Valid thresholds and fit coefficients (slope, intercept), or None if
+        fewer than two distinct finite thresholds have corresponding finite,
+        positive rates. Returning None is expected when there is not enough
+        data to fit a line.
+    """
+    thresholds = np.asarray(thresholds, dtype=float)
+    rates = np.asarray(rates, dtype=float)
+    valid = np.isfinite(thresholds) & np.isfinite(rates) & (rates > 0)
+    fit_thresholds = thresholds[valid]
+    if len(np.unique(fit_thresholds)) < 2:
+        return None
+    return fit_thresholds, np.polyfit(fit_thresholds, np.log10(rates[valid]), 1)
 
 
 def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
@@ -487,6 +532,9 @@ def _configure_bias_curve_axis(axis, config, nsb_stats, proton_stats):
         proton_rates = [stats["rate_hz"] for stats in proton_stats.values() if stats["rate_hz"] > 0]
         all_rates.extend(proton_rates)
         all_rates.extend(scaling_factor * rate for rate in proton_rates)
+        all_rates.extend(
+            PROTON_INTERSECTION_FRACTION * scaling_factor * rate for rate in proton_rates
+        )
 
     if all_rates:
         # Add 10% padding above and below
