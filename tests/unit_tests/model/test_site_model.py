@@ -7,6 +7,7 @@ import pytest
 from astropy.table import QTable
 
 from simtools.model.site_model import SiteModel
+from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 
@@ -147,7 +148,7 @@ def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
         value="atmospheric_profile-1.0.0.ecsv",
         instrument="OBS-South",
     )
-    serialize = mocker.patch.object(site_model, "_export_ecsv_as_simtel_table")
+    serialize = mocker.patch.object(get_model_writer(site_model), "_export_ecsv_as_simtel_table")
     model_directory = tmp_test_directory / "model"
 
     site_model.export_atmospheric_transmission_file(model_directory)

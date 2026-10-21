@@ -7,6 +7,7 @@ import yaml
 
 from simtools.job_execution.execution import submit_jobs, wait_for_submission
 from simtools.job_execution.job import ExecutionOptions, JobSpec
+from simtools.runners.simtools_runner import _resolve_nested_configuration_files
 from simtools.utils.general import replace_placeholders_recursively
 
 _DIRECTORY_CONTEXT_PATHS = (
@@ -54,10 +55,11 @@ def _canary_config(template_dir, workflow, context):
     resolved = replace_placeholders_recursively(
         yaml.safe_load(workflow_path.read_text(encoding="utf-8")), values
     )
+    _resolve_nested_configuration_files(resolved["applications"], values)
     application = resolved["applications"][0]["configuration"]
     config = application.get("backend_config")
     if not isinstance(config, dict):
-        raise ValueError(f"Preflight requires inline backend_config in {workflow_path}")
+        raise ValueError(f"Preflight requires backend_config in {workflow_path}")
     return config
 
 

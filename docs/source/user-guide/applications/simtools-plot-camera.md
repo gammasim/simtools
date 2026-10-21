@@ -1,0 +1,84 @@
+# simtools-plot-camera
+
+```{eval-rst}
+.. automodule:: simtools.applications.plot_camera
+   :members:
+   :exclude-members: main
+```
+
+```{eval-rst}
+The orientation for the plotting is "as seen for an observer facing the camera".
+
+An example of the camera plot can be found below.
+
+.. _camera_fov_plot:
+.. image:: images/validate_camera_fov_North-LST-1_pixelLayout.png
+  :width: 50 %
+
+
+**Command line arguments**
+
+site (str, required)
+    North or South.
+telescope (str, required)
+    Telescope model name (e.g. LST-1, SST-D, ...)
+model_version (str, optional)
+    Model version
+camera_in_sky_coor (bool, optional)
+    Plot the camera layout in sky coordinates akin to looking at it from behind for single \
+     mirror telescopes
+print_pixels_id (bool, optional)
+    Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero\
+     (--print_pixels_id 0). To print all pixels, set to 'All'."
+
+**Example**
+
+LST - 5.0.0
+
+.. code-block:: console
+
+    simtools-plot-camera --site North \\
+        --telescope LSTN-01 --model_version 5.0.0
+
+The output is saved in simtools-output/plot_camera.
+
+Expected final print-out message:
+
+.. code-block:: console
+
+    Saved camera plot in /workdir/external/simtools/simtools-output/plot_camera\\
+    /application-plots/plot_camera_LST-1_pixel_layout.png
+```
+
+## Trigger-patch plots
+
+Select patch group IDs directly, or show all patches containing a pixel:
+
+```console
+simtools-plot-camera --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_patches 0 1 2
+simtools-plot-camera --site North --telescope LSTN-design \
+  --model_version 7.0.0 --trigger_pixel 75
+```
+
+Patch IDs are `group_id` values from the model. The plot shows an overview and a
+labelled close-up; overlaps use stripes. The options are mutually exclusive. For
+LSTN-design model 7.0.0, select at most six patches per plot.
+
+| Telescope and selection | Telescope and selection |
+| --- | --- |
+| LSTN-design (North), groups 0, 3, 4<br>![LSTN-design trigger patches](images/trigger-patch-examples/LSTN-design.png) | MSTx-FlashCam (North), groups 0, 2, 3<br>![MSTx-FlashCam trigger patches](images/trigger-patch-examples/MSTx-FlashCam.png) |
+| MSTx-NectarCam (North), groups 924, 925, 926<br>![MSTx-NectarCam trigger patches](images/trigger-patch-examples/MSTx-NectarCam.png) | SSTS-design (South), groups 0, 1<br>![SSTS-design trigger patches](images/trigger-patch-examples/SSTS-design.png) |
+
+```{eval-rst}
+.. simtools-cli-help::
+   :application: plot_camera
+   :no-heading:
+```
+
+## Example
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: plot_camera_run.yml
+```

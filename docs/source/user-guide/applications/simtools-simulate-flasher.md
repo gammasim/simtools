@@ -10,11 +10,53 @@
 The flasher simulation allows for two different run modes:
 
 1. Direct injection of light into the camera (bypassing the telescope optics).
-2. Simulation of the full light path (using the light-emission package from sim_telarray).
+2. Simulation of light emission from the source using the light-emission package from sim_telarray.
 
-The direct injection mode uses a simplified model for the flasher light source. Both run modes
-provide events in sim_telarray format that can be processed by standard analysis steps or
-visualized using e.g. the 'simtools-plot-simtel-events' application.
+Full-simulation flat-fielding uses the source geometry and angular distribution to illuminate
+the camera, but sets ``Bypass_Optics=1`` in sim_telarray, bypassing telescope optics in this case.
+Both modes produce sim_telarray events for standard analysis or
+visualization with 'simtools-plot-simtel-events'.
+
+**Photon counts and matching run modes**
+
+The ``flasher_photons`` setting has a different meaning in each run mode:
+
+.. list-table:: Photon count meanings by run mode
+   :header-rows: 1
+
+   * - Run mode
+     - Meaning of ``flasher_photons``
+   * - ``direct_injection``
+     - Overrides the model parameter ``flasher_photons_at_pixel``, setting the injected photon
+       count per pixel.
+   * - ``full_simulation``
+     - Sets the number of photons emitted by the flasher source and passed to sim_telarray.
+
+For a matched comparison, determine the expected camera illumination for the chosen source,
+wavelength, pulse, and telescope, then derive the direct per-pixel setting. Validate it with signal
+distributions and a separate per-pixel mean and variance analysis; the comparison below summarizes
+signals across pixels and events.
+
+**Comparing signal outputs**
+
+Compare the sim_telarray files with ``simtools-compare-productions`` in signal mode. Quote file
+patterns so the application can expand them:
+
+.. code-block:: console
+
+    simtools-compare-productions \
+        --comparison_level signal \
+        --production direct_injection "/path/to/direct/*.simtel.zst" \
+        --production full_simulation "/path/to/full/*.simtel.zst" \
+        --telescope_name LSTN-01 \
+        --output_path flasher-comparison
+
+The ``signals.png`` plot compares integrated-signal distributions across pixels and events.
+Its legend identifies productions only; it does not display means or match pixels between files.
+For mean-based scaling, use
+``simtools.sim_events.production_comparison.collect_signal_metrics`` and calculate
+``metrics.signals.mean()`` for each returned production metric, grouped by telescope. See
+:doc:`simtools-compare-productions` for comparison options and outputs.
 
 **Example Usage**
 
@@ -72,8 +114,8 @@ light_source_type (str, optional)
 number_of_events (int, optional):
     Number of events to simulate (default: 1). Can be a single value or a list.
 flasher_photons (int, optional)
-    Overwrite the model parameter flasher_photons. Can be a single value or
-    a list for filter wheel sequences.
+    Photon intensity; its meaning depends on the run mode as described above. Can be a single
+    value or a list for filter wheel sequences.
 model_version (str, optional)
     Version of the simulation model.
 run_number (int, optional)

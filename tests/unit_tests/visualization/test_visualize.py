@@ -105,15 +105,13 @@ def test_plot_1d_legend_fontsize_setting():
     plt.close(fig)
 
 
-def test_add_unit(caplog, wavelength):
+def test_add_unit(wavelength):
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == wavelength
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
-    with caplog.at_level(logging.DEBUG):
-        assert visualize._add_unit(wavelength, value_with_unit)
-    assert "Tried to add a unit from astropy.unit" in caplog.text
+    assert visualize._add_unit(wavelength, value_with_unit) == wavelength
 
     value_with_unit = [30, 40] * u.cm**2
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"

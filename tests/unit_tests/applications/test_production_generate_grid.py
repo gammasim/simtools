@@ -53,6 +53,7 @@ def test_full_parser_retains_supported_shared_arguments():
         "eslope",
         "event_number_first_shower",
         "model_version",
+        "max_showers_per_run",
         "output_file",
         "output_path",
         "overwrite_model_parameters",
@@ -70,6 +71,7 @@ def test_full_parser_retains_supported_shared_arguments():
     assert "array_element_list" not in actions
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
+    assert actions["max_showers_per_run"].type.__name__ == "scientific_int"
 
 
 def test_plot_array_layout_parser_retains_ignore_missing_design_model():
@@ -99,6 +101,28 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.array_layout_name == ["LSTN-01"]
     assert not hasattr(args, "telescope")
     assert args.output_file == "job_grid.ecsv"
+
+
+def test_full_parser_allows_max_showers_without_showers_per_run():
+    args = _full_parser().parse_args(
+        [
+            "--model_version",
+            "7.0.0",
+            "--site",
+            "North",
+            "--array_layout_name",
+            "LSTN-01",
+            "--primary",
+            "gamma",
+            "--total_showers",
+            "2500",
+            "--max_showers_per_run",
+            "1000",
+        ]
+    )
+
+    assert args.showers_per_run is None
+    assert args.max_showers_per_run == 1000
 
 
 @pytest.mark.parametrize("option", ["showers_per_run_power_law", "energy_max_scaling"])

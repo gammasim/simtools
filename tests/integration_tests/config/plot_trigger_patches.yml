@@ -1,0 +1,32 @@
+---
+applications:
+- application: simtools-plot-trigger-patches
+  docs:
+    title: Plot the LST trigger-patch configuration
+    summary: >-
+      Check camera trigger-patch coverage and spatial layout from model configuration without
+      running simulations.
+  configuration:
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    telescope: LSTN-design
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: trigger-patches-LSTN-design.pdf
+    - path_descriptor: output_path
+      file: trigger-patches-LSTN-design.pixels.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+    - path_descriptor: output_path
+      file: trigger-patches-LSTN-design.groups.ecsv
+      validations:
+      - type: table
+        minimum_rows: 1
+    - path_descriptor: output_path
+      file: trigger-patches-LSTN-design.summary.json
+  test_name: configuration-only
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

@@ -1,10 +1,47 @@
 import json
 from pathlib import Path
 
+import jsonschema
 import pytest
 import yaml
 
 from simtools.science_tests import definitions as science_test_definitions
+
+_REASON_KEY = "reason"
+_STATUS_KEY = "status"
+
+_CONTEXT_FILE_NAME = "context.yml"
+_SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
+_STORAGE_ROOT_PLACEHOLDER = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
+_ENCODING = "utf-8"
+_RELEASE_LABEL_KEY = "release_label"
+_REPORT_PAGE_COLUMN = "report_page"
+
+
+def test_science_test_config_schema_rejects_unknown_site_fields():
+    with pytest.raises(jsonschema.ValidationError, match="Additional properties"):
+        science_test_definitions._validate_science_test_config(
+            {
+                "site": "north",
+                "required_tests": ["compare"],
+                "array_layout_name": "CTAO-North-Alpha",
+                "unexpected": True,
+            },
+            science_test_definitions._SITE_SCHEMA_FILE,
+        )
+
+
+def test_htcondor_environment_schema_accepts_interaction_table_path():
+    science_test_definitions._validate_science_test_config(
+        {
+            "SIMTOOLS_CORSIKA_PATH": "/workdir/simulation_software/corsika7",
+            "SIMTOOLS_SIM_TELARRAY_PATH": "/workdir/simulation_software/sim_telarray",
+            "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": (
+                "/corsika7-interaction-tables/interaction-tables"
+            ),
+        },
+        "htcondor_environment.schema.yml",
+    )
 
 
 def test_dependency_order_and_invalid_definitions():
@@ -57,9 +94,9 @@ def test_validate_definition_rejects_invalid_catalogue_entries(test_id, site, de
 
 def test_load_suites_rejects_site_that_disagrees_with_its_file(campaign):
     site_path = campaign["release_dir"] / "sites/north.yml"
-    suite = yaml.safe_load(site_path.read_text(encoding="utf-8"))
+    suite = yaml.safe_load(site_path.read_text(encoding=_ENCODING))
     suite["site"] = "south"
-    site_path.write_text(yaml.safe_dump(suite), encoding="utf-8")
+    site_path.write_text(yaml.safe_dump(suite), encoding=_ENCODING)
     release = science_test_definitions._load_yaml(campaign["release_dir"] / "release.yml")
     catalogue = science_test_definitions._load_catalogue(
         release, campaign["release_dir"], campaign["template_dir"]
@@ -89,12 +126,12 @@ def test_test_definition_applies_release_comparison_contract():
 def test_expected_pair_count_blocks_an_incomplete_comparison(tmp_test_directory):
     report = Path(tmp_test_directory)
     inventory = report / "comparison_inventory.json"
-    inventory.write_text(json.dumps({"matched_pair_count": 2}), encoding="utf-8")
+    inventory.write_text(json.dumps({"matched_pair_count": 2}), encoding=_ENCODING)
     definition = {"expected_pair_count": 2}
     replacements = {"__SCIENCE_REPORT_PATH__": str(report)}
 
     science_test_definitions._check_expected_pair_count(definition, replacements)
-    inventory.write_text(json.dumps({"matched_pair_count": 1}), encoding="utf-8")
+    inventory.write_text(json.dumps({"matched_pair_count": 1}), encoding=_ENCODING)
     with pytest.raises(ValueError, match="expected 2 matched pairs, observed 1"):
         science_test_definitions._check_expected_pair_count(definition, replacements)
 
@@ -102,7 +139,7 @@ def test_expected_pair_count_blocks_an_incomplete_comparison(tmp_test_directory)
 def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_directory):
     report = Path(tmp_test_directory)
     metrics = report / "metrics.json"
-    metrics.write_text(json.dumps({"results": [{"count": 3}]}), encoding="utf-8")
+    metrics.write_text(json.dumps({"results": [{"count": 3}]}), encoding=_ENCODING)
     definition = {
         "products": [str(metrics)],
         "rule": {
@@ -110,23 +147,91 @@ def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_di
             "metrics": [{"file": str(metrics), "key": "results.0.count", "minimum": 2}],
         },
     }
+    assert science_test_definitions._evaluate_products(definition, {})[_STATUS_KEY] == "warn"
+    metrics.write_text(json.dumps({"results": [{"count": 1}]}), encoding=_ENCODING)
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result[_STATUS_KEY] == "warn"
+    assert any("Acceptance failed" in warning for warning in result["acceptance_warnings"])
+    metrics.write_text(json.dumps({"results": [{}]}), encoding=_ENCODING)
+    with pytest.raises(ValueError, match=r"Missing metric results\.0\.count"):
+        science_test_definitions._evaluate_products(definition, {})
+    metrics.write_text(json.dumps({"results": [{"count": True}]}), encoding=_ENCODING)
+    with pytest.raises(ValueError, match=r"Invalid metric results\.0\.count"):
+        science_test_definitions._evaluate_products(definition, {})
 
-    assert science_test_definitions._evaluate_products(definition, {})["status"] == "warn"
-    metrics.write_text(json.dumps({"results": [{"count": 1}]}), encoding="utf-8")
-    with pytest.raises(science_test_definitions._AcceptanceError, match="Acceptance failed"):
-        science_test_definitions._evaluate_products(definition, {})
-    metrics.write_text(json.dumps({"results": [{}]}), encoding="utf-8")
-    with pytest.raises(ValueError, match=r"Missing metric results.0.count"):
-        science_test_definitions._evaluate_products(definition, {})
-    metrics.write_text(json.dumps({"results": [{"count": True}]}), encoding="utf-8")
-    with pytest.raises(ValueError, match=r"Invalid metric results.0.count"):
-        science_test_definitions._evaluate_products(definition, {})
+
+def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test_directory):
+    report = Path(tmp_test_directory)
+    metrics_file = report / "comparison_metrics.csv"
+    metrics_file.write_text(
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n",
+        encoding=_ENCODING,
+    )
+    metric = {
+        "file": str(metrics_file),
+        "key": "value",
+        "format": "csv",
+        "select": {
+            "metric": "ks",
+            "plot": ["distribution_core_distance", "distribution_core_distance_LST?"],
+        },
+        "minimum_entries": 100,
+        "warning_maximum": 0.03,
+        "maximum": 0.05,
+    }
+    definition = {"products": [str(metrics_file)], "rule": {"metrics": [metric]}}
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result[_STATUS_KEY] == "warn"
+    assert "insufficient statistics" in result[_REASON_KEY]
+    metrics_file.write_text(
+        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
+        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
+        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,"
+        "500,510,27\n",
+        encoding=_ENCODING,
+    )
+    result = science_test_definitions._evaluate_products(definition, {})
+    assert result[_STATUS_KEY] == "warn"
+    assert "value=0.06853 exceeds 0.05 (PDF page 27)" in result[_REASON_KEY]
+
+
+def test_csv_acceptance_keeps_warnings_for_distinct_measurements(tmp_test_directory):
+    report = Path(tmp_test_directory)
+    metrics_file = report / "comparison_metrics.csv"
+    metrics_file.write_text(
+        "pair,array_layout,plot,scope,metric,value,valid,reason,baseline_count,candidate_count\n"
+        "pair-1,layout-a,distribution,whole_array,ks,0.08,True,ok,100,100\n"
+        "pair-1,layout-b,distribution,whole_array,ks,0.08,True,ok,100,100\n",
+        encoding=_ENCODING,
+    )
+    definition = {
+        "products": [str(metrics_file)],
+        "rule": {
+            "metrics": [
+                {
+                    "file": str(metrics_file),
+                    "key": "value",
+                    "format": "csv",
+                    "maximum": 0.05,
+                }
+            ]
+        },
+    }
+
+    result = science_test_definitions._evaluate_products(definition, {})
+
+    assert result[_STATUS_KEY] == "warn"
+    assert len(result["acceptance_warnings"]) == 2
+    assert result["acceptance_warnings"][0] == result["acceptance_warnings"][1]
 
 
 def test_release_acceptance_override_is_rejected(campaign):
     override = campaign["release_dir"] / "acceptance/overrides.yml"
     override.parent.mkdir(parents=True)
-    override.write_text(yaml.safe_dump({"overrides": {"comparison": {}}}), encoding="utf-8")
+    override.write_text(yaml.safe_dump({"overrides": {"comparison": {}}}), encoding=_ENCODING)
 
     with pytest.raises(ValueError, match="overrides are not supported"):
         science_test_definitions._load_acceptance(campaign["release_dir"], campaign["template_dir"])
@@ -159,7 +264,7 @@ def test_completed_production_gate(tmp_test_directory):
     submission = root / "submission.json"
     product = root / "event.dat"
     product_directory = root / "events"
-    product.write_text("event", encoding="utf-8")
+    product.write_text("event", encoding=_ENCODING)
     product_directory.mkdir()
     (product_directory / "data").write_bytes(b"events")
     payload = {
@@ -169,13 +274,13 @@ def test_completed_production_gate(tmp_test_directory):
             "expected_outputs": {"job": [str(product), str(product_directory)]},
         },
     }
-    submission.write_text(json.dumps(payload), encoding="utf-8")
+    submission.write_text(json.dumps(payload), encoding=_ENCODING)
     definition = {"requires_completed_production": True}
     replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
     with pytest.raises(ValueError, match="not completed"):
         science_test_definitions._check_inputs(definition, replacements)
     payload["metadata"]["state"] = "completed"
-    submission.write_text(json.dumps(payload), encoding="utf-8")
+    submission.write_text(json.dumps(payload), encoding=_ENCODING)
     science_test_definitions._check_inputs(definition, replacements)
     product.unlink()
     with pytest.raises(ValueError, match="missing expected outputs"):
@@ -186,12 +291,12 @@ def test_required_inputs_must_exist_and_be_nonempty(tmp_test_directory):
     candidate = Path(tmp_test_directory) / "candidate"
     product = candidate / "nested/input.json"
     product.parent.mkdir(parents=True)
-    product.write_text("{}", encoding="utf-8")
+    product.write_text("{}", encoding=_ENCODING)
     definition = {"requires": ["__SCIENCE_CANDIDATE_SITE_PATH__/**/*.json"]}
     replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)}
 
     science_test_definitions._check_inputs(definition, replacements)
-    product.write_text("", encoding="utf-8")
+    product.write_text("", encoding=_ENCODING)
     with pytest.raises(ValueError, match="Missing or empty required product"):
         science_test_definitions._check_inputs(definition, replacements)
 
@@ -207,7 +312,7 @@ def test_expected_pair_count_must_be_a_positive_integer(expected, tmp_test_direc
 @pytest.mark.parametrize("contents", ["- item\n", ""])
 def test_yaml_loader_requires_a_mapping(contents, tmp_test_directory):
     path = Path(tmp_test_directory) / "invalid.yml"
-    path.write_text(contents, encoding="utf-8")
+    path.write_text(contents, encoding=_ENCODING)
     with pytest.raises(ValueError, match="Expected a mapping"):
         science_test_definitions._load_yaml(path)
 
@@ -215,9 +320,9 @@ def test_yaml_loader_requires_a_mapping(contents, tmp_test_directory):
 @pytest.mark.parametrize(
     ("release", "context", "message"),
     [
-        ({"release_label": "../invalid"}, {}, "release_label"),
+        ({_RELEASE_LABEL_KEY: "../invalid"}, {}, _RELEASE_LABEL_KEY),
         (
-            {"release_label": "candidate"},
+            {_RELEASE_LABEL_KEY: "candidate"},
             {},
             "absolute path",
         ),
@@ -236,7 +341,9 @@ def test_identical_release_context_paths_identifies_conflicting_entries():
     }
 
     with pytest.raises(ValueError, match="__SCIENCE_CANDIDATE_PATH__=/data/production") as error:
-        science_test_definitions._validate_release_context({"release_label": "candidate"}, context)
+        science_test_definitions._validate_release_context(
+            {_RELEASE_LABEL_KEY: "candidate"}, context
+        )
 
     assert "__SCIENCE_BASELINE_PATH__=/data/production" in str(error.value)
 
@@ -249,7 +356,9 @@ def test_nested_release_context_paths_are_rejected():
     }
 
     with pytest.raises(ValueError, match="non-overlapping"):
-        science_test_definitions._validate_release_context({"release_label": "candidate"}, context)
+        science_test_definitions._validate_release_context(
+            {_RELEASE_LABEL_KEY: "candidate"}, context
+        )
 
 
 def test_site_cannot_override_context_root(tmp_test_directory):
@@ -328,7 +437,7 @@ def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directo
             "expected_outputs": {"job-000001": [str(root / "events.hdf5")]},
         },
     }
-    (root / "submission.json").write_text(json.dumps(submission), encoding="utf-8")
+    (root / "submission.json").write_text(json.dumps(submission), encoding=_ENCODING)
     definition = {"reviewed_grid": "grid.ecsv"}
     replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
     assert science_test_definitions._check_reviewed_production(definition, replacements) == {
@@ -359,3 +468,53 @@ def test_baseline_check_preserves_paths_containing_candidate_name(mocker):
     assert baseline["__SCIENCE_CANDIDATE_PATH__"] == "/data/v10"
     assert baseline["__SCIENCE_CANDIDATE_SITE_PATH__"] == "/data/v10/north"
     assert baseline["__SCIENCE_BASELINE_PATH__"] == "/data/v10"
+
+
+def test_load_context_resolves_storage_root_before_path_validation(tmp_test_directory, monkeypatch):
+    root = Path(tmp_test_directory)
+    storage = root / "shared storage"
+    monkeypatch.setenv(_SCIENCE_TESTS_ROOT_ENV, f"{storage}/")
+    context_file = root / _CONTEXT_FILE_NAME
+    paths = dict(zip(science_test_definitions._PATH_KEYS, ("v0.39.0", "v0.37.0", "reference-data")))
+    source = {key: f"{_STORAGE_ROOT_PLACEHOLDER}/{name}" for key, name in paths.items()}
+    source["simulation_models_git_revision"] = "v0.18.0"
+    source["optional_path"] = None
+    context_file.write_text(yaml.safe_dump(source), encoding=_ENCODING)
+
+    context = science_test_definitions._load_context(context_file)
+
+    assert context == {**source, **{key: str(storage / name) for key, name in paths.items()}}
+    science_test_definitions._validate_release_context(
+        {_RELEASE_LABEL_KEY: "test-release"}, context
+    )
+    assert yaml.safe_load(context_file.read_text(encoding=_ENCODING)) == source
+    assert not storage.exists()
+
+
+@pytest.mark.parametrize("storage_root", [None, "", "relative/path"])
+def test_load_context_rejects_missing_or_relative_storage_root(
+    tmp_test_directory, monkeypatch, storage_root
+):
+    if storage_root is None:
+        monkeypatch.delenv(_SCIENCE_TESTS_ROOT_ENV, raising=False)
+    else:
+        monkeypatch.setenv(_SCIENCE_TESTS_ROOT_ENV, storage_root)
+    context_file = Path(tmp_test_directory) / _CONTEXT_FILE_NAME
+    context_file.write_text(
+        yaml.safe_dump(
+            {science_test_definitions._PATH_KEYS[0]: f"{_STORAGE_ROOT_PLACEHOLDER}/candidate"}
+        ),
+        encoding=_ENCODING,
+    )
+    with pytest.raises(ValueError, match=f"Set {_SCIENCE_TESTS_ROOT_ENV}.*absolute path"):
+        science_test_definitions._load_context(context_file)
+
+
+def test_load_context_keeps_explicit_paths_without_storage_root(tmp_test_directory, monkeypatch):
+    root = Path(tmp_test_directory)
+    monkeypatch.delenv(_SCIENCE_TESTS_ROOT_ENV, raising=False)
+    context_file = root / _CONTEXT_FILE_NAME
+    context = {science_test_definitions._PATH_KEYS[0]: str(root / "absolute-candidate")}
+    context_file.write_text(yaml.safe_dump(context), encoding=_ENCODING)
+    assert science_test_definitions._load_context(context_file) == context
+    assert science_test_definitions._load_context(None) == {}

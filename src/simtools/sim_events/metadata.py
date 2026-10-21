@@ -44,7 +44,7 @@ def build_standard_metadata(args_dict, output_file, product_data_name="reduced_e
 def build_simulation_metadata(
     input_files,
     array_models=None,
-    simulation_software="sim_telarray",
+    simulation_software=None,
 ):
     """Build the versioned simulation metadata document for one output file.
 
@@ -56,13 +56,17 @@ def build_simulation_metadata(
     array_models : list of dict, optional
         Plain dictionaries exported from resolved ``ArrayModel`` instances.
     simulation_software : str, optional
-        Simulation software name.
+        Simulation software name. When omitted, infer it from input provenance;
+        current inputs without a software field default to sim_telarray.
 
     Returns
     -------
     dict
         JSON-compatible simulation metadata document.
     """
+    if simulation_software is None:
+        sources = {record.get("simulation_software", "sim_telarray") for record in input_files}
+        simulation_software = "mixed" if len(sources) > 1 else next(iter(sources), "sim_telarray")
     model_exports = [to_builtin(model) for model in (array_models or [])]
     models_status = "complete" if model_exports else "unavailable"
     metadata = {

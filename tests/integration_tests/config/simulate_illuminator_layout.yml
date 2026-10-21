@@ -30,6 +30,18 @@ applications:
             range:
             - 5000
             - 30000
+    - path_descriptor: output_path
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.log.gz
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.err.gz
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.light_emission.log.gz
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.light_emission.err.gz
+      output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: run-layout
 schema_name: application_workflow.metaschema

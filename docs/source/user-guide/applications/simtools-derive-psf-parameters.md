@@ -112,6 +112,25 @@ Output files include:
 * Optimized simulation model parameter files (if --write_psf_parameters is specified)
 ```
 
+Independent finite-difference evaluations within each gradient calculation and Monte
+Carlo repetitions run concurrently on the selected
+[execution backend](../execution_backends.md). Gradient-descent iterations remain
+sequential. The controller runs the initial and candidate-step simulations and
+creates the final plots, so it also needs the simulation software and model source.
+HTCondor receives one job per independent evaluation, rather than one job for the
+whole workflow; scheduler latency can outweigh the benefit for short simulations.
+
+Local execution defaults to half the system CPUs, rounded down
+with a minimum of one worker. Set `--max_workers 1` for serial execution or choose a
+positive worker count explicitly. Zero or negative values use all system CPUs. This limit controls local processes; HTCondor
+concurrency is controlled by the scheduler. Each evaluation reconstructs its own
+model and writes under a unique `parallel_evaluations/` subdirectory. With `--cleanup`,
+all evaluation files are removed when the batch finishes, including failed
+evaluations and backend errors. Without it, evaluation files are retained.
+Final application outputs are preserved. Allow for additional memory and temporary
+disk use when increasing the number of workers.
+
+
 ## Command line arguments
 
 ```{eval-rst}

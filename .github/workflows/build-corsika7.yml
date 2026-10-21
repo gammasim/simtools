@@ -142,6 +142,9 @@ jobs:
           trap 'docker rm -f "$container_id"' EXIT
           docker cp "$container_id:/input/corsika7-source.tar.gz" corsika7-source.tar.gz
           docker cp "$container_id:/input/corsika7-source.tar.gz.sha256" corsika7-source.tar.gz.sha256
+          # Older snapshots record the archive path relative to the snapshot build context.
+          sed -i 's|  input/corsika7-source\.tar\.gz$|  corsika7-source.tar.gz|' \
+            corsika7-source.tar.gz.sha256
           echo "Restored CORSIKA sources from $SOURCE_SNAPSHOT."
 
       - name: Prepare CORSIKA sources
