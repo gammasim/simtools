@@ -91,12 +91,14 @@ simtools-maintain-simulation-model-compare-productions <applications/simtools-ma
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
+simtools-plot-camera <applications/simtools-plot-camera>
 simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
+simtools-plot-trigger-patches <applications/simtools-plot-trigger-patches>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-monte-carlo-statistics <applications/simtools-production-derive-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
@@ -112,7 +114,6 @@ simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
 simtools-validate-camera-efficiency <applications/simtools-validate-camera-efficiency>
-simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>

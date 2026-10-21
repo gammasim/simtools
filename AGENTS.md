@@ -120,10 +120,13 @@ and sim_telarray configuration, applications, validation, reporting, and plottin
   is tested. Mock unrelated I/O/network/model sources/CORSIKA/sim_telarray.
   No hardcoded temporary paths, `tempfile`, or checked-in/downloaded unit inputs;
   resource compatibility belongs in integration tests.
-- Compare floats with `pytest.approx()`, quantities with
-  `astropy.tests.helper.assert_quantity_allclose`. Fix deprecations; no filters
-  hiding warning failures. For metadata failures inspect schemas, mocks, and
-  sim_telarray metadata registry before changing expectations.
+- Follow `python:S1244`: use `pytest.approx()` for float comparisons in tests;
+  use `math.isclose()` or `numpy.isclose()` when either operand is a float literal
+  or a variable assigned one (Sonar flags `pytest.approx()` in this case).
+  Use appropriate tolerances, including a positive absolute tolerance near zero.
+- Compare quantities with `astropy.tests.helper.assert_quantity_allclose`.
+  Fix deprecations; no filters hiding warning failures. For metadata failures inspect
+  schemas, mocks, and sim_telarray metadata registry before changing expectations.
 - Apply every matching validation row, subject to explicit user instructions.
   Shared behavior means multiple module/application consumers.
 

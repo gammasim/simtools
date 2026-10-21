@@ -28,6 +28,7 @@ sim_events
 sim_telarray
 statistics
 simulators
+simulation
 testing
 trigger
 utils

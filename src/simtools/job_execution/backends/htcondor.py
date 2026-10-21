@@ -12,6 +12,8 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from simtools.constants import SCIENCE_TEST_SCHEMA_PATH
+from simtools.data_model import schema
 from simtools.job_execution.backends.base import (
     BackendConfigurationError,
     BackendExecutionError,
@@ -87,6 +89,11 @@ class HTCondorBackend:
         HTCondorBackend._validate_extra_attributes(config)
         HTCondorBackend._validate_timing(config)
         HTCondorBackend._validate_paths(config)
+        schema.validate_dict_using_schema(
+            config,
+            schema_file=SCIENCE_TEST_SCHEMA_PATH / "htcondor_backend.schema.yml",
+            offline=True,
+        )
 
     @staticmethod
     def _validate_request_cpus(config):
@@ -258,6 +265,7 @@ class HTCondorBackend:
         value = HTCondorBackend._strip_environment_comment(value).strip().strip("\"'")
         if not key:
             raise BackendConfigurationError(f"Invalid empty environment key in {path}.")
+        value = os.path.expandvars(str(Path(value).expanduser()))
         return key, value
 
     @staticmethod

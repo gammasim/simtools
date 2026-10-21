@@ -137,6 +137,12 @@ def _create_base_plot_figure(data_to_plot, simulated_data=None):
         plot_difference=True,
         no_markers=True,
     )
+    for difference_ax in fig.get_axes()[1:]:
+        for line in difference_ax.lines:
+            line.set_ydata(np.asarray(line.get_ydata()) * 100)
+        difference_ax.set_ylabel("Difference\n[%]")
+        difference_ax.relim()
+        difference_ax.autoscale_view(scalex=False)
     ax = fig.get_axes()[0]
     ax.set_ylim(0, 1.05)
     ax.set_ylabel(CUMULATIVE_PSF)

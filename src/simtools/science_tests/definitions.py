@@ -1,22 +1,39 @@
 """Load and validate release science-test definitions."""
 
+import csv
+import fnmatch
 import hashlib
 import json
 import logging
 import math
+import os
 import re
 from collections import Counter
 from pathlib import Path
 
-from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA, SCIENCE_TEST_SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.io.file_type import _get_product_filename
 from simtools.production_configuration.job_grid_io import read_job_grid
 from simtools.production_configuration.production_file_selection import (
     discover_manifests,
     normalize_for_comparison,
 )
 from simtools.utils.general import replace_placeholders_recursively
+
+_SCIENCE_REPORT_PATH = "__SCIENCE_REPORT_PATH__"
+_JOB_IDS = "job_ids"
+
+_ARRAY_LAYOUT_KEY = "array_layout"
+_COMPARISON_INVENTORY_FILE = _get_product_filename("comparison_inventory")
+_REASON_KEY = "reason"
+_SCOPE_KEY = "scope"
+_SELECT_KEY = "select"
+_STATUS_KEY = "status"
+_TELESCOPE_TYPE_KEY = "telescope_type"
+_ENCODING = "utf-8"
+_CSV_CONTEXT_KEYS = ("pair", _ARRAY_LAYOUT_KEY, _SCOPE_KEY, _TELESCOPE_TYPE_KEY)
 
 _VALID_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 
@@ -32,11 +49,18 @@ _MODEL_SOURCE_KEYS = (
     "simulation_models_git_revision",
 )
 
-_SUBMISSION_FILE_NAME = "submission.json"
+_SUBMISSION_FILE_NAME = _get_product_filename("submission_manifest")
 
+_ACCEPTANCE_VALUE_FORMAT = ".4g"
+
+_REPORT_PAGE_COLUMN = "report_page"
+
+_SITE_SCHEMA_FILE = "site.schema.yml"
 _RELEASE_FILE_NAME = "release.yml"
 
 _SETUP_RELEASE_LABEL = "__SCIENCE_RELEASE_LABEL__"
+
+_SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
 
 _PUBLICATION_WARNING_BYTES = 20 * 1024 * 1024
 
@@ -118,6 +142,7 @@ def _load_suites(release_dir, release, catalogue, template_dir=None):
         if not isinstance(site, str) or not _VALID_NAME.fullmatch(site):
             raise ValueError(f"Invalid site name: {site!r}")
         suite = _load_site_suite(release_dir, template_dir, site)
+        _validate_science_test_config(suite, _SITE_SCHEMA_FILE)
         _validate_site_suite(site, suite, catalogue)
         suites[site] = suite
     return suites
@@ -212,11 +237,11 @@ def _check_inputs(definition, replacements):
 
 def _check_completed_submission(path):
     """Require a completed manifest covering every submitted job's declared files."""
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_text(encoding=_ENCODING))
     metadata = payload.get("metadata", {})
     if metadata.get("state") != "completed":
         raise ValueError(f"Production is not completed: {path}")
-    jobs = payload.get("job_ids", [])
+    jobs = payload.get(_JOB_IDS, [])
     outputs = metadata.get("expected_outputs", {})
     if not jobs or set(jobs) != set(outputs):
         raise ValueError(f"Production has missing expected outputs: {path}")
@@ -231,19 +256,193 @@ def _evaluate_products(definition, replacements):
     _check_required_products(definition, replacements)
     _check_expected_pair_count(definition, replacements)
     rule = definition.get("rule", {})
+    warnings = []
     for metric in rule.get("metrics", []):
-        pattern = replace_placeholders_recursively(metric["file"], replacements)
-        for path in _matched_files(pattern):
-            value = json.loads(path.read_text(encoding="utf-8"))
-            try:
-                for key in metric["key"].split("."):
-                    value = value[int(key)] if isinstance(value, list) else value[key]
-            except (KeyError, IndexError, TypeError) as exc:
-                raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
-            _check_metric(value, metric)
+        try:
+            warnings.extend(_evaluate_metric(metric, replacements))
+        except _AcceptanceError as exc:
+            warnings.append(str(exc))
     if rule.get("mode") == "advisory":
-        return {"status": "warn", "reason": "Numerical acceptance is advisory; review required."}
-    return {"status": "pass"}
+        warnings.append("Numerical acceptance is advisory; review required.")
+    if warnings:
+        return {
+            _STATUS_KEY: "warn",
+            _REASON_KEY: f"Acceptance warning ({len(warnings)}): {warnings[0]}",
+            "acceptance_warnings": warnings,
+        }
+    return {_STATUS_KEY: "pass"}
+
+
+def _evaluate_metric(metric, replacements):
+    """Evaluate one configured metric over all matching products."""
+    pattern = replace_placeholders_recursively(metric["file"], replacements)
+    warnings = []
+    for path in _matched_files(pattern):
+        if metric.get("format") == "csv":
+            warnings.extend(_evaluate_csv_metric(path, metric))
+        else:
+            _evaluate_json_metric(path, metric)
+    return warnings
+
+
+def _evaluate_json_metric(path, metric):
+    """Read and validate one nested JSON metric."""
+    value = json.loads(path.read_text(encoding=_ENCODING))
+    try:
+        for key in metric["key"].split("."):
+            value = value[int(key)] if isinstance(value, list) else value[key]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError(f"Missing metric {metric['key']} in {path}") from exc
+    _check_metric(value, metric)
+
+
+def _evaluate_csv_metric(path, metric):
+    """Apply configured scalar thresholds to selected rows of a compact results table."""
+    field = metric.get("field", metric["key"])
+    with path.open(encoding=_ENCODING, newline="") as input_file:
+        all_rows = list(csv.DictReader(input_file))
+    selectors = metric.get(_SELECT_KEY, {})
+    rows = [row for row in all_rows if _csv_row_matches(row, selectors)]
+    counts = Counter(_csv_metric_identity(row) for row in all_rows)
+    duplicates = [identity for identity, count in counts.items() if count > 1]
+    if duplicates:
+        raise ValueError(f"Duplicate comparison metric rows in {path}: {duplicates[:5]}.")
+    warnings = _missing_csv_metrics(path, all_rows, rows, selectors)
+    if not rows:
+        return warnings or [f"No comparison rows match {selectors} in {path}."]
+    for row in rows:
+        try:
+            warning = _evaluate_csv_row(row, metric, field, path)
+        except _AcceptanceError as exc:
+            warning = str(exc)
+        if warning:
+            warnings.append(warning)
+    return warnings
+
+
+def _csv_row_matches(row, selectors):
+    """Apply configured selectors to a scalar result or expected context."""
+    return all(_csv_value_matches(row.get(key, ""), value) for key, value in selectors.items())
+
+
+def _csv_metric_identity(row):
+    """Identify a scalar measurement independently of its value and PDF page."""
+    return tuple(
+        row.get(key, "")
+        for key in (
+            "pair",
+            _ARRAY_LAYOUT_KEY,
+            "plot",
+            _SCOPE_KEY,
+            _TELESCOPE_TYPE_KEY,
+            "population",
+            "metric",
+        )
+    )
+
+
+def _csv_metric_contexts(path, rows):
+    """Use declared pair/type coverage, falling back to older scalar tables."""
+    inventory = path.with_name(_COMPARISON_INVENTORY_FILE)
+    payload = json.loads(inventory.read_text(encoding=_ENCODING)) if inventory.is_file() else {}
+    scopes = payload.get("metric_scopes")
+    if scopes is None:
+        return {tuple(row.get(key, "") for key in _CSV_CONTEXT_KEYS) for row in rows}
+    return {
+        (pair, layout, _TELESCOPE_TYPE_KEY if telescope else "whole_array", telescope)
+        for pair, layouts in scopes.items()
+        for layout, telescopes in layouts.items()
+        for telescope in ("", *telescopes)
+    }
+
+
+def _missing_csv_metrics(path, all_rows, selected, selectors):
+    """Warn for each expected configuration/type without a selected measurement."""
+    observed = {tuple(row.get(key, "") for key in _CSV_CONTEXT_KEYS) for row in selected}
+    context_selectors = {key: value for key, value in selectors.items() if key in _CSV_CONTEXT_KEYS}
+    warnings = []
+    for context in sorted(_csv_metric_contexts(path, all_rows) - observed):
+        row = dict(zip(_CSV_CONTEXT_KEYS, context))
+        if not _csv_row_matches(row, context_selectors):
+            continue
+        telescope = row[_TELESCOPE_TYPE_KEY]
+        plots = selectors.get("plot", [])
+        plots = [plots] if isinstance(plots, str) else plots
+        if (
+            telescope
+            and plots
+            and not any(fnmatch.fnmatchcase(telescope, plot.rsplit("_", 1)[-1]) for plot in plots)
+        ):
+            continue
+        warnings.append(
+            f"Missing comparison metric rows for {row['pair']} {row[_ARRAY_LAYOUT_KEY]} "
+            f"{row[_SCOPE_KEY]} {telescope}: {selectors}."
+        )
+    return warnings
+
+
+def _evaluate_csv_row(row, metric, field, path):
+    """Evaluate a selected CSV row and return its warning, if any."""
+    label = f"{row.get('plot')} {row.get(_SCOPE_KEY)} {row.get('pair')}"
+    if row.get("valid", "").casefold() != "true":
+        return f"{label}: invalid statistic ({row.get(_REASON_KEY)}){_report_page_suffix(row)}."
+    value, counts = _read_csv_acceptance_values(row, field, path)
+    minimum_entries = metric.get("minimum_entries")
+    if minimum_entries is not None and min(counts) < minimum_entries:
+        return f"{label}: insufficient statistics ({counts}){_report_page_suffix(row)}."
+    return _check_csv_thresholds(value, metric, field, label, row)
+
+
+def _read_csv_acceptance_values(row, field, path):
+    """Parse and validate the statistic and sample counts from a CSV row."""
+    try:
+        value = float(row[field])
+        counts = [int(float(row[key])) for key in ("baseline_count", "candidate_count")]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid acceptance value in {path}: {row}") from exc
+    if not math.isfinite(value):
+        raise ValueError(f"Invalid acceptance value in {path}: {row}")
+    return value, counts
+
+
+def _check_csv_thresholds(value, metric, field, label, row):
+    """Apply warning and failure thresholds to one valid statistic."""
+    minimum = metric.get("minimum", -math.inf)
+    if value < minimum:
+        raise _AcceptanceError(
+            f"{label}: {field}={_format_acceptance_value(value)} is below required minimum "
+            f"{_format_acceptance_value(minimum)}{_report_page_suffix(row)}."
+        )
+    warning_limit = metric.get("warning_maximum")
+    fail_limit = metric.get("maximum", math.inf)
+    if value > fail_limit:
+        raise _AcceptanceError(
+            f"Acceptance failed for {label}: {field}={_format_acceptance_value(value)} "
+            f"exceeds {_format_acceptance_value(fail_limit)}{_report_page_suffix(row)}."
+        )
+    if warning_limit is not None and value > warning_limit:
+        return (
+            f"{label}: {field}={_format_acceptance_value(value)} exceeds warning limit "
+            f"{_format_acceptance_value(warning_limit)}{_report_page_suffix(row)}."
+        )
+    return None
+
+
+def _report_page_suffix(row):
+    """Return a compact PDF page reference when the statistic was rendered."""
+    page = row.get(_REPORT_PAGE_COLUMN)
+    return f" (PDF page {page})" if page else ""
+
+
+def _format_acceptance_value(value):
+    """Render acceptance values to four significant digits for readable reports."""
+    return format(value, _ACCEPTANCE_VALUE_FORMAT)
+
+
+def _csv_value_matches(actual, expected):
+    """Match an exact CSV selector or one of its configured glob patterns."""
+    choices = expected if isinstance(expected, list) else [expected]
+    return any(fnmatch.fnmatchcase(actual, str(choice)) for choice in choices)
 
 
 def _check_required_products(definition, replacements):
@@ -260,8 +459,8 @@ def _check_expected_pair_count(definition, replacements):
         return
     if isinstance(expected, bool) or not isinstance(expected, int) or expected < 1:
         raise ValueError("expected_pair_count must be a positive integer.")
-    inventory = Path(replacements["__SCIENCE_REPORT_PATH__"]) / "comparison_inventory.json"
-    payload = json.loads(inventory.read_text(encoding="utf-8"))
+    inventory = Path(replacements[_SCIENCE_REPORT_PATH]) / _COMPARISON_INVENTORY_FILE
+    payload = json.loads(inventory.read_text(encoding=_ENCODING))
     observed = payload.get("matched_pair_count")
     if observed != expected:
         raise ValueError(
@@ -274,7 +473,9 @@ def _check_metric(value, metric):
     if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
         raise ValueError(f"Invalid metric {metric['key']}: {value}")
     if value < metric.get("minimum", -math.inf) or value > metric.get("maximum", math.inf):
-        raise _AcceptanceError(f"Acceptance failed for {metric['key']}: {value}")
+        raise _AcceptanceError(
+            f"Acceptance failed for {metric['key']}: {_format_acceptance_value(value)}"
+        )
 
 
 def _campaign_signature(
@@ -301,25 +502,31 @@ def _campaign_signature(
     for definition in catalogue.values():
         payload.append(
             _resolve_workflow(template_dir, release_dir, definition["workflow"]).read_text(
-                encoding="utf-8"
+                encoding=_ENCODING
             )
         )
     runtime_file = template_dir / "run_time.yml"
     if runtime_file.is_file():
-        payload.append(runtime_file.read_text(encoding="utf-8"))
+        payload.append(runtime_file.read_text(encoding=_ENCODING))
     for profile in sorted((template_dir / "profiles").glob("*.yml")):
-        payload.append(profile.read_text(encoding="utf-8"))
+        payload.append(profile.read_text(encoding=_ENCODING))
     for environment_file in sorted((template_dir / "profiles").glob("*.env")):
-        payload.append(environment_file.read_text(encoding="utf-8"))
-    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+        payload.append(environment_file.read_text(encoding=_ENCODING))
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode(_ENCODING)).hexdigest()
 
 
 def _load_acceptance(release_dir, template_dir):
     """Load the shared acceptance contracts and reject unsupported overrides."""
-    products = _load_yaml(template_dir / "acceptance" / "expected-products.yml").get("tests")
-    rules = _load_yaml(template_dir / "acceptance" / "thresholds.yml").get("rules")
+    product_contract = _load_yaml(template_dir / "acceptance" / "expected-products.yml")
+    threshold_contract = _load_yaml(template_dir / "acceptance" / "thresholds.yml")
+    _validate_science_test_config(product_contract, "expected_products.schema.yml")
+    _validate_science_test_config(threshold_contract, "thresholds.schema.yml")
+    products = product_contract.get("tests")
+    rules = threshold_contract.get("rules")
     if not isinstance(products, dict) or not isinstance(rules, dict):
         raise ValueError("Expected products and acceptance rules must be mappings.")
+    for rule_id, rule in rules.items():
+        _validate_rule(rule, rule_id)
     overrides = release_dir / "acceptance" / "overrides.yml"
     if overrides.is_file() and _load_yaml(overrides).get("overrides"):
         raise ValueError(
@@ -376,7 +583,9 @@ def _comparison_settings(release, comparison, kind):
 
 def _validate_rule(rule, rule_id):
     """Fail malformed acceptance rules before any workflow can execute."""
-    if not isinstance(rule, dict) or (rule_id and rule.get("mode") not in {"advisory", "blocking"}):
+    if not isinstance(rule, dict) or (
+        rule_id and rule.get("mode") not in {"advisory", "blocking", "thresholds"}
+    ):
         raise ValueError(f"Invalid acceptance rule: {rule_id}")
     metrics = rule.get("metrics", [])
     if not isinstance(metrics, list):
@@ -393,7 +602,7 @@ def _validate_metric_rule(metric):
         or not isinstance(metric.get("key"), str)
     ):
         raise ValueError("Each acceptance metric needs file and key.")
-    for limit in ("minimum", "maximum"):
+    for limit in ("minimum", "maximum", "warning_maximum"):
         if limit not in metric:
             continue
         value = metric[limit]
@@ -403,6 +612,21 @@ def _validate_metric_rule(metric):
             or not math.isfinite(value)
         ):
             raise ValueError(f"Invalid acceptance {limit}: {value}")
+    selectors = metric.get(_SELECT_KEY, {})
+    if not isinstance(selectors, dict) or any(
+        not isinstance(key, str)
+        or not isinstance(value, str | list)
+        or (isinstance(value, list) and not all(isinstance(item, str) for item in value))
+        for key, value in selectors.items()
+    ):
+        raise ValueError("CSV acceptance select must map column names to string values.")
+    minimum_entries = metric.get("minimum_entries")
+    if minimum_entries is not None and (
+        isinstance(minimum_entries, bool)
+        or not isinstance(minimum_entries, int)
+        or minimum_entries < 1
+    ):
+        raise ValueError(f"Invalid acceptance minimum_entries: {minimum_entries}")
 
 
 def _model_source_arguments(application_args, context, release):
@@ -454,7 +678,7 @@ def _site_replacements(context, site, site_config, work):
             "__SCIENCE_ARRAY_LAYOUT__": site_config["array_layout_name"],
             "__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate_root / site),
             "__SCIENCE_BASELINE_SITE_PATH__": str(baseline_root / site),
-            "__SCIENCE_REPORT_PATH__": str(work),
+            _SCIENCE_REPORT_PATH: str(work),
             "__SCIENCE_COLLECTION_PATH__": str(work),
         }
     )
@@ -495,6 +719,7 @@ def _load_catalogue(release, release_dir, template_dir):
     if not path.is_absolute():
         path = (release_dir / path).resolve()
     data = _load_yaml(path)
+    _validate_science_test_config(data, "catalogue.schema.yml")
     catalogue = data.get("tests", data)
     if not isinstance(catalogue, dict) or not catalogue:
         raise ValueError("Science-test catalogue must be a non-empty mapping.")
@@ -549,10 +774,30 @@ def _relative_path(path, root):
 
 
 def _load_context(context_file):
-    """Load the optional science-test context mapping."""
+    """Load context paths, resolving the optional shared storage root."""
     if context_file is None:
         return {}
-    return _load_yaml(Path(context_file))
+    context = _load_yaml(Path(context_file))
+    _validate_science_test_config(context, "context.schema.yml")
+    placeholder = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
+    if not any(isinstance(value, str) and placeholder in value for value in context.values()):
+        return context
+    storage_root = os.environ.get(_SCIENCE_TESTS_ROOT_ENV)
+    if not storage_root or not Path(storage_root).is_absolute():
+        raise ValueError(
+            f"Set {_SCIENCE_TESTS_ROOT_ENV} to a non-empty absolute path "
+            f"before loading {context_file}."
+        )
+    return replace_placeholders_recursively(context, {placeholder: str(Path(storage_root))})
+
+
+def _validate_science_test_config(configuration, schema_file):
+    """Validate one science-test configuration against its packaged schema."""
+    schema.validate_dict_using_schema(
+        configuration,
+        schema_file=SCIENCE_TEST_SCHEMA_PATH / schema_file,
+        offline=True,
+    )
 
 
 def _load_yaml(path):
@@ -597,7 +842,7 @@ def _check_reviewed_production(definition, replacements):
     submitted = []
     for path in _matched_files(str(root / "**" / _SUBMISSION_FILE_NAME)):
         _check_completed_submission(path)
-        submitted.extend(json.loads(path.read_text(encoding="utf-8")).get("job_ids", []))
+        submitted.extend(json.loads(path.read_text(encoding=_ENCODING)).get(_JOB_IDS, []))
     _require_same_ids(expected_ids, submitted, "submitted jobs")
     return {"expected_jobs": len(rows), "observed_jobs": len(manifests)}
 
