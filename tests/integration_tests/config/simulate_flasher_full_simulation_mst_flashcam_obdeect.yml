@@ -1,0 +1,39 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  docs:
+    title: Simulate an MSFx flash for a South FlashCam with obdeect
+    summary: Propagate an MSFx calibration pulse through the optics and FlashCam camera of MSTS-04.
+  configuration:
+    run_mode: full_simulation
+    light_source: MSFx-FlashCam
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: South
+    telescopes: MSTS-04
+    run_number: 10
+    flasher_photons: 1e6
+    log_level: DEBUG
+    ray_tracing_backend: obdeect
+    obdeect_seed: 1
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: full_simulation_run000010_South_7.0.0_simulate_flasher_MSTS-04.simtel.zst
+      output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: flasher
+        event:
+          pe_sum:
+            range:
+            - 1000
+            - 50000
+          photons:
+            range:
+            - 90
+            - 500000
+  model_version_use_current: true
+  test_name: full_simulation_msfx_flashcam_obdeect
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

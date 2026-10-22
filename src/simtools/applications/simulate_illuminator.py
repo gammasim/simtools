@@ -96,6 +96,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
     ),
     validate_simulation_dependencies=True,
 )

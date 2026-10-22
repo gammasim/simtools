@@ -184,7 +184,7 @@ RAY_TRACING_BACKEND = _argument(
 OBDEECT_SEED = _argument(
     "obdeect_seed",
     "ray tracing configuration",
-    help="Seed for obdeect mirror errors and photon sampling (default: random).",
+    help="Seed for the random mirror deviations and photon sampling of obdeect (default: random).",
     type=int,
     default=None,
 )

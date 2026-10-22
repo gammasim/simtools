@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import math
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
@@ -316,7 +317,7 @@ def test__add_illuminator_command_options(simulator_instance):
 
         # Verify structure and key values
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
         assert result[0] == "-x 100.0"  # 1.0m -> 100.0cm
         assert result[1] == "-y 200.0"  # 2.0m -> 200.0cm
         assert result[2] == "-z 1200.0"  # ground altitude plus 9.0m tower height
@@ -325,6 +326,7 @@ def test__add_illuminator_command_options(simulator_instance):
         assert result[5] == "-s 450"  # wavelength in nm
         assert result[6] == "-p square:2.0"  # pulse shape
         assert result[7] == "-a gauss:5.0"  # angular distribution
+        assert result[8] == "-N 1"  # one pulse unless number_of_events is given
 
 
 def test__add_illuminator_command_options_with_custom_position_and_pointing(simulator_instance):
@@ -359,7 +361,7 @@ def test__add_illuminator_command_options_with_custom_position_and_pointing(simu
 
         # Verify custom values are used
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
         assert result[0] == "-x 500.0"  # 5.0m -> 500.0cm
         assert result[1] == "-y 600.0"  # 6.0m -> 600.0cm
         assert result[2] == "-z 700.0"  # 7.0m -> 700.0cm
@@ -954,11 +956,8 @@ def test__prepare_flasher_atmosphere_files(simulator_instance):
         # Should try to create both atmosphere file aliases
         assert mock_symlink.call_count == 2
 
-        # Verify symlink calls
-        expected_calls = [
-            ((config_directory / "atm_profile.dat",),),
-            ((config_directory / "atm_profile.dat",),),
-        ]
+        # Links point to the profile by name (same directory), valid for relative paths.
+        expected_calls = [(("atm_profile.dat",),), (("atm_profile.dat",),)]
         mock_symlink.assert_has_calls(expected_calls, any_order=True)
 
     # Test with custom model_id
@@ -1811,3 +1810,134 @@ def test_get_available_wavelengths_from_config_missing_keys():
 
     with pytest.raises(ValueError, match="Missing required configuration keys"):
         SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_version)
+
+
+def _obdeect_settings(mock_settings):
+    mock_settings.config.ray_tracing_backend = "obdeect"
+    mock_settings.config.sim_telarray_exe = "/mock/simtel/bin/sim_telarray"
+    mock_settings.config.args = {"obdeect_seed": 3}
+
+
+def test_make_run_command_with_obdeect(simulator_instance):
+    """obdeect writes the photons beforehand; sim_telarray bypasses its optics."""
+    simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-02.cfg"
+    simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
+    simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
+    simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+    simulator_instance.runner_service.get_file_name.return_value = Path("/out/photons.iact.gz")
+    with (
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+        patch.object(simulator_instance, "_get_telescope_pointing") as pointing,
+        patch.object(simulator_instance, "_make_light_emission_command") as light_emission,
+    ):
+        _obdeect_settings(mock_settings)
+        lines = simulator_instance.make_run_command()
+
+    script = "".join(lines)
+    light_emission.assert_not_called()
+    pointing.assert_not_called()
+    assert "-C Bypass_Optics=1" in script
+    assert "-C telescope_theta=0.0" in script
+    assert "-C telescope_phi=0.0" in script
+
+
+def test_prepare_run_writes_obdeect_photons(simulator_instance, tmp_test_directory):
+    simulator_instance.submission_files.get_file_name.return_value = tmp_test_directory / "run.sh"
+    simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: (
+        tmp_test_directory / f"{file_type}.dat"
+    )
+    with (
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+        patch.object(simulator_instance, "_write_obdeect_photons") as write,
+        patch.object(simulator_instance, "make_run_command", return_value=["#!/bin/bash\n"]),
+    ):
+        _obdeect_settings(mock_settings)
+        simulator_instance.prepare_run()
+
+    write.assert_called_once_with(tmp_test_directory / "iact_output.dat")
+
+
+def test_write_obdeect_photons_rejects_dual_mirror_telescopes(simulator_instance):
+    simulator_instance.telescope_model.get_parameter_value.return_value = 2
+    with pytest.raises(NotImplementedError, match="dual-mirror"):
+        simulator_instance._write_obdeect_photons(Path("photons.iact"))
+
+
+def test_obdeect_flasher_events_geometry(simulator_instance):
+    """The flasher sits in the primary-mirror frame; its light goes straight to the camera."""
+    model = Mock(focal_surface_z_m=16.0)
+    tracer = Mock()
+    tracer.optical_model.return_value = model
+    light = Mock()
+    parameters = {
+        "mirror_offset": 1.5 * u.m,
+        "camera_body_diameter": 2.4 * u.m,
+        "flasher_position": [20.0 * u.cm, 10.0 * u.cm, -50.0 * u.cm],
+    }
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = parameters.get
+    simulator_instance.telescope_model.get_parameter_value.return_value = 0  # Circular body.
+    simulator_instance.light_emission_config = {"flasher_photons": [1000], "number_of_events": [2]}
+
+    _, radius = simulator_instance._obdeect_flasher_events(tracer, light, {"seed": 3}, 2156.0)
+
+    tracer.optical_model.assert_called_once_with(0.0)
+    args, kwargs = light.light_source_events.call_args
+    assert args == (model, [1000, 1000])
+    assert kwargs["position_m"] == pytest.approx((0.2, 0.1, -2.0))
+    assert kwargs["direct"] is True
+    assert kwargs["disk"] == ((0.0, 0.0, 16.0), (0.0, 0.0, 1.0), pytest.approx(1.2))
+    assert kwargs["emission_altitude_m"] == pytest.approx(2156.0 + 18.0)
+    assert kwargs["seed"] == 3
+    assert radius == pytest.approx(1.2)
+
+
+def test_obdeect_illuminator_events_geometry(simulator_instance, tmp_test_directory, mocker):
+    """Telescope at its position with axes offsets; the slant-path transmission applied."""
+    # pylint: disable-next=import-outside-toplevel
+    from simtools.ray_tracing import obdeect_light_emission as light
+
+    (tmp_test_directory / "atm.dat").write_text(
+        "# H2= 2.000, H1= 3.000\n300 0.1\n", encoding="utf-8"
+    )
+    simulator_instance.telescope_model.config_file_directory = tmp_test_directory
+    tracer = Mock()
+    parameters = {
+        "telescope_sphere_radius": 9.0 * u.m,
+        "axes_offsets": [1.6 * u.m, 0.0 * u.m],
+    }
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
+    simulator_instance.light_emission_config = {"flasher_photons": 1e9, "number_of_events": 2}
+    events = mocker.patch.object(light, "light_source_events")
+    with (
+        patch.object(simulator_instance, "_get_telescope_pointing", return_value=(0.0, 0.0)),
+        patch.object(
+            simulator_instance,
+            "_get_illuminator_position",
+            return_value=(0.0 * u.m, 0.0 * u.m, 1000.0 * u.m),
+        ),
+        patch.object(
+            simulator_instance, "_get_illuminator_pointing_vector", return_value=[0, 0, -1]
+        ),
+        patch.object(simulator_instance, "_should_use_telpos_file", return_value=True),
+        patch.object(
+            simulator_instance,
+            "_get_telescope_position_ground_with_axis_offset",
+            return_value=(0.0 * u.m, 0.0 * u.m, 0.0 * u.m),
+        ),
+        patch.object(simulator_instance, "_atmospheric_transmission_file", return_value="atm.dat"),
+    ):
+        _, radius = simulator_instance._obdeect_illuminator_events(
+            tracer, light, {"seed": 3, "wavelength_nm": 300.0}, 2000.0
+        )
+
+    tracer.optical_model.assert_called_once_with(0.0)
+    args, kwargs = events.call_args
+    assert args[1] == [1e9, 1e9]
+    # Vertical telescope: the azimuth-altitude offset moves the frame along x.
+    assert kwargs["position_m"] == pytest.approx([-1.6, 0.0, 1000.0])
+    assert kwargs["axis"] == pytest.approx([0.0, 0.0, -1.0])
+    assert kwargs["emission_altitude_m"] == pytest.approx(2000.0)
+    # From 3000 m down to 2000 m (depth 0.1), vertical: airmass 1.
+    assert kwargs["transmission"] == pytest.approx(math.exp(-0.1))
+    assert radius == pytest.approx(9.0)
