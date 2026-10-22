@@ -32,12 +32,12 @@ def generate_bias_curves(args):
     _logger.info("Extracting NSB trigger rates from HDF5 files...")
     nsb_stats = _extract_nsb_rates(args, time_window)
     if not nsb_stats:
-        raise FileNotFoundError(f"No NSB input files found in {args['data_dir']}")
+        raise FileNotFoundError(f"No NSB input files found in {args['event_data_directory']}")
 
     _logger.info("Calculating proton trigger rates...")
     proton_stats = _extract_proton_rates(args)
     if not proton_stats:
-        raise FileNotFoundError(f"No proton input files found in {args['data_dir']}")
+        raise FileNotFoundError(f"No proton input files found in {args['event_data_directory']}")
 
     if args.get("proton_table_file"):
         _write_proton_ecsv(proton_stats, args["proton_table_file"])
@@ -122,7 +122,7 @@ def _calculate_time_window(args):
 
 def _extract_nsb_rates(args, time_window):
     """Extract NSB trigger rates from gamma reduced event-data HDF5 files."""
-    data_dir = Path(args["data_dir"])
+    data_dir = Path(args["event_data_directory"])
     gamma_hdf5_files = list(data_dir.rglob(f"gamma*{_REDUCED_EVENT_DATA_SUFFIX}"))
     if gamma_hdf5_files:
         _logger.info(f"Found {len(gamma_hdf5_files)} gamma HDF5 file(s)")
@@ -149,7 +149,7 @@ def _extract_proton_rates(args):
 
     Thresholds and run numbers are extracted from file names.
     """
-    data_dir = Path(args["data_dir"])
+    data_dir = Path(args["event_data_directory"])
     proton_files = _group_hdf5_files_by_threshold_and_run(data_dir)
 
     if not proton_files:
