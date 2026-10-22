@@ -11,23 +11,18 @@ from simtools.model.site_model import SiteModel
 ARGUMENTS = (
     cli.ArgumentDefinition(
         "list_available_layouts",
-        exclusive_group="input group",
-        exclusive_group_required=False,
         help="List available layouts in the simulation-model source.",
         action="store_true",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "include_calibration_array_elements",
         help="Include calibration array elements in output table.",
         action="store_true",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
-        required=False,
         default="ground",
         choices=["ground", "utm"],
     ),

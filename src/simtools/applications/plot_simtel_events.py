@@ -5,7 +5,12 @@
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
+from simtools.visualization.plot_simtel_events import (
+    PEDESTAL_SOURCE_MONITORING,
+    PEDESTAL_SOURCE_WAVEFORM,
+    PLOT_CHOICES,
+    generate_and_save_plots,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -75,9 +80,14 @@ _ARGUMENTS = (
         "max_events", type=int, default=1, help="Maximum number of events to process"
     ),
     cli.ArgumentDefinition(
+        "pedestal_source",
+        choices=[PEDESTAL_SOURCE_WAVEFORM, PEDESTAL_SOURCE_MONITORING],
+        default=PEDESTAL_SOURCE_WAVEFORM,
+        help="Pedestal source: estimate from each waveform or use sim_telarray monitoring data",
+    ),
+    cli.ArgumentDefinition(
         "save_pngs", action="store_true", help="Also save individual PNG images per plot"
     ),
-    cli.ArgumentDefinition("dpi", type=int, default=300, help="PNG dpi"),
 )
 
 
@@ -85,13 +95,14 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.FIGURE_DPI(aliases=("dpi",)),
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
+    excluded_standard_arguments=("figure_dpi",),
     initialize_model_reader=False,
 )
 

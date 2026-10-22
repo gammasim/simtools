@@ -273,6 +273,7 @@ def test_write_run_script_perfect_mirror_flags(calculator):
     photons, stars, log_file = calculator._prepare_psf_io_files()
     script = calculator._write_run_script(photons, stars, log_file)
     txt = script.read_text(encoding="utf-8")
+    assert f"exec > '{log_file}' 2> '{log_file.with_suffix('.err')}'" in txt
     assert "-DPERFECT_DISH=1" in txt
     assert "-C telescope_random_angle=0" in txt
 

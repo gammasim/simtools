@@ -13,6 +13,7 @@ from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
 
 logger = logging.getLogger()
+_TELESCOPE_THROUGHPUT_FILE_PREFIX = "telescope_throughput_"
 
 
 @pytest.fixture
@@ -52,7 +53,8 @@ def camera_efficiency_lst(config_data_lst, mocker):
 def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
     """Create a minimal camera-efficiency result table for analysis tests."""
     test_results_file = (
-        Path(tmp_test_directory) / "camera_efficiency_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
+        Path(tmp_test_directory)
+        / "telescope_throughput_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
     )
 
     wavelength = np.arange(200.0, 1001.0)
@@ -88,6 +90,20 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
 
 def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
+
+
+def test_load_files_uses_telescope_throughput_name(camera_efficiency_lst):
+    assert camera_efficiency_lst._file["results"].name.startswith(_TELESCOPE_THROUGHPUT_FILE_PREFIX)
+
+
+def test_prepared_nsb_spectrum_placeholder_uses_site_model_default(
+    camera_efficiency_lst, config_data_lst
+):
+    config = camera_efficiency_lst._configuration(
+        config_data_lst | {"nsb_spectrum": "${prepared:nsb_reference_spectrum.ecsv}"}
+    )
+
+    assert config["nsb_spectrum"] is None
 
 
 def test_init_reuses_supplied_simulation_models(config_data_lst, mocker):

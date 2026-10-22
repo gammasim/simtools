@@ -38,6 +38,7 @@ dependencies = [
   "numpy",
   "packaging",
   "particle",
+  "pillow",
   "pygit2>=1.19",
   "pyproj",
   "python-dotenv",
@@ -80,7 +81,9 @@ optional-dependencies.tests = [
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls.documentation = "https://gammasim.github.io/simtools/"
 urls.repository = "https://github.com/gammasim/simtools"
+scripts.simtools-compare-atmospheres = "simtools.applications.compare_atmospheres:main"
 scripts.simtools-compare-productions = "simtools.applications.compare_productions:main"
+scripts.simtools-compare-science-results = "simtools.applications.compare_science_results:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
   simtools.applications.convert_geo_coordinates_of_array_elements:main\
   """
@@ -94,7 +97,10 @@ scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:
 scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
 scripts.simtools-derive-pulse-shape-parameters = "simtools.applications.derive_pulse_shape_parameters:main"
+scripts.simtools-derive-telescope-sphere-radius = "simtools.applications.derive_telescope_sphere_radius:main"
 scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
+scripts.simtools-docs-assemble-pages = "simtools.applications.docs_assemble_pages:main"
+scripts.simtools-docs-generate-toctree = "simtools.applications.docs_generate_toctree:main"
 scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
 scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
 scripts.simtools-docs-produce-model-parameter-reports = """\
@@ -127,6 +133,7 @@ scripts.simtools-maintain-simulation-model-write-array-element-positions = """\
   simtools.applications.maintain_simulation_model_write_array_element_positions:main\
   """
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-plot-camera = "simtools.applications.plot_camera:main"
 scripts.simtools-plot-corsika-limits = "simtools.applications.plot_corsika_limits:main"
 scripts.simtools-plot-production-grid = "simtools.applications.plot_production_grid:main"
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
@@ -135,6 +142,7 @@ scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:ma
 scripts.simtools-plot-tabular-data-for-model-parameter = """\
   simtools.applications.plot_tabular_data_for_model_parameter:main\
   """
+scripts.simtools-plot-trigger-patches = "simtools.applications.plot_trigger_patches:main"
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
 scripts.simtools-production-derive-monte-carlo-statistics = """\
   simtools.applications.production_derive_monte_carlo_statistics:main\
@@ -143,6 +151,7 @@ scripts.simtools-production-generate-grid = "simtools.applications.production_ge
 scripts.simtools-production-select-files = "simtools.applications.production_select_files:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
+scripts.simtools-run-science-tests = "simtools.applications.run_science_tests:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"
@@ -152,12 +161,11 @@ scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_
 scripts.simtools-submit-model-parameter-from-external = """\
   simtools.applications.submit_model_parameter_from_external:main\
   """
-scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
-scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
 scripts.simtools-validate-file-using-schema = "simtools.applications.validate_file_using_schema:main"
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 scripts.simtools-validate-repository-consistency = "simtools.applications.validate_repository_consistency:main"
+scripts.simtools-validate-telescope-throughput = "simtools.applications.validate_telescope_throughput:main"
 scripts.simtools-write-production-metadata = "simtools.applications.write_production_metadata:main"
 scripts.simtools-write-reduced-event-lists = "simtools.applications.write_reduced_event_lists:main"
 scripts.simtools-write-trigger-histograms = "simtools.applications.write_trigger_histograms:main"
@@ -172,6 +180,7 @@ package-data.simtools = [
   "schemas/*.yml",
   "schemas/input/*.yml",
   "schemas/model_parameters/*.yml",
+  "schemas/science_tests/*.yml",
 ]
 data-files.simtools = [ "dependency_versions.yml" ]
 

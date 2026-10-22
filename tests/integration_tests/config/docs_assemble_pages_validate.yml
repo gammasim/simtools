@@ -1,0 +1,14 @@
+---
+applications:
+- application: simtools-docs-assemble-pages
+  docs:
+    title: Validate a documentation version switcher file
+    summary: >-
+      Check the list of documentation versions to publish (version switcher file of the
+      pydata-sphinx-theme) without downloading or assembling the site.
+  configuration:
+    switcher_file: docs/_static/switcher.json
+    validate_only: true
+  test_name: validate
+schema_name: application_workflow.metaschema
+schema_version: 0.6.0

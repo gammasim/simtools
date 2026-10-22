@@ -12,16 +12,24 @@ import pytest
 from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.sim_events import file_info
+from simtools.simulation.parameters import SimulationParameters
 from simtools.simulator import Simulator
 
 logger = logging.getLogger()
 
-CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.CorsikaConfig"
+CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.get_shower_configuration"
 INITIALIZE_RUN_LIST_ERROR_MSG = (
     "Error in initializing run list "
     "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
 )
+
+
+STDERR_DIAGNOSTIC = "stderr diagnostic"
+
+TEXT_ENCODING = "utf-8"
+STDOUT_LOG_SUFFIX = ".log.gz"
 
 
 @pytest.fixture
@@ -66,7 +74,7 @@ def patch_simulator_core(mocker, mock_array_model):
 
     def _apply():
         mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
-        mocker.patch("simtools.simulator.CorsikaConfig")
+        mocker.patch("simtools.simulator.get_shower_configuration")
         mock_runner_service = mocker.patch("simtools.simulator.runner_services.RunnerServices")
         mock_runner_service.return_value.load_files.return_value = {}
         mock_runner_service.return_value.get_file_name.side_effect = (
@@ -232,23 +240,34 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     source_dir = Path(str(tmp_test_directory)) / "source"
     source_dir.mkdir(parents=True, exist_ok=True)
     output_file = source_dir / f"output_file_{model_version}_simtel.zst"
-    output_file.write_text("output", encoding="utf-8")
+    output_file.write_text("output", encoding=TEXT_ENCODING)
     log_file = source_dir / f"log_file_{model_version}_simtel.log.gz"
-    with gzip.open(log_file, "wt", encoding="utf-8") as handle:
+    with gzip.open(log_file, "wt", encoding=TEXT_ENCODING) as handle:
         handle.write("log")
     histogram_file = source_dir / f"hist_file_{model_version}_hist_log.zst"
-    histogram_file.write_text("hist", encoding="utf-8")
-    corsika_log_file = source_dir / f"corsika_{model_version}.log.gz"
-    with gzip.open(corsika_log_file, "wt", encoding="utf-8") as handle:
+    histogram_file.write_text("hist", encoding=TEXT_ENCODING)
+    corsika_log_file = source_dir / f"corsika_{model_version}{STDOUT_LOG_SUFFIX}"
+    with gzip.open(corsika_log_file, "wt", encoding=TEXT_ENCODING) as handle:
         handle.write("corsika")
     resource_file = source_dir / f"corsika_{model_version}.resources.json"
-    resource_file.write_text("{}", encoding="utf-8")
+    resource_file.write_text("{}", encoding=TEXT_ENCODING)
     model_archive = source_dir / f"model_files_{model_version}.tar.gz"
-    model_archive.write_text("model", encoding="utf-8")
+    model_archive.write_text("model", encoding=TEXT_ENCODING)
     simtools_log_file = source_dir / "simtools.log"
-    simtools_log_file.write_text("simtools", encoding="utf-8")
+    simtools_log_file.write_text("simtools", encoding=TEXT_ENCODING)
+
+    stderr_files = []
+    for stdout_file in (log_file, corsika_log_file):
+        stderr_file = stdout_file.with_name(
+            stdout_file.name.removesuffix(STDOUT_LOG_SUFFIX) + ".err.gz"
+        )
+        with gzip.open(stderr_file, "wt", encoding=TEXT_ENCODING) as handle:
+            handle.write(STDERR_DIAGNOSTIC)
+        stderr_files.append(stderr_file)
 
     files_by_type = {
+        "sim_telarray_err": [str(stderr_files[0])],
+        "corsika_err": [str(stderr_files[1])],
         "sim_telarray_output": [str(output_file)],
         "sim_telarray_log": [str(log_file)],
         "sim_telarray_histogram": [str(histogram_file)],
@@ -273,18 +292,35 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
 
     assert "Packing output files for registering on the grid" in caplog.text
     assert "Grid output files grid placed in" in caplog.text
-    with gzip.open(directory_for_grid_upload / log_file.name, "rt", encoding="utf-8") as handle:
-        assert handle.read() == "log"
-    assert (directory_for_grid_upload / histogram_file.name).read_text(encoding="utf-8") == "hist"
+    for stderr_file in stderr_files:
+        with gzip.open(
+            directory_for_grid_upload / stderr_file.name, "rt", encoding=TEXT_ENCODING
+        ) as handle:
+            assert handle.read() == STDERR_DIAGNOSTIC
     with gzip.open(
-        directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8"
+        directory_for_grid_upload / log_file.name, "rt", encoding=TEXT_ENCODING
+    ) as handle:
+        assert handle.read() == "log"
+    assert (directory_for_grid_upload / histogram_file.name).read_text(
+        encoding=TEXT_ENCODING
+    ) == "hist"
+    with gzip.open(
+        directory_for_grid_upload / corsika_log_file.name, "rt", encoding=TEXT_ENCODING
     ) as handle:
         assert handle.read() == "corsika"
-    assert (directory_for_grid_upload / resource_file.name).read_text(encoding="utf-8") == "{}"
-    assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
+    assert (directory_for_grid_upload / resource_file.name).read_text(
+        encoding=TEXT_ENCODING
+    ) == "{}"
+    assert (directory_for_grid_upload / model_archive.name).read_text(
+        encoding=TEXT_ENCODING
+    ) == "model"
     assert not output_file.exists()
-    assert (directory_for_grid_upload / output_file.name).read_text(encoding="utf-8") == "output"
-    with gzip.open(directory_for_grid_upload / "simtools.log.gz", "rt", encoding="utf-8") as handle:
+    assert (directory_for_grid_upload / output_file.name).read_text(
+        encoding=TEXT_ENCODING
+    ) == "output"
+    with gzip.open(
+        directory_for_grid_upload / "simtools.log.gz", "rt", encoding=TEXT_ENCODING
+    ) as handle:
         assert handle.read() == "simtools"
 
 
@@ -299,7 +335,7 @@ def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, 
 
     shower_simulator.run_number = shower_simulator._initialize_from_tool_configuration()
     assert shower_simulator.run_number == 42
-    file_info.get_corsika_run_number.assert_called_once_with(corsika_file)
+    file_info.get_corsika_run_number.assert_called_once_with(corsika_file, file_format="eventio")
 
 
 def test_pack_for_register_with_multiple_versions(
@@ -333,9 +369,12 @@ def test_pack_for_register_with_multiple_versions(
     mock_corsika_config.array_model.layout_name = "test_layout"  # from args
     mock_corsika_config.array_model.model_version = model_versions[0]
     mock_corsika_config.run_mode = None
+    mock_corsika_config.simulation_parameters = SimulationParameters(
+        1, PrimaryParticle("common_name", "proton"), 20, 0, 10, 100, viewcone_max=10, zenith_min=20
+    )
     mock_corsika_config.primary_particle.name = "proton"  # from args
 
-    mocker.patch("simtools.simulator.CorsikaConfig", return_value=mock_corsika_config)
+    mocker.patch("simtools.simulator.get_shower_configuration", return_value=mock_corsika_config)
     mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
 
     mock_config = mocker.Mock()
@@ -458,8 +497,8 @@ def test_reduced_event_lists_sim_telarray(array_simulator, mocker, tmp_test_dire
     array_simulator.save_reduced_event_lists()
 
     assert mock_simtel_io_writer.call_count == 2
-    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
-    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
+    mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"], file_format="eventio")
+    mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"], file_format="eventio")
 
     assert mock_table_handler.write_table_chunks.call_count == 2
     output_files = {
@@ -494,8 +533,12 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
 
     assert mock_simtel_io_writer.call_count == 2
-    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
-    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
+    mock_simtel_io_writer.assert_any_call(
+        [str(data_dir / "output_file1.simtel.zst")], file_format="eventio"
+    )
+    mock_simtel_io_writer.assert_any_call(
+        [str(data_dir / "output_file2.simtel.gz")], file_format="eventio"
+    )
 
     assert mock_table_handler.write_table_chunks.call_count == 2
     output_files = {
@@ -534,7 +577,7 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
 
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
-    mock_simtel_io_writer.assert_called_once_with([input_file])
+    mock_simtel_io_writer.assert_called_once_with([input_file], file_format="eventio")
     call = mock_table_handler.write_table_chunks.call_args
     assert call.kwargs["output_file"] == data_dir / "output_file3.reduced_event_data.hdf5"
     assert "metadata_documents" in call.kwargs
@@ -570,7 +613,7 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     tmp_base = Path(str(tmp_test_directory))
     input_file_list = tmp_base / "simtel_files.txt"
     input_files = [f"input_file{index}.simtel.zst" for index in range(1, 6)]
-    input_file_list.write_text("\n".join(input_files) + "\n", encoding="utf-8")
+    input_file_list.write_text("\n".join(input_files) + "\n", encoding=TEXT_ENCODING)
     output_dir = tmp_base / "reduced"
 
     mock_generator = mocker.MagicMock()
@@ -586,9 +629,9 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     )
 
     assert mock_simtel_io_writer.call_args_list == [
-        mocker.call(input_files[0:2]),
-        mocker.call(input_files[2:4]),
-        mocker.call(input_files[4:5]),
+        mocker.call(input_files[0:2], file_format="eventio"),
+        mocker.call(input_files[2:4], file_format="eventio"),
+        mocker.call(input_files[4:5], file_format="eventio"),
     ]
     assert [
         call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
@@ -609,8 +652,8 @@ def test_write_reduced_event_lists_from_file_list_pattern(mocker, tmp_test_direc
     second_list = tmp_base / "second.txt"
     first_inputs = ["first_file1.simtel.zst", "first_file2.simtel.zst"]
     second_inputs = ["second_file1.simtel.zst"]
-    first_list.write_text("\n".join(first_inputs) + "\n", encoding="utf-8")
-    second_list.write_text("\n".join(second_inputs) + "\n", encoding="utf-8")
+    first_list.write_text("\n".join(first_inputs) + "\n", encoding=TEXT_ENCODING)
+    second_list.write_text("\n".join(second_inputs) + "\n", encoding=TEXT_ENCODING)
     output_dir = tmp_base / "reduced"
 
     mock_generator = mocker.MagicMock()
@@ -626,8 +669,8 @@ def test_write_reduced_event_lists_from_file_list_pattern(mocker, tmp_test_direc
     )
 
     assert mock_simtel_io_writer.call_args_list == [
-        mocker.call(first_inputs),
-        mocker.call(second_inputs),
+        mocker.call(first_inputs, file_format="eventio"),
+        mocker.call(second_inputs, file_format="eventio"),
     ]
     assert [
         call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
@@ -913,9 +956,7 @@ def test_report(array_simulator, mocker, caplog):
     mock_corsika_config.primary_particle = "gamma"
     mock_corsika_config.azimuth_angle = 180.0
     mock_corsika_config.zenith_angle = 20.0
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_resources_report = "Mean wall time/run [sec]: 123.45, #events/run: 1000"
     mocker.patch.object(
@@ -1122,12 +1163,12 @@ def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
 
     simtel_file = output_dir / "simtel_output_files.txt"
     assert simtel_file.exists()
-    content = simtel_file.read_text(encoding="utf-8")
+    content = simtel_file.read_text(encoding=TEXT_ENCODING)
     assert "/path/to/file1.simtel.gz\n/path/to/file2.simtel.gz\n" == content
 
     log_file = output_dir / "log_files.txt"
     assert log_file.exists()
-    content = log_file.read_text(encoding="utf-8")
+    content = log_file.read_text(encoding=TEXT_ENCODING)
     assert "/path/to/logfile.log\n" == content
 
     corsika_log_file = output_dir / "corsika_log_files.txt"
@@ -1177,7 +1218,7 @@ def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
 
     path_objects_file = output_dir / "path_objects_files.txt"
     assert path_objects_file.exists()
-    content = path_objects_file.read_text(encoding="utf-8")
+    content = path_objects_file.read_text(encoding=TEXT_ENCODING)
     assert "/path/to/file1.path\n/path/to/file2.path\n" == content
     assert "Saving list of path_objects files to" in caplog.text
 
@@ -1227,9 +1268,7 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
     mock_corsika_config.mc_events = 500
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1270,9 +1309,7 @@ def test_validate_simulations_corsika(shower_simulator, mocker):
     mock_corsika_config.mc_events = 1000
     mock_corsika_config.use_curved_atmosphere = True
 
-    mocker.patch.object(
-        shower_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    shower_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1318,9 +1355,7 @@ def test_validate_simulations_corsika_sim_telarray(
     mock_corsika_config.mc_events = 750
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        shower_array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    shower_array_simulator.simulation_parameters = [mock_corsika_config]
 
     mock_simtel_validator = mocker.patch(
         "simtools.simulator.simtel_output_validator.validate_sim_telarray"
@@ -1368,9 +1403,7 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
     mock_corsika_config.mc_events = 500
     mock_corsika_config.use_curved_atmosphere = False
 
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
+    array_simulator.simulation_parameters = [mock_corsika_config]
 
     mocker.patch("simtools.simulator.simtel_output_validator.validate_sim_telarray")
     mocker.patch("simtools.simulator.corsika_output_validator.validate_corsika_output")
@@ -1400,4 +1433,21 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
     mock_output_validator.assert_called_once_with(
         data_files=mock_event_data_files,
         expected_mc_events=500,
+    )
+
+
+def test_telescope_only_does_not_create_shower_configuration(array_simulator, mocker):
+    assert array_simulator.corsika_configurations is None
+    assert array_simulator.simulation_parameters[0].shower_events == 10
+    mocker.patch("simtools.simulator.get_shower_configuration", side_effect=AssertionError)
+    array_simulator._initialize_array_models()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    ["run.simtel", "run.simtel.gz", "run.corsika.zst", "run.iact.bz2", "run.example", "run"],
+)
+def test_reduced_filename_is_independent_of_input_format(file_name):
+    assert Simulator._build_output_file_for_input_batch("output", [file_name]) == Path(
+        "output/run.reduced_event_data.hdf5"
     )

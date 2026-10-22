@@ -62,3 +62,14 @@ low- and high-energy models. If omitted, the selected CORSIKA build default is r
 .. simtools-integration-example::
     :file: simulate_prod_proton_20_deg_north_check_output.yml
 ```
+
+## Shower input file format
+
+For telescope simulations supplied with a shower input file,
+`simulation_file_format` selects its reader. The default `eventio` reads current
+CORSIKA IACT files. The reader supplies physical pointing, shower counts, reuse,
+and observation height without constructing a CORSIKA configuration.
+
+See [configuration and file formats](../../developer-guide/simulation_formats.md)
+for the interfaces used to add formats. Available simulation programs remain
+CORSIKA7 and sim_telarray.

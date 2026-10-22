@@ -66,3 +66,8 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 .. automodule:: ray_tracing.optics_validation
    :members:
 ```
+
+```{eval-rst}
+.. automodule:: simtools.ray_tracing.psf_evaluation
+   :members:
+```

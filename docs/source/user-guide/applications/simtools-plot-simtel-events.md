@@ -6,6 +6,12 @@
    :exclude-members: main
 ```
 
+Use `--pedestal_source monitoring` to use the per-pixel high-gain pedestal stored
+in sim_telarray camera monitoring data for pedestal plots and signal integration.
+The default, `waveform`, estimates the pedestal separately for each event from the
+last 10 waveform samples; a pulse tail in that window can bias the estimate.
+The monitoring option requires valid monitoring data for every selected event.
+
 ```{eval-rst}
 Produces diagnostic figures from sim_telarray (.simtel.zst) files.
 Meant to run after simulations (e.g., simtools-simulate-flasher,
@@ -43,13 +49,16 @@ event_id (int or list, optional)
     Specific event ID(s) to plot. Default: None (first event).
 max_events (int, optional)
     Maximum number of events to process. Default: 1.
+pedestal_source (str, optional)
+    Pedestal source for pedestal plots and signal integration. Choices: waveform,
+    monitoring. Default: waveform.
 output_file (str, optional)
     Base name for output files. PDF will be named ``<base>_<inputstem>.pdf``.
     If omitted, uses input file stem.
 save_pngs (flag, optional)
     Also save individual PNG files per plot.
-dpi (int, optional)
-    Resolution for PNG outputs. Default: 300.
+figure_dpi (int, optional)
+    Resolution for PNG outputs (alias: ``dpi``). Default: 300.
 output_path (str, optional)
     Directory for output files.
 
@@ -69,7 +78,7 @@ output_path (str, optional)
      --simtel_file run000010.simtel.zst \\
      --telescope MSTN-01 \\
      --plots all \\
-     --save_pngs --dpi 200
+     --save_pngs --figure_dpi 200
 
 3) Plot specific events:
 

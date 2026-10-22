@@ -158,6 +158,12 @@ def test_corsika_exe_curved_none():
         _ = config.corsika_exe_curved
 
 
+def test_corsika_exe_is_none_when_not_configured():
+    config = _Config()
+
+    assert config.corsika_exe is None
+
+
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_interaction_table_path_property(mock_is_dir, config_instance):

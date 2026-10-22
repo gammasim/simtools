@@ -61,7 +61,13 @@ class CorsikaSimtelRunner:
         # because it allows to define multiple sim_telarray instances
         self.simulator_array = []
         for _corsika_config in self.corsika_config:
-            self.simulator_array.append(SimulatorArray(corsika_config=_corsika_config, label=label))
+            self.simulator_array.append(
+                SimulatorArray(
+                    simulation_parameters=_corsika_config.simulation_parameters,
+                    array_model=_corsika_config.array_model,
+                    label=label,
+                )
+            )
 
     def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
         """
@@ -124,7 +130,7 @@ class CorsikaSimtelRunner:
                     resources_file,
                     "sim_telarray",
                     run_number,
-                    model_version=simulator_array.corsika_config.array_model.model_version,
+                    model_version=simulator_array.array_model.model_version,
                     log_file=log_file,
                 )
                 file.write(

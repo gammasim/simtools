@@ -325,7 +325,7 @@ class IncidentAnglesCalculator:
         with script_path.open("w", encoding="utf-8") as sh:
             sh.write("#!/usr/bin/env bash\n\n")
             sh.write("set -e\nset -o pipefail\n\n")
-            sh.write(f"exec > '{log_file}' 2>&1\n\n")
+            sh.write(f"exec > '{log_file}' 2> '{log_file.with_suffix('.err')}'\n\n")
             sh.write(f"{command}\n")
         script_path.chmod(script_path.stat().st_mode | 0o110)
         return script_path
