@@ -349,6 +349,17 @@ def test_arglist_from_config_keeps_multi_value_append_options_together():
     )
 
 
+def test_arglist_from_config_repeats_nested_multi_value_append_options():
+    configurator = Configurator()
+    option = "--atmosphere"
+    configurator.parser.add_argument(option, action="append", nargs=3)
+    result = Configurator._arglist_from_config(
+        {"atmosphere": [["North", "1", "2"], ["South", "3", "4"]]},
+        parser=configurator.parser,
+    )
+    assert result == [option, "North", "1", "2", option, "South", "3", "4"]
+
+
 def test_convert_string_none_to_none():
     assert {} == Configurator._convert_string_none_to_none({})
 

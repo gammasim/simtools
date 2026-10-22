@@ -10,7 +10,7 @@ from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
-from simtools.atmosphere import AtmosphereProfile
+from simtools.atmosphere.atmosphere import AtmosphereProfile
 from simtools.camera.camera_efficiency_calculator import (
     RESULT_COLUMN_DESCRIPTIONS,
     CameraEfficiencyCalculator,
