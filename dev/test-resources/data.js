@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792647193306,
+  "lastUpdate": 1792652233691,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31160,6 +31160,48 @@ window.BENCHMARK_DATA = {
             "value": 465.1484375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261018.339.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "93b4cca49bb913d9c62c5c2980c9966f8afab933",
+          "message": "Add a `simtools-compare-atmospheres` application to compare atmospheric profile and transmission model parameters (#2658)\n\n* Plot properties of the atmosphere\n\n* Add a `simtools-compare-atmospheres` application\n\n* CI docs fix\n\n* Validate relative_difference_limit for finiteness\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n* allow to give paths as alternative to model parameter versions\n\n---------\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-10-22T08:42:16+02:00",
+          "tree_id": "804d58c56c9cb1c3540ed642fd3745c9597f14ef",
+          "url": "https://github.com/gammasim/simtools/commit/93b4cca49bb913d9c62c5c2980c9966f8afab933"
+        },
+        "date": 1792652222410,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 84.99307178199999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 86.35,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 949.29296875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
