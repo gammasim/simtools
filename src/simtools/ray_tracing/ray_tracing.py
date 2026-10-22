@@ -490,6 +490,7 @@ class RayTracing:
         no_tel_transmission=False,
         containment_fraction=0.8,
         save_photons=False,
+        keep_images=True,
     ):
         """
         Analyze ray tracing simulation results.
@@ -516,6 +517,9 @@ class RayTracing:
         save_photons: bool
             If True, retain compressed photon list files after analysis. By default, photon
             list files are removed after successful analysis.
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle (see ``images``). Images hold
+            all photon positions; without them only the results table is kept.
         """
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
@@ -531,6 +535,7 @@ class RayTracing:
             use_rx,
             containment_fraction,
             save_photons,
+            keep_images,
         )
 
         if do_analyze:
@@ -545,6 +550,7 @@ class RayTracing:
         use_rx,
         containment_fraction,
         save_photons,
+        keep_images=True,
     ):
         """
         Process off-axis angles and mirrors for RayTracing analysis.
@@ -561,6 +567,8 @@ class RayTracing:
             Containment fraction for PSF containment calculation.
         save_photons: bool
             If True, retain compressed photon list files after analysis.
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle.
 
         Returns
         -------
@@ -592,9 +600,7 @@ class RayTracing:
                         mirror_number=mirror_number,
                     )
                 )
-                photons_file = photons_file_gz
-                if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
-                    photons_file = photons_file_lis
+                photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
 
                 # Calculate theta and phi for transmission calculation
                 theta_offset = np.sqrt(off_x**2 + off_y**2)
@@ -609,8 +615,8 @@ class RayTracing:
                     use_rx,
                 )
 
-                # Store PSF image with (x, y) tuple key
-                self.psf_images[(off_x, off_y)] = copy(image)
+                if keep_images:
+                    self.psf_images[(off_x, off_y)] = copy(image)
 
                 if do_analyze:
                     _current_results = self._analyze_image(
@@ -632,6 +638,13 @@ class RayTracing:
                 )
 
         return _rows
+
+    @staticmethod
+    def _select_photon_file(photons_file_lis, photons_file_gz, use_rx):
+        """Choose the available photon list, preferring a reusable compressed list."""
+        if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
+            return photons_file_lis
+        return photons_file_gz
 
     @staticmethod
     def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
