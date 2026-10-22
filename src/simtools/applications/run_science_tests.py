@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 """Run the reusable release science-test catalogue."""
 
-from pathlib import Path
-
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.science_tests.campaign import run_release, setup_release
@@ -77,10 +75,9 @@ def main():
             simulation_models_git_revision=args.get("simulation_models_git_revision"),
         )
         return
-    context_file = args.get(CONTEXT_FILE) or str(Path(args[RELEASE_DIR]) / "context.yml")
     run_release(
         args[RELEASE_DIR],
-        context_file=context_file,
+        context_file=args.get(CONTEXT_FILE),
         template_dir=args.get(TEMPLATE_DIR),
         sites=args.get("site"),
         tests=args.get("test"),
