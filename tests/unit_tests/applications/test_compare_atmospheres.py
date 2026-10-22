@@ -65,7 +65,25 @@ def test_main_mixes_ecsv_files_and_versions(mocker, tmp_test_directory):
     assert inputs[0]["profile"] is read_asset.return_value
     assert inputs[0][_PROFILE_VERSION_KEY] is None
     assert inputs[0][_TRANSMISSION_VERSION_KEY] == _TRANSMISSION_VERSION
-    assert str(profile_file) in inputs[0]["label"]
+    assert inputs[0]["label"] == f"{_NORTH} reference"
+
+
+def test_main_labels_reference_and_candidates_per_site(mocker, tmp_test_directory):
+    second_north = [_NORTH, _PROFILE_VERSION, _TRANSMISSION_VERSION]
+    south = ["South", _PROFILE_VERSION, _TRANSMISSION_VERSION]
+    context = _start_context(
+        mocker,
+        tmp_test_directory,
+        [_NORTH, _PROFILE_VERSION, _TRANSMISSION_VERSION],
+        Mock(),
+    )
+    context.args["atmosphere"].extend([second_north, south])
+    characterize = mocker.patch.object(compare_atmospheres, _CHARACTERIZE)
+
+    compare_atmospheres.main()
+
+    labels = [item["label"] for item in characterize.call_args.args[0]]
+    assert labels == [f"{_NORTH} reference", f"{_NORTH} candidate", "South reference"]
 
 
 def test_main_with_only_ecsv_files_needs_no_model_reader(mocker, tmp_test_directory):

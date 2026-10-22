@@ -84,16 +84,28 @@ def _version(value):
     return value
 
 
+def _label(site, index):
+    """Return a short role label for an atmosphere within its site comparison."""
+    if index == 0:
+        return f"{site} reference"
+    if index == 1:
+        return f"{site} candidate"
+    return f"{site} candidate {index}"
+
+
 def main():
     """Compare atmospheres using the configured model repository or ECSV files."""
     context = APPLICATION.start()
     output_path = context.io_handler.get_output_directory()
     atmospheres = []
+    site_counts = {}
     for site, profile, transmission in context.args[_ATMOSPHERE]:
         site = validate_site(site)
+        index = site_counts.get(site, 0)
+        site_counts[site] = index + 1
         atmospheres.append(
             {
-                "label": f"{site} profile {profile} transmission {transmission}",
+                "label": _label(site, index),
                 "site": site,
                 "profile_version": _version(profile),
                 "transmission_version": _version(transmission),
