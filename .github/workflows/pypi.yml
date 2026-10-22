@@ -34,6 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python --version
+          python -m pip install --upgrade pip
           pip install -U build
           python -m build
 

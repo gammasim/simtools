@@ -89,7 +89,8 @@ jobs:
 
       - name: Build package
         run: |
-          python -m pip install --upgrade pip build
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build
           python -m build
           python - <<'PY'
           from pathlib import Path
@@ -116,7 +117,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Install dependency exporter prerequisites
-        run: python -m pip install packaging pyyaml
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install packaging pyyaml
 
       - name: Read CORSIKA interaction tables version
         id: interaction_table_version
@@ -256,6 +259,7 @@ jobs:
 
       - name: Export dependency environment
         run: |
+          python -m pip install --upgrade pip
           python -m pip install pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
@@ -381,6 +385,7 @@ jobs:
 
       - name: Export dependency environment
         run: |
+          python -m pip install --upgrade pip
           python -m pip install pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
@@ -510,6 +515,7 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
+          python -m pip install --no-cache-dir --upgrade pip
           pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
 
       - name: Install resource benchmark dependency (prod container)
@@ -519,6 +525,7 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
+          python -m pip install --no-cache-dir --upgrade pip
           pip install --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Integration tests
