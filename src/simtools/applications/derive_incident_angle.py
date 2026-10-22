@@ -32,15 +32,12 @@ _ARGUMENTS = (
         help="Assume perfect mirror shape/alignment/reflection",
         action=argparse.BooleanOptionalAction,
         default=False,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "debug_plots",
-        dest="debug_plots",
         help="Save angle plots and debug plots",
         action=argparse.BooleanOptionalAction,
         default=False,
-        required=False,
     ),
 )
 
@@ -55,6 +52,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),

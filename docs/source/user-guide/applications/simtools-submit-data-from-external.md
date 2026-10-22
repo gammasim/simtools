@@ -14,8 +14,8 @@ and converted following a pre-described schema.
 
 input_meta (str, optional)
     input meta data file (yml format)
-input_data_file (str, optional)
-    input data file
+input_file (str, required)
+    input data file (alias: ``input_data_file``)
 schema_file (str, optional)
     Schema describing the input data
 
@@ -27,7 +27,7 @@ Submit mirror measurements with associated metadata:
 
     simtools-submit-data-from-external \\
         --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\
-        --input_data_file ./tests/resources/MLTdata-preproduction.ecsv \\
+        --input_file ./tests/resources/MLTdata-preproduction.ecsv \\
         --schema_file src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml \\
         --output_file TEST-submit_data_from_external.ecsv
 

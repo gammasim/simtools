@@ -129,6 +129,24 @@ def test_zenith_angle(caplog):
     assert "The zenith angle provided is not a valid numeric" in caplog.text
 
 
+@pytest.mark.parametrize("angle", ["190", "190 deg", 190 * u.deg])
+def test_zenith_angle_out_of_range_for_command_line_inputs(angle):
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
+    ):
+        helpers.zenith_angle(angle)
+
+
+@pytest.mark.parametrize(("angle", "expected"), [("370", 370), ("370 deg", 370), ("-10 deg", -10)])
+def test_azimuth_angle_out_of_range_for_command_line_inputs(angle, expected):
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=rf"The provided azimuth angle, {expected:.1f}, is outside of the allowed \[0, 360\]",
+    ):
+        helpers.azimuth_angle(angle)
+
+
 def test_parse_quantity_pair():
     for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100 GeV 5 TeV", "100GeV 5 TeV"]:
         e_pair = helpers.parse_quantity_pair(test_string)

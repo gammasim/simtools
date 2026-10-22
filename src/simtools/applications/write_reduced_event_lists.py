@@ -32,15 +32,7 @@ _ARGUMENTS = (
         default=1,
         help="Number of input files combined into each reduced event file (default: 1).",
     ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        type=int,
-        default=None,
-        help=(
-            "Maximum parallel output-file workers. Default: 60%% of CPU cores; use 1 for "
-            "serial execution or 0 for all cores."
-        ),
-    ),
+    cli.MAX_WORKERS,
     cli.ArgumentDefinition(
         "wait",
         action="store_true",

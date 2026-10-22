@@ -25,7 +25,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.SIMULATION_MODELS_PATH(required=True),
         cli.MODEL_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
     ),
 )
 

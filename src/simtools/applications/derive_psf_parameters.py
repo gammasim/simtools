@@ -10,15 +10,7 @@ _ARGUMENTS = (
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.DATA,
-    cli.ArgumentDefinition(
-        "max_workers",
-        type=int,
-        default=None,
-        help=(
-            "Concurrent local evaluations (default: half the system CPUs, minimum one; "
-            "zero or negative: all CPUs)."
-        ),
-    ),
+    cli.MAX_WORKERS,
     cli.ArgumentDefinition(
         "plot_all",
         help=(
@@ -31,7 +23,6 @@ _ARGUMENTS = (
         "write_psf_parameters",
         help="Write the optimized PSF parameters as simulation model parameter files",
         action="store_true",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "rmsd_threshold",
@@ -69,12 +60,7 @@ _ARGUMENTS = (
         help="Use KS statistic for monte carlo uncertainty analysis.",
         action="store_true",
     ),
-    cli.ArgumentDefinition(
-        "fraction",
-        help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
-        type=float,
-        default=0.8,
-    ),
+    cli.PSF_CONTAINMENT_FRACTION,
     cli.ArgumentDefinition(
         "cleanup",
         help="Remove intermediate *.log and *.lis* files after optimization.",
@@ -95,6 +81,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SITE,
         cli.TELESCOPE,
         cli.DATA_SEARCH_PATH,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
