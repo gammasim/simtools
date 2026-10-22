@@ -11,7 +11,9 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
+from simtools.constants import SIMTEL_MAX_SEED
 from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS, INVALID_KEY_TO_PLOT, RayTracing
+from simtools.utils import random
 
 
 def _example_rows():
@@ -415,6 +417,10 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     mock_simulator = mocker.patch("simtools.ray_tracing.ray_tracing.SimulatorRayTracing")
     mock_simulator_instance = mock_simulator.return_value
     mock_simulator_instance.run = mocker.Mock()
+    mocker.patch(
+        "simtools.ray_tracing.ray_tracing.simtel_seeds.instance_seed_pairs",
+        return_value=[(11, 22)],
+    )
     mock_open = mocker.patch(
         "simtools.ray_tracing.ray_tracing.open", mocker.mock_open(), create=True
     )
@@ -446,6 +452,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
             "use_random_focal_length": ray_tracing_lst.use_random_focal_length,
             "mirror_numbers": 0,
             "number_of_photons": None,
+            "seeds": [(11, 22)],
         },
         force_simulate=True,
     )
@@ -479,29 +486,36 @@ def _obdeect_arrivals(detected_x_m, total_photons=1000, has_structure=False):
 
 
 @pytest.mark.parametrize(
-    ("test", "photon_count", "expected_photons", "expected_configurations"),
+    ("test", "photon_count", "expected_photons", "expected_instances"),
     [(False, None, 2_000_000, 20), (True, None, 5000, 1), (False, 12345, 12345, 1)],
 )
 def test_ray_tracing_simulate_obdeect(
-    ray_tracing_lst, mocker, test, photon_count, expected_photons, expected_configurations
+    ray_tracing_lst, mocker, test, photon_count, expected_photons, expected_instances
 ):
     pytest.importorskip("obdeect")
     config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
     config.ray_tracing_backend = "obdeect"
-    config.args = {"number_of_photons": photon_count, "obdeect_seed": 5}
+    config.args = {"number_of_photons": photon_count, "instrument_seed": 5, "simulation_seed": [7]}
+    seeds = list(
+        zip(
+            random.instance_seeds(5, expected_instances, max_seed=SIMTEL_MAX_SEED),
+            random.instance_seeds(7, expected_instances, max_seed=SIMTEL_MAX_SEED),
+            strict=True,
+        )
+    )
     ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, -0.5)]
     tracer = mocker.patch("simtools.ray_tracing.obdeect_backend.ObdeectRayTracer")
     tracer.return_value.trace_star.side_effect = [_obdeect_arrivals(0.1), _obdeect_arrivals(0.2)]
 
     ray_tracing_lst.simulate(test=test, force=True)
 
-    tracer.assert_called_once_with(ray_tracing_lst.telescope_model, seed=5)
+    tracer.assert_called_once_with(ray_tracing_lst.telescope_model)
     calls = tracer.return_value.trace_star.call_args_list
     assert [c.args[1:3] for c in calls] == [(0.0, 0.0), (1.0, -0.5)]
     for call_ in calls:
         assert call_.args[0] == ray_tracing_lst.zenith_angle
         assert call_.args[3] == pytest.approx(10000.0)
-        assert call_.args[4:] == (expected_photons, expected_configurations, None)
+        assert call_.args[4:] == (expected_photons, seeds, None)
     # Images stay in memory; no photon files.
     assert ray_tracing_lst._traced_images[(1.0, -0.5, 0)]["position_m"][0, 0] == pytest.approx(0.2)
     assert not list(ray_tracing_lst.output_directory.glob("*photons*"))
@@ -513,7 +527,7 @@ def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirro
     ray_tracing = ray_tracing_lst_single_mirror_mode
     config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
     config.ray_tracing_backend = "obdeect"
-    config.args = {}
+    config.args = {"instrument_seed": 5, "simulation_seed": [7]}
     tracer = mocker.patch("simtools.ray_tracing.obdeect_backend.ObdeectRayTracer")
     tracer.return_value.trace_star.return_value = _obdeect_arrivals(0.0)
     ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
@@ -526,7 +540,14 @@ def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirro
         assert call_.args[6][0] == number
         distance_km = mirror_data["source_distance"]
         assert call_.args[3] == pytest.approx(distance_km * 1000.0)
-        assert call_.args[4:6] == (100000, 1)
+        assert call_.args[4] == 100000
+        # One instance; each mirror has its own seeds, derived from the configured ones.
+        assert call_.args[5] == [
+            tuple(
+                random.seeds(fixed_seed=(seed, number + 1), max_seed=SIMTEL_MAX_SEED)
+                for seed in (5, 7)
+            )
+        ]
         assert call_.args[6][1:] == (Path("mirror.dat"), pytest.approx(distance_km * 1.0e5))
 
 

@@ -18,7 +18,8 @@ applications:
     zenith_angle: 20
     plot_images: true
     ray_tracing_backend: obdeect
-    obdeect_seed: 17
+    instrument_seed: 17
+    simulation_seed: [17]
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

@@ -19,12 +19,13 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools import settings
+from simtools import constants, settings
 from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing.psf_analysis import PSFImage
+from simtools.simtel import simtel_seeds
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
-from simtools.utils import names
+from simtools.utils import names, random
 from simtools.visualization import visualize
 
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
@@ -413,9 +414,20 @@ class RayTracing:
                 label=self.label,
             )
 
+        seeds = self._instance_seeds(
+            single_instance=test or settings.config.args.get("number_of_photons") is not None
+        )
         simulations = [
             (
-                self._create_simulator(off_x, off_y, mirror_number, mirror_data, test, force),
+                self._create_simulator(
+                    off_x,
+                    off_y,
+                    mirror_number,
+                    mirror_data,
+                    test,
+                    force,
+                    self._mirror_seeds(seeds, mirror_number),
+                ),
                 off_x,
                 off_y,
                 mirror_number,
@@ -440,7 +452,35 @@ class RayTracing:
         for simulator in simulations:
             self._run_simulator(simulator, test, compress_photons)
 
-    def _create_simulator(self, off_x, off_y, mirror_number, mirror_data, test, force):
+    def _instance_seeds(self, single_instance=False):
+        """(Instrument seed, simulation seed) of each random instrument instance.
+
+        A single instance in single-mirror mode, for a given number of photons, or
+        if ``single_instance`` is set; otherwise ``random_instrument_instances``.
+        Both backends run one simulation per instance with these seeds.
+        """
+        instances = settings.config.args.get(
+            "random_instrument_instances", constants.RAY_TRACING_INSTRUMENT_INSTANCES
+        )
+        if single_instance or self.single_mirror_mode:
+            instances = 1
+        return simtel_seeds.instance_seed_pairs(instances)
+
+    def _mirror_seeds(self, seeds, mirror_number):
+        """Seeds of one mirror in single-mirror mode (each mirror has its own errors)."""
+        if not self.single_mirror_mode:
+            return seeds
+        return [
+            tuple(
+                random.seeds(
+                    fixed_seed=(seed, mirror_number + 1), max_seed=constants.SIMTEL_MAX_SEED
+                )
+                for seed in pair
+            )
+            for pair in seeds
+        ]
+
+    def _create_simulator(self, off_x, off_y, mirror_number, mirror_data, test, force, seeds):
         """Create one ray-tracing simulator with unique input and output files."""
         self._logger.info(
             f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), mirror={mirror_number}"
@@ -463,6 +503,7 @@ class RayTracing:
                 "number_of_photons": None
                 if test
                 else settings.config.args.get("number_of_photons"),
+                "seeds": seeds,
             },
             force_simulate=force,
         )
@@ -500,13 +541,11 @@ class RayTracing:
         # pylint: disable-next=import-outside-toplevel
         from simtools.ray_tracing.obdeect_backend import ObdeectRayTracer
 
-        tracer = ObdeectRayTracer(
-            self.telescope_model, seed=settings.config.args.get("obdeect_seed")
-        )
+        tracer = ObdeectRayTracer(self.telescope_model)
         photons = 5000 if test else settings.config.args.get("number_of_photons")
-        configurations = 1 if self.single_mirror_mode or photons is not None else 20
+        seeds = self._instance_seeds(single_instance=photons is not None)
         if photons is None:
-            photons = configurations * 100000
+            photons = len(seeds) * 100000
         for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
                 single_mirror = None
@@ -524,7 +563,7 @@ class RayTracing:
                     off_y,
                     mirror_data["source_distance"] * u.km.to(u.m),
                     photons,
-                    configurations,
+                    self._mirror_seeds(seeds, mirror_number),
                     single_mirror,
                 )
                 self._traced_images[(off_x, off_y, mirror_number)] = arrivals

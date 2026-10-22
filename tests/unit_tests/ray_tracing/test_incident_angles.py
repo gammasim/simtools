@@ -797,11 +797,19 @@ def test_run_obdeect(monkeypatch, mocker, calculator):
     }
     tracer.return_value.trace_star.return_value = arrivals
     mocker.patch.object(calculator, "_save_results")
+    mocker.patch.object(ia.simtel_seeds, "instance_seed_pairs", return_value=[(11, 22)])
 
     result = calculator.run()
 
-    tracer.assert_called_once_with(calculator.telescope_model, seed=None, perfect_mirror=False)
-    assert tracer.return_value.trace_star.call_args.args == (0.0, 0.0, 0.0, 10000.0, 1000)
+    tracer.assert_called_once_with(calculator.telescope_model, perfect_mirror=False)
+    assert tracer.return_value.trace_star.call_args.args == (
+        0.0,
+        0.0,
+        0.0,
+        10000.0,
+        1000,
+        [(11, 22)],
+    )
     assert result["angle_incidence_focal"].to_value(u.deg).tolist() == [
         pytest.approx(math.degrees(math.acos(0.8)))
     ]

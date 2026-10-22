@@ -16,11 +16,12 @@ obdeect runs inside the simtools process. It compiles the model parameters of
 the telescope model, exactly as simtools reads them for sim_telarray, into an
 optical model and traces star light to the camera entrance. Light source,
 telescope pointing, photon numbers, mirror-error realisations and the
-single-mirror mode follow the sim_telarray ray-tracing runs. `--obdeect_seed`
-fixes the random numbers (mirror errors and photon sampling); results do not
-depend on the number of threads.
+single-mirror mode follow the sim_telarray ray-tracing runs. Both backends use
+the same seeds: `--instrument_seed` fixes the mirror errors of the
+`--random_instrument_instances` realisations, `--simulation_seed` the photons.
+obdeect results do not depend on the number of threads.
 
 If the telescope model describes the telescope structure
-(`telescope_obscuration_cylinders`, `telescope_obscuration_quadrilaterals`),
+(`telescope_structure`),
 obdeect traces its shadows and `telescope_transmission` is not applied to the
 effective area. sim_telarray does not simulate the structure.

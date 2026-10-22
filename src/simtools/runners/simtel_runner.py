@@ -65,13 +65,17 @@ class SimtelRunner:
         runs = 1 if test else self.runs_per_set
         label = "test" if test else f"{self.runs_per_set}x"
         self._logger.info(f"Running ({label}) with command: {command}")
-        for _ in range(runs):
+        for run_index in range(runs):
             job_manager.submit(
-                command,
+                self._command_for_run(command, run_index),
                 out_file=stdout_file,
                 err_file=stderr_file,
                 env=SIM_TELARRAY_ENV,
             )
+
+    def _command_for_run(self, command, run_index):  # pylint: disable=unused-argument
+        """Return the command of one run of a set (subclasses may vary it per run)."""
+        return command
 
     def make_run_command(self, run_number=None, input_file=None):
         """Make the sim_telarray run command (to implemented in subclasses)."""

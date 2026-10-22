@@ -77,7 +77,11 @@ class SimulatorRayTracing(SimtelRunner):
             else config_data
         )
         self._rep_number = 0
-        self.runs_per_set = 1 if self.config.single_mirror_mode else 20
+        # (Instrument seed, simulation seed) of each run; None lets sim_telarray draw them.
+        self.seeds = list(
+            (config_data.get("seeds") if isinstance(config_data, dict) else None) or [None]
+        )
+        self.runs_per_set = len(self.seeds)
         self.photons_per_run = 100000 if not test else 5000
         photon_count = (
             config_data.get("number_of_photons") if isinstance(config_data, dict) else None
@@ -90,7 +94,6 @@ class SimulatorRayTracing(SimtelRunner):
             ):
                 raise ValueError("number_of_photons must be a positive integer")
             self.photons_per_run = photon_count
-            self.runs_per_set = 1
         self._single_pixel_camera_file = None
         self._funnel_file = None
         self._write_config = True
@@ -239,6 +242,13 @@ class SimulatorRayTracing(SimtelRunner):
         cmd.append(str(settings.config.corsika_dummy_file))
 
         return cmd, self._log_file, self._log_file.with_suffix(".err")
+
+    def _command_for_run(self, command, run_index):
+        """Run with the instrument and simulation seed of its random instrument instance."""
+        seeds = self.seeds[run_index]
+        if seeds is None:
+            return command
+        return [*command[:-1], "-C", f"random_seed={seeds[0]},{seeds[1]}", command[-1]]
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """

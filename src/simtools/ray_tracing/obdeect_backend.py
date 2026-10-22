@@ -14,7 +14,6 @@ import numpy as np
 from obdeect.model import DETECTED, OpticalModel
 
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
-from simtools.utils import random
 
 # Single-mirror mode: the mirror is placed alone at the dish centre and imaged
 # from twice its focal length (as in SimulatorRayTracing).
@@ -52,34 +51,30 @@ class ObdeectRayTracer:
     ----------
     telescope_model: TelescopeModel
         Telescope model.
-    seed: int, optional
-        Seed for mirror errors and photon sampling; drawn at random if not given.
     perfect_mirror: bool
         Remove random mirror errors (focal lengths, alignment, scattering).
     """
 
-    def __init__(self, telescope_model, seed=None, perfect_mirror=False):
+    def __init__(self, telescope_model, perfect_mirror=False):
         self.telescope_model = telescope_model
-        self.seed = random.seeds(fixed_seed=seed)
         self._changes = dict(_PERFECT_MIRROR_ZEROS) if perfect_mirror else {}
         telescope_model.export_model_files(update_if_necessary=True)
         self._models = {}
 
-    def optical_model(self, telescope_zenith, configuration=0, single_mirror=None):
+    def optical_model(self, telescope_zenith, instrument_seed, single_mirror=None):
         """Optical model at a telescope zenith angle [deg] (cached).
 
-        ``configuration`` numbers independent mirror-error realisations.
-        ``single_mirror`` is a (mirror number, mirror list file, camera distance
-        [cm]) tuple for the single-mirror mode; each mirror has its own errors.
+        ``instrument_seed`` fixes the random mirror errors of this instrument
+        instance. ``single_mirror`` is a (mirror number, mirror list file,
+        camera distance [cm]) tuple for the single-mirror mode.
         """
-        key = (round(telescope_zenith, 9), configuration, single_mirror)
+        key = (round(telescope_zenith, 9), instrument_seed, single_mirror)
         if key not in self._models:
             records, files = self._records(single_mirror)
-            mirror = -1 if single_mirror is None else single_mirror[0]
             self._models[key] = OpticalModel.from_records(
                 records,
                 lambda name: files[name].read_text(encoding="utf-8"),
-                configuration_seed=random.seeds(fixed_seed=(self.seed, configuration, mirror + 1)),
+                configuration_seed=instrument_seed,
                 zenith_deg=telescope_zenith,
                 provenance={
                     "telescope": self.telescope_model.name,
@@ -123,13 +118,14 @@ class ObdeectRayTracer:
         off_axis_y,
         source_distance_m,
         photons,
-        configurations=1,
+        seeds,
         single_mirror=None,
     ):
-        """Trace star light, as in a sim_telarray ray-tracing run.
+        """Trace star light, as in the sim_telarray ray-tracing runs.
 
-        Photons are split evenly over ``configurations`` mirror-error
-        realisations; ``single_mirror`` as in ``optical_model``.
+        Photons are split evenly over the random instrument instances, given by
+        their (instrument seed, simulation seed) in ``seeds``, as sim_telarray
+        runs one simulation per instance; ``single_mirror`` as in ``optical_model``.
 
         Returns
         -------
@@ -141,24 +137,23 @@ class ObdeectRayTracer:
         """
         telescope_zenith, _ = telescope_pointing(zenith_angle, off_axis_x, off_axis_y)
         towards_source = star_direction(zenith_angle, off_axis_x, off_axis_y)
-        if photons < configurations:
-            raise ValueError("number_of_photons must be at least one per mirror configuration")
-        per_configuration = photons // configurations
+        if photons < len(seeds):
+            raise ValueError("number_of_photons must be at least one per instrument instance")
+        per_instance = photons // len(seeds)
         arrivals = []
-        for configuration in range(configurations):
-            model = self.optical_model(telescope_zenith, configuration, single_mirror)
+        for instrument_seed, simulation_seed in seeds:
+            model = self.optical_model(telescope_zenith, instrument_seed, single_mirror)
             sample = model.star_photons(
-                per_configuration,
-                seed=self.seed,
+                per_instance,
+                seed=simulation_seed,
                 towards_source=towards_source,
                 distance_m=source_distance_m,
-                first_id=configuration * per_configuration,
             )
-            traced = model.trace(sample, seed=self.seed, apply_responses=False)
+            traced = model.trace(sample, seed=simulation_seed, apply_responses=False)
             detected = traced["status"] == DETECTED
             arrivals.append({name: values[detected] for name, values in traced.items()})
         return {name: np.concatenate([a[name] for a in arrivals]) for name in arrivals[0]} | {
-            "total_photons": per_configuration * configurations,
+            "total_photons": per_instance * len(seeds),
             "total_area_m2": model.sampling_area_m2,
             "has_structure": model.has_structure,
         }

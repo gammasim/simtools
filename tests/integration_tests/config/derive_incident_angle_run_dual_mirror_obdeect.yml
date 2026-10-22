@@ -15,7 +15,8 @@ applications:
     output_path: simtools-output
     parameter_version: 1.0.0
     ray_tracing_backend: obdeect
-    obdeect_seed: 17
+    instrument_seed: 17
+    simulation_seed: [17]
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

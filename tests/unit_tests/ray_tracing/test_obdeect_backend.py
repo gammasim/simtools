@@ -74,9 +74,10 @@ def toy_telescope(tmp_path, mocker):
 
 
 def test_trace_star(toy_telescope):
-    tracer = ObdeectRayTracer(toy_telescope, seed=3)
+    seeds = [(3, 4), (5, 6)]  # (instrument seed, simulation seed) of two instances
+    tracer = ObdeectRayTracer(toy_telescope)
     toy_telescope.export_model_files.assert_called_once_with(update_if_necessary=True)
-    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 20000, configurations=2)
+    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 20000, seeds)
     assert arrivals["total_photons"] == 20000
     assert not arrivals["has_structure"]
     # Seven 1 m mirrors minus the shadow of the 0.6 m square camera.
@@ -85,36 +86,32 @@ def test_trace_star(toy_telescope):
     assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
     assert np.allclose(image[:, 2], 8.5)
 
-    repeated = ObdeectRayTracer(toy_telescope, seed=3).trace_star(
-        20.0, 0.0, 0.0, 10000.0, 20000, configurations=2
-    )
+    repeated = ObdeectRayTracer(toy_telescope).trace_star(20.0, 0.0, 0.0, 10000.0, 20000, seeds)
     assert np.array_equal(arrivals["position_m"], repeated["position_m"], equal_nan=True)
     with pytest.raises(ValueError, match="number_of_photons"):
-        tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 1, configurations=2)
-    first, second = (tracer.optical_model(20.0, c) for c in (0, 1))
-    assert first is tracer.optical_model(20.0, 0)
+        tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 1, seeds)
+    first, second = (tracer.optical_model(20.0, seed) for seed in (3, 5))
+    assert first is tracer.optical_model(20.0, 3)
     assert first.sha256 != second.sha256  # Independent mirror-error realisations.
     assert first.document["provenance"]["telescope"] == "TOY-01"
 
 
 def test_perfect_and_single_mirror(toy_telescope):
-    tracer = ObdeectRayTracer(toy_telescope, seed=1, perfect_mirror=True)
+    tracer = ObdeectRayTracer(toy_telescope, perfect_mirror=True)
     normals = [
-        [f["normal"] for f in tracer.optical_model(20.0, c).document["optics"]["primary"]["facets"]]
-        for c in (0, 1)
+        [f["normal"] for f in tracer.optical_model(20.0, s).document["optics"]["primary"]["facets"]]
+        for s in (1, 2)
     ]
     assert normals[0] == normals[1]
 
     toy_telescope.parameters["mirror_focal_length"]["value"] = 800.0
     single_mirror = (0, toy_telescope.get_single_mirror_list_file(0), 1600.0)
-    optics = tracer.optical_model(20.0, 0, single_mirror).document["optics"]
-    other = tracer.optical_model(20.0, 0, (1, *single_mirror[1:]))
-    assert other.sha256 != tracer.optical_model(20.0, 0, single_mirror).sha256
+    optics = tracer.optical_model(20.0, 1, single_mirror).document["optics"]
     assert len(optics["primary"]["facets"]) == 1
     assert optics["obscurers"] == []
     assert optics["focal_surface"]["plane_z_m"] == pytest.approx(16.5)
     # The source at the mirror's centre of curvature (distances count from the dish vertex).
-    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 16.0, 5000, 1, single_mirror)
+    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 16.0, 5000, [(1, 2)], single_mirror)
     image = arrivals["position_m"]
     # Mirror area over the sampling disk (radius 1.2 x 0.5 m): 69%.
     assert len(image) == pytest.approx(0.25 / 0.36 * 5000, rel=0.05)

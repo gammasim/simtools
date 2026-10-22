@@ -20,6 +20,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.simtel import simtel_seeds
 
 
 class IncidentAnglesCalculator:
@@ -159,17 +160,14 @@ class IncidentAnglesCalculator:
         # pylint: disable-next=import-outside-toplevel
         from simtools.ray_tracing.obdeect_backend import ObdeectRayTracer
 
-        tracer = ObdeectRayTracer(
-            self.telescope_model,
-            seed=settings.config.args.get("obdeect_seed"),
-            perfect_mirror=self.perfect_mirror,
-        )
+        tracer = ObdeectRayTracer(self.telescope_model, perfect_mirror=self.perfect_mirror)
         arrivals = tracer.trace_star(
             self.zenith_angle_deg,
             float(self.config_data["off_axis_angle"].to_value(u.deg)),
             0.0,
             self._source_distance_km() * 1000.0,
             int(self.config_data["number_of_photons"]),
+            simtel_seeds.instance_seed_pairs(),
         )
         if len(arrivals["direction"]) == 0:
             raise RuntimeError("obdeect: no photon reached the focal surface")
@@ -300,7 +298,9 @@ class IncidentAnglesCalculator:
                 "-C mirror_align_random_vertical=0,28,0,0",
             ]
 
+        instrument_seed, simulation_seed = simtel_seeds.instance_seed_pairs()[0]
         opts += [
+            cfg("random_seed", f"{instrument_seed},{simulation_seed}"),
             cfg("IMAGING_LIST", str(photons_file)),
             cfg("stars", str(stars_file)),
             cfg("altitude", self.site_model.get_parameter_value("corsika_observation_level")),

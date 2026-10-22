@@ -39,11 +39,9 @@ class SimtelSeeds:
         """
         self._logger = logging.getLogger(__name__)
 
-        self.instrument_seed = settings.config.args.get("sim_telarray_instrument_seed", None)
-        self.instruments = settings.config.args.get(
-            "sim_telarray_random_instrument_instances", None
-        )
-        self.simulation_seed = settings.config.args.get("sim_telarray_seed", None)
+        self.instrument_seed = settings.config.args.get("instrument_seed", None)
+        self.instruments = settings.config.args.get("random_instrument_instances", None)
+        self.simulation_seed = settings.config.args.get("simulation_seed", None)
         self.seed_file = settings.config.args.get("sim_telarray_seed_file", None)
         if output_path is not None:
             self.seed_file = Path(output_path) / self.seed_file
@@ -59,7 +57,7 @@ class SimtelSeeds:
                 return self._set_fixed_seeds()
             else:
                 raise ValueError(
-                    "sim_telarray_seed must contain one value (simulation seed) or two values "
+                    "simulation_seed must contain one value (simulation seed) or two values "
                     "(instrument seed, simulation seed)."
                 )
 
@@ -110,10 +108,8 @@ class SimtelSeeds:
         )
         if self.instruments > 1024:
             raise ValueError("Number of random instances of instrument must be less than 1024")
-        random_integers = random.seeds(
-            n_seeds=self.instruments,
-            max_seed=SIMTEL_MAX_SEED,
-            fixed_seed=self.instrument_seed,
+        random_integers = random.instance_seeds(
+            self.instrument_seed, self.instruments, max_seed=SIMTEL_MAX_SEED
         )
         with open(self.seed_file, "w", encoding="utf-8") as file:
             file.write(
@@ -190,3 +186,47 @@ class SimtelSeeds:
             "simulation_seed": self.simulation_seed,
         }
         ascii_handler.write_data_to_file(path, seed_dict)
+
+
+def instance_seed_pairs(instances=1):
+    """
+    Instrument and simulation seed of each random instrument instance.
+
+    Uses the configured ``instrument_seed`` and ``simulation_seed`` (two values: instrument
+    and simulation seed, for testing); seeds not configured are drawn at random. A single
+    instance uses the seeds themselves, more instances derive theirs from them (as the
+    instrument seed file does). Used by both ray-tracing backends.
+
+    Parameters
+    ----------
+    instances : int
+        Number of random instrument instances.
+
+    Returns
+    -------
+    list of tuple of int
+        (instrument seed, simulation seed) of each instance.
+    """
+    instrument = settings.config.args.get("instrument_seed")
+    simulation = settings.config.args.get("simulation_seed")
+    if isinstance(simulation, list | tuple):
+        if len(simulation) not in (1, 2):
+            raise ValueError(
+                "simulation_seed must contain one value (simulation seed) or two values "
+                "(instrument seed, simulation seed)."
+            )
+        if len(simulation) == 2:
+            instrument = simulation[0]
+        simulation = simulation[-1]
+    instrument = instrument or random.seeds(max_seed=SIMTEL_MAX_SEED)
+    simulation = simulation or random.seeds(max_seed=SIMTEL_MAX_SEED)
+    logging.getLogger(__name__).info(
+        f"Instrument seed {instrument}, simulation seed {simulation} ({instances} instances)"
+    )
+    return list(
+        zip(
+            random.instance_seeds(instrument, instances, max_seed=SIMTEL_MAX_SEED),
+            random.instance_seeds(simulation, instances, max_seed=SIMTEL_MAX_SEED),
+            strict=True,
+        )
+    )
