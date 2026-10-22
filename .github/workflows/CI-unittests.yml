@@ -183,7 +183,7 @@ jobs:
               "-Dsonar.plugins.download.timeout=600"
               "-Dsonar.python.coverage.reportPaths=coverage.xml"
               "-Dsonar.python.version=3.14"
-              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py,tests/unit_tests/reporting/test_docs_pages.py"
+              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py"
               "-Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**"
             )
 

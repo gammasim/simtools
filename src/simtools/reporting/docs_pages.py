@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 VERSION_PATTERN = re.compile(r"^v\d+\.\d+\.\d+$")
 LATEST_VERSION = "latest"
 SWITCHER_FILE_PATH = Path("_static") / "switcher.json"
+DOWNLOAD_TIMEOUT_SECONDS = 60
 
 
 def version_key(version):
@@ -82,6 +83,8 @@ def read_version_switcher(switcher_file):
     entries = json.loads(Path(switcher_file).read_text(encoding="utf-8"))
     if not isinstance(entries, list) or not entries:
         raise ValueError(f"{switcher_file}: expected a non-empty list of versions.")
+    if any(not isinstance(entry, dict) for entry in entries):
+        raise ValueError(f"{switcher_file}: each version entry must be an object.")
 
     errors = []
     versions = _release_versions(entries, _site_url(entries, errors), errors)
@@ -116,7 +119,7 @@ def download_version(version, package_url, output_path, token=None):
     if token:
         request.add_header("JOB-TOKEN", token)
     logger.info(f"Downloading documentation {version} from {url}")
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
         data = response.read()
     target = Path(output_path) / version
     target.mkdir(parents=True)

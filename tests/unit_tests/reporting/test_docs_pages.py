@@ -10,6 +10,27 @@ from simtools.reporting import docs_pages
 HOST = "https://docs.example.org"
 INDEX_HTML = "index.html"
 SHARED_CONTENT = "<html>shared</html>"
+VERSION = "v1.0.0"
+NEW_VERSION = "v1.1.0"
+VERSION_010 = "v0.10.0"
+VERSION_09 = "v0.9.0"
+JOB_TOKEN = "secret"
+FILE_HTML = "file.html"
+REGISTRY = "registry"
+PUBLIC = "public"
+VERSION_KEY = "version"
+PREFERRED = "preferred"
+LATEST = "latest"
+SWITCHER_JSON = "switcher.json"
+EXPECTED_LIST_ERROR = "expected a non-empty list"
+LATEST_ENTRY_ERROR = "Exactly one 'latest' entry"
+OLD_HTML = "old.html"
+NEW_HTML = "new.html"
+PAGE_HTML = "page.html"
+THEME_JS = "theme.js"
+THEME_MAP = "theme.js.map"
+COPY_HTML = "copy.html"
+UNIQUE_HTML = "unique.html"
 
 
 def _write_switcher(path, entries):
@@ -19,8 +40,8 @@ def _write_switcher(path, entries):
 
 def _switcher_entries(*versions):
     return [
-        {"version": "latest", "url": f"{HOST}/", "preferred": True},
-        *({"version": version, "url": f"{HOST}/{version}/"} for version in versions),
+        {VERSION_KEY: LATEST, "url": f"{HOST}/", PREFERRED: True},
+        *({VERSION_KEY: version, "url": f"{HOST}/{version}/"} for version in versions),
     ]
 
 
@@ -37,70 +58,81 @@ def _write_site_tarball(registry, version, files):
 
 
 def test_version_key():
-    assert docs_pages.version_key("v0.10.0") > docs_pages.version_key("v0.9.1")
+    assert docs_pages.version_key(VERSION_010) > docs_pages.version_key("v0.9.1")
 
 
 def test_read_version_switcher(tmp_test_directory):
     switcher = _write_switcher(
-        Path(tmp_test_directory) / "switcher.json", _switcher_entries("v0.9.0", "v0.10.0")
+        Path(tmp_test_directory) / SWITCHER_JSON, _switcher_entries(VERSION_09, VERSION_010)
     )
-    assert docs_pages.read_version_switcher(switcher) == ["v0.10.0", "v0.9.0"]
+    assert docs_pages.read_version_switcher(switcher) == [VERSION_010, VERSION_09]
 
 
 def test_read_version_switcher_site_with_base_path(tmp_test_directory):
     entries = [
-        {"version": "latest", "url": f"{HOST}/project/", "preferred": True},
-        {"version": "v1.0.0", "url": f"{HOST}/project/v1.0.0/"},
+        {VERSION_KEY: LATEST, "url": f"{HOST}/project/", PREFERRED: True},
+        {VERSION_KEY: VERSION, "url": f"{HOST}/project/v1.0.0/"},
     ]
-    switcher = _write_switcher(Path(tmp_test_directory) / "switcher.json", entries)
-    assert docs_pages.read_version_switcher(switcher) == ["v1.0.0"]
+    switcher = _write_switcher(Path(tmp_test_directory) / SWITCHER_JSON, entries)
+    assert docs_pages.read_version_switcher(switcher) == [VERSION]
 
 
 @pytest.mark.parametrize(
     ("entries", "message"),
     [
-        ([], "expected a non-empty list"),
-        ({"version": "latest"}, "expected a non-empty list"),
+        ([], EXPECTED_LIST_ERROR),
+        ({VERSION_KEY: LATEST}, EXPECTED_LIST_ERROR),
         (
-            [{"version": "v1.0.0", "url": f"{HOST}/v1.0.0/", "preferred": True}],
-            "Exactly one 'latest' entry",
+            [{VERSION_KEY: VERSION, "url": f"{HOST}/{VERSION}/", PREFERRED: True}],
+            LATEST_ENTRY_ERROR,
         ),
         (
-            [*_switcher_entries("v1.0.0"), {"version": "latest", "url": f"{HOST}/"}],
-            "Exactly one 'latest' entry",
+            [*_switcher_entries(VERSION), {VERSION_KEY: LATEST, "url": f"{HOST}/"}],
+            LATEST_ENTRY_ERROR,
         ),
         (
-            [{"version": "latest", "url": "http://docs.example.org", "preferred": True}],
+            [{VERSION_KEY: LATEST, "url": "http://docs.example.org", PREFERRED: True}],
             "must start with 'https://' and end with '/'",
         ),
-        ([*_switcher_entries(), {"version": "1.0.0", "url": f"{HOST}/1.0.0/"}], "match vX.Y.Z"),
+        ([*_switcher_entries(), {VERSION_KEY: "1.0.0", "url": f"{HOST}/1.0.0/"}], "match vX.Y.Z"),
         (
-            [*_switcher_entries(), {"version": "v1.0.1", "url": f"{HOST}/v1.0.0/"}],
+            [*_switcher_entries(), {VERSION_KEY: "v1.0.1", "url": f"{HOST}/{VERSION}/"}],
             "URL of v1.0.1 must be",
         ),
         (
-            [{**entry, "preferred": False} for entry in _switcher_entries("v1.0.0")],
+            [{**entry, PREFERRED: False} for entry in _switcher_entries(VERSION)],
             "Exactly one entry must be marked",
         ),
-        (_switcher_entries("v1.0.0", "v1.0.0"), "Duplicate versions"),
+        (_switcher_entries(VERSION, VERSION), "Duplicate versions"),
         (_switcher_entries(), "No released version"),
     ],
 )
 def test_read_version_switcher_invalid(tmp_test_directory, entries, message):
-    switcher = _write_switcher(Path(tmp_test_directory) / "switcher.json", entries)
+    switcher = _write_switcher(Path(tmp_test_directory) / SWITCHER_JSON, entries)
     with pytest.raises(ValueError, match=message):
+        docs_pages.read_version_switcher(switcher)
+
+
+@pytest.mark.parametrize("entry", [None, VERSION, 1, True, []])
+@pytest.mark.parametrize("with_valid_entries", [False, True])
+def test_read_version_switcher_rejects_non_objects(tmp_test_directory, entry, with_valid_entries):
+    entries = _switcher_entries(VERSION) if with_valid_entries else []
+    entries.append(entry)
+    switcher = _write_switcher(Path(tmp_test_directory) / SWITCHER_JSON, entries)
+    with pytest.raises(ValueError, match="each version entry must be an object"):
         docs_pages.read_version_switcher(switcher)
 
 
 def test_download_version(tmp_test_directory):
     tmp_path = Path(tmp_test_directory)
-    _write_site_tarball(tmp_path / "registry", "v1.0.0", {INDEX_HTML: SHARED_CONTENT})
+    registry = tmp_path / REGISTRY
+    _write_site_tarball(registry, VERSION, {INDEX_HTML: SHARED_CONTENT})
 
     docs_pages.download_version(
-        "v1.0.0", f"file://{tmp_path}/registry/{{version}}/docs-site.tar.gz", tmp_path / "site"
+        VERSION, f"{registry.as_uri()}/{{version}}/docs-site.tar.gz", tmp_path / "site"
     )
 
-    assert (tmp_path / "site" / "v1.0.0" / INDEX_HTML).read_text() == SHARED_CONTENT
+    assert (tmp_path / "site" / VERSION / INDEX_HTML).read_text() == SHARED_CONTENT
 
 
 def test_download_version_sends_job_token(tmp_test_directory, mocker):
@@ -112,91 +144,92 @@ def test_download_version_sends_job_token(tmp_test_directory, mocker):
     urlopen = mocker.patch("urllib.request.urlopen", return_value=response)
 
     docs_pages.download_version(
-        "v1.0.0", "https://registry/{version}/site.tar.gz", Path(tmp_test_directory), "secret"
+        VERSION, "https://registry/{version}/site.tar.gz", Path(tmp_test_directory), JOB_TOKEN
     )
 
     request = urlopen.call_args[0][0]
+    assert urlopen.call_args.kwargs["timeout"] == 60
     assert request.full_url == "https://registry/v1.0.0/site.tar.gz"
-    assert request.get_header("Job-token") == "secret"
+    assert request.get_header("Job-token") == JOB_TOKEN
 
 
 def test_copy_version_to_root(tmp_test_directory):
     site = Path(tmp_test_directory)
-    (site / "v1.0.0" / "sub").mkdir(parents=True)
-    (site / "v1.0.0" / INDEX_HTML).write_text("root")
-    (site / "v1.0.0" / "sub" / "page.html").write_text("page")
+    (site / VERSION / "sub").mkdir(parents=True)
+    (site / VERSION / INDEX_HTML).write_text("root")
+    (site / VERSION / "sub" / PAGE_HTML).write_text("page")
 
-    docs_pages.copy_version_to_root(site, "v1.0.0")
+    docs_pages.copy_version_to_root(site, VERSION)
 
     assert (site / INDEX_HTML).read_text() == "root"
-    assert (site / "sub" / "page.html").read_text() == "page"
+    assert (site / "sub" / PAGE_HTML).read_text() == "page"
 
 
 def test_remove_source_maps(tmp_test_directory):
     site = Path(tmp_test_directory)
-    (site / "theme.js").write_text("js")
-    (site / "theme.js.map").write_text("map")
+    (site / THEME_JS).write_text("js")
+    (site / THEME_MAP).write_text("map")
 
     docs_pages.remove_source_maps(site)
 
-    assert (site / "theme.js").exists()
-    assert not (site / "theme.js.map").exists()
+    assert (site / THEME_JS).exists()
+    assert not (site / THEME_MAP).exists()
 
 
 def test_deduplicate(tmp_test_directory):
     site = Path(tmp_test_directory)
-    (site / "v1.0.0" / "sub").mkdir(parents=True)
+    (site / VERSION / "sub").mkdir(parents=True)
     (site / INDEX_HTML).write_text(SHARED_CONTENT)
-    (site / "v1.0.0" / INDEX_HTML).write_text(SHARED_CONTENT)
-    (site / "v1.0.0" / "sub" / "copy.html").write_text(SHARED_CONTENT)
-    (site / "v1.0.0" / "unique.html").write_text("<html>unique</html>")
+    (site / VERSION / INDEX_HTML).write_text(SHARED_CONTENT)
+    (site / VERSION / "sub" / COPY_HTML).write_text(SHARED_CONTENT)
+    (site / VERSION / UNIQUE_HTML).write_text("<html>unique</html>")
 
     docs_pages.deduplicate(site)
 
     assert not (site / INDEX_HTML).is_symlink()
-    assert (site / "v1.0.0" / INDEX_HTML).is_symlink()
-    assert (site / "v1.0.0" / INDEX_HTML).readlink() == Path("..") / INDEX_HTML
-    assert (site / "v1.0.0" / "sub" / "copy.html").read_text() == SHARED_CONTENT
-    assert not (site / "v1.0.0" / "unique.html").is_symlink()
+    assert (site / VERSION / INDEX_HTML).is_symlink()
+    assert (site / VERSION / INDEX_HTML).readlink() == Path("..") / INDEX_HTML
+    assert (site / VERSION / "sub" / COPY_HTML).read_text() == SHARED_CONTENT
+    assert not (site / VERSION / UNIQUE_HTML).is_symlink()
 
 
 def test_deployed_size_counts_symlinks_by_target_length(tmp_test_directory):
     site = Path(tmp_test_directory)
-    (site / "file.html").write_text("x" * 100)
-    (site / "link.html").symlink_to("file.html")
+    (site / FILE_HTML).write_text("x" * 100)
+    (site / "link.html").symlink_to(FILE_HTML)
 
-    assert docs_pages.deployed_size(site) == 100 + len("file.html")
+    assert docs_pages.deployed_size(site) == 100 + len(FILE_HTML)
 
 
 def test_check_size(tmp_test_directory):
     site = Path(tmp_test_directory)
-    (site / "v1.0.0").mkdir()
-    (site / "v1.0.0" / INDEX_HTML).write_text("x" * 2000)
+    (site / VERSION).mkdir()
+    (site / VERSION / INDEX_HTML).write_text("x" * 2000)
 
-    docs_pages.check_size(site, ["v1.0.0"], size_budget_mb=0.01)
+    docs_pages.check_size(site, [VERSION], size_budget_mb=0.01)
     with pytest.raises(RuntimeError, match="exceeds the budget"):
-        docs_pages.check_size(site, ["v1.0.0"], size_budget_mb=0.001)
+        docs_pages.check_size(site, [VERSION], size_budget_mb=0.001)
 
 
 def test_assemble_pages(tmp_test_directory):
     tmp_path = Path(tmp_test_directory)
-    registry = tmp_path / "registry"
+    registry = tmp_path / REGISTRY
     _write_site_tarball(
-        registry, "v1.0.0", {INDEX_HTML: SHARED_CONTENT, "old.html": "old", "a.js.map": "map"}
+        registry, VERSION, {INDEX_HTML: SHARED_CONTENT, OLD_HTML: "old", "a.js.map": "map"}
     )
-    _write_site_tarball(registry, "v1.1.0", {INDEX_HTML: SHARED_CONTENT, "new.html": "new"})
-    switcher = _write_switcher(tmp_path / "switcher.json", _switcher_entries("v1.0.0", "v1.1.0"))
-    site = tmp_path / "public"
+    _write_site_tarball(registry, NEW_VERSION, {INDEX_HTML: SHARED_CONTENT, NEW_HTML: "new"})
+    switcher = _write_switcher(tmp_path / SWITCHER_JSON, _switcher_entries(VERSION, NEW_VERSION))
+    site = tmp_path / PUBLIC
 
     docs_pages.assemble_pages(
-        switcher, site, f"file://{registry}/{{version}}/docs-site.tar.gz", size_budget_mb=1.0
+        switcher, site, f"{registry.as_uri()}/{{version}}/docs-site.tar.gz", size_budget_mb=1.0
     )
 
-    assert (site / "new.html").read_text() == "new"
-    assert not (site / "old.html").exists()
-    assert (site / "v1.0.0" / "old.html").read_text() == "old"
-    assert (site / "v1.1.0" / INDEX_HTML).is_symlink()
-    assert (site / "v1.0.0" / INDEX_HTML).is_symlink()
+    assert (site / NEW_HTML).read_text() == "new"
+    assert not (site / OLD_HTML).exists()
+    assert (site / VERSION / OLD_HTML).read_text() == "old"
+    assert (site / NEW_VERSION / INDEX_HTML).is_symlink()
+    assert (site / VERSION / INDEX_HTML).is_symlink()
     assert not list(site.rglob("*.map"))
     assert json.loads((site / docs_pages.SWITCHER_FILE_PATH).read_text()) == json.loads(
         switcher.read_text()
@@ -205,9 +238,9 @@ def test_assemble_pages(tmp_test_directory):
 
 def test_assemble_pages_requires_empty_output(tmp_test_directory):
     tmp_path = Path(tmp_test_directory)
-    switcher = _write_switcher(tmp_path / "switcher.json", _switcher_entries("v1.0.0"))
-    (tmp_path / "public").mkdir()
-    (tmp_path / "public" / "file").write_text("x")
+    switcher = _write_switcher(tmp_path / SWITCHER_JSON, _switcher_entries(VERSION))
+    (tmp_path / PUBLIC).mkdir()
+    (tmp_path / PUBLIC / "file").write_text("x")
 
     with pytest.raises(FileExistsError, match="is not empty"):
-        docs_pages.assemble_pages(switcher, tmp_path / "public", "file:///{version}", 1.0)
+        docs_pages.assemble_pages(switcher, tmp_path / PUBLIC, "file:///{version}", 1.0)

@@ -91,15 +91,20 @@ def generate_toctree(docs_path):
         Root directory of the Sphinx documentation source.
     """
     docs_path = Path(docs_path)
-    directories = [docs_path]
-    while directories:
-        directory = directories.pop()
-        subdirectories = sorted(
-            path
-            for path in directory.iterdir()
-            if path.is_dir() and path.name not in IGNORE_DIRECTORIES
-        )
-        directories.extend(subdirectories)
-        entries = toctree_entries(directory, subdirectories)
-        if entries:
-            write_index_file(directory, entries, is_site_root=directory == docs_path)
+    _generate_directory_toctree(docs_path, docs_path)
+
+
+def _generate_directory_toctree(directory, docs_path):
+    """Generate child indexes first and return whether this directory has an index."""
+    subdirectories = []
+    for path in sorted(directory.iterdir()):
+        if (
+            path.is_dir()
+            and path.name not in IGNORE_DIRECTORIES
+            and _generate_directory_toctree(path, docs_path)
+        ):
+            subdirectories.append(path)
+    entries = toctree_entries(directory, subdirectories)
+    if entries:
+        write_index_file(directory, entries, is_site_root=directory == docs_path)
+    return bool(entries)
