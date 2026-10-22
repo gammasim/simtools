@@ -209,6 +209,7 @@ def test_submit_command_failure(mocker, tmp_path, with_app_log):
         ({"key": "value"}, ["--key", "value"]),
         ({"flag": True}, ["--flag"]),
         ({"flag": False}, []),
+        ({"files": []}, []),
         ({"files": ["file1.txt", "file2.txt"]}, ["--files", "file1.txt", "file2.txt"]),
         ({"file": ["file1.txt"]}, ["--file", "file1.txt"]),
         ({"count": 42, "threshold": 3.14}, ["--count", "42", "--threshold", "3.14"]),
