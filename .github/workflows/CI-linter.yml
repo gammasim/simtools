@@ -68,7 +68,7 @@ jobs:
 
       - name: Python dependencies
         run: |
-          pip install -e '.[tests,dev,doc]'
+          bash .github/scripts/install_python_dependencies.sh -e '.[tests,dev,doc]'
           pip check
 
       - name: Dotenv linter

@@ -516,7 +516,8 @@ jobs:
 
       - name: Install resource benchmark dependency (prod container)
         if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
-        run: pip install --no-cache-dir psutil
+        run: |
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir psutil
 
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}

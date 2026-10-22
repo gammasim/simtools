@@ -63,6 +63,7 @@ RUN SIMTOOLS_PYTHON="python${PYTHON_VERSION}" \
     . env/bin/activate && \
     bash /workdir/install_python_dependencies.sh \
       --no-cache-dir --requirement /workdir/requirements-dev.txt && \
+    rm /workdir/install_python_dependencies.sh && \
     SIMTOOLS_CONTAINER_BUILD=1 \
       SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
       SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \
