@@ -42,8 +42,7 @@ jobs:
 
       - name: Installation
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
+          bash .github/scripts/install_python_dependencies.sh -e .
 
       - name: Check for files without the suffix *.schema.yml
         run: |

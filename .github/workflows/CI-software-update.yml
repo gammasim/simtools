@@ -25,9 +25,7 @@ jobs:
 
       - name: Install packages (as pre-commit is running on all files after autoupdate)
         run: |
-          python -m pip install --upgrade pip
-          pip install -e '.[tests,dev,doc]'
-          pip install pylint
+          bash .github/scripts/install_python_dependencies.sh -e '.[tests,dev,doc]'
 
       - uses: browniebroke/pre-commit-autoupdate-action@d5663279643bd228226e60a4fe4fa9efc30c03eb  # main
         env:

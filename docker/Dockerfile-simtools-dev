@@ -53,15 +53,16 @@ WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
 COPY dependency_versions.yml /workdir/dependency_versions.yml
 COPY src /workdir/src
-RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip && \
-    python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade packaging pyyaml && \
+COPY .github/scripts/install_python_dependencies.sh /workdir/install_python_dependencies.sh
+RUN SIMTOOLS_PYTHON="python${PYTHON_VERSION}" \
+      bash /workdir/install_python_dependencies.sh --no-cache-dir --upgrade packaging pyyaml && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
       --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
-    python -m pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
+    bash /workdir/install_python_dependencies.sh \
+      --no-cache-dir --requirement /workdir/requirements-dev.txt && \
     SIMTOOLS_CONTAINER_BUILD=1 \
       SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
       SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \

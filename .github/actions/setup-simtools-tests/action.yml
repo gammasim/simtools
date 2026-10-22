@@ -35,8 +35,7 @@ runs:
       if: ${{ inputs.install-dependencies == 'true' }}
       shell: bash -leo pipefail {0}
       run: |
-        python -m pip install --upgrade pip
-        pip install -e '.[tests]'
+        bash .github/scripts/install_python_dependencies.sh -e '.[tests]'
 
     - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}
@@ -47,8 +46,7 @@ runs:
         TESTS_BRANCH: ${{ inputs.simtools-tests-branch }}
       run: |
         if [[ "$INSTALL_DEPENDENCIES" != "true" ]]; then
-          python -m pip install --upgrade pip
-          python -m pip install pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
         fi
         python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
         CATALOG_MODEL_BRANCH=$(python src/simtools/applications/dependency_versions.py \
