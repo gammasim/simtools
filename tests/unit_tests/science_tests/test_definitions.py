@@ -1,614 +1,245 @@
-import json
 from pathlib import Path
+from types import SimpleNamespace
 
-import jsonschema
 import pytest
 import yaml
 
-from simtools.science_tests import definitions as science_test_definitions
+from simtools.science_tests import definitions as defs
 
-_CAMERA_EFFICIENCY_METRIC = "cam_eff"
-_COMPLETE_STATUS = "complete"
-_INCOMPLETE_STATUS = "incomplete"
-_CHANGES_KEY = "changes"
-_ADVISORY_KEY = "advisory"
+EXPLICIT = "/explicit"
+IMAGE_SIF = "/image.sif"
+MODELS = "/models"
+WORK = "/work"
+CUSTOM = "__CUSTOM__"
+IMAGE = "__IMAGE__"
+ABSOLUTE_PATH = "absolute path"
+ANALYSIS = "analysis"
+ARRAY_LAYOUT_NAME = "array_layout_name"
+COMPARE_BY = "compare_by"
+CONFIGURATION_OVERRIDES = "configuration_overrides"
+DEPENDS_ON = "depends_on"
+IMAGE_KEY = "image"
+OVERRIDE = "override"
+RELEASE_DIR = "release_dir"
+REPLACEMENTS = "replacements"
+REQUIRED_TESTS = "required_tests"
+SOUTH = "south"
+TEMPLATE_DIR = "template_dir"
+UNSET = "unset"
+USES_BASELINE = "uses_baseline"
+UTF_8 = "utf-8"
+WORKFLOW_YML = "workflow.yml"
 
-_REASON_KEY = "reason"
-_STATUS_KEY = "status"
-
-_CONTEXT_FILE_NAME = "context.yml"
-_SCIENCE_TESTS_ROOT_ENV = "SIMTOOLS_SCIENCE_TESTS_ROOT"
-_STORAGE_ROOT_PLACEHOLDER = f"${{{_SCIENCE_TESTS_ROOT_ENV}}}"
-_ENCODING = "utf-8"
-_RELEASE_LABEL_KEY = "release_label"
-_REPORT_PAGE_COLUMN = "report_page"
+CATALOGUE = "catalogue.yml"
+NORTH = "north"
+COMPARE = "compare"
+DERIVE = "derive"
+SITE_TEMPLATE = "sites/north.yml"
 
 
-def test_science_test_config_schema_rejects_unknown_site_fields():
-    with pytest.raises(jsonschema.ValidationError, match="Additional properties"):
-        science_test_definitions._validate_science_test_config(
-            {
-                "site": "north",
-                "required_tests": ["compare"],
-                "array_layout_name": "CTAO-North-Alpha",
-                "unexpected": True,
-            },
-            science_test_definitions._SITE_SCHEMA_FILE,
-        )
+def write_yaml(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data), encoding=UTF_8)
+    return path
 
 
-def test_htcondor_environment_schema_accepts_interaction_table_path():
-    science_test_definitions._validate_science_test_config(
-        {
-            "SIMTOOLS_CORSIKA_PATH": "/workdir/simulation_software/corsika7",
-            "SIMTOOLS_SIM_TELARRAY_PATH": "/workdir/simulation_software/sim_telarray",
-            "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": (
-                "/corsika7-interaction-tables/interaction-tables"
-            ),
-        },
-        "htcondor_environment.schema.yml",
+def update_yaml(path, **values):
+    data = yaml.safe_load(path.read_text(encoding=UTF_8))
+    data.update(values)
+    write_yaml(path, data)
+
+
+def test_load_release_merges_site_overrides(campaign):
+    write_yaml(
+        campaign[RELEASE_DIR] / SITE_TEMPLATE,
+        {"site": NORTH, ARRAY_LAYOUT_NAME: OVERRIDE, REQUIRED_TESTS: [DERIVE]},
     )
+    bundle = defs.load_release(campaign[RELEASE_DIR])
+
+    assert bundle.template_dir == campaign[TEMPLATE_DIR].resolve()
+    assert bundle.suites[NORTH][ARRAY_LAYOUT_NAME] == OVERRIDE
+    assert bundle.suites[SOUTH][REQUIRED_TESTS] == [COMPARE]
+    assert set(bundle.catalogue) == {DERIVE, COMPARE}
 
 
-def test_dependency_order_and_invalid_definitions():
-    assert science_test_definitions._dependency_order(
-        ["b", "a"], {"a": {}, "b": {"depends_on": ["a"]}}
-    ) == [
-        "a",
-        "b",
-    ]
+@pytest.mark.parametrize(
+    ("site_definition", "message"),
+    [
+        ({"site": SOUTH, ARRAY_LAYOUT_NAME: "a", REQUIRED_TESTS: ["x"]}, "declares site"),
+        ({"site": NORTH, ARRAY_LAYOUT_NAME: "a", REQUIRED_TESTS: ["x"]}, "Unknown"),
+    ],
+)
+def test_load_release_rejects_invalid_sites(campaign, site_definition, message):
+    write_yaml(campaign[TEMPLATE_DIR] / SITE_TEMPLATE, site_definition)
+    with pytest.raises(ValueError, match=message):
+        defs.load_release(campaign[RELEASE_DIR])
+
+
+def test_load_release_rejects_unsupported_site_and_unknown_files(campaign):
+    catalogue = campaign[TEMPLATE_DIR] / CATALOGUE
+    data = yaml.safe_load(catalogue.read_text(encoding=UTF_8))
+    data["tests"][COMPARE]["sites"] = [SOUTH]
+    write_yaml(catalogue, data)
+    with pytest.raises(ValueError, match="does not support site"):
+        defs.load_release(campaign[RELEASE_DIR])
+    (campaign[TEMPLATE_DIR] / SITE_TEMPLATE).unlink()
+    with pytest.raises(FileNotFoundError, match="No site definition"):
+        defs.load_release(campaign[RELEASE_DIR])
+    with pytest.raises(FileNotFoundError, match="not found"):
+        defs.load_release(campaign[RELEASE_DIR] / "missing", campaign[TEMPLATE_DIR])
+
+
+def test_load_release_rejects_placeholder_release_label(campaign):
+    update_yaml(campaign[RELEASE_DIR] / defs.RELEASE_FILE, release_label=defs.RELEASE_LABEL)
+    with pytest.raises(ValueError, match="filename-safe"):
+        defs.load_release(campaign[RELEASE_DIR])
+
+
+def test_resolve_template_dir_requires_template(tmp_test_directory):
+    with pytest.raises(FileNotFoundError, match="No science-test-template"):
+        defs.resolve_template_dir(Path(tmp_test_directory) / "a" / "b")
+
+
+def test_load_context_resolves_storage_root(tmp_test_directory, monkeypatch):
+    context = write_yaml(
+        Path(tmp_test_directory) / "context.yml",
+        {defs.CANDIDATE_PATH: f"${{{defs.SCIENCE_TESTS_ROOT_ENV}}}/v1", "unused": None},
+    )
+    monkeypatch.setenv(defs.SCIENCE_TESTS_ROOT_ENV, "/data/")
+    assert defs.load_context(context)[defs.CANDIDATE_PATH] == "/data/v1"
+    monkeypatch.setenv(defs.SCIENCE_TESTS_ROOT_ENV, "relative")
+    with pytest.raises(ValueError, match=ABSOLUTE_PATH):
+        defs.load_context(context)
+    write_yaml(context, {defs.CANDIDATE_PATH: EXPLICIT})
+    assert defs.load_context(context) == {defs.CANDIDATE_PATH: EXPLICIT}
+
+
+def test_select_matches_case_insensitively():
+    assert defs.select(None, ["a", "b"], "site") == ["a", "b"]
+    assert defs.select(["B", "b"], ["a", "b"], "site") == ["b"]
+    with pytest.raises(ValueError, match="Invalid site selection"):
+        defs.select(["c"], ["a", "b"], "site")
+    with pytest.raises(ValueError, match="Invalid test selection"):
+        defs.select([], ["a"], "test")
+
+
+def test_dependency_order_detects_cycles_and_unknown_tests():
+    catalogue = {"a": {DEPENDS_ON: ["b"]}, "b": {}, "c": {DEPENDS_ON: ["c"]}}
+    assert defs.dependency_order(["a", "b"], catalogue) == ["b", "a"]
     with pytest.raises(ValueError, match="Circular"):
-        science_test_definitions._dependency_order(["a"], {"a": {"depends_on": ["a"]}})
-    with pytest.raises(ValueError, match="Unknown"):
-        science_test_definitions._dependency_order(["a"], {})
-    with pytest.raises(ValueError, match="Invalid definition"):
-        science_test_definitions._dependency_order(["a"], {"a": []})
+        defs.dependency_order(["c"], catalogue)
+    with pytest.raises(ValueError, match="Unknown science test"):
+        defs.dependency_order(["d"], catalogue)
 
 
-@pytest.mark.parametrize(
-    ("allow", "tests"), [(False, ["production"]), (True, None), (True, ["compare"])]
-)
-def test_production_must_be_explicit(allow, tests):
-    with pytest.raises(ValueError, match="Select production explicitly"):
-        science_test_definitions._check_production_selection(
-            "production", {"tier": "release-prod"}, tests, allow, False
-        )
+def test_test_definition_adds_contracts_and_baseline_usage(bundle):
+    bundle.release[CONFIGURATION_OVERRIDES] = {COMPARE: {COMPARE_BY: []}}
+    compare = defs.test_definition(bundle, COMPARE)
+    derive = defs.test_definition(bundle, DERIVE)
+
+    assert compare[USES_BASELINE] is True
+    assert derive[USES_BASELINE] is False
+    assert compare["rule"]["mode"] == "advisory"
+    assert compare[CONFIGURATION_OVERRIDES] == {COMPARE_BY: []}
+    assert derive["workflow_path"] == bundle.template_dir / WORKFLOW_YML
 
 
-def test_production_selection_allows_dry_runs_and_non_production_tests():
-    science_test_definitions._check_production_selection(
-        "production", {"tier": "release-prod"}, None, False, True
-    )
-    science_test_definitions._check_production_selection(
-        "compare", {"tier": "release-light"}, None, False, False
-    )
+def test_test_definition_requires_products_and_rules(bundle):
+    del bundle.products[DERIVE]
+    with pytest.raises(ValueError, match="expected-product contract"):
+        defs.test_definition(bundle, DERIVE)
+    bundle.rules.clear()
+    with pytest.raises(ValueError, match="Missing acceptance rule"):
+        defs.test_definition(bundle, COMPARE)
 
 
-@pytest.mark.parametrize(
-    ("test_id", "site", "definition", "message"),
-    [
-        ("bad/name", "north", {"sites": ["north"], "tier": "smoke", "workflow": "x"}, "ID"),
-        ("test", "south", {"sites": ["north"], "tier": "smoke", "workflow": "x"}, "support"),
-        ("test", "north", {"sites": ["north"], "tier": "large", "workflow": "x"}, "tier"),
-        ("test", "north", {"sites": ["north"], "tier": "smoke"}, "workflow"),
-    ],
-)
-def test_validate_definition_rejects_invalid_catalogue_entries(test_id, site, definition, message):
-    with pytest.raises(ValueError, match=message):
-        science_test_definitions._validate_definition(test_id, site, definition)
-
-
-def test_load_suites_rejects_site_that_disagrees_with_its_file(campaign):
-    site_path = campaign["release_dir"] / "sites/north.yml"
-    suite = yaml.safe_load(site_path.read_text(encoding=_ENCODING))
-    suite["site"] = "south"
-    site_path.write_text(yaml.safe_dump(suite), encoding=_ENCODING)
-    release = science_test_definitions._load_yaml(campaign["release_dir"] / "release.yml")
-    catalogue = science_test_definitions._load_catalogue(
-        release, campaign["release_dir"], campaign["template_dir"]
-    )
-
-    with pytest.raises(ValueError, match="Invalid site or missing layout"):
-        science_test_definitions._load_suites(campaign["release_dir"], release, catalogue)
-
-
-def test_test_definition_applies_release_comparison_contract():
-    test_id = "compare.events"
-    definition = science_test_definitions._test_definition(
-        test_id,
-        {test_id: {"acceptance_rule": "limits"}},
-        {"products": {test_id: ["metrics.json"]}, "rules": {"limits": {"mode": _ADVISORY_KEY}}},
-        {
-            "expected_changes": ["configuration.azimuth_angle"],
-            "comparison_parameters": {"events": {"compare_by": ["configuration.azimuth_angle"]}},
-        },
-    )
-
-    assert definition["comparison_parameters"] == {"compare_by": ["configuration.azimuth_angle"]}
-    assert definition["expected_changes"] == ["configuration.azimuth_angle"]
-    assert definition["rule"]["mode"] == _ADVISORY_KEY
-
-
-def test_expected_pair_count_blocks_an_incomplete_comparison(tmp_test_directory):
-    report = Path(tmp_test_directory)
-    inventory = report / "comparison_inventory.json"
-    inventory.write_text(json.dumps({"matched_pair_count": 2}), encoding=_ENCODING)
-    definition = {"expected_pair_count": 2}
-    replacements = {"__SCIENCE_REPORT_PATH__": str(report)}
-
-    science_test_definitions._check_expected_pair_count(definition, replacements)
-    inventory.write_text(json.dumps({"matched_pair_count": 1}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match="expected 2 matched pairs, observed 1"):
-        science_test_definitions._check_expected_pair_count(definition, replacements)
-
-
-def test_evaluate_products_checks_nested_metrics_and_advisory_limits(tmp_test_directory):
-    report = Path(tmp_test_directory)
-    metrics = report / "metrics.json"
-    metrics.write_text(json.dumps({"results": [{"count": 3}]}), encoding=_ENCODING)
-    definition = {
-        "products": [str(metrics)],
-        "rule": {
-            "mode": _ADVISORY_KEY,
-            "metrics": [{"file": str(metrics), "key": "results.0.count", "minimum": 2}],
-        },
-    }
-    assert science_test_definitions._evaluate_products(definition, {})[_STATUS_KEY] == "warn"
-    metrics.write_text(json.dumps({"results": [{"count": 1}]}), encoding=_ENCODING)
-    result = science_test_definitions._evaluate_products(definition, {})
-    assert result[_STATUS_KEY] == "warn"
-    assert any("Acceptance failed" in warning for warning in result["acceptance_warnings"])
-    metrics.write_text(json.dumps({"results": [{}]}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match=r"Missing metric results\.0\.count"):
-        science_test_definitions._evaluate_products(definition, {})
-    metrics.write_text(json.dumps({"results": [{"count": True}]}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match=r"Invalid metric results\.0\.count"):
-        science_test_definitions._evaluate_products(definition, {})
-
-
-def test_result_status_file_blocks_incomplete_and_reports_advisory(tmp_test_directory):
-    result_file = Path(tmp_test_directory) / "comparison.json"
-    definition = {"result_status_file": str(result_file)}
-    result_file.write_text(
-        json.dumps(
-            {
-                "status": _COMPLETE_STATUS,
-                _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: True}},
-            }
-        ),
-        encoding=_ENCODING,
-    )
-
-    result = science_test_definitions._evaluate_products(definition, {})
-
-    assert result[_STATUS_KEY] == "warn"
-    assert "Advisory tolerance exceeded for cam_eff." in result["acceptance_warnings"]
-    result_file.write_text(json.dumps({"status": _INCOMPLETE_STATUS}), encoding=_ENCODING)
-    with pytest.raises(ValueError, match="Science-test result is incomplete"):
-        science_test_definitions._evaluate_products(definition, {})
-
-
-@pytest.mark.parametrize("child_status", [_COMPLETE_STATUS, _INCOMPLETE_STATUS])
-def test_result_status_file_handles_multiple_telescopes(tmp_test_directory, child_status):
-    result_file = Path(tmp_test_directory) / "comparison.json"
-    result_file.write_text(
-        json.dumps(
-            {
-                "status": _COMPLETE_STATUS,
-                _CHANGES_KEY: {},
-                "comparisons": {
-                    "LSTN-01": {
-                        "status": child_status,
-                        _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: True}},
-                    },
-                    "LSTN-02": {
-                        "status": _COMPLETE_STATUS,
-                        _CHANGES_KEY: {_CAMERA_EFFICIENCY_METRIC: {_ADVISORY_KEY: False}},
-                    },
-                },
-            }
-        ),
-        encoding=_ENCODING,
-    )
-    definition = {"result_status_file": str(result_file)}
-
-    if child_status == _INCOMPLETE_STATUS:
-        with pytest.raises(ValueError, match="telescope result is incomplete"):
-            science_test_definitions._evaluate_products(definition, {})
-    else:
-        result = science_test_definitions._evaluate_products(definition, {})
-        assert result[_STATUS_KEY] == "warn"
-        assert result["acceptance_warnings"] == [
-            "LSTN-01: Advisory tolerance exceeded for cam_eff."
-        ]
-
-
-def test_csv_acceptance_warns_for_small_samples_and_fails_above_maximum(tmp_test_directory):
-    report = Path(tmp_test_directory)
-    metrics_file = report / "comparison_metrics.csv"
-    metrics_file.write_text(
-        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
-        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
-        "distribution_core_distance,whole_array,ks,0.04,,True,ok,50,120,12\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.02,,True,ok,500,510,14\n",
-        encoding=_ENCODING,
-    )
-    metric = {
-        "file": str(metrics_file),
-        "key": "value",
-        "format": "csv",
-        "select": {
-            "metric": "ks",
-            "plot": ["distribution_core_distance", "distribution_core_distance_LST?"],
-        },
-        "minimum_entries": 100,
-        "warning_maximum": 0.03,
-        "maximum": 0.05,
-    }
-    definition = {"products": [str(metrics_file)], "rule": {"metrics": [metric]}}
-    result = science_test_definitions._evaluate_products(definition, {})
-    assert result[_STATUS_KEY] == "warn"
-    assert "insufficient statistics" in result[_REASON_KEY]
-    metrics_file.write_text(
-        "plot,scope,metric,value,normalized_value,valid,reason,baseline_count,"
-        f"candidate_count,{_REPORT_PAGE_COLUMN}\n"
-        "distribution_core_distance_LSTN,telescope_type,ks,0.06853146853146852,,True,ok,"
-        "500,510,27\n",
-        encoding=_ENCODING,
-    )
-    result = science_test_definitions._evaluate_products(definition, {})
-    assert result[_STATUS_KEY] == "warn"
-    assert "value=0.06853 exceeds 0.05 (PDF page 27)" in result[_REASON_KEY]
-
-
-def test_csv_acceptance_keeps_warnings_for_distinct_measurements(tmp_test_directory):
-    report = Path(tmp_test_directory)
-    metrics_file = report / "comparison_metrics.csv"
-    metrics_file.write_text(
-        "pair,array_layout,plot,scope,metric,value,valid,reason,baseline_count,candidate_count\n"
-        "pair-1,layout-a,distribution,whole_array,ks,0.08,True,ok,100,100\n"
-        "pair-1,layout-b,distribution,whole_array,ks,0.08,True,ok,100,100\n",
-        encoding=_ENCODING,
-    )
-    definition = {
-        "products": [str(metrics_file)],
-        "rule": {
-            "metrics": [
-                {
-                    "file": str(metrics_file),
-                    "key": "value",
-                    "format": "csv",
-                    "maximum": 0.05,
-                }
-            ]
-        },
-    }
-
-    result = science_test_definitions._evaluate_products(definition, {})
-
-    assert result[_STATUS_KEY] == "warn"
-    assert len(result["acceptance_warnings"]) == 2
-    assert result["acceptance_warnings"][0] == result["acceptance_warnings"][1]
-
-
-def test_release_acceptance_override_is_rejected(campaign):
-    override = campaign["release_dir"] / "acceptance/overrides.yml"
-    override.parent.mkdir(parents=True)
-    override.write_text(yaml.safe_dump({"overrides": {"comparison": {}}}), encoding=_ENCODING)
-
-    with pytest.raises(ValueError, match="overrides are not supported"):
-        science_test_definitions._load_acceptance(campaign["release_dir"], campaign["template_dir"])
-
-
-@pytest.mark.parametrize("workflow", ["/outside.yml", "../outside.yml"])
-def test_workflow_path_cannot_escape_template(campaign, workflow):
-    with pytest.raises(ValueError, match="relative template path"):
-        science_test_definitions._resolve_workflow(
-            campaign["template_dir"], campaign["release_dir"], workflow
-        )
-
-
-@pytest.mark.parametrize("value", [True, float("nan")])
-def test_metric_rules_reject_non_numeric_or_non_finite_limits(value):
-    with pytest.raises(ValueError, match="Invalid acceptance minimum"):
-        science_test_definitions._validate_metric_rule(
-            {"file": "metrics.json", "key": "count", "minimum": value}
-        )
-
-
-@pytest.mark.parametrize("metric", [None, {}, {"file": "metrics.json"}, {"key": "count"}])
-def test_metric_rules_reject_incomplete_selector(metric):
-    with pytest.raises(ValueError, match="Each acceptance metric needs file and key"):
-        science_test_definitions._validate_metric_rule(metric)
-
-
-def test_completed_production_gate(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    submission = root / "submission.json"
-    product = root / "event.dat"
-    product_directory = root / "events"
-    product.write_text("event", encoding=_ENCODING)
-    product_directory.mkdir()
-    (product_directory / "data").write_bytes(b"events")
-    payload = {
-        "job_ids": ["job"],
-        "metadata": {
-            "state": "submitted",
-            "expected_outputs": {"job": [str(product), str(product_directory)]},
-        },
-    }
-    submission.write_text(json.dumps(payload), encoding=_ENCODING)
-    definition = {"requires_completed_production": True}
-    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
-    with pytest.raises(ValueError, match="not completed"):
-        science_test_definitions._check_inputs(definition, replacements)
-    payload["metadata"]["state"] = "completed"
-    submission.write_text(json.dumps(payload), encoding=_ENCODING)
-    science_test_definitions._check_inputs(definition, replacements)
-    product.unlink()
-    with pytest.raises(ValueError, match="missing expected outputs"):
-        science_test_definitions._check_inputs(definition, replacements)
-
-
-def test_required_inputs_must_exist_and_be_nonempty(tmp_test_directory):
-    candidate = Path(tmp_test_directory) / "candidate"
-    product = candidate / "nested/input.json"
-    product.parent.mkdir(parents=True)
-    product.write_text("{}", encoding=_ENCODING)
-    definition = {"requires": ["__SCIENCE_CANDIDATE_SITE_PATH__/**/*.json"]}
-    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(candidate)}
-
-    science_test_definitions._check_inputs(definition, replacements)
-    product.write_text("", encoding=_ENCODING)
-    with pytest.raises(ValueError, match="Missing or empty required product"):
-        science_test_definitions._check_inputs(definition, replacements)
-
-
-@pytest.mark.parametrize("expected", [True, 0])
-def test_expected_pair_count_must_be_a_positive_integer(expected, tmp_test_directory):
-    with pytest.raises(ValueError, match="positive integer"):
-        science_test_definitions._check_expected_pair_count(
-            {"expected_pair_count": expected}, {"__SCIENCE_REPORT_PATH__": tmp_test_directory}
-        )
-
-
-@pytest.mark.parametrize("contents", ["- item\n", ""])
-def test_yaml_loader_requires_a_mapping(contents, tmp_test_directory):
-    path = Path(tmp_test_directory) / "invalid.yml"
-    path.write_text(contents, encoding=_ENCODING)
-    with pytest.raises(ValueError, match="Expected a mapping"):
-        science_test_definitions._load_yaml(path)
-
-
-@pytest.mark.parametrize(
-    ("release", "context", "message"),
-    [
-        ({_RELEASE_LABEL_KEY: "../invalid"}, {}, _RELEASE_LABEL_KEY),
-        (
-            {_RELEASE_LABEL_KEY: "candidate"},
-            {},
-            "absolute path",
-        ),
-    ],
-)
-def test_invalid_release_context(release, context, message):
-    with pytest.raises(ValueError, match=message):
-        science_test_definitions._validate_release_context(release, context)
-
-
-def test_identical_release_context_paths_identifies_conflicting_entries():
-    context = {
-        "__SCIENCE_CANDIDATE_PATH__": "/data/production",
-        "__SCIENCE_BASELINE_PATH__": "/data/production",
-        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
-    }
-
-    with pytest.raises(ValueError, match="__SCIENCE_CANDIDATE_PATH__=/data/production") as error:
-        science_test_definitions._validate_release_context(
-            {_RELEASE_LABEL_KEY: "candidate"}, context
-        )
-
-    assert "__SCIENCE_BASELINE_PATH__=/data/production" in str(error.value)
-
-
-def test_nested_release_context_paths_are_rejected():
-    context = {
-        "__SCIENCE_CANDIDATE_PATH__": "/data/production/candidate",
-        "__SCIENCE_BASELINE_PATH__": "/data/production",
-        "__PRODUCTION_CONFIGURATION_PATH__": "/data/configuration",
-    }
-
+def test_validate_context_checks_paths(bundle):
+    defs.validate_context(bundle, uses_baseline=True)
+    bundle.context[defs.BASELINE_PATH] = bundle.context[defs.CANDIDATE_PATH] + "/sub"
     with pytest.raises(ValueError, match="non-overlapping"):
-        science_test_definitions._validate_release_context(
-            {_RELEASE_LABEL_KEY: "candidate"}, context
-        )
+        defs.validate_context(bundle, uses_baseline=True)
+    defs.validate_context(bundle, uses_baseline=False)
+    bundle.context[defs.CANDIDATE_PATH] = f"/storage/{defs.RELEASE_LABEL}"
+    with pytest.raises(ValueError, match=ABSOLUTE_PATH):
+        defs.validate_context(bundle, uses_baseline=False)
 
 
-def test_site_cannot_override_context_root(tmp_test_directory):
-    root = Path(tmp_test_directory)
-    context = {"__SCIENCE_CANDIDATE_PATH__": str(root)}
-    suite = {
-        "array_layout_name": "CTAO-North-Alpha",
-        "replacements": {"__SCIENCE_CANDIDATE_PATH__": "other"},
-    }
-    with pytest.raises(ValueError, match="reserved context key"):
-        science_test_definitions._site_replacements(context, "north", suite, root)
+def test_site_replacements_include_release_and_model_source(bundle):
+    bundle.context[defs.MODELS_GIT_PATH] = MODELS
+    bundle.context[UNSET] = None
+    replacements = defs.site_replacements(bundle, NORTH, Path(WORK))
 
-
-def test_site_replacements_expose_selected_model_source(tmp_test_directory):
-    replacements = science_test_definitions._site_replacements(
-        {
-            "simulation_models_git_path": "/models",
-            "__SCIENCE_CANDIDATE_PATH__": "/candidate",
-            "__SCIENCE_BASELINE_PATH__": "/baseline",
-        },
-        "north",
-        {"array_layout_name": "CTAO-North-Alpha"},
-        Path(tmp_test_directory),
-    )
-
-    assert replacements["__SCIENCE_MODELS_SOURCE_PATH__"] == "/models"
-
-
-def test_site_replacements_use_first_camera_telescope_for_workflow_resolution(
-    tmp_test_directory,
-):
-    replacements = science_test_definitions._site_replacements(
-        {"__SCIENCE_CANDIDATE_PATH__": "/candidate"},
-        "north",
-        {
-            "array_layout_name": "CTAO-North-Alpha",
-            "camera_telescopes": ["LSTN-01", "LSTN-02"],
-        },
-        Path(tmp_test_directory),
-    )
-
-    assert replacements["__SCIENCE_CAMERA_TELESCOPE__"] == "LSTN-01"
+    assert replacements["__SCIENCE_SITE__"] == "North"
+    assert replacements[defs.BASELINE_LABEL] == "v1"
+    assert replacements[defs.RELEASE_LABEL] == "v2"
+    assert replacements["__SCIENCE_MODEL_VERSION__"] == "7"
+    assert replacements["__SCIENCE_MODELS_SOURCE_PATH__"] == MODELS
+    assert replacements[defs.REPORT_PATH] == WORK
+    assert replacements[defs.CANDIDATE_SITE_PATH].endswith("/v2/north")
+    assert UNSET not in replacements
+    bundle.suites[NORTH][REPLACEMENTS] = {CUSTOM: 1}
+    assert defs.site_replacements(bundle, NORTH, Path(WORK))[CUSTOM] == "1"
+    bundle.suites[NORTH][REPLACEMENTS] = {defs.REPORT_PATH: "x"}
+    with pytest.raises(ValueError, match="reserved keys"):
+        defs.site_replacements(bundle, NORTH, Path(WORK))
 
 
 @pytest.mark.parametrize(
-    "observed", [["job-000001"], ["job-000001", "job-000001"], ["job-000001", "job-000003"]]
-)
-def test_reviewed_ids_reject_missing_extra_and_duplicate_jobs(observed):
-    with pytest.raises(ValueError, match="Incomplete production jobs"):
-        science_test_definitions._require_same_ids(
-            {"job-000001", "job-000002"}, observed, "production jobs"
-        )
-
-
-def test_grid_configuration_checks_quantities_and_each_run():
-    import astropy.units as u
-
-    row = {"run_number": 2, "energy_min": 1 * u.TeV, "model_version": "7.0.0"}
-    config = {
-        "run_number": 2,
-        "energy_min": {"value": 1000, "unit": "GeV"},
-        "model_version": ["7.0.0"],
-    }
-    science_test_definitions._check_grid_configuration(row, {}, config)
-    with pytest.raises(ValueError, match="run_number"):
-        science_test_definitions._check_grid_configuration(row, {}, config | {"run_number": 1})
-
-
-@pytest.mark.parametrize("layout", ["CTAO-North-Alpha", ["CTAO-North-Alpha"]])
-def test_grid_configuration_accepts_single_array_layout(layout):
-    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
-    config = row | {"array_layout_name": layout}
-    science_test_definitions._check_grid_configuration(row, {}, config)
-
-
-@pytest.mark.parametrize(
-    "layout", [[], ["CTAO-South-Alpha"], ["CTAO-North-Alpha", "CTAO-South-Alpha"]]
-)
-def test_grid_configuration_rejects_different_or_multiple_array_layouts(layout):
-    row = {"run_number": 1, "array_layout_name": "CTAO-North-Alpha"}
-    config = row | {"array_layout_name": layout}
-    with pytest.raises(ValueError, match="array_layout_name"):
-        science_test_definitions._check_grid_configuration(row, {}, config)
-
-
-def test_reviewed_grid_rejects_missing_whole_submission(mocker, tmp_test_directory):
-    from simtools.production_configuration.production_file_selection import ProductionManifest
-
-    root = Path(tmp_test_directory)
-    (root / "events.hdf5").write_bytes(b"events")
-    manifest = ProductionManifest(
-        root / "metadata.yml",
-        {
-            "job_id": "job-000001",
-            "configuration": {"run_number": 1},
-            "files": {"reduced_event_data": ["events.hdf5"]},
-        },
-    )
-    mocker.patch.object(
-        science_test_definitions, "read_job_grid", return_value=([{"run_number": 1}], {})
-    )
-    mocker.patch.object(science_test_definitions, "discover_manifests", return_value=[manifest])
-    submission = {
-        "job_ids": ["job-000001"],
-        "metadata": {
-            "state": "completed",
-            "expected_outputs": {"job-000001": [str(root / "events.hdf5")]},
-        },
-    }
-    (root / "submission.json").write_text(json.dumps(submission), encoding=_ENCODING)
-    definition = {"reviewed_grid": "grid.ecsv"}
-    replacements = {"__SCIENCE_CANDIDATE_SITE_PATH__": str(root)}
-    assert science_test_definitions._check_reviewed_production(definition, replacements) == {
-        "expected_jobs": 1,
-        "observed_jobs": 1,
-    }
-    mocker.patch.object(
-        science_test_definitions,
-        "read_job_grid",
-        return_value=([{"run_number": 1}, {"run_number": 2}], {}),
-    )
-    with pytest.raises(ValueError, match="job-000002"):
-        science_test_definitions._check_reviewed_production(definition, replacements)
-
-
-def test_baseline_check_preserves_paths_containing_candidate_name(mocker):
-    check = mocker.patch.object(science_test_definitions, "_check_reviewed_production")
-    replacements = {
-        "__SCIENCE_CANDIDATE_PATH__": "/data/v1",
-        "__SCIENCE_BASELINE_PATH__": "/data/v10",
-        "__SCIENCE_CANDIDATE_SITE_PATH__": "/data/v1/north",
-        "__SCIENCE_BASELINE_SITE_PATH__": "/data/v10/north",
-    }
-    science_test_definitions._check_inputs(
-        {"reviewed_grid": "grid.ecsv", "acceptance_rule": "events"}, replacements
-    )
-    baseline = check.call_args.args[1]
-    assert baseline["__SCIENCE_CANDIDATE_PATH__"] == "/data/v10"
-    assert baseline["__SCIENCE_CANDIDATE_SITE_PATH__"] == "/data/v10/north"
-    assert baseline["__SCIENCE_BASELINE_PATH__"] == "/data/v10"
-
-
-def test_load_context_resolves_storage_root_before_path_validation(tmp_test_directory, monkeypatch):
-    root = Path(tmp_test_directory)
-    storage = root / "shared storage"
-    monkeypatch.setenv(_SCIENCE_TESTS_ROOT_ENV, f"{storage}/")
-    context_file = root / _CONTEXT_FILE_NAME
-    paths = dict(zip(science_test_definitions._PATH_KEYS, ("v0.39.0", "v0.37.0", "reference-data")))
-    source = {key: f"{_STORAGE_ROOT_PLACEHOLDER}/{name}" for key, name in paths.items()}
-    source["simulation_models_git_revision"] = "v0.18.0"
-    source["optional_path"] = None
-    context_file.write_text(yaml.safe_dump(source), encoding=_ENCODING)
-
-    context = science_test_definitions._load_context(context_file)
-
-    assert context == {**source, **{key: str(storage / name) for key, name in paths.items()}}
-    science_test_definitions._validate_release_context(
-        {_RELEASE_LABEL_KEY: "test-release"}, context
-    )
-    assert yaml.safe_load(context_file.read_text(encoding=_ENCODING)) == source
-    assert not storage.exists()
-
-
-@pytest.mark.parametrize("storage_root", [None, "", "relative/path"])
-def test_load_context_rejects_missing_or_relative_storage_root(
-    tmp_test_directory, monkeypatch, storage_root
-):
-    if storage_root is None:
-        monkeypatch.delenv(_SCIENCE_TESTS_ROOT_ENV, raising=False)
-    else:
-        monkeypatch.setenv(_SCIENCE_TESTS_ROOT_ENV, storage_root)
-    context_file = Path(tmp_test_directory) / _CONTEXT_FILE_NAME
-    context_file.write_text(
-        yaml.safe_dump(
-            {science_test_definitions._PATH_KEYS[0]: f"{_STORAGE_ROOT_PLACEHOLDER}/candidate"}
+    ("release", "context", "expected"),
+    [
+        ({}, {defs.MODELS_GIT_PATH: "/git"}, {defs.MODELS_PATH: None}),
+        (
+            {defs.MODELS_PATH: MODELS},
+            {defs.MODELS_GIT_PATH: "/git"},
+            {defs.MODELS_GIT_PATH: None, defs.MODELS_GIT_REVISION: None},
         ),
-        encoding=_ENCODING,
+        ({}, {}, {}),
+    ],
+)
+def test_model_source_arguments_select_one_source(release, context, expected):
+    bundle = SimpleNamespace(release=release, context=context)
+    args = defs.model_source_arguments({defs.MODELS_GIT_REVISION: "main"}, bundle)
+    for key, value in expected.items():
+        assert args[key] == value
+
+
+def test_shared_runtime_environment_selects_role(tmp_test_directory):
+    template = Path(tmp_test_directory) / "runtime"
+    template.mkdir()
+    assert defs.shared_runtime_environment(template, {}) is None
+    write_yaml(
+        template / defs.RUNTIME_FILE,
+        {
+            "runtime_environment": {"container_engine": "apptainer", IMAGE_KEY: IMAGE},
+            "runtime_environments": {ANALYSIS: {IMAGE_KEY: "__SCIENCE_UNSET__"}},
+        },
     )
-    with pytest.raises(ValueError, match=f"Set {_SCIENCE_TESTS_ROOT_ENV}.*absolute path"):
-        science_test_definitions._load_context(context_file)
+    runtime = defs.shared_runtime_environment(template, {IMAGE: IMAGE_SIF})
+    assert runtime[IMAGE_KEY] == IMAGE_SIF
+    with pytest.raises(ValueError, match="Unresolved placeholder"):
+        defs.shared_runtime_environment(template, {}, ANALYSIS)
+    with pytest.raises(ValueError, match="No runtime environment configured"):
+        defs.shared_runtime_environment(template, {}, "camera")
 
 
-def test_load_context_keeps_explicit_paths_without_storage_root(tmp_test_directory, monkeypatch):
-    root = Path(tmp_test_directory)
-    monkeypatch.delenv(_SCIENCE_TESTS_ROOT_ENV, raising=False)
-    context_file = root / _CONTEXT_FILE_NAME
-    context = {science_test_definitions._PATH_KEYS[0]: str(root / "absolute-candidate")}
-    context_file.write_text(yaml.safe_dump(context), encoding=_ENCODING)
-    assert science_test_definitions._load_context(context_file) == context
-    assert science_test_definitions._load_context(None) == {}
+def test_resolve_workflow_prefers_release_override(bundle):
+    override = write_yaml(bundle.release_dir / WORKFLOW_YML, {"applications": []})
+    assert defs.resolve_workflow(bundle, WORKFLOW_YML) == override
+    assert defs.resolve_workflow(bundle, "compare.yml").parent == bundle.template_dir
+    for invalid in ("/absolute.yml", "../outside.yml"):
+        with pytest.raises(ValueError, match="relative template path"):
+            defs.resolve_workflow(bundle, invalid)
+
+
+def test_campaign_signature_tracks_workflows_and_profiles(bundle):
+    signature = defs.campaign_signature(bundle, {})
+    assert defs.campaign_signature(bundle, {}) == signature
+    write_yaml(bundle.template_dir / "profiles" / "local.yml", {"backend": "local"})
+    assert defs.campaign_signature(bundle, {}) != signature
+
+
+def test_load_yaml_requires_mapping(tmp_test_directory):
+    path = Path(tmp_test_directory) / "list.yml"
+    path.write_text("- item\n", encoding=UTF_8)
+    with pytest.raises(ValueError, match="Expected a mapping"):
+        defs.load_yaml(path)

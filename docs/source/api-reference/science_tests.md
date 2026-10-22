@@ -5,20 +5,17 @@
 Modules for loading release definitions, coordinating selected test runs, and publishing
 their reports.
 
-## Telescope-throughput result handling
-
-Load and compare validation results for overall telescope throughput, including optical
-components, camera response, and night-sky-background rates.
-
-```{eval-rst}
-.. automodule:: simtools.science_tests.camera_efficiency_results
-   :members:
-```
-
 ## campaign
 
 ```{eval-rst}
 .. automodule:: science_tests.campaign
+   :members:
+```
+
+## acceptance
+
+```{eval-rst}
+.. automodule:: science_tests.acceptance
    :members:
 ```
 
@@ -43,9 +40,26 @@ components, camera response, and night-sky-background rates.
    :members:
 ```
 
+## production
+
+```{eval-rst}
+.. automodule:: science_tests.production
+   :members:
+```
+
 ## reports
 
 ```{eval-rst}
 .. automodule:: science_tests.reports
+   :members:
+```
+
+## telescope_throughput
+
+Read and compare validation results for overall telescope throughput, including optical
+components, camera response, and night-sky-background rates.
+
+```{eval-rst}
+.. automodule:: science_tests.telescope_throughput
    :members:
 ```
