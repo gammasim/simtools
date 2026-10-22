@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import QTable
 
@@ -780,3 +781,40 @@ def test_filter_distribution_includes_rays_without_pixel_hits(calculator, monkey
     assert list(nonzero["fraction"]) == pytest.approx([0.5 / 0.9, 0.5 / 0.9])
     assert nonzero["incidence_angle"].to_value(u.deg) == pytest.approx([30.15, 59.85])
     assert exported.meta["angle_reference"] == "optical axis at focal surface"
+
+
+def test_run_obdeect(monkeypatch, mocker, calculator):
+    pytest.importorskip("obdeect")
+    monkeypatch.setattr(ia.settings.config, "_ray_tracing_backend", "obdeect")
+    tracer = mocker.patch("simtools.ray_tracing.obdeect_backend.ObdeectRayTracer")
+    arrivals = {
+        "direction": np.array([[0.6, 0.0, -0.8]]),
+        "primary_incidence_deg": np.array([10.0]),
+        "secondary_incidence_deg": np.array([20.0]),
+        "primary_point_m": np.array([[3.0, 4.0, 0.0]]),
+        "secondary_point_m": np.array([[0.3, -0.4, 3.0]]),
+    }
+    tracer.return_value.trace_star.return_value = arrivals
+    mocker.patch.object(calculator, "_save_results")
+
+    result = calculator.run()
+
+    tracer.assert_called_once_with(calculator.telescope_model, seed=None, perfect_mirror=False)
+    assert tracer.return_value.trace_star.call_args.args == (0.0, 0.0, 0.0, 10000.0, 1000)
+    assert result["angle_incidence_focal"].to_value(u.deg).tolist() == [
+        pytest.approx(math.degrees(math.acos(0.8)))
+    ]
+    assert result["angle_incidence_secondary"][0].to_value(u.deg) == pytest.approx(20.0)
+    assert result["primary_hit_radius"][0].to_value(u.m) == pytest.approx(5.0)
+    assert result["secondary_hit_y"][0].to_value(u.m) == pytest.approx(-0.4)
+    assert result.colnames[:3] == [
+        "angle_incidence_focal",
+        "angle_incidence_primary",
+        "angle_incidence_secondary",
+    ]
+
+    tracer.return_value.trace_star.return_value = {
+        name: values[:0] for name, values in arrivals.items()
+    }
+    with pytest.raises(RuntimeError, match="no photon"):
+        calculator.run()

@@ -1,10 +1,10 @@
 """Simulation runner for ray tracing simulations."""
 
 import logging
+import math
 from collections import namedtuple
 
 import astropy.units as u
-import numpy as np
 
 from simtools import settings
 from simtools.io import io_handler
@@ -14,6 +14,19 @@ from simtools.utils import names
 # pylint: disable=no-member
 # The line above is needed because there are members which are created
 # by adding them to the __dict__ of the class rather than directly.
+
+
+def telescope_pointing(zenith_angle, off_axis_x, off_axis_y, azimuth_angle=0.0):
+    """Telescope zenith and azimuth angles [deg] for a star offset in the camera.
+
+    The star is at azimuth ``azimuth_angle`` and zenith ``zenith_angle``; the
+    telescope points ``off_axis_x`` upwards (camera x points down) and
+    ``off_axis_y`` sideways (camera y points right).
+    """
+    phi = azimuth_angle
+    if zenith_angle > 1.0e-6:
+        phi += off_axis_y / math.sin(math.radians(zenith_angle))
+    return zenith_angle - off_axis_x, phi
 
 
 class SimulatorRayTracing(SimtelRunner):
@@ -169,12 +182,12 @@ class SimulatorRayTracing(SimtelRunner):
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
 
-        # x_cam pointing downwards
-        telescope_theta = self.config.zenith_angle - self.config.off_axis_x
-        # y_cam pointing rightwards
-        telescope_phi = self.config.azimuth_angle
-        if self.config.zenith_angle > 1.0e-6:
-            telescope_phi += self.config.off_axis_y / np.sin(np.radians(self.config.zenith_angle))
+        telescope_theta, telescope_phi = telescope_pointing(
+            self.config.zenith_angle,
+            self.config.off_axis_x,
+            self.config.off_axis_y,
+            self.config.azimuth_angle,
+        )
 
         options = {
             "random_state": "none",

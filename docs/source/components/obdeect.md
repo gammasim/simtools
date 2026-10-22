@@ -1,29 +1,26 @@
 # Telescope ray tracing with obdeect
 
-The optional obdeect backend is distributed as the `obdeect-dev` PyPI package.
-Install it together with simtools using:
+[obdeect](https://github.com/GernotMaier/obdeect) is an optical ray tracer for
+imaging atmospheric Cherenkov telescopes. It is an optional backend for the
+ray-tracing applications of simtools (PSF, effective mirror area, effective
+focal length, incident angles). Install it with
 
 ```sh
 python -m pip install 'gammasimtools[obdeect]'
 ```
 
-The wheel contains the compiled C++ ray-tracing engine and the
-`obdeect-simtools-raytrace` command. simtools resolves that command from the
-installed package; a separate obdeect checkout, installation directory, or
-runtime container is not required.
+and select it with `--ray_tracing_backend obdeect` (or the environment variable
+`SIMTOOLS_RAY_TRACING_BACKEND=obdeect`); `sim_telarray` remains the default.
 
-The `sim_telarray` backend remains the default. The obdeect backend can be
-selected with `ray_tracing_backend=obdeect` for the packaged reference optical
-prescriptions. Production model-driven runs remain gated on validation of the
-versioned scene and optical-arrival contract for the requested telescope model.
+obdeect runs inside the simtools process. It compiles the model parameters of
+the telescope model, exactly as simtools reads them for sim_telarray, into an
+optical model and traces star light to the camera entrance. Light source,
+telescope pointing, photon numbers, mirror-error realisations and the
+single-mirror mode follow the sim_telarray ray-tracing runs. `--obdeect_seed`
+fixes the random numbers (mirror errors and photon sampling); results do not
+depend on the number of threads.
 
-For an imported nominal LST/MST scene, pass the file written by
-`obdeect.scene_compiler.write_native_scene` as `obdeect_scene_file` in the
-simulation configuration. The native CLI preserves scene provenance and
-finite panel/detector apertures; run-specific alignment, materials, support
-geometry and dual-mirror scenes remain validation gates.
-The package can also be used independently of simtools:
-
-```sh
-obdeect-simtools-raytrace --telescope MST --photons 10000 --output trace.csv
-```
+If the telescope model describes the telescope structure
+(`telescope_obscuration_cylinders`, `telescope_obscuration_quadrilaterals`),
+obdeect traces its shadows and `telescope_transmission` is not applied to the
+effective area. sim_telarray does not simulate the structure.

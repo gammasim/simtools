@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
 import logging
+import math
 
 import astropy.units as u
 import pytest
 
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
+from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing, telescope_pointing
 
 logger = logging.getLogger()
 
@@ -233,3 +234,11 @@ def test_rejects_invalid_total_photons(count, telescope_model_sst, site_model_so
                 "mirror_numbers": 0,
             },
         )
+
+
+def test_telescope_pointing():
+    assert telescope_pointing(20.0, 1.0, 0.0) == (19.0, 0.0)
+    theta, phi = telescope_pointing(20.0, 0.0, 1.0)
+    assert theta == pytest.approx(20.0)
+    assert phi == pytest.approx(1.0 / math.sin(math.radians(20.0)))
+    assert telescope_pointing(0.0, 0.0, 1.0) == (0.0, 0.0)

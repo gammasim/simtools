@@ -2,7 +2,6 @@
 
 import os
 import socket
-from importlib import metadata
 from pathlib import Path
 from types import MappingProxyType
 
@@ -23,7 +22,6 @@ class _Config:
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
         self._ray_tracing_backend = "sim_telarray"
-        self._obdeect_exe = None
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
@@ -67,12 +65,6 @@ class _Config:
         )
         if self._ray_tracing_backend not in {"sim_telarray", "obdeect"}:
             raise ValueError("ray_tracing_backend must be one of 'sim_telarray' or 'obdeect'")
-        self._obdeect_exe = self._get_config_value(
-            args,
-            "obdeect_executable",
-            "SIMTOOLS_OBDEECT_EXECUTABLE",
-            default="obdeect-simtools-raytrace",
-        )
         self._corsika_path = self._get_config_value(
             args,
             "corsika_path",
@@ -167,33 +159,6 @@ class _Config:
     def ray_tracing_backend(self):
         """Configured optical ray-tracing backend."""
         return self._ray_tracing_backend
-
-    @property
-    def obdeect_exe(self):
-        """Path to the packaged obdeect executable."""
-        try:
-            from obdeect import executable_path  # pylint: disable=import-outside-toplevel
-
-            return executable_path(self._obdeect_exe or "obdeect-simtools-raytrace")
-        except ModuleNotFoundError as exc:
-            raise FileNotFoundError(
-                "obdeect-dev is not installed; install gammasimtools[obdeect]"
-            ) from exc
-
-    @property
-    def obdeect_version(self):
-        """Return the installed obdeect distribution version."""
-        try:
-            return metadata.version("obdeect-dev")
-        except metadata.PackageNotFoundError as exc:
-            raise FileNotFoundError(
-                "obdeect-dev is not installed; install gammasimtools[obdeect]"
-            ) from exc
-
-    @property
-    def obdeect_contract_version(self):
-        """Return the arrival-table contract consumed by simtools."""
-        return "obdeect-arrival-v1"
 
     @property
     def sim_telarray_exe(self):

@@ -1,0 +1,45 @@
+---
+applications:
+- application: simtools-derive-incident-angle
+  docs:
+    title: Derive photon incidence angles for an SST with obdeect
+    summary: >-
+      Ray-trace an off-axis source through a dual-mirror SST with the obdeect backend and derive
+      camera, primary and secondary mirror photon-incidence angles.
+  configuration:
+    site: South
+    telescope: SSTS-01
+    off_axis_angles: 1.0
+    number_of_photons: 10000
+    model_version: 6.0.2
+    output_path: simtools-output
+    parameter_version: 1.0.0
+    ray_tracing_backend: obdeect
+    obdeect_seed: 17
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: incident_angles_derive_incident_angle_SSTS-01_off1.ecsv
+      output_sub_path: incident_angles
+    # Dual-mirror telescope: exports all three incidence-angle parameters in telescope subdirectory
+    - path_descriptor: output_path
+      file: camera_filter_photon_incident_angle.ecsv
+      output_sub_path: SSTS-01
+    - path_descriptor: output_path
+      file: camera_filter_photon_incident_angle.json
+      output_sub_path: SSTS-01
+    - path_descriptor: output_path
+      file: primary_mirror_incidence_angle.ecsv
+      output_sub_path: SSTS-01
+    - path_descriptor: output_path
+      file: primary_mirror_incidence_angle.json
+      output_sub_path: SSTS-01
+    - path_descriptor: output_path
+      file: secondary_mirror_incidence_angle.ecsv
+      output_sub_path: SSTS-01
+    - path_descriptor: output_path
+      file: secondary_mirror_incidence_angle.json
+      output_sub_path: SSTS-01
+  test_name: incident_angles_dual_mirror_obdeect
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

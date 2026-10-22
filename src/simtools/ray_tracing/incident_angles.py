@@ -9,7 +9,6 @@ Angle of incidence on to secondary mirror [deg] (if available).
 import logging
 import math
 import re
-import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -59,9 +58,7 @@ class IncidentAnglesCalculator:
             u.deg
         )
         self.output_dir = Path(output_dir)
-        self.label = (
-            label or f"incident_angles_{config_data.get('telescope', 'obdeect_optical_model')}"
-        )
+        self.label = label or f"incident_angles_{config_data['telescope']}"
         cfg = config_data
         self.perfect_mirror = cfg.get("perfect_mirror", False)
         self.results = None
@@ -158,77 +155,38 @@ class IncidentAnglesCalculator:
         return self.results
 
     def _run_obdeect(self):
-        """Run a model-derived trace and read its interaction records."""
-        # pylint: disable-next=import-outside-toplevel,import-error
-        from obdeect.result_contract import (
-            read_arrivals,
-        )
+        """Trace the star with obdeect and return the angle table of ``run``."""
+        # pylint: disable-next=import-outside-toplevel
+        from simtools.ray_tracing.obdeect_backend import ObdeectRayTracer
 
-        optical_model_file = self.config_data.get(
-            "obdeect_optical_model_file"
-        ) or settings.config.args.get("obdeect_optical_model_file")
-        if not optical_model_file:
-            raise ValueError("obdeect_optical_model_file is required for model-derived ray tracing")
-        output_file = self.results_dir / f"arrivals_{self._label_suffix()}.csv"
-        distance_m = self._source_distance_km() * 1000.0
-        off_axis = self.config_data.get("off_axis_angle", 0.0 * u.deg)
-        off_axis_deg = (
-            float(off_axis.to_value(u.deg)) if isinstance(off_axis, u.Quantity) else float(off_axis)
+        tracer = ObdeectRayTracer(
+            self.telescope_model,
+            seed=settings.config.args.get("obdeect_seed"),
+            perfect_mirror=self.perfect_mirror,
         )
-        command = [
-            str(settings.config.obdeect_exe),
-        ]
-        command.extend(["--optical-model", str(Path(optical_model_file).expanduser())])
-        command.extend(
-            [
-                "--photons",
-                str(int(self.config_data["number_of_photons"])),
-                "--output",
-                str(output_file),
-                "--field-x-deg",
-                str(off_axis_deg),
-                "--field-y-deg",
-                "0.0",
-                "--distance-m",
-                str(distance_m),
-                "--wavelength-nm",
-                str(float(self.config_data.get("wavelength_nm", 400.0))),
-            ]
+        arrivals = tracer.trace_star(
+            self.zenith_angle_deg,
+            float(self.config_data["off_axis_angle"].to_value(u.deg)),
+            0.0,
+            self._source_distance_km() * 1000.0,
+            int(self.config_data["number_of_photons"]),
         )
-        subprocess.run(command, check=True)
-        arrivals = read_arrivals(output_file)
-        arrivals = [arrival for arrival in arrivals if arrival.detected]
-        if not arrivals:
-            raise RuntimeError(f"obdeect produced no arrivals: {output_file}")
-
-        result = QTable()
-        result["angle_incidence_focal"] = [a.incidence_focal_deg for a in arrivals] * u.deg
+        if len(arrivals["direction"]) == 0:
+            raise RuntimeError("obdeect: no photon reached the focal surface")
+        # Angle to the optical axis, as the sim_telarray imaging list.
+        focal = np.degrees(np.arccos(np.abs(arrivals["direction"][:, 2])))
+        self.results = QTable()
+        self.results["angle_incidence_focal"] = focal * u.deg
         if self.calculate_primary_secondary_angles:
-            result["angle_incidence_primary"] = [a.incidence_primary_deg for a in arrivals] * u.deg
-            result["angle_incidence_secondary"] = [
-                a.incidence_secondary_deg for a in arrivals
-            ] * u.deg
-            nan_point = (float("nan"), float("nan"), float("nan"))
-            primary_points = [
-                a.interaction_points_m[1] if len(a.interaction_points_m) > 1 else nan_point
-                for a in arrivals
-            ]
-            secondary_points = [
-                a.interaction_points_m[2] if len(a.interaction_points_m) > 3 else nan_point
-                for a in arrivals
-            ]
-            result["primary_hit_radius"] = [
-                math.hypot(point[0], point[1]) for point in primary_points
-            ] * u.m
-            result["primary_hit_x"] = [point[0] for point in primary_points] * u.m
-            result["primary_hit_y"] = [point[1] for point in primary_points] * u.m
-            result["secondary_hit_radius"] = [
-                math.hypot(point[0], point[1]) for point in secondary_points
-            ] * u.m
-            result["secondary_hit_x"] = [point[0] for point in secondary_points] * u.m
-            result["secondary_hit_y"] = [point[1] for point in secondary_points] * u.m
-
-        self.results = result
+            points = {m: arrivals[f"{m}_point_m"] for m in ("primary", "secondary")}
+            for mirror in points:
+                angles = arrivals[f"{mirror}_incidence_deg"]
+                self.results[f"angle_incidence_{mirror}"] = angles * u.deg
+            for mirror, point in points.items():
+                self.results[f"{mirror}_hit_radius"] = np.hypot(point[:, 0], point[:, 1]) * u.m
+            for mirror, point in points.items():
+                self.results[f"{mirror}_hit_x"] = point[:, 0] * u.m
+                self.results[f"{mirror}_hit_y"] = point[:, 1] * u.m
         self._save_results()
         return self.results
 

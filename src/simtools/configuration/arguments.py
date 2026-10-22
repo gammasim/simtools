@@ -181,26 +181,15 @@ RAY_TRACING_BACKEND = _argument(
     default=None,
 )
 
-OBDEECT_EXECUTABLE = _argument(
-    "obdeect_executable",
+OBDEECT_SEED = _argument(
+    "obdeect_seed",
     "ray tracing configuration",
-    help="obdeect executable name (default: packaged obdeect-dev executable).",
-    default="obdeect-simtools-raytrace",
-)
-
-OBDEECT_OPTICAL_MODEL_FILE = _argument(
-    "obdeect_optical_model_file",
-    "ray tracing configuration",
-    help="Compiled optical-model JSON required when selecting the obdeect backend.",
-    type=str,
+    help="Seed for obdeect mirror errors and photon sampling (default: random).",
+    type=int,
     default=None,
 )
 
-RAY_TRACING_ARGUMENTS = (
-    RAY_TRACING_BACKEND,
-    OBDEECT_EXECUTABLE,
-    OBDEECT_OPTICAL_MODEL_FILE,
-)
+RAY_TRACING_ARGUMENTS = (RAY_TRACING_BACKEND, OBDEECT_SEED)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 

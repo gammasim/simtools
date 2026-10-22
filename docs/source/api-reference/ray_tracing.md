@@ -22,6 +22,15 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
+(obdeectbackendmodule)=
+
+## obdeect_backend
+
+```{eval-rst}
+.. automodule:: ray_tracing.obdeect_backend
+   :members:
+```
+
 (psfanalysismodule)=
 
 ## psf_analysis

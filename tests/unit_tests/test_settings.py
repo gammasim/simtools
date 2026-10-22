@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 import os
-import sys
-import types
 from pathlib import Path
 from unittest.mock import patch
 
@@ -26,7 +24,6 @@ def clear_simtools_env():
         "SIMTOOLS_CORSIKA_HE_INTERACTION",
         "SIMTOOLS_CORSIKA_LE_INTERACTION",
         "SIMTOOLS_RAY_TRACING_BACKEND",
-        "SIMTOOLS_OBDEECT_EXECUTABLE",
     ]
     for var in simtools_vars:
         old_env[var] = os.environ.pop(var, None)
@@ -84,29 +81,6 @@ def test_ray_tracing_backend_rejects_unknown_value(config_instance):
         config_instance.load(
             args={"ray_tracing_backend": "unknown"}, resolve_sim_software_executables=False
         )
-
-
-@patch.dict(os.environ, {}, clear=True)
-@patch.dict(os.environ, {}, clear=True)
-def test_obdeect_executable_from_installed_package(config_instance, tmp_test_directory, mocker):
-    executable = Path(tmp_test_directory) / "obdeect-simtools-raytrace"
-    executable.write_text("#!/bin/sh\n", encoding="utf-8")
-    executable.chmod(0o755)
-    package = types.SimpleNamespace(executable_path=lambda name: executable)
-    mocker.patch.dict(sys.modules, {"obdeect": package})
-
-    config_instance.load(args={}, resolve_sim_software_executables=False)
-
-    assert config_instance.obdeect_exe == executable
-
-
-@patch.dict(os.environ, {}, clear=True)
-def test_obdeect_contract_and_version(config_instance, mocker):
-    config_instance.load(args={}, resolve_sim_software_executables=False)
-    mocker.patch("simtools.settings.metadata.version", return_value="0.1.0")
-
-    assert config_instance.obdeect_contract_version == "obdeect-arrival-v1"
-    assert config_instance.obdeect_version == "0.1.0"
 
 
 @patch("os.access", return_value=True)

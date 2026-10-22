@@ -448,54 +448,97 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     assert not photons_file.exists()
 
 
-@pytest.mark.parametrize("offsets", [[(0.0, 0.0)], [(0.0, 0.0), (1.0, -0.5)]])
-@pytest.mark.parametrize("test", [False, True])
-@pytest.mark.parametrize("mirror_class", [0, 2])
-@pytest.mark.parametrize("photon_count", [None, 12345, 0])
-@pytest.mark.parametrize("max_workers", [DEFAULT_MAX_WORKERS, 2])
+def _obdeect_arrivals(detected_x_m, total_photons=1000, has_structure=False):
+    """Arrivals as returned by ObdeectRayTracer.trace_star: one detected photon."""
+    return {
+        "position_m": np.array([[detected_x_m, 0.02, 10.0]]),
+        "total_photons": total_photons,
+        "total_area_m2": 400.0,
+        "has_structure": has_structure,
+    }
+
+
+@pytest.mark.parametrize(
+    ("test", "photon_count", "expected_photons", "expected_configurations"),
+    [(False, None, 2_000_000, 20), (True, None, 5000, 1), (False, 12345, 12345, 1)],
+)
 def test_ray_tracing_simulate_obdeect(
-    ray_tracing_lst, mocker, offsets, test, max_workers, mirror_class, photon_count
+    ray_tracing_lst, mocker, test, photon_count, expected_photons, expected_configurations
 ):
+    pytest.importorskip("obdeect")
     config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
     config.ray_tracing_backend = "obdeect"
-    config.args = {
-        "obdeect_optical_model_file": "optical-model.json",
-        "number_of_photons": photon_count,
-    }
-    ray_tracing_lst.telescope_model.get_parameter_value.return_value = mirror_class
-    ray_tracing_lst.off_axis_angle = offsets
-    simulators = [mocker.Mock() for _ in offsets]
-    factory = mocker.patch(
-        "simtools.ray_tracing.ray_tracing.SimulatorObdeect", side_effect=simulators
-    )
-    gzip_open = mocker.patch("gzip.open")
+    config.args = {"number_of_photons": photon_count, "obdeect_seed": 5}
+    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, -0.5)]
+    tracer = mocker.patch("simtools.ray_tracing.obdeect_backend.ObdeectRayTracer")
+    tracer.return_value.trace_star.side_effect = [_obdeect_arrivals(0.1), _obdeect_arrivals(0.2)]
 
-    ray_tracing_lst.simulate(test=test, force=True, max_workers=max_workers, compress_photons=False)
+    ray_tracing_lst.simulate(test=test, force=True)
 
-    assert factory.call_count == len(offsets)
-    for (off_x, off_y), simulator, factory_call in zip(
-        offsets, simulators, factory.call_args_list, strict=True
-    ):
-        simulator.run.assert_called_once_with(test=test)
-        kwargs = factory_call.kwargs
-        assert kwargs["config_data"] == {
-            "obdeect_optical_model_file": "optical-model.json",
-            "off_axis_x": off_x,
-            "off_axis_y": off_y,
-            "source_distance": ray_tracing_lst.mirrors[0]["source_distance"] * u.km,
-            "single_mirror_mode": False,
-            "number_of_photons": 100 if test else 10000 if photon_count is None else photon_count,
-            "focal_surface_image": True,
-            "zenith_angle": ray_tracing_lst.zenith_angle,
-        }
-        assert kwargs["output_file"] == ray_tracing_lst.output_directory.joinpath(
-            ray_tracing_lst._generate_file_name(
-                file_type="photons", suffix=".lis", off_axis_x=off_x, off_axis_y=off_y
-            )
-        )
-        assert kwargs["force_simulate"] is True
-    gzip_open.assert_not_called()
+    tracer.assert_called_once_with(ray_tracing_lst.telescope_model, seed=5)
+    calls = tracer.return_value.trace_star.call_args_list
+    assert [c.args[1:3] for c in calls] == [(0.0, 0.0), (1.0, -0.5)]
+    for call_ in calls:
+        assert call_.args[0] == ray_tracing_lst.zenith_angle
+        assert call_.args[3] == pytest.approx(10000.0)
+        assert call_.args[4:] == (expected_photons, expected_configurations, None)
+    photons_file = ray_tracing_lst._get_ray_tracing_files(1.0, -0.5, 0)[0]
+    assert photons_file.suffix == ".npz"
+    with np.load(photons_file) as data:
+        assert data["x_cm"].tolist() == [pytest.approx(20.0)]
+        assert data["y_cm"].tolist() == [pytest.approx(2.0)]
+        assert int(data["total_photons"]) == 1000
     ray_tracing_lst.telescope_model.write_sim_telarray_config_file.assert_not_called()
+
+    tracer.return_value.trace_star.reset_mock()
+    ray_tracing_lst.simulate(test=test, force=False)  # Existing images are kept.
+    tracer.return_value.trace_star.assert_not_called()
+
+
+def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirror_mode, mocker):
+    pytest.importorskip("obdeect")
+    ray_tracing = ray_tracing_lst_single_mirror_mode
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.ray_tracing_backend = "obdeect"
+    config.args = {}
+    tracer = mocker.patch("simtools.ray_tracing.obdeect_backend.ObdeectRayTracer")
+    tracer.return_value.trace_star.return_value = _obdeect_arrivals(0.0)
+    ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
+
+    ray_tracing.simulate(test=False, force=True)
+
+    for call_, (number, mirror_data) in zip(
+        tracer.return_value.trace_star.call_args_list, ray_tracing.mirrors.items(), strict=True
+    ):
+        assert call_.args[6][0] == number
+        distance_km = mirror_data["source_distance"]
+        assert call_.args[3] == pytest.approx(distance_km * 1000.0)
+        assert call_.args[4:6] == (100000, 1)
+        assert call_.args[6][1:] == (Path("mirror.dat"), pytest.approx(distance_km * 1.0e5))
+
+
+@pytest.mark.parametrize("has_structure", [False, True])
+def test_ray_tracing_analyze_obdeect(ray_tracing_lst, mocker, has_structure):
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.ray_tracing_backend = "obdeect"
+    photons_file = ray_tracing_lst._get_ray_tracing_files(0.0, 0.0, 0)[0]
+    x = np.linspace(-1.0, 1.0, 101)
+    np.savez(
+        photons_file,
+        x_cm=x,
+        y_cm=np.zeros_like(x),
+        total_photons=1010,
+        total_area_m2=400.0,
+        has_structure=has_structure,
+    )
+    ray_tracing_lst.telescope_model.get_parameter_value.return_value = [0.5, 0, 0, 0]
+
+    ray_tracing_lst.analyze(force=True, export=False, save_photons=True)
+
+    area = ray_tracing_lst._results["eff_area"][0].to_value(u.m**2)
+    assert area == pytest.approx(40.0 if has_structure else 20.0)
+    with pytest.raises(ValueError, match="rx"):
+        ray_tracing_lst._create_psf_image(photons_file, 1000.0, 0.8, use_rx=True)
 
 
 def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, mocker):
@@ -511,20 +554,10 @@ def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, m
     assert mock_run_simulator.call_count == 2
 
 
-@pytest.mark.parametrize(
-    ("backend", "max_workers", "expected_workers"),
-    [
-        ("sim_telarray", DEFAULT_MAX_WORKERS, DEFAULT_MAX_WORKERS),
-        ("sim_telarray", 3, 3),
-        ("obdeect", DEFAULT_MAX_WORKERS, DEFAULT_MAX_WORKERS),
-        ("obdeect", 3, 3),
-    ],
-)
+@pytest.mark.parametrize(("max_workers", "expected_workers"), [(DEFAULT_MAX_WORKERS, 8), (3, 3)])
 def test_ray_tracing_simulate_limits_full_telescope_workers(
-    ray_tracing_lst, mocker, backend, max_workers, expected_workers
+    ray_tracing_lst, mocker, max_workers, expected_workers
 ):
-    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
-    config.ray_tracing_backend = backend
     ray_tracing_lst.off_axis_angle = [(float(index), 0.0) for index in range(10)]
     mocker.patch.object(
         ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock() for _ in range(10)]
