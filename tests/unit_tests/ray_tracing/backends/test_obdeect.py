@@ -8,8 +8,13 @@ import pytest
 pytest.importorskip("obdeect")
 
 # pylint: disable-next=wrong-import-position
+import astropy.units as u
+from astropy.table import QTable
+
 from simtools.ray_tracing import parameter_changes
-from simtools.ray_tracing.obdeect_backend import (
+from simtools.ray_tracing.backends import StarImageRequest
+from simtools.ray_tracing.backends.obdeect import (
+    ObdeectBackend,
     ObdeectRayTracer,
     star_direction,
 )
@@ -78,7 +83,7 @@ def test_trace_star(toy_telescope):
     seeds = [(3, 4), (5, 6)]  # (instrument seed, simulation seed) of two instances
     tracer = ObdeectRayTracer(toy_telescope)
     toy_telescope.export_model_files.assert_called_once_with(update_if_necessary=True)
-    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 20000, seeds)
+    arrivals = tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 10000, seeds)
     assert arrivals["total_photons"] == 20000
     assert not arrivals["has_structure"]
     # Seven 1 m mirrors minus the shadow of the 0.6 m square camera.
@@ -87,10 +92,8 @@ def test_trace_star(toy_telescope):
     assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
     assert np.allclose(image[:, 2], 8.5)
 
-    repeated = ObdeectRayTracer(toy_telescope).trace_star(20.0, 0.0, 0.0, 10000.0, 20000, seeds)
+    repeated = ObdeectRayTracer(toy_telescope).trace_star(20.0, 0.0, 0.0, 10000.0, 10000, seeds)
     assert np.array_equal(arrivals["position_m"], repeated["position_m"], equal_nan=True)
-    with pytest.raises(ValueError, match="number_of_photons"):
-        tracer.trace_star(20.0, 0.0, 0.0, 10000.0, 1, seeds)
     first, second = (tracer.optical_model(20.0, seed) for seed in (3, 5))
     assert first is tracer.optical_model(20.0, 3)
     assert first.sha256 != second.sha256  # Independent mirror-error realisations.
@@ -98,14 +101,18 @@ def test_trace_star(toy_telescope):
 
 
 def test_perfect_and_single_mirror(toy_telescope):
-    tracer = ObdeectRayTracer(toy_telescope, changes=parameter_changes.PERFECT_MIRROR)
+    tracer = ObdeectRayTracer(toy_telescope)
+    perfect = parameter_changes.PERFECT_MIRROR
     normals = [
-        [f["normal"] for f in tracer.optical_model(20.0, s).document["optics"]["primary"]["facets"]]
+        [
+            f["normal"]
+            for f in tracer.optical_model(20.0, s, perfect).document["optics"]["primary"]["facets"]
+        ]
         for s in (1, 2)
     ]
     assert normals[0] == normals[1]
 
-    single_mirror = parameter_changes.single_mirror(
+    single_mirror = perfect | parameter_changes.single_mirror(
         toy_telescope.get_single_mirror_list_file(0), 800.0, 1600.0
     )
     optics = tracer.optical_model(20.0, 1, single_mirror).document["optics"]
@@ -119,3 +126,48 @@ def test_perfect_and_single_mirror(toy_telescope):
     assert len(image) == pytest.approx(0.25 / 0.36 * 5000, rel=0.05)
     # A perfect spherical mirror imaging its centre of curvature: a point image.
     assert np.max(np.hypot(image[:, 0], image[:, 1])) < 1.0e-3
+
+
+def _request(off_axis_x=0.0):
+    return StarImageRequest(
+        off_axis_x=off_axis_x,
+        off_axis_y=0.0,
+        source_distance_km=10.0,
+        seeds=((3, 4),),
+        photons_per_instance=5000,
+    )
+
+
+@pytest.fixture
+def backend(toy_telescope):
+    toy_telescope.site = "North"
+    return ObdeectBackend(toy_telescope, None, "test", 20.0, False)
+
+
+@pytest.mark.parametrize("save_photons", [False, True])
+def test_backend_psf_image(backend, io_handler, save_photons):
+    request = _request()
+    with pytest.raises(RuntimeError, match="simulate first"):
+        backend.psf_image(request, 800.0, 0.8)
+    backend.simulate([request], test=True, force=True, compress_photons=False, max_workers=1)
+
+    image, traced_structure = backend.psf_image(request, 800.0, 0.8, save_photons=save_photons)
+
+    assert traced_structure is False
+    area = image.get_effective_area()
+    assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
+    files = list(io_handler.get_output_directory().glob("ray_tracing_photons*.ecsv"))
+    assert len(files) == int(save_photons)
+    if save_photons:
+        photons = QTable.read(files[0])
+        assert photons["x"].unit == u.cm
+        assert photons.meta["total_photons"] == 5000
+    with pytest.raises(ValueError, match="rx"):
+        backend.psf_image(request, 800.0, 0.8, use_rx=True)
+
+
+def test_backend_incidence_angles(backend, tmp_path):
+    data, files = backend.incidence_angles(_request(1.0), tmp_path, "name", False)
+    assert files == []
+    assert np.all(np.isfinite(data["angle_incidence_focal"]))
+    assert np.median(data["angle_incidence_focal"]) > 1.0  # Off axis and from the dish.

@@ -1,7 +1,7 @@
 """Model-parameter changes of ray-tracing modes, the same for every backend.
 
 Each mode is a set of model-parameter values replacing those of the telescope
-model: sim_telarray receives them as configuration options, obdeect as changed
+model: sim_telarray receives them as configuration options, other backends as changed
 parameter records.
 """
 
