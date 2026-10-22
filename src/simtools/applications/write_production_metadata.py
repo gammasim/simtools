@@ -17,7 +17,6 @@ _ARGUMENTS = (
         "job_grid_file",
         help="Authoritative job grid used to reconstruct resolved production configuration.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "check",

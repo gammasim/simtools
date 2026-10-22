@@ -10,7 +10,8 @@ from simtools.simtel.bias_curve_generator import generate_bias_curves
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "data_dir",
+        "event_data_directory",
+        aliases=("data_dir",),
         type=Path,
         required=True,
         help=(
@@ -21,9 +22,8 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "scaling_factor",
         type=float,
-        required=True,
-        help=("Scaling factor to account for ions we didn't simulate"),
         default=1.35,
+        help="Scaling factor to account for ions we didn't simulate.",
     ),
     cli.ArgumentDefinition(
         "figure_file",
@@ -34,13 +34,11 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "nsb_table_file",
         type=Path,
-        required=False,
         help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
     ),
     cli.ArgumentDefinition(
         "proton_table_file",
         type=Path,
-        required=False,
         help="Output ECSV table file for proton rates. If not specified, no table is written.",
     ),
     cli.ArgumentDefinition(

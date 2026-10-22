@@ -50,7 +50,6 @@ _ARGUMENTS = (
         ),
         nargs="+",
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -71,7 +70,6 @@ _ARGUMENTS = (
         "energy_threshold_fraction",
         help="Fraction of the stable energy-peak count used to derive ERANGE ",
         type=efficiency_interval,
-        required=False,
         default=0.01,
     ),
     cli.ArgumentDefinition(
@@ -99,7 +97,6 @@ _ARGUMENTS = (
             "Set to 0 (default) to use integrated limits; must be non-negative."
         ),
         type=validate_differential_loss_bins_per_decade,
-        required=False,
         default=0,
     ),
 )

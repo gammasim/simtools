@@ -150,7 +150,7 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
-    args["array_layout_names"] = ["alpha"]
+    args["array_layout_name"] = ["alpha"]
 
     metadata = Table(
         rows=[
@@ -192,7 +192,7 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
 ):
     args = mock_args_dict.copy()
     args["trigger_histogram_file"] = "trigger_histograms.hdf5"
-    args["array_names"] = None
+    args["array_layout_name"] = None
 
     metadata = Table(
         rows=[
@@ -1216,7 +1216,6 @@ def mock_args_dict():
         "steps": None,
         "ignore_runtime_environment": False,
         "trigger_histogram_file": "trigger_histograms.hdf5",
-        "array_names": None,
         "array_layout_name": None,
         "output_file": "corsika_limits.ecsv",
         "allowed_losses": [

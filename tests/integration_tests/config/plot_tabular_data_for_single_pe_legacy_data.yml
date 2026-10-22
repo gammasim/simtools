@@ -13,7 +13,7 @@ applications:
     output_file: single_pe_data
     output_path: simtools-output
     plot_config: ${static:plot_single_pe_config_data_from_legacy_csv.yml}
-    table_data_path: tests/resources/downloaded
+    data_search_path: tests/resources/downloaded
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path

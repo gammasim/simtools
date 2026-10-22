@@ -14,26 +14,22 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_layouts",
         type=str,
-        required=False,
         help="Complete canonical array-layout parameter file (legacy input).",
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
         type=str,
-        required=False,
         help="Name of the new array layout.",
     ),
     cli.ArgumentDefinition(
         "array_element_list",
         type=str,
-        required=False,
         nargs="+",
         help="Telescope names in the new array layout.",
     ),
     cli.ArgumentDefinition(
         "reference_array_layout",
         type=str,
-        required=False,
         default="hyper_array",
         help="Existing layout that limits selectable telescopes.",
     ),
@@ -41,7 +37,6 @@ _ARGUMENTS = (
         "input_meta",
         help="Meta data file(s) associated to input data.",
         type=str,
-        required=False,
         nargs="+",
     ),
 )
@@ -57,6 +52,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.UPDATED_PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

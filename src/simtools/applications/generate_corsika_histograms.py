@@ -22,7 +22,6 @@ _ARGUMENTS = (
         help="Labels for the input files (in the same order as input_files)",
         type=str,
         nargs="+",
-        required=None,
     ),
     cli.ArgumentDefinition(
         "normalization",
@@ -41,7 +40,11 @@ _ARGUMENTS = (
         default=1000.0,
     ),
     cli.ArgumentDefinition(
-        "pdf_file_name", help="Save histograms into a pdf file.", type=str, required=None
+        "output_file",
+        aliases=("pdf_file_name",),
+        help="Output PDF file with the histograms.",
+        type=str,
+        required=True,
     ),
 )
 
@@ -72,7 +75,7 @@ def main():
 
     plot_corsika_histograms.export_all_photon_figures_pdf(
         all_histograms,
-        app_context.io_handler.get_output_file(app_context.args.get("pdf_file_name")),
+        app_context.io_handler.get_output_file(app_context.args["output_file"]),
         app_context.args.get("file_labels"),
     )
 

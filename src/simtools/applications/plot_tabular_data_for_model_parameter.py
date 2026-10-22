@@ -13,7 +13,6 @@ _ARGUMENTS = (
         help="Plot type as defined in the schema file.",
         type=str,
         required=True,
-        default=None,
     ),
 )
 

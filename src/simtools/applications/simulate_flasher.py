@@ -4,11 +4,14 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration.argument_helpers import scientific_int, telescope
+from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
 from simtools.utils import general
+
+_LIGHT_SOURCE_GROUP = "light source"
+_TARGET_GROUP = "target"
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -17,45 +20,29 @@ _ARGUMENTS = (
         type=str,
         choices=["direct_injection", "full_simulation"],
         required=True,
-        default="direct_injection",
     ),
     cli.ArgumentDefinition(
         "light_source",
-        exclusive_group="group",
+        exclusive_group=_LIGHT_SOURCE_GROUP,
         exclusive_group_required=True,
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
     ),
     cli.ArgumentDefinition(
         "light_source_type",
-        exclusive_group="group",
+        exclusive_group=_LIGHT_SOURCE_GROUP,
         exclusive_group_required=True,
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
     ),
-    cli.ArgumentDefinition(
-        "telescopes",
-        exclusive_group="target group",
-        exclusive_group_required=True,
-        help="One or more telescopes (e.g. LSTN-01, MSTN-04, SSTS-04)",
-        type=telescope,
-        nargs="+",
-    ),
-    cli.ArgumentDefinition(
-        "array_layout_name",
-        exclusive_group="target group",
-        exclusive_group_required=True,
-        help="Array layout name(s) (e.g. alpha, subsystem_msts)",
-        nargs="+",
-        type=str,
-    ),
+    cli.TELESCOPES(exclusive_group=_TARGET_GROUP, exclusive_group_required=True),
+    cli.ARRAY_LAYOUT_NAME(exclusive_group=_TARGET_GROUP, exclusive_group_required=True),
     cli.ArgumentDefinition(
         "number_of_events",
         help="Number of flasher events to simulate",
         type=int,
         default=1,
         nargs="+",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "flasher_photons",
@@ -65,7 +52,6 @@ _ARGUMENTS = (
         ),
         type=scientific_int,
         nargs="+",
-        required=False,
     ),
 )
 

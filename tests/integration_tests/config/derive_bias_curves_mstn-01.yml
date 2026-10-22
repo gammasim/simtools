@@ -7,7 +7,7 @@ applications:
       Combine NSB and proton reduced event-data files to derive the analogue-sum trigger threshold
       for the North MST.
   configuration:
-    data_dir: ${generated:bias_curves_input}
+    event_data_directory: ${generated:bias_curves_input}
     scaling_factor: 1.35
     figure_file: simtools-output/derive_bias_curves_mstn-01
     nsb_table_file: simtools-output/derive_bias_curves_mstn-01/nsb_table.ecsv

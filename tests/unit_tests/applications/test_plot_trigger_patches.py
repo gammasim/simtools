@@ -98,7 +98,7 @@ def test_run_writes_configuration_report_without_exporting_simulation_files(
             "site": SITE_NAME,
             "telescope": TELESCOPE_NAME,
             "model_version": MODEL_VERSION_VALUE,
-            "output_name": None,
+            "output_file": None,
             "overwrite_model_parameters": None,
         },
         io_handler=SimpleNamespace(

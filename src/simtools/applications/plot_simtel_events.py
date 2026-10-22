@@ -88,7 +88,6 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "save_pngs", action="store_true", help="Also save individual PNG images per plot"
     ),
-    cli.ArgumentDefinition("dpi", type=int, default=300, help="PNG dpi"),
 )
 
 
@@ -96,13 +95,14 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.FIGURE_DPI(aliases=("dpi",)),
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
+    excluded_standard_arguments=("figure_dpi",),
     initialize_model_reader=False,
 )
 

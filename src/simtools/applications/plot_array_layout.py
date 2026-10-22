@@ -28,28 +28,24 @@ _ARGUMENTS = (
         "figure_name",
         help="Name of the output figure to be saved.",
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
         "show_labels",
         help="Plot array element labels.",
         action="store_true",
-        required=False,
         default=False,
     ),
     cli.ArgumentDefinition(
         "marker_scaling",
         help="Scaling factor for the markers.",
         type=float,
-        required=False,
         default=1.0,
     ),
     cli.ArgumentDefinition(
         "coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
-        required=False,
         default="ground",
         choices=["ground", "utm"],
     ),
@@ -57,7 +53,6 @@ _ARGUMENTS = (
         "axes_range",
         help="Range of the both axes in meters.",
         type=float,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -65,7 +60,6 @@ _ARGUMENTS = (
         help="Explicit x-axis limits [xmin xmax] in meters.",
         type=float,
         nargs=2,
-        required=False,
         default=None,
         metavar=("XMIN", "XMAX"),
     ),
@@ -74,7 +68,6 @@ _ARGUMENTS = (
         help="Explicit y-axis limits [ymin ymax] in meters.",
         type=float,
         nargs=2,
-        required=False,
         default=None,
         metavar=("YMIN", "YMAX"),
     ),
@@ -82,7 +75,6 @@ _ARGUMENTS = (
         "array_layout_name_background",
         help="Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).",
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -90,7 +82,6 @@ _ARGUMENTS = (
         help="List of array elements to plot as gray circles.",
         type=str,
         nargs="*",
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -98,7 +89,6 @@ _ARGUMENTS = (
         help="List of array elements to plot with red circles around them.",
         type=str,
         nargs="*",
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -109,7 +99,6 @@ _ARGUMENTS = (
             "'upper center', 'center', or 'no_legend'."
         ),
         type=str,
-        required=False,
         default="best",
     ),
     cli.ArgumentDefinition(
@@ -117,14 +106,12 @@ _ARGUMENTS = (
         help="Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max",
         type=str,
         choices=["symmetric", "exact"],
-        required=False,
         default="symmetric",
     ),
     cli.ArgumentDefinition(
         "padding",
         help="Fractional padding applied around computed extents (used for both modes).",
         type=float,
-        required=False,
         default=0.1,
     ),
 )

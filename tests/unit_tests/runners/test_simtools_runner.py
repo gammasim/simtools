@@ -1477,3 +1477,23 @@ def test_explicit_git_model_source_excludes_inherited_filesystem_source():
     )
 
     assert configuration == {SIMULATION_MODELS_GIT_PATH: "selected-models"}
+
+
+@pytest.mark.parametrize(
+    ("application", "accepted"),
+    [
+        ("simtools-submit-model-parameter-from-external", True),
+        ("simtools-plot-camera", False),
+        ("external-tool", True),
+        ("simtools-not-an-application", True),
+    ],
+)
+def test_ignore_existing_parameter_version_is_passed_only_to_accepting_applications(
+    application, accepted
+):
+    option = simtools_runner._IGNORE_EXISTING_PARAMETER_VERSION
+    configurations = [{"application": application, "configuration": {}}]
+
+    simtools_runner._apply_execution_overrides(configurations, {option: True}, {}, None)
+
+    assert (option in configurations[0]["configuration"]) is accepted

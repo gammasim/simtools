@@ -14,7 +14,6 @@ _ARGUMENTS = (
         "output_file",
         help="output file name (if not given: print to stdout)",
         type=str,
-        required=False,
     ),
 )
 

@@ -60,8 +60,7 @@ simtools-compare-productions \
     --output_path signal-comparisons
 ```
 
-`--telescope_name` is also accepted as an alias for signal-level telescope selection. Use only
-one of these options at a time.
+`--telescope_name` is accepted as an alias of `--array_layout_name`.
 
 For event-level comparisons, use `array_layout_name` to restrict the comparison to selected layouts.
 Without this option, all
@@ -92,7 +91,6 @@ simtools-compare-productions \
 | --- | --- | --- | --- |
 | Input | `production` | HDF5 | Repeated label and comma-separated file-pattern pairs. |
 | Input | `array_layout_name` | Array-layout or telescope name(s) | Optional selection for event-level layouts or signal-level telescopes. |
-| Input | `telescope_name` | Telescope name(s) | Optional alias for signal-level telescope selection. |
 | Output | `output_path` | Directory | Directory for figures and the statistics report. |
 | Output | `comparison_statistics.json` | JSON | Machine-readable comparison statistics. |
 

@@ -11,7 +11,7 @@ from simtools.runners.simtools_runner import run_applications
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "config_file", help="Application configuration.", type=str, required=True, default=None
+        "config_file", help="Application configuration.", type=str, required=True
     ),
     cli.ArgumentDefinition(
         "steps",
@@ -37,7 +37,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    arguments=(*_ARGUMENTS,),
+    arguments=(*_ARGUMENTS, cli.IGNORE_EXISTING_PARAMETER_VERSION),
     setup_io_handler=False,
     resolve_sim_software_executables=False,
     usage="simtools-run-application --config_file config_file_name",

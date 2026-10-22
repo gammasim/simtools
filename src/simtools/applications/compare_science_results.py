@@ -66,7 +66,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     initialize_output=True,
     initialize_model_reader=False,
-    excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    excluded_standard_arguments=("test",),
 )
 
 

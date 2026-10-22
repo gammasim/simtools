@@ -15,7 +15,6 @@ _ARGUMENTS = (
         "coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
         default="ground",
-        required=False,
         type=str,
         choices=["ground", "utm"],
     ),
@@ -28,7 +27,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.OUTPUT_PATH,
         cli.PARAMETER_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
     ),
     initialize_model_reader=False,
 )

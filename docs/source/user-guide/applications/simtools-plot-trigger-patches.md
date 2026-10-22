@@ -40,7 +40,7 @@ full configuration. The JSON includes model identifiers, a configuration
 digest, coverage status, and a runtime-trigger status marked `not tested`. A
 `pass` membership coverage status means every camera pixel appears in at least
 one patch; it does not validate firing or trigger eligibility. Use
-`--output_name` to set the shared file-name base.
+`--output_file` to set the shared file-name base.
 
 ```{eval-rst}
 .. automodule:: simtools.applications.plot_trigger_patches

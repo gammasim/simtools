@@ -9,10 +9,12 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import positive_quantity, scientific_int
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
-from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
+_LIGHT_SOURCE_GEOMETRY_GROUP = (
+    "Configurable light source position and pointing (override simulation model values)"
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -20,7 +22,6 @@ _ARGUMENTS = (
         help="Illuminator name, e.g. ILLN-01. Required for single-pair mode.",
         type=str,
         default=None,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "simulate_all",
@@ -28,37 +29,28 @@ _ARGUMENTS = (
         action="store_true",
         default=False,
     ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        help=(
-            "Maximum parallel workers for multi-pair mode. Default: 60%% of CPU cores. "
-            "Set to 0 or negative for all cores."
-        ),
-        type=int,
-        default=None,
-        required=False,
-    ),
+    cli.MAX_WORKERS,
     cli.ArgumentDefinition(
         "light_source_position",
-        group="Configurable light source position and pointing (override simulation model values)",
+        group=_LIGHT_SOURCE_GEOMETRY_GROUP,
         help="Light source position (x,y,z) relative to the array center (ground coordinates) in m",
         metavar=("X", "Y", "Z"),
+        type=float,
         nargs=3,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "light_source_pointing",
-        group="Configurable light source position and pointing (override simulation model values)",
+        group=_LIGHT_SOURCE_GEOMETRY_GROUP,
         help=(
             "Light source pointing direction "
             "(example pointing downwards: --light_source_pointing 0 0 -1)"
         ),
         metavar=("X", "Y", "Z"),
+        type=float,
         nargs=3,
-        required=False,
     ),
     cli.ArgumentDefinition(
-        "number_of_events", help="Number of events to simulate", type=int, default=1, required=False
+        "number_of_events", help="Number of events to simulate", type=int, default=1
     ),
     cli.ArgumentDefinition(
         "flasher_photons",
@@ -67,7 +59,6 @@ _ARGUMENTS = (
             "e.g. 1e8."
         ),
         type=scientific_int,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "wavelength",
@@ -79,9 +70,19 @@ _ARGUMENTS = (
         ),
         type=positive_quantity("nm"),
         nargs="+",
-        required=False,
     ),
 )
+
+
+def _validate_pair_selection(args_dict, _config_sources, parser):
+    """Require one illuminator and one telescope unless all pairs are simulated."""
+    if args_dict.get("simulate_all"):
+        return
+    if not args_dict.get("light_source") or not args_dict.get("telescope"):
+        parser.error(
+            "--light_source and --telescope are required for single-pair mode. "
+            "Use --simulate_all for multi-pair mode."
+        )
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -98,6 +99,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     validate_simulation_dependencies=True,
+    post_parse=_validate_pair_selection,
 )
 
 
@@ -105,24 +107,11 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    # Determine illuminator and telescope filters
+    # Filters are optional with --simulate_all; single-pair mode requires both (post-parse).
     light_source = app_context.args.get("light_source")
     telescope = app_context.args.get("telescope")
-    simulate_all = app_context.args.get("simulate_all")
-
-    if simulate_all:
-        # Multi-pair mode: filters are optional
-        illuminators = [light_source] if light_source else None
-        telescopes = [telescope] if telescope else None
-    else:
-        # Single-pair mode: both filters are required
-        if not light_source or not telescope:
-            sys.exit(
-                "error: --light_source and --telescope are required for single-pair mode. "
-                "Use --simulate_all for multi-pair mode."
-            )
-        illuminators = general.ensure_list(light_source)
-        telescopes = general.ensure_list(telescope)
+    illuminators = [light_source] if light_source else None
+    telescopes = [telescope] if telescope else None
 
     # Always use MultiIlluminatorSimulator (single-pair is just a special case)
     simulator = MultiIlluminatorSimulator(

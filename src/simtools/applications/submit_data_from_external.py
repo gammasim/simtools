@@ -8,16 +8,12 @@ from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition("input_meta", help="meta data file associated to input data", type=str),
     cli.ArgumentDefinition(
-        "input_meta", help="meta data file associated to input data", type=str, required=False
+        "input_file", aliases=("input_data_file",), help="Input data file", type=str, required=True
     ),
-    cli.ArgumentDefinition("input_data_file", help="Input data file", type=str, required=True),
-    cli.ArgumentDefinition(
-        "schema_file", help="Schema file describing input data", type=str, required=False
-    ),
-    cli.ArgumentDefinition(
-        "ignore_metadata", help="Ignore metadata", action="store_true", required=False
-    ),
+    cli.ArgumentDefinition("schema_file", help="Schema file describing input data", type=str),
+    cli.ArgumentDefinition("ignore_metadata", help="Ignore metadata", action="store_true"),
 )
 
 
@@ -46,7 +42,7 @@ def main():
             if _metadata
             else app_context.args.get("schema_file")
         ),
-        data_file=app_context.args["input_data_file"],
+        data_file=app_context.args["input_file"],
     )
 
     writer.ModelDataWriter.write_product_data(

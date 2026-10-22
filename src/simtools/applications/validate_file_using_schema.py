@@ -19,7 +19,7 @@ _ARGUMENTS = (
             "assumed and the bundled model-parameter schemas are used."
         ),
     ),
-    cli.ArgumentDefinition("schema_file", help="Schema file", required=False),
+    cli.ArgumentDefinition("schema_file", help="Schema file"),
     cli.ArgumentDefinition(
         "data_type",
         help="Type of input data",

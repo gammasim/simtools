@@ -49,7 +49,7 @@ def main():
 
         app_context.logger.info(
             f"Markdown report generated for {app_context.args['site']}"
-            f"Telescope {app_context.args['telescope']}: {output_path}"
+            f" Telescope {app_context.args['telescope']}: {output_path}"
         )
 
 

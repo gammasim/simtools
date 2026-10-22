@@ -11,27 +11,22 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_element_positions_file", help="List of array element positions.", required=True
     ),
-    cli.ArgumentDefinition(
-        "input_meta", help="meta data file associated to input data", type=str, required=False
-    ),
+    cli.ArgumentDefinition("input_meta", help="meta data file associated to input data", type=str),
     cli.ArgumentDefinition(
         "print",
         help="print list of positions in requested coordinate system",
-        required=False,
         default="",
         choices=["ground", "utm", "mercator"],
     ),
     cli.ArgumentDefinition(
         "export",
         help="export array element list to file (in requested coordinate system)",
-        required=False,
         default=None,
         choices=["ground", "utm", "mercator"],
     ),
     cli.ArgumentDefinition(
         "select_assets",
         help="select a subset of assets (e.g., MSTN, LSTN)",
-        required=False,
         default=None,
         nargs="+",
     ),
@@ -39,7 +34,6 @@ _ARGUMENTS = (
         "skip_input_validation",
         help="skip input data validation against schema",
         default=False,
-        required=False,
         action="store_true",
     ),
 )

@@ -15,12 +15,11 @@ _ARGUMENTS = (
         "parameter", type=str, required=True, help="Parameter for simulation model"
     ),
     cli.ArgumentDefinition("instrument", type=instrument, required=True, help="Instrument name"),
-    cli.ArgumentDefinition("site", type=str, required=True, help="Site location"),
+    cli.SITE(required=True),
     cli.ArgumentDefinition("parameter_version", type=str, required=True, help="Parameter version"),
     cli.ArgumentDefinition(
         "model_parameter_schema_version",
         type=str,
-        required=False,
         help="Model-parameter schema version to use for validation and value interpretation",
     ),
     cli.ArgumentDefinition(
@@ -36,12 +35,14 @@ _ARGUMENTS = (
         "input_meta",
         help="meta data file(s) associated to input data (wildcards or list of files allowed)",
         type=str,
-        required=False,
         nargs="+",
     ),
     cli.ArgumentDefinition(
         "check_parameter_version",
-        help="Check if the parameter version exists in the model repository",
+        help=(
+            "Fail if the parameter version already exists in the model repository "
+            "(skipped with --ignore_existing_parameter_version)."
+        ),
         action="store_true",
     ),
 )
@@ -52,6 +53,7 @@ APPLICATION = ApplicationDefinition.for_module(
     model_repository=True,
     arguments=(
         *_ARGUMENTS,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

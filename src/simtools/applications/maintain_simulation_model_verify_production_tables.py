@@ -6,14 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.model import model_repository
 
-_ARGUMENTS = (
-    cli.ArgumentDefinition(
-        "simulation_models_path",
-        help="Path to the simulation models repository.",
-        type=str,
-        required=True,
-    ),
-)
+_ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
 
 
 APPLICATION = ApplicationDefinition.for_module(

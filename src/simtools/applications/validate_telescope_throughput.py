@@ -17,7 +17,6 @@ _ARGUMENTS = (
         ),
         type=str,
         default=None,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "skip_correction_to_nsb_spectrum",
@@ -25,14 +24,12 @@ _ARGUMENTS = (
             "Skip correction to the NSB spectrum for the altitude difference between the "
             "reference B&E spectrum and the observation level at the CTAO sites."
         ),
-        required=False,
         action="store_true",
     ),
     cli.ArgumentDefinition(
         "write_reference_nsb_rate_as_parameter",
         help="Write the NSB pixel rate obtained for reference conditions as a model parameter ",
         action="store_true",
-        required=False,
     ),
 )
 
@@ -45,25 +42,19 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.SITE,
-        cli.TELESCOPE,
+        cli.SITE(required=True),
+        cli.TELESCOPE(required=True),
         cli.ZENITH_ANGLE,
         cli.AZIMUTH_ANGLE,
+        cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
 )
 
 
-def _validate_required_args(args_dict):
-    """Validate required arguments that must be explicitly provided."""
-    if args_dict["site"] is None or args_dict["telescope"] is None:
-        raise RuntimeError("Site and telescope must be provided")
-
-
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    _validate_required_args(app_context.args)
 
     run_camera_efficiency(
         app_context.args,

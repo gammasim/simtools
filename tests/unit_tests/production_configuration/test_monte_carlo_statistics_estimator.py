@@ -288,7 +288,6 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
 
     common_args = {
         "input": "unused.hdf5",
-        "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
         "target_triggered_events": None,
@@ -336,7 +335,6 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
     monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
         {
             "input": "unused.hdf5",
-            "array_names": None,
             "spectral_index": -2.0,
             "target_relative_uncertainty": 0.1,
             "target_triggered_events": None,
@@ -372,7 +370,6 @@ def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
     monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
         {
             "input": "unused.hdf5",
-            "array_names": None,
             "spectral_index": -2.0,
             "target_relative_uncertainty": None,
             "target_triggered_events": 25,
@@ -405,7 +402,6 @@ def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_p
         monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
             {
                 "input": "unused.hdf5",
-                "array_names": None,
                 "spectral_index": -2.0,
                 "target_relative_uncertainty": 0.1,
                 "target_triggered_events": None,
@@ -434,7 +430,6 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
 
     args = {
         "input": str(reference_file),
-        "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
         "target_triggered_events": None,
@@ -498,7 +493,6 @@ def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
 
     common_args = {
         "input": "unused.hdf5",
-        "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
         "target_triggered_events": None,
@@ -539,7 +533,6 @@ def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocke
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
         {
             "input": "unused.hdf5",
-            "array_names": None,
             "spectral_index": None,
             "target_relative_uncertainty": None,
             "target_triggered_events": 25,
@@ -569,7 +562,6 @@ def test_estimator_warns_and_falls_back_when_histogram_spectral_index_is_missing
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
         {
             "input": "unused.hdf5",
-            "array_names": None,
             "spectral_index": None,
             "target_relative_uncertainty": None,
             "target_triggered_events": 25,

@@ -28,9 +28,8 @@ The following 1D histograms are generated:
 input_files (str, required)
     The name(s) of the CORSIKA IACT file(s) resulted from the CORSIKA simulation.
 
-pdf_file_name (str, optional)
-    The name of the output pdf file to save the histograms. If not provided,
-    the histograms are only shown on screen.
+output_file (str, required)
+    The name of the output pdf file to save the histograms (alias: ``pdf_file_name``).
 
 file_labels (str, optional)
     Labels for the input files (in the same order as input_files). If not provided,
@@ -44,7 +43,7 @@ Fill and plot histograms for a test IACT file:
 
     simtools-generate-corsika-histograms --input_files /workdir/external/simtools/\\
     tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
-        --pdf_file_name test.pdf
+        --output_file test.pdf
 
 Fill and plot histograms for several files:
 
@@ -52,7 +51,7 @@ Fill and plot histograms for several files:
 
     simtools-generate-corsika-histograms --input_files file1 file 2 \\
         --file_lablels label1 label2 \\
-        --pdf_file_name test.pdf
+        --output_file test.pdf
 
 **Notes**
 

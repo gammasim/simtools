@@ -45,20 +45,17 @@ _ARGUMENTS = (
             "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
         ),
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "grid_output_path",
         help="Directory for output files for registering on the grid.",
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
         "save_file_lists",
         help="Save lists of output and log files.",
         action="store_true",
-        required=False,
         default=False,
     ),
     cli.ArgumentDefinition(
@@ -68,7 +65,6 @@ _ARGUMENTS = (
             "(only relevant for simulation software 'corsika_sim_telarray')."
         ),
         action="store_true",
-        required=False,
         default=False,
     ),
     cli.ArgumentDefinition(
@@ -78,7 +74,6 @@ _ARGUMENTS = (
             "Saved with the same name as the sim_telarray output file (different extension). "
         ),
         action=argparse.BooleanOptionalAction,
-        required=False,
         default=True,
     ),
     cli.ArgumentDefinition(
@@ -105,7 +100,6 @@ _ARGUMENTS = (
             "combined with manual production arguments such as '--zenith_angle'."
         ),
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
@@ -116,7 +110,6 @@ _ARGUMENTS = (
             "otherwise row 1 is used."
         ),
         type=int,
-        required=False,
         default=1,
     ),
     cli.ArgumentDefinition(
