@@ -119,6 +119,8 @@ class RayTracing:
             self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")
         )
         self.psf_images = {}
+        # Photon images traced in memory, by (off_x, off_y, mirror number).
+        self._traced_images = {}
         self._results = None
 
     def _process_offset_angles(self, off_axis_angle, offset_directions):
@@ -402,7 +404,7 @@ class RayTracing:
             raise ValueError("max_workers must be a positive integer")
 
         if settings.config.ray_tracing_backend == "obdeect":
-            self._simulate_obdeect(test, force)
+            self._simulate_obdeect(test)
             return
 
         if not self.single_mirror_mode:
@@ -490,8 +492,8 @@ class RayTracing:
                 shutil.copyfileobj(f_in, f_out)
         photons_file.unlink()
 
-    def _simulate_obdeect(self, test, force):
-        """Trace star light with obdeect; photon images are written as ``.npz`` files.
+    def _simulate_obdeect(self, test):
+        """Trace star light with obdeect; the photon images are kept in memory.
 
         Photon numbers and mirror-error realisations follow the sim_telarray runs.
         """
@@ -507,10 +509,6 @@ class RayTracing:
             photons = configurations * 100000
         for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
-                photons_file = self._get_ray_tracing_files(off_x, off_y, mirror_number)[0]
-                if photons_file.exists() and not force:
-                    self._logger.info(f"Skipping existing photon image {photons_file}")
-                    continue
                 single_mirror = None
                 if self.single_mirror_mode:
                     single_mirror = (
@@ -529,14 +527,7 @@ class RayTracing:
                     configurations,
                     single_mirror,
                 )
-                np.savez(
-                    photons_file,
-                    x_cm=100.0 * arrivals["position_m"][:, 0],
-                    y_cm=100.0 * arrivals["position_m"][:, 1],
-                    total_photons=arrivals["total_photons"],
-                    total_area_m2=arrivals["total_area_m2"],
-                    has_structure=arrivals["has_structure"],
-                )
+                self._traced_images[(off_x, off_y, mirror_number)] = arrivals
 
     def analyze(
         self,
@@ -670,16 +661,24 @@ class RayTracing:
         photons_file_lis, photons_file_gz, stars_file = self._get_ray_tracing_files(
             off_x, off_y, mirror_number
         )
-        photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
         theta_offset = np.sqrt(off_x**2 + off_y**2)
-        tel_transmission = (
-            1.0
-            if self._traced_structure(photons_file)
-            else compute_telescope_transmission(tel_transmission_pars, theta_offset)
-        )
-        image = self._create_psf_image(
-            photons_file, mirror_data["focal_length"], containment_fraction, use_rx
-        )
+        tel_transmission = compute_telescope_transmission(tel_transmission_pars, theta_offset)
+        traced = self._traced_images.get((off_x, off_y, mirror_number))
+        if traced is None:
+            photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
+            image = self._create_psf_image(
+                photons_file, mirror_data["focal_length"], containment_fraction, use_rx
+            )
+        else:
+            if use_rx:
+                raise ValueError("rx analyses sim_telarray photon lists only")
+            image = self._traced_psf_image(
+                traced, mirror_data["focal_length"], containment_fraction
+            )
+            if traced["has_structure"]:  # The traced structure replaces telescope_transmission.
+                tel_transmission = 1.0
+            if save_photons:
+                self._write_traced_photons(traced, photons_file_lis.with_suffix(".ecsv"))
         if keep_images:
             self.psf_images[(off_x, off_y)] = copy(image)
         current_result = self._analyze_mirror_image(
@@ -697,7 +696,7 @@ class RayTracing:
 
     def _get_ray_tracing_files(self, off_x, off_y, mirror_number):
         """Return photon and star list paths for one ray-tracing simulation."""
-        photon_suffix = ".npz" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
+        photon_suffix = ".lis"
         photons_file_lis = self.output_directory.joinpath(
             self._generate_file_name(
                 "photons",
@@ -753,14 +752,6 @@ class RayTracing:
         return current_results
 
     @staticmethod
-    def _traced_structure(photons_file):
-        """Return True if obdeect traced the structure, which replaces telescope_transmission."""
-        if photons_file.suffix != ".npz":
-            return False
-        with np.load(photons_file) as data:
-            return bool(data["has_structure"])
-
-    @staticmethod
     def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
         """Remove ray-tracing input and output lists unless retention was requested."""
         if not save_photons:
@@ -809,19 +800,35 @@ class RayTracing:
             PSF image object.
         """
         image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
-        if photons_file.suffix == ".npz":
-            if use_rx:
-                raise ValueError("rx analyses sim_telarray photon lists only")
-            with np.load(photons_file) as data:
-                image.set_photon_positions(
-                    data["x_cm"],
-                    data["y_cm"],
-                    int(data["total_photons"]),
-                    float(data["total_area_m2"]),
-                )
-        else:
-            image.process_photon_list(photons_file, use_rx)
+        image.process_photon_list(photons_file, use_rx)
         return image
+
+    @staticmethod
+    def _traced_psf_image(traced, focal_length, containment_fraction):
+        """Create the PSF image of photons traced in memory."""
+        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
+        position_cm = 100.0 * traced["position_m"]
+        image.set_photon_positions(
+            position_cm[:, 0],
+            position_cm[:, 1],
+            traced["total_photons"],
+            traced["total_area_m2"],
+        )
+        return image
+
+    @staticmethod
+    def _write_traced_photons(traced, file_name):
+        """Write photons traced in memory as an ECSV table (camera-entrance positions)."""
+        table = QTable(
+            [100.0 * traced["position_m"][:, 0] * u.cm, 100.0 * traced["position_m"][:, 1] * u.cm],
+            names=("x", "y"),
+            meta={
+                "total_photons": int(traced["total_photons"]),
+                "total_area_m2": float(traced["total_area_m2"]),
+                "traced_structure": bool(traced["has_structure"]),
+            },
+        )
+        table.write(file_name, format="ascii.ecsv", overwrite=True)
 
     def _analyze_image(
         self,

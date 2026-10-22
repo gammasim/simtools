@@ -502,17 +502,10 @@ def test_ray_tracing_simulate_obdeect(
         assert call_.args[0] == ray_tracing_lst.zenith_angle
         assert call_.args[3] == pytest.approx(10000.0)
         assert call_.args[4:] == (expected_photons, expected_configurations, None)
-    photons_file = ray_tracing_lst._get_ray_tracing_files(1.0, -0.5, 0)[0]
-    assert photons_file.suffix == ".npz"
-    with np.load(photons_file) as data:
-        assert data["x_cm"].tolist() == [pytest.approx(20.0)]
-        assert data["y_cm"].tolist() == [pytest.approx(2.0)]
-        assert int(data["total_photons"]) == 1000
+    # Images stay in memory; no photon files.
+    assert ray_tracing_lst._traced_images[(1.0, -0.5, 0)]["position_m"][0, 0] == pytest.approx(0.2)
+    assert not list(ray_tracing_lst.output_directory.glob("*photons*"))
     ray_tracing_lst.telescope_model.write_sim_telarray_config_file.assert_not_called()
-
-    tracer.return_value.trace_star.reset_mock()
-    ray_tracing_lst.simulate(test=test, force=False)  # Existing images are kept.
-    tracer.return_value.trace_star.assert_not_called()
 
 
 def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirror_mode, mocker):
@@ -538,27 +531,28 @@ def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirro
 
 
 @pytest.mark.parametrize("has_structure", [False, True])
-def test_ray_tracing_analyze_obdeect(ray_tracing_lst, mocker, has_structure):
-    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
-    config.ray_tracing_backend = "obdeect"
-    photons_file = ray_tracing_lst._get_ray_tracing_files(0.0, 0.0, 0)[0]
-    x = np.linspace(-1.0, 1.0, 101)
-    np.savez(
-        photons_file,
-        x_cm=x,
-        y_cm=np.zeros_like(x),
-        total_photons=1010,
-        total_area_m2=400.0,
-        has_structure=has_structure,
-    )
+def test_ray_tracing_analyze_traced_images(ray_tracing_lst, has_structure):
+    """Images traced in memory; telescope_transmission unless the structure was traced."""
+    x_m = np.linspace(-0.01, 0.01, 101)
+    ray_tracing_lst._traced_images[(0.0, 0.0, 0)] = {
+        "position_m": np.column_stack([x_m, np.zeros_like(x_m), np.full_like(x_m, 10.0)]),
+        "total_photons": 1010,
+        "total_area_m2": 400.0,
+        "has_structure": has_structure,
+    }
     ray_tracing_lst.telescope_model.get_parameter_value.return_value = [0.5, 0, 0, 0]
 
     ray_tracing_lst.analyze(force=True, export=False, save_photons=True)
 
     area = ray_tracing_lst._results["eff_area"][0].to_value(u.m**2)
     assert area == pytest.approx(40.0 if has_structure else 20.0)
+    photons = QTable.read(
+        ray_tracing_lst._get_ray_tracing_files(0.0, 0.0, 0)[0].with_suffix(".ecsv")
+    )
+    assert photons["x"].to_value(u.cm) == pytest.approx(100.0 * x_m)
+    assert photons.meta["traced_structure"] is has_structure
     with pytest.raises(ValueError, match="rx"):
-        ray_tracing_lst._create_psf_image(photons_file, 1000.0, 0.8, use_rx=True)
+        ray_tracing_lst.analyze(force=True, export=False, use_rx=True)
 
 
 def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, mocker):

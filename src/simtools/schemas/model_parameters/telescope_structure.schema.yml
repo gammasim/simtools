@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: telescope_structure
 description: |-
   Geometry of the opaque telescope structure (camera support masts,
-  quadrupods, dish frame), traced explicitly by the obdeect ray tracing.
+  quadrupods, dish frame), traced explicitly by the ray tracing.
   One row per element, by its shape: a cylinder is given by the end points
   1 and 2 of its axis and its diameter; a convex polyhedron is the convex
   hull of its corner points 1, 2, ... (at least four). Columns a row does
