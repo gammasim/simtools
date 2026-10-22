@@ -73,6 +73,8 @@ simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
 simtools-derive-telescope-sphere-radius <applications/simtools-derive-telescope-sphere-radius>
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
+simtools-docs-assemble-pages <applications/simtools-docs-assemble-pages>
+simtools-docs-generate-toctree <applications/simtools-docs-generate-toctree>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
