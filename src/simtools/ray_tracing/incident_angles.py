@@ -20,6 +20,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.ray_tracing import parameter_changes
 from simtools.simtel import simtel_seeds
 
 
@@ -160,7 +161,10 @@ class IncidentAnglesCalculator:
         # pylint: disable-next=import-outside-toplevel
         from simtools.ray_tracing.obdeect_backend import ObdeectRayTracer
 
-        tracer = ObdeectRayTracer(self.telescope_model, perfect_mirror=self.perfect_mirror)
+        tracer = ObdeectRayTracer(
+            self.telescope_model,
+            changes=parameter_changes.PERFECT_MIRROR if self.perfect_mirror else None,
+        )
         arrivals = tracer.trace_star(
             self.zenith_angle_deg,
             float(self.config_data["off_axis_angle"].to_value(u.deg)),
@@ -289,14 +293,9 @@ class IncidentAnglesCalculator:
             f"-I{self.telescope_model.config_file_directory}",
         ]
         if self.perfect_mirror:
-            opts += [
-                "-DPERFECT_DISH=1",
-                "-C random_focal_length=0",
-                "-C mirror_reflection_random_angle=0",
-                "-C mirror_align_random_distance=0",
-                "-C mirror_align_random_horizontal=0,28,0,0",
-                "-C mirror_align_random_vertical=0,28,0,0",
-            ]
+            opts.append("-DPERFECT_DISH=1")
+            options = parameter_changes.sim_telarray_options(parameter_changes.PERFECT_MIRROR)
+            opts += [cfg(name, value) for name, value in options.items()]
 
         instrument_seed, simulation_seed = simtel_seeds.instance_seed_pairs()[0]
         opts += [

@@ -537,7 +537,6 @@ def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirro
     for call_, (number, mirror_data) in zip(
         tracer.return_value.trace_star.call_args_list, ray_tracing.mirrors.items(), strict=True
     ):
-        assert call_.args[6][0] == number
         distance_km = mirror_data["source_distance"]
         assert call_.args[3] == pytest.approx(distance_km * 1000.0)
         assert call_.args[4] == 100000
@@ -548,7 +547,9 @@ def test_ray_tracing_simulate_obdeect_single_mirror(ray_tracing_lst_single_mirro
                 for seed in (5, 7)
             )
         ]
-        assert call_.args[6][1:] == (Path("mirror.dat"), pytest.approx(distance_km * 1.0e5))
+        changes = call_.args[6]
+        assert changes["mirror_list"] == "mirror.dat"
+        assert changes["focal_length"] == pytest.approx(distance_km * 1.0e5)
 
 
 @pytest.mark.parametrize("has_structure", [False, True])

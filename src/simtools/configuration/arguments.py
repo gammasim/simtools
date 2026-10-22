@@ -188,7 +188,7 @@ RAY_TRACING_BACKEND = _argument(
     default=None,
 )
 
-# Seeds of sim_telarray and obdeect alike: the instrument seed randomises the instrument
+# Seeds of every simulation backend alike: the instrument seed randomises the instrument
 # (mirror errors, gains, ...) of each random instrument instance, the simulation seed the
 # simulated events and photons.
 INSTRUMENT_SEED = _argument(

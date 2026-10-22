@@ -22,6 +22,7 @@ from astropy.table import QTable
 from simtools import constants, settings
 from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
+from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel import simtel_seeds
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
@@ -548,13 +549,13 @@ class RayTracing:
             photons = len(seeds) * 100000
         for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
-                single_mirror = None
+                changes = None
                 if self.single_mirror_mode:
-                    single_mirror = (
-                        mirror_number,
+                    changes = parameter_changes.single_mirror(
                         self.telescope_model.get_single_mirror_list_file(
                             mirror_number, self.use_random_focal_length
                         ),
+                        self.telescope_model.get_parameter_value("mirror_focal_length"),
                         mirror_data["source_distance"] * u.km.to(u.cm),
                     )
                 arrivals = tracer.trace_star(
@@ -564,7 +565,7 @@ class RayTracing:
                     mirror_data["source_distance"] * u.km.to(u.m),
                     photons,
                     self._mirror_seeds(seeds, mirror_number),
-                    single_mirror,
+                    changes,
                 )
                 self._traced_images[(off_x, off_y, mirror_number)] = arrivals
 

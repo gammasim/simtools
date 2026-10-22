@@ -8,6 +8,7 @@ import pytest
 pytest.importorskip("obdeect")
 
 # pylint: disable-next=wrong-import-position
+from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.obdeect_backend import (
     ObdeectRayTracer,
     star_direction,
@@ -97,15 +98,16 @@ def test_trace_star(toy_telescope):
 
 
 def test_perfect_and_single_mirror(toy_telescope):
-    tracer = ObdeectRayTracer(toy_telescope, perfect_mirror=True)
+    tracer = ObdeectRayTracer(toy_telescope, changes=parameter_changes.PERFECT_MIRROR)
     normals = [
         [f["normal"] for f in tracer.optical_model(20.0, s).document["optics"]["primary"]["facets"]]
         for s in (1, 2)
     ]
     assert normals[0] == normals[1]
 
-    toy_telescope.parameters["mirror_focal_length"]["value"] = 800.0
-    single_mirror = (0, toy_telescope.get_single_mirror_list_file(0), 1600.0)
+    single_mirror = parameter_changes.single_mirror(
+        toy_telescope.get_single_mirror_list_file(0), 800.0, 1600.0
+    )
     optics = tracer.optical_model(20.0, 1, single_mirror).document["optics"]
     assert len(optics["primary"]["facets"]) == 1
     assert optics["obscurers"] == []

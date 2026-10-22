@@ -801,7 +801,7 @@ def test_run_obdeect(monkeypatch, mocker, calculator):
 
     result = calculator.run()
 
-    tracer.assert_called_once_with(calculator.telescope_model, perfect_mirror=False)
+    tracer.assert_called_once_with(calculator.telescope_model, changes=None)
     assert tracer.return_value.trace_star.call_args.args == (
         0.0,
         0.0,

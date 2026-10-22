@@ -2,35 +2,19 @@
 
 obdeect compiles the model parameters of a telescope into an optical model and
 traces star light through the optics to the camera entrance. The light source,
-the telescope pointing and the parameter changes of the single-mirror mode
+the telescope pointing and the parameter changes of the ray-tracing modes
 follow the sim_telarray ray-tracing runs of simtools, so that both backends
 answer the same question.
 """
 
 import math
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 from obdeect.model import DETECTED, OpticalModel
 
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
-
-# Single-mirror mode: the mirror is placed alone at the dish centre and imaged
-# from twice its focal length (as in SimulatorRayTracing).
-_SINGLE_MIRROR_ZEROS = {
-    "focus_offset": [0.0, 0.0, 0.0, 0.0],
-    "camera_body_diameter": 0.0,
-    "parabolic_dish": False,
-    "mirror_align_random_distance": 0.0,
-    "mirror_align_random_vertical": [0.0, 28.0, 0.0, 0.0],
-}
-_PERFECT_MIRROR_ZEROS = {
-    "random_focal_length": [0.0, 0.0],
-    "mirror_reflection_random_angle": [0.0, 0.0, 0.0],
-    "mirror_align_random_distance": 0.0,
-    "mirror_align_random_horizontal": [0.0, 28.0, 0.0, 0.0],
-    "mirror_align_random_vertical": [0.0, 28.0, 0.0, 0.0],
-}
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):
@@ -51,26 +35,27 @@ class ObdeectRayTracer:
     ----------
     telescope_model: TelescopeModel
         Telescope model.
-    perfect_mirror: bool
-        Remove random mirror errors (focal lengths, alignment, scattering).
+    changes: dict, optional
+        Model-parameter values replacing those of the telescope model (see
+        ``simtools.ray_tracing.parameter_changes``).
     """
 
-    def __init__(self, telescope_model, perfect_mirror=False):
+    def __init__(self, telescope_model, changes=None):
         self.telescope_model = telescope_model
-        self._changes = dict(_PERFECT_MIRROR_ZEROS) if perfect_mirror else {}
+        self._changes = dict(changes or {})
         telescope_model.export_model_files(update_if_necessary=True)
         self._models = {}
 
-    def optical_model(self, telescope_zenith, instrument_seed, single_mirror=None):
+    def optical_model(self, telescope_zenith, instrument_seed, changes=None):
         """Optical model at a telescope zenith angle [deg] (cached).
 
         ``instrument_seed`` fixes the random mirror errors of this instrument
-        instance. ``single_mirror`` is a (mirror number, mirror list file,
-        camera distance [cm]) tuple for the single-mirror mode.
+        instance; ``changes`` are model-parameter values for this model only.
         """
-        key = (round(telescope_zenith, 9), instrument_seed, single_mirror)
+        changes = self._changes | (changes or {})
+        key = (round(telescope_zenith, 9), instrument_seed, repr(sorted(changes.items())))
         if key not in self._models:
-            records, files = self._records(single_mirror)
+            records, files = self._records(changes)
             self._models[key] = OpticalModel.from_records(
                 records,
                 lambda name: files[name].read_text(encoding="utf-8"),
@@ -83,7 +68,7 @@ class ObdeectRayTracer:
             )
         return self._models[key]
 
-    def _records(self, single_mirror):
+    def _records(self, changes):
         """Parameter records and their files, with the changes of this run."""
         directory = self.telescope_model.config_file_directory
         records = {
@@ -96,19 +81,13 @@ class ObdeectRayTracer:
             for name, record in records.items()
             if record.get("file") and isinstance(record["value"], str)
         }
-        changes = dict(self._changes)
-        if single_mirror is not None:
-            _, mirror_list, camera_distance = single_mirror
-            focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
-            changes |= _SINGLE_MIRROR_ZEROS | {
-                "focal_length": camera_distance,
-                "dish_shape_length": focal_length,
-                "mirror_focal_length": focal_length,
-            }
-            files["mirror_list"] = mirror_list
         for name, value in changes.items():
-            if name in records:
-                records[name] = deepcopy(records[name]) | {"value": value}
+            if name not in records:
+                continue
+            if records[name].get("file"):
+                files[name] = Path(value)
+                value = Path(value).name
+            records[name] = deepcopy(records[name]) | {"value": value}
         return records, files
 
     def trace_star(
@@ -119,13 +98,13 @@ class ObdeectRayTracer:
         source_distance_m,
         photons,
         seeds,
-        single_mirror=None,
+        changes=None,
     ):
         """Trace star light, as in the sim_telarray ray-tracing runs.
 
         Photons are split evenly over the random instrument instances, given by
         their (instrument seed, simulation seed) in ``seeds``, as sim_telarray
-        runs one simulation per instance; ``single_mirror`` as in ``optical_model``.
+        runs one simulation per instance; ``changes`` as in ``optical_model``.
 
         Returns
         -------
@@ -142,7 +121,7 @@ class ObdeectRayTracer:
         per_instance = photons // len(seeds)
         arrivals = []
         for instrument_seed, simulation_seed in seeds:
-            model = self.optical_model(telescope_zenith, instrument_seed, single_mirror)
+            model = self.optical_model(telescope_zenith, instrument_seed, changes)
             sample = model.star_photons(
                 per_instance,
                 seed=simulation_seed,

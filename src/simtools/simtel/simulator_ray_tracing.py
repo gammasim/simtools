@@ -8,6 +8,7 @@ import astropy.units as u
 
 from simtools import settings
 from simtools.io import io_handler
+from simtools.ray_tracing import parameter_changes
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
 
@@ -214,20 +215,18 @@ class SimulatorRayTracing(SimtelRunner):
         if self.config.single_mirror_mode:
             options.update(
                 {
-                    "focus_offset": "all:0.",
                     "camera_config_file": str(self._single_pixel_camera_file),
                     "camera_pixels": "1",
                     "trigger_pixels": "1",
-                    "camera_body_diameter": "0",
-                    "mirror_list": self.telescope_model.get_single_mirror_list_file(
-                        self.config.mirror_numbers, self.config.use_random_focal_length
+                    **parameter_changes.sim_telarray_options(
+                        parameter_changes.single_mirror(
+                            self.telescope_model.get_single_mirror_list_file(
+                                self.config.mirror_numbers, self.config.use_random_focal_length
+                            ),
+                            _mirror_focal_length,
+                            self.config.source_distance * u.km.to(u.cm),
+                        )
                     ),
-                    "focal_length": self.config.source_distance * u.km.to(u.cm),
-                    "dish_shape_length": _mirror_focal_length,
-                    "mirror_focal_length": _mirror_focal_length,
-                    "parabolic_dish": "0",
-                    "mirror_align_random_distance": "0.",
-                    "mirror_align_random_vertical": "0.,28.,0.,0.",
                 }
             )
 
