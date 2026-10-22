@@ -7,6 +7,11 @@ import pytest
 import simtools.job_execution.job_manager as jm
 
 logger = logging.getLogger()
+_ATMOSPHERE_OPTION = "--atmosphere"
+_PROFILE_REFERENCE_FILE = "profile-reference.ecsv"
+_TRANSMISSION_REFERENCE_FILE = "transmission-reference.ecsv"
+_PROFILE_CANDIDATE_FILE = "profile-candidate.ecsv"
+_TRANSMISSION_CANDIDATE_FILE = "transmission-candidate.ecsv"
 
 
 @pytest.mark.parametrize(
@@ -221,6 +226,26 @@ def test_convert_dict_to_args(input_dict, expected):
         # For multiple items, check all expected elements are present
         for item in expected:
             assert item in result
+
+
+def test_convert_nested_list_to_repeated_fixed_arity_arguments():
+    configuration = {
+        "atmosphere": [
+            ["North", _PROFILE_REFERENCE_FILE, _TRANSMISSION_REFERENCE_FILE],
+            ["South", _PROFILE_CANDIDATE_FILE, _TRANSMISSION_CANDIDATE_FILE],
+        ]
+    }
+
+    assert jm._convert_dict_to_args(configuration) == [
+        _ATMOSPHERE_OPTION,
+        "North",
+        _PROFILE_REFERENCE_FILE,
+        _TRANSMISSION_REFERENCE_FILE,
+        _ATMOSPHERE_OPTION,
+        "South",
+        _PROFILE_CANDIDATE_FILE,
+        _TRANSMISSION_CANDIDATE_FILE,
+    ]
 
 
 def test_raise_job_execution_error_with_all_logs(mocker, tmp_path):
