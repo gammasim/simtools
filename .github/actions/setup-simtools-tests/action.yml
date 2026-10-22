@@ -34,7 +34,7 @@ runs:
     - name: Python dependencies
       if: ${{ inputs.install-dependencies == 'true' }}
       shell: bash -leo pipefail {0}
-      run: pip install -e '.[tests]'
+      run: pip install -e '.[tests,obdeect]'
 
     - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}

@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install '.[doc]'
+          pip install '.[doc,obdeect]'
 
       - name: Check for non-ASCII characters
         run: |

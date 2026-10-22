@@ -32,7 +32,7 @@ SOURCE_REF_PATTERN = re.compile(
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
-OBDEECT_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+OBDEECT_VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$", re.ASCII)
 
 
 @cache
