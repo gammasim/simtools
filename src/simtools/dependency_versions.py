@@ -32,6 +32,7 @@ SOURCE_REF_PATTERN = re.compile(
 IMAGE_TAG_PATTERN = re.compile(r"^\w[\w.-]{0,127}$", re.ASCII)
 CORSIKA_INTERACTION_TABLES_LABEL = "CORSIKA interaction tables"
 SOURCE_SNAPSHOT_REGISTRY = "ghcr.io/gammasim"
+OBDEECT_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 
 
 @cache
@@ -335,9 +336,19 @@ def validate_dependency_catalog(catalog):
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
     _validate_archive_checksums(catalog["archives"])
+    _validate_obdeect(catalog, schema_version)
     _validate_components(catalog, schema_version)
     _validate_production_combinations(catalog)
     return catalog
+
+
+def _validate_obdeect(catalog, schema_version):
+    """Validate the obdeect version where the catalog format requires it."""
+    if "obdeect" not in _dependency_schemas()[schema_version]["required"]:
+        return
+    version = catalog.get("obdeect")
+    if not isinstance(version, str) or not OBDEECT_VERSION_PATTERN.fullmatch(version):
+        raise ValueError("Missing or invalid obdeect version (expected X.Y.Z).")
 
 
 def _validate_components(catalog, schema_version):
@@ -784,6 +795,7 @@ def dependency_catalog_summary(catalog):
     return {
         "python_version": catalog["python"],
         "apptainer_version": catalog["apptainer"],
+        "obdeect_version": catalog.get("obdeect", ""),
         "base_image": _image_reference(
             base["name"], base["runtime-version"], base.get("runtime-digest")
         ),

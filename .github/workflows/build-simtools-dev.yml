@@ -38,6 +38,7 @@ jobs:
     outputs:
       base_image: ${{ steps.config.outputs.base_image }}
       python_version: ${{ steps.config.outputs.python_version }}
+      obdeect_version: ${{ steps.config.outputs.obdeect_version }}
       dev_corsika_image: ${{ steps.config.outputs.dev_corsika_image }}
       dev_simtel_image: ${{ steps.config.outputs.dev_simtel_image }}
     steps:
@@ -96,7 +97,7 @@ jobs:
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ needs.dependency-config.outputs.dev_corsika_image }}
             SIMTEL_IMAGE=${{ needs.dependency-config.outputs.dev_simtel_image }}
-            OBDEECT_VERSION=0.1.0
+            OBDEECT_VERSION=${{ needs.dependency-config.outputs.obdeect_version }}
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_GIT_REVISION=${{ env.SIMTOOLS_GIT_REVISION }}
           push: ${{ github.repository == 'gammasim/simtools' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) }}

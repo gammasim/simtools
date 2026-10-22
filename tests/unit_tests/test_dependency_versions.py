@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from packaging.requirements import Requirement
 
 from simtools import dependency_versions
 
@@ -323,6 +324,30 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     )
     assert summary["simtools_tests_revision"] == ""
     assert summary["simtools_tests_url"] == catalog["simtools-tests"]["source-url"]
+    assert summary["obdeect_version"] == catalog["obdeect"]
+
+
+@pytest.mark.parametrize("version", [None, "0.2", "v0.2.0", 2])
+def test_catalog_requires_a_valid_obdeect_version(simtools_root_path, version):
+    """Catalog formats from 0.9.0 pin the obdeect version installed in the images."""
+    catalog = _load_catalog(simtools_root_path)
+    catalog.pop("obdeect")
+    if version is not None:
+        catalog["obdeect"] = version
+
+    with pytest.raises(ValueError, match="obdeect version"):
+        dependency_versions.validate_dependency_catalog(catalog)
+
+
+def test_catalog_obdeect_version_satisfies_the_project_extra(simtools_root_path):
+    """The image pin is within the range the optional obdeect extra declares."""
+    catalog = _load_catalog(simtools_root_path)
+    requirements = dependency_versions.project_requirements(
+        simtools_root_path / "pyproject.toml", ["obdeect"]
+    )
+    requirement = next(Requirement(r) for r in requirements if r.startswith("obdeect-dev"))
+
+    assert requirement.specifier.contains(catalog["obdeect"])
 
 
 def test_env_template_matches_catalog(simtools_root_path):
@@ -774,6 +799,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
         "0.6.0",
         "0.7.0",
         "0.8.0",
+        "0.9.0",
     ]
     assert "simtools-tests" not in schemas_by_version["0.1.0"]["required"]
     assert "simtools-tests" in schemas_by_version["0.2.0"]["required"]

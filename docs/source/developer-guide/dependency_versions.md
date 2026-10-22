@@ -13,6 +13,10 @@ stable upstream so rebuilding a release resolves to the same source. The catalog
 optional Git revisions and OCI digests for explicit pins, and requires SHA-256 checksums for
 downloaded archives.
 
+`obdeect` is the version of the obdeect ray tracer (PyPI package `obdeect-dev`) installed in the
+development and production images. It must satisfy the range of the optional `obdeect` extra in
+`pyproject.toml`, which applies to `pip install 'gammasimtools[obdeect]'`.
+
 `simtools-tests.resource-version` selects a resource directory inside the test repository; it is
 separate from the repository Git ref. CORSIKA and sim_telarray refs that cannot be used in image
 tags need a `build-id`.
