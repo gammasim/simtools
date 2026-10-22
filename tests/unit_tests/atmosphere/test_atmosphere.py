@@ -3,7 +3,7 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.atmosphere import AtmosphereProfile
+from simtools.atmosphere.atmosphere import AtmosphereProfile
 
 
 def test_read_valid_file(tmp_test_directory):
