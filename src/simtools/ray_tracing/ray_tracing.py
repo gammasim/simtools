@@ -546,6 +546,7 @@ class RayTracing:
         no_tel_transmission=False,
         containment_fraction=0.8,
         save_photons=False,
+        keep_images=True,
     ):
         """
         Analyze ray tracing simulation results.
@@ -572,6 +573,9 @@ class RayTracing:
         save_photons: bool
             If True, retain compressed photon list files after analysis. By default, photon
             list files are removed after successful analysis.
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle (see ``images``). Images hold
+            all photon positions; without them only the results table is kept.
         """
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
@@ -587,6 +591,7 @@ class RayTracing:
             use_rx,
             containment_fraction,
             save_photons,
+            keep_images,
         )
 
         if do_analyze:
@@ -601,6 +606,7 @@ class RayTracing:
         use_rx,
         containment_fraction,
         save_photons,
+        keep_images=True,
     ):
         """
         Process off-axis angles and mirrors for RayTracing analysis.
@@ -617,6 +623,8 @@ class RayTracing:
             Containment fraction for PSF containment calculation.
         save_photons: bool
             If True, retain compressed photon list files after analysis.
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle.
 
         Returns
         -------
@@ -637,6 +645,7 @@ class RayTracing:
                     use_rx,
                     containment_fraction,
                     save_photons,
+                    keep_images,
                 )
                 if current_result is not None:
                     _rows.append(current_result)
@@ -654,6 +663,7 @@ class RayTracing:
         use_rx,
         containment_fraction,
         save_photons,
+        keep_images,
     ):
         """Create and analyze the PSF image for one offset and mirror."""
         self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
@@ -670,7 +680,8 @@ class RayTracing:
         image = self._create_psf_image(
             photons_file, mirror_data["focal_length"], containment_fraction, use_rx
         )
-        self.psf_images[(off_x, off_y)] = copy(image)
+        if keep_images:
+            self.psf_images[(off_x, off_y)] = copy(image)
         current_result = self._analyze_mirror_image(
             image,
             off_x,
