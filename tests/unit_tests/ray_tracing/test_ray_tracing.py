@@ -397,7 +397,9 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     mock_simulator = mocker.patch("simtools.ray_tracing.ray_tracing.SimulatorRayTracing")
     mock_simulator_instance = mock_simulator.return_value
     mock_simulator_instance.run = mocker.Mock()
-    mock_open = mocker.patch("builtins.open", mocker.mock_open())
+    mock_open = mocker.patch(
+        "simtools.ray_tracing.ray_tracing.open", mocker.mock_open(), create=True
+    )
     mock_gzip_open = mocker.patch("gzip.open", mocker.mock_open())
     mock_copyfileobj = mocker.patch("shutil.copyfileobj")
     mock_unlink = mocker.patch("pathlib.Path.unlink")
