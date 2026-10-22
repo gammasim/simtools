@@ -1,19 +1,12 @@
 """Run and export the standard camera-efficiency calculations."""
 
 import logging
-import os
 from pathlib import Path
 
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.science_tests.camera_efficiency_results import (
-    create_manifest,
-    normalize_summary,
-    write_json,
-)
 from simtools.utils import names
-from simtools.version import __version__
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
 
@@ -84,27 +77,10 @@ def run_camera_efficiency(
     plot_paths = sorted(
         path for path in output_path.iterdir() if path.suffix.lower() in {".png", ".pdf", ".svg"}
     )
-    artifact_paths = {
-        "summary": summary_path,
-        "wavelength_table": wavelength_tables[0],
-        "wavelength_tables": wavelength_tables,
-        "native_plots": plot_paths,
-    }
-    manifest = create_manifest(
-        normalize_summary(results),
-        config,
-        output_path,
-        artifacts=artifact_paths,
-        image_identity=os.environ.get("SIMTOOLS_IMAGE_ID"),
-        simtools_version=__version__,
-    )
-    manifest_path = output_path / "telescope_throughput_manifest.json"
-    write_json(manifest_path, manifest)
     return {
         "results": results,
         "summary_path": summary_path,
         "artifacts": sorted(set(wavelength_tables + plot_paths)),
-        "manifest_path": manifest_path,
     }
 
 

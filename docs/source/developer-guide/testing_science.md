@@ -100,15 +100,29 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
-Telescope-throughput site definitions can list several telescopes in `camera_telescopes`:
+Workflows reference release and site values through placeholders such as
+`__SCIENCE_CANDIDATE_SITE_PATH__`, `__SCIENCE_BASELINE_SITE_PATH__`, `__SCIENCE_REPORT_PATH__`,
+`__SCIENCE_RELEASE_LABEL__`, `__SCIENCE_BASELINE_LABEL__`, and `__SCIENCE_MODEL_VERSION__`.
+Tests whose workflow references a baseline placeholder require a baseline path in the context.
+An application referencing `__SCIENCE_CAMERA_TELESCOPE__` runs once for each telescope listed in
+the site's `camera_telescopes`:
 
 ```yaml
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
 
+`configuration_overrides` in `release.yml` sets application configuration values for all
+applications of one test, for example:
+
+```yaml
+configuration_overrides:
+  compare.trigger_histograms:
+    compare_by: []
+```
+
 Run `telescope_throughput` separately for each release, using that release's science-test directory,
-context, container image, and model source. Each run writes telescope results and manifests under
-its configured release data directory. For example, select a site and run:
+context, container image, and model source. Each run writes one result directory per telescope
+under its configured release data directory. For example, select a site and run:
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
