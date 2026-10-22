@@ -77,10 +77,10 @@ def _read_table(context, parameter, site, value):
     )
 
 
-def _version(value):
-    """Return the parameter version, or None for ECSV file inputs."""
+def _version(value, table):
+    """Return the parameter version from its input value or ECSV metadata."""
     if _is_ecsv_file(value):
-        return None
+        return table.meta.get("parameter_version")
     return value
 
 
@@ -103,14 +103,16 @@ def main():
         site = validate_site(site)
         index = site_counts.get(site, 0)
         site_counts[site] = index + 1
+        profile_table = _read_table(context, _PROFILE, site, profile)
+        transmission_table = _read_table(context, _TRANSMISSION, site, transmission)
         atmospheres.append(
             {
                 "label": _label(site, index),
                 "site": site,
-                "profile_version": _version(profile),
-                "transmission_version": _version(transmission),
-                "profile": _read_table(context, _PROFILE, site, profile),
-                "transmission": _read_table(context, _TRANSMISSION, site, transmission),
+                "profile_version": _version(profile, profile_table),
+                "transmission_version": _version(transmission, transmission_table),
+                "profile": profile_table,
+                "transmission": transmission_table,
             }
         )
     characterize_atmospheres(

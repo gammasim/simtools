@@ -12,6 +12,7 @@ from simtools.applications import compare_atmospheres
 _NORTH = "North"
 _PROFILE_VERSION = "1.0.0"
 _TRANSMISSION_VERSION = "2.0.0"
+_PARAMETER_VERSION = "parameter_version"
 _PROFILE_VERSION_KEY = "profile_version"
 _TRANSMISSION_VERSION_KEY = "transmission_version"
 _RELATIVE_DIFFERENCE_LIMIT = "relative_difference_limit"
@@ -54,6 +55,7 @@ def test_main_mixes_ecsv_files_and_versions(mocker, tmp_test_directory):
         mocker, tmp_test_directory, [_NORTH, str(profile_file), _TRANSMISSION_VERSION], reader
     )
     read_asset = mocker.patch.object(compare_atmospheres, _READ_ECSV_ASSET)
+    read_asset.return_value.meta = {_PARAMETER_VERSION: _PROFILE_VERSION}
     characterize = mocker.patch.object(compare_atmospheres, _CHARACTERIZE)
     compare_atmospheres.main()
     read_asset.assert_called_once()
@@ -63,7 +65,7 @@ def test_main_mixes_ecsv_files_and_versions(mocker, tmp_test_directory):
     assert reader.export_model_file.call_args.kwargs["parameter"] == "atmospheric_transmission"
     inputs = characterize.call_args.args[0]
     assert inputs[0]["profile"] is read_asset.return_value
-    assert inputs[0][_PROFILE_VERSION_KEY] is None
+    assert inputs[0][_PROFILE_VERSION_KEY] == _PROFILE_VERSION
     assert inputs[0][_TRANSMISSION_VERSION_KEY] == _TRANSMISSION_VERSION
     assert inputs[0]["label"] == f"{_NORTH} reference"
 
@@ -91,11 +93,20 @@ def test_main_with_only_ecsv_files_needs_no_model_reader(mocker, tmp_test_direct
     for file in files:
         file.touch()
     _start_context(mocker, tmp_test_directory, [_NORTH, *map(str, files)])
-    read_asset = mocker.patch.object(compare_atmospheres, _READ_ECSV_ASSET)
+    read_asset = mocker.patch.object(
+        compare_atmospheres,
+        _READ_ECSV_ASSET,
+        side_effect=[
+            SimpleNamespace(meta={_PARAMETER_VERSION: _PROFILE_VERSION}),
+            SimpleNamespace(meta={_PARAMETER_VERSION: _TRANSMISSION_VERSION}),
+        ],
+    )
     characterize = mocker.patch.object(compare_atmospheres, _CHARACTERIZE)
     compare_atmospheres.main()
     assert read_asset.call_count == 2
-    assert characterize.call_args.args[0][0][_TRANSMISSION_VERSION_KEY] is None
+    atmosphere = characterize.call_args.args[0][0]
+    assert atmosphere[_PROFILE_VERSION_KEY] == _PROFILE_VERSION
+    assert atmosphere[_TRANSMISSION_VERSION_KEY] == _TRANSMISSION_VERSION
 
 
 def test_main_raises_for_missing_ecsv_file(mocker, tmp_test_directory):
