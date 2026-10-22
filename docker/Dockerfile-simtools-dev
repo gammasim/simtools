@@ -23,7 +23,6 @@ ARG PYTHON_VERSION
 ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
-ARG OBDEECT_VERSION
 ARG BASE_IMAGE
 
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
@@ -57,18 +56,16 @@ COPY src /workdir/src
 RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packaging pyyaml && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
-      --extras dev doc tests > /workdir/requirements-dev.txt && \
+      --extras dev doc tests obdeect > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
     python -m pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
-    pip install --no-cache-dir "obdeect-dev==${OBDEECT_VERSION}" && \
     SIMTOOLS_CONTAINER_BUILD=1 \
       SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
       SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \
       SIMTOOLS_CORSIKA_IMAGE="${CORSIKA_IMAGE}" \
       SIMTOOLS_SIMTEL_IMAGE="${SIMTEL_IMAGE}" \
-      SIMTOOLS_OBDEECT_VERSION="${OBDEECT_VERSION}" \
       PYTHONPATH=/workdir/src python -m simtools.applications.dependency_manifest \
         --development \
         --project_file /workdir/pyproject.toml \
@@ -79,7 +76,6 @@ RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir --upgrade pip packag
     mkdir -p /workdir/external
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
-ENV SIMTOOLS_OBDEECT_VERSION="${OBDEECT_VERSION}"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
 ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/stdtools/lib:\

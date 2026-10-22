@@ -20,7 +20,6 @@ ARG SIMTOOLS_VERSION
 ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
-ARG OBDEECT_VERSION
 ARG BASE_IMAGE
 ARG CONTAINER_USER="simtools"
 ARG CONTAINER_UID="1000"
@@ -56,15 +55,13 @@ ENV SIMTOOLS_GIT_REVISION=${SIMTOOLS_GIT_REVISION}
 ENV SIMTOOLS_BASE_IMAGE=${BASE_IMAGE}
 ENV SIMTOOLS_CORSIKA_IMAGE=${CORSIKA_IMAGE}
 ENV SIMTOOLS_SIMTEL_IMAGE=${SIMTEL_IMAGE}
-ENV SIMTOOLS_OBDEECT_VERSION=${OBDEECT_VERSION}
 
 # hadolint ignore=DL4006
 RUN python"${PYTHON_VERSION}" -m venv env \
   && . env/bin/activate \
   && python -m pip install --no-cache-dir --upgrade pip \
   && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_GAMMASIMTOOLS="${SIMTOOLS_VERSION}" \
-    pip install --no-cache-dir '/workdir/simtools' \
-  && pip install --no-cache-dir "obdeect-dev==${OBDEECT_VERSION}" \
+    pip install --no-cache-dir '/workdir/simtools[obdeect]' \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \
   && pip cache purge && rm -rf /root/.cache \
   && mkdir -p /opt/simtools/provenance \

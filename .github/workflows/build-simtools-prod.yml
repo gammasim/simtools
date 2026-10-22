@@ -61,7 +61,6 @@ jobs:
     outputs:
       base_image: ${{ steps.config.outputs.base_image }}
       python_version: ${{ steps.config.outputs.python_version }}
-      obdeect_version: ${{ steps.config.outputs.obdeect_version }}
       production_matrix: ${{ steps.config.outputs.production_matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -182,7 +181,6 @@ jobs:
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ matrix.corsika_image }}
             SIMTEL_IMAGE=${{ matrix.simtel_image }}
-            OBDEECT_VERSION=${{ needs.dependency-config.outputs.obdeect_version }}
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_VERSION=${{ steps.build-identity.outputs.simtools_version }}
             SIMTOOLS_GIT_REVISION=${{ steps.build-identity.outputs.simtools_git_revision }}
