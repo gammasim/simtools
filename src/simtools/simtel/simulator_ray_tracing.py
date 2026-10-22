@@ -78,11 +78,10 @@ class SimulatorRayTracing(SimtelRunner):
             else config_data
         )
         self._rep_number = 0
-        # (Instrument seed, simulation seed) of each run; None lets sim_telarray draw them.
-        self.seeds = list(
+        self.run_seeds = list(
             (config_data.get("seeds") if isinstance(config_data, dict) else None) or [None]
         )
-        self.runs_per_set = len(self.seeds)
+        self.runs_per_set = len(self.run_seeds)
         self.photons_per_run = self.config.photons_per_run or (5000 if test else 100000)
         self._single_pixel_camera_file = None
         self._funnel_file = None
@@ -216,13 +215,6 @@ class SimulatorRayTracing(SimtelRunner):
         cmd.append(str(settings.config.corsika_dummy_file))
 
         return cmd, self._log_file, self._log_file.with_suffix(".err")
-
-    def _command_for_run(self, command, run_index):
-        """Run with the instrument and simulation seed of its random instrument instance."""
-        seeds = self.seeds[run_index]
-        if seeds is None:
-            return command
-        return [*command[:-1], "-C", f"random_seed={seeds[0]},{seeds[1]}", command[-1]]
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """

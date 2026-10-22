@@ -189,14 +189,14 @@ RAY_TRACING_BACKEND = _argument(
 )
 
 # Seeds of every simulation backend alike: the instrument seed randomises the instrument
-# (mirror errors, gains, ...) of each random instrument instance, the simulation seed the
+# (mirror deviations, gains, ...) of each random instrument instance, the simulation seed the
 # simulated events and photons.
 INSTRUMENT_SEED = _argument(
     "instrument_seed",
     _SIMULATION_CONFIGURATION_GROUP,
     aliases=("sim_telarray_instrument_seed",),
     help=(
-        "Seed of the random instrument setup (e.g. mirror errors, gains); with several "
+        "Seed of the random instrument setup (e.g. mirror deviations, gains); with several "
         "random instrument instances, their seeds are derived from it (default: random)."
     ),
     type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
@@ -206,7 +206,7 @@ RANDOM_INSTRUMENT_INSTANCES = _argument(
     "random_instrument_instances",
     _SIMULATION_CONFIGURATION_GROUP,
     aliases=("sim_telarray_random_instrument_instances",),
-    help="Number of random instrument instances (e.g. mirror-error realisations).",
+    help="Number of random instrument instances (e.g. random mirror realisations).",
     type=helpers.bounded_int(1, 1024),
     default=1,
 )
@@ -230,7 +230,7 @@ RAY_TRACING_ARGUMENTS = (
     INSTRUMENT_SEED,
     RANDOM_INSTRUMENT_INSTANCES(
         default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
-        help="Number of random instrument instances (mirror-error realisations) per image.",
+        help="Number of random instrument instances (random mirror realisations) per image.",
     ),
     SIMULATION_SEED,
 )
