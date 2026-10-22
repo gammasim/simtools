@@ -970,6 +970,9 @@ class ReadParameters:
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
         output_filename.parent.mkdir(parents=True, exist_ok=True)
         data, dict_tables = self.get_array_element_parameter_data(telescope_model)
+        is_design_model = telescope_model.name == telescope_model.design_model
+        if not is_design_model:
+            data, dict_tables = self._select_specific_parameters(data, dict_tables)
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
             data.sort(key=lambda x: (x[0], x[1]), reverse=True)
@@ -978,15 +981,12 @@ class ReadParameters:
             # Group by class and write sections
             file.write(f"# {telescope_model.name}\n")
 
-            if telescope_model.name != telescope_model.design_model:
+            if not is_design_model:
                 file.write(
-                    "The design model can be found here: "
-                    f"[{telescope_model.design_model}]"
-                    f"({telescope_model.design_model}.md).\n\n"
-                )
-                file.write(
-                    "Parameters shown in ***bold and italics*** are specific to each telescope.\n"
-                    "Parameters without emphasis are inherited from the design model.\n"
+                    f"Parameters specific to {telescope_model.name}"
+                    " (shown in ***bold and italics***).\n"
+                    "All other parameters are inherited from the design model "
+                    f"[{telescope_model.design_model}]({telescope_model.design_model}.md).\n"
                 )
                 file.write("\n\n")
 
@@ -998,20 +998,30 @@ class ReadParameters:
             for parameter, value_data, unit in dict_tables:
                 self._write_dict_table(parameter, file, value_data, unit)
 
+    @staticmethod
+    def _select_specific_parameters(data, dict_tables):
+        """
+        Select the parameters specific to an array element (not inherited from its design model).
+
+        Specific parameters are emphasized in the rows returned by
+        get_array_element_parameter_data.
+        """
+        specific_data = [row for row in data if row[1].startswith("***")]
+        specific_names = {row[1].strip("*") for row in specific_data}
+        specific_dict_tables = [entry for entry in dict_tables if entry[0] in specific_names]
+        return specific_data, specific_dict_tables
+
     def produce_model_parameter_reports(self, collection="telescopes"):
         """
-        Produce a markdown report per parameter for a given array element.
+        Produce a markdown report of all model parameters for a given array element.
 
-        Outputs one markdown report per model parameter of a given array element comparing
-        values across model versions.
+        Outputs one markdown report per array element with one section per model parameter,
+        comparing parameter values across model versions.
         """
         logger.info(
             f"Comparing parameters across model versions for Telescope: {self.array_element}"
             f" and Site: {self.site}."
         )
-        output_path = self.output_path / f"{self.array_element}"
-        Path(output_path).mkdir(parents=True, exist_ok=True)
-
         all_parameter_names = names.model_parameters(None).keys()
         all_parameter_data = self.model_reader.get_model_parameters_for_all_model_versions(
             site=self.site, array_element_name=self.array_element, collection=collection
@@ -1020,53 +1030,55 @@ class ReadParameters:
         comparison_data = self._compare_parameter_across_versions(
             all_parameter_data, all_parameter_names
         )
+        parameters = [
+            parameter for parameter in all_parameter_names if comparison_data.get(parameter)
+        ]
+        if not parameters:
+            return
 
-        for parameter in all_parameter_names:
-            parameter_data = comparison_data.get(parameter)
-            if not parameter_data:
-                continue
+        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        output_filename = Path(self.output_path) / f"{self.array_element}.md"
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(
+                f"# {self.array_element}\n\n"
+                "Model parameters and their values for all model versions.\n\n"
+            )
+            for parameter in parameters:
+                self._write_parameter_section(file, parameter, comparison_data, collection)
 
-            output_filename = output_path / f"{parameter}.md"
+    def _write_parameter_section(self, file, parameter, comparison_data, collection):
+        """Write the section of a single parameter comparing values across model versions."""
+        parameter_descriptions = self.get_all_parameter_descriptions(collection=collection).get(
+            parameter
+        ) or self.get_all_parameter_descriptions(collection="telescopes").get(parameter)
 
-            parameter_descriptions = self.get_all_parameter_descriptions(collection=collection).get(
-                parameter
-            ) or self.get_all_parameter_descriptions(collection="telescopes").get(parameter)
+        self._write_parameter_header(file, parameter, parameter_descriptions.get("description"))
+        self._write_table_rows(file, parameter, comparison_data)
 
-            description = parameter_descriptions.get("description")
-            with output_filename.open("w", encoding="utf-8") as file:
-                # Write header and table
-                self._write_parameter_header(file, parameter, description)
-                self._write_table_rows(file, parameter, comparison_data)
+        dict_items = [
+            item for item in comparison_data.get(parameter) if item.get("dict_table") is not None
+        ]
+        if dict_items:
+            latest_dict_item = max(
+                dict_items,
+                key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+            )
+            self._write_dict_table(
+                parameter,
+                file,
+                latest_dict_item["dict_table"],
+                latest_dict_item.get("dict_unit") or " ",
+                heading_level=3,
+            )
 
-                dict_items = [
-                    item
-                    for item in comparison_data.get(parameter)
-                    if item.get("dict_table") is not None
-                ]
-                if dict_items:
-                    latest_dict_item = max(
-                        dict_items,
-                        key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
-                    )
-                    self._write_dict_table(
-                        parameter,
-                        file,
-                        latest_dict_item["dict_table"],
-                        latest_dict_item.get("dict_unit") or " ",
-                    )
-
-                # If entries reference files, write the image/plot section
-                if comparison_data.get(parameter)[0]["file_flag"]:
-                    self._write_file_flag_section(file, parameter, comparison_data)
+        # If entries reference files, write the image/plot section
+        if comparison_data.get(parameter)[0]["file_flag"]:
+            self._write_file_flag_section(file, parameter, comparison_data)
+        file.write("\n\n")
 
     def _write_parameter_header(self, file, parameter, description):
-        """Write the markdown header for a parameter file."""
-        file.write(
-            f"# {parameter}\n\n"
-            f"**Telescope**: {self.array_element}\n\n"
-            f"**Description**: {description}\n\n"
-            "\n"
-        )
+        """Write the markdown section header for a parameter."""
+        file.write(f"## {parameter}\n\n**Description**: {description}\n\n\n")
 
     def _write_table_rows(self, file, parameter, comparison_data):
         """Write the comparison table header and rows for a parameter."""
@@ -1147,12 +1159,12 @@ class ReadParameters:
         description = plot_descriptions.get(parameter, "Parameter plot")
         file.write(f"![{description}.]({image_path.as_posix()})")
 
-    def _write_dict_table(self, parameter, file, value_data, unit):
+    def _write_dict_table(self, parameter, file, value_data, unit, heading_level=2):
         """Write a markdown table for parameters that are lists of dictionaries."""
         if not value_data:
             return
 
-        file.write(f"\n## {parameter.replace('_', ' ').title()}\n\n")
+        file.write(f"\n{'#' * heading_level} {parameter.replace('_', ' ').title()}\n\n")
         headers = value_data[0].keys()
         file.write("| " + " | ".join(headers) + " |\n")
         file.write("|" + " --- |" * len(headers) + "\n")

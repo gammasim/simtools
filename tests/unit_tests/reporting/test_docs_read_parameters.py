@@ -106,11 +106,27 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
 
     read_parameters.produce_model_parameter_reports()
 
-    file_path = output_path / args["telescope"] / "quantum_efficiency.md"
+    file_path = output_path / f"{args['telescope']}.md"
     assert file_path.exists()
     report = file_path.read_text(encoding="utf-8")
-    assert "quantum_efficiency" in report
+    assert report.startswith("# LSTN-01\n")
+    assert "## quantum_efficiency" in report
     assert "qe_file.dat" in report
+
+
+def test_produce_model_parameter_reports_no_parameters(tmp_test_directory, mocker):
+    read_parameters = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01"}, output_path=tmp_test_directory
+    )
+    mocker.patch.object(
+        read_parameters.model_source,
+        "get_model_parameters_for_all_model_versions",
+        return_value={},
+    )
+
+    read_parameters.produce_model_parameter_reports()
+
+    assert not (tmp_test_directory / "LSTN-01.md").exists()
 
 
 @pytest.mark.parametrize(
@@ -1419,6 +1435,42 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(tmp_path
         rp,
         "get_array_element_parameter_data",
         return_value=(
+            [
+                ["Structure", "inherited_param", "1.0.0", "1 m", "desc", "short"],
+                ["Structure", "***param***", "***1.0.0***", "***2 m***", "desc", "short"],
+            ],
+            [
+                ("dict_param", [{"a": 1, "value": 2}], "m"),
+                ("param", [{"a": 1, "value": 2}], "m"),
+            ],
+        ),
+    )
+    write_dict_table = mocker.patch.object(rp, "_write_dict_table")
+
+    rp.produce_array_element_report()
+
+    content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
+    assert "Parameters specific to LSTN-01" in content
+    assert "inherited from the design model [LSTN-design](LSTN-design.md)" in content
+    assert "***param***" in content
+    assert "inherited_param" not in content
+    assert write_dict_table.call_count == 1
+    assert write_dict_table.call_args[0][0] == "param"
+
+
+def test_produce_array_element_report_design_model_lists_all_parameters(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
+        output_path=tmp_path,
+    )
+    mocker.patch(
+        "simtools.reporting.docs_read_parameters.TelescopeModel",
+        return_value=DummyTelescope(site="North", name="LSTN-design", model_version="6.0.0"),
+    )
+    mocker.patch.object(
+        rp,
+        "get_array_element_parameter_data",
+        return_value=(
             [["Structure", "param", "1.0.0", "1 m", "desc", "short"]],
             [("dict_param", [{"a": 1, "value": 2}], "m")],
         ),
@@ -1427,10 +1479,25 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(tmp_path
 
     rp.produce_array_element_report()
 
-    content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
-    assert "The design model can be found here" in content
-    assert "Parameters shown in ***bold and italics***" in content
+    content = (tmp_path / "LSTN-design.md").read_text(encoding="utf-8")
+    assert "inherited from the design model" not in content
+    assert "| param" in content
     assert write_dict_table.call_count == 1
+
+
+def test_select_specific_parameters():
+    data = [
+        ["Structure", "inherited", "1.0.0", "1 m", "desc", "short"],
+        ["Structure", "***specific***", "***1.0.0***", "***1 m***", "desc", "short"],
+    ]
+    dict_tables = [("inherited", [{"a": 1}], "m"), ("specific", [{"a": 2}], "m")]
+
+    selected_data, selected_dict_tables = ReadParameters._select_specific_parameters(
+        data, dict_tables
+    )
+
+    assert selected_data == [data[1]]
+    assert selected_dict_tables == [dict_tables[1]]
 
 
 def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mocker):
@@ -1479,6 +1546,18 @@ def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mock
     assert write_dict_table.call_count == 1
     assert write_dict_table.call_args[0][0] == "dict_param"
     assert write_dict_table.call_args[0][2] == [{"a": 2, "value": 2}]
+    assert write_dict_table.call_args[1] == {"heading_level": 3}
+    content = (tmp_path / "LSTN-01.md").read_text(encoding="utf-8")
+    assert "## dict_param\n\n**Description**: desc" in content
+
+
+def test__write_dict_table_heading_level(tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+    file = StringIO()
+    rp._write_dict_table("dict_param", file, [{"a": 1, "value": 2}], "m", heading_level=3)
+    content = file.getvalue()
+    assert content.startswith("\n### Dict Param\n\n")
+    assert "| 1 | 2 m |" in content
 
 
 def test__write_dict_table_empty_value_data(tmp_path):
