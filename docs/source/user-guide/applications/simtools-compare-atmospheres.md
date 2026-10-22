@@ -36,6 +36,9 @@ reach a requested level. Each transmission table uses its own recorded
 observation level; comparisons can therefore include different path endpoints.
 All relative-difference axes use a symmetric range of ±35% by default. Override
 this with the `relative_difference_limit` command-line argument.
+With `--fallback_to_candidate`, a missing reference ECSV produces candidate-only plots.
+The JSON summary records the missing reference and the science-test acceptance rule
+marks the result as a warning.
 The summary reports unweighted differences over common tabulated wavelengths.
 A value is required at 10 km in each transmission table and each profile must
 cover that altitude. Missing wavelength cells are not interpolated. Direct

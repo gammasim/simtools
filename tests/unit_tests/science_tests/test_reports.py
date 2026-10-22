@@ -169,7 +169,9 @@ def test_write_summary_writes_json_and_markdown(tmp_test_directory):
     markdown = (directory / "release-summary.md").read_text(encoding=ENCODING)
     assert "[report](north/compare); [deviations](north/compare/acceptance.md)" in markdown
     assert "| boom | - |" in markdown
-    assert "Previous successful output" in markdown
+    assert "## Execution details" not in markdown
+    assert "/work/execution.log" not in markdown
+    assert "Previous successful output" not in markdown
     assert "run ID `run`" in markdown
     assert json.loads((directory / RELEASE_SUMMARY_JSON).read_text(encoding=ENCODING))
 
