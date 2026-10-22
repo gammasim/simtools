@@ -4,6 +4,7 @@ import pytest
 
 from simtools.configuration.arguments import (
     FIGURE_DPI,
+    FIGURE_PNG_PALETTE,
     ArgumentDefinition,
 )
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -30,3 +31,11 @@ def test_figure_dpi_defaults_and_accepts_cli_value():
 
     assert parser.parse_args([]).figure_dpi == 300
     assert parser.parse_args(["--figure_dpi", "123"]).figure_dpi == 123
+
+
+def test_figure_png_palette_defaults_and_accepts_cli_flag():
+    parser = CommandLineParser()
+    parser.add_argument_definitions((FIGURE_PNG_PALETTE,))
+
+    assert parser.parse_args([]).figure_png_palette is False
+    assert parser.parse_args(["--figure_png_palette"]).figure_png_palette is True

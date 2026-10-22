@@ -328,6 +328,13 @@ FIGURE_DPI = _argument(
     default=300,
 )
 
+FIGURE_PNG_PALETTE = _argument(
+    "figure_png_palette",
+    "execution",
+    action="store_true",
+    help="Save PNG figures with an optimized 256-color palette (smaller files).",
+)
+
 EXPORT_BUILD_INFO = _argument(
     "export_build_info",
     "execution",
@@ -371,6 +378,7 @@ EXECUTION_ARGUMENTS = (
     DISABLE_LOG_FILE,
     FIGURE_FORMAT,
     FIGURE_DPI,
+    FIGURE_PNG_PALETTE,
     EXPORT_BUILD_INFO,
     VERSION,
     BUILD_INFO,

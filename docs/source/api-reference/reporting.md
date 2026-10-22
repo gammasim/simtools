@@ -5,6 +5,22 @@
 The reporting modules read model parameter values and descriptions from the model repository and write to a report.
 
 
+## docs_pages
+
+```{eval-rst}
+.. automodule:: reporting.docs_pages
+   :members:
+```
+
+
+## docs_toctree
+
+```{eval-rst}
+.. automodule:: reporting.docs_toctree
+   :members:
+```
+
+
 ## docs_read_parameters
 
 ```{eval-rst}
