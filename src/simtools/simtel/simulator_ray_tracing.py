@@ -4,10 +4,9 @@ import logging
 import math
 from collections import namedtuple
 
-import astropy.units as u
-
 from simtools import settings
 from simtools.io import io_handler
+from simtools.ray_tracing import parameter_changes
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
 
@@ -44,7 +43,9 @@ class SimulatorRayTracing(SimtelRunner):
     config_data: namedtuple
         namedtuple containing the configurable parameters as values (expected units in
         brackets): zenith_angle (deg), off_axis_x (deg), off_axis_y (deg),
-        source_distance (km), single_mirror_mode, use_random_focal_length, mirror_numbers.
+        source_distance (km), single_mirror_mode, mirror_numbers, photons_per_run,
+        parameter_changes (model-parameter values replacing those of the model) and
+        seeds (instrument and simulation seed of each run).
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
     test: bool
@@ -77,20 +78,11 @@ class SimulatorRayTracing(SimtelRunner):
             else config_data
         )
         self._rep_number = 0
-        self.runs_per_set = 1 if self.config.single_mirror_mode else 20
-        self.photons_per_run = 100000 if not test else 5000
-        photon_count = (
-            config_data.get("number_of_photons") if isinstance(config_data, dict) else None
+        self.run_seeds = list(
+            (config_data.get("seeds") if isinstance(config_data, dict) else None) or [None]
         )
-        if photon_count is not None:
-            if (
-                isinstance(photon_count, bool)
-                or not isinstance(photon_count, int)
-                or photon_count < 1
-            ):
-                raise ValueError("number_of_photons must be a positive integer")
-            self.photons_per_run = photon_count
-            self.runs_per_set = 1
+        self.runs_per_set = len(self.run_seeds)
+        self.photons_per_run = self.config.photons_per_run or (5000 if test else 100000)
         self._single_pixel_camera_file = None
         self._funnel_file = None
         self._write_config = True
@@ -176,12 +168,6 @@ class SimulatorRayTracing(SimtelRunner):
 
         config_file_path = self.telescope_model.config_file_path
 
-        if self.config.single_mirror_mode:
-            # Note: no mirror length defined for dual-mirror telescopes
-            _mirror_focal_length = float(
-                self.telescope_model.get_parameter_value("mirror_focal_length")
-            )
-
         telescope_theta, telescope_phi = telescope_pointing(
             self.config.zenith_angle,
             self.config.off_axis_x,
@@ -211,22 +197,12 @@ class SimulatorRayTracing(SimtelRunner):
         if self.config.single_mirror_mode:
             options.update(
                 {
-                    "focus_offset": "all:0.",
                     "camera_config_file": str(self._single_pixel_camera_file),
                     "camera_pixels": "1",
                     "trigger_pixels": "1",
-                    "camera_body_diameter": "0",
-                    "mirror_list": self.telescope_model.get_single_mirror_list_file(
-                        self.config.mirror_numbers, self.config.use_random_focal_length
-                    ),
-                    "focal_length": self.config.source_distance * u.km.to(u.cm),
-                    "dish_shape_length": _mirror_focal_length,
-                    "mirror_focal_length": _mirror_focal_length,
-                    "parabolic_dish": "0",
-                    "mirror_align_random_distance": "0.",
-                    "mirror_align_random_vertical": "0.,28.,0.,0.",
                 }
             )
+        options.update(parameter_changes.sim_telarray_options(self.config.parameter_changes))
 
         cmd = [
             str(settings.config.sim_telarray_exe),
@@ -238,7 +214,7 @@ class SimulatorRayTracing(SimtelRunner):
             cmd.extend(["-C", f"{key}={value}"])
         cmd.append(str(settings.config.corsika_dummy_file))
 
-        return cmd, self._log_file, self._log_file
+        return cmd, self._log_file, self._log_file.with_suffix(".err")
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """
@@ -301,8 +277,9 @@ class SimulatorRayTracing(SimtelRunner):
                 "off_axis_y",
                 "source_distance",
                 "single_mirror_mode",
-                "use_random_focal_length",
                 "mirror_numbers",
+                "photons_per_run",
+                "parameter_changes",
             ],
         )
         return config_data(
@@ -312,6 +289,7 @@ class SimulatorRayTracing(SimtelRunner):
             off_axis_y=data_dict["off_axis_y"],
             source_distance=data_dict["source_distance"],
             single_mirror_mode=data_dict["single_mirror_mode"],
-            use_random_focal_length=data_dict["use_random_focal_length"],
-            mirror_numbers=data_dict["mirror_numbers"],
+            mirror_numbers=data_dict.get("mirror_numbers"),
+            photons_per_run=data_dict.get("photons_per_run"),
+            parameter_changes=data_dict.get("parameter_changes") or {},
         )

@@ -1,15 +1,13 @@
 """
 Ray tracing simulations and analysis.
 
-Simulates light propagation through telescope optics using simtel_array,
-processes photon lists to compute PSF (D80 containment diameter),
-effective mirror area, and effective focal length as functions of off-axis angle.
+Traces star light through the telescope optics with the configured ray-tracing
+backend (``simtools.ray_tracing.backends``) and computes the PSF (D80
+containment diameter), effective mirror area, and effective focal length as
+functions of the off-axis angle.
 """
 
-import gzip
 import logging
-import shutil
-from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from math import pi, tan
 from pathlib import Path
@@ -19,12 +17,13 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools import settings
+from simtools import constants, settings
 from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
-from simtools.ray_tracing.psf_analysis import PSFImage
-from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
-from simtools.utils import names
+from simtools.ray_tracing import backends, parameter_changes
+from simtools.ray_tracing.backends import StarImageRequest
+from simtools.simtel import simtel_seeds
+from simtools.utils import names, random
 from simtools.visualization import visualize
 
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
@@ -119,6 +118,7 @@ class RayTracing:
             self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")
         )
         self.psf_images = {}
+        self._backend = None
         self._results = None
 
     def _process_offset_angles(self, off_axis_angle, offset_directions):
@@ -375,22 +375,18 @@ class RayTracing:
         """
         Run simulations using the configured ray-tracing backend.
 
-        Generates photon lists for each off-axis angle and mirror configuration,
-        simulating light propagation through telescope optics.
-        Output files are compressed with gzip if compress_photons is True.
-        Independent full-telescope simulations are executed concurrently. Single-mirror
-        simulations remain serial because their temporary camera files are shared.
+        Traces one image for each off-axis angle (and mirror in single-mirror mode).
 
         Parameters
         ----------
         test: bool
             Test flag will make it faster by simulating much fewer photons.
         force: bool
-            Force flag will remove existing files and simulate again.
+            Simulate again even if the backend keeps earlier results.
         compress_photons: bool
-            If True, compress photon list files to ``.gz`` after simulation.
+            Compress photon files the backend writes.
         max_workers: int
-            Maximum number of concurrent full-telescope simulations. Defaults to 8.
+            Maximum number of concurrent simulations of the backend. Defaults to 8.
 
         Raises
         ------
@@ -400,143 +396,103 @@ class RayTracing:
         """
         if max_workers < 1:
             raise ValueError("max_workers must be a positive integer")
+        self._get_backend().simulate(
+            self._requests(test),
+            test=test,
+            force=force,
+            compress_photons=compress_photons,
+            max_workers=max_workers,
+        )
 
-        if settings.config.ray_tracing_backend == "obdeect":
-            self._simulate_obdeect(test, force)
-            return
-
-        if not self.single_mirror_mode:
-            self.telescope_model.write_sim_telarray_config_file(
-                additional_models=self.site_model,
-                label=self.label,
+    def _get_backend(self):
+        """Return the ray-tracing backend (created on first use)."""
+        if self._backend is None:
+            self._backend = backends.get_backend()(
+                self.telescope_model,
+                self.site_model,
+                self.label,
+                self.zenith_angle,
+                self.single_mirror_mode,
             )
+        return self._backend
 
-        simulations = [
-            (
-                self._create_simulator(off_x, off_y, mirror_number, mirror_data, test, force),
-                off_x,
-                off_y,
-                mirror_number,
-            )
+    def _requests(self, test=False, for_simulation=True):
+        """Star images to trace: one per off-axis angle (and mirror in single-mirror mode).
+
+        Seeds and parameter changes are only needed to simulate; the analysis
+        identifies the images.
+        """
+        photons = self._photons_per_instance(test)
+        seeds = ()
+        if for_simulation:
+            seeds = self._instance_seeds(single_instance=test or photons is not None)
+        return [
+            self._request(off_x, off_y, mirror_number, photons or 100000, seeds, for_simulation)
             for off_x, off_y in self.off_axis_angle
-            for mirror_number, mirror_data in self.mirrors.items()
+            for mirror_number in self.mirrors
         ]
 
-        if not self.single_mirror_mode and len(simulations) > 1:
-            workers = min(max_workers, len(simulations))
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                list(
-                    executor.map(
-                        self._run_simulator,
-                        simulations,
-                        [test] * len(simulations),
-                        [compress_photons] * len(simulations),
-                    )
-                )
-            return
+    @staticmethod
+    def _photons_per_instance(test):
+        """Photons per instance: 5000 in test mode, else ``number_of_photons`` (or None)."""
+        if test:
+            return 5000
+        photons = settings.config.args.get("number_of_photons")
+        if photons is not None and (
+            isinstance(photons, bool) or not isinstance(photons, int) or photons < 1
+        ):
+            raise ValueError("number_of_photons must be a positive integer")
+        return photons
 
-        for simulator in simulations:
-            self._run_simulator(simulator, test, compress_photons)
-
-    def _create_simulator(self, off_x, off_y, mirror_number, mirror_data, test, force):
-        """Create one ray-tracing simulator with unique input and output files."""
-        self._logger.info(
-            f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), mirror={mirror_number}"
-        )
-        theta_offset = np.sqrt(off_x**2 + off_y**2)
-        simulator = SimulatorRayTracing(
-            telescope_model=self.telescope_model,
-            site_model=self.site_model,
-            label=self.label,
-            test=test,
-            config_data={
-                "zenith_angle": self.zenith_angle,
-                "off_axis_x": off_x,
-                "off_axis_y": off_y,
-                "off_axis_theta": theta_offset,
-                "source_distance": mirror_data["source_distance"],
-                "single_mirror_mode": self.single_mirror_mode,
-                "use_random_focal_length": self.use_random_focal_length,
-                "mirror_numbers": mirror_number,
-                "number_of_photons": None
-                if test
-                else settings.config.args.get("number_of_photons"),
-            },
-            force_simulate=force,
-        )
-        if not self.single_mirror_mode:
-            simulator._write_config = False  # pylint: disable=protected-access
-        return simulator
-
-    def _run_simulator(self, simulation, test, compress_photons):
-        """Run one prepared simulator and optionally compress its photon list."""
-        simulator, off_x, off_y, mirror_number = simulation
-        simulator.run(test=test)
-        photons_file = self.output_directory.joinpath(
-            self._generate_file_name(
-                file_type="photons",
-                suffix=".lis",
-                off_axis_x=off_x,
-                off_axis_y=off_y,
-                mirror_number=mirror_number if self.single_mirror_mode else None,
+    def _request(self, off_x, off_y, mirror_number, photons, seeds, for_simulation):
+        """Return the request of one image."""
+        source_distance = self.mirrors[mirror_number]["source_distance"]
+        changes = {}
+        if self.single_mirror_mode and for_simulation:
+            changes = parameter_changes.single_mirror(
+                self.telescope_model.get_single_mirror_list_file(
+                    mirror_number, self.use_random_focal_length
+                ),
+                self.telescope_model.get_parameter_value("mirror_focal_length"),
+                source_distance * u.km.to(u.cm),
             )
+        return StarImageRequest(
+            off_axis_x=off_x,
+            off_axis_y=off_y,
+            source_distance_km=source_distance,
+            seeds=tuple(self._mirror_seeds(seeds, mirror_number)),
+            photons_per_instance=photons,
+            mirror_number=mirror_number if self.single_mirror_mode else None,
+            parameter_changes=changes,
         )
-        if not compress_photons:
-            return
 
-        self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
-        with open(photons_file, "rb") as f_in:
-            with gzip.open(photons_file.with_suffix(photons_file.suffix + ".gz"), "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        photons_file.unlink()
+    def _instance_seeds(self, single_instance=False):
+        """(Instrument seed, simulation seed) of each random instrument instance.
 
-    def _simulate_obdeect(self, test, force):
-        """Trace star light with obdeect; photon images are written as ``.npz`` files.
-
-        Photon numbers and mirror-error realisations follow the sim_telarray runs.
+        A single instance in single-mirror mode, for a given number of photons, or
+        if ``single_instance`` is set; otherwise ``random_instrument_instances``.
+        Both backends run one simulation per instance with these seeds.
         """
-        # pylint: disable-next=import-outside-toplevel
-        from simtools.ray_tracing.obdeect_backend import ObdeectRayTracer
-
-        tracer = ObdeectRayTracer(
-            self.telescope_model, seed=settings.config.args.get("obdeect_seed")
+        instances = settings.config.args.get(
+            "random_instrument_instances", constants.RAY_TRACING_INSTRUMENT_INSTANCES
         )
-        photons = 5000 if test else settings.config.args.get("number_of_photons")
-        configurations = 1 if self.single_mirror_mode or photons is not None else 20
-        if photons is None:
-            photons = configurations * 100000
-        for off_x, off_y in self.off_axis_angle:
-            for mirror_number, mirror_data in self.mirrors.items():
-                photons_file = self._get_ray_tracing_files(off_x, off_y, mirror_number)[0]
-                if photons_file.exists() and not force:
-                    self._logger.info(f"Skipping existing photon image {photons_file}")
-                    continue
-                single_mirror = None
-                if self.single_mirror_mode:
-                    single_mirror = (
-                        mirror_number,
-                        self.telescope_model.get_single_mirror_list_file(
-                            mirror_number, self.use_random_focal_length
-                        ),
-                        mirror_data["source_distance"] * u.km.to(u.cm),
-                    )
-                arrivals = tracer.trace_star(
-                    self.zenith_angle,
-                    off_x,
-                    off_y,
-                    mirror_data["source_distance"] * u.km.to(u.m),
-                    photons,
-                    configurations,
-                    single_mirror,
+        if single_instance or self.single_mirror_mode:
+            instances = 1
+        return simtel_seeds.instance_seed_pairs(instances)
+
+    def _mirror_seeds(self, seeds, mirror_number):
+        """Seeds of one mirror in single-mirror mode (each mirror has its own errors)."""
+        if not self.single_mirror_mode:
+            return seeds
+        return [
+            tuple(
+                random.seeds(
+                    fixed_seed=(seed, mirror_number + 1), max_seed=constants.SIMTEL_MAX_SEED
                 )
-                np.savez(
-                    photons_file,
-                    x_cm=100.0 * arrivals["position_m"][:, 0],
-                    y_cm=100.0 * arrivals["position_m"][:, 1],
-                    total_photons=arrivals["total_photons"],
-                    total_area_m2=arrivals["total_area_m2"],
-                    has_structure=arrivals["has_structure"],
-                )
+                for seed in pair
+            )
+            for pair in seeds
+        ]
 
     def analyze(
         self,
@@ -546,6 +502,7 @@ class RayTracing:
         no_tel_transmission=False,
         containment_fraction=0.8,
         save_photons=False,
+        keep_images=True,
     ):
         """
         Analyze ray tracing simulation results.
@@ -570,8 +527,11 @@ class RayTracing:
             Containment fraction for PSF containment calculation. Allowed values are in the
             interval [0,1]
         save_photons: bool
-            If True, retain compressed photon list files after analysis. By default, photon
-            list files are removed after successful analysis.
+            If True, keep the photons of the images (as files of the backend); by default,
+            photon files are removed after the analysis.
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle (see ``images``). Images hold
+            all photon positions; without them only the results table is kept.
         """
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
@@ -587,6 +547,7 @@ class RayTracing:
             use_rx,
             containment_fraction,
             save_photons,
+            keep_images,
         )
 
         if do_analyze:
@@ -601,9 +562,10 @@ class RayTracing:
         use_rx,
         containment_fraction,
         save_photons,
+        keep_images=True,
     ):
         """
-        Process off-axis angles and mirrors for RayTracing analysis.
+        Analyze the image of each off-axis angle and mirror.
 
         Parameters
         ----------
@@ -616,7 +578,9 @@ class RayTracing:
         containment_fraction: float
             Containment fraction for PSF containment calculation.
         save_photons: bool
-            If True, retain compressed photon list files after analysis.
+            If True, keep the photons of the images (backend-specific files).
+        keep_images: bool
+            If True, keep the PSF image of each off-axis angle.
 
         Returns
         -------
@@ -624,96 +588,41 @@ class RayTracing:
             List of results for each combination of off-axis angle and mirror.
         """
         _rows = []
-
-        for off_x, off_y in self.off_axis_angle:
-            for mirror_number, mirror_data in self.mirrors.items():
-                current_result = self._process_mirror_result(
-                    off_x,
-                    off_y,
-                    mirror_number,
-                    mirror_data,
-                    tel_transmission_pars,
-                    do_analyze,
-                    use_rx,
-                    containment_fraction,
-                    save_photons,
-                )
-                if current_result is not None:
-                    _rows.append(current_result)
-
+        for request in self._requests(for_simulation=False):
+            mirror_number = 0 if request.mirror_number is None else request.mirror_number
+            self._logger.debug(
+                f"Analyzing RayTracing for off_axis=({request.off_axis_x:.3f}, "
+                f"{request.off_axis_y:.3f})"
+            )
+            image, traced_structure = self._get_backend().psf_image(
+                request,
+                self.mirrors[mirror_number]["focal_length"],
+                containment_fraction,
+                use_rx=use_rx,
+                save_photons=save_photons,
+            )
+            theta_offset = np.sqrt(request.off_axis_x**2 + request.off_axis_y**2)
+            # A traced telescope structure replaces telescope_transmission.
+            tel_transmission = (
+                1.0
+                if traced_structure
+                else compute_telescope_transmission(tel_transmission_pars, theta_offset)
+            )
+            if keep_images:
+                self.psf_images[(request.off_axis_x, request.off_axis_y)] = copy(image)
+            current_result = self._analyze_mirror_image(
+                image,
+                request.off_axis_x,
+                request.off_axis_y,
+                mirror_number,
+                theta_offset,
+                containment_fraction,
+                tel_transmission,
+                do_analyze,
+            )
+            if current_result is not None:
+                _rows.append(current_result)
         return _rows
-
-    def _process_mirror_result(
-        self,
-        off_x,
-        off_y,
-        mirror_number,
-        mirror_data,
-        tel_transmission_pars,
-        do_analyze,
-        use_rx,
-        containment_fraction,
-        save_photons,
-    ):
-        """Create and analyze the PSF image for one offset and mirror."""
-        self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
-        photons_file_lis, photons_file_gz, stars_file = self._get_ray_tracing_files(
-            off_x, off_y, mirror_number
-        )
-        photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
-        theta_offset = np.sqrt(off_x**2 + off_y**2)
-        tel_transmission = (
-            1.0
-            if self._traced_structure(photons_file)
-            else compute_telescope_transmission(tel_transmission_pars, theta_offset)
-        )
-        image = self._create_psf_image(
-            photons_file, mirror_data["focal_length"], containment_fraction, use_rx
-        )
-        self.psf_images[(off_x, off_y)] = copy(image)
-        current_result = self._analyze_mirror_image(
-            image,
-            off_x,
-            off_y,
-            mirror_number,
-            theta_offset,
-            containment_fraction,
-            tel_transmission,
-            do_analyze,
-        )
-        self._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons)
-        return current_result
-
-    def _get_ray_tracing_files(self, off_x, off_y, mirror_number):
-        """Return photon and star list paths for one ray-tracing simulation."""
-        photon_suffix = ".npz" if settings.config.ray_tracing_backend == "obdeect" else ".lis"
-        photons_file_lis = self.output_directory.joinpath(
-            self._generate_file_name(
-                "photons",
-                photon_suffix,
-                off_axis_x=off_x,
-                off_axis_y=off_y,
-                mirror_number=mirror_number,
-            )
-        )
-        photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
-        stars_file = self.output_directory.joinpath(
-            self._generate_file_name(
-                "stars",
-                ".lis",
-                off_axis_x=off_x,
-                off_axis_y=off_y,
-                mirror_number=mirror_number,
-            )
-        )
-        return photons_file_lis, photons_file_gz, stars_file
-
-    @staticmethod
-    def _select_photon_file(photons_file_lis, photons_file_gz, use_rx):
-        """Choose the available photon list, preferring a reusable compressed list."""
-        if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
-            return photons_file_lis
-        return photons_file_gz
 
     def _analyze_mirror_image(
         self,
@@ -741,22 +650,6 @@ class RayTracing:
             return (*current_results, mirror_number)
         return current_results
 
-    @staticmethod
-    def _traced_structure(photons_file):
-        """Return True if obdeect traced the structure, which replaces telescope_transmission."""
-        if photons_file.suffix != ".npz":
-            return False
-        with np.load(photons_file) as data:
-            return bool(data["has_structure"])
-
-    @staticmethod
-    def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
-        """Remove ray-tracing input and output lists unless retention was requested."""
-        if not save_photons:
-            photons_file_lis.unlink(missing_ok=True)
-            photons_file_gz.unlink(missing_ok=True)
-            stars_file.unlink(missing_ok=True)
-
     def _get_telescope_transmission_params(self, no_tel_transmission):
         """
         Get telescope transmission parameters.
@@ -776,41 +669,6 @@ class RayTracing:
             if not no_tel_transmission
             else [1, 0, 0, 0]
         )
-
-    def _create_psf_image(self, photons_file, focal_length, containment_fraction, use_rx=False):
-        """
-        Create PSF image from photons file.
-
-        Parameters
-        ----------
-        photons_file: Path
-            Path to the photons file.
-        focal_length: float
-            Focal length of the telescope.
-        containment_fraction: float
-            Containment fraction for PSF containment calculation.
-        use_rx: bool
-            Flag indicating whether to use the RX method for analysis.
-
-        Returns
-        -------
-        PSFImage
-            PSF image object.
-        """
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
-        if photons_file.suffix == ".npz":
-            if use_rx:
-                raise ValueError("rx analyses sim_telarray photon lists only")
-            with np.load(photons_file) as data:
-                image.set_photon_positions(
-                    data["x_cm"],
-                    data["y_cm"],
-                    int(data["total_photons"]),
-                    float(data["total_area_m2"]),
-                )
-        else:
-            image.process_photon_list(photons_file, use_rx)
-        return image
 
     def _analyze_image(
         self,

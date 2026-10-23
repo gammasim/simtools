@@ -29,7 +29,7 @@ applications:
     grid_output_path: simtools-grid-output
     primary: gamma
     run_number: 20
-    sim_telarray_seed:
+    simulation_seed:
     - 1745
     - 290
     simulation_software: corsika_sim_telarray
@@ -57,6 +57,12 @@ applications:
         reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-South-CTAO-South-Beta.cfg}
     - path_descriptor: grid_output_path
       file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.log.gz
+    - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.err.gz
+    - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.corsika.log.gz
+    - path_descriptor: grid_output_path
+      file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.corsika.err.gz
     - path_descriptor: grid_output_path
       file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.hdata.zst
     - path_descriptor: grid_output_path

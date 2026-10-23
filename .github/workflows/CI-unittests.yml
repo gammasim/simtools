@@ -9,7 +9,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -91,7 +91,7 @@ jobs:
         uses: ./.github/actions/setup-simtools-tests
         with:
           python-version: ${{ matrix.python-version }}
-          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          simulation-model-branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
           simtools-tests-branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
 
       - name: Unit tests
@@ -183,7 +183,7 @@ jobs:
               "-Dsonar.plugins.download.timeout=600"
               "-Dsonar.python.coverage.reportPaths=coverage.xml"
               "-Dsonar.python.version=3.14"
-              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py"
+              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py,tests/unit_tests/**"
               "-Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**"
             )
 

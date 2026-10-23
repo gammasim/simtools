@@ -13,8 +13,7 @@ applications:
   integration_tests:
   - test_outputs:
     - path_descriptor: output_path
-      file: quantum_efficiency.md
-      output_sub_path: LSTN-01
+      file: LSTN-01.md
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema

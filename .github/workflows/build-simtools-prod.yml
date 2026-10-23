@@ -9,7 +9,7 @@ on:
         description: 'Simulation model branch for image tests'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch for image tests'
         required: false
@@ -27,9 +27,10 @@ on:
           - avx512f
           - sse4
   push:
+    branches:
+      - main
     tags:
       - 'v*-rc*'
-  pull_request:
     paths:
       - docker/Dockerfile-simtools-prod
       - pyproject.toml
@@ -180,7 +181,6 @@ jobs:
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ matrix.corsika_image }}
             SIMTEL_IMAGE=${{ matrix.simtel_image }}
-            OBDEECT_VERSION=0.1.0
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_VERSION=${{ steps.build-identity.outputs.simtools_version }}
             SIMTOOLS_GIT_REVISION=${{ steps.build-identity.outputs.simtools_git_revision }}
@@ -197,7 +197,7 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
-      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
       simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
       runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'

@@ -70,10 +70,10 @@ def test_atmospheric_transmission(tmp_test_directory):
 
 
 def test_ground_to_telescope_follows_the_star_geometry():
-    """Telescope pointing as in the validated star-light runs (obdeect_backend)."""
+    """Telescope pointing as in the validated star-light runs (obdeect)."""
     pytest.importorskip("obdeect")
     # pylint: disable=import-outside-toplevel
-    from simtools.ray_tracing.obdeect_backend import star_direction
+    from simtools.ray_tracing.backends.obdeect import star_direction
     from simtools.simtel.simulator_ray_tracing import telescope_pointing
 
     zenith = math.radians(20.0)

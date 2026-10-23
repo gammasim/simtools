@@ -51,31 +51,27 @@ class ArgumentDefinition:
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
-        """Return a copy with application-local argparse overrides."""
-        return ArgumentDefinition(
-            self.name,
-            group=self.group,
-            exclusive_group=self.exclusive_group,
-            exclusive_group_required=self.exclusive_group_required,
-            preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
-            **{**self.kwargs, **overrides},
-        )
+        """Return a copy with application-local definition and argparse overrides.
+
+        Overrides named like a definition field (for example ``exclusive_group`` or
+        ``aliases``) replace that field; all other overrides replace argparse keywords.
+        """
+        fields = {field: overrides.pop(field, getattr(self, field)) for field in _DEFINITION_FIELDS}
+        return ArgumentDefinition(self.name, **fields, **{**self.kwargs, **overrides})
 
     def without_requiredness(self):
         """Return a copy whose required constraints can be validated after parsing."""
-        kwargs = dict(self.kwargs)
-        if "required" in kwargs:
-            kwargs["required"] = False
-        return ArgumentDefinition(
-            self.name,
-            group=self.group,
-            exclusive_group=self.exclusive_group,
-            exclusive_group_required=False,
-            preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
-            **kwargs,
-        )
+        required_override = {"required": False} if "required" in self.kwargs else {}
+        return self(exclusive_group_required=False, **required_override)
+
+
+_DEFINITION_FIELDS = (
+    "group",
+    "exclusive_group",
+    "exclusive_group_required",
+    "preserve_by_version",
+    "aliases",
+)
 
 
 def _argument(name, group, **kwargs):
@@ -171,6 +167,17 @@ BACKEND_CONFIG = _argument(
 
 BACKEND_ARGUMENTS = (BACKEND, BACKEND_CONFIG)
 
+MAX_WORKERS = _argument(
+    "max_workers",
+    "execution",
+    help=(
+        "Maximum number of parallel local worker processes: 0 or negative uses all CPU "
+        "cores, 1 runs serially, unset uses a fraction of the CPU cores."
+    ),
+    type=int,
+    default=None,
+)
+
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
 RAY_TRACING_BACKEND = _argument(
@@ -181,15 +188,52 @@ RAY_TRACING_BACKEND = _argument(
     default=None,
 )
 
-OBDEECT_SEED = _argument(
-    "obdeect_seed",
-    "ray tracing configuration",
-    help="Seed for the random mirror deviations and photon sampling of obdeect (default: random).",
-    type=int,
-    default=None,
+# Seeds of every simulation backend alike: the instrument seed randomises the instrument
+# (mirror deviations, gains, ...) of each random instrument instance, the simulation seed the
+# simulated events and photons.
+INSTRUMENT_SEED = _argument(
+    "instrument_seed",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_instrument_seed",),
+    help=(
+        "Seed of the random instrument setup (e.g. mirror deviations, gains); with several "
+        "random instrument instances, their seeds are derived from it (default: random)."
+    ),
+    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
 )
 
-RAY_TRACING_ARGUMENTS = (RAY_TRACING_BACKEND, OBDEECT_SEED)
+RANDOM_INSTRUMENT_INSTANCES = _argument(
+    "random_instrument_instances",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_random_instrument_instances",),
+    help="Number of random instrument instances (e.g. random mirror realisations).",
+    type=helpers.bounded_int(1, 1024),
+    default=1,
+)
+
+SIMULATION_SEED = _argument(
+    "simulation_seed",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_seed",),
+    help=(
+        "Seed of the simulation (events, photons) (default: random). Two values: "
+        "[instrument_seed, simulation_seed] (use for testing only)."
+    ),
+    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
+    nargs="+",
+)
+
+SEED_ARGUMENTS = (INSTRUMENT_SEED, RANDOM_INSTRUMENT_INSTANCES, SIMULATION_SEED)
+
+RAY_TRACING_ARGUMENTS = (
+    RAY_TRACING_BACKEND,
+    INSTRUMENT_SEED,
+    RANDOM_INSTRUMENT_INSTANCES(
+        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
+        help="Number of random instrument instances (random mirror realisations) per image.",
+    ),
+    SIMULATION_SEED,
+)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 
@@ -219,6 +263,15 @@ OUTPUT_ARGUMENTS = (
     OUTPUT_FILE,
     OUTPUT_FILE_FORMAT,
     SKIP_OUTPUT_VALIDATION,
+)
+
+SELECT = _argument(
+    "select",
+    "application",
+    help="Selection expression as dotted.path=value. Can be repeated.",
+    action="extend",
+    nargs="+",
+    default=[],
 )
 
 RUNTIME_ENVIRONMENT_FILE = _argument(
@@ -330,6 +383,13 @@ FIGURE_DPI = _argument(
     default=300,
 )
 
+FIGURE_PNG_PALETTE = _argument(
+    "figure_png_palette",
+    "execution",
+    action="store_true",
+    help="Save PNG figures with an optimized 256-color palette (smaller files).",
+)
+
 EXPORT_BUILD_INFO = _argument(
     "export_build_info",
     "execution",
@@ -341,7 +401,10 @@ IGNORE_EXISTING_PARAMETER_VERSION = _argument(
     "ignore_existing_parameter_version",
     "execution",
     action="store_true",
-    help="skip checking for an existing model parameter version in the model repository",
+    help=(
+        "Skip the check for an existing model parameter version in the model repository "
+        "before writing model parameters."
+    ),
 )
 
 VERSION = _argument(
@@ -370,8 +433,8 @@ EXECUTION_ARGUMENTS = (
     DISABLE_LOG_FILE,
     FIGURE_FORMAT,
     FIGURE_DPI,
+    FIGURE_PNG_PALETTE,
     EXPORT_BUILD_INFO,
-    IGNORE_EXISTING_PARAMETER_VERSION,
     VERSION,
     BUILD_INFO,
 )
@@ -565,6 +628,13 @@ SIMULATION_SOFTWARE = _argument(
     type=str,
     choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
     default=defaults.SIMULATION_SOFTWARE_DEFAULT,
+)
+
+SIMULATION_FILE_FORMAT = _argument(
+    "simulation_file_format",
+    _SIMULATION_CONFIGURATION_GROUP,
+    help="Simulation input format. Current IACT and sim_telarray files use 'eventio'.",
+    default="eventio",
 )
 
 PRIMARY = _argument(
@@ -767,32 +837,6 @@ CORSIKA_INTERACTION_ARGUMENTS = (
     CORSIKA_HADRONIC_TRANSITION_ENERGY,
 )
 
-SIM_TELARRAY_INSTRUMENT_SEED = _argument(
-    "sim_telarray_instrument_seed",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help="Random seed used for sim_telarray instrument setup.",
-    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
-)
-
-SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES = _argument(
-    "sim_telarray_random_instrument_instances",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help="Number of random instrument instances initialized in sim_telarray.",
-    type=helpers.bounded_int(1, 1024),
-    default=1,
-)
-
-SIM_TELARRAY_SEED = _argument(
-    "sim_telarray_seed",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help=(
-        "Random seed used for sim_telarray simulation. Single value: seed for event "
-        "simulation. Two values: [instrument_seed, simulation_seed] (use for testing only)."
-    ),
-    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
-    nargs="+",
-)
-
 SIM_TELARRAY_SEED_FILE = _argument(
     "sim_telarray_seed_file",
     _SIM_TELARRAY_CONFIGURATION_GROUP,
@@ -801,12 +845,7 @@ SIM_TELARRAY_SEED_FILE = _argument(
     default="sim_telarray_instrument_seeds.txt",
 )
 
-SIM_TELARRAY_ARGUMENTS = (
-    SIM_TELARRAY_INSTRUMENT_SEED,
-    SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES,
-    SIM_TELARRAY_SEED,
-    SIM_TELARRAY_SEED_FILE,
-)
+SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE)
 
 SOURCE_DISTANCE = _argument(
     "source_distance",
@@ -855,6 +894,14 @@ OFFSET_STEP = _argument(
     help="Offset angle step size in degrees (unitless values are interpreted as deg).",
     type=helpers.positive_quantity("deg"),
     default=0.25 * u.deg,
+)
+
+PSF_CONTAINMENT_FRACTION = _argument(
+    "fraction",
+    "application",
+    help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
+    type=helpers.efficiency_interval,
+    default=0.8,
 )
 
 ALL_MODEL_VERSIONS = _argument(
@@ -910,14 +957,7 @@ def corsika_configuration_arguments(*, primary_required=True):
 
 def _layout_argument(argument, *, required):
     """Put an argument in the shared array-layout selection group."""
-    return ArgumentDefinition(
-        argument.name,
-        group=argument.group,
-        exclusive_group="array layout",
-        exclusive_group_required=required,
-        preserve_by_version=argument.preserve_by_version,
-        **argument.kwargs,
-    )
+    return argument(exclusive_group="array layout", exclusive_group_required=required)
 
 
 def layout_selection_arguments(

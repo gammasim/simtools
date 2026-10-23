@@ -17,7 +17,7 @@ applications:
     label: test
     log_level: DEBUG
     output_path: simtools-output
-    sim_telarray_seed:
+    simulation_seed:
     - 1745
     - 290
   integration_tests:

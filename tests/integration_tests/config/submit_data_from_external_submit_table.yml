@@ -6,7 +6,7 @@ applications:
     summary: >-
       Validate an external MST mirror-measurement table and metadata against the input-data schema.
   configuration:
-    input_data_file: tests/resources/static/MLTdata-preproduction.ecsv
+    input_file: tests/resources/static/MLTdata-preproduction.ecsv
     input_meta: tests/resources/static/MLTdata-preproduction.meta.yml
     output_file: test.ecsv
     output_path: simtools-output

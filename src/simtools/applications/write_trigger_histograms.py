@@ -38,12 +38,7 @@ _ARGUMENTS = (
         exclusive_group="event_data_input",
         exclusive_group_required=True,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "require_complete_runs",
         help="Fail when selected run numbers are not contiguous within each configuration group.",
@@ -89,15 +84,7 @@ _ARGUMENTS = (
         action="store_true",
         default=False,
     ),
-    cli.ArgumentDefinition(
-        "max_workers",
-        help=(
-            "Number of worker processes to use for execution "
-            "(default: 1; set to 0 for auto-detection of available cores)."
-        ),
-        type=int,
-        default=1,
-    ),
+    cli.MAX_WORKERS(default=1),
 )
 
 

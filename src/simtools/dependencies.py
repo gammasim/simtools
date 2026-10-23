@@ -32,7 +32,7 @@ from simtools.version import __version__
 _logger = logging.getLogger(__name__)
 
 DEPENDENCY_MANIFEST_PATH = Path("/opt/simtools/provenance/dependency-manifest.json")
-DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.2.0"
+DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.1.0"
 SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "avx_flag",
     "build_date",
@@ -395,7 +395,6 @@ def build_dependency_manifest():
                 "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
                 "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
                 "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
-                "obdeect_version": os.getenv("SIMTOOLS_OBDEECT_VERSION"),
             }.items()
             if value
         },
@@ -409,6 +408,8 @@ def _sanitize_build_options(build_options):
 
 def get_direct_python_dependency_versions():
     """Return installed versions of direct simtools Python dependencies.
+
+    Includes optional dependencies (extras) that are installed.
 
     Returns
     -------
@@ -424,9 +425,6 @@ def get_direct_python_dependency_versions():
         try:
             parsed_requirement = Requirement(requirement)
         except InvalidRequirement:
-            continue
-        marker = parsed_requirement.marker
-        if marker is not None and "extra" in str(marker) and not marker.evaluate({"extra": ""}):
             continue
         name = parsed_requirement.name.lower().replace("_", "-")
         installed_version = _distribution_version(name)
@@ -523,7 +521,6 @@ def write_development_dependency_manifest(output_file, project_file, build_optio
                 "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
                 "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
                 "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
-                "obdeect_version": os.getenv("SIMTOOLS_OBDEECT_VERSION"),
             }.items()
             if value
         },
@@ -532,9 +529,12 @@ def write_development_dependency_manifest(output_file, project_file, build_optio
 
 
 def _project_dependency_versions(project_file):
-    """Return installed versions of direct dependencies declared by a project file."""
+    """Return installed versions of direct (and installed optional) dependencies of a project."""
     with Path(project_file).open("rb") as file:
-        requirements = tomllib.load(file)["project"]["dependencies"]
+        project = tomllib.load(file)["project"]
+    requirements = list(project["dependencies"])
+    for optional in project.get("optional-dependencies", {}).values():
+        requirements.extend(optional)
     versions = {}
     for requirement in requirements:
         match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
