@@ -5,6 +5,8 @@ model: sim_telarray receives them as configuration options, other backends as ch
 parameter records.
 """
 
+TELESCOPE_STRUCTURE = "telescope_structure"
+
 # No random mirror errors (focal lengths, reflection angles, alignment).
 PERFECT_MIRROR = {
     "random_focal_length": [0.0, 0.0],
@@ -43,6 +45,7 @@ def single_mirror(mirror_list, mirror_focal_length, camera_distance):
         "mirror_focal_length": mirror_focal_length,
         "focus_offset": [0.0, 0.0, 0.0, 0.0],
         "camera_body_diameter": 0.0,
+        TELESCOPE_STRUCTURE: "none",
         "parabolic_dish": False,
         "mirror_align_random_distance": 0.0,
         "mirror_align_random_vertical": [0.0, 28.0, 0.0, 0.0],
@@ -71,4 +74,4 @@ def sim_telarray_options(changes):
             return ",".join(str(v) for v in value)
         return str(value)
 
-    return {name: text(value) for name, value in changes.items()}
+    return {name: text(value) for name, value in changes.items() if name != TELESCOPE_STRUCTURE}

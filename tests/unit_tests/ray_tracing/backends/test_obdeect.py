@@ -114,6 +114,9 @@ def test_perfect_and_single_mirror(toy_telescope):
     ]
     assert normals[0] == normals[1]
 
+    toy_telescope.parameters[parameter_changes.TELESCOPE_STRUCTURE] = _record(
+        "structure.ecsv", file=True
+    )
     single_mirror = perfect | parameter_changes.single_mirror(
         toy_telescope.get_single_mirror_list_file(0), 800.0, 1600.0
     )
@@ -156,6 +159,7 @@ def test_backend_psf_image(backend, io_handler, save_photons):
     image, traced_structure = backend.psf_image(request, 800.0, 0.8, save_photons=save_photons)
 
     assert traced_structure is False
+    assert request.key not in backend._images
     area = image.get_effective_area()
     assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
     files = list(io_handler.get_output_directory().glob("ray_tracing_photons*.ecsv"))

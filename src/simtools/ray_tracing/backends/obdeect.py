@@ -275,6 +275,7 @@ class ObdeectBackend:
         )
         if save_photons:
             self._write_photons(request, traced, position_cm)
+        del self._images[request.key]
         return image, bool(traced["has_structure"])
 
     def _write_photons(self, request, traced, position_cm):

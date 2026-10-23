@@ -45,6 +45,8 @@ FLASHER_POSITION = "flasher_position"
 FLASHER_WAVELENGTH = "flasher_wavelength"
 FLAT_FIELDING = "flat_fielding"
 LIGHT_SOURCE_TYPE = "light_source_type"
+LIGHT_SOURCE_POSITION = "light_source_position"
+LIGHT_SOURCE_POINTING = "light_source_pointing"
 NUMBER_OF_EVENTS = "number_of_events"
 RUN_NUMBER = "run_number"
 TELESCOPE_SPHERE_RADIUS = "telescope_sphere_radius"
@@ -220,9 +222,9 @@ class SimulatorLightEmission(SimtelRunner):
 
             self._logger.info(f"Using wavelength: {closest_wavelength.value} nm")
 
-        if config.get("light_source_position") is not None:
-            config["light_source_position"] = (
-                np.array(config["light_source_position"], dtype=float) * u.m
+        if config.get(LIGHT_SOURCE_POSITION) is not None:
+            config[LIGHT_SOURCE_POSITION] = (
+                np.array(config[LIGHT_SOURCE_POSITION], dtype=float) * u.m
             )
 
         return config
@@ -424,18 +426,17 @@ class SimulatorLightEmission(SimtelRunner):
         """
         theta, phi = self._get_telescope_pointing()
         position = self.get_illuminator_position()
-        if self.uses_telescope_position_file(self.get_illuminator_pointing_vector(position)):
-            telescope = self._get_telescope_position_ground_with_axis_offset(*position)
-            radius = self.telescope_model.get_parameter_value_with_unit(TELESCOPE_SPHERE_RADIUS)
-            telescope, radius = [c.to(u.m).value for c in telescope], radius.to(u.m).value
-        else:  # xyzls default: one telescope at the array origin.
-            telescope, radius = [0.0, 0.0, 0.0], 15.0
+        telescope = self._get_telescope_position_ground_with_axis_offset(*position)
+        radius = self.telescope_model.get_parameter_value_with_unit(TELESCOPE_SPHERE_RADIUS)
+        telescope, radius = [c.to(u.m).value for c in telescope], radius.to(u.m).value
         position = np.array([c.to(u.m).value for c in position])
         offsets = [
             c.to(u.m).value
             for c in self.telescope_model.get_parameter_value_with_unit(AXES_OFFSETS)
         ]
         relative = position - np.array(telescope)
+        if relative[2] == 0:
+            raise ValueError("Horizontal illuminator paths require a nonzero altitude difference")
         pointing = np.asarray(self.get_illuminator_pointing_vector(position * u.m), dtype=float)
         transmission = AtmosphericTransmission(
             self.site_model.get_parameter_table("atmospheric_transmission")
@@ -494,7 +495,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         if self.light_emission_config[LIGHT_SOURCE_TYPE] == FLAT_FIELDING:
             return 0.0, 0.0
-        if self.light_emission_config.get("light_source_position") is not None:
+        if self.light_emission_config.get(LIGHT_SOURCE_POSITION) is not None:
             self._logger.info("Using fixed (vertical up) telescope pointing.")
             return 0.0, 0.0
         illuminator_position = self.get_illuminator_position()
@@ -554,7 +555,12 @@ class SimulatorLightEmission(SimtelRunner):
         The first axes_offsets component is a horizontal offset from the azimuth axis towards the
         reflector. For illuminator simulations, offsets are applied in the telescope frame using
         the current pointing direction.
+        An explicit source position and downward beam select an artificial telescope at the origin.
         """
+        if self.light_emission_config.get(LIGHT_SOURCE_POSITION) is not None and not (
+            self.uses_telescope_position_file(self.light_emission_config.get(LIGHT_SOURCE_POINTING))
+        ):
+            return (0.0 * u.m,) * 3
         x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
             "array_element_position_ground"
         )
@@ -646,7 +652,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def get_illuminator_position(self):
         """Return the illuminator emission position in ground coordinates."""
-        pos = self.light_emission_config.get("light_source_position")
+        pos = self.light_emission_config.get(LIGHT_SOURCE_POSITION)
         if pos is not None:
             return pos
 
@@ -660,7 +666,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def get_illuminator_pointing_vector(self, pos=None):
         """Return illuminator pointing vector; prefer explicit config if available."""
-        pointing_vector = self.light_emission_config.get("light_source_pointing")
+        pointing_vector = self.light_emission_config.get(LIGHT_SOURCE_POINTING)
         if pointing_vector is not None:
             return pointing_vector
         if pos is None:
@@ -670,10 +676,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     @staticmethod
     def uses_telescope_position_file(pointing_vector):
-        """Decide whether to use telpos file based on pointing vector.
-
-        Rule: do not use telpos only if pointing is (0, 0, -1) (within tolerance).
-        """
+        """Return False for the downward beam used with an artificial telescope at the origin."""
         try:
             vec = np.asarray(pointing_vector, dtype=float)
         except TypeError, ValueError:

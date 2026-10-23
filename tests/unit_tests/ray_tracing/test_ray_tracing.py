@@ -15,6 +15,10 @@ from simtools.constants import SIMTEL_MAX_SEED
 from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 from simtools.utils import random
 
+BACKEND_METADATA = "ray_tracing_backend"
+PROCESS_IMAGES = "_process_off_axis_and_mirror"
+CACHED_COLUMN = "cached"
+
 
 def _example_rows():
     return [
@@ -211,11 +215,12 @@ def test_ray_tracing_no_images(ray_tracing_lst, caplog):
     ],
 )
 def test_analyze(ray_tracing_lst, mocker, export, force, read_called, store_called, export_called):
+    ray_tracing_lst._results = QTable(meta={BACKEND_METADATA: "sim_telarray"})
     mock_read_results = mocker.patch.object(ray_tracing_lst, "_read_results")
     mock_store_results = mocker.patch.object(ray_tracing_lst, "_store_results")
     mock_export_results = mocker.patch.object(ray_tracing_lst, "export_results")
     mock_exists = mocker.patch("pathlib.Path.exists", return_value=True)
-    mock_process = mocker.patch.object(ray_tracing_lst, "_process_off_axis_and_mirror")
+    mock_process = mocker.patch.object(ray_tracing_lst, PROCESS_IMAGES)
 
     ray_tracing_lst.analyze(export=export, force=force)
 
@@ -225,6 +230,20 @@ def test_analyze(ray_tracing_lst, mocker, export, force, read_called, store_call
     assert mock_read_results.called == read_called
     assert mock_store_results.called == store_called
     assert mock_export_results.called == export_called
+
+
+@pytest.mark.parametrize("cached_backend", [None, "obdeect"])
+def test_analyze_rejects_results_from_another_backend(ray_tracing_lst, mocker, cached_backend):
+    cached = QTable({CACHED_COLUMN: [True]})
+    if cached_backend is not None:
+        cached.meta[BACKEND_METADATA] = cached_backend
+    cached.write(ray_tracing_lst._file_results, format="ascii.ecsv")
+    mocker.patch.object(ray_tracing_lst, PROCESS_IMAGES, return_value=_example_rows())
+
+    ray_tracing_lst.analyze(export=False)
+
+    assert CACHED_COLUMN not in ray_tracing_lst._results.colnames
+    assert BACKEND_METADATA in ray_tracing_lst._results.meta
 
 
 def test_images_with_psf_images(ray_tracing_lst, mocker):
