@@ -10,6 +10,7 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.data_model import model_data_writer
+from simtools.io import io_handler
 from simtools.job_execution.execution import map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
@@ -40,8 +41,17 @@ class MirrorOptimizationJob:
 
 
 def _optimize_single_mirror_worker(job):
-    """Reconstruct optimization state and optimize one mirror."""
-    instance = MirrorPanelPSF(job.label, job.args)
+    """
+    Reconstruct optimization state and optimize one mirror.
+
+    Each mirror has its own model directory: the sim_telarray configuration
+    written for every evaluation holds the trial RNDA values, and mirrors are
+    optimized in parallel.
+    """
+    model_directory = io_handler.IOHandler().get_model_configuration_directory(
+        job.args["model_version"], sub_dir=f"mirror_{job.mirror_index}"
+    )
+    instance = MirrorPanelPSF(job.label, job.args, model_directory=model_directory)
     return instance.optimize_single_mirror(job.mirror_index, job.measured_psf)
 
 
@@ -60,6 +70,8 @@ class MirrorPanelPSF:
         Application label.
     args_dict : dict
         Dictionary with input arguments, e.g. site, telescope, data path, model version.
+    model_directory : Path, optional
+        Directory of the model configuration files.
     """
 
     # Hard guardrails
@@ -68,7 +80,7 @@ class MirrorPanelPSF:
     MAX_FRAC_STEP = 0.1
     MAX_ITER = 100
 
-    def __init__(self, label, args_dict):
+    def __init__(self, label, args_dict, model_directory=None):
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.args_dict = args_dict
@@ -80,6 +92,7 @@ class MirrorPanelPSF:
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
+            model_directory=model_directory,
         )
 
         self.measured_data = self._load_measured_data()
