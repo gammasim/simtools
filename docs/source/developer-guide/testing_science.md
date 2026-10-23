@@ -137,6 +137,23 @@ results and publishes `report.pdf` and `science-comparison.json` to
 contain `simtools-compare-science-results`. Execution logs and effective workflows remain below
 `$SIMTOOLS_SCIENCE_TESTS_ROOT/<release>/work/science-tests/`.
 
+Atmosphere comparisons use `compare.atmospheres`, which runs independently for North and South.
+Each site workflow exports its configured reference and candidate profile and transmission
+parameter versions to separate directories, then compares those ECSV files. These inputs come
+from the release's configured model source; they do not use the software release baseline path.
+The science-test report includes `atmosphere_profiles.pdf`, `atmosphere_transmission.pdf`, and
+`atmosphere_summary.json`. Select parameter versions in each site's `replacements` in
+`science-test-template/sites/`; the release's site files can override them. The atmosphere summary
+acceptance check requires common transmission wavelengths. Review the figures and values for
+scientific suitability; a passing structural check does not set physical difference limits.
+
+For example, run both sites with:
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test compare.atmospheres --site north --site south
+```
+
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.
 Warnings do not qualify a release; every required test must pass.

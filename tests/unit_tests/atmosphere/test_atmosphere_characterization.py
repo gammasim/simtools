@@ -31,6 +31,8 @@ _REFERENCE = "reference"
 _TRANSMISSION_DIFFERENCE = "transmission_difference"
 _RELATIVE_DIFFERENCE_LIMIT = 35.0
 _SUMMARY_FILE = "atmosphere_summary.json"
+_PROFILE_PLOT = "atmosphere_profiles.png"
+_TRANSMISSION_PLOT = "atmosphere_transmission.png"
 _WAVELENGTH = "wavelength"
 _EXTINCTION = "extinction"
 _ATMOSPHERES = "atmospheres"
@@ -84,12 +86,21 @@ def test_characterize_writes_plots_and_summary(atmospheres, tmp_test_directory):
     assert math.isclose(candidate["max_absolute_difference"], 0.5)
     assert math.isclose(result[_ATMOSPHERES][0]["observation_level_km"], 2.0)
     for name in (
-        "atmosphere_profiles.png",
-        "atmosphere_transmission.png",
+        _PROFILE_PLOT,
+        _TRANSMISSION_PLOT,
         _SUMMARY_FILE,
     ):
         assert (tmp_test_directory / name).is_file()
     assert json.loads((tmp_test_directory / _SUMMARY_FILE).read_text()) == result
+
+
+def test_characterize_writes_candidate_only_plots(atmospheres, tmp_test_directory):
+    result = characterize_atmospheres(atmospheres[:1], tmp_test_directory)
+
+    assert result[_REFERENCE] == _REFERENCE
+    assert result[_ATMOSPHERES][0][_TRANSMISSION_DIFFERENCE]["common_wavelength_count"] == 2
+    assert (Path(tmp_test_directory) / _PROFILE_PLOT).is_file()
+    assert (Path(tmp_test_directory) / _TRANSMISSION_PLOT).is_file()
 
 
 def test_characterize_validates_inputs(atmospheres, tmp_test_directory):
