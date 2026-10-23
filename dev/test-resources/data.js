@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792746941814,
+  "lastUpdate": 1792751118561,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31534,6 +31534,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 446.83984375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximilian.linhoff@cta-observatory.org",
+            "name": "Maximilian Linhoff",
+            "username": "maxnoe"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e9c9661597f2f027368b0594810a84463463c3c5",
+          "message": "Re-enable sonar for tag builds (#2670)",
+          "timestamp": "2026-10-23T12:04:34+02:00",
+          "tree_id": "c6571e69c4623bd7abf7dffc8751da07f3dc9458",
+          "url": "https://github.com/gammasim/simtools/commit/e9c9661597f2f027368b0594810a84463463c3c5"
+        },
+        "date": 1792751100947,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 91.21932020899999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 94.12,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 446.640625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
