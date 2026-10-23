@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install '.[doc]'
+          bash .github/scripts/install_python_dependencies.sh '.[doc]'
 
       - name: Check for non-ASCII characters
         run: |
