@@ -16,14 +16,8 @@ _ARGUMENTS = (
         help="Plotting configuration file name.",
         type=str,
         required=True,
-        default=None,
     ),
-    cli.ArgumentDefinition(
-        "table_data_path",
-        help="Path to the data files (optional). Expect all files to be in the same directory.",
-        type=str,
-        default=None,
-    ),
+    cli.DATA_SEARCH_PATH(default=None, aliases=("table_data_path",)),
     cli.ArgumentDefinition(
         "output_file", help="Output file name (without suffix)", type=str, required=True
     ),
@@ -69,7 +63,7 @@ def main():
     plot_tables.plot(
         config=plot_config["plot"],
         output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
-        data_path=app_context.args.get("table_data_path"),
+        data_path=app_context.args.get("data_search_path"),
         model_reader=app_context.model_reader,
     )
 

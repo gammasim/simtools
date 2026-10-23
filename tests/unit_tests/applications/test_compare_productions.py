@@ -121,7 +121,7 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     app_context.args = {
         "comparison_level": "signal",
         "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
-        "telescope_name": ["LSTN-01"],
+        "array_layout_name": ["LSTN-01"],
         "figure_format": ["pdf"],
     }
     app_context.io_handler.get_output_directory.return_value = output_directory
@@ -174,20 +174,6 @@ def test_signal_comparison_uses_array_layout_name_as_telescope_selection(
     mock_collect.assert_called_once_with(mocker.ANY, telescope_names=["LSTN-03"])
 
 
-def test_signal_comparison_rejects_two_telescope_selection_options(mocker):
-    app_context = mocker.MagicMock()
-    app_context.args = {
-        "comparison_level": "signal",
-        "array_layout_name": ["LSTN-03"],
-        "telescope_name": ["MSTN-01"],
-    }
-    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
-    mock_application.start.return_value = app_context
-
-    with pytest.raises(ValueError, match="Use only one of"):
-        compare_productions.main()
-
-
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():
     argument_names = {argument.name for argument in compare_productions.APPLICATION.all_arguments}
 
@@ -198,7 +184,7 @@ def test_application_exposes_events_comparison_level_without_unused_output_argum
     }.isdisjoint(argument_names)
     assert "comparison_level" in argument_names
     assert "array_layout_name" in argument_names
-    assert "telescope_name" in argument_names
+    assert "telescope_name" not in argument_names
     assert {"test", "ignore_existing_parameter_version"}.isdisjoint(argument_names)
     assert "figure_format" in argument_names
 
@@ -224,7 +210,7 @@ def test_comparison_level_argument_accepts_events():
     )
 
     assert args.comparison_level == "events"
-    assert args.telescope_name == ["LSTN-01", "MSTN-01"]
+    assert args.array_layout_name == ["LSTN-01", "MSTN-01"]
 
 
 def test_comparison_level_argument_accepts_computing():
@@ -316,6 +302,47 @@ def test_computing_comparison_rejects_duplicate_effective_labels(mocker):
     parser.error.assert_called_once_with(
         "'--baseline_label' and '--candidate_label' must be different."
     )
+
+
+@pytest.mark.parametrize(
+    ("baseline_label", "candidate_label"),
+    [("candidate", None), (None, "baseline"), ("same", "same")],
+)
+def test_event_comparison_rejects_duplicate_effective_metadata_labels(
+    mocker, baseline_label, candidate_label
+):
+    parser = mocker.Mock()
+    compare_productions._post_parse(
+        {
+            "comparison_level": "events",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": baseline_label,
+            "candidate_label": candidate_label,
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--baseline_label' and '--candidate_label' must be different."
+    )
+
+
+def test_event_comparison_accepts_distinct_effective_metadata_labels(mocker):
+    parser = mocker.Mock()
+    compare_productions._post_parse(
+        {
+            "comparison_level": "events",
+            "baseline_path": "baseline",
+            "candidate_path": "candidate",
+            "baseline_label": "reference",
+        },
+        None,
+        parser,
+    )
+
+    parser.error.assert_not_called()
 
 
 def test_main_runs_computing_comparison(mocker, tmp_test_directory):

@@ -4,7 +4,6 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration.argument_helpers import telescope
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.production_comparison import write_production_comparison
@@ -24,7 +23,6 @@ _ARGUMENTS = (
         action="append",
         nargs="+",
         metavar=("LABEL", "INPUT_FILE_PATTERNS"),
-        required=False,
         help=(
             "Production descriptor for event or signal comparison: --production <label> "
             "<comma-separated input file patterns>. Repeat for each production; the first "
@@ -35,32 +33,23 @@ _ARGUMENTS = (
         "baseline_path",
         help="Production directory containing baseline metadata manifests.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_path",
         help="Optional candidate production directory containing metadata manifests.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "baseline_label",
         help="Display label for the baseline production in computing comparisons.",
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "candidate_label",
         help="Display label for the candidate production in computing comparisons.",
         type=str,
-        required=False,
     ),
-    cli.ArgumentDefinition(
-        "select",
-        help="Selection expression as dotted.path=value. Can be repeated.",
-        action="append",
-        default=[],
-    ),
+    cli.SELECT,
     cli.ArgumentDefinition(
         "compare_by",
         help="Configuration field allowed to differ between baseline and candidate.",
@@ -74,20 +63,17 @@ _ARGUMENTS = (
         help="Comparison level to execute.",
     ),
     cli.ArgumentDefinition(
-        "array_layout_name",
-        nargs="+",
+        "report_mode",
+        choices=["compact", "diagnostic", "none"],
+        default="diagnostic",
+        help="Render compact PDF panels, full diagnostics, or no figures while retaining metrics.",
+    ),
+    cli.ARRAY_LAYOUT_NAME(
+        aliases=("telescope_name",),
         help=(
             "Restrict event-level comparison to selected array layout name(s), or signal-level "
             "comparison to selected telescope name(s)."
         ),
-        required=False,
-    ),
-    cli.ArgumentDefinition(
-        "telescope_name",
-        nargs="+",
-        type=telescope,
-        help="Restrict signal-level comparison to the selected telescope name(s).",
-        required=False,
     ),
 )
 
@@ -118,8 +104,6 @@ def _validate_computing_arguments(args_dict, parser):
 
 def _validate_non_computing_arguments(args_dict, parser):
     """Validate arguments specific to event and signal comparisons."""
-    if args_dict.get("baseline_label") or args_dict.get("candidate_label"):
-        parser.error("Production labels can only be used with '--comparison_level computing'.")
     has_legacy_input = bool(args_dict.get("production"))
     has_metadata_input = bool(args_dict.get("baseline_path") or args_dict.get("candidate_path"))
     if has_legacy_input == has_metadata_input:
@@ -130,6 +114,11 @@ def _validate_non_computing_arguments(args_dict, parser):
         parser.error("'--baseline_path' and '--candidate_path' must be used together.")
     if args_dict.get("comparison_level") == "signal" and not has_legacy_input:
         parser.error("Signal-level comparison requires '--production' sim_telarray inputs.")
+    if has_metadata_input and args_dict.get("comparison_level") == "events":
+        baseline_label = args_dict.get("baseline_label") or "baseline"
+        candidate_label = args_dict.get("candidate_label") or "candidate"
+        if baseline_label == candidate_label:
+            parser.error("'--baseline_label' and '--candidate_label' must be different.")
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -140,7 +129,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     initialize_output=False,
     initialize_model_reader=False,
-    excluded_standard_arguments=("test", "ignore_existing_parameter_version"),
+    excluded_standard_arguments=("test",),
     post_parse=_post_parse,
 )
 
@@ -173,16 +162,10 @@ def main():
 
 def _run_signal_comparison(app_context):
     """Run signal-level comparison and return generated statistics files."""
-    array_layout_names = app_context.args.get("array_layout_name")
-    telescope_names = app_context.args.get("telescope_name")
-    if array_layout_names and telescope_names:
-        raise ValueError(
-            "Use only one of --array_layout_name and --telescope_name for signal comparison."
-        )
     production_descriptors = parse_production_arguments(app_context.args["production"])
     metrics_by_telescope = collect_signal_metrics(
         production_descriptors,
-        telescope_names=array_layout_names or telescope_names,
+        telescope_names=app_context.args.get("array_layout_name"),
     )
     return [
         (statistics_file, None)

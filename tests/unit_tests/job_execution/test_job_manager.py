@@ -7,6 +7,11 @@ import pytest
 import simtools.job_execution.job_manager as jm
 
 logger = logging.getLogger()
+_ATMOSPHERE_OPTION = "--atmosphere"
+_PROFILE_REFERENCE_FILE = "profile-reference.ecsv"
+_TRANSMISSION_REFERENCE_FILE = "transmission-reference.ecsv"
+_PROFILE_CANDIDATE_FILE = "profile-candidate.ecsv"
+_TRANSMISSION_CANDIDATE_FILE = "transmission-candidate.ecsv"
 
 
 @pytest.mark.parametrize(
@@ -150,6 +155,11 @@ def test_build_command_combinations(command, config, runtime_env, expected):
     assert result == expected
 
 
+def test_build_command_omits_empty_comparison_fields():
+    command = "simtools-compare-productions"
+    assert jm._build_command(command, {"compare_by": []}) == [command]
+
+
 def test_build_command_with_script_file(tmp_path):
     script_file = tmp_path / "test_script.sh"
     script_file.write_text("#!/bin/bash\necho test")
@@ -199,6 +209,7 @@ def test_submit_command_failure(mocker, tmp_path, with_app_log):
         ({"key": "value"}, ["--key", "value"]),
         ({"flag": True}, ["--flag"]),
         ({"flag": False}, []),
+        ({"files": []}, []),
         ({"files": ["file1.txt", "file2.txt"]}, ["--files", "file1.txt", "file2.txt"]),
         ({"file": ["file1.txt"]}, ["--file", "file1.txt"]),
         ({"count": 42, "threshold": 3.14}, ["--count", "42", "--threshold", "3.14"]),
@@ -216,6 +227,26 @@ def test_convert_dict_to_args(input_dict, expected):
         # For multiple items, check all expected elements are present
         for item in expected:
             assert item in result
+
+
+def test_convert_nested_list_to_repeated_fixed_arity_arguments():
+    configuration = {
+        "atmosphere": [
+            ["North", _PROFILE_REFERENCE_FILE, _TRANSMISSION_REFERENCE_FILE],
+            ["South", _PROFILE_CANDIDATE_FILE, _TRANSMISSION_CANDIDATE_FILE],
+        ]
+    }
+
+    assert jm._convert_dict_to_args(configuration) == [
+        _ATMOSPHERE_OPTION,
+        "North",
+        _PROFILE_REFERENCE_FILE,
+        _TRANSMISSION_REFERENCE_FILE,
+        _ATMOSPHERE_OPTION,
+        "South",
+        _PROFILE_CANDIDATE_FILE,
+        _TRANSMISSION_CANDIDATE_FILE,
+    ]
 
 
 def test_raise_job_execution_error_with_all_logs(mocker, tmp_path):

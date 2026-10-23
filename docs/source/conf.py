@@ -5,10 +5,12 @@
 # documentation root, use Path.resolve() to make it absolute, like shown here.
 
 # pylint: skip-file
+import json
 import tomllib
 from importlib import import_module
 from pathlib import Path
 from sys import path
+from urllib.parse import quote
 
 import yaml
 
@@ -150,6 +152,12 @@ html_title = f"{project}"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_logo = "../_static/simtools_logo.png"
+switcher_versions = json.loads(
+    (Path(__file__).parent.parent / "_static/switcher.json").read_text(encoding="utf-8")
+)
+for switcher_entry in switcher_versions:
+    switcher_entry["name"] = switcher_entry["version"].removeprefix("v").capitalize()
+
 html_theme_options = {
     "navbar_start": ["navbar-logo"],
     "navbar_end": ["version-switcher", "navbar-icon-links"],
@@ -163,13 +171,11 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": (
-            "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/"
-            "docs/_static/switcher.json"
-        ),
+        "json_url": "data:application/json," + quote(json.dumps(switcher_versions)),
         "version_match": "latest",
     },
-    "check_switcher": True,
+    # The version list is parsed above and embedded for offline browsing.
+    "check_switcher": False,
     "logo": {
         "alt_text": "simtools",
     },

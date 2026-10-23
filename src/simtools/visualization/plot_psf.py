@@ -137,6 +137,12 @@ def _create_base_plot_figure(data_to_plot, simulated_data=None):
         plot_difference=True,
         no_markers=True,
     )
+    for difference_ax in fig.get_axes()[1:]:
+        for line in difference_ax.lines:
+            line.set_ydata(np.asarray(line.get_ydata()) * 100)
+        difference_ax.set_ylabel("Difference\n[%]")
+        difference_ax.relim()
+        difference_ax.autoscale_view(scalex=False)
     ax = fig.get_axes()[0]
     ax.set_ylim(0, 1.05)
     ax.set_ylabel(CUMULATIVE_PSF)
@@ -672,7 +678,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
     ray.simulate(test=args_dict.get("test", False), force=True)
-    ray.analyze(force=True, containment_fraction=fraction)
+    ray.analyze(force=True, containment_fraction=fraction, keep_images=False)
 
     for key in ["psf_cm", "psf_deg"]:
         plt.figure(figsize=(10, 6), tight_layout=True)

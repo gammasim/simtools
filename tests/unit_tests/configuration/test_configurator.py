@@ -9,16 +9,31 @@ import astropy.units as u
 import pytest
 import yaml
 
+from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
+    SITE,
     STANDARD_ARGUMENTS,
+    TELESCOPE,
+    TELESCOPES,
     ArgumentDefinition,
 )
 from simtools.configuration.configurator import Configurator
 
 logger = logging.getLogger()
+LSTN_DESIGN = "LSTN-design"
+LSFS_DESIGN = "LSFS-design"
+SHARED_LIGHT_SOURCE = "MSFx-FlashCam"
+LIGHT_SOURCE = "light_source"
+NORTH = "North"
+SOUTH = "South"
+SITE_OPTION = "--site"
+LIGHT_SOURCE_OPTION = "--light_source"
+LAYOUT_KEY = "array_layout_name"
+NORTH_ALPHA_LAYOUT = "CTAO-North-Alpha"
+ALPHA_LAYOUT = "alpha"
 
 
 @pytest.fixture
@@ -64,6 +79,101 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
     assert config["log_level"] == "info"
 
 
+@pytest.mark.parametrize(
+    ("telescope_argument", "telescope_name", "site"),
+    [
+        (TELESCOPE, LSTN_DESIGN, SOUTH),
+        (TELESCOPE, LSFS_DESIGN, NORTH),
+        (TELESCOPES, "SSTS-25", NORTH),
+        (ARRAY_LAYOUT_NAME, "LSTS-02", NORTH),
+    ],
+)
+def test_configure_rejects_telescope_from_different_site(
+    telescope_argument, telescope_name, site, monkeypatch, capsys
+):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((SITE, telescope_argument))
+    option = f"--{telescope_argument.name}"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", SITE_OPTION, site, option, telescope_name],
+    )
+
+    with pytest.raises(SystemExit, match="2"):
+        config_builder.configure()
+    element_site = NORTH if site == SOUTH else SOUTH
+    assert (
+        f"array element {telescope_name} belongs to site {element_site}, "
+        f"but site {site} was selected"
+    ) in capsys.readouterr().err
+
+
+def test_configure_accepts_matching_telescope_and_site(monkeypatch):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, TELESCOPE))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", SITE_OPTION, NORTH, "--telescope", LSTN_DESIGN],
+    )
+
+    assert config_builder.configure()["telescope"] == LSTN_DESIGN
+
+
+def test_configure_rejects_light_source_from_different_site(monkeypatch, capsys):
+    light_source = ArgumentDefinition(LIGHT_SOURCE, type=str)
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, light_source))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", SITE_OPTION, NORTH, LIGHT_SOURCE_OPTION, LSFS_DESIGN],
+    )
+
+    with pytest.raises(SystemExit, match="2"):
+        config_builder.configure()
+    assert (
+        f"array element {LSFS_DESIGN} belongs to site {SOUTH}, but site {NORTH} was selected"
+    ) in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("site", [NORTH, SOUTH])
+def test_configure_accepts_shared_light_source_at_either_site(monkeypatch, site):
+    light_source = ArgumentDefinition(LIGHT_SOURCE, type=str)
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, light_source))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["test", SITE_OPTION, site, LIGHT_SOURCE_OPTION, SHARED_LIGHT_SOURCE],
+    )
+
+    assert config_builder.configure()[LIGHT_SOURCE] == SHARED_LIGHT_SOURCE
+
+
+@pytest.mark.parametrize("layout", [LSTN_DESIGN, NORTH_ALPHA_LAYOUT, ALPHA_LAYOUT, "LSTN-subarray"])
+def test_configure_accepts_matching_element_or_named_layout(monkeypatch, layout):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions((*STANDARD_ARGUMENTS, SITE, ARRAY_LAYOUT_NAME))
+    monkeypatch.setattr(sys, "argv", ["test", SITE_OPTION, NORTH, f"--{LAYOUT_KEY}", layout])
+
+    assert config_builder.configure()[LAYOUT_KEY] == [layout]
+
+
+def test_configure_rejects_invalid_light_source(monkeypatch, capsys):
+    config_builder = Configurator(label="test")
+    config_builder.parser.add_argument_definitions(
+        (SITE, ArgumentDefinition(LIGHT_SOURCE, type=str))
+    )
+    monkeypatch.setattr(sys, "argv", ["test", SITE_OPTION, NORTH, LIGHT_SOURCE_OPTION, "bad"])
+
+    with pytest.raises(SystemExit, match="2"):
+        config_builder.configure()
+
+    assert "error: Invalid name bad" in capsys.readouterr().err
+
+
 def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory):
     config_dict = {
         "applications": [
@@ -71,10 +181,10 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
                 "application": "simtools-simulate-prod",
                 "configuration": {
                     "model_version": ["6.3.0", "7.0.0"],
-                    "array_layout_name": {
+                    LAYOUT_KEY: {
                         "by_version": {
-                            "<7.0.0": "alpha",
-                            ">=7.0.0": "CTAO-North-Alpha",
+                            "<7.0.0": ALPHA_LAYOUT,
+                            ">=7.0.0": NORTH_ALPHA_LAYOUT,
                         }
                     },
                 },
@@ -90,10 +200,10 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
     loaded_config = config_builder._config_from_file(config_file)
 
     assert loaded_config["model_version"] == ["6.3.0", "7.0.0"]
-    assert loaded_config["array_layout_name"] == {
+    assert loaded_config[LAYOUT_KEY] == {
         "by_version": {
-            "<7.0.0": "alpha",
-            ">=7.0.0": "CTAO-North-Alpha",
+            "<7.0.0": ALPHA_LAYOUT,
+            ">=7.0.0": NORTH_ALPHA_LAYOUT,
         }
     }
 
@@ -108,8 +218,8 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
                 "model_version": ["6.3.0", "7.0.0"],
                 "site": {
                     "by_version": {
-                        "<7.0.0": "North",
-                        ">=7.0.0": "South",
+                        "<7.0.0": NORTH,
+                        ">=7.0.0": SOUTH,
                     }
                 },
             },
@@ -123,9 +233,12 @@ def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
         config_builder._config_from_file(config_file)
 
 
-def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_directory, monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "ignored"))
-    monkeypatch.setenv("SIMTOOLS_TEST_RESOURCES", str(tmp_test_directory / "also-ignored"))
+def test_config_from_file_resolves_test_resource_paths_from_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.setenv("SIMTOOLS_TESTS_PATH", str(tmp_test_directory / "simtools-tests"))
+    monkeypatch.setenv("SIMTOOLS_TESTS_RESOURCE_VERSION", "v0.38.0")
     config_dict = {
         "applications": [
             {
@@ -148,11 +261,27 @@ def test_config_from_file_does_not_resolve_test_resource_paths(tmp_test_director
     config_builder = Configurator()
     loaded_config = config_builder._config_from_file(config_file)
 
-    assert loaded_config["trigger_histogram_file"] == (
-        "${generated:gamma_diffuse_run000010.trigger_histograms.hdf5}"
+    resource_path = tmp_test_directory / "simtools-tests" / "v0.38.0" / "integration_tests"
+    assert loaded_config["trigger_histogram_file"] == str(
+        resource_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
     )
-    assert loaded_config["plot_config"] == "${static:plot_config.yml}"
-    assert loaded_config["table_data_path"] == "${downloaded:table_data}"
+    assert loaded_config["plot_config"] == str(resource_path / "static/plot_config.yml")
+    assert loaded_config["table_data_path"] == str(resource_path / "downloaded/table_data")
+
+
+def test_config_from_file_does_not_resolve_test_resource_paths_without_environment(
+    tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(constants, "TEST_RESOURCES_ROOT", constants._DEFAULT_TEST_RESOURCES_ROOT)
+    monkeypatch.delenv("SIMTOOLS_TESTS_PATH", raising=False)
+    monkeypatch.delenv("SIMTOOLS_TESTS_RESOURCE_VERSION", raising=False)
+    config_file = tmp_test_directory / "configuration-resource-macros.yml"
+    config_file.write_text("input: ${generated:input.ecsv}\n", encoding="utf-8")
+
+    config_builder = Configurator()
+    loaded_config = config_builder._config_from_file(config_file)
+
+    assert loaded_config["input"] == "${generated:input.ecsv}"
 
 
 def test_arglist_from_config():
@@ -194,6 +323,41 @@ def test_arglist_from_config_splits_scalar_for_fixed_nargs():
         {"showers_per_run_power_law": "0.0 1 TeV"},
         parser=configurator.parser,
     )
+
+
+def test_arglist_from_config_repeats_single_value_append_options():
+    configurator = Configurator()
+    configurator.parser.add_argument("--select", action="append")
+
+    assert [
+        "--select",
+        "configuration.primary=gamma",
+        "--select",
+        "configuration.site=North",
+    ] == Configurator._arglist_from_config(
+        {"select": ["configuration.primary=gamma", "configuration.site=North"]},
+        parser=configurator.parser,
+    )
+
+
+def test_arglist_from_config_keeps_multi_value_append_options_together():
+    configurator = Configurator()
+    configurator.parser.add_argument("--production", action="append", nargs="+")
+
+    assert ["--production", "baseline", "*.hdf5"] == Configurator._arglist_from_config(
+        {"production": ["baseline", "*.hdf5"]}, parser=configurator.parser
+    )
+
+
+def test_arglist_from_config_repeats_nested_multi_value_append_options():
+    configurator = Configurator()
+    option = "--atmosphere"
+    configurator.parser.add_argument(option, action="append", nargs=3)
+    result = Configurator._arglist_from_config(
+        {"atmosphere": [["North", "1", "2"], ["South", "3", "4"]]},
+        parser=configurator.parser,
+    )
+    assert result == [option, "North", "1", "2", option, "South", "3", "4"]
 
 
 def test_convert_string_none_to_none():

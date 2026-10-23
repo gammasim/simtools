@@ -17,7 +17,7 @@ inputs:
   simulation-model-branch:
     description: Simulation model branch used by tests.
     required: false
-    default: "main"
+    default: ""
   simtools-tests-branch:
     description: simtools-tests branch used by tests.
     required: false
@@ -34,7 +34,8 @@ runs:
     - name: Python dependencies
       if: ${{ inputs.install-dependencies == 'true' }}
       shell: bash -leo pipefail {0}
-      run: pip install -e '.[tests]'
+      run: |
+        bash .github/scripts/install_python_dependencies.sh -e '.[tests]'
 
     - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}
@@ -45,9 +46,12 @@ runs:
         TESTS_BRANCH: ${{ inputs.simtools-tests-branch }}
       run: |
         if [[ "$INSTALL_DEPENDENCIES" != "true" ]]; then
-          python -m pip install pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
         fi
         python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+        CATALOG_MODEL_BRANCH=$(python src/simtools/applications/dependency_versions.py \
+          --format env | sed -n 's/^SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=//p')
+        MODEL_BRANCH="${MODEL_BRANCH:-$CATALOG_MODEL_BRANCH}"
         git check-ref-format --branch "$MODEL_BRANCH"
         git check-ref-format --branch "$TESTS_BRANCH"
         {

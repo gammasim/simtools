@@ -1,5 +1,6 @@
 """Project wide constants."""
 
+import os
 from importlib.resources import files
 from pathlib import Path
 
@@ -15,6 +16,7 @@ METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
 # Path to run time environment json schema
 RUN_TIME_ENVIRONMENT_SCHEMA = SCHEMA_PATH / "run_time_environment.schema.yml"
+SCIENCE_TEST_SCHEMA_PATH = SCHEMA_PATH / "science_tests"
 # Path to model parameter metaschema
 MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 # Path to model parameter description metaschema
@@ -38,6 +40,31 @@ _DEFAULT_TEST_RESOURCES_ROOT = Path("tests/unit_tests/resources")
 def get_test_resources_root():
     """Return the test-resource root configured by the test harness."""
     return TEST_RESOURCES_ROOT
+
+
+def get_configured_test_resources_root():
+    """Return the test-resource root configured for an application, if any."""
+    if TEST_RESOURCES_ROOT != _DEFAULT_TEST_RESOURCES_ROOT:
+        return TEST_RESOURCES_ROOT
+
+    tests_path = os.environ.get("SIMTOOLS_TESTS_PATH")
+    resource_version = _get_test_resource_version()
+    if not tests_path or not resource_version:
+        return None
+    return Path(tests_path).expanduser() / resource_version / "integration_tests"
+
+
+def _get_test_resource_version():
+    """Return the configured version of the simtools-tests resources."""
+    for variable in (
+        "SIMTOOLS_TESTS_RESOURCE_VERSION",
+        "SIMTOOLS_TESTS_REF",
+        "SIMTOOLS_TESTS_TAG",
+        "SIMTOOLS_TESTS_VERSION",
+    ):
+        if version := os.environ.get(variable):
+            return version
+    return None
 
 
 TEST_RESOURCES_ROOT = _DEFAULT_TEST_RESOURCES_ROOT

@@ -9,7 +9,7 @@ on:
         description: 'Simulation model branch for image tests'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch for image tests'
         required: false
@@ -27,11 +27,13 @@ on:
           - avx512f
           - sse4
   push:
+    branches:
+      - main
     tags:
       - 'v*-rc*'
-  pull_request:
     paths:
       - docker/Dockerfile-simtools-prod
+      - .github/scripts/install_python_dependencies.sh
       - pyproject.toml
       - dependency_versions.yml
       - src/simtools/applications/dependency_versions.py
@@ -67,7 +69,7 @@ jobs:
         env:
           AVX_FLAG: ${{ github.event.inputs.avx_flag || 'all' }}
         run: |
-          python -m pip install packaging pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
           if [[ "${AVX_FLAG}" != "all" ]]; then
             production_matrix=$(sed -n 's/^production_matrix=//p' dependency-output | \
@@ -196,7 +198,7 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
-      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+      simulation_model_branch: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
       simtools_tests_branch: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
       model_versions: '["7.0.0"]'
       runner_labels: '["ubuntu-24.04","ubuntu-24.04-arm"]'

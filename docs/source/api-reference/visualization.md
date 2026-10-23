@@ -66,6 +66,13 @@ the visualization module.
    :members:
 ```
 
+## plot_trigger_patches
+
+```{eval-rst}
+.. automodule:: visualization.plot_trigger_patches
+   :members:
+```
+
 (visualization-plot-simtel_events)=
 
 ## plot_simtel_events
@@ -140,6 +147,13 @@ the visualization module.
 
 ```{eval-rst}
 .. automodule:: visualization.plot_event_level_production_comparison
+   :members:
+```
+
+## plot_science_comparison
+
+```{eval-rst}
+.. automodule:: visualization.plot_science_comparison
    :members:
 ```
 

@@ -19,7 +19,6 @@ ARGUMENTS = (
             "export name, or base name for ECSV export of dict-backed tables."
         ),
         type=str,
-        required=False,
     ),
     cli.ArgumentDefinition(
         "export_model_file",
@@ -28,7 +27,6 @@ ARGUMENTS = (
             "--output_file is supplied)."
         ),
         action="store_true",
-        required=False,
     ),
     cli.ArgumentDefinition(
         "export_model_file_as_table",
@@ -38,7 +36,6 @@ ARGUMENTS = (
             "by table-backed ones."
         ),
         action="store_true",
-        required=False,
     ),
 )
 
@@ -55,7 +52,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *ARGUMENTS,
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,

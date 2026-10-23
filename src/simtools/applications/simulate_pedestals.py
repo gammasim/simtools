@@ -24,7 +24,6 @@ _ARGUMENTS = (
             "(dark sky) NSB rate."
         ),
         type=float,
-        required=False,
         default=1.0,
     ),
     cli.ArgumentDefinition(

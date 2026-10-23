@@ -13,6 +13,18 @@ _ARGUMENTS = (
         required=True,
         help="Path to the ECSV file containing grid points.",
     ),
+    cli.ArgumentDefinition(
+        "azimuth_center",
+        type=float,
+        default=180.0,
+        help="Azimuth-bin center in degrees for the selected shower-statistics plot.",
+    ),
+    cli.ArgumentDefinition(
+        "azimuth_width",
+        type=float,
+        default=1.0,
+        help="Azimuth-bin width in degrees for the selected shower-statistics plot.",
+    ),
 )
 
 
@@ -21,9 +33,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
     initialize_model_reader=False,
 )
 
@@ -31,14 +41,19 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """Run the ProductionGridPlotter."""
     app_context = APPLICATION.start()
+    output_path = app_context.io_handler.get_output_directory()
 
     plotter = ProductionGridPlotter(
         grid_points_file=app_context.args["grid_points_file"],
-        output_path=app_context.io_handler.get_output_directory(),
+        output_path=output_path,
     )
 
     plotter.plot_sky_projection()
     plotter.plot_limit_projections()
+    plotter.plot_shower_statistics_vs_zenith(
+        azimuth_center=app_context.args["azimuth_center"],
+        azimuth_width=app_context.args["azimuth_width"],
+    )
 
 
 if __name__ == "__main__":

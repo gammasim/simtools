@@ -287,6 +287,8 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
             mock_telescope_model, mock_site_model, args_dict, sample_parameters, tmp_path
         )
         plt.close("all")
+        mock_ray.analyze.assert_called_once()
+        assert mock_ray.analyze.call_args.kwargs["keep_images"] is False
 
         # Verify telescope parameters were applied and simulation was run
 
@@ -322,8 +324,8 @@ def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
     }
 
     with (
-        patch("matplotlib.pyplot.subplots") as mock_subplots,
-        patch("matplotlib.pyplot.close"),
+        patch("simtools.visualization.plot_psf.plt.subplots") as mock_subplots,
+        patch("simtools.visualization.plot_psf.plt.close"),
     ):
         mock_fig = MagicMock()
         mock_ax = MagicMock()
@@ -453,3 +455,18 @@ def test_create_psf_vs_offaxis_plot_negative_max_offset(sample_parameters):
         plot_psf.create_psf_vs_offaxis_plot(
             mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
         )
+
+
+def test_psf_difference_is_displayed_as_percentage(data_to_plot, sample_psf_data):
+    simulated = sample_psf_data.copy()
+    simulated[plot_psf.CUMULATIVE_PSF] += 0.01
+    fig, ax = plot_psf._create_base_plot_figure(data_to_plot, simulated)
+    try:
+        difference_ax = fig.get_axes()[1]
+        assert difference_ax.get_ylabel() == "Difference\n[%]"
+        assert difference_ax.lines[1].get_ydata() == pytest.approx(np.ones(len(simulated)))
+        assert ax.lines[1].get_ydata() == pytest.approx(simulated[plot_psf.CUMULATIVE_PSF])
+        lower, upper = difference_ax.get_ylim()
+        assert lower < 1 < upper
+    finally:
+        plt.close(fig)

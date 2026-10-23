@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
         run: |
-          python -m pip install packaging pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   refresh:
@@ -178,7 +178,10 @@ jobs:
             tar -czf input/corsika7-source.tar.gz \
               corsika7 corsika_revision corsika7-config corsika_config_revision \
               corsika-opt-patches corsika_opt_patch_revision
-            sha256sum input/corsika7-source.tar.gz > input/corsika7-source.tar.gz.sha256
+            (
+              cd input
+              sha256sum corsika7-source.tar.gz > corsika7-source.tar.gz.sha256
+            )
             snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg source "$source_revision" \
               --arg config "$config_revision" --arg patch "$patch_revision" --arg digest "$snapshot_digest" \
@@ -232,7 +235,10 @@ jobs:
             rm -rf sim_telarray/.git hessio/.git stdtools/.git
             tar -czf input/simtel-source.tar.gz \
               sim_telarray simtel_revision hessio hessio_revision stdtools stdtools_revision
-            sha256sum input/simtel-source.tar.gz > input/simtel-source.tar.gz.sha256
+            (
+              cd input
+              sha256sum simtel-source.tar.gz > simtel-source.tar.gz.sha256
+            )
             snapshot_digest=$(build_snapshot "$image")
             jq --arg ref "$source_ref" --arg simtel "$simtel_revision" \
               --arg hessio "$hessio_revision" --arg stdtools "$stdtools_revision" --arg digest "$snapshot_digest" \
@@ -244,7 +250,8 @@ jobs:
           done < <(jq -c '.[]' <<< "$SIMTEL_MATRIX")
 
       - name: Install catalog update dependencies
-        run: python -m pip install packaging pyyaml
+        run: |
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
 
       - name: Update the dependency catalog
         run: |
@@ -258,6 +265,8 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: dependency_versions.yml
+          labels: no-changelog-needed
           branch: update/build-input-source-revisions
           title: Update build-input source revisions
           commit-message: "chore: update build-input source revisions"

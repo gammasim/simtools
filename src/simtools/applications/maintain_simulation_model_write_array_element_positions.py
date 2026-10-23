@@ -15,7 +15,6 @@ _ARGUMENTS = (
         "coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
         default="ground",
-        required=False,
         type=str,
         choices=["ground", "utm"],
     ),
@@ -26,9 +25,8 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.SIMULATION_MODELS_PATH(required=True),
+        cli.OUTPUT_PATH,
         cli.PARAMETER_VERSION,
-        cli.OVERWRITE_MODEL_PARAMETERS,
     ),
     initialize_model_reader=False,
 )
@@ -41,7 +39,7 @@ def main():
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],
         input_file=app_context.args["array_element_positions_file"],
-        repository_path=app_context.args["simulation_models_path"],
+        repository_path=app_context.args["output_path"],
         parameter_version=app_context.args["parameter_version"],
     )
 

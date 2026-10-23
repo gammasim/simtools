@@ -17,8 +17,8 @@ Command line arguments
 
 array_element_positions_file : str
     File containing a table of array element positions.
-simulation_models_path : Path
-    Path of local copy of model parameter repository.
+output_path : Path
+    Directory for generated model parameter files.
 parameter_version : str
     Parameter version.
 coordinate_system : str
@@ -30,13 +30,13 @@ Add array element positions to repository (ground coordinates):
 
 .. code-block:: console
 
-    simtools-maintain-simulation-model-write-array-element-positions             --array_element_positions_file tests/resources/telescope_positions-North-ground.ecsv             --simulation_models_path /path/to/repository             --parameter_version 0.1.0             --coordinate_system ground
+    simtools-maintain-simulation-model-write-array-element-positions             --array_element_positions_file tests/resources/telescope_positions-North-ground.ecsv             --output_path /path/to/repository             --parameter_version 0.1.0             --coordinate_system ground
 
 Add array element positions to repository (utm coordinates):
 
 .. code-block:: console
 
-    simtools-maintain-simulation-model-write-array-element-positions             --array_element_positions_file tests/resources/telescope_positions-North-utm.ecsv             --simulation_models_path /path/to/repository             --parameter_version 0.1.0             --coordinate_system utm
+    simtools-maintain-simulation-model-write-array-element-positions             --array_element_positions_file tests/resources/telescope_positions-North-utm.ecsv             --output_path /path/to/repository             --parameter_version 0.1.0             --coordinate_system utm
 ```
 
 ## Command line arguments

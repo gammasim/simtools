@@ -21,6 +21,7 @@ import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA, SIM_TELARRAY_META_PARAMETER_REGISTRY
 from simtools.data_model import metadata_model, schema, schema_loader
 from simtools.io import ascii_handler, io_handler
+from simtools.io.file_type import _get_product_suffixes
 from simtools.settings import config
 from simtools.sim_events.file_info import get_corsika_run_and_event_headers
 from simtools.simtel import simtel_validate_metadata
@@ -34,6 +35,12 @@ _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
     r"(?P<value>\"[^\"]*\"|'[^']*'|[^\s]+)",
     re.IGNORECASE,
 )
+
+
+def _matches_catalog_product(file_path, product_id):
+    """Match a product using the caller's existing case-sensitive behavior."""
+    file_name = Path(file_path).name
+    return file_name.endswith(_get_product_suffixes(product_id))
 
 
 class MetadataCollector:
@@ -479,9 +486,9 @@ class MetadataCollector:
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
             elif Path(metadata_file).suffix == ".ecsv":
                 _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
-            elif Path(metadata_file).name.endswith((".simtel.zst", ".simtel.gz", ".simtel")):
+            elif _matches_catalog_product(metadata_file, "sim_telarray_output"):
                 _input_metadata = self._read_input_metadata_from_simtel(metadata_file)
-            elif Path(metadata_file).name.endswith((".corsika.zst", ".corsika.gz", ".corsika")):
+            elif _matches_catalog_product(metadata_file, "corsika_output"):
                 _input_metadata = self._read_input_metadata_from_corsika(metadata_file)
             else:
                 raise ValueError(f"Unknown metadata file format: {metadata_file}")

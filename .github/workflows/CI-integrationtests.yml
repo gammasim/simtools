@@ -17,7 +17,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -29,7 +29,7 @@ on:
         description: 'Simulation model branch'
         required: false
         type: string
-        default: 'main'
+        default: ''
       simtools_tests_branch:
         description: 'simtools-tests branch'
         required: false
@@ -89,7 +89,7 @@ jobs:
 
       - name: Build package
         run: |
-          python -m pip install --upgrade pip build
+          bash .github/scripts/install_python_dependencies.sh --upgrade build
           python -m build
           python - <<'PY'
           from pathlib import Path
@@ -116,7 +116,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Install dependency exporter prerequisites
-        run: python -m pip install packaging pyyaml
+        run: |
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
 
       - name: Read CORSIKA interaction tables version
         id: interaction_table_version
@@ -256,14 +257,15 @@ jobs:
 
       - name: Export dependency environment
         run: |
-          python -m pip install pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
-          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || 'main' }}
+          BRANCH: ${{ inputs.simulation_model_branch || vars.SIMULATION_MODEL_BRANCH || '' }}
         run: |
+          BRANCH="${BRANCH:-$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION}"
           git check-ref-format --branch "$BRANCH"
           echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -380,13 +382,15 @@ jobs:
 
       - name: Export dependency environment
         run: |
-          python -m pip install pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
 
       - name: Set test resource checkout
         id: test_resources
         env:
-          BRANCH: ${{ inputs.simtools_tests_branch || vars.SIMTOOLS_TESTS_BRANCH || 'main' }}
+          BRANCH: >-
+            ${{ inputs.simtools_tests_branch ||
+            'main' }}
         run: |
           git check-ref-format --branch "$BRANCH"
           test -n "$SIMTOOLS_TESTS_RESOURCE_VERSION"
@@ -507,16 +511,18 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+          bash .github/scripts/install_python_dependencies.sh \
+            --no-cache-dir pygit2 pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
 
       - name: Install resource benchmark dependency (prod container)
         if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
-        run: pip install --no-cache-dir psutil
+        run: |
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir psutil
 
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
-          pip install --no-cache-dir -e '.[tests,dev,doc]'
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Integration tests
         shell: bash -l {0}

@@ -4,11 +4,13 @@
 import logging
 import re
 from collections import OrderedDict
+from io import BytesIO
 from pathlib import Path
 
 import astropy.units as u
 from astropy.table import QTable
 from cycler import cycler
+from PIL import Image
 
 import simtools.utils.general as gen
 from simtools.settings import config
@@ -131,10 +133,6 @@ def _add_unit(title, array):
         Title with units.
     """
     if title and "[" in title and "]" in title:
-        _logger.debug(
-            "Tried to add a unit from astropy.unit, "
-            "but axis already has an explicit unit. Left axis title as is."
-        )
         return title
 
     if not isinstance(array, u.Quantity) or not str(array[0].unit):
@@ -680,9 +678,13 @@ def save_figure(
         Close the figure after saving. Defaults to False.
     pil_kwargs : dict, optional
         Keyword arguments passed to Pillow when saving PNG files.
+
+    PNG files are converted to an optimized 256-color palette if ``figure_png_palette`` is
+    configured.
     """
     configured_formats = config.args.get("figure_format")
     configured_dpi = config.args.get("figure_dpi")
+    png_palette = config.args.get("figure_png_palette", False)
 
     figure_format = figure_format or configured_formats or ["png"]
 
@@ -693,11 +695,37 @@ def save_figure(
         if fmt == "png" and pil_kwargs is not None:
             save_kwargs["pil_kwargs"] = pil_kwargs
         fig.savefig(_file, **save_kwargs)
+        if fmt == "png" and png_palette:
+            convert_png_to_palette(_file)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
     if close:
         plt.close(fig)
+
+
+def convert_png_to_palette(png_file):
+    """
+    Convert a PNG file to an optimized 256-color palette image.
+
+    The file is replaced only if the converted image is smaller. The conversion is
+    deterministic, so identical figures result in identical files.
+
+    Parameters
+    ----------
+    png_file : Path or str
+        PNG file to convert in place.
+    """
+    png_file = Path(png_file)
+    with Image.open(png_file) as image:
+        if image.mode == "RGBA":
+            palette_image = image.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
+        else:
+            palette_image = image.convert("RGB").quantize(colors=256)
+    buffer = BytesIO()
+    palette_image.save(buffer, format="PNG", optimize=True)
+    if buffer.tell() < png_file.stat().st_size:
+        png_file.write_bytes(buffer.getvalue())
 
 
 def save_figures_to_single_document(figs, output_file_name, close=False):
@@ -706,19 +734,17 @@ def save_figures_to_single_document(figs, output_file_name, close=False):
 
     Parameters
     ----------
-    figs: list
-        List of plt.figure instances to save.
+    figs: iterable
+        Matplotlib figures to save, optionally generated one at a time.
     output_file_name: Path, str
         PDF file name
     close : bool, optional
         Close each figure after saving. Defaults to False.
     """
-    _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
-    pdf_pages = pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix())
-    for fig in figs:
-        fig.tight_layout()
-        pdf_pages.savefig(fig)
-        if close:
-            plt.close(fig)
-
-    pdf_pages.close()
+    _logger.info(f"Saving figures to {output_file_name}")
+    with pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix()) as pdf_pages:
+        for fig in figs:
+            fig.tight_layout()
+            pdf_pages.savefig(fig)
+            if close:
+                plt.close(fig)

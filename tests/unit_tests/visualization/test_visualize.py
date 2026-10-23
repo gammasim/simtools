@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
+from PIL import Image
 
 from simtools.visualization import visualize
 
@@ -105,15 +106,13 @@ def test_plot_1d_legend_fontsize_setting():
     plt.close(fig)
 
 
-def test_add_unit(caplog, wavelength):
+def test_add_unit(wavelength):
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == wavelength
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
-    with caplog.at_level(logging.DEBUG):
-        assert visualize._add_unit(wavelength, value_with_unit)
-    assert "Tried to add a unit from astropy.unit" in caplog.text
+    assert visualize._add_unit(wavelength, value_with_unit) == wavelength
 
     value_with_unit = [30, 40] * u.cm**2
     assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
@@ -346,14 +345,81 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-def test_save_figures_to_single_document(tmp_test_directory):
+@pytest.mark.parametrize("figure_container", [list, iter])
+def test_save_figures_to_single_document(tmp_test_directory, figure_container):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
     output_pdf = tmp_test_directory / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document([fig1, fig2], output_pdf, close=True)
+    visualize.save_figures_to_single_document(
+        figure_container([fig1, fig2]), output_pdf, close=True
+    )
     assert output_pdf.exists()
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
     plt.close("all")
+
+
+def test_save_figures_to_single_document_closes_pdf_after_generator_error(
+    tmp_test_directory, mocker
+):
+    mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
+    figure = mocker.Mock()
+
+    def figures():
+        yield figure
+        raise RuntimeError("Cannot create figure")
+
+    with pytest.raises(RuntimeError, match="Cannot create figure"):
+        visualize.save_figures_to_single_document(figures(), tmp_test_directory / "images.pdf")
+
+    mock_pdf.return_value.__enter__.return_value.savefig.assert_called_once_with(figure)
+    mock_pdf.return_value.__exit__.assert_called_once()
+
+
+def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker):
+    mocker.patch.object(visualize, "config").args = {"figure_png_palette": True}
+    convert = mocker.patch.object(visualize, "convert_png_to_palette")
+    fig = mocker.Mock()
+    output_file = Path(tmp_test_directory) / "figure"
+
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"])
+
+    convert.assert_called_once_with(output_file.with_suffix(".png"))
+
+
+def test_save_figure_keeps_png_without_palette_option(tmp_test_directory, mocker):
+    mocker.patch.object(visualize, "config").args = {}
+    convert = mocker.patch.object(visualize, "convert_png_to_palette")
+
+    visualize.save_figure(mocker.Mock(), Path(tmp_test_directory) / "figure")
+
+    convert.assert_not_called()
+
+
+@pytest.mark.parametrize("mode", ["RGBA", "RGB"])
+def test_convert_png_to_palette(tmp_test_directory, mode):
+    png_file = Path(tmp_test_directory) / f"figure_{mode}.png"
+    # Smooth color gradient with noise (true-color image; savefig is stubbed in unit tests)
+    rng = np.random.default_rng(seed=1)
+    gradient = np.linspace(0, 255, 200 * 200).reshape(200, 200)
+    pixels = np.stack([gradient, gradient.T, rng.integers(0, 4, (200, 200)) * 60], axis=-1)
+    Image.fromarray(pixels.astype(np.uint8)).convert(mode).save(png_file)
+    original_size = png_file.stat().st_size
+
+    visualize.convert_png_to_palette(png_file)
+
+    with Image.open(png_file) as image:
+        assert image.mode == "P"
+    assert png_file.stat().st_size < original_size
+
+
+def test_convert_png_to_palette_keeps_smaller_original(tmp_test_directory):
+    png_file = Path(tmp_test_directory) / "tiny.png"
+    Image.new("P", (1, 1)).save(png_file)
+    original = png_file.read_bytes()
+
+    visualize.convert_png_to_palette(png_file)
+
+    assert png_file.read_bytes() == original

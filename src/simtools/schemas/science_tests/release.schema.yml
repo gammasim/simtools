@@ -1,0 +1,115 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ScienceTestRelease'
+title: Science-test release configuration
+description: Release-specific settings for a science-test campaign.
+schema_version: 0.2.0
+schema_name: science_tests/release.schema
+type: object
+additionalProperties: false
+
+definitions:
+  ScienceTestRelease:
+    type: object
+    additionalProperties: false
+    properties:
+      catalogue:
+        description: Catalogue path, relative to the release directory.
+        type: string
+      required_sites:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9_.-]*$'
+      baseline:
+        description: Baseline release label.
+        type: string
+      release_label:
+        oneOf:
+          - type: string
+            minLength: 1
+            pattern: '^[a-zA-Z0-9][a-zA-Z0-9_.-]*$'
+          - const: __SCIENCE_RELEASE_LABEL__
+      simulation_models_git_revision:
+        type: string
+        minLength: 1
+      simulation_models_path:
+        type: string
+        minLength: 1
+      simulation_models_git_path:
+        type: string
+        minLength: 1
+      model_version:
+        type: string
+        minLength: 1
+      expected_changes:
+        description: Configuration fields comparisons may group by (compare_by).
+        type: array
+        items:
+          type: string
+      configuration_overrides:
+        description: Application configuration values applied to all applications of a test.
+        type: object
+        additionalProperties:
+          type: object
+    required: [required_sites, release_label]
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ScienceTestRelease'
+title: Science-test release configuration
+description: Release-specific settings for a science-test campaign.
+schema_version: 0.1.0
+schema_name: science_tests/release.schema
+type: object
+additionalProperties: false
+
+definitions:
+  ScienceTestRelease:
+    type: object
+    additionalProperties: false
+    properties:
+      catalogue:
+        type: string
+      required_sites:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+      baseline:
+        type: string
+      release_label:
+        oneOf:
+          - type: string
+            minLength: 1
+            pattern: '^[a-zA-Z0-9][a-zA-Z0-9_.-]*$'
+          - const: __SCIENCE_RELEASE_LABEL__
+      simulation_models_git_revision:
+        type: string
+        minLength: 1
+      simulation_models_path:
+        type: string
+        minLength: 1
+      simulation_models_git_path:
+        type: string
+        minLength: 1
+      model_version:
+        type: string
+        minLength: 1
+      expected_changes:
+        type: array
+        items:
+          type: string
+      report_mode:
+        enum: [compact, diagnostic, none]
+      comparison_parameters:
+        type: object
+        additionalProperties:
+          type: object
+      comparison_requirements:
+        type: object
+        additionalProperties:
+          type: object
+    required: [required_sites, release_label]

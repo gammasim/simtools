@@ -18,7 +18,7 @@ def test_main_converts_fadc_bins_to_nanoseconds(
         "rise_width_ns": 2.5,
         "fall_width_ns": 5.0,
         "rise_range": [0.1, 0.9],
-        "fall_range": [0.9, 0.1],
+        "fall_range": [0.8, 0.2],
         "dt_ns": 0.1,
         "time_margin_ns": 5.0,
         "site": "North",
@@ -40,6 +40,8 @@ def test_main_converts_fadc_bins_to_nanoseconds(
     call = mock_solver.call_args.kwargs
     assert call["t_start_ns"] == pytest.approx(-165.0)
     assert call["t_stop_ns"] == pytest.approx(165.0)
+    assert call["rise_range"] == pytest.approx((0.1, 0.9))
+    assert call["fall_range"] == pytest.approx((0.8, 0.2))
 
 
 @patch("simtools.applications.derive_pulse_shape_parameters.solve_sigma_tau_from_rise_fall")

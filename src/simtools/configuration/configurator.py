@@ -11,9 +11,12 @@ import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
-from simtools import dependency_versions
+from simtools import constants, dependency_versions
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
+from simtools.utils import names
+
+_APPEND_ACTION = "_AppendAction"
 
 
 class Configurator:
@@ -123,6 +126,7 @@ class Configurator:
                 )
             )
         )
+        self._validate_site_telescope_consistency()
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
         if self.config["label"] is None:
@@ -133,6 +137,38 @@ class Configurator:
             self._initialize_output()
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config
+
+    def _validate_site_telescope_consistency(self):
+        """Reject telescope selections that belong to a different configured site."""
+        site = self.config.get("site")
+        if site is None:
+            return
+
+        array_elements = list(self.config.get("telescopes") or [])
+        for argument_name in ("telescope", "light_source"):
+            array_element = self.config.get(argument_name)
+            if array_element is not None:
+                array_elements.append(array_element)
+        for layout in gen.ensure_list(self.config.get("array_layout_name") or []):
+            try:
+                array_elements.append(names.validate_array_element_name(layout))
+            except ValueError:
+                continue
+        for array_element in array_elements:
+            self._validate_array_element_site(array_element, site)
+
+    def _validate_array_element_site(self, array_element, site):
+        """Report invalid array elements and site mismatches as parser errors."""
+        try:
+            element_sites = names.get_site_from_array_element_name(array_element)
+        except ValueError as exc:
+            self.parser.error(str(exc))
+        else:
+            if site not in gen.ensure_list(element_sites):
+                self.parser.error(
+                    f"array element {array_element} belongs to site {element_sites}, "
+                    f"but site {site} was selected"
+                )
 
     def _parser_defaults(self):
         """Return parser defaults as a configuration source mapping."""
@@ -228,7 +264,12 @@ class Configurator:
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
             _config_dict = (
-                ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
+                ascii_handler.collect_data_from_file(
+                    file_name=config_file,
+                    test_resources_path=constants.get_configured_test_resources_root(),
+                )
+                if config_file
+                else None
             )
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "configuration" in _config_dict.get("applications", [{}])[0]:
@@ -391,9 +432,7 @@ class Configurator:
             return boolean_tokens
 
         if isinstance(value, list):
-            if value:
-                return [option, *map(str, value)]
-            return [option] if action is not None and action.nargs == "*" else []
+            return Configurator._list_arg_tokens(option, value, action)
 
         if Configurator._is_scalar_config_value(value):
             return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
@@ -402,6 +441,31 @@ class Configurator:
             return [option]
 
         return []
+
+    @staticmethod
+    def _list_arg_tokens(option, value, action):
+        """Convert a list-valued configuration entry to command-line tokens."""
+        if not value:
+            return [option] if action is not None and action.nargs == "*" else []
+        if (
+            action is not None
+            and action.__class__.__name__ == _APPEND_ACTION
+            and action.nargs is not None
+            and all(isinstance(item, list) for item in value)
+        ):
+            return [token for item in value for token in (option, *map(str, item))]
+        if Configurator._is_repeatable_single_value(action):
+            return [token for item in value for token in (option, str(item))]
+        return [option, *map(str, value)]
+
+    @staticmethod
+    def _is_repeatable_single_value(action):
+        """Return whether an argparse action appends one value per occurrence."""
+        return (
+            action is not None
+            and action.__class__.__name__ == _APPEND_ACTION
+            and action.nargs is None
+        )
 
     @staticmethod
     def _boolean_arg_tokens(option, value, action):
