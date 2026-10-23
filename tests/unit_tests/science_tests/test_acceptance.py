@@ -38,6 +38,7 @@ _TRIGGERED_POPULATION = "triggered"
 _VALUE = "value"
 _ENCODING = "utf-8"
 _REPORT_PAGE_COLUMN = "report_page"
+_FALLBACK_TO_CANDIDATE = "fallback_to_candidate"
 
 
 @pytest.fixture
@@ -188,6 +189,19 @@ def test_json_metrics_and_advisory_rules(tmp_test_directory):
     for key, message in (("a.c", "Missing metric"), ("a", "Invalid metric")):
         with pytest.raises(ValueError, match=message):
             acceptance._evaluate_metric(path, {"key": key})
+
+
+def test_json_metric_warns_when_comparison_uses_candidate_fallback(tmp_test_directory):
+    path = _write_json(tmp_test_directory, "atmosphere/summary.json", {_FALLBACK_TO_CANDIDATE: 1})
+    definition = {
+        _PRODUCTS: [str(path)],
+        "rule": {_METRICS: [{"file": str(path), "key": _FALLBACK_TO_CANDIDATE, _MAXIMUM: 0}]},
+    }
+
+    result = acceptance.evaluate_products(definition, {})
+
+    assert result[_STATUS_KEY] == "warn"
+    assert "fallback_to_candidate=1" in result[_REASON_KEY]
 
 
 def test_matched_files_requires_nonempty_products(tmp_test_directory):

@@ -25,7 +25,6 @@ _SIGNATURE = "campaign_sha256"
 _QUALIFIED = "qualified"
 _RESULTS = "results"
 _HISTORY = "production_history"
-_EXECUTION_LOG = "execution_log"
 _UNKNOWN = "unknown"
 _FAILED = {"fail", "incomplete", "blocked"}
 _ENCODING = "utf-8"
@@ -180,18 +179,6 @@ def write_summary(report_dir, summary):
             f"| {result['site']} | {result['test']} | {result[_EXECUTION]} | "
             f"{result[_STATUS]} | {reason} | {'; '.join(links) or '-'} |"
         )
-    lines.extend(["", "## Execution details", ""])
-    for result in summary[_RESULTS]:
-        if result.get(_EXECUTION_LOG):
-            lines.append(
-                f"- {result['site']}/{result['test']}: {result.get('runtime', _UNKNOWN)}; "
-                f"[log]({result[_EXECUTION_LOG]}); work: `{result['execution_provenance']}`."
-            )
-        if result.get(_PREVIOUS_REPORT):
-            lines.append(
-                f"  Previous successful output: `{result[_PREVIOUS_REPORT]}` "
-                "(not evidence for this failed attempt)."
-            )
     if summary[_HISTORY]:
         lines.extend(["", "## Production history", ""])
         lines.extend(

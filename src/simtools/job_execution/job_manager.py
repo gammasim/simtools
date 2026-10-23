@@ -221,15 +221,23 @@ def _convert_dict_to_args(parameters):
             if value:
                 args.append(f"--{key}")
         elif isinstance(value, list):
-            if not value:
-                continue
-            if isinstance(value[0], dict):
-                args.extend([f"--{key}", json.dumps(value)])
-            else:
-                args.extend([f"--{key}", *(str(item) for item in value)])
+            args.extend(_convert_list_to_args(key, value))
         else:
             args.extend([f"--{key}", str(value)])
     return args
+
+
+def _convert_list_to_args(key, value):
+    if not value:
+        return []
+    if isinstance(value[0], dict):
+        return [f"--{key}", json.dumps(value)]
+    if isinstance(value[0], list):
+        args = []
+        for group in value:
+            args.extend([f"--{key}", *(str(item) for item in group)])
+        return args
+    return [f"--{key}", *(str(item) for item in value)]
 
 
 def _raise_job_execution_error(exc, out_file, err_file, application_log):
