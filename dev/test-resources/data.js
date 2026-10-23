@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792741886407,
+  "lastUpdate": 1792743455996,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31450,6 +31450,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 450.2421875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ac20fbcea7419a1433c4dd34b81276aab376323c",
+          "message": "Use a shared dependency installer to bootstrap a verified pip version  (#2668)\n\n* Always use pip ugrade pip\n\n* python dependencies\n\n* no duplication\n\n* changelog\n\n* correct PR number\n\n* Added .github/scripts/install_python_dependencies.sh to the pull-request path filters",
+          "timestamp": "2026-10-23T10:04:42+02:00",
+          "tree_id": "fc4cf96a7b181a0653a20b6cbffd9110a7106c4b",
+          "url": "https://github.com/gammasim/simtools/commit/ac20fbcea7419a1433c4dd34b81276aab376323c"
+        },
+        "date": 1792743439750,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 89.688043203,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 92.58999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 446.1171875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
