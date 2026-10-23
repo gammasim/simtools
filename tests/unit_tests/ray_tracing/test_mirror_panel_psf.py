@@ -187,14 +187,24 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     assert inst.final_percentage_diff == pytest.approx(20.0)
 
 
-def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker):
+def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker, tmp_path):
     dummy = SimpleNamespace(optimize_single_mirror=MagicMock(return_value={"ok": True}))
     constructor = mocker.patch.object(mpp, "MirrorPanelPSF", return_value=dummy)
-    job = mpp.MirrorOptimizationJob("test", {"site": "North"}, 1, 12.25)
+    directory = mocker.patch.object(
+        mpp.io_handler.IOHandler,
+        "get_model_configuration_directory",
+        side_effect=lambda version, sub_dir: tmp_path / sub_dir / version,
+    )
+    args = {"site": "North", "model_version": "6.0.0"}
+    job = mpp.MirrorOptimizationJob("test", args, 1, 12.25)
 
     result = mpp._optimize_single_mirror_worker(job)
 
-    constructor.assert_called_once_with("test", {"site": "North"})
+    # Parallel mirrors must not share configuration files (they hold the trial RNDA).
+    directory.assert_called_once_with("6.0.0", sub_dir="mirror_1")
+    constructor.assert_called_once_with(
+        "test", args, model_directory=tmp_path / "mirror_1" / "6.0.0"
+    )
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}
 
@@ -365,11 +375,15 @@ def test_write_optimization_data_writes_json(tmp_path):
     assert len(data["per_mirror_results"]) == 1
 
 
-def test_init_calls_initialize_simulation_models(monkeypatch, mocker):
+def test_init_calls_initialize_simulation_models(monkeypatch, mocker, tmp_test_directory):
     dummy_tel = _make_dummy_tel(label="tel")
     dummy_site = object()
+    model_directory = tmp_test_directory / "mirror_1" / "6.0.0"
+    calls = []
     monkeypatch.setattr(
-        mpp, "initialize_simulation_models", lambda **kw: (dummy_tel, dummy_site, None)
+        mpp,
+        "initialize_simulation_models",
+        lambda **kw: calls.append(kw) or (dummy_tel, dummy_site, None),
     )
     mocker.patch.object(mpp.MirrorPanelPSF, "_load_measured_data", return_value=[10.0])
 
@@ -379,9 +393,10 @@ def test_init_calls_initialize_simulation_models(monkeypatch, mocker):
         "telescope": "LSTN-01",
         "model_version": "6.0.0",
     }
-    inst = mpp.MirrorPanelPSF("lbl", args)
+    inst = mpp.MirrorPanelPSF("lbl", args, model_directory=model_directory)
     assert inst.telescope_model is dummy_tel
     assert inst.site_model is dummy_site
+    assert calls[0]["model_directory"] == model_directory
 
 
 def test_write_optimization_data_warns_when_parameter_export_fails(tmp_path, mocker, caplog):
