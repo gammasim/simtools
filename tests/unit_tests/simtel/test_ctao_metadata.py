@@ -10,14 +10,19 @@ from astropy.time import Time
 
 from simtools.simtel import ctao_metadata
 
+_PRODUCTION_ID = "production_id"
+_LABEL = "label"
+_SIMPROD = "SIMPROD"
 _BASE_ARGS = {
     "site": "North",
     "primary": "gamma",
     "zenith_angle": 20 * u.deg,
     "azimuth_angle": 180 * u.deg,
-    "production_id": "production-42",
+    _PRODUCTION_ID: "production-42",
     "activity_id": "12345678-1234-5678-1234-567812345678",
 }
+_LABEL_NAME = "label-name"
+_PRODUCTION_NAME = "production-name"
 _USED_CTAO_KEYWORDS = {
     "ctaometa",
     "title",
@@ -143,7 +148,7 @@ def test_get_ctao_simtel_metadata_creates_north_product():
     assert metadata["INSTRUME"] == "CTAO-North"
     assert metadata["PDGID"] == 22
     assert metadata["MSNGR"] == "photon"
-    assert metadata["SIMPROD"] == "production-42"
+    assert metadata[_SIMPROD] == "production-42"
     assert metadata["MODELVER"] == ctao_metadata.PRODUCT_MODEL_VERSION
     assert metadata["ACTID"] == _BASE_ARGS["activity_id"]
     assert "primary" not in metadata
@@ -187,6 +192,19 @@ def test_get_ctao_simtel_metadata_uses_contact_defaults():
     assert metadata["AUTHOR"] == "not set"
     assert metadata["ORIGIN"] == "not set"
     assert metadata["EMAIL"] == "not-set@example.org"
+
+
+@pytest.mark.parametrize(
+    (_PRODUCTION_ID, _LABEL, "expected"),
+    [(None, _LABEL_NAME, _LABEL_NAME), (_PRODUCTION_NAME, _LABEL_NAME, _PRODUCTION_NAME)],
+)
+def test_production_identifier_precedence(production_id, label, expected):
+    metadata = ctao_metadata.get_ctao_simtel_metadata(
+        {**_BASE_ARGS, _PRODUCTION_ID: production_id, _LABEL: label}
+    )
+
+    assert metadata[_SIMPROD] == expected
+    assert metadata["ACTCONF"] == expected
 
 
 def test_get_ctao_simtel_metadata_uses_user_contact():

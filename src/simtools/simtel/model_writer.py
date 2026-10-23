@@ -10,11 +10,16 @@ from simtools import settings
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.sim_events.formats.registry import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.ctao_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
+_CORSIKA_FILE = "corsika_file"
+_PRIMARY = "primary"
+_ZENITH_ANGLE = "zenith_angle"
+_AZIMUTH_ANGLE = "azimuth_angle"
 SIMTEL_SOFTWARE = "sim_telarray"
 
 
@@ -250,25 +255,33 @@ class SimtelModelWriter:
         dict
             Dictionary with additional metadata.
         """
+        args = dict(settings.config.args)
+        if args.get(_CORSIKA_FILE):
+            reader = get_reader(args[_CORSIKA_FILE], args.get("simulation_file_format", "eventio"))
+            shower = reader.read_simulation_parameters()
+            args.update(
+                primary=shower["primary_particle"].name,
+                primary_id_type="common_name",
+                zenith_angle=shower[_ZENITH_ANGLE],
+                azimuth_angle=shower[_AZIMUTH_ANGLE],
+            )
         metadata = {
             "nsb_integrated_flux": self.model.site_model.get_nsb_integrated_flux(),
         }
         for metadata_key, args_key in {
-            "primary": "primary",
-            "azimuth_angle": "azimuth_angle",
-            "zenith_angle": "zenith_angle",
+            _PRIMARY: _PRIMARY,
+            _AZIMUTH_ANGLE: _AZIMUTH_ANGLE,
+            _ZENITH_ANGLE: _ZENITH_ANGLE,
             "ha_angle": "ha",
             "dec_angle": "dec",
         }.items():
-            value = settings.config.args.get(args_key)
+            value = args.get(args_key)
             if value is not None:
                 metadata[metadata_key] = (
                     value.to_value(u.deg) if hasattr(value, "to_value") else value
                 )
-        if settings.config.args.get("primary") is not None:
-            metadata.update(
-                get_ctao_simtel_metadata(settings.config.args, site_model=self.model.site_model)
-            )
+        if args.get(_PRIMARY) is not None:
+            metadata.update(get_ctao_simtel_metadata(args, site_model=self.model.site_model))
         return metadata
 
     def write_config_file(self, additional_models=None, label=None):
