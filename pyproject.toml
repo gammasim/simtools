@@ -329,7 +329,6 @@ ini_options.pythonpath = [ "tests" ]
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
-  "src/simtools/applications",
 ]
 ini_options.addopts = [
   "-v",
@@ -354,7 +353,7 @@ ini_options.filterwarnings = [
 ]
 
 [tool.coverage]
-run.omit = [ "*__init__*", "src/simtools/_version.py", "src/simtools/applications/**" ]
+run.omit = [ "*__init__*", "src/simtools/_version.py" ]
 run.relative_files = true
 report.exclude_also = [
   'if __name__ == "__main__":',
