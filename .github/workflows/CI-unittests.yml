@@ -183,8 +183,8 @@ jobs:
               "-Dsonar.plugins.download.timeout=600"
               "-Dsonar.python.coverage.reportPaths=coverage.xml"
               "-Dsonar.python.version=3.14"
-              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py,tests/unit_tests/**"
-              "-Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**"
+              "-Dsonar.exclusions=**/docs/**,**/__init__.py,tests/unit_tests/**"
+              "-Dsonar.coverage.exclusions=**/tests/**"
             )
 
             if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
