@@ -99,8 +99,27 @@ def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simula
     assert "-C atmospheric_transmission=atmospheric_transmission-CTAO-MSTN-04.dat" in script
 
 
-def test_calculate_distance_focal_plane_calibration_device(simulator_instance):
-    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = 10 * u.m
+def _focus(values):
+    units = [u.cm, u.deg, u.dimensionless_unscaled, u.dimensionless_unscaled]
+    return [value * unit for value, unit in zip(values, units)]
+
+
+@pytest.mark.parametrize(
+    ("focus_offset", "expected"),
+    [
+        (None, 9.8),
+        (_focus([2.55, 0.0, 0.0, 0.0]), 9.8255),
+        # Zenith terms only if both are non-zero (sim_config.c); zenith 0, reference 60 deg.
+        (_focus([2.0, 60.0, 4.0, 0.0]), 9.82),
+        (_focus([2.0, 60.0, 4.0, 1.0]), 9.82 + 0.01 * (4.0 * 0.5 - math.sin(math.pi / 3))),
+    ],
+)
+def test_calculate_distance_focal_plane_calibration_device(
+    simulator_instance, focus_offset, expected
+):
+    """The camera is at the focal length plus the focus offset (vertical telescope)."""
+    parameters = {"focal_length": 10 * u.m, "focus_offset": focus_offset}
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
     simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
         0.0 * u.cm,
         0.0 * u.cm,
@@ -109,7 +128,7 @@ def test_calculate_distance_focal_plane_calibration_device(simulator_instance):
 
     result = simulator_instance.calculate_distance_focal_plane_calibration_device()
     assert result.unit.is_equivalent(u.m)
-    assert np.isclose(result.value, 9.8, rtol=1e-9)
+    assert result.to_value(u.m) == pytest.approx(expected, rel=1e-9)
 
 
 def test__add_flasher_command_options_event_length_mismatch_raises(simulator_instance):

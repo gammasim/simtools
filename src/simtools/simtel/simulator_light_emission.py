@@ -762,7 +762,9 @@ class SimulatorLightEmission(SimtelRunner):
         Calculate distance between focal plane and calibration device.
 
         For flasher-type light sources. Flasher position is given in mirror coordinates,
-        with positive z pointing towards the camera, so the distance is focal_length - flasher_z.
+        with positive z pointing towards the camera. The camera is at the focal length plus
+        the focus offset of the vertical telescope (sim_config.c), so the distance is
+        focal_length + focus_offset - flasher_z.
 
         Returns
         -------
@@ -773,7 +775,28 @@ class SimulatorLightEmission(SimtelRunner):
         flasher_z = self.calibration_model.get_parameter_value_with_unit(FLASHER_POSITION)[2].to(
             u.m
         )
-        return focal_length - flasher_z
+        return focal_length + self._vertical_focus_offset() - flasher_z
+
+    def _vertical_focus_offset(self):
+        """Focus offset of the vertical telescope, as sim_telarray computes it (sim_config.c).
+
+        The zenith-angle terms apply only if both are non-zero; they are in the unit of
+        the constant term.
+        """
+        values = self.telescope_model.get_parameter_value_with_unit("focus_offset")
+        if values is None:
+            return 0.0 * u.m
+        values = general.ensure_list(values)
+        offset = values[0].to(u.m)
+        if len(values) < 4 or not (values[2].value and values[3].value):
+            return offset
+        reference = values[1].to(u.rad).value
+        return (
+            offset
+            + (values[2].value * (1.0 - np.cos(reference)) - values[3].value * np.sin(reference))
+            * values[0].unit.to(u.m)
+            * u.m
+        )
 
     def validate_simulations(self):
         """Validate that the simulations were successful."""
