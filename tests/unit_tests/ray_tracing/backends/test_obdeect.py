@@ -9,7 +9,7 @@ pytest.importorskip("obdeect")
 
 # pylint: disable-next=wrong-import-position
 import astropy.units as u
-from astropy import constants
+from astropy.constants import c as speed_of_light
 from astropy.table import QTable
 
 from simtools.ray_tracing import parameter_changes
@@ -233,7 +233,7 @@ def test_camera_photons_of_an_illuminator(backend):
     # Through the mirrors: the reflectivity weights below one, all at time ~ 300 m / c.
     assert len(photons["weight"]) > 1000
     assert np.all(photons["weight"] < 1.0)
-    light_speed = constants.c.to_value(u.m / u.ns)
+    light_speed = speed_of_light.to_value(u.m / u.ns)
     assert np.median(photons["time_ns"]) == pytest.approx((300.0 + 8.5) / light_speed, rel=0.01)
 
 
@@ -246,5 +246,5 @@ def test_at_plane():
     moved = _at_plane(photons, 0.2, 1.0)
     assert moved["position_m"] == pytest.approx(np.array([[0.0, -0.6, 0.2], [1.0, 0.0, 0.2]]))
     # Backwards along the direction: earlier.
-    light_speed = constants.c.to_value(u.m / u.ns)
+    light_speed = speed_of_light.to_value(u.m / u.ns)
     assert moved["time_ns"] == pytest.approx([-1.0 / light_speed, 10.0 - 0.2 / light_speed])

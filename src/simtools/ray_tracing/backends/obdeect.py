@@ -16,7 +16,7 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from astropy import constants
+from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-module
 from astropy.table import QTable
 from obdeect.model import DETECTED, OpticalModel
 
@@ -25,7 +25,7 @@ from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import names
 
-_SPEED_OF_LIGHT_M_PER_NS = constants.c.to_value(u.m / u.ns)
+_SPEED_OF_LIGHT_M_PER_NS = speed_of_light.to_value(u.m / u.ns)
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):
@@ -326,5 +326,5 @@ class ObdeectBackend:
         return data, []
 
     def camera_photons(self, request):
-        """Photons of a calibration light source at the camera entrance, pulse by pulse, in blocks."""
+        """Photons of a calibration light source at the camera entrance, per pulse in blocks."""
         return self._tracer.trace_light_source(request)

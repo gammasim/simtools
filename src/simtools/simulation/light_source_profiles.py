@@ -38,7 +38,7 @@ def angular_profile(shape, width_deg, samples=SAMPLES, n_sigma=N_SIGMA):
     name = str(shape).lower()
     if name == "isotropic":
         return np.array([0.0, 180.0]), np.array([1.0, 1.0])
-    if not width_deg > 0.0:
+    if width_deg <= 0.0:
         raise ValueError(f"Angular distribution '{shape}' needs a positive width")
     if name == "filledcone":
         return np.array([0.0, width_deg, width_deg * (1.0 + 1e-9)]), np.array([1.0, 1.0, 0.0])
@@ -78,12 +78,12 @@ def pulse_profile(shape, width_ns, decay_ns, samples=SAMPLES, n_sigma=N_SIGMA):
     """
     name = str(shape).lower()
     if name == "exponential":
-        if not decay_ns > 0.0:
+        if decay_ns <= 0.0:
             return None
         times = np.linspace(0.0, 4.0 * n_sigma * decay_ns, samples)
         return times, np.exp(-times / decay_ns)
     if name == "gauss-exponential":
-        if not (width_ns > 0.0 and decay_ns > 0.0):
+        if width_ns <= 0.0 or decay_ns <= 0.0:
             raise ValueError("A Gauss-Exponential pulse needs positive rise and fall times")
         span = n_sigma * (width_ns + 4.0 * decay_ns)
         times, rates = generate_pulse_from_rise_fall_times(
@@ -95,7 +95,7 @@ def pulse_profile(shape, width_ns, decay_ns, samples=SAMPLES, n_sigma=N_SIGMA):
             center_on_peak=True,
         )
         return times, np.clip(rates, 0.0, None)  # The numerical convolution dips below zero.
-    if not width_ns > 0.0:
+    if width_ns <= 0.0:
         return None
     if name == "tophat":
         return np.array([-0.5 * width_ns, 0.5 * width_ns]), np.array([1.0, 1.0])
