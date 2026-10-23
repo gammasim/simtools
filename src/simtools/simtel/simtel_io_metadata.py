@@ -10,11 +10,19 @@ from eventio.iact import InputCard
 from eventio.simtel import HistoryMeta
 
 from simtools import dependency_versions
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
 LEGACY_METADATA_ALIASES = {
+    "simzen": "zenith_angle",
+    "simaz": "azimuth_angle",
+    "simha": "ha_angle",
+    "simdec": "dec_angle",
+    "simnsb": "nsb_factor",
+    "pdgid": "primary_pdgid",
+    "msngr": "messenger",
     "simtools_corsika_config_version": "simtools_corsika_config_tag",
     "simtools_corsika_opt_patch_version": "simtools_corsika_opt_patch_tag",
     "simtools_corsika_version": "simtools_corsika_build_id",
@@ -71,7 +79,26 @@ def normalize_sim_telarray_metadata(metadata, dependency_catalog=None):
             if source_tag is not None:
                 normalized["simtools_corsika_source_tag"] = source_tag
 
+    _validate_primary_aliases(normalized)
+
     return normalized
+
+
+def _validate_primary_aliases(metadata):
+    """Reject disagreement between the native primary name and CTAO PDG ID."""
+    primary = metadata.get("primary")
+    pdg_id = metadata.get("primary_pdgid")
+    if primary is None or pdg_id is None:
+        return
+    primary_text = str(primary)
+    if primary_text.lstrip("-").isdigit():
+        return
+    resolved_pdg_id = PrimaryParticle("common_name", primary_text)
+    if resolved_pdg_id.pdg_id != int(pdg_id):
+        raise ValueError(
+            f"Conflicting sim_telarray metadata values for primary and PDGID: "
+            f"{primary!r} != {pdg_id!r}."
+        )
 
 
 @cache

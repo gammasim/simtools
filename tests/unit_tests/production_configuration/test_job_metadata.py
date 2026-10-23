@@ -135,6 +135,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
 
     manifest = build_production_job_manifest(
         _args(
+            production_id="production-42",
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
@@ -148,6 +149,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
 
     assert manifest["schema_version"] == "1.0.0"
     assert manifest["product_type"] == "simulate_prod_job"
+    assert manifest["production_id"] == "production-42"
     assert manifest["catalog_metadata"]["runNumber"] == 12
     assert manifest["configuration"]["run_number"] == 12
     assert manifest["configuration"]["zenith_angle"] == 20 * u.deg

@@ -7,18 +7,19 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
+from simtools.simtel.ctao_metadata import get_ctao_metadata_registry
 from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils import names
 
-META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter")
+META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 
 
 def get_meta_parameter_registry(schema_version=None, validate=True, source_type="all"):
     """
     Return the expanded sim_telarray meta-parameter registry.
 
-    Generated metadata are read from the registry schema. Model-parameter-derived
-    metadata are resolved from the model-parameter schemas.
+    Native generated metadata are read from the registry schema. CTAO metadata are
+    derived from ctao-datamodel, and model-parameter metadata come from their schemas.
 
     Parameters
     ----------
@@ -27,7 +28,8 @@ def get_meta_parameter_registry(schema_version=None, validate=True, source_type=
     validate : bool, optional
         Whether to validate the loaded registry against the metaschema.
     source_type : str, optional
-        Metadata source filter: ``all``, ``generated``, or ``model_parameter``.
+        Metadata source filter: ``all``, ``generated``, ``model_parameter``, or
+        ``ctao_datamodel``.
     """
     registry_source = schema.load_schema(
         SIM_TELARRAY_META_PARAMETER_REGISTRY, schema_version=schema_version or "latest"
@@ -66,7 +68,7 @@ def validate_metadata(meta_parameters):
             )
         if (
             parsed["scope"] is not None
-            and definition["source_type"] == "generated"
+            and definition["source_type"] in {"generated", "ctao_datamodel"}
             and definition["scope"] != parsed["scope"]
         ):
             raise ValueError(
@@ -92,16 +94,18 @@ def validate_metadata_values(metadata):
         Decoded sim_telarray metadata values, keyed by emitted name.
     """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
-    for name, value in normalize_sim_telarray_metadata(metadata).items():
-        definition = registry.get(name)
+    normalized_metadata = normalize_sim_telarray_metadata(metadata)
+    values_to_validate = {**normalized_metadata, **metadata}
+    for name, value in values_to_validate.items():
+        definition = registry.get(name.lower())
         if (
             definition is None
             or value is None
-            or definition["source_type"] != "generated"
+            or definition["source_type"] not in {"generated", "ctao_datamodel"}
             or definition["mode"] == "add"
         ):
             continue
-        _validate_metadata_value(name, str(value), definition["value_schema"])
+        _validate_metadata_value(name.lower(), str(value), definition["value_schema"])
 
 
 def _parse_metadata_line(line):
@@ -117,7 +121,7 @@ def _parse_metadata_line(line):
         return {
             "scope": scope,
             "mode": mode,
-            "name": name.strip(),
+            "name": name.strip().lower(),
             "value": value.strip() if separator else None,
         }
 
@@ -126,7 +130,7 @@ def _parse_metadata_line(line):
         return {
             "scope": None,
             "mode": "assign",
-            "name": name.strip(),
+            "name": name.strip().lower(),
             "value": value.strip(),
         }
 
@@ -157,6 +161,7 @@ def _build_meta_parameter_registry(registry_source):
         definition = _build_model_parameter_definition(source_name)
         meta_parameters[definition["name"]] = definition
 
+    meta_parameters.update(get_ctao_metadata_registry())
     registry["meta_parameters"] = meta_parameters
     return registry
 

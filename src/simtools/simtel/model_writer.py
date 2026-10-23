@@ -11,6 +11,7 @@ from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import simtel_seeds, table_serializers
+from simtools.simtel.ctao_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
@@ -264,6 +265,10 @@ class SimtelModelWriter:
                 metadata[metadata_key] = (
                     value.to_value(u.deg) if hasattr(value, "to_value") else value
                 )
+        if settings.config.args.get("primary") is not None:
+            metadata.update(
+                get_ctao_simtel_metadata(settings.config.args, site_model=self.model.site_model)
+            )
         return metadata
 
     def write_config_file(self, additional_models=None, label=None):

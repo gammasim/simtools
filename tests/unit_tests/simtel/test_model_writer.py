@@ -195,6 +195,7 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
         settings.config,
         "_args",
         {
+            "site": "North",
             "primary": "gamma",
             "azimuth_angle": 180.0 * u.deg,
             "zenith_angle": 20.0 * u.deg,
@@ -211,6 +212,8 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
     assert metadata["zenith_angle"] == pytest.approx(20.0)
     assert metadata["ha_angle"] == pytest.approx(0.0)
     assert metadata["dec_angle"] == pytest.approx(30.0)
+    assert metadata["INSTRUME"] == "CTAO-North"
+    assert metadata["PDGID"] == 22
 
 
 def test_export_all_simtel_config_files(mocker):
