@@ -40,6 +40,9 @@ class SimtelBackend:
         Trace single mirrors.
     """
 
+    # Calibration light: sim_telarray's LightEmission programs and optics.
+    traces_light_sources = False
+
     def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
         self._logger = logging.getLogger(__name__)
         self.telescope_model = telescope_model

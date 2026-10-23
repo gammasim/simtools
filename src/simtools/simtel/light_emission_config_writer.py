@@ -212,6 +212,7 @@ class LightEmissionConfigWriter:
             f"-z {z_cal.to(u.cm).value}",
             f"-d {','.join(map(str, pointing_vector))}",
             f"-n {self.simulation.light_emission_config['flasher_photons']}",
+            f"-N {int(self.simulation.light_emission_config.get('number_of_events') or 1)}",
             f"-s {int(flasher_wavelength.to(u.nm).value)}",
             f"-p {pulse_arg}",
             f"-a {angular_distribution}",
