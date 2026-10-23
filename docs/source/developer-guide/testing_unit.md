@@ -1,8 +1,8 @@
 # Unit Tests
 
 Unit tests cover library code in `src/simtools/` at module and function level.
-Application entrypoints in `src/simtools/applications/` are covered by
-integration tests instead.
+Application workflows are covered by integration tests. Application modules are
+also included in unit-test coverage measurement when unit tests exercise them.
 
 ## Scope
 
@@ -64,8 +64,9 @@ Keep local fixtures close to the test module that uses them.
 
 ## Coverage Workflow
 
-Coverage is a diagnostic tool, not the goal by itself. Use it to find missing
-branches after the semantic behavior is covered.
+Coverage is a diagnostic tool, not the goal by itself. It includes application
+modules as well as library code. Use it to find missing branches after the
+semantic behavior is covered.
 
 ```bash
 pytest --cov-branch --cov-report=html --cov-report=json tests/unit_tests/
