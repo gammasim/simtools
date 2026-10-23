@@ -11,6 +11,7 @@ on:
       - 'v*-rc*'
     paths:
       - docker/Dockerfile-simtools-dev
+      - .github/scripts/install_python_dependencies.sh
       - pyproject.toml
       - dependency_versions.yml
       - src/simtools/applications/dependency_versions.py
@@ -44,7 +45,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
         run: |
-          python -m pip install packaging pyyaml
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
