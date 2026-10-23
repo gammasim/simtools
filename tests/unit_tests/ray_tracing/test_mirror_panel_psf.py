@@ -374,9 +374,10 @@ def test_write_optimization_data_writes_json(tmp_path):
     assert len(data["per_mirror_results"]) == 1
 
 
-def test_init_calls_initialize_simulation_models(monkeypatch, mocker):
+def test_init_calls_initialize_simulation_models(monkeypatch, mocker, tmp_test_directory):
     dummy_tel = _make_dummy_tel(label="tel")
     dummy_site = object()
+    model_directory = tmp_test_directory / "mirror_1" / "6.0.0"
     calls = []
     monkeypatch.setattr(
         mpp,
@@ -391,10 +392,10 @@ def test_init_calls_initialize_simulation_models(monkeypatch, mocker):
         "telescope": "LSTN-01",
         "model_version": "6.0.0",
     }
-    inst = mpp.MirrorPanelPSF("lbl", args)
+    inst = mpp.MirrorPanelPSF("lbl", args, model_directory=model_directory)
     assert inst.telescope_model is dummy_tel
     assert inst.site_model is dummy_site
-    assert calls[0]["model_directory"] is None
+    assert calls[0]["model_directory"] == model_directory
 
 
 def test_write_optimization_data_warns_when_parameter_export_fails(tmp_path, mocker, caplog):
