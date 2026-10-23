@@ -1220,8 +1220,7 @@ def test_write_camera_photons(
         "flasher_angular_distribution": "Isotropic",
     }
     simulator_instance.calibration_model.get_parameter_value.side_effect = calibration_values.get
-    writer = get_light_source_writer(simulator_instance)
-    atmosphere = mocker.patch.object(writer, "prepare_flasher_atmosphere_files")
+    simulator_instance.site_model.get_parameter_table.return_value = "profile"
     photons = {
         POSITION_M: np.array([[0.1, 0.2, 16.0]]),
         "direction": np.array([[0.0, 0.0, 1.0]]),
@@ -1259,10 +1258,15 @@ def test_write_camera_photons(
         False,
     )
     backend.return_value.camera_photons.assert_called_once_with(request)
-    atmosphere.assert_called_once_with(tmp_test_directory)
+    simulator_instance.site_model.get_parameter_table.assert_called_once_with("atmospheric_profile")
     args, kwargs = write.call_args
     assert args[0] == output
-    assert kwargs == {"observation_level_m": 2156.0, "telescope_radius_m": 2.0, "run_number": 1}
+    assert kwargs == {
+        "observation_level_m": 2156.0,
+        "telescope_radius_m": 2.0,
+        "atmospheric_profile": "profile",
+        "run_number": 1,
+    }
     (bunches,) = list(args[1])
     assert len(bunches) == 2
     assert bunches["photons"][0] == pytest.approx(0.4)  # Weight times transmission.

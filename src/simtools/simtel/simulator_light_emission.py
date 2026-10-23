@@ -312,7 +312,6 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _write_camera_photons(self, iact_output):
         """Write the photons the ray-tracing backend brings to the camera entrance."""
-        writer = get_light_source_writer(self)
         level_m = (
             self.site_model.get_parameter_value_with_unit(CORSIKA_OBSERVATION_LEVEL).to(u.m).value
         )
@@ -367,12 +366,12 @@ class SimulatorLightEmission(SimtelRunner):
             )
             for pulse in backend.camera_photons(request)
         )
-        writer.prepare_flasher_atmosphere_files(self.telescope_model.config_file_directory)
         write_photon_bunches(
             iact_output,
             events,
             observation_level_m=level_m,
             telescope_radius_m=radius,
+            atmospheric_profile=self.site_model.get_parameter_table("atmospheric_profile"),
             run_number=self.light_emission_config.get(RUN_NUMBER) or 1,
         )
 

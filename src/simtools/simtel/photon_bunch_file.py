@@ -16,6 +16,7 @@ import math
 import struct
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 BUNCH_DTYPE = np.dtype(
@@ -37,8 +38,8 @@ _CORSIKA_VERSION = 6.999
 _DATE = 261022.0
 _ENERGY_GEV = 1e-9
 # Event header words (1-based) as the LightEmission programs write them for
-# artificial light. Word 77 carries the atmospheric profile number times 1024:
-# sim_telarray reads atmprof<number>.dat from its include path.
+# artificial light. Word 77 carries the atmospheric profile number times 1024;
+# the profile itself is written into the file.
 _EVENT_WORDS = {
     3: 1.0,
     4: _ENERGY_GEV,
@@ -68,6 +69,7 @@ _EVENT_WORDS = {
     98: 1.0,
 }
 _EVENT_FLAGS = 187  # Low bits of word 77.
+_PROFILE_ID = 99
 
 
 def bypass_optics_level(dual_mirror):
@@ -129,10 +131,45 @@ def camera_bunches(photons, *, dual_mirror, emission_altitude_m, camera_rotation
     return bunches
 
 
-def _object(object_type, identifier, payload, top_level=True, only_subobjects=False):
-    """Encode one EventIO object (version 0)."""
-    header = struct.pack("<IiI", object_type, identifier, len(payload) | (only_subobjects << 30))
+def _object(object_type, identifier, payload, top_level=True, only_subobjects=False, version=0):
+    """Encode one EventIO object."""
+    header = struct.pack(
+        "<IiI", object_type | (version << 20), identifier, len(payload) | (only_subobjects << 30)
+    )
     return (struct.pack("<I", _SYNC) if top_level else b"") + header + payload
+
+
+def _count(value):
+    """Encode an EventIO variable-length unsigned count."""
+    for size, marker in ((1, 0x00), (2, 0x80), (3, 0xC0), (4, 0xE0)):
+        if value < 1 << (8 * size - size):
+            return (value | (marker << (8 * size - 8))).to_bytes(size, "big")
+    return b"\xf0" + value.to_bytes(4, "big")
+
+
+def _atmospheric_profile(table, observation_level_m, identifier):
+    """Encode an atmospheric profile (EventIO type 1216, as CORSIKA writes it).
+
+    The table has the columns of the ``atmospheric_profile`` model parameter:
+    altitude, density, thickness and refractive_index (n - 1).
+    """
+    name = str(table.meta.get("parameter_name", "atmospheric_profile")).encode()
+    columns = [
+        u.Quantity(table["altitude"], u.km).to_value(u.km),
+        u.Quantity(table["density"], u.g / u.cm**3).to_value(u.g / u.cm**3),
+        u.Quantity(table["thickness"], u.g / u.cm**2).to_value(u.g / u.cm**2),
+        np.asarray(table["refractive_index"], dtype=float),
+    ]
+    rows = np.column_stack(columns).astype("<f8")
+    payload = (
+        _count(len(name))
+        + name
+        + struct.pack("<d", 100.0 * observation_level_m)
+        + _count(len(rows))
+        + rows.tobytes()
+        + _count(0)  # No 5-layer parameterisation.
+    )
+    return _object(1216, identifier, payload, version=1)
 
 
 def _block(name, words):
@@ -144,7 +181,13 @@ def _block(name, words):
 
 
 def write_photon_bunches(
-    path, events, *, observation_level_m, telescope_radius_m, run_number=1, atmosphere=1
+    path,
+    events,
+    *,
+    observation_level_m,
+    telescope_radius_m,
+    atmospheric_profile,
+    run_number=1,
 ):
     """Write photon bunches of one telescope, one array of bunches per event.
 
@@ -158,10 +201,11 @@ def write_photon_bunches(
         Altitude of the observation level (CORSIKA) a.s.l. [m].
     telescope_radius_m: float
         Radius of the telescope's fiducial sphere [m].
+    atmospheric_profile: astropy.table.Table
+        Atmospheric profile (``atmospheric_profile`` model parameter), written
+        into the file.
     run_number: int
         Run number.
-    atmosphere: int
-        Number of the atmospheric profile (file atmprof<number>.dat).
 
     Returns
     -------
@@ -183,10 +227,11 @@ def write_photon_bunches(
         output.write(
             _object(1201, 0, struct.pack("<i4f", 1, 0.0, 0.0, 0.0, 100.0 * telescope_radius_m))
         )
+        output.write(_atmospheric_profile(atmospheric_profile, observation_level_m, _PROFILE_ID))
         for count, bunches in enumerate(events, start=1):
             bunches = np.ascontiguousarray(bunches, dtype=BUNCH_DTYPE)
             event = _EVENT_WORDS | {2: count, 5: level_cm, 7: -level_cm, 44: run_number}
-            event |= {48: level_cm, 77: 1024 * atmosphere + _EVENT_FLAGS}
+            event |= {48: level_cm, 77: 1024 * _PROFILE_ID + _EVENT_FLAGS}
             output.write(_object(1202, count, _block(b"EVTH", event)))
             output.write(_object(1203, 0, struct.pack("<i3f", 1, 0.0, 0.0, 0.0)))
             photons = struct.pack("<hhfi", 0, 0, float(bunches["photons"].sum()), len(bunches))
