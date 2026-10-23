@@ -7,10 +7,12 @@ minimal set of objects sim_telarray needs, filled as the sim_telarray
 LightEmission programs (ff-1m, xyzls) fill them for artificial light.
 
 One telescope at the origin of the array frame; one photon bunch object per
-event.
+event. ``camera_bunches`` hands photons at the camera entrance to sim_telarray
+with its optics bypassed (``Bypass_Optics``).
 """
 
 import gzip
+import math
 import struct
 from pathlib import Path
 
@@ -66,6 +68,65 @@ _EVENT_WORDS = {
     98: 1.0,
 }
 _EVENT_FLAGS = 187  # Low bits of word 77.
+
+
+def bypass_optics_level(dual_mirror):
+    """Return the sim_telarray ``Bypass_Optics`` value for photons at the camera entrance."""
+    return 2 if dual_mirror else 1
+
+
+def camera_bunches(photons, *, dual_mirror, emission_altitude_m, camera_rotation_deg=0.0):
+    """
+    Photon bunches of photons at the camera entrance, for sim_telarray with its optics bypassed.
+
+    The photons cross the camera plane (through the focal-surface vertex,
+    normal to the optical axis) in the telescope frame (+z along the optical
+    axis, towards the sky).
+
+    - Single-mirror telescopes (``Bypass_Optics=1``): sim_telarray reads a
+      bunch (x, y) as the camera position M (x, y) with
+      M = [[cos r, -sin r], [-sin r, -cos r]] (camera rotation r), whereas its
+      own optics give R(-r) (x, y) of the telescope frame. Since
+      M R(-r) = diag(1, -1), the telescope frame is turned by pi about x, for
+      any camera rotation: (x, y, z) -> (x, -y, -z).
+    - Dual-mirror telescopes (``Bypass_Optics=2``): sim_telarray reads bunches
+      in its camera frame, the telescope frame rotated by r about the optical
+      axis (sim_imaging.c, tel_setup_secondary); the light travels to -z.
+
+    Parameters
+    ----------
+    photons: dict
+        ``position_m`` (n, 2 or 3), ``direction`` (n, 3), ``time_ns``,
+        ``weight`` and ``wavelength_nm`` of the photons.
+    dual_mirror: bool
+        Dual-mirror telescope.
+    emission_altitude_m: float or numpy.ndarray
+        Altitude a.s.l. sim_telarray takes as the emission point.
+    camera_rotation_deg: float
+        Camera rotation (dual-mirror telescopes) [deg].
+
+    Returns
+    -------
+    numpy.ndarray
+        Photon bunches (``BUNCH_DTYPE``); the photons per bunch are the weights.
+    """
+    position, direction = np.asarray(photons["position_m"]), np.asarray(photons["direction"])
+    x, y, cx, cy = position[:, 0], position[:, 1], direction[:, 0], direction[:, 1]
+    if dual_mirror:
+        rotation = math.radians(camera_rotation_deg)
+        cos_r, sin_r = math.cos(rotation), math.sin(rotation)
+        x, y = x * cos_r + y * sin_r, y * cos_r - x * sin_r
+        cx, cy = cx * cos_r + cy * sin_r, cy * cos_r - cx * sin_r
+    else:
+        y, cy = -y, -cy
+    bunches = np.empty(len(position), dtype=BUNCH_DTYPE)
+    bunches["x"], bunches["y"] = 100.0 * x, 100.0 * y
+    bunches["cx"], bunches["cy"] = cx, cy
+    bunches["time"] = photons["time_ns"]
+    bunches["zem"] = 100.0 * np.asarray(emission_altitude_m)
+    bunches["photons"] = photons["weight"]
+    bunches["wavelength"] = photons["wavelength_nm"]
+    return bunches
 
 
 def _object(object_type, identifier, payload, top_level=True, only_subobjects=False):

@@ -4,7 +4,12 @@ import numpy as np
 import pytest
 from eventio import EventIOFile
 
-from simtools.simtel.photon_bunch_file import BUNCH_DTYPE, write_photon_bunches
+from simtools.simtel.photon_bunch_file import (
+    BUNCH_DTYPE,
+    bypass_optics_level,
+    camera_bunches,
+    write_photon_bunches,
+)
 
 
 def _bunches(n, offset=0.0):
@@ -59,3 +64,47 @@ def test_write_photon_bunches_reads_back(tmp_test_directory, name):
     # Word 77: atmospheric profile 1 (atmprof1.dat) times 1024 plus option bits.
     assert int(event_header[1][76]) >> 10 == 1
     assert telescopes[0]["r"] == pytest.approx(200.0)
+
+
+def _camera_photons():
+    return {
+        "position_m": np.array([[0.1, 0.2, 16.0]]),
+        "direction": np.array([[0.01, 0.02, 0.99975]]),
+        "time_ns": np.array([55.0]),
+        "weight": np.array([0.7]),
+        "wavelength_nm": np.array([385.0]),
+    }
+
+
+def test_camera_bunches_single_mirror_turn_the_frame_about_x():
+    bunch = camera_bunches(_camera_photons(), dual_mirror=False, emission_altitude_m=2147.0)[0]
+    assert (bunch["x"], bunch["y"]) == pytest.approx((10.0, -20.0))
+    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.01, -0.02))
+    assert bunch["time"] == pytest.approx(55.0)
+    assert bunch["zem"] == pytest.approx(214700.0)
+    assert bunch["photons"] == pytest.approx(0.7)
+    assert bunch["wavelength"] == pytest.approx(385.0)
+    # The camera rotation does not matter for single-mirror telescopes.
+    rotated = camera_bunches(
+        _camera_photons(), dual_mirror=False, emission_altitude_m=2147.0, camera_rotation_deg=30.0
+    )
+    assert np.array_equal(
+        rotated, camera_bunches(_camera_photons(), dual_mirror=False, emission_altitude_m=2147.0)
+    )
+
+
+def test_camera_bunches_dual_mirror_in_the_camera_frame():
+    bunch = camera_bunches(_camera_photons(), dual_mirror=True, emission_altitude_m=2147.0)[0]
+    assert (bunch["x"], bunch["y"]) == pytest.approx((10.0, 20.0))
+    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.01, 0.02))
+    # Camera rotated by 90 deg: telescope x is camera -y.
+    bunch = camera_bunches(
+        _camera_photons(), dual_mirror=True, emission_altitude_m=2147.0, camera_rotation_deg=90.0
+    )[0]
+    assert (bunch["x"], bunch["y"]) == pytest.approx((20.0, -10.0))
+    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.02, -0.01))
+
+
+def test_bypass_optics_level():
+    assert bypass_optics_level(False) == 1
+    assert bypass_optics_level(True) == 2

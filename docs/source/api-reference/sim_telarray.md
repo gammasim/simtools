@@ -59,6 +59,13 @@ configuration files is not supported.
    :members:
 ```
 
+## light_emission_tables
+
+```{eval-rst}
+.. automodule:: simtel.light_emission_tables
+   :members:
+```
+
 ## photon_bunch_file
 
 ```{eval-rst}

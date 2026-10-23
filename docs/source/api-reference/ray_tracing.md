@@ -58,15 +58,6 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
-(obdeectlightemissionmodule)=
-
-## obdeect_light_emission
-
-```{eval-rst}
-.. automodule:: ray_tracing.obdeect_light_emission
-   :members:
-```
-
 (psfanalysismodule)=
 
 ## psf_analysis

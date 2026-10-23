@@ -19,6 +19,17 @@ label, the telescope zenith angle [deg] and the single-mirror flag, and provides
 - ``incidence_angles(request, work_directory, name, with_mirrors, keep_files)``:
   per-photon incidence angles on the focal surface (and mirrors) and the
   intermediate files written.
+
+Backends with ``traces_light_sources`` also make and trace the light of
+calibration light sources (flashers, illuminators; ``LightSourceRequest``):
+
+- ``camera_photons(request)``: for each light pulse, the photons crossing the
+  camera plane (through the focal-surface vertex, normal to the optical axis;
+  telescope frame, metres): ``position_m``, ``direction``, ``time_ns``,
+  ``weight`` (photons) and ``wavelength_nm``.
+
+Otherwise sim_telarray's LightEmission programs make the light and sim_telarray
+traces it.
 """
 
 from dataclasses import dataclass, field
@@ -59,6 +70,49 @@ class StarImageRequest:
     def key(self):
         """Return the identifier of the image (offsets and mirror)."""
         return self.off_axis_x, self.off_axis_y, self.mirror_number
+
+
+@dataclass(frozen=True)
+class LightSourceRequest:
+    """
+    The light of a calibration light source (a point emitter), pulse by pulse.
+
+    Parameters
+    ----------
+    position_m: tuple of float
+        Emitter position in the telescope frame [m] (+z along the optical axis).
+    axis: tuple of float
+        Unit vector of the axis of the angular profile (telescope frame).
+    angular_profile: tuple of numpy.ndarray
+        Angles to the axis [deg] and relative intensities per solid angle.
+    pulse: tuple of numpy.ndarray or None
+        Emission times [ns] and relative rates; None: instantaneous.
+    wavelength_nm: float
+        Wavelength [nm].
+    photons_per_pulse: tuple of float
+        Photons emitted into 4 pi in each pulse.
+    telescope_zenith: float
+        Telescope zenith angle [deg].
+    seeds: tuple of int
+        (Instrument seed, simulation seed).
+    inside_telescope: bool
+        The light starts inside the telescope on its way to the camera
+        (flasher): it reaches the camera directly, without the mirrors.
+    camera_radius_m: float or None
+        Radius of the camera [m]; the light of a source inside the telescope
+        is made only on its way to the camera.
+    """
+
+    position_m: tuple
+    axis: tuple
+    angular_profile: tuple = field(hash=False, compare=False)
+    pulse: tuple | None = field(hash=False, compare=False)
+    wavelength_nm: float
+    photons_per_pulse: tuple
+    telescope_zenith: float
+    seeds: tuple
+    inside_telescope: bool = False
+    camera_radius_m: float | None = None
 
 
 def get_backend(name=None):

@@ -36,9 +36,9 @@ full_simulation` and `simtools-simulate-illuminator` split the simulation into
 stages: obdeect makes the light of the calibration device and traces it to the
 camera entrance, simtools writes the photons as photon bunches
 (`simtel.photon_bunch_file`), and sim_telarray simulates the camera and
-electronics with its optics bypassed (`Bypass_Optics=1`). This replaces the
-sim_telarray LightEmission programs (`ff-1m`, `xyzls`) and sim_telarray's
-optics.
+electronics with its optics bypassed (`Bypass_Optics=1` for single-mirror,
+`Bypass_Optics=2` for dual-mirror telescopes). This replaces the sim_telarray
+LightEmission programs (`ff-1m`, `xyzls`) and sim_telarray's optics.
 
 - The light source follows the calibration model as for LightEmission: angular
   distribution, pulse shape, wavelength and photon number per pulse; the
@@ -48,4 +48,5 @@ optics.
 - Illuminator light crosses the atmosphere (sim_telarray's transmission table
   and formula, along the real path) and the optics; telescope position,
   pointing and axes offsets are those of the sim_telarray run.
-- Dual-mirror telescopes are not supported yet.
+- `--instrument_seed` and `--simulation_seed` seed obdeect and sim_telarray
+  with either backend.

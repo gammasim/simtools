@@ -5,6 +5,9 @@ traces star light through the optics to the camera entrance. The light source,
 the telescope pointing and the parameter changes of the ray-tracing modes are
 those of the sim_telarray backend, so that both backends answer the same
 question. Images stay in memory.
+
+obdeect also makes the light of calibration light sources (point emitters) and
+traces it to the camera entrance.
 """
 
 import math
@@ -20,6 +23,8 @@ from simtools.io import io_handler
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import names
+
+_SPEED_OF_LIGHT_M_PER_NS = 0.299792458
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):
@@ -137,6 +142,53 @@ class ObdeectRayTracer:
             "has_structure": model.has_structure,
         }
 
+    def trace_light_source(self, request):
+        """
+        Make and trace the light of a calibration light source, pulse by pulse.
+
+        Parameters
+        ----------
+        request: LightSourceRequest
+            Light source.
+
+        Yields
+        ------
+        dict
+            The photons of one pulse crossing the camera plane (see
+            ``simtools.ray_tracing.backends``).
+        """
+        instrument_seed, simulation_seed = request.seeds
+        model = self.optical_model(request.telescope_zenith, instrument_seed)
+        plane_z = model.focal_surface_z_m
+        disk = (
+            ((0.0, 0.0, plane_z), (0.0, 0.0, 1.0), request.camera_radius_m)
+            if request.inside_telescope
+            else None  # The telescope entrance.
+        )
+        for pulse_number, photons in enumerate(request.photons_per_pulse):
+            arrivals = model.trace_emitter(
+                photons,
+                seed=simulation_seed,
+                first_id=pulse_number << 40,
+                position_m=request.position_m,
+                intensity=request.angular_profile,
+                axis=request.axis,
+                pulse=request.pulse,
+                wavelength_nm=request.wavelength_nm,
+                disk=disk,
+                direct=request.inside_telescope,
+            )
+            yield _at_plane(arrivals, plane_z, model.propagation_group_index)
+
+
+def _at_plane(photons, plane_z, group_index):
+    """Move photons on the focal surface along their direction to the plane z = plane_z [m]."""
+    position, direction = photons["position_m"], photons["direction"]
+    path = (plane_z - position[:, 2]) / direction[:, 2]
+    photons["position_m"] = position + path[:, None] * direction
+    photons["time_ns"] = photons["time_ns"] + path * group_index / _SPEED_OF_LIGHT_M_PER_NS
+    return photons
+
 
 class ObdeectBackend:
     """
@@ -155,6 +207,8 @@ class ObdeectBackend:
     single_mirror_mode: bool
         Trace single mirrors.
     """
+
+    traces_light_sources = True
 
     def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
         del site_model
@@ -269,3 +323,7 @@ class ObdeectBackend:
                 data[f"{mirror}_hit_x"] = point[:, 0]
                 data[f"{mirror}_hit_y"] = point[:, 1]
         return data, []
+
+    def camera_photons(self, request):
+        """Photons of a calibration light source at the camera entrance, pulse by pulse."""
+        return self._tracer.trace_light_source(request)

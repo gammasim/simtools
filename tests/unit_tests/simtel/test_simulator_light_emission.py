@@ -35,11 +35,9 @@ SIMTEL_EXECUTABLE = "/mock/simtel/bin/sim_telarray"
 ATM_DAT = "atm.dat"
 ATM_TRANS_DAT = "atm_trans.dat"
 AXES_OFFSETS = "axes_offsets"
-EMISSION_ALTITUDE_M = "emission_altitude_m"
 FLASHER_PHOTONS = "flasher_photons"
 GET_ILLUMINATOR_POSITION = "get_illuminator_position"
 ILLUMINATOR = "illuminator"
-INSTRUMENT_SEED = "instrument_seed"
 MAKE_RUN_COMMAND = "make_run_command"
 NUMBER_OF_EVENTS = "number_of_events"
 POSITION_M = "position_m"
@@ -1037,107 +1035,119 @@ def test_run_script_separates_diagnostics(
             assert handle.read() == f"{stage} stderr\n"
 
 
-def _obdeect_settings(mock_settings):
-    mock_settings.config.ray_tracing_backend = "obdeect"
-    mock_settings.config.sim_telarray_exe = SIMTEL_EXECUTABLE
-    mock_settings.config.args = {INSTRUMENT_SEED: 5, "simulation_seed": [3]}
+def _tracing_backend(photons=()):
+    """A ray-tracing backend class that makes and traces calibration light."""
+    backend = Mock(traces_light_sources=True)
+    backend.return_value.camera_photons.return_value = iter(photons)
+    return backend
 
 
-def test_make_run_command_with_obdeect(simulator_instance):
-    """obdeect writes the photons beforehand; sim_telarray bypasses its optics."""
+@pytest.mark.parametrize(("mirror_class", "bypass"), [(0, 1), (2, 2)])
+def test_make_run_command_with_traced_light(simulator_instance, mirror_class, bypass):
+    """A backend writes the photons beforehand; sim_telarray bypasses its optics."""
     simulator_instance.telescope_model.config_file_path = "/mock/config/CTAO-MSTN-02.cfg"
+    simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
     simulator_instance.site_model.get_parameter_value.return_value = ATM_TRANS_DAT
     simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: ILLUMINATOR}
     simulator_instance.runner_service.get_file_name.return_value = Path("/out/photons.iact.gz")
     with (
         patch(SETTINGS_TARGET) as mock_settings,
+        patch.object(simulator_instance, "_backend", return_value=_tracing_backend()),
+        patch.object(simulator_instance, "_seeds", return_value=(5, 3)),
         patch.object(simulator_instance, TELESCOPE_POINTING_METHOD) as pointing,
         patch.object(
             get_light_source_writer(simulator_instance), MAKE_COMMAND_METHOD
         ) as light_emission,
     ):
-        _obdeect_settings(mock_settings)
+        mock_settings.config.sim_telarray_exe = SIMTEL_EXECUTABLE
         lines = simulator_instance.make_run_command()
 
     script = "".join(lines)
     light_emission.assert_not_called()
     pointing.assert_not_called()
-    assert "-C Bypass_Optics=1" in script
+    assert f"-C Bypass_Optics={bypass}" in script
     assert "-C telescope_theta=0.0" in script
     assert "-C telescope_phi=0.0" in script
+    assert "-C random_seed=5,3" in script
 
 
-def test_prepare_run_writes_obdeect_photons(simulator_instance, tmp_test_directory):
+def test_seeds_are_drawn_once(simulator_instance, mocker):
+    simulator_instance._seed_pair = None
+    pairs = mocker.patch(
+        "simtools.simtel.simulator_light_emission.instance_seed_pairs", return_value=[(5, 3)]
+    )
+    assert simulator_instance._seeds() == (5, 3)
+    assert simulator_instance._seeds() == (5, 3)
+    pairs.assert_called_once_with()
+
+
+def test_backend_only_if_it_traces_light_sources(simulator_instance, mocker):
+    target = "simtools.simtel.simulator_light_emission.get_backend"
+    mocker.patch(target, return_value=Mock(traces_light_sources=False))
+    assert simulator_instance._backend() is None
+    tracing = _tracing_backend()
+    mocker.patch(target, return_value=tracing)
+    assert simulator_instance._backend() is tracing
+
+
+def test_prepare_run_writes_camera_photons(simulator_instance, tmp_test_directory):
     simulator_instance.submission_files.get_file_name.return_value = tmp_test_directory / "run.sh"
     simulator_instance.runner_service.get_file_name.side_effect = lambda file_type: (
         tmp_test_directory / f"{file_type}.dat"
     )
     with (
-        patch(SETTINGS_TARGET) as mock_settings,
-        patch.object(simulator_instance, "_write_obdeect_photons") as write,
+        patch.object(simulator_instance, "_backend", return_value=_tracing_backend()),
+        patch.object(simulator_instance, "_write_camera_photons") as write,
         patch.object(simulator_instance, MAKE_RUN_COMMAND, return_value=[BASH_SCRIPT]),
     ):
-        _obdeect_settings(mock_settings)
         simulator_instance.prepare_run()
 
     write.assert_called_once_with(tmp_test_directory / "iact_output.dat")
 
 
-def test_write_obdeect_photons_rejects_dual_mirror_telescopes(simulator_instance):
-    simulator_instance.telescope_model.get_parameter_value.return_value = 2
-    with pytest.raises(NotImplementedError, match="dual-mirror"):
-        simulator_instance._write_obdeect_photons(Path(PHOTON_FILE_NAME))
-
-
-def test_obdeect_flasher_events_geometry(simulator_instance):
+def test_flasher_request_geometry(simulator_instance):
     """The flasher sits in the primary-mirror frame; its light goes straight to the camera."""
-    model = Mock(focal_surface_z_m=16.0)
-    tracer = Mock()
-    tracer.optical_model.return_value = model
-    light = Mock()
     parameters = {
         "mirror_offset": 1.5 * u.m,
         "camera_body_diameter": 2.4 * u.m,
         "flasher_position": [20.0 * u.cm, 10.0 * u.cm, -50.0 * u.cm],
+        "focal_length": 16.0 * u.m,
     }
     simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = parameters.get
     simulator_instance.telescope_model.get_parameter_value.return_value = 0  # Circular body.
     simulator_instance.light_emission_config = {FLASHER_PHOTONS: [1000], NUMBER_OF_EVENTS: [2]}
+    source = {"angular_profile": "a", "pulse": None, "wavelength_nm": 385.0, "seeds": (5, 3)}
 
-    _, radius = simulator_instance._obdeect_flasher_events(
-        tracer, light, {"seed": 3, INSTRUMENT_SEED: 5}, 2156.0
-    )
+    request, radius, transmission, altitude = simulator_instance._flasher_request(source, 2156.0)
 
-    tracer.optical_model.assert_called_once_with(0.0, 5)
-    args, kwargs = light.light_source_events.call_args
-    assert args == (model, [1000, 1000])
-    assert kwargs[POSITION_M] == pytest.approx((0.2, 0.1, -2.0))
-    assert kwargs["direct"] is True
-    assert kwargs["disk"] == ((0.0, 0.0, 16.0), (0.0, 0.0, 1.0), pytest.approx(1.2))
-    assert kwargs[EMISSION_ALTITUDE_M] == pytest.approx(2156.0 + 18.0)
-    assert kwargs["seed"] == 3
+    assert request.position_m == pytest.approx((0.2, 0.1, -2.0))
+    assert request.axis == (0.0, 0.0, 1.0)
+    assert request.photons_per_pulse == (1000, 1000)
+    assert request.inside_telescope is True
+    assert request.camera_radius_m == pytest.approx(1.2)
+    assert request.telescope_zenith == pytest.approx(0.0)
+    assert request.seeds == (5, 3)
     assert radius == pytest.approx(1.2)
+    assert transmission == pytest.approx(1.0)
+    # As ff-1m: the flasher distance below the camera above the observation level.
+    assert altitude == pytest.approx(2156.0 + 16.5)
 
 
-def test_obdeect_illuminator_events_geometry(simulator_instance, tmp_test_directory, mocker):
+def test_illuminator_request_geometry(simulator_instance, tmp_test_directory):
     """Telescope at its position with axes offsets; the slant-path transmission applied."""
-    # pylint: disable-next=import-outside-toplevel
-    from simtools.ray_tracing import obdeect_light_emission as light
-
     (tmp_test_directory / ATM_DAT).write_text(
         "# H2= 2.000, H1= 3.000\n300 0.1\n", encoding=TEXT_ENCODING
     )
     simulator_instance.telescope_model.config_file_directory = tmp_test_directory
-    tracer = Mock()
     parameters = {
         TELESCOPE_SPHERE_RADIUS: 9.0 * u.m,
         AXES_OFFSETS: [1.6 * u.m, 0.0 * u.m],
     }
     simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = parameters.get
     simulator_instance.light_emission_config = {FLASHER_PHOTONS: 1e9, NUMBER_OF_EVENTS: 2}
-    events = mocker.patch.object(light, "light_source_events")
+    source = {"angular_profile": "a", "pulse": None, "wavelength_nm": 300.0, "seeds": (5, 3)}
     with (
         patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=(0.0, 0.0)),
         patch.object(
@@ -1156,28 +1166,30 @@ def test_obdeect_illuminator_events_geometry(simulator_instance, tmp_test_direct
         ),
         patch.object(simulator_instance, "_atmospheric_transmission_file", return_value=ATM_DAT),
     ):
-        _, radius = simulator_instance._obdeect_illuminator_events(
-            tracer, light, {"seed": 3, INSTRUMENT_SEED: 5, "wavelength_nm": 300.0}, 2000.0
+        request, radius, transmission, altitude = simulator_instance._illuminator_request(
+            source, 2000.0
         )
 
-    tracer.optical_model.assert_called_once_with(0.0, 5)
-    args, kwargs = events.call_args
-    assert args[1] == [1e9, 1e9]
+    assert request.photons_per_pulse == (1e9, 1e9)
     # Vertical telescope: the azimuth-altitude offset moves the frame along x.
-    assert kwargs[POSITION_M] == pytest.approx([-1.6, 0.0, 1000.0])
-    assert kwargs["axis"] == pytest.approx([0.0, 0.0, -1.0])
-    assert kwargs[EMISSION_ALTITUDE_M] == pytest.approx(2000.0)
+    assert request.position_m == pytest.approx((-1.6, 0.0, 1000.0))
+    assert request.axis == pytest.approx((0.0, 0.0, -1.0))
+    assert request.inside_telescope is False
+    assert altitude == pytest.approx(2000.0)
     # From 3000 m down to 2000 m (depth 0.1), vertical: airmass 1.
-    assert kwargs["transmission"] == pytest.approx(math.exp(-0.1))
+    assert transmission == pytest.approx(math.exp(-0.1))
     assert radius == pytest.approx(9.0)
 
 
-@pytest.mark.parametrize(LIGHT_SOURCE_TYPE, [FLAT_FIELDING, ILLUMINATOR])
-def test_write_obdeect_photons_uses_writer_and_seed_pair(
-    simulator_instance, tmp_test_directory, mocker, light_source_type
+@pytest.mark.parametrize(
+    (LIGHT_SOURCE_TYPE, "mirror_class"), [(FLAT_FIELDING, 0), (ILLUMINATOR, 2)]
+)
+def test_write_camera_photons(
+    simulator_instance, tmp_test_directory, mocker, light_source_type, mirror_class
 ):
     simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: light_source_type}
-    simulator_instance.telescope_model.get_parameter_value.return_value = 1
+    simulator_instance.telescope_model.get_parameter_value.return_value = mirror_class
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = 90 * u.deg
     simulator_instance.telescope_model.config_file_directory = tmp_test_directory
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
     simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = 385 * u.nm
@@ -1189,30 +1201,50 @@ def test_write_obdeect_photons_uses_writer_and_seed_pair(
         writer, "get_pulse_shape_argument_for_sim_telarray", return_value="gauss:0.0"
     )
     atmosphere = mocker.patch.object(writer, "prepare_flasher_atmosphere_files")
-    target = "simtools.simtel.simulator_light_emission"
-    mocker.patch(f"{target}.instance_seed_pairs", return_value=[(5, 3)])
-    tracer = mocker.patch("simtools.ray_tracing.backends.obdeect.ObdeectRayTracer")
-    events = iter(())
-    flasher = mocker.patch.object(
-        simulator_instance, "_obdeect_flasher_events", return_value=(events, 2.0)
-    )
-    illuminator = mocker.patch.object(
-        simulator_instance, "_obdeect_illuminator_events", return_value=(events, 2.0)
-    )
-    write = mocker.patch(f"{target}.write_photon_bunches")
+    photons = {
+        POSITION_M: np.array([[0.1, 0.2, 16.0]]),
+        "direction": np.array([[0.0, 0.0, 1.0]]),
+        "time_ns": np.array([1.0]),
+        "weight": np.array([0.8]),
+        "wavelength_nm": np.array([385.0]),
+    }
+    backend = _tracing_backend([photons])
+    mocker.patch.object(simulator_instance, "_backend", return_value=backend)
+    mocker.patch.object(simulator_instance, "_seeds", return_value=(5, 3))
+    request = Mock(telescope_zenith=20.0)
+    for method in ("_flasher_request", "_illuminator_request"):
+        mocker.patch.object(simulator_instance, method, return_value=(request, 2.0, 0.5, 2170.0))
+    write = mocker.patch("simtools.simtel.simulator_light_emission.write_photon_bunches")
     output = tmp_test_directory / PHOTON_FILE_NAME
 
-    simulator_instance._write_obdeect_photons(output)
+    simulator_instance._write_camera_photons(output)
 
-    selected, unused = (
-        (flasher, illuminator) if light_source_type == FLAT_FIELDING else (illuminator, flasher)
+    selected = (
+        simulator_instance._flasher_request
+        if light_source_type == FLAT_FIELDING
+        else simulator_instance._illuminator_request
     )
-    unused.assert_not_called()
-    args = selected.call_args.args
-    assert args[0] is tracer.return_value
-    assert args[2][INSTRUMENT_SEED] == 5
-    assert args[2]["seed"] == 3
+    source, level = selected.call_args.args
+    assert source["seeds"] == (5, 3)
+    assert source["wavelength_nm"] == pytest.approx(385.0)
+    assert source["angular_profile"][0].tolist() == [0.0, 180.0]
+    assert source["pulse"] is None
+    assert level == pytest.approx(2156.0)
+    backend.assert_called_once_with(
+        simulator_instance.telescope_model,
+        simulator_instance.site_model,
+        simulator_instance.label,
+        20.0,
+        False,
+    )
+    backend.return_value.camera_photons.assert_called_once_with(request)
     atmosphere.assert_called_once_with(tmp_test_directory)
-    write.assert_called_once_with(
-        output, events, observation_level_m=2156.0, telescope_radius_m=2.0, run_number=1
-    )
+    args, kwargs = write.call_args
+    assert args[0] == output
+    assert kwargs == {"observation_level_m": 2156.0, "telescope_radius_m": 2.0, "run_number": 1}
+    (bunches,) = list(args[1])
+    assert bunches["photons"][0] == pytest.approx(0.4)  # Weight times transmission.
+    assert bunches["zem"][0] == pytest.approx(217000.0)
+    # Single mirror: frame turned about x; dual mirror: camera frame (rotated by 90 deg).
+    expected = (10.0, -20.0) if mirror_class == 0 else (20.0, -10.0)
+    assert (bunches["x"][0], bunches["y"][0]) == pytest.approx(expected)

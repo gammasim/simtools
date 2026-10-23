@@ -12,10 +12,11 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.ray_tracing import parameter_changes
-from simtools.ray_tracing.backends import StarImageRequest
+from simtools.ray_tracing.backends import LightSourceRequest, StarImageRequest
 from simtools.ray_tracing.backends.obdeect import (
     ObdeectBackend,
     ObdeectRayTracer,
+    _at_plane,
     star_direction,
 )
 
@@ -171,3 +172,68 @@ def test_backend_incidence_angles(backend, tmp_path):
     assert files == []
     assert np.all(np.isfinite(data["angle_incidence_focal"]))
     assert np.median(data["angle_incidence_focal"]) > 1.0  # Off axis and from the dish.
+
+
+def _light_source(**options):
+    return LightSourceRequest(
+        **{
+            "position_m": (0.1, 0.0, -0.5),
+            "axis": (0.0, 0.0, 1.0),
+            "angular_profile": ([0.0, 2.0, 2.001], [1.0, 1.0, 0.0]),
+            "pulse": ([-1.0, 1.0], [1.0, 1.0]),
+            "wavelength_nm": 385.0,
+            "photons_per_pulse": (2e5, 2e5),
+            "telescope_zenith": 0.0,
+            "seeds": (3, 4),
+            "inside_telescope": True,
+            "camera_radius_m": 0.3,
+        }
+        | options
+    )
+
+
+def test_camera_photons_of_a_flasher(backend):
+    assert backend.traces_light_sources
+    first, second = list(backend.camera_photons(_light_source()))
+    plane = backend._tracer.optical_model(0.0, 3).focal_surface_z_m
+    for photons in (first, second):
+        # Straight from the flasher to the camera plane: a 2 deg cone lights 31 cm.
+        assert len(photons["weight"]) > 1000
+        assert np.allclose(photons["position_m"][:, 2], plane)
+        assert np.all(np.hypot(*photons["position_m"][:, :2].T) < 0.3)
+        assert np.all((photons["weight"] > 0.0) & (photons["weight"] <= 1.0))
+        assert photons["wavelength_nm"] == pytest.approx(385.0)
+        assert np.all(photons["direction"][:, 2] > 0.0)
+    # Pulses are independent; the same request gives the same photons.
+    assert not np.array_equal(first["position_m"][:100], second["position_m"][:100])
+    again = next(backend.camera_photons(_light_source()))
+    assert np.array_equal(again["position_m"], first["position_m"])
+
+
+def test_camera_photons_of_an_illuminator(backend):
+    request = _light_source(
+        position_m=(0.0, 0.0, 300.0),
+        axis=(0.0, 0.0, -1.0),
+        angular_profile=([0.0, 180.0], [1.0, 1.0]),
+        pulse=None,
+        photons_per_pulse=(1e9,),
+        inside_telescope=False,
+        camera_radius_m=None,
+    )
+    (photons,) = list(backend.camera_photons(request))
+    # Through the mirrors: the reflectivity weights below one, all at time ~ 300 m / c.
+    assert len(photons["weight"]) > 1000
+    assert np.all(photons["weight"] < 1.0)
+    assert np.median(photons["time_ns"]) == pytest.approx(300.0 / 0.2998 + 8.5 / 0.2998, rel=0.01)
+
+
+def test_at_plane():
+    photons = {
+        "position_m": np.array([[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]]),
+        "direction": np.array([[0.0, 0.6, 0.8], [0.0, 0.0, -1.0]]),
+        "time_ns": np.array([0.0, 10.0]),
+    }
+    moved = _at_plane(photons, 0.2, 1.0)
+    assert moved["position_m"] == pytest.approx(np.array([[0.0, -0.6, 0.2], [1.0, 0.0, 0.2]]))
+    # Backwards along the direction: earlier.
+    assert moved["time_ns"] == pytest.approx([-1.0 / 0.299792458, 10.0 - 0.2 / 0.299792458])
