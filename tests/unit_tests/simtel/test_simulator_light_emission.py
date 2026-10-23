@@ -1208,7 +1208,7 @@ def test_write_camera_photons(
         "weight": np.array([0.8]),
         "wavelength_nm": np.array([385.0]),
     }
-    backend = _tracing_backend([photons])
+    backend = _tracing_backend([iter([photons, photons])])  # One pulse in two blocks.
     mocker.patch.object(simulator_instance, "_backend", return_value=backend)
     mocker.patch.object(simulator_instance, "_seeds", return_value=(5, 3))
     request = Mock(telescope_zenith=20.0)
@@ -1243,6 +1243,7 @@ def test_write_camera_photons(
     assert args[0] == output
     assert kwargs == {"observation_level_m": 2156.0, "telescope_radius_m": 2.0, "run_number": 1}
     (bunches,) = list(args[1])
+    assert len(bunches) == 2
     assert bunches["photons"][0] == pytest.approx(0.4)  # Weight times transmission.
     assert bunches["zem"][0] == pytest.approx(217000.0)
     # Single mirror: frame turned about x; dual mirror: camera frame (rotated by 90 deg).

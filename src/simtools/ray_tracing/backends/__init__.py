@@ -23,10 +23,10 @@ label, the telescope zenith angle [deg] and the single-mirror flag, and provides
 Backends with ``traces_light_sources`` also make and trace the light of
 calibration light sources (flashers, illuminators; ``LightSourceRequest``):
 
-- ``camera_photons(request)``: for each light pulse, the photons crossing the
-  camera plane (through the focal-surface vertex, normal to the optical axis;
-  telescope frame, metres): ``position_m``, ``direction``, ``time_ns``,
-  ``weight`` (photons) and ``wavelength_nm``.
+- ``camera_photons(request)``: for each light pulse, an iterator over blocks of
+  the photons crossing the camera plane (through the focal-surface vertex,
+  normal to the optical axis; telescope frame, metres): ``position_m``,
+  ``direction``, ``time_ns``, ``weight`` (photons) and ``wavelength_nm``.
 
 Otherwise sim_telarray's LightEmission programs make the light and sim_telarray
 traces it.

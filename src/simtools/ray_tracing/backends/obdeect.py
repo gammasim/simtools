@@ -153,9 +153,9 @@ class ObdeectRayTracer:
 
         Yields
         ------
-        dict
-            The photons of one pulse crossing the camera plane (see
-            ``simtools.ray_tracing.backends``).
+        iterator of dict
+            The photons of one pulse crossing the camera plane, block by block
+            (see ``simtools.ray_tracing.backends``).
         """
         instrument_seed, simulation_seed = request.seeds
         model = self.optical_model(request.telescope_zenith, instrument_seed)
@@ -166,7 +166,7 @@ class ObdeectRayTracer:
             else None  # The telescope entrance.
         )
         for pulse_number, photons in enumerate(request.photons_per_pulse):
-            arrivals = model.trace_emitter(
+            blocks = model.trace_emitter_blocks(
                 photons,
                 seed=simulation_seed,
                 first_id=pulse_number << 40,
@@ -178,7 +178,7 @@ class ObdeectRayTracer:
                 disk=disk,
                 direct=request.inside_telescope,
             )
-            yield _at_plane(arrivals, plane_z, model.propagation_group_index)
+            yield (_at_plane(block, plane_z, model.propagation_group_index) for block in blocks)
 
 
 def _at_plane(photons, plane_z, group_index):
@@ -325,5 +325,5 @@ class ObdeectBackend:
         return data, []
 
     def camera_photons(self, request):
-        """Photons of a calibration light source at the camera entrance, pulse by pulse."""
+        """Photons of a calibration light source at the camera entrance, pulse by pulse, in blocks."""
         return self._tracer.trace_light_source(request)

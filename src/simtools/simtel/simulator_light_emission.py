@@ -344,14 +344,20 @@ class SimulatorLightEmission(SimtelRunner):
             if self._dual_mirror()
             else 0.0
         )
+        dual_mirror = self._dual_mirror()
         events = (
-            camera_bunches(
-                photons | {"weight": photons["weight"] * transmission},
-                dual_mirror=self._dual_mirror(),
-                emission_altitude_m=emission_altitude_m,
-                camera_rotation_deg=camera_rotation,
+            np.concatenate(
+                [
+                    camera_bunches(
+                        block | {"weight": block["weight"] * transmission},
+                        dual_mirror=dual_mirror,
+                        emission_altitude_m=emission_altitude_m,
+                        camera_rotation_deg=camera_rotation,
+                    )
+                    for block in pulse
+                ]
             )
-            for photons in backend.camera_photons(request)
+            for pulse in backend.camera_photons(request)
         )
         writer.prepare_flasher_atmosphere_files(self.telescope_model.config_file_directory)
         write_photon_bunches(

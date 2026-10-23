@@ -192,9 +192,17 @@ def _light_source(**options):
     )
 
 
+def _pulses(backend, request):
+    """Photons of each pulse, blocks joined."""
+    return [
+        {name: np.concatenate([b[name] for b in blocks]) for name in blocks[0]}
+        for blocks in (list(pulse) for pulse in backend.camera_photons(request))
+    ]
+
+
 def test_camera_photons_of_a_flasher(backend):
     assert backend.traces_light_sources
-    first, second = list(backend.camera_photons(_light_source()))
+    first, second = _pulses(backend, _light_source())
     plane = backend._tracer.optical_model(0.0, 3).focal_surface_z_m
     for photons in (first, second):
         # Straight from the flasher to the camera plane: a 2 deg cone lights 31 cm.
@@ -206,7 +214,7 @@ def test_camera_photons_of_a_flasher(backend):
         assert np.all(photons["direction"][:, 2] > 0.0)
     # Pulses are independent; the same request gives the same photons.
     assert not np.array_equal(first["position_m"][:100], second["position_m"][:100])
-    again = next(backend.camera_photons(_light_source()))
+    again = _pulses(backend, _light_source())[0]
     assert np.array_equal(again["position_m"], first["position_m"])
 
 
@@ -220,7 +228,7 @@ def test_camera_photons_of_an_illuminator(backend):
         inside_telescope=False,
         camera_radius_m=None,
     )
-    (photons,) = list(backend.camera_photons(request))
+    (photons,) = _pulses(backend, request)
     # Through the mirrors: the reflectivity weights below one, all at time ~ 300 m / c.
     assert len(photons["weight"]) > 1000
     assert np.all(photons["weight"] < 1.0)
