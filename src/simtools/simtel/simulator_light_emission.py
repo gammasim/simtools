@@ -19,7 +19,7 @@ from simtools.model.model_utils import (
     read_overwrite_model_parameter_dict,
 )
 from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.ray_tracing.backends import LightSourceRequest, get_backend
+from simtools.ray_tracing.backends.interface import LightSourceRequest, get_backend
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator

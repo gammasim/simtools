@@ -192,7 +192,7 @@ def _at_plane(photons, plane_z, group_index):
 
 class ObdeectBackend:
     """
-    Ray tracing with obdeect, in process (see ``simtools.ray_tracing.backends``).
+    Ray tracing with obdeect, in process (see ``simtools.ray_tracing.backends.interface``).
 
     Parameters
     ----------

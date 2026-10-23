@@ -24,7 +24,7 @@ from simtools.utils import names
 
 class SimtelBackend:
     """
-    Ray tracing with sim_telarray (see ``simtools.ray_tracing.backends``).
+    Ray tracing with sim_telarray (see ``simtools.ray_tracing.backends.interface``).
 
     Parameters
     ----------
