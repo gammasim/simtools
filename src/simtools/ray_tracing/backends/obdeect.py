@@ -16,6 +16,7 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from astropy import constants
 from astropy.table import QTable
 from obdeect.model import DETECTED, OpticalModel
 
@@ -24,7 +25,7 @@ from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import names
 
-_SPEED_OF_LIGHT_M_PER_NS = 0.299792458
+_SPEED_OF_LIGHT_M_PER_NS = constants.c.to_value(u.m / u.ns)
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):

@@ -23,7 +23,6 @@ from simtools.ray_tracing.backends.interface import LightSourceRequest, get_back
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator
-from simtools.simtel.light_emission_tables import angular_profile, pulse_profile
 from simtools.simtel.photon_bunch_file import (
     bypass_optics_level,
     camera_bunches,
@@ -31,6 +30,7 @@ from simtools.simtel.photon_bunch_file import (
 )
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation.configuration import get_light_source_writer
+from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
 from simtools.utils import general
 from simtools.utils.geometry import (
     fiducial_radius_from_shape,
@@ -316,11 +316,19 @@ class SimulatorLightEmission(SimtelRunner):
         level_m = (
             self.site_model.get_parameter_value_with_unit(CORSIKA_OBSERVATION_LEVEL).to(u.m).value
         )
+        shape, width_ns, decay_ns = self.calibration_model.get_parameter_value(
+            "flasher_pulse_shape"
+        )
         source = {
             "angular_profile": angular_profile(
-                writer.get_angular_distribution_string_for_sim_telarray()
+                self.calibration_model.get_parameter_value("flasher_angular_distribution"),
+                self.calibration_model.get_parameter_value_with_unit(
+                    "flasher_angular_distribution_width"
+                )
+                .to(u.deg)
+                .value,
             ),
-            "pulse": pulse_profile(writer.get_pulse_shape_argument_for_sim_telarray()),
+            "pulse": pulse_profile(shape, width_ns, decay_ns),
             "wavelength_nm": self.calibration_model.get_parameter_value_with_unit(
                 FLASHER_WAVELENGTH
             )
@@ -405,15 +413,15 @@ class SimulatorLightEmission(SimtelRunner):
     def _illuminator_request(self, source, level_m):
         """Illuminator light through the atmosphere and the optics.
 
-        The geometry follows the xyzls and sim_telarray runs: telescope
-        position, pointing and axes offsets. The slant-path transmission is
-        applied here; sim_telarray adds the instrument term.
+        Telescope position, pointing and axes offsets as for the sim_telarray
+        backend. The slant-path transmission is applied here; the camera
+        simulation adds the instrument term.
 
         Returns
         -------
         tuple
             Light source, fiducial radius [m], transmission and emission altitude
-            [m] (the observation level: no further transmission in sim_telarray).
+            [m] (the observation level: no further atmospheric transmission).
         """
         theta, phi = self._get_telescope_pointing()
         position = self.get_illuminator_position()
@@ -431,7 +439,7 @@ class SimulatorLightEmission(SimtelRunner):
         relative = position - np.array(telescope)
         pointing = np.asarray(self.get_illuminator_pointing_vector(position * u.m), dtype=float)
         transmission = AtmosphericTransmission(
-            Path(self.telescope_model.config_file_directory) / self._atmospheric_transmission_file()
+            self.site_model.get_parameter_table("atmospheric_transmission")
         ).transmission(
             source["wavelength_nm"],
             level_m + position[2],
@@ -763,7 +771,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         For flasher-type light sources. Flasher position is given in mirror coordinates,
         with positive z pointing towards the camera. The camera is at the focal length plus
-        the focus offset of the vertical telescope (sim_config.c), so the distance is
+        the focus offset of the vertical telescope, so the distance is
         focal_length + focus_offset - flasher_z.
 
         Returns
@@ -778,7 +786,7 @@ class SimulatorLightEmission(SimtelRunner):
         return focal_length + self._vertical_focus_offset() - flasher_z
 
     def _vertical_focus_offset(self):
-        """Focus offset of the vertical telescope, as sim_telarray computes it (sim_config.c).
+        """Return the focus offset of the vertical telescope.
 
         The zenith-angle terms apply only if both are non-zero; they are in the unit of
         the constant term.

@@ -45,8 +45,8 @@ LightEmission programs (`ff-1m`, `xyzls`) and sim_telarray's optics.
   number of photons reaching the telescope is Poisson distributed.
 - Flasher light goes straight from the flasher to the camera; the telescope
   structure, if described, shadows it.
-- Illuminator light crosses the atmosphere (sim_telarray's transmission table
-  and formula, along the real path) and the optics; telescope position,
-  pointing and axes offsets are those of the sim_telarray run.
+- Illuminator light crosses the atmosphere (the `atmospheric_transmission`
+  table of the site, along the real path) and the optics; telescope position,
+  pointing and axes offsets are those of the sim_telarray backend.
 - `--instrument_seed` and `--simulation_seed` seed obdeect and sim_telarray
   with either backend.

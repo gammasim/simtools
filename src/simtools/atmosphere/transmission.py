@@ -1,54 +1,57 @@
-"""Atmospheric transmission along a slant path, as in sim_telarray."""
+"""Atmospheric transmission along a slant path."""
 
-from pathlib import Path
-
+import astropy.units as u
 import numpy as np
 
 
 class AtmosphericTransmission:
     """
-    Vertical optical depths of a sim_telarray atmospheric transmission table.
+    Transmission of light between two altitudes along a slant path.
 
-    The table lists, per integer wavelength, the optical depth from each
-    altitude down to the observation level (the first level, depth zero).
-    Depths are interpolated linearly in log10(altitude) and clamped at the
-    table edges, as in sim_telarray (sim_absorb.c).
+    Uses an atmospheric transmission table of the simulation models: per
+    wavelength, the vertical optical depth (``extinction``) from each altitude
+    down to the observatory level (``observatory_level`` in the table metadata,
+    depth zero). Depths are interpolated linearly in log(altitude) over the
+    altitudes tabulated for a wavelength and clamped beyond them; a wavelength
+    uses the tabulated wavelength at or below it.
 
     Parameters
     ----------
-    path: str or Path
-        sim_telarray atmospheric transmission table.
+    table: astropy.table.Table
+        Atmospheric transmission table (``wavelength``, ``altitude``, ``extinction``).
     """
 
-    def __init__(self, path):
-        lines = Path(path).read_text(encoding="utf-8").splitlines()
-        first = next(i for i, line in enumerate(lines) if line.startswith("# H2="))
-        observation_km, _, levels = lines[first][len("# H2=") :].partition("H1=")
-        observation_km = float(observation_km.strip().rstrip(","))
-        self.observation_level_m = 1000.0 * observation_km
-        levels_km = [observation_km] + [float(v) for v in levels.split("#")[0].split()]
-        self._log_altitude = np.log10(np.array(levels_km) * 1e5)  # [cm]
-        rows = [
-            [float(v) for v in line.split("#")[0].split()]
-            for line in lines[first + 1 :]
-            if line.split("#")[0].split() and int(float(line.split()[0])) != 0
-        ]
-        rows = [row for row in rows if len(row) == len(levels_km)]
-        self._wavelength = np.array([int(row[0]) for row in rows])
-        self._depth = np.column_stack([np.zeros(len(rows)), np.array([row[1:] for row in rows])])
+    def __init__(self, table):
+        self.observation_level_m = u.Quantity(table.meta["observatory_level"]).to_value(u.m)
+        wavelength = u.Quantity(table["wavelength"], u.nm).to_value(u.nm)
+        altitude = u.Quantity(table["altitude"], u.km).to_value(u.m)
+        depth = np.asarray(table["extinction"], dtype=float)
+        self._wavelength = np.unique(wavelength)
+        # Per wavelength the altitudes tabulated for it (some list fewer).
+        self._profiles = []
+        for value in self._wavelength:
+            selected = wavelength == value
+            order = np.argsort(altitude[selected])
+            self._profiles.append(
+                (
+                    np.log(np.concatenate([[self.observation_level_m], altitude[selected][order]])),
+                    np.concatenate([[0.0], depth[selected][order]]),
+                )
+            )
 
     def optical_depth(self, wavelength_nm, altitude_m):
-        """Vertical optical depth between the observation level and an altitude a.s.l."""
-        row = np.clip(int(wavelength_nm), self._wavelength[0], self._wavelength[-1])
-        depth = self._depth[row - self._wavelength[0]]
-        return np.interp(np.log10(100.0 * np.asarray(altitude_m)), self._log_altitude, depth)
+        """Vertical optical depth between the observation level and an altitude a.s.l. [m]."""
+        row = np.searchsorted(self._wavelength, wavelength_nm, side="right") - 1
+        log_altitude, depth = self._profiles[int(np.clip(row, 0, len(self._wavelength) - 1))]
+        return np.interp(np.log(np.asarray(altitude_m, dtype=float)), log_altitude, depth)
 
     def transmission(self, wavelength_nm, emission_altitude_m, telescope_altitude_m, airmass):
         """
         Transmission from the emission point to the telescope along a slant path.
 
-        sim_telarray's formula without the instrument term. Emission below the
-        observation level is not transmitted.
+        The vertical optical depth between the two altitudes times the airmass,
+        without instrument terms. Emission below the observation level is not
+        transmitted.
         """
         depth = np.abs(
             self.optical_depth(wavelength_nm, emission_altitude_m)

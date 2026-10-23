@@ -91,7 +91,7 @@ def camera_bunches(photons, *, dual_mirror, emission_altitude_m, camera_rotation
       any camera rotation: (x, y, z) -> (x, -y, -z).
     - Dual-mirror telescopes (``Bypass_Optics=2``): sim_telarray reads bunches
       in its camera frame, the telescope frame rotated by r about the optical
-      axis (sim_imaging.c, tel_setup_secondary); the light travels to -z.
+      axis; the light travels to -z.
 
     Parameters
     ----------

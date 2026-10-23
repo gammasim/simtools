@@ -9,6 +9,7 @@ from unittest.mock import ANY, Mock, patch
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
@@ -1154,12 +1155,11 @@ def test_flasher_request_geometry(simulator_instance):
     assert altitude == pytest.approx(2156.0 + 16.5)
 
 
-def test_illuminator_request_geometry(simulator_instance, tmp_test_directory):
+def test_illuminator_request_geometry(simulator_instance):
     """Telescope at its position with axes offsets; the slant-path transmission applied."""
-    (tmp_test_directory / ATM_DAT).write_text(
-        "# H2= 2.000, H1= 3.000\n300 0.1\n", encoding=TEXT_ENCODING
-    )
-    simulator_instance.telescope_model.config_file_directory = tmp_test_directory
+    table = Table({"wavelength": [300.0] * u.nm, "altitude": [3.0] * u.km, "extinction": [0.1]})
+    table.meta["observatory_level"] = 2.0 * u.km
+    simulator_instance.site_model.get_parameter_table.return_value = table
     parameters = {
         TELESCOPE_SPHERE_RADIUS: 9.0 * u.m,
         AXES_OFFSETS: [1.6 * u.m, 0.0 * u.m],
@@ -1183,7 +1183,6 @@ def test_illuminator_request_geometry(simulator_instance, tmp_test_directory):
             "_get_telescope_position_ground_with_axis_offset",
             return_value=(0.0 * u.m, 0.0 * u.m, 0.0 * u.m),
         ),
-        patch.object(simulator_instance, "_atmospheric_transmission_file", return_value=ATM_DAT),
     ):
         request, radius, transmission, altitude = simulator_instance._illuminator_request(
             source, 2000.0
@@ -1211,14 +1210,17 @@ def test_write_camera_photons(
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = 90 * u.deg
     simulator_instance.telescope_model.config_file_directory = tmp_test_directory
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = 2156 * u.m
-    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = 385 * u.nm
+    calibration = {
+        "flasher_wavelength": 385 * u.nm,
+        "flasher_angular_distribution_width": 0 * u.deg,
+    }
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = calibration.get
+    calibration_values = {
+        "flasher_pulse_shape": ["Gauss", 0.0, 0.0],
+        "flasher_angular_distribution": "Isotropic",
+    }
+    simulator_instance.calibration_model.get_parameter_value.side_effect = calibration_values.get
     writer = get_light_source_writer(simulator_instance)
-    mocker.patch.object(
-        writer, "get_angular_distribution_string_for_sim_telarray", return_value="isotropic"
-    )
-    mocker.patch.object(
-        writer, "get_pulse_shape_argument_for_sim_telarray", return_value="gauss:0.0"
-    )
     atmosphere = mocker.patch.object(writer, "prepare_flasher_atmosphere_files")
     photons = {
         POSITION_M: np.array([[0.1, 0.2, 16.0]]),
