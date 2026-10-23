@@ -12,6 +12,8 @@ from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
 from simtools.utils import names
 
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
+# Sources whose scope and values are fully described by the registry.
+_REGISTRY_DEFINED_SOURCE_TYPES = {"generated", "ctao_datamodel"}
 
 
 def get_meta_parameter_registry(schema_version=None, validate=True, source_type="all"):
@@ -68,7 +70,7 @@ def validate_metadata(meta_parameters):
             )
         if (
             parsed["scope"] is not None
-            and definition["source_type"] in {"generated", "ctao_datamodel"}
+            and definition["source_type"] in _REGISTRY_DEFINED_SOURCE_TYPES
             and definition["scope"] != parsed["scope"]
         ):
             raise ValueError(
@@ -94,18 +96,16 @@ def validate_metadata_values(metadata):
         Decoded sim_telarray metadata values, keyed by emitted name.
     """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
-    normalized_metadata = normalize_sim_telarray_metadata(metadata)
-    values_to_validate = {**normalized_metadata, **metadata}
-    for name, value in values_to_validate.items():
-        definition = registry.get(name.lower())
+    for name, value in normalize_sim_telarray_metadata(metadata).items():
+        definition = registry.get(name)
         if (
             definition is None
             or value is None
-            or definition["source_type"] not in {"generated", "ctao_datamodel"}
+            or definition["source_type"] not in _REGISTRY_DEFINED_SOURCE_TYPES
             or definition["mode"] == "add"
         ):
             continue
-        _validate_metadata_value(name.lower(), str(value), definition["value_schema"])
+        _validate_metadata_value(name, str(value), definition["value_schema"])
 
 
 def _parse_metadata_line(line):

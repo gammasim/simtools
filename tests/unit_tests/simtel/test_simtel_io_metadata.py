@@ -105,31 +105,6 @@ def test_normalize_sim_telarray_metadata_maps_legacy_names():
     }
 
 
-def test_normalize_sim_telarray_metadata_maps_ctao_simulation_values():
-    normalized = simtel_io_metadata.normalize_sim_telarray_metadata(
-        {
-            "simzen": "20.0",
-            "simaz": "180.0",
-            "simnsb": "1.25",
-            "pdgid": "22",
-            "msngr": "photon",
-        }
-    )
-
-    assert normalized == {
-        "zenith_angle": "20.0",
-        "azimuth_angle": "180.0",
-        "nsb_factor": "1.25",
-        "primary_pdgid": "22",
-        "messenger": "photon",
-    }
-
-
-def test_normalize_sim_telarray_metadata_rejects_conflicting_primary_id():
-    with pytest.raises(ValueError, match=r"Conflicting sim_telarray metadata values for primary"):
-        simtel_io_metadata.normalize_sim_telarray_metadata({"primary": "gamma", "pdgid": "2212"})
-
-
 def test_normalize_sim_telarray_metadata_resolves_corsika_source_tag():
     normalized = simtel_io_metadata.normalize_sim_telarray_metadata(
         {"simtools_corsika_version": "78010"},

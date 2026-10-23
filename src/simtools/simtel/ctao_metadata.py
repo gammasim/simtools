@@ -1,6 +1,5 @@
 """Create CTAO DataProducts metadata for sim_telarray configurations."""
 
-import os
 import uuid
 from functools import cache
 
@@ -29,16 +28,19 @@ from ctao_datamodel.models.dataproducts import (
 )
 from ctao_datamodel.models.dataproducts.reference import PRODUCT_MODEL_VERSION
 
-from simtools import settings, version
+from simtools import version
 from simtools.corsika.primary_particle import PrimaryParticle
+from simtools.model.model_parameter import InvalidModelParameterError
 
-_DEFAULT_AUTHOR = "not set"
+_DEFAULT_CONTACT = "not set"
 _DEFAULT_EMAIL = "not-set@example.org"
-_DEFAULT_ORGANIZATION = "not set"
 _MODEL_URL = "https://www.ctao.org"
 _SIMTOOLS_URL = "https://github.com/gammasim/simtools"
 _PRODUCT_DESCRIPTION = "Simulated CTAO air-shower events"
 _SIMULATION_ACTIVITY = "simulate_prod"
+_NSB_SCALING_FACTOR = "nsb_scaling_factor"
+# sim_telarray default for nsb_scaling_factor (see its model-parameter schema).
+_DEFAULT_NSB_SCALING_FACTOR = 1.0
 _MESSENGER_NAMES = {
     "electron": "electron",
     "gamma": "photon",
@@ -51,29 +53,28 @@ _REGISTRY_SAMPLE_ARGS = {
     "azimuth_angle": 0.0,
     "ha": 0.0,
     "dec": 0.0,
-    "nsb_factor": 1.0,
     "label": "simtools-registry",
     "activity_id": "12345678-1234-5678-1234-567812345678",
 }
-_LEGACY_KEYS = {"primary", "zenith_angle", "azimuth_angle", "ha_angle", "dec_angle"}
 
 
 def get_ctao_simtel_metadata(args, site_model=None, created=None):
-    """Build CTAO and legacy simtools metadata for a sim_telarray configuration.
+    """Build CTAO metadata for a sim_telarray configuration.
 
     Parameters
     ----------
     args : dict
         Resolved simulation arguments.
     site_model : ModelParameter, optional
-        Site model used to find a resolved dimensionless NSB scaling factor.
+        Site model providing the NSB scaling factor when ``args`` does not override it.
+        Without either, the sim_telarray default factor is used.
     created : astropy.time.Time, optional
         Timestamp used for the product creation and activity start fields.
 
     Returns
     -------
     dict
-        Metadata keys and serialized values ready for sim_telarray ``metaparam`` lines.
+        FITS keywords and serialized values ready for sim_telarray ``metaparam`` lines.
     """
     site = args.get("site")
     if site not in ("North", "South"):
@@ -82,8 +83,6 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
     created = Time.now() if created is None else created
     primary = _get_primary(args)
     production_id = args.get("production_id") or args.get("label") or _SIMULATION_ACTIVITY
-    activity_id = _get_activity_id(args)
-    simulation_node = _get_simulation_node(args, site_model)
     product = Product(
         description=_PRODUCT_DESCRIPTION,
         creation_time=created,
@@ -106,14 +105,14 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
             url=_MODEL_URL,
         ),
         contact=Contact(
-            name=os.getenv("SIMTOOLS_USER_NAME") or _DEFAULT_AUTHOR,
-            organization=os.getenv("SIMTOOLS_USER_ORGANIZATION") or _DEFAULT_ORGANIZATION,
-            email=os.getenv("SIMTOOLS_USER_EMAIL") or _DEFAULT_EMAIL,
+            name=args.get("user_name") or _DEFAULT_CONTACT,
+            organization=args.get("user_organization") or _DEFAULT_CONTACT,
+            email=args.get("user_email") or _DEFAULT_EMAIL,
         ),
         activity=Activity(
             process=ObservatoryProcess.SIMULATION,
             name=_SIMULATION_ACTIVITY,
-            id=activity_id,
+            id=uuid.UUID(str(args["activity_id"])) if args.get("activity_id") else uuid.uuid4(),
             start=created,
             configuration_id=production_id,
             software=Software(
@@ -124,13 +123,15 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
         ),
         simulation=Simulation(
             production_name=production_id,
-            node=simulation_node,
+            node=_get_simulation_node(args, site_model),
         ),
     )
     header = instance_to_fits_header(product, use_short=True)
     metadata = {card.keyword: card.value for card in header.cards}
-    _validate_short_keywords(metadata)
-    metadata.update(_get_legacy_metadata(args))
+    if any(keyword.startswith("HIERARCH") for keyword in metadata):
+        raise ValueError(
+            "CTAO sim_telarray metadata contains a field without a short FITS keyword."
+        )
     return metadata
 
 
@@ -141,19 +142,16 @@ def get_ctao_metadata_registry():
         _REGISTRY_SAMPLE_ARGS,
         created=Time("2000-01-01T00:00:00", scale="utc"),
     )
-    definitions = {}
-    for keyword, value in metadata.items():
-        name = keyword.lower()
-        if name in _LEGACY_KEYS:
-            continue
-        definitions[name] = {
-            "name": name,
+    return {
+        keyword.lower(): {
+            "name": keyword.lower(),
             "scope": "global",
             "mode": "set",
             "source_type": "ctao_datamodel",
             "value_schema": {"kind": "scalar", "data_type": _get_value_type(value)},
         }
-    return definitions
+        for keyword, value in metadata.items()
+    }
 
 
 def _get_value_type(value):
@@ -183,79 +181,36 @@ def _get_messenger(primary):
     return f"pdgid{'+' if primary.pdg_id > 0 else '-'}{abs(primary.pdg_id)}"
 
 
-def _get_activity_id(args):
-    """Use the configured activity UUID or create one for this run."""
-    activity_id = args.get("activity_id") or settings.config.args.get("activity_id")
-    if activity_id:
-        return uuid.UUID(str(activity_id))
-    return uuid.uuid4()
-
-
 def _get_simulation_node(args, site_model):
-    """Build the phase-space node from resolved simulation arguments."""
-    zenith = _get_angle(args, "zenith_angle")
-    azimuth = _get_angle(args, "azimuth_angle")
-    nsb_factor = _get_nsb_factor(args, site_model)
+    """Build the phase-space node; unknown sky coordinates keep the model defaults."""
     node_values = {
-        "zenith": zenith * u.deg,
-        "azimuth": azimuth * u.deg,
-        "hour_angle": _optional_angle(args, "ha"),
-        "declination": _optional_angle(args, "dec"),
-        "nsb_factor": 1.0 if nsb_factor is None else nsb_factor,
+        "zenith": _get_angle(args, "zenith_angle", required=True),
+        "azimuth": _get_angle(args, "azimuth_angle", required=True),
+        "hour_angle": _get_angle(args, "ha"),
+        "declination": _get_angle(args, "dec"),
+        "nsb_factor": _get_nsb_factor(args, site_model),
     }
-    node = SimulationGridNode(**node_values)
-    if nsb_factor is None:
-        # The upstream field is declared as float but its documented default is None.
-        object.__setattr__(node, "nsb_factor", None)
-    return node
+    return SimulationGridNode(
+        **{key: value for key, value in node_values.items() if value is not None}
+    )
 
 
-def _get_angle(args, name):
-    """Return a required angle in degrees."""
+def _get_angle(args, name, required=False):
+    """Return an angle in degrees as a quantity; plain numbers are taken as degrees."""
     value = args.get(name)
     if value is None:
-        raise ValueError(f"Missing required angle '{name}' for CTAO sim_telarray metadata.")
-    return value.to_value(u.deg) if hasattr(value, "to_value") else float(value)
-
-
-def _optional_angle(args, name):
-    """Return an optional angle in degrees."""
-    value = args.get(name)
-    if value is None:
+        if required:
+            raise ValueError(f"Missing required angle '{name}' for CTAO sim_telarray metadata.")
         return None
-    return value.to(u.deg) if hasattr(value, "to_value") else float(value) * u.deg
+    return value.to(u.deg) if hasattr(value, "to") else float(value) * u.deg
 
 
 def _get_nsb_factor(args, site_model):
-    """Return an authoritative dimensionless NSB factor when one is available."""
-    factor = args.get("nsb_factor", args.get("nsb_scaling_factor"))
+    """Return the dimensionless NSB scaling factor used by sim_telarray."""
+    factor = args.get(_NSB_SCALING_FACTOR)
     if factor is None and site_model is not None:
-        parameter = site_model.parameters.get("nsb_scaling_factor")
-        if isinstance(parameter, dict):
-            factor = parameter.get("value")
-        elif parameter is not None:
-            factor = parameter
-    return None if factor is None else float(factor)
-
-
-def _validate_short_keywords(metadata):
-    """Reject output with keys the installed model did not serialize as short cards."""
-    if any(keyword.startswith("HIERARCH") for keyword in metadata):
-        raise ValueError(
-            "CTAO sim_telarray metadata contains a field without a short FITS keyword."
-        )
-
-
-def _get_legacy_metadata(args):
-    """Return the existing simtools metadata aliases for the same run values."""
-    metadata = {"primary": args["primary"]}
-    for source, target in (
-        ("zenith_angle", "zenith_angle"),
-        ("azimuth_angle", "azimuth_angle"),
-        ("ha", "ha_angle"),
-        ("dec", "dec_angle"),
-    ):
-        value = args.get(source)
-        if value is not None:
-            metadata[target] = _get_angle(args, source)
-    return metadata
+        try:
+            factor = site_model.get_parameter_value(_NSB_SCALING_FACTOR)
+        except InvalidModelParameterError:
+            factor = None
+    return _DEFAULT_NSB_SCALING_FACTOR if factor is None else float(factor)

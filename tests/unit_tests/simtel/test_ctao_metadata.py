@@ -145,10 +145,11 @@ def test_get_ctao_simtel_metadata_creates_north_product():
     assert metadata["MSNGR"] == "photon"
     assert metadata["SIMPROD"] == "production-42"
     assert metadata["MODELVER"] == ctao_metadata.PRODUCT_MODEL_VERSION
-    assert metadata["primary"] == "gamma"
+    assert metadata["ACTID"] == _BASE_ARGS["activity_id"]
+    assert "primary" not in metadata
     assert math.isclose(metadata["SIMZEN"], 20.0)
     assert math.isclose(metadata["SIMAZ"], 180.0)
-    assert "SIMNSB" not in metadata
+    assert math.isclose(metadata["SIMNSB"], 1.0)
     assert metadata["DATAID"] != metadata["ACTID"]
 
 
@@ -162,7 +163,7 @@ def test_get_ctao_simtel_metadata_accepts_south_and_optional_coordinates(hour_an
         "site": "South",
         "ha": hour_angle,
         "dec": declination,
-        "nsb_factor": 1.25,
+        "nsb_scaling_factor": 1.25,
     }
 
     metadata = ctao_metadata.get_ctao_simtel_metadata(args)
@@ -173,21 +174,61 @@ def test_get_ctao_simtel_metadata_accepts_south_and_optional_coordinates(hour_an
     assert math.isclose(metadata["SIMNSB"], 1.25)
 
 
-def test_optional_angle_preserves_angular_units():
-    angle = ctao_metadata._optional_angle({"ha": 2 * u.hourangle}, "ha")
+def test_get_angle_preserves_angular_units():
+    angle = ctao_metadata._get_angle({"ha": 2 * u.hourangle}, "ha")
 
     assert_quantity_allclose(angle, 30 * u.deg)
+    assert ctao_metadata._get_angle({}, "ha") is None
 
 
-def test_get_ctao_simtel_metadata_uses_contact_defaults(monkeypatch):
-    for name in ("SIMTOOLS_USER_NAME", "SIMTOOLS_USER_ORGANIZATION", "SIMTOOLS_USER_EMAIL"):
-        monkeypatch.delenv(name, raising=False)
-
+def test_get_ctao_simtel_metadata_uses_contact_defaults():
     metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS)
 
     assert metadata["AUTHOR"] == "not set"
     assert metadata["ORIGIN"] == "not set"
     assert metadata["EMAIL"] == "not-set@example.org"
+
+
+def test_get_ctao_simtel_metadata_uses_user_contact():
+    args = {
+        **_BASE_ARGS,
+        "user_name": "A. Author",
+        "user_organization": "CTAO",
+        "user_email": "author@example.org",
+    }
+
+    metadata = ctao_metadata.get_ctao_simtel_metadata(args)
+
+    assert metadata["AUTHOR"] == "A. Author"
+    assert metadata["ORIGIN"] == "CTAO"
+    assert metadata["EMAIL"] == "author@example.org"
+
+
+def test_get_ctao_simtel_metadata_creates_activity_id_when_missing():
+    args = {key: value for key, value in _BASE_ARGS.items() if key != "activity_id"}
+
+    metadata = ctao_metadata.get_ctao_simtel_metadata(args)
+
+    assert metadata["ACTID"] != _BASE_ARGS["activity_id"]
+
+
+def test_get_ctao_simtel_metadata_reads_nsb_factor_from_site_model(mocker):
+    site_model = mocker.Mock()
+    site_model.get_parameter_value.return_value = "0.5"
+
+    metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
+
+    site_model.get_parameter_value.assert_called_once_with("nsb_scaling_factor")
+    assert math.isclose(metadata["SIMNSB"], 0.5)
+
+
+def test_get_ctao_simtel_metadata_uses_default_nsb_factor_missing_from_site_model(mocker):
+    site_model = mocker.Mock()
+    site_model.get_parameter_value.side_effect = ctao_metadata.InvalidModelParameterError("missing")
+
+    metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
+
+    assert math.isclose(metadata["SIMNSB"], 1.0)
 
 
 @pytest.mark.parametrize(
@@ -196,6 +237,7 @@ def test_get_ctao_simtel_metadata_uses_contact_defaults(monkeypatch):
         ({**_BASE_ARGS, "site": "East"}, "Unsupported CTAO site"),
         ({**_BASE_ARGS, "primary": "not-a-particle"}, "Invalid particle name"),
         ({key: value for key, value in _BASE_ARGS.items() if key != "primary"}, "primary particle"),
+        ({**_BASE_ARGS, "zenith_angle": None}, "Missing required angle 'zenith_angle'"),
     ],
 )
 def test_get_ctao_simtel_metadata_rejects_bad_input(args, message):
