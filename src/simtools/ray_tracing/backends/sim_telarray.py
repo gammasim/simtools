@@ -330,7 +330,6 @@ class _ImagingList:
         col_idx = self._find_column_indices(photons_file)
 
         focal = []
-        # Initialize optional arrays once based on the configuration
         primary = secondary = radius_m = secondary_radius_m = None
         primary_hit_x_m = primary_hit_y_m = secondary_hit_x_m = secondary_hit_y_m = None
         if self.with_mirrors:
@@ -419,7 +418,6 @@ class _ImagingList:
         indices : dict[str, int]
             Mapping to update in-place.
         """
-        # Use the same optical-axis angle for diagnostics and filter export.
         if "angle of incidence" in desc:
             if "focal surface" in desc and "optical axis" in desc:
                 indices["focal"] = num - 1
@@ -431,7 +429,6 @@ class _ImagingList:
                 if f"{mirror} mirror" in desc:
                     indices[mirror] = num - 1
                     return
-        # Reflection points (X/Y)
         if "reflection point" not in desc:
             return
         self._set_reflection_index_if_match(desc, num, indices)
