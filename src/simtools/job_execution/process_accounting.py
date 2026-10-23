@@ -18,6 +18,10 @@ from simtools.version import __version__
 
 _STDOUT_LOG_SUFFIX = ".log.gz"
 _STDERR_LOG_SUFFIX = ".err.gz"
+_ENCODING = "utf-8"
+_RECORD_SCHEMA_VERSION = "1.1.0"
+_CONTAINER_ENVIRONMENT_VARIABLES = ("APPTAINER_CONTAINER", "SINGULARITY_CONTAINER")
+_CPUINFO_PATH = Path("/proc/cpuinfo")
 
 
 def build_accounting_command(
@@ -154,7 +158,7 @@ def run_and_record(
         peak_rss_bytes,
         return_code,
     )
-    output_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding=_ENCODING)
     if capture_errors:
         raise RuntimeError(
             "Failed to capture simulation output; inspect the available logs."
@@ -254,9 +258,9 @@ def _read_linux_process_sample(pid):
         return None
     try:
         stat_fields = (
-            Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()
+            Path(f"/proc/{pid}/stat").read_text(encoding=_ENCODING).rsplit(")", 1)[1].split()
         )
-        status = Path(f"/proc/{pid}/status").read_text(encoding="utf-8")
+        status = Path(f"/proc/{pid}/status").read_text(encoding=_ENCODING)
     except FileNotFoundError, IndexError, PermissionError:
         return None
     clock_ticks = os.sysconf(os.sysconf_names["SC_CLK_TCK"])
@@ -294,7 +298,7 @@ def _build_record(
     """Build one JSON-serializable resource record."""
     return {
         "schema_name": "process_resource_record",
-        "schema_version": "1.0.0",
+        "schema_version": _RECORD_SCHEMA_VERSION,
         "simtools_version": __version__,
         "run_id": str(run_id),
         "role": role,
@@ -313,7 +317,36 @@ def _build_record(
         if platform.system() == "Linux"
         else "wall_clock_only",
         "platform": platform.platform(),
+        **_execution_environment(),
     }
+
+
+def _execution_environment():
+    """Return host and container identity needed to interpret resource measurements."""
+    container_image = next(
+        (os.environ[name] for name in _CONTAINER_ENVIRONMENT_VARIABLES if os.environ.get(name)),
+        None,
+    )
+    return {
+        "hostname": platform.node() or None,
+        "cpu_model": _read_cpu_model(),
+        "logical_cpu_count": os.cpu_count(),
+        "available_cpu_count": os.process_cpu_count(),
+        "container_image": container_image,
+    }
+
+
+def _read_cpu_model():
+    """Return the processor model name, or ``None`` when it is unavailable."""
+    try:
+        cpuinfo = _CPUINFO_PATH.read_text(encoding=_ENCODING)
+    except OSError:
+        return platform.processor() or None
+    for line in cpuinfo.splitlines():
+        key, _, value = line.partition(":")
+        if key.strip() == "model name" and value.strip():
+            return value.strip()
+    return platform.processor() or None
 
 
 def _parse_command_line_arguments():

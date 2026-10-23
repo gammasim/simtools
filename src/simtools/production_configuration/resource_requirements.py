@@ -17,7 +17,40 @@ from simtools.production_configuration.production_file_selection import (
     filter_manifests,
 )
 
+_BASELINE = "baseline"
+_CANDIDATE = "candidate"
+_PRODUCTION_LABEL = "production_label"
+_JOB_ID = "job_id"
+_MESSAGE = "message"
+_ENCODING = "utf-8"
+_HOSTNAME = "hostname"
+_CPU_MODEL = "cpu_model"
+_LOGICAL_CPU_COUNT = "logical_cpu_count"
+_AVAILABLE_CPU_COUNT = "available_cpu_count"
+_CONTAINER_IMAGE = "container_image"
+_HOST_COUNT = "host_count"
+_RECORD_COUNT = "record_count"
+_PRODUCTION_HEADER = "Production"
 _ROLES = ("corsika", "sim_telarray")
+_RECORD_SCHEMA_VERSIONS = ("1.0.0", "1.1.0")
+_UNKNOWN = "unknown"
+_ENVIRONMENT_COLUMNS = (
+    _CPU_MODEL,
+    _LOGICAL_CPU_COUNT,
+    _AVAILABLE_CPU_COUNT,
+    _CONTAINER_IMAGE,
+)
+_ENVIRONMENT_GROUP_COLUMNS = (_PRODUCTION_LABEL, "role", *_ENVIRONMENT_COLUMNS)
+_COVERAGE_DIMENSIONS = (
+    "role",
+    "primary",
+    "site",
+    "array_layout_name",
+    "model_version",
+    "energy_min_gev",
+    "energy_max_gev",
+    "zenith_angle_deg",
+)
 _SUMMARY_STATISTICS = ("mean", "median", "std", "min", "max", "p05", "p95")
 _OUTPUT_TYPES = (
     "corsika",
@@ -28,7 +61,7 @@ _OUTPUT_TYPES = (
 
 
 def collect_resource_requirements(
-    production_path, selections=None, label="baseline", comparison_role=None
+    production_path, selections=None, label=_BASELINE, comparison_role=None
 ):
     """Collect one resource row per recorded simulation process.
 
@@ -61,11 +94,11 @@ def collect_resource_requirements(
             except (AttributeError, OSError, TypeError, ValueError) as exc:
                 diagnostics.append(
                     {
-                        "production_label": label,
-                        "job_id": manifest.data.get("job_id"),
+                        _PRODUCTION_LABEL: label,
+                        _JOB_ID: manifest.data.get(_JOB_ID),
                         "run_number": manifest.run_number,
                         "role": role,
-                        "message": str(exc),
+                        _MESSAGE: str(exc),
                     }
                 )
     if not rows:
@@ -93,8 +126,8 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         Paths of the ECSV, JSON, Markdown, and plot outputs plus diagnostics.
     """
     output_directory = Path(output_directory)
-    baseline_label = args_dict.get("baseline_label") or "baseline"
-    candidate_label = args_dict.get("candidate_label") or "candidate"
+    baseline_label = args_dict.get("baseline_label") or _BASELINE
+    candidate_label = args_dict.get("candidate_label") or _CANDIDATE
     selections = list(args_dict.get("select") or [])
     layouts = args_dict.get("array_layout_name") or []
     if len(layouts) > 1:
@@ -105,18 +138,18 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         args_dict["baseline_path"],
         selections,
         label=baseline_label,
-        comparison_role="baseline",
+        comparison_role=_BASELINE,
     )
     if args_dict.get("candidate_path"):
         candidate_rows, candidate_diagnostics = collect_resource_requirements(
             args_dict["candidate_path"],
             selections,
             label=candidate_label,
-            comparison_role="candidate",
+            comparison_role=_CANDIDATE,
         )
         rows.extend(candidate_rows)
         diagnostics.extend(candidate_diagnostics)
-        _validate_resource_coverage(rows)
+        _validate_resource_coverage(rows, diagnostics)
     report_mode = args_dict.get("report_mode", "diagnostic")
     table_file = None
     if report_mode == "compact":
@@ -125,6 +158,7 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         table_file = output_directory / "resource_requirements.ecsv"
         resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
         summary = summarize_resource_requirements(rows)
+    environments = _execution_environments(rows)
     json_file = output_directory / _get_product_filename("resource_requirements")
     json_file.write_text(
         json.dumps(
@@ -135,18 +169,20 @@ def write_resource_requirements(args_dict, output_directory, plotter):
                 "summary": summary,
                 "diagnostics": diagnostics,
                 "configurations": _configuration_resource_summary(rows),
+                "execution_environments": environments,
             },
             indent=2,
             allow_nan=False,
         )
         + "\n",
-        encoding="utf-8",
+        encoding=_ENCODING,
     )
     report_file = output_directory / "resource_requirements.md"
     if report_mode == "compact":
         _write_compact_markdown_report(summary, diagnostics, report_file)
     else:
         write_markdown_report(summary, diagnostics, report_file)
+    _append_environment_report(environments, report_file)
     plot_files = plotter(
         rows,
         output_directory,
@@ -177,12 +213,12 @@ def _summarize_compact_resource_requirements(rows):
     )
     grouped = {}
     for row in rows:
-        key = (row["production_label"], row["role"])
+        key = (row[_PRODUCTION_LABEL], row["role"])
         grouped.setdefault(key, []).append(row)
     summary = []
     for (production_label, role), group_rows in sorted(grouped.items()):
         item = {
-            "production_label": production_label,
+            _PRODUCTION_LABEL: production_label,
             "role": role,
             "job_count": len(group_rows),
         }
@@ -222,7 +258,7 @@ def _write_compact_markdown_report(summary, diagnostics, output_file):
                 for statistic in ("median", "p05", "p95")
             ]
             lines.append(
-                f"| {item['production_label']} | {item['role']} | {item['job_count']} "
+                f"| {item[_PRODUCTION_LABEL]} | {item['role']} | {item['job_count']} "
                 f"| {label} | " + " | ".join(values) + " |"
             )
     if diagnostics:
@@ -236,9 +272,9 @@ def _write_compact_markdown_report(summary, diagnostics, output_file):
             ]
         )
         lines.extend(
-            f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
+            f"| {item[_JOB_ID]} | {item['role']} | {item[_MESSAGE]} |" for item in diagnostics
         )
-    Path(output_file).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    Path(output_file).write_text("\n".join(lines) + "\n", encoding=_ENCODING)
 
 
 def summarize_resource_requirements(rows):
@@ -248,7 +284,7 @@ def summarize_resource_requirements(rows):
     preserve separate CORSIKA and sim_telarray values.
     """
     group_columns = (
-        "production_label",
+        _PRODUCTION_LABEL,
         "role",
         "primary",
         "site",
@@ -330,7 +366,7 @@ def write_markdown_report(summary, diagnostics, output_file):
     """Write a compact human-readable resource requirements report."""
     output_file = Path(output_file)
     dimension_specs = (
-        ("production_label", "Production"),
+        (_PRODUCTION_LABEL, _PRODUCTION_HEADER),
         ("role", "Role"),
         ("primary", "Primary"),
         ("site", "Site"),
@@ -347,7 +383,7 @@ def write_markdown_report(summary, diagnostics, output_file):
     dimensions = tuple(
         key
         for key, _ in dimension_specs
-        if key in varying_dimensions or key in {"production_label", "role", "job_count"}
+        if key in varying_dimensions or key in {_PRODUCTION_LABEL, "role", "job_count"}
     )
     metrics = (
         ("wall_time_seconds", "Wall time (s/run)"),
@@ -401,15 +437,15 @@ def write_markdown_report(summary, diagnostics, output_file):
             ["", "## Skipped records", "", "| Job | Role | Reason |", "| --- | --- | --- |"]
         )
         lines.extend(
-            f"| {item['job_id']} | {item['role']} | {item['message']} |" for item in diagnostics
+            f"| {item[_JOB_ID]} | {item['role']} | {item[_MESSAGE]} |" for item in diagnostics
         )
-    output_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    output_file.write_text("\n".join(lines) + "\n", encoding=_ENCODING)
 
 
 def _resource_row(manifest, role, label, comparison_role=None):
     """Build one validated normalized resource row."""
     record_paths = _resource_record_paths(manifest, role)
-    records = [json.loads(path.read_text(encoding="utf-8")) for path in record_paths]
+    records = [json.loads(path.read_text(encoding=_ENCODING)) for path in record_paths]
     for record, record_path in zip(records, record_paths, strict=True):
         _validate_record(record, record_path, manifest.run_number, role)
     record = _combine_records(records)
@@ -436,17 +472,17 @@ def _resource_row(manifest, role, label, comparison_role=None):
     ]
     storage_size = sum(storage_components) if storage_components else None
     return {
-        "production_label": label,
+        _PRODUCTION_LABEL: label,
         "comparison_role": comparison_role or label,
-        "job_id": manifest.data["job_id"],
+        _JOB_ID: manifest.data[_JOB_ID],
         "run_number": manifest.run_number,
         "role": role,
-        "production_id": manifest.data.get("production_id") or "unknown",
+        "production_id": manifest.data.get("production_id") or _UNKNOWN,
         "primary": configuration["primary"],
         "site": configuration["site"],
         "array_layout_name": _layout_name(configuration["array_layout_name"]),
         "model_version": str(configuration["model_version"]),
-        "simtools_version": record.get("simtools_version") or "unknown",
+        "simtools_version": record.get("simtools_version") or _UNKNOWN,
         "energy_min_gev": energy_min,
         "energy_max_gev": energy_max,
         "energy_midpoint_gev": (
@@ -465,6 +501,7 @@ def _resource_row(manifest, role, label, comparison_role=None):
         "end_time": record.get("end_time"),
         "measurement_method": record.get("measurement_method"),
         "platform": record.get("platform"),
+        **_execution_environment(record),
         "wall_time_seconds_per_event": _per_event(record.get("wall_time_seconds"), showers),
         "cpu_time_seconds_per_event": _per_event(cpu_time, showers),
         "wall_time_seconds_per_triggered_event": _per_event(
@@ -498,6 +535,17 @@ def _resource_row(manifest, role, label, comparison_role=None):
             storage_size, triggered_events
         ),
         "resource_record": ";".join(str(path) for path in record_paths),
+    }
+
+
+def _execution_environment(record):
+    """Return host, processor, and container identity from a resource record."""
+    return {
+        _HOSTNAME: record.get(_HOSTNAME) or _UNKNOWN,
+        _CPU_MODEL: record.get(_CPU_MODEL) or _UNKNOWN,
+        _LOGICAL_CPU_COUNT: record.get(_LOGICAL_CPU_COUNT),
+        _AVAILABLE_CPU_COUNT: record.get(_AVAILABLE_CPU_COUNT),
+        _CONTAINER_IMAGE: record.get(_CONTAINER_IMAGE) or _UNKNOWN,
     }
 
 
@@ -537,7 +585,7 @@ def _validate_record(record, record_path, run_number, role):
         raise ValueError(f"Malformed resource record in {record_path}: expected a mapping.")
     if (
         record.get("schema_name") != "process_resource_record"
-        or record.get("schema_version") != "1.0.0"
+        or record.get("schema_version") not in _RECORD_SCHEMA_VERSIONS
     ):
         raise ValueError(f"Unsupported resource record schema in {record_path}.")
     if record.get("role") != role:
@@ -650,7 +698,7 @@ def _configuration_resource_summary(rows):
     groups = {}
     for row in rows:
         key = tuple(row.get(name) for name in dimensions)
-        role = row.get("comparison_role") or row["production_label"]
+        role = row.get("comparison_role") or row[_PRODUCTION_LABEL]
         groups.setdefault(key, {}).setdefault(role, []).append(row)
     output = []
     for key, productions in sorted(groups.items(), key=lambda item: str(item[0])):
@@ -666,7 +714,7 @@ def _configuration_resource_summary(rows):
                         "p95": float(np.percentile(observations, 95)),
                     }
             item["productions"][production] = values
-        if {"baseline", "candidate"} <= productions.keys():
+        if {_BASELINE, _CANDIDATE} <= productions.keys():
             item["ratios"] = _resource_median_ratios(item["productions"], metrics)
         output.append(item)
     return output
@@ -676,33 +724,100 @@ def _resource_median_ratios(productions, metrics):
     """Return comparable positive median ratios with missing values left explicit."""
     ratios = {}
     for metric in metrics:
-        baseline = productions["baseline"].get(metric, {}).get("median")
-        candidate = productions["candidate"].get(metric, {}).get("median")
+        baseline = productions[_BASELINE].get(metric, {}).get("median")
+        candidate = productions[_CANDIDATE].get(metric, {}).get("median")
         ratios[metric] = candidate / baseline if baseline and candidate is not None else None
     return ratios
 
 
-def _validate_resource_coverage(rows):
+def _validate_resource_coverage(rows, diagnostics=None):
     """Reject omitted configuration/role pairs instead of silently intersecting them."""
-    dimensions = (
-        "role",
-        "primary",
-        "site",
-        "array_layout_name",
-        "model_version",
-        "energy_min_gev",
-        "energy_max_gev",
-        "zenith_angle_deg",
-    )
     keys = {
         role: {
-            tuple(row.get(key) for key in dimensions)
+            tuple(row.get(key) for key in _COVERAGE_DIMENSIONS)
             for row in rows
             if row.get("comparison_role") == role
         }
-        for role in ("baseline", "candidate")
+        for role in (_BASELINE, _CANDIDATE)
     }
-    if keys["baseline"] != keys["candidate"]:
-        raise ValueError(
-            "Resource configuration/role coverage differs between baseline and candidate."
+    if keys[_BASELINE] == keys[_CANDIDATE]:
+        return
+    details = [
+        f"{role} only: {_format_coverage_keys(keys[role] - keys[other])}"
+        for role, other in ((_BASELINE, _CANDIDATE), (_CANDIDATE, _BASELINE))
+        if keys[role] - keys[other]
+    ]
+    if diagnostics:
+        details.append(
+            "skipped records: "
+            + "; ".join(
+                f"{item[_PRODUCTION_LABEL]} {item[_JOB_ID]} {item['role']}: {item[_MESSAGE]}"
+                for item in diagnostics
+            )
         )
+    raise ValueError(
+        "Resource configuration/role coverage differs between baseline and candidate ("
+        + "; ".join(details)
+        + ")."
+    )
+
+
+def _format_coverage_keys(keys):
+    """Format configuration/role coverage keys for an error message."""
+    return ", ".join(
+        "{"
+        + ", ".join(
+            f"{name}={value}" for name, value in zip(_COVERAGE_DIMENSIONS, key, strict=True)
+        )
+        + "}"
+        for key in sorted(keys, key=str)
+    )
+
+
+def _execution_environments(rows):
+    """Count resource records and hosts per production, role, and execution environment."""
+    groups = {}
+    for row in rows:
+        key = tuple(row.get(column) for column in _ENVIRONMENT_GROUP_COLUMNS)
+        groups.setdefault(key, []).append(row)
+    environments = []
+    for key, group_rows in sorted(groups.items(), key=lambda item: str(item[0])):
+        environment = dict(zip(_ENVIRONMENT_GROUP_COLUMNS, key, strict=True))
+        environment[_HOST_COUNT] = len({row.get(_HOSTNAME) for row in group_rows})
+        environment[_RECORD_COUNT] = len(group_rows)
+        environments.append(environment)
+    return environments
+
+
+def _append_environment_report(environments, output_file):
+    """Append the execution environments behind the reported measurements."""
+    headers = (
+        _PRODUCTION_HEADER,
+        "Role",
+        "CPU model",
+        "Logical CPUs",
+        "Available CPUs",
+        "Container",
+        "Hosts",
+        "Records",
+    )
+    columns = (*_ENVIRONMENT_GROUP_COLUMNS, _HOST_COUNT, _RECORD_COUNT)
+    lines = [
+        "",
+        "## Execution environments",
+        "",
+        "Timing comparisons are only meaningful between matching environments.",
+        "",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+    for item in environments:
+        values = (_format_label(item[column]) for column in columns)
+        lines.append("| " + " | ".join(values) + " |")
+    with Path(output_file).open("a", encoding=_ENCODING) as report:
+        report.write("\n".join(lines) + "\n")
+
+
+def _format_label(value):
+    """Format an optional report label."""
+    return "-" if value is None else str(value)
