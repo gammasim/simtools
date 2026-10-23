@@ -59,6 +59,13 @@ configuration files is not supported.
    :members:
 ```
 
+## photon_bunch_file
+
+```{eval-rst}
+.. automodule:: simtel.photon_bunch_file
+   :members:
+```
+
 ## simtel_file_writer
 
 (simtel-file-writer-1)=

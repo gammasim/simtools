@@ -35,7 +35,7 @@ runs:
       if: ${{ inputs.install-dependencies == 'true' }}
       shell: bash -leo pipefail {0}
       run: |
-        bash .github/scripts/install_python_dependencies.sh -e '.[tests]'
+        bash .github/scripts/install_python_dependencies.sh -e '.[tests,obdeect]'
 
     - name: Export test repository settings
       if: ${{ inputs.extract-simulation-model == 'true' }}

@@ -47,6 +47,8 @@ APPLICATION = ApplicationDefinition.for_module(
     model_repository=True,
     arguments=(
         *_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
@@ -54,7 +56,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
-        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     initialize_output=True,
 )

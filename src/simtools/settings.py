@@ -21,6 +21,7 @@ class _Config:
         self._args = {}
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
+        self._ray_tracing_backend = "sim_telarray"
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
@@ -59,6 +60,11 @@ class _Config:
             "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
             default="sim_telarray",
         )
+        self._ray_tracing_backend = self._get_config_value(
+            args, "ray_tracing_backend", "SIMTOOLS_RAY_TRACING_BACKEND", default="sim_telarray"
+        )
+        if self._ray_tracing_backend not in {"sim_telarray", "obdeect"}:
+            raise ValueError("ray_tracing_backend must be one of 'sim_telarray' or 'obdeect'")
         self._corsika_path = self._get_config_value(
             args,
             "corsika_path",
@@ -148,6 +154,11 @@ class _Config:
         if self._sim_telarray_path and Path(self._sim_telarray_path).is_dir():
             return Path(self._sim_telarray_path)
         raise FileNotFoundError(f"sim_telarray path not found: {self._sim_telarray_path}")
+
+    @property
+    def ray_tracing_backend(self):
+        """Configured optical ray-tracing backend."""
+        return self._ray_tracing_backend
 
     @property
     def sim_telarray_exe(self):

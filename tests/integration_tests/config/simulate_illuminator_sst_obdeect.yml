@@ -1,0 +1,36 @@
+---
+applications:
+- application: simtools-simulate-illuminator
+  docs:
+    title: Simulate an illuminator pulse to a South SST with obdeect
+    summary: >-
+      Ray-trace ILLS-03 light through the dual-mirror optics of SSTS-17 and hand it to the
+      camera simulation (Bypass_Optics=2).
+  configuration:
+    light_source: ILLS-03
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: South
+    telescope: SSTS-17
+    flasher_photons: 1e9
+    log_level: DEBUG
+    ray_tracing_backend: obdeect
+    instrument_seed: 1
+    simulation_seed: 1
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: illuminator_South_ILLS-03_7.0.0_simulate_illuminator_SSTS-17_300nm.simtel.zst
+      output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: illuminator
+        event:
+          pe_sum:
+            range:
+            - 5000
+            - 30000
+  model_version_use_current: true
+  test_name: run-sst_obdeect
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

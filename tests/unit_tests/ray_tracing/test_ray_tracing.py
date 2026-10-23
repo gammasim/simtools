@@ -11,7 +11,9 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
+from simtools.constants import SIMTEL_MAX_SEED
 from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
+from simtools.utils import random
 
 
 def _example_rows():
@@ -225,119 +227,6 @@ def test_analyze(ray_tracing_lst, mocker, export, force, read_called, store_call
     assert mock_export_results.called == export_called
 
 
-def test_process_off_axis_and_mirror(ray_tracing_lst, mocker):
-    mock_generate_file_name = mocker.patch.object(
-        ray_tracing_lst, "_generate_file_name", return_value="photons_file"
-    )
-    mock_create_psf_image = mocker.patch.object(
-        ray_tracing_lst, "_create_psf_image", return_value="psf_image"
-    )
-    mock_analyze_image = mocker.patch.object(
-        ray_tracing_lst,
-        "_analyze_image",
-        return_value=(0.5 * u.deg, 5.0 * u.cm, 10.0 * u.deg, 100.0 * u.m * u.m),
-    )
-
-    all_mirrors = {
-        0: {
-            "focal_length": 10.0,
-        },
-        1: {
-            "focal_length": 20.0,
-        },
-        2: {
-            "focal_length": 30.0,
-        },
-    }
-    ray_tracing_lst.mirrors = all_mirrors
-    ray_tracing_lst.single_mirror_mode = True
-    tel_transmission_pars = ray_tracing_lst._get_telescope_transmission_params(True)
-    do_analyze = True
-    use_rx = False
-    containment_fraction = 0.8
-
-    results = ray_tracing_lst._process_off_axis_and_mirror(
-        tel_transmission_pars, do_analyze, use_rx, containment_fraction, save_photons=False
-    )
-
-    assert len(results) == len(ray_tracing_lst.off_axis_angle) * len(all_mirrors)
-
-    mock_generate_file_name.assert_called()
-    mock_create_psf_image.assert_called()
-    mock_analyze_image.assert_called()
-
-
-def test_process_off_axis_and_mirror_no_analyze(ray_tracing_lst, mocker):
-    mock_generate_file_name = mocker.patch.object(
-        ray_tracing_lst, "_generate_file_name", return_value="photons_file"
-    )
-    mock_create_psf_image = mocker.patch.object(
-        ray_tracing_lst, "_create_psf_image", return_value="psf_image"
-    )
-    mock_analyze_image = mocker.patch.object(ray_tracing_lst, "_analyze_image")
-
-    tel_transmission_pars = ray_tracing_lst._get_telescope_transmission_params(True)
-    do_analyze = False
-    use_rx = False
-    containment_fraction = 0.8
-
-    results = ray_tracing_lst._process_off_axis_and_mirror(
-        tel_transmission_pars, do_analyze, use_rx, containment_fraction, save_photons=False
-    )
-
-    assert len(results) == 0
-
-    mock_generate_file_name.assert_called()
-    mock_create_psf_image.assert_called()
-    mock_analyze_image.assert_not_called()
-
-
-@pytest.mark.parametrize("keep_images", [True, False])
-def test_process_off_axis_and_mirror_keep_images(ray_tracing_lst, mocker, keep_images):
-    mocker.patch.object(ray_tracing_lst, "_generate_file_name", return_value="photons_file")
-    mocker.patch.object(ray_tracing_lst, "_create_psf_image", return_value="psf_image")
-    mocker.patch.object(ray_tracing_lst, "_analyze_image", return_value=(1.0, 2.0))
-    ray_tracing_lst.psf_images = {}
-    tel_transmission_pars = ray_tracing_lst._get_telescope_transmission_params(True)
-
-    results = ray_tracing_lst._process_off_axis_and_mirror(
-        tel_transmission_pars, True, False, 0.8, save_photons=False, keep_images=keep_images
-    )
-
-    assert len(results) == len(ray_tracing_lst.off_axis_angle)
-    assert len(ray_tracing_lst.psf_images) == (
-        len(ray_tracing_lst.off_axis_angle) if keep_images else 0
-    )
-
-
-def test_remove_photon_files_removes_stars_by_default(tmp_test_directory):
-    photons_file_lis = Path(str(tmp_test_directory)) / "photons.lis"
-    photons_file_gz = Path(str(tmp_test_directory)) / "photons.lis.gz"
-    stars_file = Path(str(tmp_test_directory)) / "stars.lis"
-    for file_path in [photons_file_lis, photons_file_gz, stars_file]:
-        file_path.touch()
-
-    RayTracing._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, False)
-
-    assert not photons_file_lis.exists()
-    assert not photons_file_gz.exists()
-    assert not stars_file.exists()
-
-
-def test_remove_photon_files_retains_stars_when_requested(tmp_test_directory):
-    photons_file_lis = Path(str(tmp_test_directory)) / "photons.lis"
-    photons_file_gz = Path(str(tmp_test_directory)) / "photons.lis.gz"
-    stars_file = Path(str(tmp_test_directory)) / "stars.lis"
-    for file_path in [photons_file_lis, photons_file_gz, stars_file]:
-        file_path.touch()
-
-    RayTracing._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, True)
-
-    assert photons_file_lis.exists()
-    assert photons_file_gz.exists()
-    assert stars_file.exists()
-
-
 def test_images_with_psf_images(ray_tracing_lst, mocker):
     mock_psf_image = mocker.Mock()
     # off_axis_angle with offset_directions=["N"] results in [(0.0, 0.0)] since it's (0, 1*0) = (0, 0)
@@ -411,137 +300,10 @@ def test_get_mirror_panel_focal_length_with_random_uniform(ray_tracing_lst, mock
     mock_rng_instance.uniform.assert_called_once_with(low=-1.0, high=1.0)
 
 
-def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker):
-    mock_simulator = mocker.patch("simtools.ray_tracing.ray_tracing.SimulatorRayTracing")
-    mock_simulator_instance = mock_simulator.return_value
-    mock_simulator_instance.run = mocker.Mock()
-    mock_open = mocker.patch(
-        "simtools.ray_tracing.ray_tracing.open", mocker.mock_open(), create=True
-    )
-    mock_gzip_open = mocker.patch("gzip.open", mocker.mock_open())
-    mock_copyfileobj = mocker.patch("shutil.copyfileobj")
-    mock_unlink = mocker.patch("pathlib.Path.unlink")
-
-    # Mock Path.exists() to return True for .gz files and False for .lis files
-    def mock_exists(self):
-        return str(self).endswith(".gz")
-
-    mocker.patch.object(Path, "exists", mock_exists)
-
-    with caplog.at_level(logging.INFO):
-        ray_tracing_lst.simulate(test=True, force=True)
-
-    mock_simulator.assert_called_once_with(
-        telescope_model=ray_tracing_lst.telescope_model,
-        site_model=site_model_north,
-        label=ray_tracing_lst.label,
-        test=True,
-        config_data={
-            "zenith_angle": ray_tracing_lst.zenith_angle,
-            "off_axis_x": np.float64(0.0),
-            "off_axis_y": np.float64(0.0),
-            "off_axis_theta": np.float64(0.0),
-            "source_distance": ray_tracing_lst.mirrors[0]["source_distance"],
-            "single_mirror_mode": ray_tracing_lst.single_mirror_mode,
-            "use_random_focal_length": ray_tracing_lst.use_random_focal_length,
-            "mirror_numbers": 0,
-        },
-        force_simulate=True,
-    )
-    mock_simulator_instance.run.assert_called_once_with(test=True)
-
-    mock_open.assert_called_once()
-    mock_gzip_open.assert_called_once()
-    mock_copyfileobj.assert_called_once()
-    mock_unlink.assert_called_once()
-
-    photons_file = ray_tracing_lst.output_directory.joinpath(
-        ray_tracing_lst._generate_file_name(
-            file_type="photons",
-            suffix=".lis",
-            off_axis_x=0.0,
-            off_axis_y=0.0,
-        )
-    )
-    assert photons_file.with_suffix(photons_file.suffix + ".gz").exists() is True
-    assert not photons_file.exists()
-
-
-def test_ray_tracing_simulate_runs_all_full_telescope_offsets(ray_tracing_lst, mocker):
-    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, 0.0)]
-    mock_create_simulator = mocker.patch.object(
-        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock(), mocker.Mock()]
-    )
-    mock_run_simulator = mocker.patch.object(ray_tracing_lst, "_run_simulator")
-
-    ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
-
-    assert mock_create_simulator.call_count == 2
-    assert mock_run_simulator.call_count == 2
-
-
-@pytest.mark.parametrize(("max_workers", "expected_workers"), [(None, 8), (3, 3)])
-def test_ray_tracing_simulate_limits_full_telescope_workers(
-    ray_tracing_lst, mocker, max_workers, expected_workers
-):
-    ray_tracing_lst.off_axis_angle = [(float(index), 0.0) for index in range(10)]
-    mocker.patch.object(
-        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock() for _ in range(10)]
-    )
-    mocker.patch.object(ray_tracing_lst, "_run_simulator")
-    executor = mocker.patch("simtools.ray_tracing.ray_tracing.ThreadPoolExecutor")
-    executor.return_value.__enter__.return_value.map.return_value = []
-
-    if max_workers is None:
-        ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
-    else:
-        ray_tracing_lst.simulate(
-            test=True, force=True, compress_photons=False, max_workers=max_workers
-        )
-
-    executor.assert_called_once_with(max_workers=expected_workers)
-
-
-def test_ray_tracing_simulate_rejects_non_positive_worker_count(ray_tracing_lst):
+@pytest.mark.parametrize("max_workers", [0, -1])
+def test_ray_tracing_simulate_rejects_non_positive_worker_count(ray_tracing_lst, max_workers):
     with pytest.raises(ValueError, match="max_workers must be a positive integer"):
-        ray_tracing_lst.simulate(max_workers=0)
-
-
-def test_ray_tracing_simulate_propagates_full_telescope_worker_failure(ray_tracing_lst, mocker):
-    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, 0.0)]
-    mocker.patch.object(
-        ray_tracing_lst, "_create_simulator", side_effect=[mocker.Mock(), mocker.Mock()]
-    )
-    mocker.patch.object(
-        ray_tracing_lst, "_run_simulator", side_effect=RuntimeError("worker failed")
-    )
-
-    with pytest.raises(RuntimeError, match="worker failed"):
-        ray_tracing_lst.simulate(test=True, force=True, compress_photons=False)
-
-
-def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
-    mock_psf_image = mocker.patch("simtools.ray_tracing.ray_tracing.PSFImage")
-    mock_psf_image_instance = mock_psf_image.return_value
-    mock_process_photon_list = mocker.patch.object(mock_psf_image_instance, "process_photon_list")
-
-    focal_length = 10.0
-    containment_fraction = 0.8
-    use_rx = False
-
-    image = ray_tracing_lst._create_psf_image(
-        photons_file=test_photons_file,
-        focal_length=focal_length,
-        containment_fraction=containment_fraction,
-        use_rx=use_rx,
-    )
-
-    mock_psf_image.assert_called_once_with(
-        focal_length=focal_length,
-        containment_fraction=containment_fraction,
-    )
-    mock_process_photon_list.assert_called_once_with(test_photons_file, use_rx)
-    assert image == mock_psf_image_instance
+        ray_tracing_lst.simulate(max_workers=max_workers)
 
 
 def test_analyze_image(ray_tracing_lst, mocker):
@@ -912,3 +674,129 @@ def test_process_offset_angles_unknown_direction(
     assert len(result) == 1
     assert result[0] == (0.0, 1.0)
     assert "Unknown direction X" in caplog.text
+
+
+@pytest.fixture
+def backend(ray_tracing_lst, mocker):
+    """A mocked backend returning one image that did not trace the telescope structure."""
+    ray_tracing_lst._backend = mocker.Mock()
+    ray_tracing_lst._backend.psf_image.return_value = ("psf_image", False)
+    return ray_tracing_lst._backend
+
+
+@pytest.mark.parametrize(
+    ("test", "photon_count", "photons_per_instance", "instances"),
+    [(False, None, 100000, 20), (True, None, 5000, 1), (False, 12345, 12345, 1)],
+)
+def test_simulate_requests(
+    ray_tracing_lst, backend, mocker, test, photon_count, photons_per_instance, instances
+):
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.args = {"number_of_photons": photon_count, "instrument_seed": 5, "simulation_seed": [7]}
+    ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, -0.5)]
+
+    ray_tracing_lst.simulate(test=test, force=True, compress_photons=False, max_workers=3)
+
+    requests = backend.simulate.call_args.args[0]
+    assert backend.simulate.call_args.kwargs == {
+        "test": test,
+        "force": True,
+        "compress_photons": False,
+        "max_workers": 3,
+    }
+    seeds = tuple(
+        zip(
+            random.instance_seeds(5, instances, max_seed=SIMTEL_MAX_SEED),
+            random.instance_seeds(7, instances, max_seed=SIMTEL_MAX_SEED),
+            strict=True,
+        )
+    )
+    assert [(r.off_axis_x, r.off_axis_y) for r in requests] == [(0.0, 0.0), (1.0, -0.5)]
+    for request in requests:
+        assert request.source_distance_km == pytest.approx(10.0)
+        assert request.photons_per_instance == photons_per_instance
+        assert request.seeds == seeds
+        assert request.mirror_number is None
+        assert request.parameter_changes == {}
+
+
+@pytest.mark.parametrize("photon_count", [0, -1, True, 1.5])
+def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, mocker, photon_count):
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.args = {"number_of_photons": photon_count}
+    with pytest.raises(ValueError, match="positive integer"):
+        ray_tracing_lst.simulate()
+
+
+def test_simulate_single_mirror_requests(ray_tracing_lst_single_mirror_mode, mocker):
+    ray_tracing = ray_tracing_lst_single_mirror_mode
+    backend = ray_tracing._backend = mocker.Mock()
+    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
+    config.args = {"instrument_seed": 5, "simulation_seed": [7]}
+    ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
+
+    ray_tracing.simulate()
+
+    requests = backend.simulate.call_args.args[0]
+    for request, (number, mirror_data) in zip(requests, ray_tracing.mirrors.items(), strict=True):
+        assert request.mirror_number == number
+        assert request.photons_per_instance == 100000
+        # One instance; each mirror has its own seeds, derived from the configured ones.
+        assert request.seeds == (
+            tuple(
+                random.seeds(fixed_seed=(seed, number + 1), max_seed=SIMTEL_MAX_SEED)
+                for seed in (5, 7)
+            ),
+        )
+        assert request.parameter_changes["mirror_list"] == "mirror.dat"
+        assert request.parameter_changes["focal_length"] == pytest.approx(
+            mirror_data["source_distance"] * 1.0e5
+        )
+
+
+@pytest.mark.parametrize("do_analyze", [True, False])
+@pytest.mark.parametrize("keep_images", [True, False])
+def test_process_off_axis_and_mirror(ray_tracing_lst, backend, mocker, do_analyze, keep_images):
+    analyze_image = mocker.patch.object(ray_tracing_lst, "_analyze_image", return_value=(1.0, 2.0))
+    ray_tracing_lst.psf_images = {}
+
+    results = ray_tracing_lst._process_off_axis_and_mirror(
+        [0.5, 0, 0, 0], do_analyze, False, 0.8, save_photons=True, keep_images=keep_images
+    )
+
+    request = backend.psf_image.call_args.args[0]
+    assert request.key == (0.0, 0.0, None)
+    assert backend.psf_image.call_args.args[1:] == (
+        ray_tracing_lst.mirrors[0]["focal_length"],
+        0.8,
+    )
+    assert backend.psf_image.call_args.kwargs == {"use_rx": False, "save_photons": True}
+    assert len(results) == (1 if do_analyze else 0)
+    assert analyze_image.called is do_analyze
+    assert len(ray_tracing_lst.psf_images) == (1 if keep_images else 0)
+
+
+@pytest.mark.parametrize("traced_structure", [False, True])
+def test_traced_structure_replaces_telescope_transmission(
+    ray_tracing_lst, backend, mocker, traced_structure
+):
+    """telescope_transmission applies unless the backend traced the telescope structure."""
+    backend.psf_image.return_value = ("psf_image", traced_structure)
+    analyze_image = mocker.patch.object(ray_tracing_lst, "_analyze_image", return_value=(1.0,))
+
+    ray_tracing_lst._process_off_axis_and_mirror([0.5, 0, 0, 0], True, False, 0.8, False)
+
+    assert analyze_image.call_args.args[-1] == pytest.approx(1.0 if traced_structure else 0.5)
+
+
+def test_backend_is_selected_by_configuration(ray_tracing_lst, mocker):
+    backend_class = mocker.patch("simtools.ray_tracing.ray_tracing.interface.get_backend")
+    assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
+    assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
+    backend_class.return_value.assert_called_once_with(
+        ray_tracing_lst.telescope_model,
+        ray_tracing_lst.site_model,
+        ray_tracing_lst.label,
+        ray_tracing_lst.zenith_angle,
+        False,
+    )

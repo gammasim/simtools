@@ -180,6 +180,61 @@ MAX_WORKERS = _argument(
 
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
+RAY_TRACING_BACKEND = _argument(
+    "ray_tracing_backend",
+    "ray tracing configuration",
+    help="Optical ray-tracing backend (default: sim_telarray).",
+    choices=("sim_telarray", "obdeect"),
+    default=None,
+)
+
+# Seeds of every simulation backend alike: the instrument seed randomises the instrument
+# (mirror deviations, gains, ...) of each random instrument instance, the simulation seed the
+# simulated events and photons.
+INSTRUMENT_SEED = _argument(
+    "instrument_seed",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_instrument_seed",),
+    help=(
+        "Seed of the random instrument setup (e.g. mirror deviations, gains); with several "
+        "random instrument instances, their seeds are derived from it (default: random)."
+    ),
+    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
+)
+
+RANDOM_INSTRUMENT_INSTANCES = _argument(
+    "random_instrument_instances",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_random_instrument_instances",),
+    help="Number of random instrument instances (e.g. random mirror realisations).",
+    type=helpers.bounded_int(1, 1024),
+    default=1,
+)
+
+SIMULATION_SEED = _argument(
+    "simulation_seed",
+    _SIMULATION_CONFIGURATION_GROUP,
+    aliases=("sim_telarray_seed",),
+    help=(
+        "Seed of the simulation (events, photons) (default: random). Two values: "
+        "[instrument_seed, simulation_seed] (use for testing only)."
+    ),
+    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
+    nargs="+",
+)
+
+SEED_ARGUMENTS = (INSTRUMENT_SEED, RANDOM_INSTRUMENT_INSTANCES, SIMULATION_SEED)
+
+RAY_TRACING_ARGUMENTS = (
+    RAY_TRACING_BACKEND,
+    INSTRUMENT_SEED,
+    RANDOM_INSTRUMENT_INSTANCES(
+        default=constants.RAY_TRACING_INSTRUMENT_INSTANCES,
+        help="Number of random instrument instances (random mirror realisations) per image.",
+    ),
+    SIMULATION_SEED,
+)
+
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 
 OUTPUT_FILE = _argument(
@@ -782,32 +837,6 @@ CORSIKA_INTERACTION_ARGUMENTS = (
     CORSIKA_HADRONIC_TRANSITION_ENERGY,
 )
 
-SIM_TELARRAY_INSTRUMENT_SEED = _argument(
-    "sim_telarray_instrument_seed",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help="Random seed used for sim_telarray instrument setup.",
-    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
-)
-
-SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES = _argument(
-    "sim_telarray_random_instrument_instances",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help="Number of random instrument instances initialized in sim_telarray.",
-    type=helpers.bounded_int(1, 1024),
-    default=1,
-)
-
-SIM_TELARRAY_SEED = _argument(
-    "sim_telarray_seed",
-    _SIM_TELARRAY_CONFIGURATION_GROUP,
-    help=(
-        "Random seed used for sim_telarray simulation. Single value: seed for event "
-        "simulation. Two values: [instrument_seed, simulation_seed] (use for testing only)."
-    ),
-    type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
-    nargs="+",
-)
-
 SIM_TELARRAY_SEED_FILE = _argument(
     "sim_telarray_seed_file",
     _SIM_TELARRAY_CONFIGURATION_GROUP,
@@ -816,12 +845,7 @@ SIM_TELARRAY_SEED_FILE = _argument(
     default="sim_telarray_instrument_seeds.txt",
 )
 
-SIM_TELARRAY_ARGUMENTS = (
-    SIM_TELARRAY_INSTRUMENT_SEED,
-    SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES,
-    SIM_TELARRAY_SEED,
-    SIM_TELARRAY_SEED_FILE,
-)
+SIM_TELARRAY_ARGUMENTS = (*SEED_ARGUMENTS, SIM_TELARRAY_SEED_FILE)
 
 SOURCE_DISTANCE = _argument(
     "source_distance",

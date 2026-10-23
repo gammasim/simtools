@@ -22,6 +22,8 @@ def simulator_instance():
     inst._logger = Mock()
     inst.runner_service = Mock()
     inst.io_handler = Mock()
+    inst.label = "test"
+    inst._seed_pair = (11, 13)
     writer = LightEmissionConfigWriter(inst)
     writer._logger = inst._logger
     inst.configuration_writers = {"light_emission": writer}

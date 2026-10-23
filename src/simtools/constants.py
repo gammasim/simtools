@@ -74,6 +74,8 @@ TEST_RESOURCES_DOWNLOADED = str(TEST_RESOURCES_ROOT / "downloaded")
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647
+# Random instrument instances (mirror-error realisations) of a ray-tracing image.
+RAY_TRACING_INSTRUMENT_INSTANCES = 20
 # Maximum include filename length accepted by sim_telarray parser (80-char getword buffer).
 # The include token is written as "<filename>", so keep the filename itself safely below 80 chars.
 SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH = 77

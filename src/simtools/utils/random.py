@@ -34,3 +34,26 @@ def seeds(n_seeds=1, min_seed=1, max_seed=2_000_000_000, fixed_seed=None):
     if n_seeds == 1:
         return int(seed_list[0])
     return [int(x) for x in seed_list]
+
+
+def instance_seeds(seed, instances, max_seed=2_000_000_000):
+    """
+    Seeds of random instances derived from one seed.
+
+    Parameters
+    ----------
+    seed : int
+        Seed the instance seeds are derived from.
+    instances : int
+        Number of instances.
+    max_seed : int
+        Upper limit for the derived seeds (exclusive).
+
+    Returns
+    -------
+    list of int
+        The seed itself for a single instance, otherwise ``instances`` derived seeds.
+    """
+    if instances == 1:
+        return [seed]
+    return seeds(n_seeds=instances, max_seed=max_seed, fixed_seed=seed)
