@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - docker/Dockerfile-simtel_array
+      - .github/scripts/install_python_dependencies.sh
       - .github/workflows/build-sim_telarray.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
