@@ -223,6 +223,7 @@ def test_simulate_single_mirror_psf_passes_fraction_to_analyze(mocker):
         def analyze(self, **kwargs):
             assert kwargs.get("force") is True
             assert kwargs.get("containment_fraction") == pytest.approx(0.95)
+            assert kwargs.get("keep_images") is False
 
         def get_psf_mm(self):
             return self._psf_mm
