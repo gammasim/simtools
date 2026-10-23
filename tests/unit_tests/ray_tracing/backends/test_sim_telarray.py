@@ -11,8 +11,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from simtools.ray_tracing import parameter_changes
-from simtools.ray_tracing.backends import StarImageRequest
 from simtools.ray_tracing.backends import sim_telarray as backend_module
+from simtools.ray_tracing.backends.interface import StarImageRequest
 from simtools.ray_tracing.backends.sim_telarray import SimtelBackend, _ImagingList
 
 _IMAGING_HEADER = """# Column 2: Pixel number hit

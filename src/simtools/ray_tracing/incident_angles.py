@@ -1,6 +1,6 @@
 """Calculate photon incident angles on focal plane and primary/secondary mirrors.
 
-The ray-tracing backend (``simtools.ray_tracing.backends``) provides, per photon,
+The ray-tracing backend (``simtools.ray_tracing.backends.interface``) provides, per photon,
 the angle of incidence at the focal surface with respect to the optical axis
 [deg] and, for dual-mirror telescopes, the angles of incidence on the primary
 and secondary mirror [deg] and the hit points on them.
@@ -16,8 +16,9 @@ from astropy.table import QTable, vstack
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing import backends, parameter_changes
-from simtools.ray_tracing.backends import StarImageRequest
+from simtools.ray_tracing import parameter_changes
+from simtools.ray_tracing.backends import interface
+from simtools.ray_tracing.backends.interface import StarImageRequest
 from simtools.simtel import simtel_seeds
 
 
@@ -129,7 +130,7 @@ class IncidentAnglesCalculator:
             photons_per_instance=int(self.config_data["number_of_photons"]),
             parameter_changes=parameter_changes.PERFECT_MIRROR if self.perfect_mirror else {},
         )
-        backend = backends.get_backend()(
+        backend = interface.get_backend()(
             self.telescope_model, self.site_model, self.label, self.zenith_angle_deg, False
         )
         data, intermediate_files = backend.incidence_angles(

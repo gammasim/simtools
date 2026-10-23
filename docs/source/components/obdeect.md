@@ -14,7 +14,7 @@ and select it with `--ray_tracing_backend obdeect` (or the environment variable
 
 The ray-tracing applications describe what to trace (star position, source
 distance, photons, seeds and parameter changes such as the single-mirror mode)
-and hand it to the backend (`simtools.ray_tracing.backends`); both backends
+and hand it to the backend (`simtools.ray_tracing.backends.interface`); both backends
 receive the same requests. obdeect runs inside the simtools process: it compiles
 the model parameters of the telescope model, exactly as simtools reads them for
 sim_telarray, into an optical model and traces star light to the camera

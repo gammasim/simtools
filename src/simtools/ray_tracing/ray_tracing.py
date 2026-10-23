@@ -2,7 +2,7 @@
 Ray tracing simulations and analysis.
 
 Traces star light through the telescope optics with the configured ray-tracing
-backend (``simtools.ray_tracing.backends``) and computes the PSF (D80
+backend (``simtools.ray_tracing.backends.interface``) and computes the PSF (D80
 containment diameter), effective mirror area, and effective focal length as
 functions of the off-axis angle.
 """
@@ -20,8 +20,9 @@ from astropy.table import QTable
 from simtools import constants, settings
 from simtools.io import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
-from simtools.ray_tracing import backends, parameter_changes
-from simtools.ray_tracing.backends import StarImageRequest
+from simtools.ray_tracing import parameter_changes
+from simtools.ray_tracing.backends import interface
+from simtools.ray_tracing.backends.interface import StarImageRequest
 from simtools.simtel import simtel_seeds
 from simtools.utils import names, random
 from simtools.visualization import visualize
@@ -407,7 +408,7 @@ class RayTracing:
     def _get_backend(self):
         """Return the ray-tracing backend (created on first use)."""
         if self._backend is None:
-            self._backend = backends.get_backend()(
+            self._backend = interface.get_backend()(
                 self.telescope_model,
                 self.site_model,
                 self.label,

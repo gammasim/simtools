@@ -12,7 +12,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.ray_tracing import parameter_changes
-from simtools.ray_tracing.backends import StarImageRequest
+from simtools.ray_tracing.backends.interface import StarImageRequest
 from simtools.ray_tracing.backends.obdeect import (
     ObdeectBackend,
     ObdeectRayTracer,

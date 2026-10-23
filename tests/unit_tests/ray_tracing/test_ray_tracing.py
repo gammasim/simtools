@@ -790,7 +790,7 @@ def test_traced_structure_replaces_telescope_transmission(
 
 
 def test_backend_is_selected_by_configuration(ray_tracing_lst, mocker):
-    backend_class = mocker.patch("simtools.ray_tracing.ray_tracing.backends.get_backend")
+    backend_class = mocker.patch("simtools.ray_tracing.ray_tracing.interface.get_backend")
     assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
     assert ray_tracing_lst._get_backend() is backend_class.return_value.return_value
     backend_class.return_value.assert_called_once_with(

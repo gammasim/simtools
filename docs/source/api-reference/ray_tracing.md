@@ -24,10 +24,10 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 
 (raytracingbackendsmodule)=
 
-## backends
+## backends.interface
 
 ```{eval-rst}
-.. automodule:: ray_tracing.backends
+.. automodule:: ray_tracing.backends.interface
    :members:
 ```
 
