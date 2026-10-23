@@ -292,6 +292,24 @@ def test_process_off_axis_and_mirror_no_analyze(ray_tracing_lst, mocker):
     mock_analyze_image.assert_not_called()
 
 
+@pytest.mark.parametrize("keep_images", [True, False])
+def test_process_off_axis_and_mirror_keep_images(ray_tracing_lst, mocker, keep_images):
+    mocker.patch.object(ray_tracing_lst, "_generate_file_name", return_value="photons_file")
+    mocker.patch.object(ray_tracing_lst, "_create_psf_image", return_value="psf_image")
+    mocker.patch.object(ray_tracing_lst, "_analyze_image", return_value=(1.0, 2.0))
+    ray_tracing_lst.psf_images = {}
+    tel_transmission_pars = ray_tracing_lst._get_telescope_transmission_params(True)
+
+    results = ray_tracing_lst._process_off_axis_and_mirror(
+        tel_transmission_pars, True, False, 0.8, save_photons=False, keep_images=keep_images
+    )
+
+    assert len(results) == len(ray_tracing_lst.off_axis_angle)
+    assert len(ray_tracing_lst.psf_images) == (
+        len(ray_tracing_lst.off_axis_angle) if keep_images else 0
+    )
+
+
 def test_remove_photon_files_removes_stars_by_default(tmp_test_directory):
     photons_file_lis = Path(str(tmp_test_directory)) / "photons.lis"
     photons_file_gz = Path(str(tmp_test_directory)) / "photons.lis.gz"

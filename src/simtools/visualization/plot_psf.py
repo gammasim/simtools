@@ -678,7 +678,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
     ray.simulate(test=args_dict.get("test", False), force=True)
-    ray.analyze(force=True, containment_fraction=fraction)
+    ray.analyze(force=True, containment_fraction=fraction, keep_images=False)
 
     for key in ["psf_cm", "psf_deg"]:
         plt.figure(figsize=(10, 6), tight_layout=True)

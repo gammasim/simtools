@@ -287,6 +287,8 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
             mock_telescope_model, mock_site_model, args_dict, sample_parameters, tmp_path
         )
         plt.close("all")
+        mock_ray.analyze.assert_called_once()
+        assert mock_ray.analyze.call_args.kwargs["keep_images"] is False
 
         # Verify telescope parameters were applied and simulation was run
 
