@@ -77,6 +77,7 @@ def test_run_and_record_writes_direct_process_record(tmp_test_directory):
 
     record = json.loads(output_file.read_text(encoding=ENCODING))
     assert return_code == 0
+    assert {"schema_name", "schema_version"}.isdisjoint(record)
     assert record["role"] == CORSIKA_ROLE
     assert record["run_id"] == "5"
     assert record["model_version"] == "7.0.0"
@@ -84,7 +85,6 @@ def test_run_and_record_writes_direct_process_record(tmp_test_directory):
     assert record["signal"] is None
     assert record["wall_time_seconds"] > 0
     assert record["measurement_method"] in {"linux_procfs_direct_pid", "wall_clock_only"}
-    assert record["schema_version"] == "1.1.0"
     assert record["logical_cpu_count"] >= record["available_cpu_count"] >= 1
     with gzip.open(log_file, "rt", encoding=ENCODING) as handle:
         assert handle.read() == "eventio input\n"

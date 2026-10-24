@@ -33,7 +33,6 @@ _RECORD_COUNT = "record_count"
 _RECORD_ENVIRONMENTS = "_record_environments"
 _PRODUCTION_HEADER = "Production"
 _ROLES = ("corsika", "sim_telarray")
-_RECORD_SCHEMA_VERSIONS = ("1.0.0", "1.1.0")
 _UNKNOWN = "unknown"
 _ENVIRONMENT_COLUMNS = (
     _CPU_MODEL,
@@ -590,11 +589,6 @@ def _validate_record(record, record_path, run_number, role):
     """Validate resource-record fields required by this report."""
     if not isinstance(record, Mapping):
         raise ValueError(f"Malformed resource record in {record_path}: expected a mapping.")
-    if (
-        record.get("schema_name") != "process_resource_record"
-        or record.get("schema_version") not in _RECORD_SCHEMA_VERSIONS
-    ):
-        raise ValueError(f"Unsupported resource record schema in {record_path}.")
     if record.get("role") != role:
         raise ValueError(f"Resource record role mismatch in {record_path}: {record.get('role')!r}.")
     if str(record.get("run_id")) != str(run_number):

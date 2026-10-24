@@ -19,7 +19,6 @@ from simtools.version import __version__
 _STDOUT_LOG_SUFFIX = ".log.gz"
 _STDERR_LOG_SUFFIX = ".err.gz"
 _ENCODING = "utf-8"
-_RECORD_SCHEMA_VERSION = "1.1.0"
 _CONTAINER_ENVIRONMENT_VARIABLES = ("APPTAINER_CONTAINER", "SINGULARITY_CONTAINER")
 _CPUINFO_PATH = Path("/proc/cpuinfo")
 
@@ -297,8 +296,6 @@ def _build_record(
 ):
     """Build one JSON-serializable resource record."""
     return {
-        "schema_name": "process_resource_record",
-        "schema_version": _RECORD_SCHEMA_VERSION,
         "simtools_version": __version__,
         "run_id": str(run_id),
         "role": role,

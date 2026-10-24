@@ -31,7 +31,6 @@ MODEL_VERSION = "7.0.0"
 FIXTURE_START_TIME = "2026-01-01T00:00:00+00:00"
 TRIGGERED_EVENTS = "triggered_events"
 SIMULATED_EVENTS = "simulated_events"
-SCHEMA_VERSION = "schema_version"
 INITIAL_SCHEMA_VERSION = "1.0.0"
 PRODUCTION_LABEL = "production_label"
 MESSAGE = "message"
@@ -76,8 +75,6 @@ def _manifest(tmp_test_directory):
         (directory_part / _record_name(suffix)).write_text(
             json.dumps(
                 {
-                    "schema_name": "process_resource_record",
-                    SCHEMA_VERSION: INITIAL_SCHEMA_VERSION,
                     "run_id": "1",
                     "role": role,
                     "return_code": 0,
@@ -245,7 +242,6 @@ def test_collect_resource_requirements_keeps_execution_environment(mocker, tmp_t
     for record_path in manifest.directory.rglob(RESOURCE_RECORD_PATTERN):
         record = json.loads(record_path.read_text(encoding=ENCODING))
         record.update(
-            schema_version="1.1.0",
             hostname=TEST_HOSTNAME,
             cpu_model=TEST_CPU_MODEL,
             logical_cpu_count=8,
@@ -295,17 +291,22 @@ def test_split_records_keep_all_environments(mocker, tmp_test_directory, differe
     )
 
 
-def test_collect_resource_requirements_rejects_unknown_record_schema(mocker, tmp_test_directory):
+@pytest.mark.parametrize("legacy_metadata", [False, True])
+def test_collect_resource_requirements_ignores_schema_metadata(
+    mocker, tmp_test_directory, legacy_metadata
+):
     manifest = _manifest(tmp_test_directory)
-    record_path = next((manifest.directory / CORSIKA).rglob(RESOURCE_RECORD_PATTERN))
-    record = json.loads(record_path.read_text(encoding=ENCODING))
-    record[SCHEMA_VERSION] = "2.0.0"
-    record_path.write_text(json.dumps(record), encoding=ENCODING)
+    if legacy_metadata:
+        for record_path in manifest.directory.rglob(RESOURCE_RECORD_PATTERN):
+            record = json.loads(record_path.read_text(encoding=ENCODING))
+            record.update(schema_name="process_resource_record", schema_version="unregistered")
+            record_path.write_text(json.dumps(record), encoding=ENCODING)
     mocker.patch.object(resource_requirements, DISCOVER_MANIFESTS, return_value=[manifest])
 
-    _, diagnostics = resource_requirements.collect_resource_requirements(PRODUCTION)
+    rows, diagnostics = resource_requirements.collect_resource_requirements(PRODUCTION)
 
-    assert "Unsupported resource record schema" in diagnostics[0][MESSAGE]
+    assert len(rows) == 2
+    assert diagnostics == []
 
 
 def test_write_resource_requirements_compact_skips_table_and_writes_summary(
