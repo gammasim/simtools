@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792751118561,
+  "lastUpdate": 1792818555108,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31576,6 +31576,46 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 446.640625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Maximilian Linhoff",
+            "username": "maxnoe",
+            "email": "maximilian.linhoff@cta-observatory.org"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "e9c9661597f2f027368b0594810a84463463c3c5",
+          "message": "Re-enable sonar for tag builds (#2670)",
+          "timestamp": "2026-10-23T10:04:34Z",
+          "url": "https://github.com/gammasim/simtools/commit/e9c9661597f2f027368b0594810a84463463c3c5"
+        },
+        "date": 1792818543461,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 94.658214163,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 97.47000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 446.07421875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261012.334.1 | container=None | sample_interval_s=0.2"
           }
