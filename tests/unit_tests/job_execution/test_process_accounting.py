@@ -23,6 +23,12 @@ SIMULATION_COMMAND = "simulation"
 POPEN_ATTRIBUTE = "Popen"
 STDERR_LOG_FAILURE = "stderr_log"
 DISK_FULL_MESSAGE = "output disk is full"
+APPTAINER_CONTAINER = "APPTAINER_CONTAINER"
+SINGULARITY_CONTAINER = "SINGULARITY_CONTAINER"
+CONTAINER_IMAGE_PATH = "/images/simtools.sif"
+TEST_CPU_MODEL = "Test CPU"
+CONTAINER_IMAGE_KEY = "container_image"
+FALLBACK_CPU_MODEL = "fallback"
 
 
 def test_build_accounting_command_includes_optional_arguments(tmp_test_directory):
@@ -71,6 +77,7 @@ def test_run_and_record_writes_direct_process_record(tmp_test_directory):
 
     record = json.loads(output_file.read_text(encoding=ENCODING))
     assert return_code == 0
+    assert {"schema_name", "schema_version"}.isdisjoint(record)
     assert record["role"] == CORSIKA_ROLE
     assert record["run_id"] == "5"
     assert record["model_version"] == "7.0.0"
@@ -78,6 +85,7 @@ def test_run_and_record_writes_direct_process_record(tmp_test_directory):
     assert record["signal"] is None
     assert record["wall_time_seconds"] > 0
     assert record["measurement_method"] in {"linux_procfs_direct_pid", "wall_clock_only"}
+    assert record["logical_cpu_count"] >= record["available_cpu_count"] >= 1
     with gzip.open(log_file, "rt", encoding=ENCODING) as handle:
         assert handle.read() == "eventio input\n"
 
@@ -108,6 +116,50 @@ def test_run_and_record_accepts_environment_without_log_file(tmp_test_directory)
 
     assert return_code == 0
     assert json.loads(output_file.read_text(encoding=ENCODING))["role"] == SIM_TELARRAY_ROLE
+
+
+def test_execution_environment_reports_host_and_container(mocker, monkeypatch):
+    monkeypatch.delenv(APPTAINER_CONTAINER, raising=False)
+    monkeypatch.setenv(SINGULARITY_CONTAINER, CONTAINER_IMAGE_PATH)
+    mocker.patch.object(process_accounting.platform, "node", return_value="")
+    mocker.patch.object(process_accounting, "_read_cpu_model", return_value=TEST_CPU_MODEL)
+
+    environment = process_accounting._execution_environment()
+
+    assert environment["hostname"] is None
+    assert environment["cpu_model"] == TEST_CPU_MODEL
+    assert environment[CONTAINER_IMAGE_KEY] == CONTAINER_IMAGE_PATH
+
+
+def test_execution_environment_without_container(monkeypatch):
+    monkeypatch.delenv(APPTAINER_CONTAINER, raising=False)
+    monkeypatch.delenv(SINGULARITY_CONTAINER, raising=False)
+
+    assert process_accounting._execution_environment()[CONTAINER_IMAGE_KEY] is None
+
+
+@pytest.mark.parametrize(
+    ("cpuinfo", "expected"),
+    [
+        ("processor\t: 0\nmodel name\t: Test CPU @ 2.0GHz\n", "Test CPU @ 2.0GHz"),
+        ("processor\t: 0\nmodel name\t:\n", FALLBACK_CPU_MODEL),
+        (None, FALLBACK_CPU_MODEL),
+        ("Model : ARM server\n", "ARM server"),
+        (
+            "CPU implementer : 0x41\nCPU part : 0xd0c\n" * 2,
+            "CPU implementer: 0x41, CPU part: 0xd0c",
+        ),
+        ("CPU implementer : \nCPU part : \n", FALLBACK_CPU_MODEL),
+    ],
+)
+def test_read_cpu_model(mocker, tmp_test_directory, cpuinfo, expected):
+    cpuinfo_path = tmp_test_directory / "cpuinfo.txt"
+    if cpuinfo is not None:
+        cpuinfo_path.write_text(cpuinfo, encoding=ENCODING)
+    mocker.patch.object(process_accounting, "_CPUINFO_PATH", cpuinfo_path)
+    mocker.patch.object(process_accounting.platform, "processor", return_value=FALLBACK_CPU_MODEL)
+
+    assert process_accounting._read_cpu_model() == expected
 
 
 def test_read_linux_process_sample_handles_unavailable_process(mocker):
