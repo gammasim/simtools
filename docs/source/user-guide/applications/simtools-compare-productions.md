@@ -34,7 +34,11 @@ For computing summaries, use `--comparison_level computing --baseline_path <prod
 Add `--candidate_path` to compare a second production and repeated `--select` options to filter
 both. Outputs include `resource_requirements.md`, `resource_requirements.json`, and resource plots
 for CORSIKA and sim_telarray. Time and storage are normalized per event; peak memory is per process.
-Diagnostic mode also retains detailed ECSV records.
+Diagnostic mode also retains detailed ECSV records. Reports list the CPU model, CPU counts,
+container image, and host count behind each production's records; compare timings only between
+matching environments. The comparison fails when the two productions do not cover the same
+configurations and process roles, and the error lists the uncovered configurations and skipped
+resource records.
 
 ```console
 simtools-compare-productions \
