@@ -342,11 +342,18 @@ def _read_cpu_model():
         cpuinfo = _CPUINFO_PATH.read_text(encoding=_ENCODING)
     except OSError:
         return platform.processor() or None
+    fields = {}
     for line in cpuinfo.splitlines():
         key, _, value = line.partition(":")
-        if key.strip() == "model name" and value.strip():
-            return value.strip()
-    return platform.processor() or None
+        if value.strip():
+            fields.setdefault(key.strip(), value.strip())
+    for key in ("model name", "Model"):
+        if key in fields:
+            return fields[key]
+    identifiers = [
+        f"{key}: {fields[key]}" for key in ("CPU implementer", "CPU part") if key in fields
+    ]
+    return ", ".join(identifiers) or platform.processor() or None
 
 
 def _parse_command_line_arguments():

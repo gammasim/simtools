@@ -144,6 +144,12 @@ def test_execution_environment_without_container(monkeypatch):
         ("processor\t: 0\nmodel name\t: Test CPU @ 2.0GHz\n", "Test CPU @ 2.0GHz"),
         ("processor\t: 0\nmodel name\t:\n", FALLBACK_CPU_MODEL),
         (None, FALLBACK_CPU_MODEL),
+        ("Model : ARM server\n", "ARM server"),
+        (
+            "CPU implementer : 0x41\nCPU part : 0xd0c\n" * 2,
+            "CPU implementer: 0x41, CPU part: 0xd0c",
+        ),
+        ("CPU implementer : \nCPU part : \n", FALLBACK_CPU_MODEL),
     ],
 )
 def test_read_cpu_model(mocker, tmp_test_directory, cpuinfo, expected):

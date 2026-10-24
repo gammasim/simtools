@@ -51,6 +51,10 @@ STORAGE_BYTES_PER_TRIGGERED_EVENT = "sim_telarray_storage_bytes_per_triggered_ev
 SIMTEL = "simtel"
 TEST_HOSTNAME = "node-1"
 TEST_CPU_MODEL = "Test CPU"
+ARM_CPU_MODEL = "ARM server"
+EXECUTION_ENVIRONMENTS = "execution_environments"
+RECORD_COUNT = "record_count"
+HOST_COUNT = "host_count"
 TEST_CONTAINER_IMAGE = "simtools.sif"
 
 
@@ -210,7 +214,7 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
     assert metrics["diagnostic_count"] == 0
     assert metrics["summary"][0]["peak_rss_bytes_p05"] == pytest.approx(1000)
     assert metrics["summary"][0]["peak_rss_bytes_p95"] == pytest.approx(1000)
-    assert metrics["execution_environments"] == [
+    assert metrics[EXECUTION_ENVIRONMENTS] == [
         {
             PRODUCTION_LABEL: BASELINE,
             "role": role,
@@ -218,8 +222,8 @@ def test_write_resource_requirements_writes_table_report_and_plots(mocker, tmp_t
             LOGICAL_CPU_COUNT: None,
             AVAILABLE_CPU_COUNT: None,
             CONTAINER_IMAGE: UNKNOWN,
-            "host_count": 1,
-            "record_count": 1,
+            HOST_COUNT: 1,
+            RECORD_COUNT: 1,
         }
         for role in (CORSIKA, SIM_TELARRAY)
     ]
@@ -258,6 +262,37 @@ def test_collect_resource_requirements_keeps_execution_environment(mocker, tmp_t
         (row[HOSTNAME], row[CPU_MODEL], row[AVAILABLE_CPU_COUNT], row[CONTAINER_IMAGE])
         for row in rows
     } == {(TEST_HOSTNAME, TEST_CPU_MODEL, 2, TEST_CONTAINER_IMAGE)}
+
+
+@pytest.mark.parametrize("different_cpu", [False, True])
+def test_split_records_keep_all_environments(mocker, tmp_test_directory, different_cpu):
+    manifest = _manifest(tmp_test_directory)
+    record_path = next((manifest.directory / CORSIKA).rglob(RESOURCE_RECORD_PATTERN))
+    record = json.loads(record_path.read_text(encoding=ENCODING))
+    record[HOSTNAME] = TEST_HOSTNAME
+    record[CPU_MODEL] = TEST_CPU_MODEL
+    record_path.write_text(json.dumps(record), encoding=ENCODING)
+    record[HOSTNAME] = "node-2"
+    if different_cpu:
+        record[CPU_MODEL] = ARM_CPU_MODEL
+    record_path.with_name("split.corsika.resources.json").write_text(
+        json.dumps(record), encoding=ENCODING
+    )
+    mocker.patch.object(resource_requirements, DISCOVER_MANIFESTS, return_value=[manifest])
+
+    result = resource_requirements.write_resource_requirements(
+        {BASELINE_PATH: PRODUCTION, "select": [], "figure_format": []},
+        tmp_test_directory,
+        mocker.Mock(return_value=[]),
+    )
+
+    metrics = json.loads(result["json_file"].read_text(encoding=ENCODING))
+    environments = [item for item in metrics[EXECUTION_ENVIRONMENTS] if item["role"] == CORSIKA]
+    assert sum(item[RECORD_COUNT] for item in environments) == 2
+    assert sum(item[HOST_COUNT] for item in environments) == 2
+    assert {item[CPU_MODEL] for item in environments} == (
+        {TEST_CPU_MODEL, ARM_CPU_MODEL} if different_cpu else {TEST_CPU_MODEL}
+    )
 
 
 def test_collect_resource_requirements_rejects_unknown_record_schema(mocker, tmp_test_directory):

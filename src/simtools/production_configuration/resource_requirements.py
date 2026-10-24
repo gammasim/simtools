@@ -30,6 +30,7 @@ _AVAILABLE_CPU_COUNT = "available_cpu_count"
 _CONTAINER_IMAGE = "container_image"
 _HOST_COUNT = "host_count"
 _RECORD_COUNT = "record_count"
+_RECORD_ENVIRONMENTS = "_record_environments"
 _PRODUCTION_HEADER = "Production"
 _ROLES = ("corsika", "sim_telarray")
 _RECORD_SCHEMA_VERSIONS = ("1.0.0", "1.1.0")
@@ -200,7 +201,12 @@ def write_resource_requirements(args_dict, output_directory, plotter):
 
 def resource_table(rows):
     """Return resource rows as an ECSV-compatible Astropy table."""
-    return Table(rows=rows)
+    return Table(
+        rows=[
+            {key: value for key, value in row.items() if key != _RECORD_ENVIRONMENTS}
+            for row in rows
+        ]
+    )
 
 
 def _summarize_compact_resource_requirements(rows):
@@ -502,6 +508,7 @@ def _resource_row(manifest, role, label, comparison_role=None):
         "measurement_method": record.get("measurement_method"),
         "platform": record.get("platform"),
         **_execution_environment(record),
+        _RECORD_ENVIRONMENTS: [_execution_environment(item) for item in records],
         "wall_time_seconds_per_event": _per_event(record.get("wall_time_seconds"), showers),
         "cpu_time_seconds_per_event": _per_event(cpu_time, showers),
         "wall_time_seconds_per_triggered_event": _per_event(
@@ -778,8 +785,10 @@ def _execution_environments(rows):
     """Count resource records and hosts per production, role, and execution environment."""
     groups = {}
     for row in rows:
-        key = tuple(row.get(column) for column in _ENVIRONMENT_GROUP_COLUMNS)
-        groups.setdefault(key, []).append(row)
+        for record_environment in row.get(_RECORD_ENVIRONMENTS, [row]):
+            environment_row = {**row, **record_environment}
+            key = tuple(environment_row.get(column) for column in _ENVIRONMENT_GROUP_COLUMNS)
+            groups.setdefault(key, []).append(environment_row)
     environments = []
     for key, group_rows in sorted(groups.items(), key=lambda item: str(item[0])):
         environment = dict(zip(_ENVIRONMENT_GROUP_COLUMNS, key, strict=True))
