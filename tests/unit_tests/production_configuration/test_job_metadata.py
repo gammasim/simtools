@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import astropy.units as u
 import h5py
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_metadata import (
@@ -158,6 +159,37 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         "reduced_event_data": ["gamma_run000012.reduced_event_data.hdf5"],
         "sim_telarray": ["gamma_run000012.simtel.zst"],
     }
+
+
+def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000001"
+    output_directory.mkdir()
+    simulator = _simulator("MSTS-01", run_number=12)
+    simulator.corsika_configurations = [None]
+    simulator.simulation_parameters = [
+        SimpleNamespace(
+            primary_particle=SimpleNamespace(name="gamma"),
+            shower_events=10,
+            azimuth_angle=180.0,
+            zenith_angle=40.0,
+        )
+    ]
+
+    manifest = build_production_job_manifest(
+        _args(
+            azimuth_angle=0 * u.deg,
+            zenith_angle=0 * u.deg,
+            energy_range=(100 * u.GeV, 100 * u.GeV),
+            core_scatter=(1, 840 * u.m),
+            showers_per_run=None,
+            simulation_software="sim_telarray",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    assert_quantity_allclose(manifest["configuration"]["azimuth_angle"], 180 * u.deg)
+    assert_quantity_allclose(manifest["configuration"]["zenith_angle"], 40 * u.deg)
 
 
 def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_directory):

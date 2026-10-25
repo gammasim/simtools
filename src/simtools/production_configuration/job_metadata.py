@@ -19,10 +19,12 @@ from simtools.utils.geometry import geographic_to_corsika_azimuth
 CATALOG_SITE_NAMES = {"North": "LaPalma", "South": "Paranal"}
 SIMULATION_PARAMETERS = "simulation_parameters"
 USE_CURVED_ATMOSPHERE = "use_curved_atmosphere"
+_AZIMUTH_ANGLE = "azimuth_angle"
+_ZENITH_ANGLE = "zenith_angle"
 REQUIRED_SIMULATION_JOB_METADATA_ARGUMENTS = (
     "primary",
-    "azimuth_angle",
-    "zenith_angle",
+    _AZIMUTH_ANGLE,
+    _ZENITH_ANGLE,
     "energy_range",
     "core_scatter",
     "view_cone",
@@ -57,14 +59,14 @@ def build_simulation_job_metadata(args_dict, simulator, include_sct=True):
     dict
         Job-level metadata using DIRAC file-catalog field names.
     """
-    azimuth_angle = args_dict["azimuth_angle"].to_value(u.deg)
+    azimuth_angle = args_dict[_AZIMUTH_ANGLE].to_value(u.deg)
     view_cone_min, view_cone_max = args_dict["view_cone"]
     metadata = {
         "array_layout": args_dict["array_layout_name"],
         "site": CATALOG_SITE_NAMES[args_dict["site"]],
         "particle": _primary_name(args_dict, simulator),
         "phiP": round(geographic_to_corsika_azimuth(azimuth_angle), 2),
-        "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
+        "thetaP": round(float(args_dict[_ZENITH_ANGLE].to_value(u.deg)), 2),
         "view_cone_min": round(float(view_cone_min.to_value(u.deg)), 2),
         "view_cone_max": round(float(view_cone_max.to_value(u.deg)), 2),
         "runNumber": int(simulator.run_number),
@@ -234,8 +236,8 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "array_layout_name": args_dict["array_layout_name"],
         "model_version": _scalar_or_list(args_dict["model_version"]),
         "simulation_software": args_dict["simulation_software"],
-        "azimuth_angle": args_dict["azimuth_angle"],
-        "zenith_angle": args_dict["zenith_angle"],
+        _AZIMUTH_ANGLE: args_dict[_AZIMUTH_ANGLE],
+        _ZENITH_ANGLE: args_dict[_ZENITH_ANGLE],
         "energy_min": energy_min,
         "energy_max": energy_max,
         "view_cone_min": view_cone_min,
@@ -252,6 +254,15 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         if atmosphere_configuration is not None
         else _resolved_atmosphere_configuration(args_dict, simulator),
     }
+    simulation_parameters = getattr(simulator, SIMULATION_PARAMETERS, [])
+    if not isinstance(simulation_parameters, list):
+        simulation_parameters = [simulation_parameters]
+    if simulation_parameters:
+        parameters = simulation_parameters[0]
+        for angle in (_AZIMUTH_ANGLE, _ZENITH_ANGLE):
+            value = getattr(parameters, angle, None)
+            if value is not None:
+                configuration[angle] = float(value) * u.deg
     _add_optional_configuration_value(configuration, "dec", args_dict.get("dec"))
     _add_optional_configuration_value(configuration, "ha", args_dict.get("ha"))
     for key in (
