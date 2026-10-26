@@ -29,6 +29,7 @@ from simtools.visualization import visualize
 
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
 DEFAULT_MAX_WORKERS = 8
+BACKEND_METADATA = "ray_tracing_backend"
 
 
 class RayTracing:
@@ -537,6 +538,9 @@ class RayTracing:
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
             self._read_results()
+            do_analyze = (
+                self._results.meta.get(BACKEND_METADATA) != settings.config.ray_tracing_backend
+            )
 
         tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
 
@@ -776,6 +780,7 @@ class RayTracing:
         if self.single_mirror_mode:
             _columns.append("mirror_number")
         self._results = QTable(rows=_rows, names=_columns)
+        self._results.meta[BACKEND_METADATA] = settings.config.ray_tracing_backend
 
     def export_results(self):
         """Export results to a csv file."""

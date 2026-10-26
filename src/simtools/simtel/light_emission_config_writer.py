@@ -140,14 +140,8 @@ class LightEmissionConfigWriter:
 
         if self.simulation.light_emission_config.get("light_source_type") == "illuminator":
             illuminator_position = self.simulation.get_illuminator_position()
-            pointing_vector = self.simulation.get_illuminator_pointing_vector(illuminator_position)
-            if self.simulation.uses_telescope_position_file(pointing_vector):
-                self._logger.info(
-                    "Using telescope position file for illuminator setup "
-                    f"(pointing={pointing_vector})."
-                )
-                position_file = self.simulation.write_telescope_position_file(illuminator_position)
-                cmd.append(f"--telpos-file {position_file}")
+            position_file = self.simulation.write_telescope_position_file(illuminator_position)
+            cmd.append(f"--telpos-file {position_file}")
         return cmd
 
     def get_light_source_command(self):
