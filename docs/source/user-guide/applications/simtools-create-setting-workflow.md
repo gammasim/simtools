@@ -13,10 +13,10 @@ For parameters with multiple typed values, pass a bracketed list and include uni
 values. For example:
 
 ```console
-simtools-create-setting-workflow \\
-  --instrument LSFN-design --parameter flasher_pulse_shape \\
-  --value '["Gauss-Exponential", "0.4 ns", "1.59 ns"]' \\
-  --parameter_version 1.0.1 \\
+simtools-create-setting-workflow \
+  --instrument LSFN-design --parameter flasher_pulse_shape \
+  --value '["Gauss-Exponential", "0.4 ns", "1.59 ns"]' \
+  --parameter_version 1.0.1 \
   --description "Set pulse shape, width, and decay time"
 ```
 
