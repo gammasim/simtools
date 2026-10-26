@@ -20,6 +20,13 @@ FULL_UPDATE = "full_update"
 MODEL_UPDATE = "model_update"
 MODEL_VERSION_HISTORY = "model_version_history"
 UPDATE_TYPE = "update_type"
+FILE_PARAMETER_NAME = "test_file_parameter"
+FILE_PARAMETER_VERSION = "1.0.0"
+FILE_PARAMETER_ACTIVITY_ID = "test-activity-id"
+FILE_PARAMETER_ASSET = "test-file-parameter-1.0.0.ecsv"
+FILE_PARAMETER_CONTENT = b"# test file asset\n"
+WORKFLOW_REPOSITORY = "https://example.org/workflows.git"
+WORKFLOW_BRANCH = "feature-branch"
 
 
 def test_verify_simulation_model_production_tables_success(tmp_test_directory):
@@ -893,6 +900,100 @@ def test_download_model_parameter_from_workflow(
         / "pm_photoelectron_spectrum"
         / "pm_photoelectron_spectrum-3.0.0.json",
     )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("urllib.request.urlopen")
+def test_download_model_parameter_from_workflow_copies_file_asset(
+    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
+):
+    tmp_test_directory = Path(tmp_test_directory)
+    telescope = "LSTN-design"
+    parameter_data = {
+        "file": True,
+        "parameter_version": FILE_PARAMETER_VERSION,
+        "value": FILE_PARAMETER_ASSET,
+    }
+    mock_collect_data.return_value = parameter_data
+    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=FILE_PARAMETER_NAME,
+        param_data={
+            "version": FILE_PARAMETER_VERSION,
+            "activity_id": FILE_PARAMETER_ACTIVITY_ID,
+        },
+        simulation_models_path=tmp_test_directory,
+        setting_workflows_git_tag=WORKFLOW_BRANCH,
+        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
+    )
+
+    parameter_directory = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / telescope
+        / FILE_PARAMETER_NAME
+    )
+    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
+    asset_file = parameter_directory / FILE_PARAMETER_ASSET
+    assert asset_file.read_bytes() == FILE_PARAMETER_CONTENT
+    mock_write_json.assert_called_once_with(parameter_data, parameter_file)
+    mock_urlopen.assert_called_once_with(
+        f"{WORKFLOW_REPOSITORY.removesuffix('.git')}/-/raw/{WORKFLOW_BRANCH}/"
+        f"output/{telescope}/{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ACTIVITY_ID}/"
+        f"{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ASSET}",
+        timeout=30,
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("urllib.request.urlopen")
+def test_download_model_parameter_from_workflow_repairs_missing_file_asset(
+    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
+):
+    tmp_test_directory = Path(tmp_test_directory)
+    telescope = "LSTN-design"
+    parameter_directory = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / telescope
+        / FILE_PARAMETER_NAME
+    )
+    parameter_directory.mkdir(parents=True)
+    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
+    parameter_file.write_text(
+        json.dumps(
+            {
+                "file": True,
+                "parameter_version": FILE_PARAMETER_VERSION,
+                "value": FILE_PARAMETER_ASSET,
+            }
+        ),
+        encoding="utf-8",
+    )
+    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=FILE_PARAMETER_NAME,
+        param_data={
+            "version": FILE_PARAMETER_VERSION,
+            "activity_id": FILE_PARAMETER_ACTIVITY_ID,
+        },
+        simulation_models_path=tmp_test_directory,
+        setting_workflows_git_tag=WORKFLOW_BRANCH,
+        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
+    )
+
+    assert (parameter_directory / FILE_PARAMETER_ASSET).read_bytes() == FILE_PARAMETER_CONTENT
+    mock_collect_data.assert_not_called()
+    mock_write_json.assert_not_called()
+    mock_urlopen.assert_called_once()
 
 
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
