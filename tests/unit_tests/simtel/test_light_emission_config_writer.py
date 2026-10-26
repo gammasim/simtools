@@ -677,11 +677,12 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         mock_atmo.assert_called_once_with("/config/dir")
 
     # Test default path (non-flasher)
+    telescope_position_file = Path(tmp_test_directory) / "telpos.txt"
     with (
         patch.object(
             simulator_instance,
             "write_telescope_position_file",
-            return_value=f"{tmp_test_directory}/telpos.txt",
+            return_value=str(telescope_position_file),
         ) as mock_telpos,
         patch.object(
             simulator_instance,
@@ -689,7 +690,7 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             return_value=[1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
         ),
     ):
-        # Default-down pointing: do not use telpos file.
+        # Every pointing uses the model's telescope position and radius.
         simulator_instance.light_emission_config = {
             "light_source_type": "illuminator",
             "light_source_pointing": [0.0, 0.0, -1.0],
@@ -697,8 +698,9 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 "]
-        mock_telpos.assert_not_called()
+        expected = ["-h  2200 ", f"--telpos-file {telescope_position_file}"]
+        assert result == expected
+        assert mock_telpos.call_count == 1
 
         # Non-default pointing: use telpos file.
         simulator_instance.light_emission_config = {
@@ -708,8 +710,8 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 ", f"--telpos-file {tmp_test_directory}/telpos.txt"]
-        assert mock_telpos.call_count == 1
+        assert result == expected
+        assert mock_telpos.call_count == 2
 
 
 def test__make_light_emission_script(simulator_instance):

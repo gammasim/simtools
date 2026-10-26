@@ -48,5 +48,5 @@ LightEmission programs (`ff-1m`, `xyzls`) and sim_telarray's optics.
 - Illuminator light crosses the atmosphere (the `atmospheric_transmission`
   table of the site, along the real path) and the optics; telescope position,
   pointing and axes offsets are those of the sim_telarray backend.
-- `--instrument_seed` and `--simulation_seed` seed obdeect and sim_telarray
-  with either backend.
+- `--instrument_seed` and `--simulation_seed` seed obdeect emission and the sim_telarray
+  camera simulation. The default LightEmission programs choose their own emission seeds.

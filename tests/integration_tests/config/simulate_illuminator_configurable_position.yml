@@ -37,7 +37,7 @@ applications:
             - 10000
           photons:
             range:
-            - 5000
+            - 3000
             - 13000
   model_version_use_current: true
   test_name: run-configurable-position

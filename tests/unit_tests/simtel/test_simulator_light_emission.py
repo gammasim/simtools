@@ -10,8 +10,9 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
+from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
 
 MAKE_COMMAND_METHOD = "make_command"
@@ -184,7 +185,7 @@ def test_get_illuminator_position_adds_tower_height(simulator_instance):
 
 def test_get_illuminator_position_keeps_configured_position(simulator_instance):
     configured_position = [10.0 * u.m, 20.0 * u.m, 39.0 * u.m]
-    simulator_instance.light_emission_config = {"light_source_position": configured_position}
+    simulator_instance.light_emission_config = {LIGHT_SOURCE_POSITION: configured_position}
 
     position = simulator_instance.get_illuminator_position()
 
@@ -198,6 +199,32 @@ def test_uses_telescope_position_file_rule(simulator_instance):
     assert simulator_instance.uses_telescope_position_file([1.0, 0.0, 0.0]) is True
     assert simulator_instance.uses_telescope_position_file(None) is True
     assert simulator_instance.uses_telescope_position_file(["a", "b", "c"]) is True
+
+
+@pytest.mark.parametrize(
+    ("position", "pointing", "at_origin"),
+    [
+        ([0, 0, 1000], [0, 0, -1], True),
+        (None, [0, 0, -1], False),
+        ([0, 0, 1000], None, False),
+        ([0, 0, 1000], [1, 0, 0], False),
+    ],
+)
+def test_illuminator_telescope_geometry(simulator_instance, position, pointing, at_origin):
+    simulator_instance.light_emission_config = {
+        LIGHT_SOURCE_POSITION: position,
+        "light_source_pointing": pointing,
+    }
+    model_position = [10, 20, 30] * u.m
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = [
+        model_position,
+        [0, 0] * u.m,
+    ]
+
+    result = simulator_instance._get_telescope_position_ground_with_axis_offset()
+
+    expected = [0, 0, 0] * u.m if at_origin else model_position
+    assert_quantity_allclose(result, expected)
 
 
 def test_prepare_run(simulator_instance, tmp_test_directory):
@@ -408,13 +435,13 @@ def test__initialize_light_emission_configuration_with_position(simulator_instan
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
 
     # Test configuration with position
-    config = {"light_source_position": [1.5, 2.0, 3.5]}
+    config = {LIGHT_SOURCE_POSITION: [1.5, 2.0, 3.5]}
     result = simulator_instance._initialize_light_emission_configuration(config)
 
     # Verify position was converted to astropy units
-    assert hasattr(result["light_source_position"], "unit")
-    assert result["light_source_position"].unit == u.m
-    np.testing.assert_array_equal(result["light_source_position"].value, [1.5, 2.0, 3.5])
+    assert hasattr(result[LIGHT_SOURCE_POSITION], "unit")
+    assert result[LIGHT_SOURCE_POSITION].unit == u.m
+    np.testing.assert_array_equal(result[LIGHT_SOURCE_POSITION].value, [1.5, 2.0, 3.5])
     assert result[FLASHER_PHOTONS] == pytest.approx(1e7)
     # No light_source_type should be set since flasher_type is None
     assert LIGHT_SOURCE_TYPE not in result
@@ -562,7 +589,7 @@ def test__get_telescope_pointing(simulator_instance):
     # Test with light_source_position keeps fixed vertical-up telescope pointing
     simulator_instance.light_emission_config = {
         LIGHT_SOURCE_TYPE: ILLUMINATOR,
-        "light_source_position": [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
+        LIGHT_SOURCE_POSITION: [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
     }
     with patch.object(
         simulator_instance, "_calibration_pointing_direction"
@@ -1155,7 +1182,8 @@ def test_flasher_request_geometry(simulator_instance):
     assert altitude == pytest.approx(2156.0 + 16.5)
 
 
-def test_illuminator_request_geometry(simulator_instance):
+@pytest.mark.parametrize("source_height", [1000.0, 0.0])
+def test_illuminator_request_geometry(simulator_instance, source_height):
     """Telescope at its position with axes offsets; the slant-path transmission applied."""
     table = Table({"wavelength": [300.0] * u.nm, "altitude": [3.0] * u.km, "extinction": [0.1]})
     table.meta["observatory_level"] = 2.0 * u.km
@@ -1172,18 +1200,21 @@ def test_illuminator_request_geometry(simulator_instance):
         patch.object(
             simulator_instance,
             GET_ILLUMINATOR_POSITION,
-            return_value=(0.0 * u.m, 0.0 * u.m, 1000.0 * u.m),
+            return_value=(0.0 * u.m, 0.0 * u.m, source_height * u.m),
         ),
         patch.object(
             simulator_instance, "get_illuminator_pointing_vector", return_value=[0, 0, -1]
         ),
-        patch.object(simulator_instance, "uses_telescope_position_file", return_value=True),
         patch.object(
             simulator_instance,
             "_get_telescope_position_ground_with_axis_offset",
             return_value=(0.0 * u.m, 0.0 * u.m, 0.0 * u.m),
         ),
     ):
+        if source_height == 0:
+            with pytest.raises(ValueError, match="Horizontal illuminator paths"):
+                simulator_instance._illuminator_request(source, 2000.0)
+            return
         request, radius, transmission, altitude = simulator_instance._illuminator_request(
             source, 2000.0
         )
