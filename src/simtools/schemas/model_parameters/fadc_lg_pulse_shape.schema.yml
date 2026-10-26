@@ -10,14 +10,18 @@ meta_schema_version: 0.1.0
 name: fadc_lg_pulse_shape
 description: >-
   Complete narrow-illumination low-gain FADC pulse templates versus fluctuated
-  pixel intensity. Each row gives the input intensity in photoelectron units,
-  time relative to the pixel-pulse reference time, and waveform amplitude in
-  units of the nominal one-photoelectron FADC peak. The table is used only
-  above its lowest intensity; lower signals retain the linear pulse path.
-  Amplitudes include the full intensity response and must not be normalized
-  independently at each intensity. Time zero is the median photoelectron
-  arrival time including pixel transit delay. Templates must share a time
-  grid. Linear interpolation is used between intensities; above the largest
+  pixel intensity. Each row gives the input intensity in photoelectron units
+  at nominal gain, time relative to the pixel-pulse reference time, and
+  waveform amplitude in units of the nominal one-photoelectron FADC peak. The
+  table is used only above its lowest intensity; lower signals retain the
+  linear pulse path. Amplitudes include the full intensity response and must
+  not be normalized independently at each intensity. Time zero is the median
+  photoelectron arrival time including pixel transit delay, i.e. the same
+  origin as fadc_pulse_shape; the lowest template should equal its intensity
+  times the peak-normalized fadc_pulse_shape smeared with transit_time_jitter
+  to avoid a step at the transition. Pixel gain variations shift the intensity at which a template
+  is selected, not the template amplitude. Templates must share a time grid.
+  Linear interpolation is used between intensities; above the largest
   intensity the last waveform is held fixed. Baseline-subtracted templates
   affect Cherenkov readout only; NSB and trigger pulses remain linear.
   This approximation does not describe broad or separated light components.
@@ -27,10 +31,12 @@ data:
     unit: dimensionless
     table_columns:
       - name: intensity
-        description: Fluctuated pixel signal
+        description: Fluctuated pixel signal at nominal gain
         type: float64
         unit: dimensionless
         required: true
+        allowed_range:
+          min: 1.0
       - name: time
         description: Time relative to the pixel-pulse reference time
         type: float64

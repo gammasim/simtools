@@ -6,6 +6,7 @@ import astropy.units as u
 import pytest
 from astropy.table import QTable, Table
 
+from simtools.data_model import schema
 from simtools.data_model.table_asset import (
     get_simtel_serialization,
     read_ecsv_asset,
@@ -458,3 +459,25 @@ def test_validate_table_asset_rejects_missing_required_metadata():
             table,
             schema_entry={"table_metadata": [{"name": "source_file_name", "required": True}]},
         )
+
+
+@pytest.mark.parametrize("parameter", ["fadc_hg_pulse_shape", "fadc_lg_pulse_shape"])
+def test_saturation_template_schema_requires_intensity_of_at_least_one_pe(parameter):
+    """Templates below 1 p.e. are rejected, as sim_telarray does."""
+    entry = schema.get_model_parameter_schema(parameter)["data"][0]
+    table = QTable(
+        {
+            "intensity": [0.5, 0.5, 0.5],
+            "time": [-1.0, 0.0, 1.0] * u.ns,
+            "amplitude": [0.0, 0.5, 0.0],
+        }
+    )
+    for name in table.colnames:
+        table[name].info.description = name
+
+    with pytest.raises(ValueError, match=r"'intensity' violates allowed_range\.min"):
+        validate_table_asset(table, schema_entry=entry)
+
+    table["intensity"] = [1.0, 1.0, 1.0]
+    table["intensity"].info.description = "intensity"
+    validate_table_asset(table, schema_entry=entry)
