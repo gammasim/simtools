@@ -13,6 +13,8 @@ import simtools.configuration.argument_helpers as helpers
 import simtools.configuration.commandline_parser as parser
 from simtools.configuration.arguments import ENERGY_RANGE, PRIMARY
 
+PLAIN_STRING = "plain_string"
+
 
 def test_scientific_int():
     assert helpers.scientific_int("100") == 100
@@ -282,7 +284,7 @@ def test_bounded_int():
 
 
 def test_string_or_dict():
-    assert helpers.string_or_dict("plain_string") == "plain_string"
+    assert helpers.string_or_dict(PLAIN_STRING) == PLAIN_STRING
     assert helpers.string_or_dict("{invalid}") == "{invalid}"
 
     dict_str = "{'key1': 'value1', 'key2': 'value2'}"
@@ -302,6 +304,15 @@ def test_string_or_dict():
     result = helpers.string_or_dict(dict_str_spaces)
     assert isinstance(result, dict)
     assert result == {"a": "b"}
+
+
+def test_string_or_list():
+    list_value = ["Gauss-Exponential", "0.4 ns", "1.59 ns"]
+    assert helpers.string_or_list(repr(list_value)) == list_value
+    assert helpers.string_or_list(PLAIN_STRING) == PLAIN_STRING
+    assert helpers.string_or_list("[invalid]") == "[invalid]"
+    already_parsed = ["a", "b"]
+    assert helpers.string_or_list(already_parsed) == already_parsed
 
 
 def test_one_or_many_action():

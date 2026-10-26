@@ -80,6 +80,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
         Optional key ``overwrite_collection_files`` (bool) allows collection
         output files to be overwritten when different source files have the
         same basename. Defaults to False.
+        Set ``provenance_path`` to False to omit the resolved workflow file.
     run_time : list or None
         Prepared runtime command. If provided, reuse it instead of preparing
         the runtime environment from the workflow configuration.
@@ -674,6 +675,8 @@ def _write_resolved_workflow(
     configuration_file, configurations, runtime_environment, collection, provenance_path=None
 ):
     """Write execution provenance at an explicit path or below the first output."""
+    if provenance_path is False:
+        return
     output_path = next(
         (
             config.get("configuration", {}).get("output_path")

@@ -15,8 +15,8 @@ json format, metadata as a yaml file.
 
 parameter (str)
     model parameter name
-value (str, value)
-    input value (number, string, string-type lists)
+value (str or list of str)
+    Input value. Lists with different element types may be passed as multiple values.
 instrument (str)
     instrument name.
 site (str)
