@@ -10,6 +10,8 @@ from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import instrument
 from simtools.data_model.json_validation import validate_finite_json_values
 
+_VALUE_ARGUMENT = "value"
+
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "parameter", type=str, required=True, help="Parameter for simulation model"
@@ -23,8 +25,9 @@ _ARGUMENTS = (
         help="Model-parameter schema version to use for validation and value interpretation",
     ),
     cli.ArgumentDefinition(
-        "value",
+        _VALUE_ARGUMENT,
         type=str,
+        nargs="+",
         required=True,
         help=(
             "Model parameter value: a number, a number with a unit, or a list of values "
@@ -65,7 +68,9 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
     model_parameter_schema_version = app_context.args.get("model_parameter_schema_version")
-    value = app_context.args["value"]
+    value = app_context.args[_VALUE_ARGUMENT]
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
     data_writer = writer.ModelDataWriter()
     parameter_type = data_writer.get_parameter_type_for_schema(
         app_context.args["parameter"],

@@ -163,7 +163,7 @@ def test_multiple_workflows_are_rejected(setting_args, setting_writer):
         setting_workflow.create_setting_workflow(setting_args)
 
 
-def test_run_and_rerun_use_separate_outputs(setting_args, setting_writer, mocker):
+def test_run_and_retry_use_activity_output_directory(setting_args, setting_writer, mocker):
     config_file = setting_workflow.create_setting_workflow(setting_args)
     run = mocker.patch.object(setting_workflow.simtools_runner, "run_applications")
     output = setting_workflow.run_setting_workflow(config_file, {})
@@ -171,13 +171,15 @@ def test_run_and_rerun_use_separate_outputs(setting_args, setting_writer, mocker
         setting_args["output_path"] / "input"
     )
     assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(output)
-    assert run.call_args.args[0]["ignore_existing_parameter_version"] is False
+    initial_args = run.call_args.args[0]
+    assert initial_args.get("ignore_existing_parameter_version", False) is False
+    assert run.call_args.args[0]["provenance_path"] is False
     output.mkdir(parents=True)
     sentinel = output / "previous-result.json"
     sentinel.write_text("previous result", encoding="utf-8")
     rerun_output = setting_workflow.run_setting_workflow(config_file, {})
-    assert rerun_output.parent == output / "reruns"
-    assert run.call_args.args[0]["ignore_existing_parameter_version"] is True
+    assert rerun_output == output
+    assert run.call_args.args[0] == initial_args
     assert run.call_args.kwargs["replacements"]["output/__SETTING_WORKFLOW__"] == str(rerun_output)
     assert sentinel.read_text(encoding="utf-8") == "previous result"
 

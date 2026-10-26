@@ -234,7 +234,7 @@ def _setting_metadata(metadata):
 
 
 def run_setting_workflow(config_file, args):
-    """Execute a prepared setting, keeping previous outputs intact.
+    """Execute a prepared setting in its activity output directory.
 
     Parameters
     ----------
@@ -253,14 +253,11 @@ def run_setting_workflow(config_file, args):
     input_root = config_file.parents[3]
     root = input_root.parent
     output = root / "output" / relative
-    rerun = output.exists()
-    if rerun:
-        output = output / "reruns" / general.get_uuid()
     runner_args = {
         **args,
         "config_file": str(config_file),
         "ignore_runtime_environment": args.get("ignore_runtime_environment", False),
-        "ignore_existing_parameter_version": rerun,
+        "provenance_path": False,
     }
     runtime_file = config_file.with_name("runtime.yml")
     run_time = None
