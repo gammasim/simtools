@@ -9,22 +9,31 @@ meta_schema_url: "https://raw.githubusercontent.com/gammasim/\
 meta_schema_version: 0.1.0
 name: fadc_lg_pulse_shape
 description: >-
-  Complete narrow-illumination low-gain FADC pulse templates versus fluctuated
-  pixel intensity. Each row gives the input intensity in photoelectron units
-  at nominal gain, time relative to the pixel-pulse reference time, and
-  waveform amplitude in units of the nominal one-photoelectron FADC peak. The
-  table is used only above its lowest intensity; lower signals retain the
-  linear pulse path. Amplitudes include the full intensity response and must
-  not be normalized independently at each intensity. Time zero is the median
-  photoelectron arrival time including pixel transit delay, i.e. the same
-  origin as fadc_pulse_shape; the lowest template should equal its intensity
-  times the peak-normalized fadc_pulse_shape smeared with transit_time_jitter
-  to avoid a step at the transition. Pixel gain variations shift the intensity at which a template
-  is selected, not the template amplitude. Templates must share a time grid.
-  Linear interpolation is used between intensities; above the largest
-  intensity the last waveform is held fixed. Baseline-subtracted templates
-  affect Cherenkov readout only; NSB and trigger pulses remain linear.
-  This approximation does not describe broad or separated light components.
+  Low-gain FADC pulse templates versus fluctuated pixel intensity,
+  describing the response to a narrow light flash. Each row gives the input
+  intensity in photoelectron units at nominal gain, time relative to the
+  photoelectron arrival time, and waveform amplitude in units of the nominal
+  one-photoelectron FADC peak. Amplitudes include the full intensity response
+  and must not be normalized independently at each intensity. Time zero is
+  the photoelectron arrival time including pixel transit delay, i.e. the same
+  origin as fadc_pulse_shape. Templates include transit_time_jitter, which is
+  not applied again; the lowest template should equal its intensity times the
+  peak-normalized fadc_pulse_shape smeared with transit_time_jitter to avoid a
+  step at the transition. Each signal photoelectron contributes the
+  interpolated template, divided by its intensity and weighted with the
+  photoelectron amplitude, at its own arrival time, so the arrival time
+  spread is preserved. The template is selected by the effective intensity
+  (peak of the summed linear pulses relative to the one-photoelectron peak,
+  at nominal gain), so spread-out signals saturate less; pixel gain
+  variations shift the intensity at which a template is selected, not the
+  template amplitude. Signals at or below the lowest effective intensity
+  retain the linear pulse path. Templates must share a time grid. Linear
+  interpolation is used between intensities, so the grid should be dense
+  enough to avoid double-peaked intermediate pulses; above the largest
+  intensity the last template is held fixed. Baseline-subtracted templates
+  affect Cherenkov readout only; NSB and trigger pulses remain linear. One
+  template is used per pixel, so separated light components are saturated
+  according to the brightest one.
 short_description: Intensity-dependent low-gain FADC pulse templates.
 data:
   - type: file
@@ -38,7 +47,7 @@ data:
         allowed_range:
           min: 1.0
       - name: time
-        description: Time relative to the pixel-pulse reference time
+        description: Time relative to the photoelectron arrival time
         type: float64
         unit: ns
         required: true
