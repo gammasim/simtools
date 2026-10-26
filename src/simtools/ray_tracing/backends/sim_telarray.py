@@ -17,9 +17,9 @@ from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.ray_tracing import parameter_changes
+from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing, telescope_pointing
-from simtools.utils import names
 
 
 class SimtelBackend:
@@ -167,26 +167,13 @@ class SimtelBackend:
 
     def _files(self, request):
         """Photon list (and its compressed name) and star list of one image."""
-
-        def file_name(file_type):
-            return self._output_directory / names.generate_file_name(
-                file_type=file_type,
-                suffix=".lis",
-                site=self.telescope_model.site,
-                telescope_model_name=self.telescope_model.name,
-                source_distance=None if self.single_mirror_mode else request.source_distance_km,
-                zenith_angle=self.zenith_angle,
-                off_axis_x=request.off_axis_x,
-                off_axis_y=request.off_axis_y,
-                mirror_number=request.mirror_number if self.single_mirror_mode else None,
-                label=self.label,
-            )
-
-        photons_file = file_name("ray_tracing_photons")
+        photons_file = self._output_directory / image_file_name(
+            self, request, "ray_tracing_photons", ".lis"
+        )
         return (
             photons_file,
             photons_file.with_suffix(photons_file.suffix + ".gz"),
-            file_name("ray_tracing_stars"),
+            self._output_directory / image_file_name(self, request, "ray_tracing_stars", ".lis"),
         )
 
     def incidence_angles(self, request, work_directory, name, with_mirrors, keep_files=False):

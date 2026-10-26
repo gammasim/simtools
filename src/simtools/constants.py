@@ -74,6 +74,8 @@ TEST_RESOURCES_DOWNLOADED = str(TEST_RESOURCES_ROOT / "downloaded")
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647
+# Optical ray-tracing backends; the first one is the default.
+RAY_TRACING_BACKENDS = ("sim_telarray", "obdeect")
 # Random instrument instances (mirror-error realisations) of a ray-tracing image.
 RAY_TRACING_INSTRUMENT_INSTANCES = 20
 # Maximum include filename length accepted by sim_telarray parser (80-char getword buffer).

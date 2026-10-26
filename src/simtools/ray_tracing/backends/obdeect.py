@@ -18,25 +18,25 @@ import astropy.units as u
 import numpy as np
 from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-module
 from astropy.table import QTable
-from obdeect.model import DETECTED, OpticalModel
+from obdeect.model import OpticalModel
 
 from simtools.io import io_handler
+from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
-from simtools.utils import names
+from simtools.utils import geometry
 
 _SPEED_OF_LIGHT_M_PER_NS = speed_of_light.to_value(u.m / u.ns)
 
 
 def star_direction(zenith_angle, off_axis_x, off_axis_y):
     """Return the unit vector to the star in the telescope frame (+z: optical axis)."""
-    theta, phi = (math.radians(a) for a in telescope_pointing(zenith_angle, off_axis_x, off_axis_y))
     zenith = math.radians(zenith_angle)
-    return (
-        math.sin(zenith) * math.cos(theta) * math.cos(phi) - math.cos(zenith) * math.sin(theta),
-        math.sin(zenith) * math.sin(phi),
-        math.sin(zenith) * math.sin(theta) * math.cos(phi) + math.cos(zenith) * math.cos(theta),
+    direction = geometry.ground_direction_to_telescope_frame(
+        (math.sin(zenith), 0.0, math.cos(zenith)),
+        *telescope_pointing(zenith_angle, off_axis_x, off_axis_y),
     )
+    return tuple(direction.tolist())
 
 
 class ObdeectRayTracer:
@@ -52,21 +52,26 @@ class ObdeectRayTracer:
         self.telescope_model = telescope_model
         telescope_model.export_model_files(update_if_necessary=True)
         self._models = {}
+        self._file_texts = {}
 
     def optical_model(self, telescope_zenith, instrument_seed, changes=None):
         """Optical model at a telescope zenith angle [deg] (cached).
 
         ``instrument_seed`` fixes the random mirror errors of this instrument
         instance; ``changes`` are model-parameter values replacing those of the
-        telescope model (see ``simtools.ray_tracing.parameter_changes``).
+        telescope model (see ``simtools.ray_tracing.parameter_changes``). Only
+        the models of the most recent telescope zenith angle are kept.
         """
         changes = changes or {}
-        key = (round(telescope_zenith, 9), instrument_seed, repr(sorted(changes.items())))
+        telescope_zenith = round(telescope_zenith, 9)
+        key = (telescope_zenith, instrument_seed, repr(sorted(changes.items())))
         if key not in self._models:
+            if any(cached[0] != telescope_zenith for cached in self._models):
+                self._models.clear()
             records, files = self._records(changes)
             self._models[key] = OpticalModel.from_records(
                 records,
-                lambda name: files[name].read_text(encoding="utf-8"),
+                lambda name: self._file_text(files[name]),
                 configuration_seed=instrument_seed,
                 zenith_deg=telescope_zenith,
                 provenance={
@@ -75,6 +80,12 @@ class ObdeectRayTracer:
                 },
             )
         return self._models[key]
+
+    def _file_text(self, path):
+        """Return the text of a model file (read once)."""
+        if path not in self._file_texts:
+            self._file_texts[path] = path.read_text(encoding="utf-8")
+        return self._file_texts[path]
 
     def _records(self, changes):
         """Parameter records and their files, with the changes of this run."""
@@ -107,13 +118,15 @@ class ObdeectRayTracer:
         photons_per_instance,
         seeds,
         changes=None,
+        *,
+        outputs=None,
     ):
         """Trace star light, as in the sim_telarray ray-tracing runs.
 
         ``photons_per_instance`` photons for each random instrument instance,
         given by its (instrument seed, simulation seed) in ``seeds``, as
         sim_telarray runs one simulation per instance; ``changes`` as in
-        ``optical_model``.
+        ``optical_model``; ``outputs`` the arrival arrays to return (None: all).
 
         Returns
         -------
@@ -134,9 +147,15 @@ class ObdeectRayTracer:
                 towards_source=towards_source,
                 distance_m=source_distance_m,
             )
-            traced = model.trace(sample, seed=simulation_seed, apply_responses=False)
-            detected = traced["status"] == DETECTED
-            arrivals.append({name: values[detected] for name, values in traced.items()})
+            arrivals.append(
+                model.trace(
+                    sample,
+                    seed=simulation_seed,
+                    apply_responses=False,
+                    outputs=outputs,
+                    detected_only=True,
+                )
+            )
         return {name: np.concatenate([a[name] for a in arrivals]) for name in arrivals[0]} | {
             "total_photons": photons_per_instance * len(seeds),
             "total_area_m2": model.sampling_area_m2,
@@ -220,7 +239,7 @@ class ObdeectBackend:
         self._tracer = ObdeectRayTracer(telescope_model)
         self._images = {}
 
-    def _trace(self, request):
+    def _trace(self, request, outputs):
         return self._tracer.trace_star(
             self.zenith_angle,
             request.off_axis_x,
@@ -229,6 +248,7 @@ class ObdeectBackend:
             request.photons_per_instance,
             request.seeds,
             request.parameter_changes,
+            outputs=outputs,
         )
 
     def simulate(self, requests, test=False, force=False, compress_photons=True, max_workers=8):
@@ -240,8 +260,8 @@ class ObdeectBackend:
         """
         del test, force, compress_photons, max_workers
         for request in requests:
-            arrivals = self._trace(request)
             # Only what the image needs: camera positions [cm] of the detected photons.
+            arrivals = self._trace(request, outputs=("position_m",))
             self._images[request.key] = {
                 "position_cm": 100.0 * arrivals["position_m"][:, :2],
                 "total_photons": arrivals["total_photons"],
@@ -276,21 +296,12 @@ class ObdeectBackend:
         if save_photons:
             self._write_photons(request, traced, position_cm)
         del self._images[request.key]
-        return image, bool(traced["has_structure"])
+        return image, traced["has_structure"]
 
     def _write_photons(self, request, traced, position_cm):
         """Write the photons of an image as an ECSV table (camera-entrance positions)."""
-        file_name = io_handler.IOHandler().get_output_directory() / names.generate_file_name(
-            file_type="ray_tracing_photons",
-            suffix=".ecsv",
-            site=self.telescope_model.site,
-            telescope_model_name=self.telescope_model.name,
-            source_distance=None if self.single_mirror_mode else request.source_distance_km,
-            zenith_angle=self.zenith_angle,
-            off_axis_x=request.off_axis_x,
-            off_axis_y=request.off_axis_y,
-            mirror_number=request.mirror_number if self.single_mirror_mode else None,
-            label=self.label,
+        file_name = io_handler.IOHandler().get_output_directory() / image_file_name(
+            self, request, "ray_tracing_photons", ".ecsv"
         )
         table = QTable(
             [position_cm[:, 0] * u.cm, position_cm[:, 1] * u.cm],
@@ -298,7 +309,7 @@ class ObdeectBackend:
             meta={
                 "total_photons": int(traced["total_photons"]),
                 "total_area_m2": float(traced["total_area_m2"]),
-                "traced_structure": bool(traced["has_structure"]),
+                "traced_structure": traced["has_structure"],
             },
         )
         table.write(file_name, format="ascii.ecsv", overwrite=True)
@@ -313,7 +324,14 @@ class ObdeectBackend:
             Angles [deg] and hit points [m], and no intermediate files.
         """
         del work_directory, name, keep_files
-        arrivals = self._trace(request)
+        outputs = ["direction"]
+        if with_mirrors:
+            outputs += [
+                f"{mirror}_{column}"
+                for mirror in ("primary", "secondary")
+                for column in ("point_m", "incidence_deg")
+            ]
+        arrivals = self._trace(request, outputs)
         if len(arrivals["direction"]) == 0:
             raise RuntimeError("No photon reached the focal surface")
         # Angle to the optical axis, as in the sim_telarray imaging list.

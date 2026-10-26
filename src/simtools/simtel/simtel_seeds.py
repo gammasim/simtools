@@ -9,6 +9,19 @@ from simtools.io import ascii_handler
 from simtools.utils import names, random
 from simtools.version import semver_to_int
 
+SIMULATION_SEED_LENGTH_ERROR = (
+    "simulation_seed must contain one value (simulation seed) or two values "
+    "(instrument seed, simulation seed)."
+)
+
+
+def _split_simulation_seed(value):
+    """Return (instrument seed or None, simulation seed) of a one- or two-value seed list."""
+    if len(value) not in (1, 2):
+        raise ValueError(SIMULATION_SEED_LENGTH_ERROR)
+    instrument = value[0] if len(value) == 2 else None
+    return instrument, value[-1]
+
 
 class SimtelSeeds:
     """Manage seeds for sim_telarray simulations."""
@@ -51,15 +64,10 @@ class SimtelSeeds:
     def initialize_seeds(self, site, model_version, zenith_angle, azimuth_angle):
         """Initialize seeds based on provided parameters."""
         if isinstance(self.simulation_seed, list):
-            if len(self.simulation_seed) == 1:
-                self.simulation_seed = self.simulation_seed[0]
-            elif len(self.simulation_seed) == 2:
+            _, simulation_seed = _split_simulation_seed(self.simulation_seed)
+            if len(self.simulation_seed) == 2:
                 return self._set_fixed_seeds()
-            else:
-                raise ValueError(
-                    "simulation_seed must contain one value (simulation seed) or two values "
-                    "(instrument seed, simulation seed)."
-                )
+            self.simulation_seed = simulation_seed
 
         if not self.simulation_seed:
             self.simulation_seed = random.seeds(max_seed=SIMTEL_MAX_SEED)
@@ -210,14 +218,8 @@ def instance_seed_pairs(instances=1):
     instrument = settings.config.args.get("instrument_seed")
     simulation = settings.config.args.get("simulation_seed")
     if isinstance(simulation, list | tuple):
-        if len(simulation) not in (1, 2):
-            raise ValueError(
-                "simulation_seed must contain one value (simulation seed) or two values "
-                "(instrument seed, simulation seed)."
-            )
-        if len(simulation) == 2:
-            instrument = simulation[0]
-        simulation = simulation[-1]
+        fixed_instrument, simulation = _split_simulation_seed(simulation)
+        instrument = fixed_instrument or instrument
     instrument = instrument or random.seeds(max_seed=SIMTEL_MAX_SEED)
     simulation = simulation or random.seeds(max_seed=SIMTEL_MAX_SEED)
     logging.getLogger(__name__).info(

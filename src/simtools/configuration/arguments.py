@@ -183,8 +183,8 @@ SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 RAY_TRACING_BACKEND = _argument(
     "ray_tracing_backend",
     "ray tracing configuration",
-    help="Optical ray-tracing backend (default: sim_telarray).",
-    choices=("sim_telarray", "obdeect"),
+    help=f"Optical ray-tracing backend (default: {constants.RAY_TRACING_BACKENDS[0]}).",
+    choices=constants.RAY_TRACING_BACKENDS,
     default=None,
 )
 

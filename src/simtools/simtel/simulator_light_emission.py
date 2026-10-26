@@ -348,12 +348,12 @@ class SimulatorLightEmission(SimtelRunner):
         backend = self._backend()(
             self.telescope_model, self.site_model, self.label, request.telescope_zenith, False
         )
+        dual_mirror = self._dual_mirror()
         camera_rotation = (
             self.telescope_model.get_parameter_value_with_unit("camera_rotate").to(u.deg).value
-            if self._dual_mirror()
+            if dual_mirror
             else 0.0
         )
-        dual_mirror = self._dual_mirror()
         events = (
             np.concatenate(
                 [

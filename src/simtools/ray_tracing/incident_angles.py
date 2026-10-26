@@ -59,8 +59,7 @@ class IncidentAnglesCalculator:
         )
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
-        cfg = config_data
-        self.perfect_mirror = cfg.get("perfect_mirror", False)
+        self.perfect_mirror = config_data.get("perfect_mirror", False)
         self.results = None
 
         self.output_dir.mkdir(parents=True, exist_ok=True)

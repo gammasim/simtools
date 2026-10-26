@@ -100,6 +100,8 @@ def test_trace_star(toy_telescope):
     assert first is tracer.optical_model(20.0, 3)
     assert first.sha256 != second.sha256  # Independent mirror-error realisations.
     assert first.document["provenance"]["telescope"] == "TOY-01"
+    tracer.optical_model(30.0, 3)  # Another zenith angle: the earlier models are dropped.
+    assert tracer.optical_model(20.0, 3) is not first
 
 
 def test_perfect_and_single_mirror(toy_telescope):
@@ -177,6 +179,14 @@ def test_backend_incidence_angles(backend, tmp_path):
     assert files == []
     assert np.all(np.isfinite(data["angle_incidence_focal"]))
     assert np.median(data["angle_incidence_focal"]) > 1.0  # Off axis and from the dish.
+
+
+def test_backend_incidence_angles_with_mirrors(backend, tmp_path):
+    data, _ = backend.incidence_angles(_request(1.0), tmp_path, "name", True)
+    for mirror in ("primary", "secondary"):
+        for name in (f"angle_incidence_{mirror}", f"{mirror}_hit_x", f"{mirror}_hit_y"):
+            assert len(data[name]) == len(data["angle_incidence_focal"])
+    assert np.all(np.isfinite(data["angle_incidence_primary"]))
 
 
 def _light_source(**options):

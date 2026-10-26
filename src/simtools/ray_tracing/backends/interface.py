@@ -35,6 +35,7 @@ traces it.
 from dataclasses import dataclass, field
 
 from simtools import settings
+from simtools.utils import names
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,40 @@ class LightSourceRequest:
     seeds: tuple
     inside_telescope: bool = False
     camera_radius_m: float | None = None
+
+
+def image_file_name(backend, request, file_type, suffix):
+    """
+    Return the name of a file of one traced image.
+
+    Parameters
+    ----------
+    backend: object
+        Backend (telescope model, zenith angle, label and single-mirror flag).
+    request: StarImageRequest
+        Star image.
+    file_type: str
+        File type (e.g. ``ray_tracing_photons``).
+    suffix: str
+        File suffix.
+
+    Returns
+    -------
+    str
+        File name.
+    """
+    return names.generate_file_name(
+        file_type=file_type,
+        suffix=suffix,
+        site=backend.telescope_model.site,
+        telescope_model_name=backend.telescope_model.name,
+        source_distance=None if backend.single_mirror_mode else request.source_distance_km,
+        zenith_angle=backend.zenith_angle,
+        off_axis_x=request.off_axis_x,
+        off_axis_y=request.off_axis_y,
+        mirror_number=request.mirror_number if backend.single_mirror_mode else None,
+        label=backend.label,
+    )
 
 
 def get_backend(name=None):

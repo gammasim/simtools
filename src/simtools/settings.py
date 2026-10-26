@@ -6,6 +6,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from simtools.configuration import defaults
+from simtools.constants import RAY_TRACING_BACKENDS
 from simtools.corsika.build_options import (
     get_installed_corsika_build_variants,
     select_corsika_build_variant,
@@ -21,7 +22,7 @@ class _Config:
         self._args = {}
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
-        self._ray_tracing_backend = "sim_telarray"
+        self._ray_tracing_backend = RAY_TRACING_BACKENDS[0]
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
@@ -61,10 +62,16 @@ class _Config:
             default="sim_telarray",
         )
         self._ray_tracing_backend = self._get_config_value(
-            args, "ray_tracing_backend", "SIMTOOLS_RAY_TRACING_BACKEND", default="sim_telarray"
+            args,
+            "ray_tracing_backend",
+            "SIMTOOLS_RAY_TRACING_BACKEND",
+            default=RAY_TRACING_BACKENDS[0],
         )
-        if self._ray_tracing_backend not in {"sim_telarray", "obdeect"}:
-            raise ValueError("ray_tracing_backend must be one of 'sim_telarray' or 'obdeect'")
+        if self._ray_tracing_backend not in RAY_TRACING_BACKENDS:
+            raise ValueError(
+                f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
+                f"got '{self._ray_tracing_backend}'"
+            )
         self._corsika_path = self._get_config_value(
             args,
             "corsika_path",
