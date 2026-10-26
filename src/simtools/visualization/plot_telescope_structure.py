@@ -206,7 +206,7 @@ def _dual_mirror_apertures(parameters, overall):
     """
     apertures = []
     for prefix in ("primary_mirror", "secondary_mirror"):
-        name = prefix.split("_")[0]
+        name = prefix.split("_", maxsplit=1)[0]
         if prefix == "secondary_mirror":
             coefficients, scale = _secondary_coefficients(parameters)
         else:
@@ -440,7 +440,10 @@ def shadowing_shares(tel_model, zenith_deg, photons, seed):
         per cent, number of photons whose path crosses the element).
     """
     try:
-        from simtools.ray_tracing.backends.obdeect import ObdeectRayTracer
+        # Imported here: obdeect is an optional dependency, needed for shadowing only.
+        from simtools.ray_tracing.backends.obdeect import (  # pylint: disable=import-outside-toplevel
+            ObdeectRayTracer,
+        )
     except ImportError as error:
         raise ImportError(
             "shadowing needs the optional obdeect package (install the obdeect extra)"
@@ -593,8 +596,8 @@ def plot_telescope_structure(geometry, output_file, shares=None):
     _add_legend(axes[0], geometry)
     if shares is not None and top > 0:
         mappable = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(0, top))
-        bar = figure.colorbar(mappable, ax=axes, shrink=0.7, pad=0.02)
-        bar.set_label("light stopped by this element alone [% of the unobscured light]")
+        colourbar = figure.colorbar(mappable, ax=axes, shrink=0.7, pad=0.02)
+        colourbar.set_label("light stopped by this element alone [% of the unobscured light]")
     figure.suptitle(f"{geometry.name}: telescope structure", color="0.3")
     save_figure(figure, output_file, log_title="telescope structure")
     plt.close(figure)

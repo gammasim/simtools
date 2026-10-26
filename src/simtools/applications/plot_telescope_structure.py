@@ -15,7 +15,7 @@ from simtools.visualization import plot_telescope_structure as structure
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "shadowing",
-        help="Colour the telescope structure by the light each element stops alone (needs obdeect).",
+        help="Colour the structure by the light each element stops alone (needs obdeect).",
         action="store_true",
         default=False,
     ),
