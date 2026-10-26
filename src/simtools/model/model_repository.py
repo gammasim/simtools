@@ -24,6 +24,7 @@ from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 
 _logger = logging.getLogger(__name__)
+_INFO_FILE_NAME = "info.yml"
 
 
 def get_production_directory(simulation_models_path, model_version=None):
@@ -45,6 +46,61 @@ def get_production_directory(simulation_models_path, model_version=None):
     if model_version:
         return Path(simulation_models_path) / "simulation-models/productions" / str(model_version)
     return Path(simulation_models_path) / "simulation-models/productions"
+
+
+def initialize_production(
+    simulation_models_path, model_version, base_model_version, update_type="patch_update"
+):
+    """Create an initial production info file based on an existing model version.
+
+    Parameters
+    ----------
+    simulation_models_path : str or Path
+        Path to the simulation models repository.
+    model_version : str
+        Version to initialize.
+    base_model_version : str
+        Existing production version used as the starting point.
+    update_type : str, optional
+        Production update type to write to the new info file.
+
+    Raises
+    ------
+    FileExistsError
+        If the target production directory already exists.
+    FileNotFoundError
+        If the base production info file does not exist.
+    ValueError
+        If the update type is not supported.
+    """
+    if update_type not in {"patch_update", "full_update"}:
+        raise ValueError(f"Unsupported production update type: {update_type}")
+
+    target_directory = get_production_directory(simulation_models_path, model_version)
+    source_info = get_production_directory(simulation_models_path, base_model_version) / (
+        _INFO_FILE_NAME
+    )
+    if target_directory.exists():
+        raise FileExistsError(
+            f"Cannot initialize production {model_version}: target directory already exists: "
+            f"{target_directory}"
+        )
+    if not source_info.is_file():
+        raise FileNotFoundError(
+            f"Cannot initialize production {model_version}: base production info file does not "
+            f"exist: {source_info}"
+        )
+
+    info = {
+        "model_version": model_version,
+        "model_update": update_type,
+        "model_version_history": [base_model_version],
+        "model_status": "development",
+        "description": f"Initial configuration based on production model {base_model_version}",
+        "changes": {},
+    }
+    target_directory.mkdir(parents=True)
+    ascii_handler.write_data_to_file(info, target_directory / _INFO_FILE_NAME)
 
 
 def get_model_parameter_directory(simulation_models_path):

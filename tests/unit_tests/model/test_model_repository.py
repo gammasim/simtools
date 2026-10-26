@@ -6,11 +6,17 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from simtools.io import ascii_handler
 from simtools.model import model_repository
 
 TEST_PRODUCTION_FILE = "test_production.json"
 TEST_MODIFICATIONS_FILE = "modifications.json"
 PATH_PATCH = "simtools.model.model_repository.get_model_parameter_file_path"
+INITIALIZATION_BASE_VERSION = "7.0.0"
+INITIALIZATION_TARGET_VERSION = "7.0.1"
+INFO_FILE_NAME = "info.yml"
+PATCH_UPDATE = "patch_update"
+FULL_UPDATE = "full_update"
 
 
 def test_verify_simulation_model_production_tables_success(tmp_test_directory):
@@ -33,6 +39,66 @@ def test_verify_simulation_model_production_tables_success(tmp_test_directory):
 
         assert result is True
         mock_verify.assert_called_once()
+
+
+@pytest.mark.parametrize("update_type", [PATCH_UPDATE, FULL_UPDATE])
+def test_initialize_production_writes_info_for_existing_base(tmp_test_directory, update_type):
+    root = Path(tmp_test_directory)
+    base_info = (
+        root / "simulation-models" / "productions" / INITIALIZATION_BASE_VERSION / INFO_FILE_NAME
+    )
+    base_info.parent.mkdir(parents=True)
+    base_info.write_text("{}", encoding="utf-8")
+
+    model_repository.initialize_production(
+        root, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION, update_type
+    )
+
+    target_info = (
+        root / "simulation-models" / "productions" / INITIALIZATION_TARGET_VERSION / INFO_FILE_NAME
+    )
+    assert ascii_handler.collect_data_from_file(target_info) == {
+        "model_version": INITIALIZATION_TARGET_VERSION,
+        "model_update": update_type,
+        "model_version_history": [INITIALIZATION_BASE_VERSION],
+        "model_status": "development",
+        "description": (
+            f"Initial configuration based on production model {INITIALIZATION_BASE_VERSION}"
+        ),
+        "changes": {},
+    }
+
+
+def test_initialize_production_rejects_existing_target(tmp_test_directory):
+    target = (
+        Path(tmp_test_directory)
+        / "simulation-models"
+        / "productions"
+        / INITIALIZATION_TARGET_VERSION
+    )
+    target.mkdir(parents=True)
+
+    with pytest.raises(FileExistsError, match="target directory already exists"):
+        model_repository.initialize_production(
+            tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
+        )
+
+
+def test_initialize_production_rejects_missing_base_info(tmp_test_directory):
+    with pytest.raises(FileNotFoundError, match="base production info file does not exist"):
+        model_repository.initialize_production(
+            tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
+        )
+
+
+def test_initialize_production_rejects_unsupported_update_type(tmp_test_directory):
+    with pytest.raises(ValueError, match="Unsupported production update type: invalid"):
+        model_repository.initialize_production(
+            tmp_test_directory,
+            INITIALIZATION_TARGET_VERSION,
+            INITIALIZATION_BASE_VERSION,
+            update_type="invalid",
+        )
 
 
 def test_verify_simulation_model_production_tables_missing_files(tmp_test_directory):
