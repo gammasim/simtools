@@ -18,7 +18,7 @@ import astropy.units as u
 import numpy as np
 from astropy.constants import c as speed_of_light  # pylint: disable=no-name-in-module
 from astropy.table import QTable
-from obdeect.model import OpticalModel
+from obdeect.model import DETECTED, OpticalModel
 
 from simtools.io import io_handler
 from simtools.ray_tracing.backends.interface import image_file_name
@@ -52,26 +52,21 @@ class ObdeectRayTracer:
         self.telescope_model = telescope_model
         telescope_model.export_model_files(update_if_necessary=True)
         self._models = {}
-        self._file_texts = {}
 
     def optical_model(self, telescope_zenith, instrument_seed, changes=None):
         """Optical model at a telescope zenith angle [deg] (cached).
 
         ``instrument_seed`` fixes the random mirror errors of this instrument
         instance; ``changes`` are model-parameter values replacing those of the
-        telescope model (see ``simtools.ray_tracing.parameter_changes``). Only
-        the models of the most recent telescope zenith angle are kept.
+        telescope model (see ``simtools.ray_tracing.parameter_changes``).
         """
         changes = changes or {}
-        telescope_zenith = round(telescope_zenith, 9)
-        key = (telescope_zenith, instrument_seed, repr(sorted(changes.items())))
+        key = (round(telescope_zenith, 9), instrument_seed, repr(sorted(changes.items())))
         if key not in self._models:
-            if any(cached[0] != telescope_zenith for cached in self._models):
-                self._models.clear()
             records, files = self._records(changes)
             self._models[key] = OpticalModel.from_records(
                 records,
-                lambda name: self._file_text(files[name]),
+                lambda name: files[name].read_text(encoding="utf-8"),
                 configuration_seed=instrument_seed,
                 zenith_deg=telescope_zenith,
                 provenance={
@@ -80,12 +75,6 @@ class ObdeectRayTracer:
                 },
             )
         return self._models[key]
-
-    def _file_text(self, path):
-        """Return the text of a model file (read once)."""
-        if path not in self._file_texts:
-            self._file_texts[path] = path.read_text(encoding="utf-8")
-        return self._file_texts[path]
 
     def _records(self, changes):
         """Parameter records and their files, with the changes of this run."""
@@ -118,15 +107,13 @@ class ObdeectRayTracer:
         photons_per_instance,
         seeds,
         changes=None,
-        *,
-        outputs=None,
     ):
         """Trace star light, as in the sim_telarray ray-tracing runs.
 
         ``photons_per_instance`` photons for each random instrument instance,
         given by its (instrument seed, simulation seed) in ``seeds``, as
         sim_telarray runs one simulation per instance; ``changes`` as in
-        ``optical_model``; ``outputs`` the arrival arrays to return (None: all).
+        ``optical_model``.
 
         Returns
         -------
@@ -147,19 +134,13 @@ class ObdeectRayTracer:
                 towards_source=towards_source,
                 distance_m=source_distance_m,
             )
-            arrivals.append(
-                model.trace(
-                    sample,
-                    seed=simulation_seed,
-                    apply_responses=False,
-                    outputs=outputs,
-                    detected_only=True,
-                )
-            )
+            traced = model.trace(sample, seed=simulation_seed, apply_responses=False)
+            detected = traced["status"] == DETECTED
+            arrivals.append({name: values[detected] for name, values in traced.items()})
         return {name: np.concatenate([a[name] for a in arrivals]) for name in arrivals[0]} | {
             "total_photons": photons_per_instance * len(seeds),
             "total_area_m2": model.sampling_area_m2,
-            "has_structure": model.has_structure,
+            "has_structure": bool(model.has_structure),
         }
 
     def trace_light_source(self, request):
@@ -239,7 +220,7 @@ class ObdeectBackend:
         self._tracer = ObdeectRayTracer(telescope_model)
         self._images = {}
 
-    def _trace(self, request, outputs):
+    def _trace(self, request):
         return self._tracer.trace_star(
             self.zenith_angle,
             request.off_axis_x,
@@ -248,7 +229,6 @@ class ObdeectBackend:
             request.photons_per_instance,
             request.seeds,
             request.parameter_changes,
-            outputs=outputs,
         )
 
     def simulate(self, requests, test=False, force=False, compress_photons=True, max_workers=8):
@@ -261,12 +241,12 @@ class ObdeectBackend:
         del test, force, compress_photons, max_workers
         for request in requests:
             # Only what the image needs: camera positions [cm] of the detected photons.
-            arrivals = self._trace(request, outputs=("position_m",))
+            arrivals = self._trace(request)
             self._images[request.key] = {
                 "position_cm": 100.0 * arrivals["position_m"][:, :2],
                 "total_photons": arrivals["total_photons"],
                 "total_area_m2": arrivals["total_area_m2"],
-                "has_structure": bool(arrivals["has_structure"]),
+                "has_structure": arrivals["has_structure"],
             }
 
     def psf_image(
@@ -324,14 +304,7 @@ class ObdeectBackend:
             Angles [deg] and hit points [m], and no intermediate files.
         """
         del work_directory, name, keep_files
-        outputs = ["direction"]
-        if with_mirrors:
-            outputs += [
-                f"{mirror}_{column}"
-                for mirror in ("primary", "secondary")
-                for column in ("point_m", "incidence_deg")
-            ]
-        arrivals = self._trace(request, outputs)
+        arrivals = self._trace(request)
         if len(arrivals["direction"]) == 0:
             raise RuntimeError("No photon reached the focal surface")
         # Angle to the optical axis, as in the sim_telarray imaging list.

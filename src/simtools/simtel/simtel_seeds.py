@@ -64,8 +64,8 @@ class SimtelSeeds:
     def initialize_seeds(self, site, model_version, zenith_angle, azimuth_angle):
         """Initialize seeds based on provided parameters."""
         if isinstance(self.simulation_seed, list):
-            _, simulation_seed = _split_simulation_seed(self.simulation_seed)
-            if len(self.simulation_seed) == 2:
+            fixed_instrument, simulation_seed = _split_simulation_seed(self.simulation_seed)
+            if fixed_instrument is not None:
                 return self._set_fixed_seeds()
             self.simulation_seed = simulation_seed
 
@@ -219,7 +219,8 @@ def instance_seed_pairs(instances=1):
     simulation = settings.config.args.get("simulation_seed")
     if isinstance(simulation, list | tuple):
         fixed_instrument, simulation = _split_simulation_seed(simulation)
-        instrument = fixed_instrument or instrument
+        if fixed_instrument is not None:
+            instrument = fixed_instrument
     instrument = instrument or random.seeds(max_seed=SIMTEL_MAX_SEED)
     simulation = simulation or random.seeds(max_seed=SIMTEL_MAX_SEED)
     logging.getLogger(__name__).info(

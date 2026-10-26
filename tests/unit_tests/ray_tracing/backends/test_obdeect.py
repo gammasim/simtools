@@ -100,8 +100,6 @@ def test_trace_star(toy_telescope):
     assert first is tracer.optical_model(20.0, 3)
     assert first.sha256 != second.sha256  # Independent mirror-error realisations.
     assert first.document["provenance"]["telescope"] == "TOY-01"
-    tracer.optical_model(30.0, 3)  # Another zenith angle: the earlier models are dropped.
-    assert tracer.optical_model(20.0, 3) is not first
 
 
 def test_perfect_and_single_mirror(toy_telescope):

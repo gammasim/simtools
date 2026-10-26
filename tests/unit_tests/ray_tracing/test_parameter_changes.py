@@ -22,3 +22,14 @@ def test_sim_telarray_options():
     assert set(parameter_changes.sim_telarray_options(parameter_changes.PERFECT_MIRROR)) == set(
         parameter_changes.PERFECT_MIRROR
     )
+
+
+def test_sim_telarray_options_use_sim_telarray_names():
+    options = parameter_changes.sim_telarray_options(
+        {
+            "secondary_mirror_baffle": [0.0, 0.0, 0.0, 0.0, 0.0],
+            "telescope_structure": "none",
+            "trigger_pixels": 1,
+        }
+    )
+    assert options == {"secondary_baffle": "0.0,0.0,0.0,0.0,0.0", "trigger_pixels": "1"}

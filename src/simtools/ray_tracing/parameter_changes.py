@@ -5,6 +5,8 @@ model: sim_telarray receives them as configuration options, other backends as ch
 parameter records.
 """
 
+from simtools.utils import names
+
 TELESCOPE_STRUCTURE = "telescope_structure"
 
 # No random mirror errors (focal lengths, reflection angles, alignment).
@@ -56,6 +58,10 @@ def sim_telarray_options(changes):
     """
     Return the changes as sim_telarray configuration options (name=value).
 
+    Options carry sim_telarray's names of the model parameters; model parameters
+    that sim_telarray does not read (e.g. the telescope structure) are left out.
+    Names that are not model parameters are taken as sim_telarray keywords.
+
     Parameters
     ----------
     changes: dict
@@ -74,4 +80,12 @@ def sim_telarray_options(changes):
             return ",".join(str(v) for v in value)
         return str(value)
 
-    return {name: text(value) for name, value in changes.items() if name != TELESCOPE_STRUCTURE}
+    options = {}
+    for name, value in changes.items():
+        try:
+            simtel_name = names.get_simulation_software_name_from_parameter_name(name)
+        except KeyError:
+            simtel_name = name
+        if simtel_name is not None:
+            options[simtel_name] = text(value)
+    return options
