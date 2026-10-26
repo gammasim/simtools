@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+import gzip
+import hashlib
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -87,6 +91,48 @@ def test_write_photon_bunches_reads_back(tmp_test_directory, name):
     assert atmosphere["thickness"].tolist() == [1030.0, 800.0, 270.0]
     assert atmosphere["refractive_index_minus_1"].tolist() == [2.8e-4, 2.3e-4, 1.0e-4]
     assert telescopes[0]["r"] == pytest.approx(200.0)
+
+
+# Reference written by the code before the zero-copy bunch writer (simtools commit e98013d): the
+# events of ``_reference_events`` and the atmospheric profile of the test above, written with
+# ``run_number=7``; sha256 of the uncompressed file (of the decompressed content for ``.gz``).
+REFERENCE_SHA256 = "c70b7edc6d86888018ec7734e095a80f2e6cb70939afd02daeedfaa24b5a7314"
+
+
+def _reference_events():
+    rng = np.random.default_rng(20261025)
+    events = []
+    for n in (1000, 0, 257):
+        bunches = np.zeros(n, dtype=BUNCH_DTYPE)
+        for name in ("x", "y", "cx", "cy", "time", "zem", "photons", "wavelength"):
+            bunches[name] = rng.uniform(-50.0, 50.0, n)
+        bunches["photons"] = rng.uniform(0.0, 1.0, n)
+        events.append(bunches)
+    return events
+
+
+@pytest.mark.parametrize("name", ["photons.iact", "photons.iact.gz"])
+def test_write_photon_bunches_reference_bytes(tmp_test_directory, name):
+    path = tmp_test_directory / name
+    profile = Table(
+        {
+            "altitude": [0.0, 2.0, 10.0] * u.km,
+            "density": [1.2e-3, 1.0e-3, 4.0e-4] * u.g / u.cm**3,
+            "thickness": [1030.0, 800.0, 270.0] * u.g / u.cm**2,
+            "refractive_index": [2.8e-4, 2.3e-4, 1.0e-4],
+        }
+    )
+    write_photon_bunches(
+        path,
+        _reference_events(),
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=profile,
+        run_number=7,
+    )
+    path = Path(path)
+    content = gzip.open(path).read() if name.endswith(".gz") else path.read_bytes()
+    assert hashlib.sha256(content).hexdigest() == REFERENCE_SHA256
 
 
 def _camera_photons():
