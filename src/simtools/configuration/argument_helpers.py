@@ -478,6 +478,32 @@ def string_or_dict(value):
     return value
 
 
+def string_or_list(value):
+    """Parse a bracketed list literal, or preserve the original value.
+
+    Parameters
+    ----------
+    value : str or list
+        Command-line value to parse.
+
+    Returns
+    -------
+    list or str
+        Parsed list when ``value`` contains a valid list literal; otherwise the input value.
+    """
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        try:
+            parsed = ast.literal_eval(stripped)
+        except ValueError, SyntaxError:
+            return value
+        if isinstance(parsed, list):
+            return parsed
+    return value
+
+
 class OneOrManyAction(argparse.Action):
     """Store one value as scalar and multiple values as list."""
 
