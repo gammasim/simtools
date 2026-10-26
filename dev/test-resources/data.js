@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793006710255,
+  "lastUpdate": 1793022067257,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31780,6 +31780,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 446.15234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57dabb4bb2d78299c1e1840f55aacba3ba1acd02",
+          "message": "Fix missing copying of data tables. (#2675)\n\n* Fix missing copying of data tables.\n\n* increased coverage",
+          "timestamp": "2026-10-26T14:25:27+01:00",
+          "tree_id": "e3c5a9dd950d311906f8830591b64a49b6cf8323",
+          "url": "https://github.com/gammasim/simtools/commit/57dabb4bb2d78299c1e1840f55aacba3ba1acd02"
+        },
+        "date": 1793022050954,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 94.55280830100003,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 97.38,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 447.9609375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.9 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
           }
