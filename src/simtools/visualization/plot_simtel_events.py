@@ -661,7 +661,11 @@ class _StreamingPlotter(PlotSimtelEvent):
                     yield fig
                     if args.get("save_pngs", False):
                         self._save_plot_as_png(
-                            fig, output_file, plot_name, event_index, int(args.get("dpi", 300))
+                            fig,
+                            output_file,
+                            plot_name,
+                            event_index,
+                            int(args.get("figure_dpi", 300)),
                         )
                 finally:
                     plt.close(fig)

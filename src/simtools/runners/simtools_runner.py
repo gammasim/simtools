@@ -27,6 +27,7 @@ from simtools.job_execution import job_manager
 logger = logging.getLogger(__name__)
 _SIMULATION_MODELS_PATH = "simulation_models_path"
 _SIMULATION_MODELS_GIT_PATH = "simulation_models_git_path"
+_IGNORE_EXISTING_PARAMETER_VERSION = "ignore_existing_parameter_version"
 _MODEL_SOURCE_OPTIONS = (
     _SIMULATION_MODELS_PATH,
     _SIMULATION_MODELS_GIT_PATH,
@@ -79,6 +80,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
         Optional key ``overwrite_collection_files`` (bool) allows collection
         output files to be overwritten when different source files have the
         same basename. Defaults to False.
+        Set ``provenance_path`` to False to omit the resolved workflow file.
     run_time : list or None
         Prepared runtime command. If provided, reuse it instead of preparing
         the runtime environment from the workflow configuration.
@@ -447,19 +449,29 @@ def _model_source_options(args_dict):
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
 
-def _application_accepts_model_source_options(application, source_options):
-    """Return whether a simtools application accepts all model-source options."""
-    if not application.startswith("simtools-"):
-        return False
+def _application_argument_names(application):
+    """Return the argument names of a simtools application, or None if it is not one."""
+    if not application or not application.startswith("simtools-"):
+        return None
 
     module_name = "simtools.applications." + application.removeprefix("simtools-").replace("-", "_")
     try:
         definition = importlib.import_module(module_name).APPLICATION
     except ImportError, AttributeError:
-        return False
+        return None
+    return {argument.name for argument in definition.all_arguments}
 
-    argument_names = {argument.name for argument in definition.all_arguments}
-    return set(source_options) <= argument_names
+
+def _application_accepts_model_source_options(application, source_options):
+    """Return whether a simtools application accepts all model-source options."""
+    argument_names = _application_argument_names(application)
+    return argument_names is not None and set(source_options) <= argument_names
+
+
+def _accepts_option_or_is_external(application, option):
+    """Return whether an option can be passed to an application of a workflow step."""
+    argument_names = _application_argument_names(application)
+    return argument_names is None or option in argument_names
 
 
 def _apply_model_source_options(application, configuration, source_options):
@@ -663,6 +675,8 @@ def _write_resolved_workflow(
     configuration_file, configurations, runtime_environment, collection, provenance_path=None
 ):
     """Write execution provenance at an explicit path or below the first output."""
+    if provenance_path is False:
+        return
     output_path = next(
         (
             config.get("configuration", {}).get("output_path")
@@ -949,7 +963,9 @@ def _apply_execution_overrides(configurations, args, model_source, env_file):
     for config in configurations:
         configuration = config.get("configuration", {})
         _apply_model_source_options(config.get("application"), configuration, model_source)
-        if args.get("ignore_existing_parameter_version"):
-            configuration["ignore_existing_parameter_version"] = True
+        if args.get(_IGNORE_EXISTING_PARAMETER_VERSION) and _accepts_option_or_is_external(
+            config.get("application"), _IGNORE_EXISTING_PARAMETER_VERSION
+        ):
+            configuration[_IGNORE_EXISTING_PARAMETER_VERSION] = True
         if env_file is not None:
             configuration["env_file"] = env_file

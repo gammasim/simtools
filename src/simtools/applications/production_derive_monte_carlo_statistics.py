@@ -18,23 +18,20 @@ _ARGUMENTS = (
         "trigger_histogram_file",
         required=True,
         type=str,
-        dest="trigger_histogram_file",
         help="Path to the trigger-histogram file.",
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
         help=(
             "Optional array layout name(s) to select from a precomputed trigger-histogram "
-            "file. If omitted, derive limits for all layouts available in the file."
+            "file. If omitted, estimate statistics for all layouts available in the file."
         ),
         nargs="+",
         type=str,
-        required=False,
         default=None,
     ),
     cli.ArgumentDefinition(
         "spectral_index",
-        required=False,
         type=float,
         default=None,
         help=(
@@ -58,21 +55,18 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "optimization_energy_min",
-        required=False,
         type=positive_quantity("TeV"),
         default=None,
         help="Optional lower bound of the optimization range.",
     ),
     cli.ArgumentDefinition(
         "optimization_energy_max",
-        required=False,
         type=positive_quantity("TeV"),
         default=None,
         help="Optional upper bound of the optimization range.",
     ),
     cli.ArgumentDefinition(
         "reduced_core_radius",
-        required=False,
         type=positive_quantity("m"),
         default=None,
         help=(
@@ -82,7 +76,6 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "reduced_view_cone_radius",
-        required=False,
         type=positive_quantity("deg"),
         default=None,
         help=(

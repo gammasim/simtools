@@ -246,18 +246,25 @@ def zenith_angle(angle):
     try:
         try:
             float_angle = float(angle) * u.deg
-        except ValueError:
+        except TypeError, ValueError:
             float_angle = u.Quantity(angle).to("deg")
     except TypeError as exc:
         logger.error(
             "The zenith angle provided is not a valid numerical or astropy.Quantity value."
         )
         raise exc
-    if float_angle < 0.0 * u.deg or float_angle > 180.0 * u.deg:
+    return _check_angle_interval(float_angle, "zenith", 180)
+
+
+def _check_angle_interval(angle, name, maximum):
+    """Return an angle after checking that it lies in [0, maximum] degrees."""
+    angle_deg = angle.to_value(u.deg)
+    if angle_deg < 0.0 or angle_deg > maximum:
         raise argparse.ArgumentTypeError(
-            f"The provided zenith angle, {angle:.1f}, is outside of the allowed [0, 180] interval"
+            f"The provided {name} angle, {angle_deg:.1f}, is outside of the allowed "
+            f"[0, {maximum}] interval"
         )
-    return float_angle
+    return angle
 
 
 def azimuth_angle(angle):
@@ -280,13 +287,7 @@ def azimuth_angle(angle):
         If angle is outside [0, 360] interval or invalid string.
     """
     try:
-        float_angle = float(angle)
-        if float_angle < 0.0 or float_angle > 360.0:
-            raise argparse.ArgumentTypeError(
-                f"The provided azimuth angle, {angle:.1f}, "
-                "is outside of the allowed [0, 360] interval"
-            )
-        return float_angle * u.deg
+        return _check_angle_interval(float(angle) * u.deg, "azimuth", 360)
     except ValueError:
         logger.debug(
             "The azimuth angle provided is not a valid numeric value. "
@@ -297,7 +298,7 @@ def azimuth_angle(angle):
         raise exc
 
     try:
-        return u.Quantity(angle).to("deg")
+        return _check_angle_interval(u.Quantity(angle).to("deg"), "azimuth", 360)
     except TypeError:
         logger.debug(
             "The azimuth angle provided is not a valid astropy.Quantity. "
@@ -473,6 +474,32 @@ def string_or_dict(value):
         except ValueError, SyntaxError:
             return value
         if isinstance(parsed, dict):
+            return parsed
+    return value
+
+
+def string_or_list(value):
+    """Parse a bracketed list literal, or preserve the original value.
+
+    Parameters
+    ----------
+    value : str or list
+        Command-line value to parse.
+
+    Returns
+    -------
+    list or str
+        Parsed list when ``value`` contains a valid list literal; otherwise the input value.
+    """
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        try:
+            parsed = ast.literal_eval(stripped)
+        except ValueError, SyntaxError:
+            return value
+        if isinstance(parsed, list):
             return parsed
     return value
 

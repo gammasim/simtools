@@ -563,12 +563,8 @@ def _build_production_subdirectories(production_indices, output_dir):
 
 
 def _selected_array_names(args_dict):
-    """Return selected array-layout names from singular or plural argument keys."""
-    return (
-        args_dict.get("array_layout_name")
-        or args_dict.get("array_layout_names")
-        or args_dict.get("array_names")
-    )
+    """Return the selected array-layout names."""
+    return args_dict.get("array_layout_name")
 
 
 def _derive_limits_from_histograms(

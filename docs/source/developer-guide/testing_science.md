@@ -100,15 +100,29 @@ products, and records whether collection is pending or complete in the release s
 while jobs remain pending. `--overwrite` archives a failed, finished production for an explicit
 retry with `--allow_production`.
 
-Telescope-throughput site definitions can list several telescopes in `camera_telescopes`:
+Workflows reference release and site values through placeholders such as
+`__SCIENCE_CANDIDATE_SITE_PATH__`, `__SCIENCE_BASELINE_SITE_PATH__`, `__SCIENCE_REPORT_PATH__`,
+`__SCIENCE_RELEASE_LABEL__`, `__SCIENCE_BASELINE_LABEL__`, and `__SCIENCE_MODEL_VERSION__`.
+Tests whose workflow references a baseline placeholder require a baseline path in the context.
+An application referencing `__SCIENCE_CAMERA_TELESCOPE__` runs once for each telescope listed in
+the site's `camera_telescopes`:
 
 ```yaml
 camera_telescopes: [LSTN-01, LSTN-02]
 ```
 
+`configuration_overrides` in `release.yml` sets application configuration values for all
+applications of one test, for example:
+
+```yaml
+configuration_overrides:
+  compare.trigger_histograms:
+    compare_by: []
+```
+
 Run `telescope_throughput` separately for each release, using that release's science-test directory,
-context, container image, and model source. Each run writes telescope results and manifests under
-its configured release data directory. For example, select a site and run:
+context, container image, and model source. Each run writes one result directory per telescope
+under its configured release data directory. For example, select a site and run:
 
 ```console
 simtools-run-science-tests --release_dir /path/to/release/science_tests \
@@ -122,6 +136,23 @@ results and publishes `report.pdf` and `science-comparison.json` to
 `reports/<site>/compare.telescope_throughput/` in that release directory. Its analysis image must
 contain `simtools-compare-science-results`. Execution logs and effective workflows remain below
 `$SIMTOOLS_SCIENCE_TESTS_ROOT/<release>/work/science-tests/`.
+
+Atmosphere comparisons use `compare.atmospheres`, which runs independently for North and South.
+Each site workflow exports its configured reference and candidate profile and transmission
+parameter versions to separate directories, then compares those ECSV files. These inputs come
+from the release's configured model source; they do not use the software release baseline path.
+The science-test report includes `atmosphere_profiles.pdf`, `atmosphere_transmission.pdf`, and
+`atmosphere_summary.json`. Select parameter versions in each site's `replacements` in
+`science-test-template/sites/`; the release's site files can override them. The atmosphere summary
+acceptance check requires common transmission wavelengths. Review the figures and values for
+scientific suitability; a passing structural check does not set physical difference limits.
+
+For example, run both sites with:
+
+```console
+simtools-run-science-tests --release_dir /path/to/release/science_tests \
+  --test compare.atmospheres --site north --site south
+```
 
 Expected products and acceptance rules are declared in the template. Missing products are
 `incomplete`; numerical acceptance breaches and advisory rules are `warn` and require review.

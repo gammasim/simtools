@@ -402,7 +402,7 @@ def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_p
         EVENT_ID_KEY: 0,
         "output_file": "test_output",
         "save_pngs": False,
-        "dpi": 300,
+        "figure_dpi": 300,
     }
 
     with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
@@ -487,7 +487,7 @@ def test_streamed_plot_saves_png_after_pdf_page(mock_plotter, tmp_test_directory
     output_file = tmp_test_directory / "events.pdf"
     fig, ax = plt.subplots()
     ax.plot([1, 2])
-    args = {"save_pngs": True, "dpi": 150}
+    args = {"save_pngs": True, "figure_dpi": 150}
     with (
         mock.patch.object(mock_plotter, "_generate_single_plot", return_value=fig),
         mock.patch.object(mock_plotter, "_save_plot_as_png") as save_png,

@@ -15,7 +15,7 @@ PARAMETER_NAME = "parameter_name"
 
 def _base_args(tmp_path):
     return {
-        "data_dir": tmp_path,
+        "event_data_directory": tmp_path,
         "figure_file": tmp_path / "bias_curve.png",
         "site": "North",
         "model_version": "7.0.0",

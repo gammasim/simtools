@@ -38,6 +38,7 @@ dependencies = [
   "numpy",
   "packaging",
   "particle",
+  "pillow",
   "pygit2>=1.19",
   "pyproj",
   "python-dotenv",
@@ -77,6 +78,7 @@ optional-dependencies.tests = [
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
 urls.documentation = "https://gammasim.github.io/simtools/"
 urls.repository = "https://github.com/gammasim/simtools"
+scripts.simtools-compare-atmospheres = "simtools.applications.compare_atmospheres:main"
 scripts.simtools-compare-productions = "simtools.applications.compare_productions:main"
 scripts.simtools-compare-science-results = "simtools.applications.compare_science_results:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = """\
@@ -94,6 +96,8 @@ scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_param
 scripts.simtools-derive-pulse-shape-parameters = "simtools.applications.derive_pulse_shape_parameters:main"
 scripts.simtools-derive-telescope-sphere-radius = "simtools.applications.derive_telescope_sphere_radius:main"
 scripts.simtools-derive-trigger-rates = "simtools.applications.derive_trigger_rates:main"
+scripts.simtools-docs-assemble-pages = "simtools.applications.docs_assemble_pages:main"
+scripts.simtools-docs-generate-toctree = "simtools.applications.docs_generate_toctree:main"
 scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
 scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_produce_calibration_reports:main"
 scripts.simtools-docs-produce-model-parameter-reports = """\
@@ -324,7 +328,6 @@ ini_options.pythonpath = [ "tests" ]
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
-  "src/simtools/applications",
 ]
 ini_options.addopts = [
   "-v",
@@ -349,7 +352,7 @@ ini_options.filterwarnings = [
 ]
 
 [tool.coverage]
-run.omit = [ "*__init__*", "src/simtools/_version.py", "src/simtools/applications/**" ]
+run.omit = [ "*__init__*", "src/simtools/_version.py" ]
 run.relative_files = true
 report.exclude_also = [
   'if __name__ == "__main__":',

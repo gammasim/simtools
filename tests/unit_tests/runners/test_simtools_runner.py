@@ -1429,6 +1429,19 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
     assert payload["applications"][0]["configuration"][SIMULATION_MODELS_GIT_REVISION] == "v1.2.3"
 
 
+def test_resolved_workflow_can_be_disabled(tmp_test_directory):
+    output = Path(tmp_test_directory) / "setting-output"
+    simtools_runner._write_resolved_workflow(
+        "config.yml",
+        [{"configuration": {"output_path": output}}],
+        None,
+        None,
+        provenance_path=False,
+    )
+
+    assert not output.exists()
+
+
 def test_resolved_workflow_serializes_path_values(tmp_test_directory):
     output = Path(tmp_test_directory)
     repository = output / "simulation-models.git"
@@ -1477,3 +1490,23 @@ def test_explicit_git_model_source_excludes_inherited_filesystem_source():
     )
 
     assert configuration == {SIMULATION_MODELS_GIT_PATH: "selected-models"}
+
+
+@pytest.mark.parametrize(
+    ("application", "accepted"),
+    [
+        ("simtools-submit-model-parameter-from-external", True),
+        ("simtools-plot-camera", False),
+        ("external-tool", True),
+        ("simtools-not-an-application", True),
+    ],
+)
+def test_ignore_existing_parameter_version_is_passed_only_to_accepting_applications(
+    application, accepted
+):
+    option = simtools_runner._IGNORE_EXISTING_PARAMETER_VERSION
+    configurations = [{"application": application, "configuration": {}}]
+
+    simtools_runner._apply_execution_overrides(configurations, {option: True}, {}, None)
+
+    assert (option in configurations[0]["configuration"]) is accepted

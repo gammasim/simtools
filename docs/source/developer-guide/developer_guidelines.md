@@ -80,8 +80,9 @@ arguments using string names. `ApplicationDefinition` reads command-line options
 files, and environment variables before delegating to the common application startup code.
 
 ```{important}
-Application code is excluded from unit tests.
-Applications should therefore kept to a minimum and consist of simple, high-level logic that coordinates the use of the simtools library.
+Application workflows are covered by integration tests. Application modules are
+included in coverage measurement when unit tests exercise them. Keep applications
+focused on high-level logic that coordinates the simtools library.
 ```
 
 The documentation of application uses the in-line doc string.

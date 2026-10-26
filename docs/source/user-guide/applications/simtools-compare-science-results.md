@@ -6,30 +6,32 @@
    :exclude-members: main
 ```
 
-Compare exported telescope-throughput results without running a calculation. Each input may be a
-manifest, a legacy summary, or a directory containing one manifest per telescope. Use
-`--telescopes` to select telescope names from those directories.
-The JSON report records metric values, units, absolute and relative changes, compatibility
-diagnostics, configured advisory tolerances, plot paths, and the case, simtools version, and
-image identity for each result. A zero baseline has no relative change. Missing provenance or
-incompatible inputs produce an `incomplete` report.
+Compare telescope-throughput results of two releases without running a calculation. Each input
+is a combined summary written by `simtools-validate-telescope-throughput`, the directory
+containing it, or a directory with one such result directory per telescope. Use `--telescopes`
+to restrict the comparison to selected telescopes.
 
-Declare allowed case or input-hash changes with repeated `--compare_by` options. Set relative
-advisory tolerances with repeated `--tolerance METRIC=VALUE` options. When all three wavelength
-tables are available, the report includes shower, muon, and NSB absolute spectra and relative
-candidate-to-baseline changes, using the detected-light columns from each table. When only
-optical throughput is available, the panel is labeled accordingly. It also compares mirror reflectivity and shadowing, camera filter
-and pixel throughput, photodetector quantum efficiency, atmospheric transmission, and total
-telescope efficiency. Component plots show absolute values and relative candidate-to-baseline
-changes. Unequal wavelength grids are diagnosed without resampling. All comparison plots are
-collected into `report.pdf`; the application does not write separate PNG files.
+`science-comparison.json` records, per telescope, the summary metadata of both results and,
+for every summary metric, the values in the baseline unit, the absolute and relative change, and
+whether a configured advisory tolerance (`--tolerance METRIC=VALUE`) is exceeded. A zero
+baseline has no relative change. Differing summary metadata, missing metrics, or tolerances for
+unknown metrics make the comparison `incomplete`; allow metadata keys to differ with repeated
+`--compare_by` options.
+
+`report.pdf` contains, per telescope, the scalar changes, the detected spectra of all channels
+with wavelength tables in both results (for example shower, muon, and NSB), and the optical
+efficiency components of each channel (mirror reflectivity and shadowing, camera filter and pixel
+throughput, quantum efficiency, atmospheric transmission, and total efficiency) as absolute
+values and relative changes. Unequal wavelength grids are diagnosed without resampling. Table
+problems are reported as `table_diagnostics`; with `--require_wavelength_tables` they make the
+comparison `incomplete`.
 
 ```console
 simtools-compare-science-results \
     --baseline_path /data/baseline/telescope_throughput \
     --candidate_path /data/candidate/telescope_throughput \
     --telescopes LSTN-01 LSTN-02 \
-    --compare_by case.model_version \
+    --compare_by model_version \
     --tolerance cam_eff=0.05 \
     --output_path comparison
 ```

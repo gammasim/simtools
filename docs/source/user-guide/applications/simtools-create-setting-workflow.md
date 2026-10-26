@@ -9,6 +9,17 @@
 Prepare a simple model-parameter setting from a value, version, instrument, and scientific
 description. Run from the parameter-setting repository, or select its root with `--output_path`.
 
+For parameters with multiple typed values, pass a bracketed list and include units for unitful
+values. For example:
+
+```console
+simtools-create-setting-workflow \
+  --instrument LSFN-design --parameter flasher_pulse_shape \
+  --value '["Gauss-Exponential", "0.4 ns", "1.59 ns"]' \
+  --parameter_version 1.0.1 \
+  --description "Set pulse shape, width, and decay time"
+```
+
 ```console
 simtools-create-setting-workflow \
   --instrument LSTN-design --parameter min_photons \
@@ -19,14 +30,14 @@ simtools-create-setting-workflow \
 The command creates `input/INSTRUMENT/PARAMETER/ACTIVITY/config.yml` and `input.meta.yml`.
 It generates IDs, timestamps, contact defaults, and an unambiguous site automatically.
 Use `--site` for instruments shared between sites and `--source_url` for a reference.
-The source reference is included in the scientific description and output provenance.
+The source reference is included in the scientific description and output metadata.
 Select a model repository with the usual `--simulation_models_path` or Git-source options.
 
 Without `--run`, only the inputs are prepared. With it, the existing workflow runner writes
 the parameter JSON and metadata under `output/INSTRUMENT/PARAMETER/ACTIVITY/`.
 Identical inputs reuse their workflow; conflicting values, descriptions, contacts, or runtime
-definitions require a new parameter version. Reruns preserve previous outputs and write under
-`output/INSTRUMENT/PARAMETER/ACTIVITY/reruns/EXECUTION_ID/`.
+definitions require a new parameter version. Retrying a prepared workflow uses the same
+activity output directory. No additional execution or provenance directories are created.
 
 An optional `--runtime_environment_file runtime.yml` copies the validated runtime definition into
 the new workflow as `runtime.yml`, without starting a container during preparation. When `--run`
