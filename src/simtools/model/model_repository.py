@@ -13,6 +13,8 @@ Main functionalities are:
 """
 
 import logging
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from packaging.version import Version
@@ -20,6 +22,7 @@ from packaging.version import parse as parse_version
 
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import DEFAULT_SIMULATION_WORKFLOWS
+from simtools.data_model.table_asset import resolve_asset_path
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 
@@ -28,6 +31,7 @@ _INFO_FILE_NAME = "info.yml"
 _MODEL_UPDATE = "model_update"
 _MODEL_VERSION_HISTORY = "model_version_history"
 _PATCH_UPDATE = "patch_update"
+_WORKFLOW_ASSET_TIMEOUT_SECONDS = 30
 
 
 def get_production_directory(simulation_models_path, model_version=None):
@@ -805,16 +809,24 @@ def _download_model_parameter_from_workflow(
     target_file = get_model_parameter_file_path(
         simulation_models_path, target_scope, param, param_data["version"]
     )
-    if target_file.exists():
-        _logger.info(
-            "Model parameter file already exists for requested version: '%s'.", target_file
-        )
-        return
-
     source_file = (
         f"output/{telescope}/{param}/{param_data['activity_id']}/"
         f"{param}/{param}-{param_data['version']}.json"
     )
+    if target_file.exists():
+        _logger.info(
+            "Model parameter file already exists for requested version: '%s'.", target_file
+        )
+        existing_data = ascii_handler.collect_data_from_file(target_file)
+        _copy_model_parameter_asset_from_workflow(
+            existing_data,
+            target_file,
+            source_file,
+            setting_workflows_git_repository,
+            setting_workflows_git_tag,
+        )
+        return
+
     _logger.info(f"Downloading model parameter '{telescope} - {param}' from '{source_file}'.")
 
     downloaded_data = ascii_handler.collect_data_from_git(
@@ -840,6 +852,50 @@ def _download_model_parameter_from_workflow(
         downloaded_data["instrument"] = None
         downloaded_data["site"] = None
     writer.ModelDataWriter.write_model_parameter_json(downloaded_data, target_file)
+    _copy_model_parameter_asset_from_workflow(
+        downloaded_data,
+        target_file,
+        source_file,
+        setting_workflows_git_repository,
+        setting_workflows_git_tag,
+    )
+
+
+def _copy_model_parameter_asset_from_workflow(
+    parameter_data, target_file, source_file, git_repository, git_branch
+):
+    """Copy a file asset referenced by a workflow parameter JSON into the model repository."""
+    if not parameter_data.get("file"):
+        return
+
+    asset_value = parameter_data.get("value")
+    if not isinstance(asset_value, str):
+        raise ValueError(f"File model parameter must reference a relative filename: {asset_value}")
+
+    target_asset = resolve_asset_path(asset_value, target_file)
+    if target_asset.exists():
+        if target_asset.is_file():
+            return
+        raise IsADirectoryError(f"Model parameter asset path is not a file: {target_asset}")
+
+    source_asset = (Path(source_file).parent / asset_value).as_posix()
+    repository_url = str(git_repository).rstrip("/")
+    if "/-/raw" in repository_url:
+        asset_url = f"{repository_url}/{git_branch}/{source_asset}"
+    else:
+        asset_url = f"{repository_url.removesuffix('.git')}/-/raw/{git_branch}/{source_asset}"
+
+    try:
+        with urllib.request.urlopen(asset_url, timeout=_WORKFLOW_ASSET_TIMEOUT_SECONDS) as response:
+            asset_content = response.read()
+    except urllib.error.HTTPError as exc:
+        exc.close()
+        raise FileNotFoundError(
+            f"Failed to download model parameter asset from {asset_url}"
+        ) from exc
+
+    target_asset.parent.mkdir(parents=True, exist_ok=True)
+    target_asset.write_bytes(asset_content)
 
 
 def _create_new_model_parameter_entry(telescope, param, param_data, simulation_models_path):
