@@ -131,12 +131,32 @@ def camera_bunches(photons, *, dual_mirror, emission_altitude_m, camera_rotation
     return bunches
 
 
+def _object_header(
+    object_type, identifier, payload_length, top_level=True, only_subobjects=False, version=0
+):
+    """Encode the header of one EventIO object with a payload of ``payload_length`` bytes."""
+    header = struct.pack(
+        "<IiI",
+        object_type | (version << 20),
+        identifier,
+        payload_length | (only_subobjects << 30),
+    )
+    return (struct.pack("<I", _SYNC) if top_level else b"") + header
+
+
 def _object(object_type, identifier, payload, top_level=True, only_subobjects=False, version=0):
     """Encode one EventIO object."""
-    header = struct.pack(
-        "<IiI", object_type | (version << 20), identifier, len(payload) | (only_subobjects << 30)
+    return (
+        _object_header(
+            object_type,
+            identifier,
+            len(payload),
+            top_level=top_level,
+            only_subobjects=only_subobjects,
+            version=version,
+        )
+        + payload
     )
-    return (struct.pack("<I", _SYNC) if top_level else b"") + header + payload
 
 
 def _count(value):
@@ -235,8 +255,14 @@ def write_photon_bunches(
             output.write(_object(1202, count, _block(b"EVTH", event)))
             output.write(_object(1203, 0, struct.pack("<i3f", 1, 0.0, 0.0, 0.0)))
             photons = struct.pack("<hhfi", 0, 0, float(bunches["photons"].sum()), len(bunches))
-            bunch_object = _object(1205, 0, photons + bunches.tobytes(), top_level=False)
-            output.write(_object(1204, 0, bunch_object, only_subobjects=True))
+            payload_length = len(photons) + bunches.nbytes
+            bunch_header = _object_header(1205, 0, payload_length, top_level=False)
+            output.write(
+                _object_header(1204, 0, len(bunch_header) + payload_length, only_subobjects=True)
+            )
+            output.write(bunch_header)
+            output.write(photons)
+            output.write(memoryview(bunches))
             output.write(_object(1209, count, _block(b"EVTE", {2: count})))
         run_end = struct.pack("<i", 3) + b"RUNE" + struct.pack("<2f", run_number, count)
         output.write(_object(1210, run_number, run_end))

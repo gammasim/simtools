@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+import gzip
+import hashlib
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -12,6 +16,13 @@ from simtools.simtel.photon_bunch_file import (
     camera_bunches,
     write_photon_bunches,
 )
+
+PHOTON_FILE_NAMES = ("photons.iact", "photons.iact.gz")
+PROFILE_ALTITUDE_COLUMN = "altitude"
+PROFILE_DENSITY_COLUMN = "density"
+PROFILE_THICKNESS_COLUMN = "thickness"
+PROFILE_REFRACTIVE_INDEX_COLUMN = "refractive_index"
+ATMOSPHERE_REFRACTIVE_INDEX_KEY = "refractive_index_minus_1"
 
 
 def _bunches(n, offset=0.0):
@@ -26,26 +37,29 @@ def _bunches(n, offset=0.0):
     return bunches
 
 
-@pytest.mark.parametrize("name", ["photons.iact", "photons.iact.gz"])
-def test_write_photon_bunches_reads_back(tmp_test_directory, name):
-    path = tmp_test_directory / name
-    events = [_bunches(3), _bunches(2, offset=10.0)]
-
-    profile = Table(
+@pytest.fixture
+def atmospheric_profile():
+    return Table(
         {
-            "altitude": [0.0, 2.0, 10.0] * u.km,
-            "density": [1.2e-3, 1.0e-3, 4.0e-4] * u.g / u.cm**3,
-            "thickness": [1030.0, 800.0, 270.0] * u.g / u.cm**2,
-            "refractive_index": [2.8e-4, 2.3e-4, 1.0e-4],
+            PROFILE_ALTITUDE_COLUMN: [0.0, 2.0, 10.0] * u.km,
+            PROFILE_DENSITY_COLUMN: [1.2e-3, 1.0e-3, 4.0e-4] * u.g / u.cm**3,
+            PROFILE_THICKNESS_COLUMN: [1030.0, 800.0, 270.0] * u.g / u.cm**2,
+            PROFILE_REFRACTIVE_INDEX_COLUMN: [2.8e-4, 2.3e-4, 1.0e-4],
         }
     )
+
+
+@pytest.mark.parametrize("name", PHOTON_FILE_NAMES)
+def test_write_photon_bunches_reads_back(tmp_test_directory, atmospheric_profile, name):
+    path = tmp_test_directory / name
+    events = [_bunches(3), _bunches(2, offset=10.0)]
 
     count = write_photon_bunches(
         path,
         events,
         observation_level_m=2147.0,
         telescope_radius_m=2.0,
-        atmospheric_profile=profile,
+        atmospheric_profile=atmospheric_profile,
         run_number=7,
     )
 
@@ -84,9 +98,42 @@ def test_write_photon_bunches_reads_back(tmp_test_directory, name):
     assert atmosphere["obslevel"] == pytest.approx(214700.0)
     assert atmosphere["name"] == b"atmospheric_profile"
     assert atmosphere["altitude_km"].tolist() == [0.0, 2.0, 10.0]
-    assert atmosphere["thickness"].tolist() == [1030.0, 800.0, 270.0]
-    assert atmosphere["refractive_index_minus_1"].tolist() == [2.8e-4, 2.3e-4, 1.0e-4]
+    assert atmosphere[PROFILE_THICKNESS_COLUMN].tolist() == [1030.0, 800.0, 270.0]
+    assert atmosphere[ATMOSPHERE_REFRACTIVE_INDEX_KEY].tolist() == [2.8e-4, 2.3e-4, 1.0e-4]
     assert telescopes[0]["r"] == pytest.approx(200.0)
+
+
+# SHA-256 of the file generated from ``_reference_events`` and ``atmospheric_profile`` with
+# ``run_number=7``; compressed files are checked after decompression.
+REFERENCE_SHA256 = "c70b7edc6d86888018ec7734e095a80f2e6cb70939afd02daeedfaa24b5a7314"
+
+
+def _reference_events():
+    rng = np.random.default_rng(20261025)
+    events = []
+    for n in (1000, 0, 257):
+        bunches = np.zeros(n, dtype=BUNCH_DTYPE)
+        for name in ("x", "y", "cx", "cy", "time", "zem", "photons", "wavelength"):
+            bunches[name] = rng.uniform(-50.0, 50.0, n)
+        bunches["photons"] = rng.uniform(0.0, 1.0, n)
+        events.append(bunches)
+    return events
+
+
+@pytest.mark.parametrize("name", PHOTON_FILE_NAMES)
+def test_write_photon_bunches_reference_bytes(tmp_test_directory, atmospheric_profile, name):
+    path = tmp_test_directory / name
+    write_photon_bunches(
+        path,
+        _reference_events(),
+        observation_level_m=2147.0,
+        telescope_radius_m=2.0,
+        atmospheric_profile=atmospheric_profile,
+        run_number=7,
+    )
+    path = Path(path)
+    content = gzip.open(path).read() if name.endswith(".gz") else path.read_bytes()
+    assert hashlib.sha256(content).hexdigest() == REFERENCE_SHA256
 
 
 def _camera_photons():
