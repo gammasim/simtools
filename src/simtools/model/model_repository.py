@@ -25,6 +25,9 @@ from simtools.utils import names, value_conversion
 
 _logger = logging.getLogger(__name__)
 _INFO_FILE_NAME = "info.yml"
+_MODEL_UPDATE = "model_update"
+_MODEL_VERSION_HISTORY = "model_version_history"
+_PATCH_UPDATE = "patch_update"
 
 
 def get_production_directory(simulation_models_path, model_version=None):
@@ -49,7 +52,7 @@ def get_production_directory(simulation_models_path, model_version=None):
 
 
 def initialize_production(
-    simulation_models_path, model_version, base_model_version, update_type="patch_update"
+    simulation_models_path, model_version, base_model_version, update_type=_PATCH_UPDATE
 ):
     """Create an initial production info file based on an existing model version.
 
@@ -73,7 +76,7 @@ def initialize_production(
     ValueError
         If the update type is not supported.
     """
-    if update_type not in {"patch_update", "full_update"}:
+    if update_type not in {_PATCH_UPDATE, "full_update"}:
         raise ValueError(f"Unsupported production update type: {update_type}")
 
     target_directory = get_production_directory(simulation_models_path, model_version)
@@ -91,10 +94,16 @@ def initialize_production(
             f"exist: {source_info}"
         )
 
+    history = [base_model_version]
+    if update_type == _PATCH_UPDATE:
+        base_info = ascii_handler.collect_data_from_file(source_info)
+        if base_info.get(_MODEL_UPDATE) == _PATCH_UPDATE:
+            history.extend(base_info.get(_MODEL_VERSION_HISTORY, []))
+
     info = {
         "model_version": model_version,
-        "model_update": update_type,
-        "model_version_history": [base_model_version],
+        _MODEL_UPDATE: update_type,
+        _MODEL_VERSION_HISTORY: history,
         "model_status": "development",
         "description": f"Initial configuration based on production model {base_model_version}",
         "changes": {},
@@ -268,7 +277,7 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
         If None, the value from ``info.yml`` is used, with ``"main"`` as fallback.
     """
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
-    update_type = modification_dict.get("model_update", "full_update")
+    update_type = modification_dict.get(_MODEL_UPDATE, "full_update")
     if setting_workflows_git_tag is None:
         setting_workflows_git_tag = modification_dict.get("setting_workflows_git_tag", "main")
     setting_workflows_git_repository = modification_dict.get(
@@ -458,7 +467,7 @@ def _get_changes_to_production(
     dict, str
         Changes dictionary and base model version.
     """
-    model_version_history = modification_dict.get("model_version_history", [])
+    model_version_history = modification_dict.get(_MODEL_VERSION_HISTORY, [])
 
     try:
         # oldest version is the base version
@@ -468,7 +477,7 @@ def _get_changes_to_production(
         return {}, modification_dict.get("model_version")
 
     changes = modification_dict.get("changes", {})
-    if update_type == "patch_update":
+    if update_type == _PATCH_UPDATE:
         return changes, base_model_version
 
     for version_mod in reversed(model_version_history):
@@ -478,7 +487,7 @@ def _get_changes_to_production(
         )
         changes = _update_two_levels_in_changes_dict(_version_changes, changes)
         # stop iterative loop after reaching first full version of production tables
-        if _changes_dict.get("model_update", "full_update") == "full_update":
+        if _changes_dict.get(_MODEL_UPDATE, "full_update") == "full_update":
             break
 
     return changes, base_model_version

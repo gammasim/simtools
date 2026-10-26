@@ -17,6 +17,9 @@ INITIALIZATION_TARGET_VERSION = "7.0.1"
 INFO_FILE_NAME = "info.yml"
 PATCH_UPDATE = "patch_update"
 FULL_UPDATE = "full_update"
+MODEL_UPDATE = "model_update"
+MODEL_VERSION_HISTORY = "model_version_history"
+UPDATE_TYPE = "update_type"
 
 
 def test_verify_simulation_model_production_tables_success(tmp_test_directory):
@@ -41,7 +44,7 @@ def test_verify_simulation_model_production_tables_success(tmp_test_directory):
         mock_verify.assert_called_once()
 
 
-@pytest.mark.parametrize("update_type", [PATCH_UPDATE, FULL_UPDATE])
+@pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
 def test_initialize_production_writes_info_for_existing_base(tmp_test_directory, update_type):
     root = Path(tmp_test_directory)
     base_info = (
@@ -59,14 +62,41 @@ def test_initialize_production_writes_info_for_existing_base(tmp_test_directory,
     )
     assert ascii_handler.collect_data_from_file(target_info) == {
         "model_version": INITIALIZATION_TARGET_VERSION,
-        "model_update": update_type,
-        "model_version_history": [INITIALIZATION_BASE_VERSION],
+        MODEL_UPDATE: update_type,
+        MODEL_VERSION_HISTORY: [INITIALIZATION_BASE_VERSION],
         "model_status": "development",
         "description": (
             f"Initial configuration based on production model {INITIALIZATION_BASE_VERSION}"
         ),
         "changes": {},
     }
+
+
+@pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
+@pytest.mark.parametrize("base_update_type", [PATCH_UPDATE, FULL_UPDATE])
+def test_initialize_production_preserves_required_history(
+    tmp_test_directory, update_type, base_update_type
+):
+    root = Path(tmp_test_directory)
+    base_version = "7.0.2"
+    target_version = "7.0.3"
+    ancestors = [INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION]
+    base_directory = model_repository.get_production_directory(root, base_version)
+    base_directory.mkdir(parents=True)
+    ascii_handler.write_data_to_file(
+        {MODEL_UPDATE: base_update_type, MODEL_VERSION_HISTORY: ancestors},
+        base_directory / INFO_FILE_NAME,
+    )
+
+    model_repository.initialize_production(root, target_version, base_version, update_type)
+
+    target_info = ascii_handler.collect_data_from_file(
+        model_repository.get_production_directory(root, target_version) / INFO_FILE_NAME
+    )
+    expected_history = [base_version]
+    if update_type == PATCH_UPDATE and base_update_type == PATCH_UPDATE:
+        expected_history.extend(ancestors)
+    assert target_info[MODEL_VERSION_HISTORY] == expected_history
 
 
 def test_initialize_production_rejects_existing_target(tmp_test_directory):
@@ -579,7 +609,7 @@ def test_generate_new_production_empty_version_history(
 ):
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
-        "model_version_history": [],
+        MODEL_VERSION_HISTORY: [],
         "setting_workflows_git_tag": "v0.3.0",
         "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
@@ -619,7 +649,7 @@ def test_generate_new_production_separates_recursive_table_changes_from_paramete
     }
     mock_collect_data.return_value = {
         "model_version": "7.0.0",
-        "model_version_history": ["6.3.0"],
+        MODEL_VERSION_HISTORY: ["6.3.0"],
         "changes": direct_changes,
     }
     mock_get_changes_to_production.return_value = recursive_changes, "6.0.0"
@@ -646,7 +676,7 @@ def test_generate_new_production_setting_workflows_git_tag_override(
 ):
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
-        "model_version_history": [],
+        MODEL_VERSION_HISTORY: [],
         "setting_workflows_git_tag": "from-info-file",
         "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
@@ -1101,7 +1131,7 @@ def test_normalize_units_for_comparison(unit, expected):
 def test_get_changes_to_production_path_update(tmp_test_directory):
     modifications_data = {
         "model_version": "6.5.0",
-        "model_version_history": ["6.0.0"],
+        MODEL_VERSION_HISTORY: ["6.0.0"],
         "changes": {
             "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62}},
             "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31}},
@@ -1162,8 +1192,8 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 7.0.0 (full_update with history pointing to 6.0.2)
     modification_dict_7_0_0 = {
         "model_version": "7.0.0",
-        "model_update": "full_update",
-        "model_version_history": ["6.0.2"],
+        MODEL_UPDATE: "full_update",
+        MODEL_VERSION_HISTORY: ["6.0.2"],
         "changes": {
             "LSTN-design": {
                 "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
@@ -1180,8 +1210,8 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 6.0.2 (patch_update with history [6.0.1, 6.0.0])
     info_6_0_2 = {
         "model_version": "6.0.2",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.1", "6.0.0"],
+        MODEL_UPDATE: "patch_update",
+        MODEL_VERSION_HISTORY: ["6.0.1", "6.0.0"],
         "changes": {
             "LSTN-design": {"photons_per_run": {"deprecated": True}},
             "MSTx-FlashCam": {
@@ -1196,16 +1226,16 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 6.0.1 (patch_update with history [6.0.0])
     info_6_0_1 = {
         "model_version": "6.0.1",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.0"],
+        MODEL_UPDATE: "patch_update",
+        MODEL_VERSION_HISTORY: ["6.0.0"],
         "changes": {"LSTN-design": {"some_parameter": {"version": "1.0.0", "value": 100}}},
     }
 
     # Mock data for version 6.0.0 (base version with no history, marked as full_update)
     info_6_0_0 = {
         "model_version": "6.0.0",
-        "model_update": "full_update",  # This triggers the break statement
-        "model_version_history": [],
+        MODEL_UPDATE: "full_update",  # This triggers the break statement
+        MODEL_VERSION_HISTORY: [],
         "changes": {},
     }
 
