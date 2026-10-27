@@ -1,6 +1,6 @@
 # Telescope ray tracing with obdeect
 
-[obdeect](https://github.com/GernotMaier/obdeect) is an optical ray tracer for
+[obdeect](https://github.com/gammasim/obdeect) is an optical ray tracer for
 imaging atmospheric Cherenkov telescopes. It is an optional backend for the
 ray-tracing applications of simtools (PSF, effective mirror area, effective
 focal length, incident angles) and for the calibration light of flashers and
