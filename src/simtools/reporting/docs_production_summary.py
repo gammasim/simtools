@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from packaging.version import Version
+
 from simtools.io import ascii_handler
 from simtools.model_repository import files
 
@@ -19,7 +21,7 @@ def collect_production_descriptions(data_path=None, model_reader=None):
     Returns
     -------
     list[tuple]
-        List with ``(model_version, description)`` pairs sorted by version string.
+        List with ``(model_version, description)`` pairs from the model source.
     """
     if model_reader is not None:
         return model_reader.get_production_descriptions()
@@ -49,18 +51,29 @@ def write_production_summary_markdown(data_path=None, output_file=None, model_re
     if output_file is None:
         raise ValueError("An output file is required.")
 
+    descriptions = sorted(
+        collect_production_descriptions(data_path=data_path, model_reader=model_reader),
+        key=lambda item: Version(item[0]),
+        reverse=True,
+    )
     lines = [
-        "# Descriptions of productions",
+        "<!-- simtools: keep-index -->",
+        "# Productions",
         "",
-        "| Production Model Version | Short Description                     |",
-        "|---------------------------|---------------------------------------|",
+        "Production versions define sets of model parameters used in simulations.",
+        "Select a version to browse its array and simulation reports.",
+        "",
+        "| Production version | Description |",
+        "| --- | --- |",
     ]
 
-    for model_version, description in collect_production_descriptions(
-        data_path=data_path, model_reader=model_reader
-    ):
+    for model_version, description in descriptions:
         escaped_description = description.replace("|", "\\|")
-        lines.append(f"| {model_version} | {escaped_description} |")
+        lines.append(f"| [{model_version}]({model_version}/index.md) | {escaped_description} |")
+
+    lines.extend(["", "```{toctree}", ":hidden:", ":maxdepth: 1", ""])
+    lines.extend(f"{model_version}/index" for model_version, _ in descriptions)
+    lines.extend(["```", ""])
 
     output_file = Path(output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
