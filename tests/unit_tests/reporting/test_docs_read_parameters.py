@@ -5,7 +5,13 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
+from simtools.reporting import docs_read_parameters
 from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
+from simtools.reporting.model_figures import (
+    _write_flasher_pulse_shape_plots,
+    _write_telescope_structure_figure,
+)
+from simtools.simtel import simtel_file_writer
 from simtools.utils import names
 
 # Test constants
@@ -66,6 +72,7 @@ def test_produce_array_element_report(telescope_model_lst, tmp_test_directory):
             },
         ),
         patch.object(rp2.model_source, "export_model_files"),
+        patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure"),
         patch(
             "simtools.reporting.docs_read_parameters.TelescopeModel",
             return_value=DummyTelescope(
@@ -103,6 +110,13 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
         "get_model_parameters_for_all_model_versions",
         return_value=mock_data,
     )
+    mocker.patch.object(
+        read_parameters.model_source,
+        "get_model_parameters",
+        return_value=mock_data["6.0.2"],
+    )
+    mocker.patch.object(read_parameters.model_source, "export_model_files")
+    mocker.patch.object(read_parameters, "_generate_plots", return_value=[])
 
     read_parameters.produce_model_parameter_reports()
 
@@ -316,7 +330,10 @@ def test__generate_plots(
         )
         return
 
-    with patch.object(read_parameters, patched_method, return_value=return_value) as mock_plot:
+    patch_target = (
+        read_parameters if patched_method == "_plot_parameter_tables" else docs_read_parameters
+    )
+    with patch.object(patch_target, patched_method, return_value=return_value) as mock_plot:
         assert (
             read_parameters._generate_plots(
                 parameter, parameter_version, input_file, tmp_test_directory
@@ -324,10 +341,30 @@ def test__generate_plots(
             == return_value
         )
         if patched_method == "_plot_parameter_tables":
-            mock_plot.assert_called_once_with(parameter, parameter_version, tmp_test_directory)
-        else:
             mock_plot.assert_called_once_with(
-                parameter, parameter_version, input_file, tmp_test_directory
+                parameter, parameter_version, tmp_test_directory, model_version=None
+            )
+        elif patched_method == "_plot_camera_config":
+            mock_plot.assert_called_once_with(
+                parameter,
+                parameter_version,
+                input_file,
+                tmp_test_directory,
+                "LSTN-design",
+                "North",
+                "6.0.0",
+                read_parameters.model_reader,
+            )
+        elif patched_method == "_plot_mirror_config":
+            mock_plot.assert_called_once_with(
+                parameter,
+                parameter_version,
+                input_file,
+                tmp_test_directory,
+                "LSTN-design",
+                "North",
+                "6.0.0",
+                read_parameters.model_reader,
             )
 
 
@@ -346,27 +383,81 @@ def test__plot_parameter_tables(tmp_test_directory, mocker):
     }
     mock_files = [Path("pm_photoelectron_spectrum_1.0.0_North_LSTN-design.png")]
     mocker.patch.object(
-        plot_tables, "generate_plot_configurations", return_value=([mock_config], mock_files)
+        plot_tables, "_generate_plot_configurations", return_value=([mock_config], mock_files)
     )
 
     # Mock plot_tables.plot to avoid actual plotting
-    mocker.patch.object(plot_tables, "plot")
+    mocker.patch.object(plot_tables, "read_table_data", return_value={"test_table": []})
+    mocker.patch.object(plot_tables, "_get_figure_cache_key", return_value="cached-key")
+    mock_render = mocker.patch.object(plot_tables, "_plot_data")
 
     result = read_parameters._plot_parameter_tables(
         "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory)
     )
-    assert result == ["pm_photoelectron_spectrum_1.0.0_North_LSTN-design"]
+    assert result == ["pm_photoelectron_spectrum_1-0-0_North_LSTN-design_cached-key"]
+    mock_render.assert_called_once()
 
     args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
 
     # Mock to return None (empty)
-    mocker.patch.object(plot_tables, "generate_plot_configurations", return_value=None)
+    mocker.patch.object(plot_tables, "_generate_plot_configurations", return_value=None)
 
     result = read_parameters._plot_parameter_tables(
         "camera_pixel_layout", "1.0.0", Path(tmp_test_directory)
     )
     assert result == []
+
+
+def test__plot_parameter_tables_reuses_only_identical_rendered_inputs(tmp_path, mocker):
+    from pathlib import Path
+
+    from simtools.visualization import plot_tables
+
+    read_parameters = ReadParameters(
+        args={"telescope": "LSTN-design", "site": "North", "model_version": "8.0.0"},
+        output_path=tmp_path,
+    )
+    mocker.patch.object(read_parameters, "_get_telescope_identifier", return_value="LSTN-design")
+    image_base = Path("mirror_reflectivity_1.0.0_North_LSTN-design.pdf")
+    configs = [
+        {"tables": [{"model_version": version, "parameter": "mirror_reflectivity"}]}
+        for version in ("7.0.0", "8.0.0", "8.0.0")
+    ]
+    mocker.patch.object(
+        plot_tables,
+        "_generate_plot_configurations",
+        side_effect=[([config], [image_base]) for config in configs],
+    )
+    mocker.patch.object(
+        plot_tables,
+        "read_table_data",
+        side_effect=[
+            {"Mirror": [(300.0, 0.91)]},
+            {"Mirror": [(300.0, 0.91)]},
+            {"Mirror": [(300.0, 0.89)]},
+        ],
+    )
+
+    def save_figure(_data, _config, output_file):
+        Path(output_file).with_suffix(".png").touch()
+
+    render = mocker.patch.object(plot_tables, "_plot_data", side_effect=save_figure)
+    first = read_parameters._plot_parameter_tables(
+        "mirror_reflectivity", "1.0.0", tmp_path, model_version="7.0.0"
+    )
+    second = read_parameters._plot_parameter_tables(
+        "mirror_reflectivity", "1.0.0", tmp_path, model_version="8.0.0"
+    )
+    third = read_parameters._plot_parameter_tables(
+        "mirror_reflectivity", "1.0.0", tmp_path, model_version="8.0.0"
+    )
+
+    assert first == second
+    assert third != second
+    assert (tmp_path / f"{first[0]}.png").is_file()
+    assert (tmp_path / f"{third[0]}.png").is_file()
+    assert render.call_count == 2
 
 
 def test__format_parameter_value(tmp_path):
@@ -770,7 +861,7 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test
         }
     )
     generate_plot_configurations = mocker.patch(
-        "simtools.reporting.docs_read_parameters.plot_tables.generate_plot_configurations",
+        "simtools.reporting.docs_read_parameters.plot_tables._generate_plot_configurations",
         return_value=None,
     )
 
@@ -1123,7 +1214,9 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
         }
     )
     monkeypatch.setattr(
-        ReadParameters, "_convert_to_md", lambda self, p, pv, f: "_data_files/myfile.md"
+        ReadParameters,
+        "_convert_to_md",
+        lambda self, p, pv, f, **_kwargs: "_data_files/myfile.md",
     )
     monkeypatch.setattr(names, "model_parameters", lambda *a, **k: {"file_param": {}})
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
@@ -1133,43 +1226,41 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
     assert data[0][3] == "[myfile.dat](_data_files/myfile.md)"
 
 
-@pytest.mark.parametrize(
-    ("parameter_version", "preexisting_plot"),
-    [(None, False), ("1.0.0", False), ("1.0.0", True)],
-)
-def test__plot_camera_components(tmp_test_directory, mocker, parameter_version, preexisting_plot):
+def test__plot_camera_components_reuses_resolved_camera_data(tmp_test_directory, mocker):
     read_parameters = ReadParameters(
         args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
         output_path=tmp_test_directory,
     )
     input_file = Path(tmp_test_directory / "camera_pixel_layout.ecsv")
     input_file.touch()
-    plot_name = input_file.stem.replace(".", "-")
-    plot_path = Path(tmp_test_directory / f"{plot_name}.png")
-    if preexisting_plot:
-        plot_path.touch()
-
-    mock_plot = mocker.patch("simtools.visualization.plot_pixels.plot")
-    result = read_parameters._plot_camera_config(
-        "camera_pixel_layout", parameter_version, input_file, tmp_test_directory
+    mocker.patch.object(read_parameters.model_reader, "get_model_parameters", return_value={})
+    mocker.patch.object(
+        read_parameters.model_reader,
+        "get_model_parameter",
+        return_value={"camera_pixel_layout": {"value": "pixels"}},
+    )
+    mocker.patch(
+        "simtools.reporting.model_figures._resolve_camera_components",
+        return_value={"pixels": [(1.0, 2.0)]},
     )
 
-    assert result == ([] if parameter_version is None else [plot_name])
-    if parameter_version is None or preexisting_plot:
-        mock_plot.assert_not_called()
-    else:
-        mock_plot.assert_called_once_with(
-            config={
-                "file_name": input_file.name,
-                "telescope": "LSTN-01",
-                "parameter_version": "1.0.0",
-                "site": "North",
-                "model_version": "6.0.0",
-                "parameter": "camera_pixel_layout",
-            },
-            output_file=plot_path.with_suffix(""),
-            model_reader=read_parameters.model_reader,
-        )
+    def save_image(_config=None, output_file=None, **_kwargs):
+        output_path = Path(output_file).with_suffix(".png")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.touch()
+
+    mock_plot = mocker.patch("simtools.reporting.model_figures.plot_pixels.plot")
+    mock_plot.side_effect = save_image
+    first = read_parameters._generate_plots(
+        "camera_pixel_layout", "1.0.0", input_file, tmp_test_directory, model_version="1.0.0"
+    )
+    second = read_parameters._generate_plots(
+        "camera_pixel_layout", "1.0.0", input_file, tmp_test_directory, model_version="7.0.0"
+    )
+
+    assert first == second
+    assert first[0].startswith("camera_pixel_layout_LSTN-01_")
+    mock_plot.assert_called_once()
 
 
 def test_is_markdown_link():
@@ -1185,16 +1276,11 @@ def test_is_markdown_link():
     assert read_parameters.is_markdown_link("") is False
 
 
-@pytest.mark.parametrize(
-    ("parameter", "latest_value", "expected_plot_text"),
-    [
-        ("param_x", None, "![Parameter plot.]"),
-    ],
-)
-def test_write_file_flag_section(parameter, latest_value, expected_plot_text, tmp_path):
+def test_write_file_flag_section_without_generated_plot(tmp_test_directory):
+    parameter = "param_x"
     rp = ReadParameters(
         args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
-        output_path=tmp_path,
+        output_path=tmp_test_directory,
     )
     rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
 
@@ -1204,21 +1290,153 @@ def test_write_file_flag_section(parameter, latest_value, expected_plot_text, tm
                 "parameter_version": "1.0.0",
                 "model_version": "6.0.0",
                 "file_flag": True,
-                **({} if parameter == "param_x" else {"value": latest_value}),
             }
         ]
     }
 
     buf = StringIO()
-    with patch("simtools.io.io_handler.IOHandler.get_output_directory", return_value=tmp_path):
-        rp._write_file_flag_section(buf, parameter, comparison_data)
+    with patch.object(rp.model_reader, "get_model_parameters", return_value={}):
+        with patch(
+            "simtools.io.io_handler.IOHandler.get_output_directory", return_value=tmp_test_directory
+        ):
+            rp._write_file_flag_section(buf, parameter, comparison_data, "telescopes")
     content = buf.getvalue()
 
-    assert "The latest parameter version is plotted below." in content
-    if expected_plot_text is None:
-        assert "![Camera configuration plot.]" not in content
-    else:
-        assert expected_plot_text in content
+    assert content == ""
+
+
+def test_write_file_flag_section_lists_generated_plots_for_matching_version(
+    tmp_test_directory,
+):
+    image_dir = Path(tmp_test_directory)
+    (image_dir / "param_x_1.0.0_North_LSTN-01_a.png").touch()
+    (image_dir / "param_x_1.0.0_North_LSTN-01_b.png").touch()
+    (image_dir / "param_x_2.0.0_North_LSTN-01.png").touch()
+    rp = ReadParameters(
+        args={"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"},
+        output_path=tmp_test_directory,
+    )
+    rp._get_telescope_identifier = lambda mv=None: "LSTN-01"
+    comparison_data = {
+        "param_x": [
+            {
+                "parameter_version": "1.0.0",
+                "model_version": "6.0.0",
+                "file_flag": True,
+            },
+            {
+                "parameter_version": "2.0.0",
+                "model_version": "5.0.0",
+                "file_flag": True,
+            },
+        ]
+    }
+
+    buf = StringIO()
+    with (
+        patch.object(
+            rp.model_reader,
+            "get_model_parameters",
+            return_value={
+                "param_x": {
+                    "parameter_version": "2.0.0",
+                    "value": "data.ecsv",
+                    "file": True,
+                    "instrument": "LSTN-01",
+                }
+            },
+        ) as get_params,
+        patch.object(rp.model_reader, "export_model_files"),
+        patch.object(
+            rp,
+            "_generate_plots",
+            return_value=[
+                "param_x_2.0.0_North_LSTN-01_a",
+                "param_x_2.0.0_North_LSTN-01_b",
+            ],
+        ) as generate_plots,
+        patch("simtools.io.io_handler.IOHandler.get_output_directory", return_value=image_dir),
+    ):
+        get_params.return_value["param_x"]["parameter_version"] = "2.0.0"
+        (image_dir / "param_x_2.0.0_North_LSTN-01_a.png").touch()
+        (image_dir / "param_x_2.0.0_North_LSTN-01_b.png").touch()
+        rp._write_file_flag_section(buf, "param_x", comparison_data, "telescopes")
+
+    content = buf.getvalue()
+    get_params.assert_called_once_with(
+        site="North",
+        array_element_name="LSTN-01",
+        collection="telescopes",
+        model_version="5.0.0",
+    )
+    assert "param_x_2.0.0_North_LSTN-01_a.png" in content
+    assert "param_x_1.0.0_North_LSTN-01_a.png" not in content
+    assert generate_plots.call_args.args[2] == (
+        Path(tmp_test_directory) / "model" / "data-LSTN-01.ecsv"
+    )
+
+
+def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory):
+    rp = ReadParameters(
+        args={"telescope": "MSFx-NectarCam", "site": "North", "model_version": "8.0.0"},
+        output_path=tmp_test_directory,
+    )
+    selected_parameters = {
+        "flasher_pulse_shape": {
+            "parameter_version": "1.0.0",
+            "value": ["Gauss-Exponential", 1.2879, 2.0961],
+        }
+    }
+    telescope_parameters = {
+        "calibration_devices": {"value": {"flat_fielding": "MSFx-NectarCam"}},
+        "fadc_sum_bins": {"value": 10},
+    }
+    comparison_items = [{"parameter_version": "1.0.0", "model_version": "8.0.0"}]
+    buf = StringIO()
+
+    with (
+        patch.object(
+            rp.model_reader,
+            "get_model_parameters",
+            side_effect=lambda **kwargs: (
+                selected_parameters
+                if kwargs["array_element_name"] == "MSFx-NectarCam"
+                else telescope_parameters
+            ),
+        ),
+        patch.object(
+            rp.model_reader,
+            "get_array_elements",
+            return_value=["MSTx-NectarCam"],
+        ),
+        patch(
+            "simtools.io.io_handler.IOHandler.get_output_directory",
+            return_value=tmp_test_directory,
+        ),
+        patch(
+            "simtools.reporting.model_figures.simtel_file_writer"
+            ".write_light_pulse_table_gauss_exp_conv",
+            wraps=simtel_file_writer.write_light_pulse_table_gauss_exp_conv,
+        ) as write_table,
+    ):
+        _write_flasher_pulse_shape_plots(
+            buf,
+            comparison_items,
+            "calibration_devices",
+            rp.model_reader,
+            "North",
+            "MSFx-NectarCam",
+        )
+
+    write_table.assert_called_once_with(
+        file_path=write_table.call_args.kwargs["file_path"],
+        width_ns=1.2879,
+        exp_decay_ns=2.0961,
+        fadc_sum_bins=10,
+        time_margin_ns=5.0,
+    )
+    assert "current sim_telarray configuration generator" in buf.getvalue()
+    assert list(Path(tmp_test_directory).glob("flasher_pulse_shape_*.png"))
 
 
 @pytest.mark.parametrize(
@@ -1446,6 +1664,7 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(tmp_path
         ),
     )
     write_dict_table = mocker.patch.object(rp, "_write_dict_table")
+    mocker.patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure")
 
     rp.produce_array_element_report()
 
@@ -1476,6 +1695,7 @@ def test_produce_array_element_report_design_model_lists_all_parameters(tmp_path
         ),
     )
     write_dict_table = mocker.patch.object(rp, "_write_dict_table")
+    mocker.patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure")
 
     rp.produce_array_element_report()
 
@@ -1483,6 +1703,68 @@ def test_produce_array_element_report_design_model_lists_all_parameters(tmp_path
     assert "inherited from the design model" not in content
     assert "| param" in content
     assert write_dict_table.call_count == 1
+
+
+def test_write_telescope_structure_figure_generates_and_links_image(tmp_test_directory, mocker):
+    from simtools.visualization.plot_telescope_structure import TelescopeGeometry
+
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
+        output_path=tmp_test_directory,
+    )
+    telescope_model = Mock()
+    telescope_model.name = "LSTN-design"
+    telescope_model.model_version = "6.0.0"
+    image_dir = Path(tmp_test_directory) / "_images"
+    mocker.patch("simtools.io.io_handler.IOHandler.get_output_directory", return_value=image_dir)
+    mocker.patch(
+        "simtools.reporting.model_figures.plot_telescope_structure.telescope_geometry",
+        return_value=TelescopeGeometry(name="LSTN-design"),
+    )
+
+    def save_image(_geometry, output_file):
+        output_path = Path(output_file).with_suffix(".png")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.touch()
+
+    render = mocker.patch(
+        "simtools.reporting.model_figures.plot_telescope_structure.plot_telescope_structure",
+        side_effect=save_image,
+    )
+    buf = StringIO()
+
+    _write_telescope_structure_figure(buf, telescope_model, rp._logger)
+    telescope_model.model_version = "7.0.0"
+    second_buf = StringIO()
+    _write_telescope_structure_figure(second_buf, telescope_model, rp._logger)
+
+    render.assert_called_once()
+    assert "telescope_structure_LSTN-design_" in buf.getvalue()
+    assert buf.getvalue() == second_buf.getvalue()
+
+
+def test_write_telescope_structure_figure_reports_missing_inputs(tmp_test_directory, mocker):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
+        output_path=tmp_test_directory,
+    )
+    telescope_model = Mock()
+    telescope_model.name = "LSTN-design"
+    telescope_model.model_version = "6.0.0"
+    mocker.patch(
+        "simtools.io.io_handler.IOHandler.get_output_directory",
+        return_value=Path(tmp_test_directory) / "_images",
+    )
+    mocker.patch(
+        "simtools.reporting.model_figures.plot_telescope_structure.telescope_geometry",
+        side_effect=FileNotFoundError("mirror input missing"),
+    )
+    buf = StringIO()
+
+    _write_telescope_structure_figure(buf, telescope_model, rp._logger)
+
+    assert "Telescope structure plot unavailable" in buf.getvalue()
+    assert "mirror input missing" in buf.getvalue()
 
 
 def test_select_specific_parameters():
@@ -1753,29 +2035,30 @@ def test__plot_mirror_config(tmp_test_directory, mocker, parameter_version, pree
     )
     input_file = Path(tmp_test_directory / "mirror_config.dat")
     input_file.write_text("dummy mirror content")
-    plot_name = input_file.stem.replace(".", "-")
-    plot_path = Path(tmp_test_directory / f"{plot_name}.png")
-    if preexisting_plot:
-        plot_path.touch()
-
-    mock_plot = mocker.patch("simtools.visualization.plot_mirrors.plot")
-    result = read_parameters._plot_mirror_config(
+    mock_plot = mocker.patch("simtools.reporting.model_figures.plot_mirrors.plot")
+    result = read_parameters._generate_plots(
         "mirror_list", parameter_version, input_file, tmp_test_directory
     )
 
-    assert result == ([] if parameter_version is None else [plot_name])
-    if parameter_version is None or preexisting_plot:
+    assert result == [] if parameter_version is None else len(result) == 1
+    if result:
+        assert result[0].startswith("mirror_list_LSTN-01_")
+    if parameter_version is None:
         mock_plot.assert_not_called()
     else:
-        mock_plot.assert_called_once_with(
-            config={
-                "parameter": "mirror_list",
-                "telescope": "LSTN-01",
-                "parameter_version": "1.0.0",
-                "site": "North",
-                "model_version": "6.0.0",
-            },
-            output_file=Path(f"{tmp_test_directory}/{plot_name}"),
-            model_reader=read_parameters.model_reader,
-            data_file_path=input_file,
-        )
+        if preexisting_plot:
+            # The content-addressed output path is determined by the figure inputs.
+            mock_plot.assert_called_once()
+        else:
+            mock_plot.assert_called_once_with(
+                config={
+                    "parameter": "mirror_list",
+                    "telescope": "LSTN-01",
+                    "parameter_version": "1.0.0",
+                    "site": "North",
+                    "model_version": "6.0.0",
+                },
+                output_file=Path(tmp_test_directory / result[0]),
+                model_reader=read_parameters.model_reader,
+                data_file_path=input_file,
+            )
