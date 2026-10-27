@@ -57,6 +57,7 @@ finite choices declared by argparse.
 :glob: true
 :maxdepth: 1
 
+simtools-analyze-flasher-response <applications/simtools-analyze-flasher-response>
 simtools-compare-atmospheres <applications/simtools-compare-atmospheres>
 simtools-compare-productions <applications/simtools-compare-productions>
 simtools-compare-science-results <applications/simtools-compare-science-results>
@@ -120,6 +121,7 @@ simtools-submit-model-parameter-from-external <applications/simtools-submit-mode
 simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
+simtools-validate-pulse-response <applications/simtools-validate-pulse-response>
 simtools-validate-telescope-throughput <applications/simtools-validate-telescope-throughput>
 simtools-validate-repository-consistency <applications/simtools-validate-repository-consistency>
 simtools-write-production-metadata <applications/simtools-write-production-metadata>

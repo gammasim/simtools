@@ -1,0 +1,93 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  docs: &scan_docs
+    title: LST direct_injection saturation scan
+    summary: Simulate four illumination levels and analyze both raw gain channels.
+  configuration: &scan
+    run_mode: direct_injection
+    light_source_type: flat_fielding
+    telescopes:
+    - LSTN-01
+    model_version: 8.0.0
+    site: North
+    run_number: 100
+    number_of_events: 2
+    flasher_photons:
+    - 100
+    - 500
+    - 3000
+    - 10000
+    label: saturation
+    output_path: __OUTPUT__/simulation
+    sim_telarray_seed:
+    - 101
+    - 102
+    overwrite_model_parameters: '{"LSTN-01": {"fadc_bins": 120, "fadc_sum_bins": 100}}'
+  test_name: validate_saturation_direct_injection_lst
+- application: simtools-analyze-flasher-response
+  configuration: &analysis
+    simtel_files:
+    - __OUTPUT__/simulation/sim_telarray/run000100/direct_injection_run000100_za20deg_azm000deg_North_8.0.0_saturation.simtel.zst
+    - __OUTPUT__/simulation/sim_telarray/run000101/direct_injection_run000101_za20deg_azm000deg_North_8.0.0_saturation.simtel.zst
+    - __OUTPUT__/simulation/sim_telarray/run000102/direct_injection_run000102_za20deg_azm000deg_North_8.0.0_saturation.simtel.zst
+    - __OUTPUT__/simulation/sim_telarray/run000103/direct_injection_run000103_za20deg_azm000deg_North_8.0.0_saturation.simtel.zst
+    illumination:
+    - 100
+    - 500
+    - 3000
+    - 10000
+    events_per_level:
+    - 2
+    telescope: LSTN-01
+    pixels:
+    - 0
+    output_path: __OUTPUT__
+  test_name: analyze_response
+  integration_tests: &response_checks
+  - test_outputs:
+    - path_descriptor: output_path
+      file: flasher_response.ecsv
+      validations:
+      - type: table
+        minimum_rows: 8
+        columns:
+          gain:
+            allowed_values:
+            - HG
+            - LG
+          peak_adc:
+            range:
+              minimum: 0
+          width_ns:
+            range:
+              minimum: 0
+    - path_descriptor: output_path
+      file: flasher_response.pdf
+    - path_descriptor: output_path
+      file: flasher_response_summary.ecsv
+      validations:
+      - type: table
+        minimum_rows: 8
+- application: simtools-simulate-flasher
+  docs: *scan_docs
+  configuration:
+    <<: *scan
+    label: linear
+    output_path: __OUTPUT__/linear_simulation
+    overwrite_model_parameters: '{"LSTN-01": {"fadc_hg_pulse_shape": null, "fadc_lg_pulse_shape":
+      null, "fadc_bins": 120, "fadc_sum_bins": 100}}'
+  test_name: linear_control
+- application: simtools-analyze-flasher-response
+  configuration:
+    <<: *analysis
+    simtel_files:
+    - __OUTPUT__/linear_simulation/sim_telarray/run000100/direct_injection_run000100_za20deg_azm000deg_North_8.0.0_linear.simtel.zst
+    - __OUTPUT__/linear_simulation/sim_telarray/run000101/direct_injection_run000101_za20deg_azm000deg_North_8.0.0_linear.simtel.zst
+    - __OUTPUT__/linear_simulation/sim_telarray/run000102/direct_injection_run000102_za20deg_azm000deg_North_8.0.0_linear.simtel.zst
+    - __OUTPUT__/linear_simulation/sim_telarray/run000103/direct_injection_run000103_za20deg_azm000deg_North_8.0.0_linear.simtel.zst
+    output_path: __OUTPUT__/linear
+  test_name: analyze_linear_control
+  integration_tests: *response_checks
+schema_name: application_workflow.metaschema
+schema_version: 0.7.0

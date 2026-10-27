@@ -44,3 +44,10 @@ etc.) are required inputs.
 .. automodule:: camera.trace_analysis
    :members:
 ```
+
+## waveform_metrics
+
+```{eval-rst}
+.. automodule:: simtools.camera.waveform_metrics
+   :members:
+```
