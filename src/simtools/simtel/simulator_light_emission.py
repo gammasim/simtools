@@ -430,10 +430,6 @@ class SimulatorLightEmission(SimtelRunner):
         radius = self.telescope_model.get_parameter_value_with_unit(TELESCOPE_SPHERE_RADIUS)
         telescope, radius = [c.to(u.m).value for c in telescope], radius.to(u.m).value
         position = np.array([c.to(u.m).value for c in position])
-        offsets = [
-            c.to(u.m).value
-            for c in self.telescope_model.get_parameter_value_with_unit(AXES_OFFSETS)
-        ]
         relative = position - np.array(telescope)
         if relative[2] == 0:
             raise ValueError("Horizontal illuminator paths require a nonzero altitude difference")
@@ -447,7 +443,7 @@ class SimulatorLightEmission(SimtelRunner):
             np.linalg.norm(relative) / abs(relative[2]),
         )
         request = LightSourceRequest(
-            position_m=tuple(ground_to_telescope_frame(relative, theta, phi, offsets)),
+            position_m=tuple(ground_to_telescope_frame(relative, theta, phi)),
             axis=tuple(
                 ground_direction_to_telescope_frame(pointing / np.linalg.norm(pointing), theta, phi)
             ),

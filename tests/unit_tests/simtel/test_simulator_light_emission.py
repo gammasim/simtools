@@ -1208,7 +1208,7 @@ def test_illuminator_request_geometry(simulator_instance, source_height):
         patch.object(
             simulator_instance,
             "_get_telescope_position_ground_with_axis_offset",
-            return_value=(0.0 * u.m, 0.0 * u.m, 0.0 * u.m),
+            return_value=(1.6 * u.m, 0.0 * u.m, 0.0 * u.m),
         ),
     ):
         if source_height == 0:
@@ -1220,7 +1220,7 @@ def test_illuminator_request_geometry(simulator_instance, source_height):
         )
 
     assert request.photons_per_pulse == (1e9, 1e9)
-    # Vertical telescope: the azimuth-altitude offset moves the frame along x.
+    # The corrected telescope position already includes the axes offset.
     assert request.position_m == pytest.approx((-1.6, 0.0, 1000.0))
     assert request.axis == pytest.approx((0.0, 0.0, -1.0))
     assert request.inside_telescope is False
