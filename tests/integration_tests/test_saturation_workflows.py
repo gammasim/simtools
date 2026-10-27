@@ -17,10 +17,15 @@ CONFIG_FILE = "config_file"
 OUTPUT_PLACEHOLDER = "__OUTPUT__"
 SUMMARY_SUFFIX = "_summary.ecsv"
 
-_WORKFLOWS = Path(__file__).parent / "config" / "saturation"
+_WORKFLOWS = Path(__file__).parent / "config"
+_WORKFLOW_NAMES = (
+    "validate_pulse_response",
+    "validate_saturation_direct_injection_lst",
+    "validate_saturation_flasher_lst",
+)
 
 
-@pytest.mark.parametrize("workflow", sorted(path.stem for path in _WORKFLOWS.glob("*.yml")))
+@pytest.mark.parametrize("workflow", _WORKFLOW_NAMES)
 def test_saturation_workflow(
     workflow, tmp_test_directory, request, simtools_root_path, monkeypatch
 ):

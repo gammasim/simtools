@@ -31,7 +31,7 @@ flag and an undefined width. ADC sums retain negative pulse tails.
 
 ## Workflow
 
-Run the configurations under `tests/integration_tests/config/saturation/` with
+Run the configurations under `tests/integration_tests/config/` with
 `simtools-run-application --config_file <workflow.yml> --replace __OUTPUT__=<directory>`.
 The direct-injection and full-simulation configurations run the existing flasher
 application followed by the analyzer. Use more events and intensity levels for
@@ -40,5 +40,5 @@ with measured curves requires measured tables and matching camera settings.
 
 ```{eval-rst}
 .. simtools-integration-example::
-   :file: saturation/validate_pulse_response.yml
+   :file: validate_pulse_response.yml
 ```

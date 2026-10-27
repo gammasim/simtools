@@ -32,7 +32,7 @@ its ADC sum covers only the recorded window.
 
 ## Workflow
 
-Run the configurations under `tests/integration_tests/config/saturation/` with
+Run the configurations under `tests/integration_tests/config/` with
 `simtools-run-application --config_file <workflow.yml> --replace __OUTPUT__=<directory>`.
 The direct-injection and full-simulation configurations run the existing flasher
 application followed by the analyzer. Use more events and intensity levels for
@@ -49,5 +49,5 @@ The direct-injection workflow also writes a matched linear/clipped control under
 
 ```{eval-rst}
 .. simtools-integration-example::
-   :file: saturation/validate_saturation_direct_injection_lst.yml
+   :file: validate_saturation_direct_injection_lst.yml
 ```
