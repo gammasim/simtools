@@ -32,18 +32,11 @@ def _create_docs_tree(docs):
 def test_generate_toctree(tmp_test_directory):
     docs = Path(tmp_test_directory) / "docs"
     _create_docs_tree(docs)
-    (docs / docs_toctree.PRODUCTION_DESCRIPTIONS_FILE_NAME).write_text(
-        "# Title\n| table |\n", encoding=ENCODING
-    )
-
     docs_toctree.generate_toctree(docs)
 
     root_index = (docs / INDEX).read_text(encoding=ENCODING)
     assert root_index.startswith(f"# {docs_toctree.SITE_TITLE}\n")
-    assert "| table |" in root_index
-    assert "# Title" not in root_index
-    assert "_descriptions/description\n" in root_index
-    assert "parameters/index\nproduction_version_descriptions\nproductions/index\n" in root_index
+    assert "parameters/index\nproductions/index\n" in root_index
 
     parameters_index = (docs / PARAMETERS / INDEX).read_text(encoding=ENCODING)
     assert (
@@ -58,15 +51,33 @@ def test_generate_toctree(tmp_test_directory):
     assert not (docs / STATIC / INDEX).exists()
 
 
-def test_generate_toctree_without_production_descriptions(tmp_test_directory):
+def test_generate_toctree_preserves_authored_indexes(tmp_test_directory):
     docs = Path(tmp_test_directory) / "docs"
     _create_docs_tree(docs)
+    root_index = docs / INDEX
+    authored = f"{docs_toctree.KEEP_INDEX_MARKER}\n# Custom landing page\n"
+    root_index.write_text(authored, encoding=ENCODING)
+    production_index = docs / PRODUCTIONS / INDEX
+    production_index.write_text(authored, encoding=ENCODING)
 
     docs_toctree.generate_toctree(docs)
 
-    root_index = (docs / INDEX).read_text(encoding=ENCODING)
-    assert "_descriptions/description" not in root_index
-    assert "parameters/index\nproductions/index\n" in root_index
+    assert root_index.read_text(encoding=ENCODING) == authored
+    assert production_index.read_text(encoding=ENCODING) == authored
+    assert "LSTN-01" in (docs / PARAMETERS / INDEX).read_text(encoding=ENCODING)
+
+
+def test_generate_toctree_includes_authored_only_directory(tmp_test_directory):
+    docs = Path(tmp_test_directory) / "docs"
+    introduction = docs / "introduction"
+    introduction.mkdir(parents=True)
+    (introduction / INDEX).write_text(
+        f"{docs_toctree.KEEP_INDEX_MARKER}\n# Introduction\n", encoding=ENCODING
+    )
+
+    docs_toctree.generate_toctree(docs)
+
+    assert "introduction/index" in (docs / INDEX).read_text(encoding=ENCODING)
 
 
 def test_generate_toctree_skips_directories_without_entries(tmp_test_directory):

@@ -35,10 +35,24 @@ def test_write_production_summary_markdown_writes_table(tmp_test_directory):
 
     content = output_file.read_text(encoding="utf-8")
 
-    assert "# Descriptions of productions" in content
-    assert "| Production Model Version | Short Description                     |" in content
-    assert "| 5.0.0 | Prod5 \\| dark |" in content
-    assert "| 6.0.0 | Prod6 dark |" in content
+    assert "# Productions" in content
+    assert "| Production version | Description |" in content
+    assert "| [5.0.0](5.0.0/index.md) | Prod5 \\| dark |" in content
+    assert "| [6.0.0](6.0.0/index.md) | Prod6 dark |" in content
+    assert content.index("[6.0.0]") < content.index("[5.0.0]")
+    assert "6.0.0/index\n5.0.0/index\n```" in content
+
+
+def test_write_production_summary_sorts_semantic_versions(tmp_test_directory):
+    data_path = Path(tmp_test_directory)
+    _write_info_file(data_path, "9.0.0", "Prod9")
+    _write_info_file(data_path, "10.0.0", "Prod10")
+    output_file = data_path / "index.md"
+
+    write_production_summary_markdown(data_path, output_file)
+
+    content = output_file.read_text(encoding="utf-8")
+    assert content.index("[10.0.0]") < content.index("[9.0.0]")
 
 
 def test_collect_production_descriptions_uses_model_reader(mocker):
