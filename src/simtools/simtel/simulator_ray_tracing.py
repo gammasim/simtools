@@ -77,7 +77,6 @@ class SimulatorRayTracing(SimtelRunner):
             if isinstance(config_data, dict)
             else config_data
         )
-        self._rep_number = 0
         self.run_seeds = list(
             (config_data.get("seeds") if isinstance(config_data, dict) else None) or [None]
         )

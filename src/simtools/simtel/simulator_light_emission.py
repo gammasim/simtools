@@ -158,18 +158,6 @@ class SimulatorLightEmission(SimtelRunner):
             light_emission_config
         )
 
-    def get_available_wavelengths(self):
-        """
-        Get available wavelengths from this simulator's calibration model.
-
-        Returns
-        -------
-        list of astropy.units.Quantity
-            List of available wavelengths with units
-        """
-        wavelengths = self.calibration_model.get_parameter_value_with_unit(FLASHER_WAVELENGTH)
-        return general.ensure_list(wavelengths)
-
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
         flasher_type = self.calibration_model.get_parameter_value("flasher_type")

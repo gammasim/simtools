@@ -17,7 +17,6 @@ from simtools.simtel.simtel_output_validator import (
     _sim_telarray_name_from_parameter_name,
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
-    assert_expected_sim_telarray_output,
     assert_expected_sim_telarray_output_and_event_type,
     assert_n_showers_and_energy_range,
     assert_sim_telarray_metadata,
@@ -512,36 +511,6 @@ def test_expected_output_and_event_type_uses_one_traversal(tmp_path):
     mock_file.assert_called_once_with(sim_file)
 
 
-def test_none_expected_output():
-    result = assert_expected_sim_telarray_output(Path("/dummy/file.zst"), None)
-    assert result is True
-
-
-@pytest.mark.parametrize(
-    ("expected_output", "extracted_data", "expected_result"),
-    [
-        ({}, {"n_telescope_events": 0, "n_calibration_events": 0}, True),
-        (
-            {"pe_sum": [10.0, 100.0]},
-            {"pe_sum": [50.0], "n_telescope_events": 0, "n_calibration_events": 0},
-            True,
-        ),
-        (
-            {"pe_sum": [100.0, 200.0]},
-            {"pe_sum": [50.0], "n_telescope_events": 0, "n_calibration_events": 0},
-            False,
-        ),
-    ],
-)
-def test_expected_sim_telarray_output(expected_output, extracted_data, expected_result):
-    with patch(
-        "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
-    ) as mock_extract:
-        mock_extract.return_value = extracted_data
-        result = assert_expected_sim_telarray_output(Path("/dummy/file.zst"), expected_output)
-        assert result is expected_result
-
-
 def test_none_expected_metadata():
     result = assert_expected_sim_telarray_metadata(Path("/dummy/file.zst"), None)
     assert result is True
@@ -669,26 +638,6 @@ def test_assert_sim_telarray_seed_matching_seed(tmp_path, caplog):
             result = _assert_sim_telarray_seed(metadata, seed, data_file)
             assert result is None
             assert "sim_telarray_seed in sim_telarray file" in caplog.text
-
-
-def test_assert_expected_output_no_data_found(tmp_path, caplog):
-    caplog.set_level(logging.ERROR)
-    data_file = tmp_path / "test.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    expected_output = {"pe_sum": (0, 100)}
-
-    with patch(
-        "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
-    ) as mock_item:
-        mock_item.return_value = {
-            "n_telescope_events": 0,
-            "n_calibration_events": 0,
-            "pe_sum": [],
-        }
-        result = assert_expected_sim_telarray_output(data_file, expected_output)
-        assert result is False
-        assert "No data found" in caplog.text
 
 
 def test_assert_events_of_type_not_found(tmp_path, caplog):

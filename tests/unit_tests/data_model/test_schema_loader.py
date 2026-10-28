@@ -31,7 +31,7 @@ def test_local_schema_takes_precedence_over_packaged_schema(tmp_test_directory, 
     tmp_test_directory = Path(tmp_test_directory)
     packaged = tmp_test_directory / "schemas"
     packaged.mkdir()
-    name = "example.schema.yml"
+    name = "precedence.schema.yml"
     (packaged / name).write_text(yaml.safe_dump({"name": "packaged"}), encoding="utf-8")
     local = tmp_test_directory / name
     local.write_text(yaml.safe_dump({"name": "custom"}), encoding="utf-8")
@@ -54,9 +54,9 @@ def test_missing_absolute_schema_does_not_use_packaged_namesake(tmp_test_directo
 @pytest.fixture(autouse=True)
 def clear_schema_loader_cache():
     """Clear shared schema state around every test."""
-    schema_loader.clear_cache()
+    schema_loader._load_schema_source.cache_clear()
     yield
-    schema_loader.clear_cache()
+    schema_loader._load_schema_source.cache_clear()
 
 
 @pytest.mark.parametrize("schema_directory", ["missing", None])
