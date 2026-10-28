@@ -5,7 +5,6 @@ from pathlib import Path
 
 from simtools import settings
 from simtools.constants import SIMTEL_MAX_SEED
-from simtools.io import ascii_handler
 from simtools.utils import names, random
 from simtools.version import semver_to_int
 
@@ -179,21 +178,6 @@ class SimtelSeeds:
 
         # Generate a random instrument seed
         return random.seeds(max_seed=SIMTEL_MAX_SEED)
-
-    def save_seeds(self, path):
-        """
-        Save the seeds to a file.
-
-        Parameters
-        ----------
-        path : str or Path
-            Path to the seed file.
-        """
-        seed_dict = {
-            "instrument_seed": self.instrument_seed,
-            "simulation_seed": self.simulation_seed,
-        }
-        ascii_handler.write_data_to_file(path, seed_dict)
 
 
 def instance_seed_pairs(instances=1):

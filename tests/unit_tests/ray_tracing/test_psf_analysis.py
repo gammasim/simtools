@@ -182,7 +182,7 @@ def test_get_effective_area(psf_image, caplog):
     image = psf_image
 
     # Test when effective area is set
-    image.set_effective_area(100.0)
+    image._effective_area = 100.0
     assert image.get_effective_area() == pytest.approx(100.0)
 
     # Test when effective area is not set
@@ -356,49 +356,6 @@ def test_is_photon_positions_ok(psf_image):
     image.photon_pos_y = psf_image.photon_pos_y  # Reset to original
     image.photon_pos_x.append(0.0)  # Add an extra element to make lengths different
     assert image._is_photon_positions_ok() is False
-
-
-def test_process_simtel_line_total_photons(psf_image, caplog):
-    image = psf_image
-    image._total_photons = 0
-    line = b"# Telescope 1 with 100 photons from 1 star(s) falling on an area of 683. m^2"
-    image._process_simtel_line(line)
-    assert image._total_photons == 100
-    assert image._total_area == pytest.approx(100.0)
-
-    # Test conflicting total area
-    line_conflict = b"# Telescope 1 with 100 photons from 1 star(s) falling on an area of 683. m^2"
-    with caplog.at_level(logging.WARNING):
-        image._process_simtel_line(line_conflict)
-    assert "Conflicting value of the total area found" in caplog.text
-    assert image._total_photons == 200
-    assert image._total_area == pytest.approx(100.0)
-
-
-def test_process_simtel_line_photon_positions(psf_image):
-    image = psf_image
-    line = b"0 0 1.0 2.0"
-    image._process_simtel_line(line)
-    assert image.photon_pos_x[-1] == pytest.approx(1.0)
-    assert image.photon_pos_y[-1] == pytest.approx(2.0)
-
-    line = b"0 0 3.0 4.0"
-    image._process_simtel_line(line)
-    assert image.photon_pos_x[-1] == pytest.approx(3.0)
-    assert image.photon_pos_y[-1] == pytest.approx(4.0)
-
-
-def test_process_simtel_line_comments(psf_image):
-    image = psf_image
-    line = b"# This is a comment"
-    image._process_simtel_line(line)
-    assert len(image.photon_pos_x) == 1000
-    assert len(image.photon_pos_y) == 1000
-
-    line = b""
-    image._process_simtel_line(line)
-    assert len(image.photon_pos_x) == 1000
-    assert len(image.photon_pos_y) == 1000
 
 
 def test_find_psf_brute_force(psf_image, mocker, caplog):

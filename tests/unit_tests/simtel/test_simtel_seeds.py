@@ -171,31 +171,6 @@ def test_get_instrument_seed_deterministic(mocker, mock_config):
 
 
 @pytest.mark.parametrize(
-    ("path_type", "instrument", "simulation"),
-    [
-        ("string", 123, 456),
-        ("pathlib", 789, 101),
-        ("pathlib", None, None),
-    ],
-)
-def test_save_seeds(
-    mocker, mock_config, tmp_path, seeds_instance, path_type, instrument, simulation
-):
-    mock_write = mocker.patch("simtools.simtel.simtel_seeds.ascii_handler.write_data_to_file")
-
-    seeds_instance.instrument_seed = instrument
-    seeds_instance.simulation_seed = simulation
-
-    path = tmp_path / "seeds.txt" if path_type == "pathlib" else "/path/to/seeds.txt"
-    seeds_instance.save_seeds(path)
-
-    mock_write.assert_called_once()
-    call_args = mock_write.call_args[0]
-    assert call_args[0] == path
-    assert call_args[1] == {"instrument_seed": instrument, "simulation_seed": simulation}
-
-
-@pytest.mark.parametrize(
     ("args", "instances", "expected"),
     [
         ({"instrument_seed": 5, "simulation_seed": [7]}, 1, [(5, 7)]),
