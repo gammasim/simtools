@@ -78,6 +78,13 @@ def main():
             model_directory=model_directory,
         )
         parameters = tel_model.parameters
+        if args["shadowing"]:
+            original_structure = None
+            if args["telescope_structure_file"] is not None:
+                original_structure = parameters.pop("telescope_structure", None)
+            tel_model.export_model_files()
+            if original_structure is not None:
+                parameters["telescope_structure"] = original_structure
         model_files = {}
         for parameter in ("mirror_list", "telescope_structure"):
             record = parameters.get(parameter)
@@ -88,6 +95,7 @@ def main():
             parameters["telescope_structure"] = {
                 **structure_parameter,
                 "value": str(args["telescope_structure_file"].resolve()),
+                "file": True,
             }
             model_files.pop("telescope_structure", None)
         if model_files:
