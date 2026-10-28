@@ -26,13 +26,6 @@ def _htcondor_factory():
 _BACKENDS = {"local": _local_factory, "htcondor": _htcondor_factory}
 
 
-def register_backend(name, factory):
-    """Register a backend factory under ``name``."""
-    if not name or not callable(factory):
-        raise ValueError("Backend name and callable factory are required.")
-    _BACKENDS[name] = factory
-
-
 def available_backends():
     """Return registered backend names."""
     return tuple(sorted(_BACKENDS))

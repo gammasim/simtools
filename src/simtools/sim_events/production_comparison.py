@@ -48,13 +48,6 @@ class ProductionEventMetrics:
     quantity_histograms: dict = field(default_factory=dict)
     trigger_multiplicity_histogram: tuple = field(default_factory=tuple)
 
-    @property
-    def trigger_fraction(self):
-        """Return triggered/simulated fraction."""
-        if self.simulated_event_count <= 0:
-            return 0.0
-        return self.triggered_event_count / self.simulated_event_count
-
 
 @dataclass
 class ProductionSignalMetrics:

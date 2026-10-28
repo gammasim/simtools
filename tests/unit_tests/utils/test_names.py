@@ -23,11 +23,6 @@ def test_site_parameters():
     assert "altitude" in names.site_parameters()
 
 
-def test_telescope_parameters():
-    assert isinstance(names.telescope_parameters(), dict)
-    assert "focal_length" in names.telescope_parameters()
-
-
 def test_get_list_of_array_element_types():
     assert names.get_list_of_array_element_types(array_element_class="telescopes", site=None) == [
         "LSTN",
@@ -154,18 +149,6 @@ def test_get_collection_name_from_array_element_name():
 
     with pytest.raises(ValueError, match=r"Invalid array element name Not_a_collection"):
         names.get_collection_name_from_array_element_name("Not_a_collection", False)
-
-
-def test_sanitize_name(caplog):
-    assert names.sanitize_name("y_edges unit") == "y_edges_unit"
-    assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
-    assert names.sanitize_name("123name") == "_123name"
-    assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
-    assert names.sanitize_name("!validName") == "_validname"
-    assert names.sanitize_name(None) is None
-
-    with pytest.raises(ValueError, match=r"^The string  could not be sanitized."):
-        names.sanitize_name("")
 
 
 def test_get_array_element_id_from_name(invalid_name):

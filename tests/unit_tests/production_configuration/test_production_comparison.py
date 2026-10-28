@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from matplotlib import pyplot as plt
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
@@ -246,34 +247,25 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
         "_production_descriptor_pairs_from_metadata",
         return_value=[({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors)],
     )
-    figure = mocker.Mock()
-    figure.get_label.return_value = "distribution_core_distance"
+    figure = plt.figure()
+    figure.set_label("distribution_core_distance")
     statistics_file = output_directory / "pair" / _ALPHA / _STATISTICS_JSON
 
     def write_pair(*args, **_kwargs):
-        args[4].append(figure)
+        args[4].add(figure)
         return statistics_file
 
     mocker.patch.object(production_comparison, "_compare_array_layout", side_effect=write_pair)
 
-    def append_page(report, page):
-        report.page_labels.append(page.get_label())
-
-    save = mocker.patch.object(
-        production_comparison.plot_event_level_production_comparison._PdfReport,
-        "append",
-        autospec=True,
-        side_effect=append_page,
-    )
     summary = mocker.patch.object(production_comparison, "_write_comparison_summary")
 
     production_comparison.write_production_comparison(
         {_BASELINE_PATH: BASELINE_KEY, "report_mode": "compact"}, output_directory
     )
 
-    save.assert_called_once()
-    assert save.call_args.args[0].path == output_directory / "trigger-report.pdf"
-    assert save.call_args.args[1] is figure
+    report_file = output_directory / "trigger-report.pdf"
+    assert report_file.exists()
+    assert report_file.stat().st_size > 0
     summary.assert_called_once_with(
         [statistics_file],
         output_directory,

@@ -3,13 +3,12 @@
 import functools
 import logging
 from collections import Counter
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 
 import numpy as np
 from astropy import units as u
-from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.io import ascii_handler, io_handler
 from simtools.io.file_type import product_filename
@@ -19,7 +18,7 @@ from simtools.statistics import (
 )
 from simtools.utils import names
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import save_figure
+from simtools.visualization.visualize import pdf_report, save_figure
 
 _JENSEN_SHANNON_DISTANCE = "jensen_shannon_distance"
 _MIXED_TRIGGER_COMBINATIONS = "mixed_trigger_combinations"
@@ -222,60 +221,31 @@ def _compact_comparison_statistics(comparison):
     return compact
 
 
-class _PdfReport:
-    """Write and close each figure immediately, retaining only its page label."""
-
-    def __init__(self, path):
-        self.path = path
-        self.page_labels = []
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.document = PdfPages(path)
-
-    def __len__(self):
-        return len(self.page_labels)
-
-    def append(self, figure):
-        """Append one page without keeping the figure in memory."""
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            figure.tight_layout()
-            self.document.savefig(figure)
-            self.page_labels.append(figure.get_label())
-        finally:
-            plt.close(figure)
-
-
-@contextmanager
-def _pdf_report(path, enabled=True):
-    """Close a streamed PDF even when comparison or rendering fails."""
-    if not enabled:
-        yield None
-        return
-    report = _PdfReport(path)
-    try:
-        yield report
-    finally:
-        report.document.close()
-
-
 @contextmanager
 def _comparison_report(output_path, report_mode, compact_figures=None, comparison_title=None):
     """Route pages to one compact PDF or suppress rendering without changing metrics."""
-    with ExitStack() as stack:
-        document = None
-        if report_mode == COMPACT_REPORT:
-            document = compact_figures
-            if document is None:
-                document = stack.enter_context(_pdf_report(output_path / "comparison-report.pdf"))
-        elif report_mode == "none":
-            document = False
-        title_token = _COMPARISON_TITLE.set(comparison_title)
-        token = _COMPACT_FIGURES.set(document)
-        try:
-            yield
-        finally:
-            _COMPACT_FIGURES.reset(token)
-            _COMPARISON_TITLE.reset(title_token)
+    if report_mode == COMPACT_REPORT and compact_figures is None:
+        with pdf_report(output_path / "comparison-report.pdf") as document:
+            with _comparison_context(document, comparison_title):
+                yield
+        return
+    document = compact_figures if report_mode == COMPACT_REPORT else None
+    if report_mode == "none":
+        document = False
+    with _comparison_context(document, comparison_title):
+        yield
+
+
+@contextmanager
+def _comparison_context(document, comparison_title):
+    """Set and restore the active report and comparison title."""
+    title_token = _COMPARISON_TITLE.set(comparison_title)
+    token = _COMPACT_FIGURES.set(document)
+    try:
+        yield
+    finally:
+        _COMPACT_FIGURES.reset(token)
+        _COMPARISON_TITLE.reset(title_token)
 
 
 def _plot_quantity_comparisons(
@@ -425,8 +395,12 @@ def _save_figure(fig, output_path, filename, figure_format=None):
         plt.close(fig)
         return
     if document is not None:
-        fig.set_label(Path(filename).stem)
-        document.append(fig)
+        label = Path(filename).stem
+        fig.set_label(label)
+        if hasattr(document, "add"):
+            document.add(fig)
+        else:
+            document.append(fig)
         return
     output_file = output_path / Path(filename).with_suffix("")
     save_figure(
@@ -1260,11 +1234,6 @@ def annotate_comparison_statistics(ax, statistics):
         fontsize=7,
         bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.75, "edgecolor": "0.8"},
     )
-
-
-def _annotate_ks_statistics(ax, statistics):
-    """Backward-compatible alias for metric-neutral comparison annotations."""
-    annotate_comparison_statistics(ax, statistics)
 
 
 def _format_statistic_value(value):

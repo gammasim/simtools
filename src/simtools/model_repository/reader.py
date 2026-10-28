@@ -106,23 +106,6 @@ class FileSystemModelSource:
                 ) from exc
         return deepcopy(self._production_tables[key])
 
-    def query_model_parameters(self, query, collection_name):
-        """Read parameter files matching an internal source query."""
-        parameter_queries = query.get("$or", [query])
-        instrument = self._get_parameter_instrument(query, collection_name)
-        parameters = [
-            parameter
-            for parameter_query in parameter_queries
-            if (
-                parameter := self._read_query_parameter(
-                    parameter_query, query, collection_name, instrument
-                )
-            )
-        ]
-        if not parameters:
-            raise ValueError(f"No parameters found for {collection_name}: {query}")
-        return parameters
-
     def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
         """Read parameter files by name and version."""
         instrument = self._get_parameter_instrument(
@@ -490,79 +473,6 @@ class SimulationModelReader:
     def export_model_files(self, parameters=None, file_names=None, dest=None):
         """Export model files through the selected source."""
         return self._source.export_model_files(parameters, file_names, dest)
-
-    def export_parameter_data(
-        self,
-        parameter,
-        site,
-        array_element_name,
-        model_version=None,
-        parameter_version=None,
-        output_file=None,
-        export_model_file=False,
-        export_model_file_as_table=False,
-        dest=None,
-    ):
-        """Export a parameter payload through the selected model source.
-
-        Parameters
-        ----------
-        parameter : str
-            Name of the model parameter.
-        site : str
-            Site name.
-        array_element_name : str
-            Array element name.
-        model_version : str, optional
-            Simulation-model version.
-        parameter_version : str, optional
-            Model-parameter version.
-        output_file : str, optional
-            Output filename, or filename override for a file-backed parameter.
-        export_model_file : bool, optional
-            Export the original parameter file when it is file-backed.
-        export_model_file_as_table : bool, optional
-            Also export the payload as an ECSV table.
-        dest : str or Path, optional
-            Destination directory for exported files.
-
-        Returns
-        -------
-        list[Path]
-            Files written to the destination.
-
-        Raises
-        ------
-        ValueError
-            If exporting is requested without a destination or without the
-            required output filename for an embedded table.
-        """
-        if not (export_model_file or export_model_file_as_table):
-            return []
-        if dest is None:
-            raise ValueError("Destination path is required to export parameter data.")
-
-        parameters = self.get_model_parameter(
-            parameter,
-            site,
-            array_element_name,
-            parameter_version=parameter_version,
-            model_version=model_version,
-        )
-        parameter_data = parameters[parameter]
-        if parameter_data.get("type") == "dict":
-            if export_model_file_as_table:
-                raise ValueError("Structured JSON model parameters are not ECSV tables")
-            return []
-        return self._export_file_parameter_data(
-            parameter,
-            parameter_data,
-            parameters,
-            output_file,
-            export_model_file,
-            export_model_file_as_table,
-            dest,
-        )
 
     def _export_file_parameter_data(
         self,

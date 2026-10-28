@@ -6,6 +6,7 @@ including parameter comparison plots, convergence plots, and PSF diameter vs off
 """
 
 import logging
+from contextlib import nullcontext
 from pathlib import Path
 
 import astropy.units as u
@@ -13,10 +14,7 @@ import numpy as np
 
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
-from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
-
-pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
 # Constants
 RADIUS = "Radius [cm]"
@@ -277,8 +275,8 @@ def create_psf_parameter_plot(
         RMSD value (if use_ks_statistic=False) or KS statistic (if use_ks_statistic=True).
     is_best : bool
         Whether this is the best parameter set.
-    pdf_pages : PdfPages
-        PDF pages object for saving plots.
+    pdf_pages : PDF report object
+        Open report for adding plots.
     fraction : float, optional
         PSF containment fraction (default: 0.8).
     p_value : float, optional
@@ -303,8 +301,7 @@ def create_psf_parameter_plot(
         second_metric,
     )
 
-    pdf_pages.savefig(fig, bbox_inches="tight")
-    plt.clf()
+    pdf_pages.add(fig)
 
 
 def create_detailed_parameter_plot(
@@ -335,7 +332,7 @@ def create_detailed_parameter_plot(
         Data dictionary for plotting
     is_best : bool
         Whether this is the best parameter set
-    pdf_pages : PdfPages
+    pdf_pages : PDF report object
         PDF pages object to save the plot
     fraction : float, optional
         PSF containment fraction (default: 0.8)
@@ -368,50 +365,7 @@ def create_detailed_parameter_plot(
         second_metric=None,
     )
 
-    pdf_pages.savefig(fig, bbox_inches="tight")
-    plt.clf()
-
-
-def create_parameter_progression_plots(
-    results, best_pars, data_to_plot, pdf_pages, fraction=DEFAULT_FRACTION
-):
-    """
-    Create plots for all parameter sets showing optimization progression.
-
-    Parameters
-    ----------
-    results : list
-        List of (pars, ks_statistic, p_value, psf_diameter, simulated_data) tuples
-    best_pars : dict
-        Best parameter set for highlighting
-    data_to_plot : dict
-        Data dictionary for plotting
-    pdf_pages : PdfPages
-        PDF pages object to save plots
-    fraction : float, optional
-        PSF containment fraction (default: 0.8)
-    """
-    logger.info("Creating plots for all parameter sets...")
-
-    for i, (pars, ks_statistic, p_value, psf_diameter, simulated_data) in enumerate(results):
-        if simulated_data is None:
-            logger.warning(f"No simulated data for iteration {i}, skipping plot")
-            continue
-
-        is_best = pars is best_pars
-        logger.info(f"Creating plot {i + 1}/{len(results)}{' (BEST)' if is_best else ''}")
-
-        create_detailed_parameter_plot(
-            pars,
-            ks_statistic,
-            psf_diameter,
-            simulated_data,
-            data_to_plot,
-            is_best,
-            pdf_pages,
-            fraction,
-            p_value,
-        )
+    pdf_pages.add(fig)
 
 
 def create_gradient_descent_convergence_plot(
@@ -485,8 +439,12 @@ def create_gradient_descent_convergence_plot(
         ax3.grid(True, alpha=0.3)
         ax3.legend()
 
-    plt.savefig(output_file, bbox_inches="tight")
-    plt.close()
+    visualize.save_figure(
+        plt.gcf(),
+        Path(output_file).with_suffix(""),
+        figure_format=[Path(output_file).suffix[1:]],
+        close=True,
+    )
 
     logger.info(f"Convergence plot saved to {output_file}")
 
@@ -725,20 +683,20 @@ def setup_pdf_plotting(args_dict, output_dir, tel_model_name):
 
     Returns
     -------
-    PdfPages or None
-        PdfPages object for saving plots if plotting is requested, None otherwise.
+    context manager
+        PDF report context manager if plotting is requested; otherwise a context
+        manager yielding None.
 
     Notes
     -----
     Creates a PDF file for saving cumulative PSF plots during gradient descent
-    optimization. Returns None if plotting is not requested via the plot_all flag.
+    optimization. Nothing is written if plotting is not requested via the plot_all flag.
     """
     if not args_dict.get("plot_all", False):
-        return None
+        return nullcontext()
     pdf_filename = output_dir / f"psf_gradient_descent_plots_{tel_model_name}.pdf"
-    pdf_pages = pdf_backend.PdfPages(pdf_filename)
     logger.info(f"Creating cumulative PSF plots for each iteration (saving to {pdf_filename})")
-    return pdf_pages
+    return visualize.pdf_report(pdf_filename)
 
 
 def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, output_dir):
@@ -769,96 +727,20 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
 
     fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     pdf_filename = output_dir.joinpath(f"psf_optimization_results_{tel_model.name}.pdf")
-    pdf_pages = pdf_backend.PdfPages(pdf_filename)
     logger.info(f"Creating PSF plots for each optimization iteration (saving to {pdf_filename})")
-
-    for i, (params, rmsd, _, psf_diameter, _) in enumerate(gd_results):
-        if i % 5 == 0 or i == len(gd_results) - 1:
-            create_psf_parameter_plot(
-                data_to_plot,
-                params,
-                psf_diameter,
-                rmsd,
-                is_best=(i == len(gd_results) - 1),
-                pdf_pages=pdf_pages,
-                fraction=fraction,
-                use_ks_statistic=False,
-            )
-    pdf_pages.close()
-
-
-def create_summary_psf_comparison_plot(
-    tel_model, optimized_params, data_to_plot, output_dir, final_rmsd, simulated_data
-):
-    """
-    Create a standalone plot comparing measured vs simulated PSF with final optimized parameters.
-
-    This creates a single plot showing the cumulative PSF comparison
-    before and after the optimization.
-
-    Parameters
-    ----------
-    tel_model : TelescopeModel
-        Telescope model with optimized parameters
-    optimized_params : dict
-        Dictionary of optimized parameter values
-    data_to_plot : dict
-        Measured PSF data
-    output_dir : Path
-        Directory for output files
-    final_rmsd : float
-        Final RMSD value at the end of optimization
-    simulated_data : dict
-        Final simulated PSF data with optimized parameters
-
-    Returns
-    -------
-    Path
-        Path to the created plot file
-    """
-    fig, ax = _create_base_plot_figure(data_to_plot, simulated_data)
-
-    title_lines = ["Final Optimized Parameters:"]
-    if "mirror_reflection_random_angle" in optimized_params:
-        refl = optimized_params["mirror_reflection_random_angle"]
-        title_lines.append(
-            f"mirror_reflection_random_angle = [{refl[0]:.6f}, {refl[1]:.6f}, {refl[2]:.6f}]"
-        )
-
-    if "mirror_align_random_vertical" in optimized_params:
-        vert = optimized_params["mirror_align_random_vertical"]
-        title_lines.append(
-            f"mirror_align_random_vertical = "
-            f"[{vert[0]:.6f}, {vert[1]:.6f}, {vert[2]:.6f}, {vert[3]:.6f}]"
-        )
-
-    if "mirror_align_random_horizontal" in optimized_params:
-        horiz = optimized_params["mirror_align_random_horizontal"]
-        title_lines.append(
-            f"mirror_align_random_horizontal = "
-            f"[{horiz[0]:.6f}, {horiz[1]:.6f}, {horiz[2]:.6f}, {horiz[3]:.6f}]"
-        )
-
-    ax.set_title("\n".join(title_lines), fontsize=9, loc="left")
-
-    rmsd_text = f"RMSD = {final_rmsd:.4f} ({final_rmsd * 100:.2f}%)"
-    ax.text(
-        0.98,
-        0.02,
-        rmsd_text,
-        transform=ax.transAxes,
-        fontsize=12,
-        verticalalignment="bottom",
-        horizontalalignment="right",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
-    )
-
-    output_file = Path(output_dir) / f"{tel_model.name}_final_psf_comparison.png"
-    fig.savefig(output_file, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-
-    logger.info(f"Final PSF comparison plot saved to {output_file}")
-    return output_file
+    with visualize.pdf_report(pdf_filename) as report:
+        for i, (params, rmsd, _, psf_diameter, _) in enumerate(gd_results):
+            if i % 5 == 0 or i == len(gd_results) - 1:
+                create_psf_parameter_plot(
+                    data_to_plot,
+                    params,
+                    psf_diameter,
+                    rmsd,
+                    is_best=(i == len(gd_results) - 1),
+                    pdf_pages=report,
+                    fraction=fraction,
+                    use_ks_statistic=False,
+                )
 
 
 def plot_psf_histogram(measured, simulated, args_dict):
@@ -916,7 +798,8 @@ def plot_psf_histogram(measured, simulated, args_dict):
     ax.set_ylabel("Count")
     ax.set_title(f"{label} ({suffix})" if suffix else label)
     ax.legend(loc="best", fontsize=9, frameon=True)
-    fig.savefig(out_path)
-    plt.close(fig)
+    visualize.save_figure(
+        fig, out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], close=True
+    )
     logger.info("PSF histogram written to %s", str(out_path))
     return str(out_path)

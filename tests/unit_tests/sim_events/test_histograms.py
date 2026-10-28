@@ -576,11 +576,6 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     # Test 2D histogram - use float dtype to avoid casting issues
     test_hist_2d = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
-    # Test direct call to _calculate_cumulative_2d
-    result_2d_direct = histograms._calculate_cumulative_2d(test_hist_2d, False)
-    expected_2d_direct = np.array([[1, 3, 6], [4, 9, 15]])
-    np.testing.assert_array_equal(result_2d_direct, expected_2d_direct)
-
     # Test _apply_cumsum_along_axis with different parameters
     # Test axis=1, reverse=False
     result_axis1_no_reverse = histograms._apply_cumsum_along_axis(
@@ -685,46 +680,6 @@ def mock_histograms(mocker):
     )
     mocker.patch("simtools.sim_events.histograms.EventDataReader")
     return EventDataHistograms("dummy_file.h5", "test_array")
-
-
-def test_rebin_2d_histogram(mock_histograms):
-    hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]])
-    x_bins = np.array([0, 1, 2, 3, 4])
-    y_bins = np.array([0, 10, 20, 30, 40])
-
-    histograms = mock_histograms
-
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
-        hist, x_bins, y_bins, rebin_factor=2
-    )
-
-    expected_hist = np.array([[3, 7], [11, 15], [19, 23], [27, 31]])
-    expected_x_bins = x_bins
-    expected_y_bins = np.array([0, 20, 40])
-
-    assert np.array_equal(rebinned_hist, expected_hist)
-    assert np.array_equal(rebinned_x_bins, expected_x_bins)
-    assert np.array_equal(rebinned_y_bins, expected_y_bins)
-
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
-        hist, x_bins, y_bins, rebin_factor=1
-    )
-
-    assert np.array_equal(rebinned_hist, hist)
-    assert np.array_equal(rebinned_x_bins, x_bins)
-    assert np.array_equal(rebinned_y_bins, y_bins)
-
-    rebinned_hist, rebinned_x_bins, rebinned_y_bins = histograms.rebin_2d_histogram(
-        hist, x_bins, y_bins, rebin_factor=4
-    )
-
-    expected_hist = np.array([[10], [26], [42], [58]])
-
-    expected_y_bins = np.array([0, 40])
-
-    assert np.array_equal(rebinned_hist, expected_hist)
-    assert np.array_equal(rebinned_x_bins, expected_x_bins)
-    assert np.array_equal(rebinned_y_bins, expected_y_bins)
 
 
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):

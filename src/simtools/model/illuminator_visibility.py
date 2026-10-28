@@ -100,17 +100,6 @@ class IlluminatorTelescopeVisibility:
         if len(self._telescopes) == 0:
             raise ValueError("Visibility table contains no telescopes")
 
-    def get_illuminators(self):
-        """
-        Get list of all illuminators in the visibility table.
-
-        Returns
-        -------
-        list of str
-            List of illuminator identifiers.
-        """
-        return list(self._illuminators)
-
     def get_telescopes(self):
         """
         Get list of all telescopes in the visibility table.
@@ -135,87 +124,6 @@ class IlluminatorTelescopeVisibility:
             List of (illuminator_id, telescope_id) tuples for all valid pairs.
         """
         return list(self._valid_pairs)
-
-    def is_valid_pair(self, illuminator, telescope):
-        """
-        Check if a specific illuminator-telescope pair is valid.
-
-        Parameters
-        ----------
-        illuminator : str
-            Illuminator identifier.
-        telescope : str
-            Telescope identifier.
-
-        Returns
-        -------
-        bool
-            True if the pair is valid (telescope is illuminated), False otherwise.
-
-        Raises
-        ------
-        ValueError
-            If the illuminator or telescope is not found in the table.
-        """
-        if illuminator not in self._illuminators:
-            raise ValueError(f"Illuminator '{illuminator}' not found in visibility table")
-        if telescope not in self._telescopes:
-            raise ValueError(f"Telescope '{telescope}' not found in visibility table")
-
-        return self._pairs.get((illuminator, telescope), False)
-
-    def get_telescopes_for_illuminator(self, illuminator):
-        """
-        Get all telescopes that can be illuminated by a specific illuminator.
-
-        Parameters
-        ----------
-        illuminator : str
-            Illuminator identifier.
-
-        Returns
-        -------
-        list of str
-            List of telescope identifiers that can be illuminated.
-
-        Raises
-        ------
-        ValueError
-            If the illuminator is not found in the table.
-        """
-        if illuminator not in self._illuminators:
-            raise ValueError(f"Illuminator '{illuminator}' not found in visibility table")
-
-        return [tel for tel in self._telescopes if self._pairs.get((illuminator, tel), False)]
-
-    def get_illuminators_for_telescope(self, telescope):
-        """
-        Get all illuminators that can illuminate a specific telescope.
-
-        Parameters
-        ----------
-        telescope : str
-            Telescope identifier.
-
-        Returns
-        -------
-        list of str
-            List of illuminator identifiers that can illuminate this telescope.
-
-        Raises
-        ------
-        ValueError
-            If the telescope is not found in the table.
-        """
-        if telescope not in self._telescopes:
-            raise ValueError(f"Telescope '{telescope}' not found in visibility table")
-
-        return [ill for ill in self._illuminators if self._pairs.get((ill, telescope), False)]
-
-    @property
-    def n_illuminators(self):
-        """Get the number of illuminators in the table."""
-        return len(self._illuminators)
 
     @property
     def n_telescopes(self):

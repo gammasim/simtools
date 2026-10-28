@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 # Constants
 RADIUS = "Radius"
 CUMULATIVE_PSF = "Cumulative PSF"
-KS_STATISTIC_NAME = "KS statistic"
 LABEL = "label"
 MODEL_VERSION = "model_version"
 TELESCOPE = "telescope"
@@ -195,8 +194,8 @@ class PSFParameterOptimizer:
         ----------
         pars : dict
             Dictionary of parameter values to test.
-        pdf_pages : PdfPages, optional
-            PDF pages object for saving plots.
+        pdf_pages : PDF report object, optional
+            Open report for adding plots.
         is_best : bool, optional
             Flag indicating if this is the best parameter set.
         use_cache : bool, optional
@@ -521,7 +520,6 @@ class PSFParameterOptimizer:
             second_metric=best_ks_stat,
         )
         del self.data_to_plot["simulated"]
-        pdf_pages.close()
         logger.info("Cumulative PSF plots saved")
 
     def run_gradient_descent(self, rmsd_threshold, learning_rate, max_iterations=200):
@@ -546,10 +544,15 @@ class PSFParameterOptimizer:
             logger.error("No PSF measurement data provided. Cannot run optimization.")
             return None, None, []
 
-        current_params = self.get_initial_parameters()
-        pdf_pages = plot_psf.setup_pdf_plotting(
+        pdf_context = plot_psf.setup_pdf_plotting(
             self.args_dict, self.output_dir, self.tel_model.name
         )
+        with pdf_context as report:
+            return self._run_descent(rmsd_threshold, learning_rate, max_iterations, report)
+
+    def _run_descent(self, rmsd_threshold, learning_rate, max_iterations, pdf_pages):
+        """Run gradient descent while writing plots to an optional open report."""
+        current_params = self.get_initial_parameters()
         results = []
 
         # Evaluate initial parameters
@@ -887,8 +890,8 @@ def run_psf_simulation(
         Dictionary containing measured PSF data under "measured" key.
     radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
-    pdf_pages : PdfPages, optional
-        PDF pages object for saving plots (default: None).
+    pdf_pages : PDF report object, optional
+        Open report for adding plots (default: None).
     is_best : bool, optional
         Flag indicating if this is the best parameter set (default: False).
     use_ks_statistic : bool, optional
@@ -978,64 +981,6 @@ def load_and_process_data(args_dict):
     data[CUMULATIVE_PSF] /= np.max(np.abs(data[CUMULATIVE_PSF]))  # Normalize to max = 1.0
 
     return OrderedDict([("measured", data)]), data[RADIUS]
-
-
-def write_tested_parameters_to_file(
-    results, best_pars, best_psf_diameter, output_dir, tel_model, fraction=DEFAULT_FRACTION
-):
-    """
-    Write optimization results and tested parameters to a log file.
-
-    Parameters
-    ----------
-    results : list
-        List of tuples containing (parameters, ks_statistic, p_value, psf_diameter, simulated_data)
-        for each tested parameter set.
-    best_pars : dict
-        Dictionary containing the best parameter values found.
-    best_psf_diameter : float
-        PSF containment diameter in cm for the best parameter set.
-    output_dir : Path
-        Directory where the log file will be written.
-    tel_model : TelescopeModel
-        Telescope model object for naming the output file.
-    fraction : float, optional
-        PSF containment fraction for labeling (default: 0.8).
-
-    Returns
-    -------
-    Path
-        Path to the created log file.
-    """
-    param_file = output_dir.joinpath(f"psf_optimization_{tel_model.name}.log")
-    psf_label = get_psf_diameter_label(fraction)
-
-    with open(param_file, "w", encoding="utf-8") as f:
-        header = _create_log_header_and_format_value(
-            "PSF Parameter Optimization Log",
-            tel_model,
-            {"Total parameter sets tested": len(results)},
-        )
-        f.write(header)
-
-        f.write("PARAMETER TESTING RESULTS:\n")
-        for i, (pars, ks_statistic, p_value, psf_diameter, _) in enumerate(results):
-            status = "BEST" if pars is best_pars else "TESTED"
-            f.write(
-                f"[{status}] Set {i + 1:03d}: KS_stat={ks_statistic:.5f}, "
-                f"p_value={p_value:.5f}, {psf_label}={psf_diameter:.5f} cm\n"
-            )
-            for par, value in pars.items():
-                f.write(f"    {par}: {value}\n")
-            f.write("\n")
-
-        f.write("OPTIMIZATION SUMMARY:\n")
-        f.write(f"Best KS statistic: {min(result[1] for result in results):.5f}\n")
-        f.write(f"Best {psf_label}: {best_psf_diameter:.5f} cm\n")
-        f.write("\nOPTIMIZED PARAMETERS:\n")
-        for par, value in best_pars.items():
-            f.write(f"{par}: {value}\n")
-    return param_file
 
 
 def _add_units_to_psf_parameters(best_pars):

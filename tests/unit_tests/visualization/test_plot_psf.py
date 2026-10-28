@@ -137,7 +137,7 @@ def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
 
         mock_base.assert_called_once()
         mock_annotations.assert_called_once()
-        mock_pdf_pages.savefig.assert_called_once()
+        mock_pdf_pages.add.assert_called_once_with(mock_fig)
 
 
 def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_psf_data):
@@ -181,20 +181,6 @@ def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_
         mock_logger.warning.assert_called()
 
 
-def test_create_parameter_progression_plots(data_to_plot, sample_parameters, sample_psf_data):
-    results = [
-        (sample_parameters, 0.123, 0.05, 3.5, sample_psf_data),
-        (sample_parameters, 0.100, None, 3.2, None),  # Test with None data (skipped)
-    ]
-
-    with patch("simtools.visualization.plot_psf.create_detailed_parameter_plot") as mock_create:
-        mock_pdf_pages = MagicMock()
-        plot_psf.create_parameter_progression_plots(
-            results, sample_parameters, data_to_plot, mock_pdf_pages
-        )
-        assert mock_create.call_count == 1  # Only first one called, second skipped due to None data
-
-
 def test_create_gradient_descent_convergence_plot(tmp_path):
     gd_results = [
         ({"param1": 0.1}, 0.1, 0.05, 3.5, None),
@@ -202,7 +188,7 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
     ]
     output_file = tmp_path / "convergence.png"
 
-    with patch("matplotlib.pyplot.savefig") as mock_save:
+    with patch("simtools.visualization.plot_psf.visualize.save_figure") as mock_save:
         # Test RMSD mode
         plot_psf.create_gradient_descent_convergence_plot(
             gd_results, 0.01, output_file, fraction=0.8, use_ks_statistic=False
@@ -342,8 +328,8 @@ def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
 @pytest.mark.parametrize(
     ("plot_all", "expected_result"),
     [
-        (True, "not_none"),  # Should return PdfPages object
-        (False, None),  # Should return None
+        (True, "not_none"),  # Report writing the PDF
+        (False, None),  # Context yielding None, no file
     ],
 )
 def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
@@ -353,33 +339,27 @@ def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
 
     if expected_result == "not_none":
         assert pdf_pages is not None
-        pdf_pages.close()
+        with pdf_pages as report:
+            report.add(plt.figure())
+        assert (tmp_path / "psf_gradient_descent_plots_LSTN-01.pdf").exists()
     else:
-        assert pdf_pages is expected_result
+        with pdf_pages as report:
+            assert report is expected_result
+        assert not (tmp_path / "psf_gradient_descent_plots_LSTN-01.pdf").exists()
 
 
 def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters):
     mock_telescope_model = MagicMock()
     mock_telescope_model.name = "LSTN-01"
-    data_to_plot = {"measured": sample_psf_data}
+    data_to_plot = {"measured": sample_psf_data, "simulated": sample_psf_data}
     gd_results = [(sample_parameters, 0.1, 0.8, 3.5, sample_psf_data)]
 
     # Test with save_plots=True - should create plots
     args_dict_with_plots = {"save_plots": True, "fraction": 0.8}
-    with (
-        patch("simtools.visualization.plot_psf.pdf_backend.PdfPages") as mock_pdf,
-        patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
-    ):
-        mock_pdf_instance = MagicMock()
-        mock_pdf.return_value = mock_pdf_instance
-
-        plot_psf.create_optimization_plots(
-            args_dict_with_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
-        )
-
-        mock_pdf.assert_called_once()
-        mock_plot.assert_called_once()
-        mock_pdf_instance.close.assert_called_once()
+    plot_psf.create_optimization_plots(
+        args_dict_with_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
+    )
+    assert (tmp_path / "psf_optimization_results_LSTN-01.pdf").exists()
 
     # Test with save_plots=False - should return early without creating plots
     args_dict_no_plots = {"save_plots": False, "fraction": 0.8}
@@ -387,42 +367,6 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
         args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
     assert result is None
-
-
-def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
-    mock_telescope_model = MagicMock()
-    mock_telescope_model.name = "LSTN-01"
-    data_to_plot = {"measured": sample_psf_data}
-    final_rmsd = 0.023
-
-    with (
-        patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
-        patch("matplotlib.pyplot.close") as mock_close,
-    ):
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_base.return_value = (mock_fig, mock_ax)
-
-        # Test with all parameters present
-        output_file = plot_psf.create_summary_psf_comparison_plot(
-            mock_telescope_model,
-            sample_parameters,
-            data_to_plot,
-            tmp_path,
-            final_rmsd,
-            sample_psf_data,
-        )
-
-        assert output_file is not None
-        mock_base.assert_called_once()
-        mock_ax.set_title.assert_called_once()
-        mock_ax.text.assert_called_once()
-        mock_fig.savefig.assert_called_once()
-        mock_close.assert_called_once()
-
-        # Verify title contains parameter information
-        title_call = mock_ax.set_title.call_args[0][0]
-        assert "Final Optimized Parameters" in title_call
 
 
 def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):

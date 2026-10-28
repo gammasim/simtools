@@ -4,6 +4,7 @@ import csv
 import json
 import logging
 from collections import Counter
+from contextlib import nullcontext
 from pathlib import Path
 
 from simtools.io.file_type import product_filename
@@ -21,7 +22,7 @@ from simtools.sim_events.production_comparison import (
     parse_production_arguments,
 )
 from simtools.visualization import plot_event_level_production_comparison
-from simtools.visualization.plot_event_level_production_comparison import _pdf_report, _PdfReport
+from simtools.visualization.visualize import pdf_report
 
 _COMPARISON_INVENTORY_FILE = product_filename("comparison_inventory")
 _COMPARISON_STATISTICS_FILE = product_filename("comparison_statistics")
@@ -96,9 +97,12 @@ def _write_metadata_comparisons(args_dict, output_directory, array_layout_names)
     statistics_files = []
     comparison_labels = {}
     report_pages = {}
-    with _pdf_report(
-        output_directory / "trigger-report.pdf", args_dict.get(_REPORT_MODE_KEY) == "compact"
-    ) as compact_figures:
+    report_context = (
+        pdf_report(output_directory / "trigger-report.pdf")
+        if args_dict.get(_REPORT_MODE_KEY) == "compact"
+        else nullcontext(None)
+    )
+    with report_context as compact_figures:
         for (pairing_key, production_descriptors), output_stem in zip(
             descriptor_pairs, output_stems
         ):
@@ -186,7 +190,7 @@ def _write_array_layout_comparisons(
 def _figure_pages(figures, first_figure):
     """Map compact plot names to their one-based page numbers in the combined PDF."""
     pages = {}
-    if isinstance(figures, _PdfReport):
+    if hasattr(figures, "page_labels"):
         labels = figures.page_labels[first_figure:]
     else:
         labels = [figure.get_label() for figure in figures[first_figure:]]

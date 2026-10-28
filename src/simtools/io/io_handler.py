@@ -4,7 +4,6 @@ import logging
 import re
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools import constants
 
 _TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
@@ -160,36 +159,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
         )
         output_file.parent.mkdir(parents=True, exist_ok=True)
         return output_file
-
-    def get_test_data_file(self, file_name=None, sub_dir=("static", "generated")):
-        """
-        Get path of a data file in the test resources directory.
-
-        Parameters
-        ----------
-        file_name: str
-            File name.
-        sub_dir: str or list or tuple of str
-        Fallback resource subdirectory name(s) to search under the configured
-        test-resource root.
-
-        Returns
-        -------
-        Path
-        """
-        base_path = self.test_resources_path
-        file_path = (base_path / file_name).resolve()
-
-        if file_path.exists():
-            return file_path
-
-        fallback_dirs = gen.ensure_list(sub_dir)
-        for folder in fallback_dirs:
-            candidate = (base_path / folder / file_name).resolve()
-            if candidate.exists():
-                return candidate
-
-        return file_path
 
     def get_model_configuration_directory(self, model_version, sub_dir=None):
         """

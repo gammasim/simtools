@@ -313,35 +313,6 @@ def read_job_grid(input_file):
     return [_deserialize_job_row(row, column_units) for row in rows], dict(table.meta)
 
 
-def read_job_grid_row(input_file, row_index):
-    """
-    Read a single row from an ECSV job grid by its 1-based index.
-
-    Parameters
-    ----------
-    input_file : str or Path
-        Input file path.
-    row_index : int
-        1-based index of the row to read (first row is 1).
-
-    Returns
-    -------
-    tuple[dict, dict]
-        Deserialized job row and metadata.
-
-    Raises
-    ------
-    IndexError
-        If ``row_index`` is outside the valid range.
-    """
-    rows, metadata = read_job_grid(input_file)
-    if row_index < 1 or row_index > len(rows):
-        raise IndexError(
-            f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
-        )
-    return rows[row_index - 1], metadata
-
-
 def _deep_merge_dicts(dict1, dict2):
     """
     Deep merge two dictionaries, with dict2 taking precedence.
@@ -378,8 +349,7 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     Parameters
     ----------
     job_row : dict
-        A single deserialized job row as returned by :func:`read_job_grid` or
-        :func:`read_job_grid_row`.
+        A single deserialized job row as returned by :func:`read_job_grid`.
     metadata : dict, optional
         Job grid metadata as returned alongside the rows.  When provided,
         ``site`` and ``simulation_software`` are included in the result.

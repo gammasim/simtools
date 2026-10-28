@@ -879,7 +879,8 @@ class RayTracing:
             self.output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
             self._logger.info(f"Saving fig in {plot_file}")
-            plot.savefig(plot_file)
+            # Keep the suffix: file names contain decimal points (e.g. "za20.0deg").
+            visualize.save_figure(plot, plot_file, figure_format=[plot_file.suffix[1:]], close=True)
 
             for (off_x, off_y), image in self.psf_images.items():
                 image_file_name = self._generate_file_name(
@@ -927,54 +928,6 @@ class RayTracing:
         """
         try:
             visualize.plot_histogram(self._results[key], **kwargs)
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
-    def get_mean(self, key):
-        """
-        Get mean value of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Mean value of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.mean(self._results[key])
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
-    def get_std_dev(self, key):
-        """
-        Get std dev of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Std deviation of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.std(self._results[key])
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 

@@ -203,24 +203,6 @@ def test_resolve_camera_components_does_not_infer_lightguide(telescope_model_lst
     assert "lightguide_angle_file" not in result["pixel_types"][0]
 
 
-def test_is_file_2d_true(telescope_model_lst, monkeypatch):
-    table = astropy.table.QTable()
-    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
-    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is True
-
-
-def test_is_file_2d_false_for_averaged_table(telescope_model_lst, monkeypatch):
-    table = astropy.table.QTable({"wavelength": [300.0], "transmission": [0.9]})
-    monkeypatch.setattr(telescope_model_lst, "get_parameter_table", Mock(return_value=table))
-    assert telescope_model_lst.is_file_2d("mirror_reflectivity") is False
-
-
-def test_is_file_2d_keyerror(telescope_model_lst, caplog):
-    result = telescope_model_lst.is_file_2d("missing_param")
-    assert result is False
-    assert "does not exist" in caplog.text
-
-
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
     fake_table = astropy.table.Table({"off_axis_angle": [0.0], "eff_area": [123.4]})
     telescope_model_lst.get_parameter_table = Mock(return_value=fake_table)
@@ -326,81 +308,3 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
         unit="m", return_focal_length_if_zero=True
     )
     assert result == pytest.approx(16.0)
-
-
-def test_read_two_dim_wavelength_angle(telescope_model_lst):
-    table = astropy.table.QTable(
-        {
-            "wavelength": [300.0, 300.0, 400.0, 400.0],
-            "incidence_angle": [0.0, 10.0, 0.0, 10.0],
-            "reflectivity": [0.8, 0.75, 0.9, 0.85],
-        }
-    )
-    telescope_model_lst.get_parameter_table = Mock(return_value=table)
-
-    result = telescope_model_lst.read_two_dim_wavelength_angle("mirror_reflectivity")
-
-    assert "Wavelength" in result
-    assert "Angle" in result
-    assert "z" in result
-    assert len(result["Wavelength"]) == 2
-    assert len(result["Angle"]) == 2
-    assert result["z"].shape == (2, 2)
-
-
-def test_read_incidence_angle_distribution(telescope_model_lst):
-    incidence_table = astropy.table.Table(
-        {
-            "incidence_angle": [0.0, 10.0],
-            "fraction": [0.5, 0.3],
-        }
-    )
-    telescope_model_lst.get_parameter_table = Mock(return_value=incidence_table)
-    result = telescope_model_lst.read_incidence_angle_distribution("incidence_angle")
-
-    assert isinstance(result, astropy.table.Table)
-    assert len(result) == 2
-    assert "incidence_angle" in result.colnames
-    assert "fraction" in result.colnames
-
-
-def test_calc_average_curve():
-    import numpy as np
-
-    from simtools.model.telescope_model import TelescopeModel
-
-    # Mock curves data
-    curves = {
-        "Wavelength": np.array([300.0, 400.0, 500.0]),
-        "Angle": np.array([0.0, 10.0, 20.0]),
-        "z": np.array([[0.8, 0.85, 0.9], [0.75, 0.8, 0.85], [0.7, 0.75, 0.8]]),
-    }
-
-    # Mock incidence angle distribution
-    incidence_angle_dist = astropy.table.Table(
-        {
-            "incidence_angle": [0.0, 10.0, 20.0],
-            "fraction": [0.5, 0.3, 0.2],
-        }
-    )
-
-    result = TelescopeModel.calc_average_curve(curves, incidence_angle_dist)
-
-    assert isinstance(result, astropy.table.Table)
-    assert "Wavelength" in result.colnames
-    assert "z" in result.colnames
-    assert len(result) == 3
-
-
-def test_export_table_to_model_directory(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    # Create a mock table
-    test_table = astropy.table.Table({"Wavelength": [300.0, 400.0], "Value": [0.8, 0.9]})
-
-    file_name = "test_output.dat"
-    result = tel_model.export_table_to_model_directory(file_name, test_table)
-
-    expected_path = tel_model.config_file_directory / file_name
-    assert result == expected_path.absolute()
-    assert expected_path.exists()

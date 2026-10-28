@@ -397,21 +397,6 @@ def test_analyze_image_zero_theta_offset(ray_tracing_lst, mocker):
     assert np.isnan(result[-1])
 
 
-def test_get_mean_std(ray_tracing_lst):
-    ray_tracing = copy.deepcopy(ray_tracing_lst)
-    _rows = _example_rows()
-    ray_tracing._store_results(_rows)
-    mean_value = ray_tracing.get_mean(key="psf_cm")
-    std_value = ray_tracing.get_std_dev(key="psf_cm")
-    assert mean_value.value == pytest.approx(4.3, abs=1e-2)
-    assert std_value.value == pytest.approx(0.05, abs=1e-2)
-
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing.get_mean(key="abc")
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing.get_std_dev(key="abc")
-
-
 def test_read_results(ray_tracing_lst, mocker):
     mock_read = mocker.patch("astropy.io.ascii.read", return_value=QTable())
     ray_tracing_lst._file_results = Path("dummy_path.ecsv")
@@ -481,15 +466,9 @@ def test_plot_histogram_invalid_key(ray_tracing_lst):
 
 
 def test_plot_valid_key(ray_tracing_lst, mocker):
-    mock_visualize_plot_table = mocker.patch(
-        "simtools.ray_tracing.ray_tracing.visualize.plot_table"
-    )
-    mock_plot = mock_visualize_plot_table.return_value
     mock_generate_file_name = mocker.patch.object(
         ray_tracing_lst, "_generate_file_name", return_value="plot_file.pdf"
     )
-    mock_mkdir = mocker.patch("pathlib.Path.mkdir")
-    mock_savefig = mocker.patch.object(mock_plot, "savefig")
 
     ray_tracing_lst._results = QTable(
         {
@@ -504,16 +483,12 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
 
     ray_tracing_lst.plot(key="psf_cm", save=True)
 
-    mock_visualize_plot_table.assert_called_once()
     mock_generate_file_name.assert_called_once_with(
         file_type="ray_tracing",
         suffix=".pdf",
         extra_label="psf_cm",
     )
-    mock_mkdir.assert_called_once_with(exist_ok=True)
-    mock_savefig.assert_called_once_with(
-        ray_tracing_lst.output_directory.joinpath("figures").joinpath("plot_file.pdf")
-    )
+    assert ray_tracing_lst.output_directory.joinpath("figures", "plot_file.pdf").exists()
 
 
 def test_plot_effective_focal_length_includes_error_column(ray_tracing_lst, mocker):

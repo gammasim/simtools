@@ -5,11 +5,11 @@ from pathlib import Path
 
 import numpy as np
 from astropy.table import Table
-from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.patches import Rectangle
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
+from simtools.visualization.visualize import pdf_report
 
 GROUP_ID = "group_id"
 GROUP_KIND = "kind"
@@ -260,7 +260,7 @@ def write_trigger_patch_report(camera, pixel_table, group_table, pdf_path):
     page_summary = format_trigger_patch_summary(pixel_table, group_table)
     distance_map = np.ma.masked_invalid(np.asarray(pixel_table[TYPICAL_DISTANCE], dtype=float))
     colormap = plt.get_cmap("viridis").with_extremes(bad="#aeb9c5")
-    with PdfPages(pdf_path) as pdf:
+    with pdf_report(pdf_path) as pdf:
         _write_report_page(
             pdf,
             camera,
@@ -357,7 +357,7 @@ def _write_report_page(
                 color=REPORT_INK,
                 family="DejaVu Sans Mono",
             )
-        pdf.savefig(figure, facecolor=REPORT_BACKGROUND)
+        pdf.add(figure)
     finally:
         plt.close(figure)
 

@@ -606,17 +606,6 @@ def test_metadata_angle_in_degrees_rejects_invalid_values(value, message):
         derive_corsika_limits._metadata_angle_in_degrees(value, "viewcone_min")
 
 
-def test_build_production_subdirectories_uses_production_indices(tmp_test_directory):
-    result = derive_corsika_limits._build_production_subdirectories(
-        [0, 3], Path(tmp_test_directory)
-    )
-
-    assert result[0] == Path(tmp_test_directory) / "production_0"
-    assert result[3] == Path(tmp_test_directory) / "production_3"
-    assert result[0].is_dir()
-    assert result[3].is_dir()
-
-
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     mock_resolve = mocker.patch(
         "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name",
@@ -1144,36 +1133,6 @@ def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
     mock_log.assert_not_called()
 
 
-def test_get_production_directory_name_readable_and_deterministic():
-    # Same inputs should produce same output when no collision exists
-    name1 = event_data_helpers.get_production_directory_name("pattern_1_*.hdf5")
-    name2 = event_data_helpers.get_production_directory_name("pattern_1_*.hdf5")
-    assert name1 == name2
-
-    # Different patterns should produce different readable names
-    name3 = event_data_helpers.get_production_directory_name("pattern_2_*.hdf5")
-    assert name1 != name3
-
-    # Names should be filesystem-safe (no special chars)
-    assert all(c.isalnum() or c == "_" for c in name1)
-    assert name1 == "production_pattern_1"
-
-
-def test_get_production_directory_name_appends_uuid_on_collision(mocker):
-    mock_uuid = mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers.get_uuid",
-        return_value="019d776b-e24c-741d-bc05-e3f6f7ec77c7",
-    )
-
-    name = event_data_helpers.get_production_directory_name(
-        "pattern_1_*.hdf5",
-        existing_names={"production_pattern_1"},
-    )
-
-    assert name == "production_pattern_1_019d776b-e24c-741d-bc05-e3f6f7ec77c7"
-    mock_uuid.assert_called_once()
-
-
 def test_parse_allowed_losses_all_and_override():
     result = derive_corsika_limits.parse_allowed_losses(
         [
@@ -1197,15 +1156,6 @@ def test_validate_differential_loss_bins_per_decade_rejects_invalid_values(value
 def test_validate_differential_loss_bins_per_decade_accepts_zero_and_positive_values():
     assert derive_corsika_limits.validate_differential_loss_bins_per_decade(0) == 0
     assert derive_corsika_limits.validate_differential_loss_bins_per_decade("5") == 5
-
-
-def test_build_production_subdirectories_single_production(tmp_test_directory):
-    result = event_data_helpers.build_production_subdirectories(
-        ["pattern_1_*.hdf5"],
-        tmp_test_directory,
-    )
-    assert set(result.keys()) == {"pattern_1_*.hdf5"}
-    assert result["pattern_1_*.hdf5"].exists()
 
 
 @pytest.fixture

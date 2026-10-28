@@ -4,6 +4,7 @@
 import logging
 import re
 from collections import OrderedDict
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 gridspec = lazy_module("matplotlib.gridspec")
 pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
+_FIGURE_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".ps", ".svg"}
 COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
@@ -200,57 +202,6 @@ def set_style(palette="default", big_plot=False):
     plt.rc("ytick", labelsize=fontsize[plot_size])
     plt.rc("legend", loc="best", shadow=False, fontsize="medium")
     plt.rc("font", family="serif", size=fontsize[plot_size])
-
-
-def get_colors(palette="default"):
-    """
-    Get the colour list of the palette requested.
-
-    If no palette is provided, the default is returned.
-
-    Parameters
-    ----------
-    palette: str
-        Colour palette.
-
-    Returns
-    -------
-    list
-        Colour list.
-
-    Raises
-    ------
-    KeyError
-        if provided palette does not exist.
-    """
-    if palette not in COLORS:
-        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
-
-    return COLORS[palette]
-
-
-def get_markers():
-    """
-    Get the marker list used in this module.
-
-    Returns
-    -------
-    list
-        List with markers.
-    """
-    return MARKERS
-
-
-def get_lines():
-    """
-    Get the line style list used in this module.
-
-    Returns
-    -------
-    list
-        List with line styles.
-    """
-    return LINES
 
 
 def filter_plot_kwargs(kwargs):
@@ -665,7 +616,8 @@ def save_figure(
     fig: plt.figure
         Figure to save.
     output_file: Path, str
-        Path to save the figure (without suffix).
+        Path to save the figure. A figure suffix (e.g. ``.pdf``) is replaced by each
+        format; other dots in the name (e.g. ``za20.0deg``) are kept.
     figure_format: list
         List of formats to save the figure. If None, use configured figure formats
         or fall back to ["png"].
@@ -687,9 +639,12 @@ def save_figure(
     png_palette = config.args.get("figure_png_palette", False)
 
     figure_format = figure_format or configured_formats or ["png"]
+    base = Path(output_file)
+    if base.suffix.lower() in _FIGURE_SUFFIXES:
+        base = base.with_suffix("")
 
     for fmt in gen.ensure_list(figure_format):
-        _file = Path(output_file).with_suffix(f".{fmt}")
+        _file = base.with_name(f"{base.name}.{fmt}")
         save_dpi = configured_dpi if fmt == "png" and configured_dpi is not None else dpi
         save_kwargs = {"format": fmt, "bbox_inches": "tight", "dpi": save_dpi}
         if fmt == "png" and pil_kwargs is not None:
@@ -702,6 +657,53 @@ def save_figure(
     fig.clf()
     if close:
         plt.close(fig)
+
+
+class _PdfReport:
+    """Write PDF pages and close each figure after it is appended."""
+
+    def __init__(self, path):
+        path = Path(path).absolute()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._document = pdf_backend.PdfPages(path.as_posix())
+        self.page_labels = []
+
+    def add(self, fig):
+        """Append a figure as a page and close it."""
+        try:
+            fig.tight_layout()
+            self._document.savefig(fig)
+            self.page_labels.append(fig.get_label())
+        finally:
+            plt.close(fig)
+
+    def __len__(self):
+        return len(self.page_labels)
+
+    def close(self):
+        """Close the PDF document."""
+        self._document.close()
+
+
+@contextmanager
+def pdf_report(path):
+    """Write figures to a multi-page PDF, closing each figure after it is added.
+
+    Parameters
+    ----------
+    path : pathlib.Path or str
+        Destination PDF path.
+
+    Yields
+    ------
+    _PdfReport
+        Report object with an ``add(fig)`` method.
+    """
+    report = _PdfReport(path)
+    try:
+        yield report
+    finally:
+        report.close()
 
 
 def convert_png_to_palette(png_file):
@@ -726,25 +728,3 @@ def convert_png_to_palette(png_file):
     palette_image.save(buffer, format="PNG", optimize=True)
     if buffer.tell() < png_file.stat().st_size:
         png_file.write_bytes(buffer.getvalue())
-
-
-def save_figures_to_single_document(figs, output_file_name, close=False):
-    """
-    Save multiple figures to a single PDF document.
-
-    Parameters
-    ----------
-    figs: iterable
-        Matplotlib figures to save, optionally generated one at a time.
-    output_file_name: Path, str
-        PDF file name
-    close : bool, optional
-        Close each figure after saving. Defaults to False.
-    """
-    _logger.info(f"Saving figures to {output_file_name}")
-    with pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix()) as pdf_pages:
-        for fig in figs:
-            fig.tight_layout()
-            pdf_pages.savefig(fig)
-            if close:
-                plt.close(fig)
