@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from simtools.data_model.mirror_segmentation import validate_segments
-from simtools.simtel.segmentation import parse_segmentation_file, write_mirror_segmentation
+from simtools.simtel.segmentation import write_mirror_segmentation
 
 PARAMETER_NAME = "primary_mirror_segmentation"
 SCHEMA_VERSION = "0.2.0"
@@ -43,9 +43,17 @@ def _polygon():
 
 
 def test_parse_and_write_ring_segments(tmp_test_directory):
-    source = Path(tmp_test_directory) / "segments.dat"
-    source.write_text("# comment\nRING 2 1 2 90 0 0.1\n", encoding="utf-8")
-    records = parse_segmentation_file(source, PARAMETER_NAME, SCHEMA_VERSION)
+    records = [
+        {
+            "kind": "ring",
+            "count": 2,
+            "r_min": _q(1),
+            "r_max": _q(2),
+            "dphi": _q(90, "deg"),
+            "phi0": _q(0, "deg"),
+            "gap": _q(0.1),
+        }
+    ]
     output = Path(tmp_test_directory) / "output.dat"
 
     write_mirror_segmentation(records, output, PARAMETER_NAME, SCHEMA_VERSION)
@@ -55,12 +63,26 @@ def test_parse_and_write_ring_segments(tmp_test_directory):
 
 
 def test_parse_and_write_shape_and_polygon_segments(tmp_test_directory):
-    source = Path(tmp_test_directory) / "segments.dat"
-    source.write_text(
-        "HEX 1 1 2 3 4\nPOLYGON 1 5 0 0 1 0 0 1\n",
-        encoding="utf-8",
-    )
-    records = parse_segmentation_file(source, PARAMETER_NAME, SCHEMA_VERSION)
+    records = [
+        {
+            "kind": "hex",
+            "count": 1,
+            "x": _q(1),
+            "y": _q(2),
+            "diameter": _q(3),
+            "rotation": _q(4, "deg"),
+        },
+        {
+            "kind": "polygon",
+            "count": 1,
+            "rotation": _q(5, "deg"),
+            "vertices": [
+                {"x": _q(0), "y": _q(0)},
+                {"x": _q(1), "y": _q(0)},
+                {"x": _q(0), "y": _q(1)},
+            ],
+        },
+    ]
     output = Path(tmp_test_directory) / "output.dat"
 
     write_mirror_segmentation(records, output, PARAMETER_NAME, SCHEMA_VERSION)

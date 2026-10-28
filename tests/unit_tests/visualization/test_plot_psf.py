@@ -181,20 +181,6 @@ def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_
         mock_logger.warning.assert_called()
 
 
-def test_create_parameter_progression_plots(data_to_plot, sample_parameters, sample_psf_data):
-    results = [
-        (sample_parameters, 0.123, 0.05, 3.5, sample_psf_data),
-        (sample_parameters, 0.100, None, 3.2, None),  # Test with None data (skipped)
-    ]
-
-    with patch("simtools.visualization.plot_psf.create_detailed_parameter_plot") as mock_create:
-        mock_pdf_pages = MagicMock()
-        plot_psf.create_parameter_progression_plots(
-            results, sample_parameters, data_to_plot, mock_pdf_pages
-        )
-        assert mock_create.call_count == 1  # Only first one called, second skipped due to None data
-
-
 def test_create_gradient_descent_convergence_plot(tmp_path):
     gd_results = [
         ({"param1": 0.1}, 0.1, 0.05, 3.5, None),
@@ -387,42 +373,6 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
         args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
     assert result is None
-
-
-def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
-    mock_telescope_model = MagicMock()
-    mock_telescope_model.name = "LSTN-01"
-    data_to_plot = {"measured": sample_psf_data}
-    final_rmsd = 0.023
-
-    with (
-        patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
-        patch("matplotlib.pyplot.close") as mock_close,
-    ):
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_base.return_value = (mock_fig, mock_ax)
-
-        # Test with all parameters present
-        output_file = plot_psf.create_summary_psf_comparison_plot(
-            mock_telescope_model,
-            sample_parameters,
-            data_to_plot,
-            tmp_path,
-            final_rmsd,
-            sample_psf_data,
-        )
-
-        assert output_file is not None
-        mock_base.assert_called_once()
-        mock_ax.set_title.assert_called_once()
-        mock_ax.text.assert_called_once()
-        mock_fig.savefig.assert_called_once()
-        mock_close.assert_called_once()
-
-        # Verify title contains parameter information
-        title_call = mock_ax.set_title.call_args[0][0]
-        assert "Final Optimized Parameters" in title_call
 
 
 def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):

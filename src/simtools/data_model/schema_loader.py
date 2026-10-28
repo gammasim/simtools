@@ -95,11 +95,6 @@ def _load_schema_source(schema_file):
     return schema
 
 
-def clear_cache():
-    """Clear cached parsed schema sources."""
-    _load_schema_source.cache_clear()
-
-
 def _get_local_schema_candidates(schema_file):
     """Build local candidate paths for a schema file reference."""
     schema_path = Path(str(schema_file))
