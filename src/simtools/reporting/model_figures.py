@@ -25,6 +25,12 @@ from simtools.visualization import (
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_pixels import _resolve_camera_components
 
+_FLASHER_X_LABEL = "Time relative to peak [ns]"
+_FLASHER_Y_LABEL = "Pulse-table amplitude"
+_NSB_TITLE = "Atmospheric extinction for NSB altitude correction"
+_NSB_X_LABEL = "Wavelength [nm]"
+_NSB_Y_LABEL = "Emission altitude [km]"
+
 
 def _write_telescope_structure_figure(file, telescope_model, logger):
     """Generate and link the nominal telescope structure for this model version."""
@@ -161,8 +167,8 @@ def _write_flasher_model_figure(
             "shape": shape,
             "telescope_model": telescope_model,
             "title": f"Flasher pulse table for {telescope_model}",
-            "x_label": "Time relative to peak [ns]",
-            "y_label": "Pulse-table amplitude",
+            "x_label": _FLASHER_X_LABEL,
+            "y_label": _FLASHER_Y_LABEL,
         },
         rendered_data={"time_ns": time, "amplitude": amplitude},
     )
@@ -189,7 +195,8 @@ def _latest_model_version(model_versions):
 def _get_flasher_readout_models(model_reader, site, model_version, calibration_device):
     """Find telescope designs that assign this calibration device and readout window."""
     readout_models = []
-    telescope_models = model_reader.get_array_elements(model_version, collection="telescopes")
+    production = model_reader.read_production_table("telescopes", model_version)
+    telescope_models = production["parameters"]
     for telescope_model in telescope_models:
         if not names.is_design_type(telescope_model):
             continue
@@ -226,8 +233,8 @@ def _save_flasher_figure(image_path, telescope_model, time, amplitude):
     figure, axes = plt.subplots(figsize=(8, 4.5))
     axes.plot(time, amplitude, label="Gauss-Exponential")
     axes.set_title(f"Flasher pulse table for {telescope_model}")
-    axes.set_xlabel("Time relative to peak [ns]")
-    axes.set_ylabel("Pulse-table amplitude")
+    axes.set_xlabel(_FLASHER_X_LABEL)
+    axes.set_ylabel(_FLASHER_Y_LABEL)
     axes.grid(True, alpha=0.3)
     axes.legend()
     figure.savefig(image_path, bbox_inches="tight")
@@ -251,9 +258,9 @@ def _plot_nsb_altitude_correction(input_file, output_path):
         renderer="plot_nsb_altitude_correction",
         renderer_modules={"model_figures": __file__},
         plot_config={
-            "title": "Atmospheric extinction for NSB altitude correction",
-            "xtitle": "Wavelength [nm]",
-            "ytitle": "Emission altitude [km]",
+            "title": _NSB_TITLE,
+            "xtitle": _NSB_X_LABEL,
+            "ytitle": _NSB_Y_LABEL,
             "colorbar": "Extinction",
         },
         rendered_data=_file_digest(input_file),
@@ -269,9 +276,9 @@ def _plot_nsb_altitude_correction(input_file, output_path):
             shading="auto",
             cmap="viridis",
         )
-        axes.set_title("Atmospheric extinction for NSB altitude correction")
-        axes.set_xlabel("Wavelength [nm]")
-        axes.set_ylabel("Emission altitude [km]")
+        axes.set_title(_NSB_TITLE)
+        axes.set_xlabel(_NSB_X_LABEL)
+        axes.set_ylabel(_NSB_Y_LABEL)
         figure.colorbar(mesh, ax=axes, label="Extinction")
         figure.savefig(image_path, bbox_inches="tight")
         plt.close(figure)

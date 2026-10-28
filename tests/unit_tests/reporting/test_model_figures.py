@@ -11,7 +11,9 @@ from simtools.reporting.model_figures import (
 
 def test_get_flasher_readout_models_uses_explicit_device_assignment():
     reader = Mock()
-    reader.get_array_elements.return_value = ["MSTx-NectarCam", "MSTx-FlashCam"]
+    reader.read_production_table.return_value = {
+        "parameters": {"MSTx-NectarCam": {}, "MSTx-FlashCam": {}, "LSTN-design": {}}
+    }
     reader.get_model_parameters.side_effect = [
         {
             "calibration_devices": {"value": {"flat_fielding": "MSFx-NectarCam"}},
@@ -21,11 +23,15 @@ def test_get_flasher_readout_models_uses_explicit_device_assignment():
             "calibration_devices": {"value": {"flat_fielding": "MSFx-FlashCam"}},
             "fadc_sum_bins": {"value": 40},
         },
+        {
+            "calibration_devices": {"value": {"flat_fielding": "MSFx-NectarCam"}},
+            "fadc_sum_bins": {"value": 32},
+        },
     ]
 
     result = _get_flasher_readout_models(reader, "North", "8.0.0", "MSFx-NectarCam")
 
-    assert result == [("MSTx-NectarCam", 60)]
+    assert result == [("MSTx-NectarCam", 60), ("LSTN-design", 32)]
 
 
 def test_use_exported_model_filenames_matches_qualified_report_assets(tmp_path):

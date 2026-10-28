@@ -421,7 +421,7 @@ def telescope_geometry(tel_model):
         structure += _secondary_shadow(parameters, overall)
     record = parameters.get("telescope_structure")
     if record and record.get("value"):
-        structure = _structure_elements(tel_model.config_file_directory / record["value"], overall)
+        structure += _structure_elements(tel_model.config_file_directory / record["value"], overall)
     return TelescopeGeometry(
         name=tel_model.name,
         mirrors=mirrors,
