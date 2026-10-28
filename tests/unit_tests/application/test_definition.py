@@ -72,7 +72,7 @@ def test_application_definition_can_exclude_standard_arguments():
 
 def test_start_delegates_to_common_startup(mocker):
     startup = mocker.patch(
-        "simtools.application.control._initialize_runtime", return_value="context"
+        "simtools.application.control.initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
@@ -105,7 +105,7 @@ def test_model_repository_definitions_initialize_the_reader_by_default():
 def test_start_can_skip_model_reader_initialization(mocker):
     """Write-only applications can start without an existing model repository."""
     startup = mocker.patch(
-        "simtools.application.control._initialize_runtime", return_value="context"
+        "simtools.application.control.initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",

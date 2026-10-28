@@ -18,11 +18,11 @@ from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.model_figures import (
-    _plot_camera_config,
-    _plot_mirror_config,
-    _plot_nsb_altitude_correction,
-    _write_flasher_pulse_shape_plots,
-    _write_telescope_structure_figure,
+    plot_camera_config,
+    plot_mirror_config,
+    plot_nsb_altitude_correction,
+    write_flasher_pulse_shape_plots,
+    write_telescope_structure_figure,
 )
 from simtools.utils import names
 from simtools.version import base_version_for_patch_delta, sort_versions
@@ -331,9 +331,9 @@ class ReadParameters:
         plot_kwargs = {k: v for k, v in (("telescope", telescope), ("site", site)) if v}
 
         if parameter == "correct_nsb_spectrum_to_telescope_altitude":
-            plot_names = _plot_nsb_altitude_correction(input_file, outpath)
+            plot_names = plot_nsb_altitude_correction(input_file, outpath)
         elif parameter == "camera_pixel_layout":
-            plot_names = _plot_camera_config(
+            plot_names = plot_camera_config(
                 parameter,
                 parameter_version,
                 input_file,
@@ -348,7 +348,7 @@ class ReadParameters:
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
         ):
-            plot_names = _plot_mirror_config(
+            plot_names = plot_mirror_config(
                 parameter,
                 parameter_version,
                 input_file,
@@ -956,7 +956,7 @@ class ReadParameters:
         with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
             file.write(f"# {telescope_model.name}\n")
-            _write_telescope_structure_figure(file, telescope_model, self._logger)
+            write_telescope_structure_figure(file, telescope_model, self._logger)
 
             if not is_design_model:
                 file.write(
@@ -1051,7 +1051,7 @@ class ReadParameters:
         if comparison_data.get(parameter)[0]["file_flag"]:
             self._write_file_flag_section(file, parameter, comparison_data, collection)
         elif parameter == "flasher_pulse_shape":
-            _write_flasher_pulse_shape_plots(
+            write_flasher_pulse_shape_plots(
                 file,
                 comparison_data[parameter],
                 collection,

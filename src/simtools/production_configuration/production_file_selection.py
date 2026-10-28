@@ -232,7 +232,7 @@ def check_manifest(manifest):
     unverifiable_fields = sorted(manifest.data.get("configuration", {}))
     for file_type, relative_paths in manifest.data.get("files", {}).items():
         for relative_path in relative_paths:
-            file_path = _resolve_relative_manifest_path(manifest.directory, relative_path)
+            file_path = resolve_relative_manifest_path(manifest.directory, relative_path)
             if file_path in seen_paths:
                 raise ValueError(
                     f"Duplicate output file listed in {manifest.path}: {relative_path}"
@@ -400,7 +400,7 @@ def _selection_matches(data, key, expected):
     value = _get_dotted_value(data, key)
     if value is None and "." not in key:
         value = _get_dotted_value(data, f"configuration.{key}")
-    return _values_match(value, expected)
+    return values_match(value, expected)
 
 
 def _get_dotted_value(data, key):
@@ -413,12 +413,12 @@ def _get_dotted_value(data, key):
     return value
 
 
-def _values_match(value, expected):
+def values_match(value, expected):
     """Return whether a manifest value matches a command-line selection value."""
     if value is None:
         return False
     if isinstance(value, list):
-        return any(_values_match(item, expected) for item in value)
+        return any(values_match(item, expected) for item in value)
     if isinstance(value, dict) and set(value) == {"value", "unit"}:
         return _quantity_matches(value, expected)
     return str(value) == expected
@@ -457,12 +457,12 @@ def _normalized_group_key(configuration):
 def _manifest_files(manifest, file_type):
     """Return absolute paths for files of the requested manifest file type."""
     return [
-        _resolve_relative_manifest_path(manifest.directory, relative_path)
+        resolve_relative_manifest_path(manifest.directory, relative_path)
         for relative_path in manifest.data.get("files", {}).get(file_type, [])
     ]
 
 
-def _resolve_relative_manifest_path(directory, relative_path):
+def resolve_relative_manifest_path(directory, relative_path):
     """Resolve one manifest-relative path and reject paths escaping the job directory."""
     path = Path(relative_path)
     if path.is_absolute():

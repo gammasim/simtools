@@ -11,10 +11,10 @@ import numpy as np
 
 from simtools.settings import config as simtools_config
 from simtools.visualization import matplotlib_backend
-from simtools.visualization.matplotlib_backend import _BACKEND_NAME
+from simtools.visualization.matplotlib_backend import BACKEND_NAME
 
 
-def _figure_cache_key(renderer, renderer_modules, plot_config, rendered_data):
+def figure_cache_key(renderer, renderer_modules, plot_config, rendered_data):
     """Return a SHA-256 key for identical plot inputs and rendering settings."""
     renderer_modules = {
         "figure_cache": __file__,
@@ -32,7 +32,7 @@ def _figure_cache_key(renderer, renderer_modules, plot_config, rendered_data):
     output_settings.update(
         {
             "locale": locale.setlocale(locale.LC_ALL),
-            "matplotlib_backend": _BACKEND_NAME,
+            "matplotlib_backend": BACKEND_NAME,
             "matplotlib_version": importlib.metadata.version("matplotlib"),
         }
     )

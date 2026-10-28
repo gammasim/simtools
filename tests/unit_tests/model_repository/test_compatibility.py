@@ -21,12 +21,12 @@ RANGE = ">=0.17.1,<0.18.0"
 def test_historical_release_constraint(monkeypatch, tmp_test_directory, tag, accepted):
     monkeypatch.setattr(models.subprocess, "run", Mock(return_value=SimpleNamespace(stdout=tag)))
     if accepted:
-        result = models._validate(tmp_test_directory, CATALOG)
+        result = models.validate_release(tmp_test_directory, CATALOG)
         assert result[models.VERSION_KEY] == "0.17.1"
         assert result[models.STATUS_KEY] == "compatible"
     else:
         with pytest.raises(ValueError, match=r"Allowed ==0\.17\.1"):
-            models._validate(tmp_test_directory, CATALOG)
+            models.validate_release(tmp_test_directory, CATALOG)
 
 
 @pytest.mark.parametrize(CONSTRAINT, [RANGE, "==0.17.1"])
@@ -59,11 +59,11 @@ def test_missing_contract():
 def test_unknown_version(monkeypatch, tmp_test_directory, tags, development):
     monkeypatch.setattr(models.subprocess, "run", Mock(return_value=SimpleNamespace(stdout=tags)))
     if development:
-        result = models._validate(tmp_test_directory, CATALOG, development=True)
+        result = models.validate_release(tmp_test_directory, CATALOG, development=True)
         assert result[models.STATUS_KEY] == models.DEVELOPMENT_STATUS
     else:
         with pytest.raises(ValueError, match="Tags at selected revision") as error:
-            models._validate(tmp_test_directory, CATALOG)
+            models.validate_release(tmp_test_directory, CATALOG)
         found_tags = ", ".join(tags.splitlines()) if tags else "none"
         assert f"Tags at selected revision: {found_tags}." in str(error.value)
         assert "Required: exactly one stable release tag. Allowed ==0.17.1" in str(error.value)

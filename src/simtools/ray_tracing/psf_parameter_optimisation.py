@@ -24,7 +24,7 @@ from simtools.io.io_handler import IOHandler
 from simtools.job_execution.backends.base import BackendError
 from simtools.job_execution.backends.local import determine_max_workers
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing.psf_evaluation import _dispatch_evaluations
+from simtools.ray_tracing.psf_evaluation import dispatch_evaluations
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
 from simtools.utils import names
@@ -308,7 +308,7 @@ class PSFParameterOptimizer:
 
     def _dispatch_parameter_evaluations(self, parameters):
         """Submit isolated evaluations to the configured execution backend."""
-        return _dispatch_evaluations(
+        return dispatch_evaluations(
             parameters,
             self.args_dict,
             self.data_to_plot,

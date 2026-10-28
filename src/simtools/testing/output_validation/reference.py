@@ -37,14 +37,14 @@ def _resource_suffixes(value):
 def _compare_mappings(first, second, tolerance):
     """Compare nested mappings, applying tolerance to model-parameter values."""
     return first.keys() == second.keys() and all(
-        _compare_values(first[key], second[key], tolerance, key == "value") for key in first
+        compare_values(first[key], second[key], tolerance, key == "value") for key in first
     )
 
 
 def _compare_sequences(first, second, tolerance, value_field):
     """Compare ordered nested sequences."""
     return len(first) == len(second) and all(
-        _compare_values(left, right, tolerance, value_field) for left, right in zip(first, second)
+        compare_values(left, right, tolerance, value_field) for left, right in zip(first, second)
     )
 
 
@@ -58,7 +58,8 @@ def _compare_model_values(first, second, tolerance):
         return first == second
 
 
-def _compare_values(first, second, tolerance, value_field=False):
+def compare_values(first, second, tolerance, value_field=False):
+    """Compare values recursively, including numerically tolerant model values."""
     if isinstance(first, dict) and isinstance(second, dict):
         return _compare_mappings(first, second, tolerance)
     if isinstance(first, (list, tuple)) and isinstance(second, (list, tuple)):
@@ -78,7 +79,7 @@ def compare_json_or_yaml_files(first_file, second_file, tolerance=1.0e-2):
         first.pop("schema_version", None)
     if isinstance(second, dict):
         second.pop("schema_version", None)
-    return _compare_values(first, second, tolerance)
+    return compare_values(first, second, tolerance)
 
 
 def _filter_mask(table, rule):

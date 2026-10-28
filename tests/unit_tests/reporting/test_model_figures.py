@@ -4,8 +4,8 @@ from astropy.table import Table
 
 from simtools.reporting.model_figures import (
     _get_flasher_readout_models,
-    _plot_nsb_altitude_correction,
     _use_exported_model_filenames,
+    plot_nsb_altitude_correction,
 )
 
 
@@ -60,7 +60,7 @@ def test_plot_nsb_altitude_correction_creates_heatmap(tmp_path):
         names=("wavelength", "altitude", "extinction"),
     ).write(input_file, format="ascii.ecsv")
 
-    plot_names = _plot_nsb_altitude_correction(input_file, tmp_path)
+    plot_names = plot_nsb_altitude_correction(input_file, tmp_path)
 
     assert len(plot_names) == 1
     assert plot_names[0].startswith("altitude-correction_")

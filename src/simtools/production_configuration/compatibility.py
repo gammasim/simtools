@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from simtools import __version__, dependency_versions, version
-from simtools.model_repository.compatibility import _validate
+from simtools.model_repository.compatibility import validate_release
 
 IMAGE_KEY = "container_image"
 
@@ -59,7 +59,7 @@ print(
 )
 
 
-def _preview(args, image=None):
+def preview(args, image=None):
     """Check selected models using the target installation's bundled catalog."""
     if image:
         result = subprocess.run(
@@ -89,7 +89,7 @@ def _preview(args, image=None):
             revision = dependency_versions.model_repository_revision(target[CATALOG_KEY])
     logger.info("Checking models for target simtools %s (host %s)", target[TARGET_KEY], __version__)
     return {
-        **_validate(
+        **validate_release(
             path,
             target[CATALOG_KEY],
             revision,
@@ -99,11 +99,11 @@ def _preview(args, image=None):
     }
 
 
-def _prepare_jobs(jobs, args, options):
+def prepare_jobs(jobs, args, options):
     """Reject incompatible models before submitting a production grid."""
     if jobs:
         image = options.backend_config.get(IMAGE_KEY)
         if any(job.resources.get(IMAGE_KEY, image) != image for job in jobs):
             raise ValueError("Submit separate production grids for different target images.")
-        _preview(args, image)
+        preview(args, image)
     return jobs

@@ -68,7 +68,7 @@ def _job_grid_args(job_grid_file, *extra_args):
 
 def _parse_with_config_sources(job_grid_file, cli_keys=(), yaml_keys=()):
     args = {"job_grid_file": str(job_grid_file), "job_grid_row": 1}
-    app._resolve_job_grid_arguments(
+    app.resolve_job_grid_arguments(
         args,
         {
             "defaults": set(),
@@ -355,7 +355,7 @@ def test_job_grid_file_allows_operational_parameters(job_grid_file):
 def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
     """HTCondor grid jobs detach unless explicitly asked to wait."""
     job_specs = [MagicMock()]
-    mocker.patch.object(app, "_prepare_jobs", side_effect=lambda jobs, *_: jobs)
+    mocker.patch.object(app, "prepare_jobs", side_effect=lambda jobs, *_: jobs)
     mocker.patch(
         "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=job_specs
     )

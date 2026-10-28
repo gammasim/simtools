@@ -12,9 +12,9 @@ from astropy.table import Table
 from simtools.io.file_type import product_filename
 from simtools.production_configuration.job_metadata import get_sim_telarray_event_counts
 from simtools.production_configuration.production_file_selection import (
-    _resolve_relative_manifest_path,
     discover_manifests,
     filter_manifests,
+    resolve_relative_manifest_path,
 )
 
 _BASELINE = "baseline"
@@ -629,7 +629,7 @@ def _output_sizes(manifest, role):
             sizes[output_type] = None
             continue
         files = manifest.data["files"].get(output_type, [])
-        paths = [_resolve_relative_manifest_path(manifest.directory, path) for path in files]
+        paths = [resolve_relative_manifest_path(manifest.directory, path) for path in files]
         sizes[output_type] = sum(path.stat().st_size for path in paths) if paths else None
     return sizes
 

@@ -600,7 +600,7 @@ def _should_forward_path(args_dict, key):
     return any(key in sources.get(source, ()) for source in explicit_sources)
 
 
-def _resolve_job_grid_arguments(args_dict, config_sources, parser):
+def resolve_job_grid_arguments(args_dict, config_sources, parser):
     """Merge selected job-grid row values into args after rejecting ambiguous input."""
     explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
     job_grid_row_is_explicit = "job_grid_row" in explicit_keys

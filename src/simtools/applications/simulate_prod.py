@@ -14,10 +14,10 @@ from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
-from simtools.production_configuration.compatibility import _prepare_jobs
+from simtools.production_configuration.compatibility import prepare_jobs
 from simtools.production_configuration.job_grid_io import (
-    _resolve_job_grid_arguments,
     build_simulate_prod_job_specs,
+    resolve_job_grid_arguments,
 )
 from simtools.production_configuration.job_metadata import build_production_job_manifest
 from simtools.production_configuration.production_file_selection import (
@@ -148,7 +148,7 @@ def _post_parse(args_dict, config_sources, parser):
     """Apply simulate-prod validations after configuration sources are merged."""
     if args_dict["list_available_corsika_models"]:
         _list_available_corsika_models(args_dict, parser)
-    _resolve_job_grid_arguments(args_dict, config_sources, parser)
+    resolve_job_grid_arguments(args_dict, config_sources, parser)
     _validate_single_interaction_models(args_dict, parser)
     args_dict["_defer_simulation_dependency_validation"] = bool(
         args_dict.get("backend", "local") != "local" and args_dict.get("_job_grid_rows")
@@ -167,7 +167,7 @@ def _execute_job_grid(args_dict):
         args_dict,
         work_dir=Path(args_dict["output_path"]),
     )
-    job_specs = _prepare_jobs(job_specs, args_dict, options)
+    job_specs = prepare_jobs(job_specs, args_dict, options)
     if args_dict.get("wait", False):
         execute_jobs(job_specs, options)
     else:

@@ -44,9 +44,9 @@ def test_dispatch_cleanup_removes_all_evaluation_files(
     mocker.patch.object(evaluation, EXECUTE_JOBS, side_effect=execute)
     if failure == BACKEND:
         with pytest.raises(RuntimeError, match=BACKEND_ERROR):
-            evaluation._dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
+            evaluation.dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
     else:
-        result = evaluation._dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
+        result = evaluation.dispatch_evaluations([{}, {}], args, {}, None, output, 2, execute)
         assert result == [1.0, None if failure else 1.0]
     assert paths[0].parents[1].name == "parallel_evaluations"
     assert paths[0].exists() == (not cleanup)
@@ -65,7 +65,7 @@ def test_dispatch_mounts_external_model_and_output_roots(tmp_test_directory, moc
     reader = SimpleNamespace(source_config=source) if source else None
     mocker.patch.object(evaluation, CONFIG, SimpleNamespace(args={}, model_reader=reader))
     execute = mocker.patch.object(evaluation, EXECUTE_JOBS, return_value=[])
-    evaluation._dispatch_evaluations([{}], {}, {}, None, output, 1, str)
+    evaluation.dispatch_evaluations([{}], {}, {}, None, output, 1, str)
     jobs = execute.call_args.args[0]
     assert output.is_dir()
     assert jobs[0].item.output_dir.is_relative_to(output)

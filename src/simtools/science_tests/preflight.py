@@ -11,7 +11,7 @@ from pathlib import Path
 
 from simtools.job_execution.execution import submit_jobs, wait_for_submission
 from simtools.job_execution.job import ExecutionOptions, JobSpec
-from simtools.runners.simtools_runner import _resolve_nested_configuration_files
+from simtools.runners.simtools_runner import resolve_nested_configuration_files
 from simtools.science_tests.acceptance import nonempty
 
 PREFLIGHT_PRIORITY = 1_000_000
@@ -75,7 +75,7 @@ def run_worker_canary(test, context, work_dir):
         Work directory for the canary job.
     """
     applications = copy.deepcopy(test.workflow["applications"][:1])
-    _resolve_nested_configuration_files(applications, test.replacements)
+    resolve_nested_configuration_files(applications, test.replacements)
     config = applications[0]["configuration"].get("backend_config") if applications else None
     if not isinstance(config, dict) or not config.get("container_image"):
         raise ValueError(

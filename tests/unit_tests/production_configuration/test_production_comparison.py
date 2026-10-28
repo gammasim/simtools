@@ -65,8 +65,8 @@ def test_root_comparison_has_no_pair_or_array_layout(tmp_test_directory):
 
 @pytest.mark.parametrize("level", [_EVENTS, "computing"])
 def test_comparison_product_validation_does_not_depend_on_acceptance_rule(mocker, level):
-    validate = mocker.patch.object(production_comparison, "_validate_derived_products")
-    production_comparison._validate_comparison_inputs(
+    validate = mocker.patch.object(production_comparison, "validate_derived_products")
+    production_comparison.validate_comparison_inputs(
         [
             {
                 "application": "simtools-compare-productions",
