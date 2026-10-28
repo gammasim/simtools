@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793209537868,
+  "lastUpdate": 1793209748808,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32994,6 +32994,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 483.44140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a0edfdc6c4d98ac378014818eac733d2dc2554ea",
+          "message": "Read simulation models through one source for checkouts, Git commits and tests (#2703)\n\n* Read simulation models through one ModelSource for all storages\n\nReplace FileSystemModelSource and GitModelSource with one ModelSource over\nDirectoryStorage, GitStorage or MemoryStorage (design 2.2, decision D6).\nSimulationModelReader.from_files/from_git keep their signatures; from_memory\nis new. A model version is read completely on first use for every storage.\nModel files are read and exported only with parameter metadata. Remove the\nunused SimulationModelReader.get_ecsv_file_as_astropy_table.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Skip file parameters without a value when exporting model files\n\nThe Git source skipped them; ModelSource passed them to path resolution,\nwhich failed for derive-incident-angle in the git integration tests.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Reject patch releases whose history version is missing\n\nModelSource skipped a missing version listed in model_version_history and\nreturned an incomplete production table; the Git source raised.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T18:28:24+01:00",
+          "tree_id": "60d5004bb7e77e2711bb15f3e3cf3af04ad30e2a",
+          "url": "https://github.com/gammasim/simtools/commit/a0edfdc6c4d98ac378014818eac733d2dc2554ea"
+        },
+        "date": 1793209734555,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 72.96794943199998,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 75.00999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 486.83984375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
