@@ -38,3 +38,4 @@ source:
   - Calibration
 simulation_software:
   - name: sim_telarray
+  - name: obdeect
