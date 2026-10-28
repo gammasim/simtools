@@ -7,6 +7,7 @@ import numpy as np
 
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 colors = lazy_module("matplotlib.colors")
 lines = lazy_module("matplotlib.lines")
@@ -52,42 +53,6 @@ def _resolve_broad_range_columns(limits_table):
         return None
 
     return resolved_columns
-
-
-def _plot_single_grid_coverage(
-    ax, zeniths, azimuths, nsb, array_name, found_combinations_str, primary_particle
-):
-    """Plot grid coverage for a single NSB and array name."""
-    z_grid = np.zeros((len(zeniths), len(azimuths)))
-    for i, zenith in enumerate(zeniths):
-        for j, azimuth in enumerate(azimuths):
-            point_str = (str(zenith), str(azimuth), str(nsb), str(array_name))
-            if point_str in found_combinations_str:
-                z_grid[i, j] = 1
-
-    az_vals = azimuths.value if hasattr(azimuths, "value") else azimuths
-    zen_vals = zeniths.value if hasattr(zeniths, "value") else zeniths
-    extent = [
-        min(az_vals) - 0.5,
-        max(az_vals) + 0.5,
-        max(zen_vals) + 0.5,
-        min(zen_vals) - 0.5,
-    ]
-
-    im = ax.imshow(
-        z_grid, cmap=colors.ListedColormap(["red", "green"]), vmin=0, vmax=1, extent=extent
-    )
-    cbar = plt.colorbar(im, ax=ax, ticks=[0, 1], label="Coverage", shrink=0.25, pad=0.02)
-    cbar.set_ticklabels(["Missing", "Present"])
-
-    ax.set_title(
-        f"Grid Coverage: NSB={nsb}, Array Name={array_name}, Primary Particle={primary_particle}"
-    )
-    ax.set_xlabel("Azimuth [deg]")
-    ax.set_ylabel(ZENITH_LABEL)
-    ax.set_xticks(az_vals)
-    ax.set_yticks(zen_vals)
-    ax.grid(which="major", linestyle="-", linewidth="0.5", color="black", alpha=0.3)
 
 
 def _plot_limit_series(axes, zeniths, values, color, filled_marker, linestyle):
@@ -245,8 +210,7 @@ def plot_limits(limits_table, output_dir):
         plt.subplots_adjust(bottom=0.15)
 
         output_file = output_dir / f"limits_{array_name}_{primary_particle}.png"
-        plt.savefig(output_file)
-        plt.close(fig)
+        save_figure(fig, output_file.with_suffix(""), figure_format=["png"], close=True)
         output_files.append(output_file)
 
     return output_files

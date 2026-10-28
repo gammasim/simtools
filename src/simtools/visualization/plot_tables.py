@@ -442,8 +442,13 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
     fig.tight_layout()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=200, bbox_inches="tight")
-    plt.close(fig)
+    visualize.save_figure(
+        fig,
+        Path(output_path).with_suffix(""),
+        figure_format=[Path(output_path).suffix[1:]],
+        dpi=200,
+        close=True,
+    )
 
 
 def _plot_nsb_curve(axis, nsb_stats):

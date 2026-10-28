@@ -47,7 +47,7 @@ def plot_metric_changes(changes, title, pdf_pages):
         Metric changes as returned by ``telescope_throughput.compare_results``.
     title : str
         Page title.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
     """
     names = list(changes)
@@ -71,7 +71,9 @@ def plot_metric_changes(changes, title, pdf_pages):
     change_axis.set_yticks(positions, labels)
     change_axis.invert_yaxis()
     change_axis.set_xlabel(_RELATIVE_CHANGE_LABEL)
-    _save_page(figure, title, pdf_pages)
+    figure.suptitle(title)
+    figure.tight_layout()
+    pdf_pages.add(figure)
 
 
 def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
@@ -85,7 +87,7 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
         Page title.
     labels : tuple of str
         Baseline and candidate legend labels.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
 
     Returns
@@ -123,7 +125,9 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
         column[1].set_ylabel(_RELATIVE_CHANGE_LABEL)
         for axis in column:
             _label_wavelength_axis(axis, unit)
-    _save_page(figure, title, pdf_pages)
+    figure.suptitle(title)
+    figure.tight_layout()
+    pdf_pages.add(figure)
     return diagnostics
 
 
@@ -138,7 +142,7 @@ def plot_components(baseline_table, candidate_table, title, labels, pdf_pages):
         Page title prefix.
     labels : tuple of str
         Baseline and candidate legend labels.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
 
     Returns
@@ -160,7 +164,9 @@ def plot_components(baseline_table, candidate_table, title, labels, pdf_pages):
     for relative in (False, True):
         figure = _component_page(wavelength, unit, groups, relative, labels)
         page = "relative change by component" if relative else "efficiency components"
-        _save_page(figure, f"{title}: {page}", pdf_pages)
+        figure.suptitle(f"{title}: {page}")
+        figure.tight_layout()
+        pdf_pages.add(figure)
     return None
 
 
@@ -234,10 +240,3 @@ def _metric_label(name, unit):
 def _label_wavelength_axis(axis, unit):
     axis.set_xlabel(f"Wavelength ({unit})")
     axis.tick_params(axis="x", labelbottom=True)
-
-
-def _save_page(figure, title, pdf_pages):
-    figure.suptitle(title)
-    figure.tight_layout()
-    pdf_pages.savefig(figure)
-    plt.close(figure)

@@ -7,7 +7,7 @@ from astropy import units as u
 
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import save_figures_to_single_document
+from simtools.visualization.visualize import pdf_report
 
 matplotlib = lazy_module("matplotlib")
 colors = lazy_module("matplotlib.colors")
@@ -222,6 +222,6 @@ def export_all_photon_figures_pdf(histograms_instance, pdf_file_name, labels=Non
         Optional list of labels for the input files. If None, file names are used as labels.
         The order should match the order of histograms_instance if it's a list.
     """
-    save_figures_to_single_document(
-        _build_all_photon_figures(histograms_instance, labels=labels), Path(pdf_file_name)
-    )
+    with pdf_report(Path(pdf_file_name)) as report:
+        for figure in _build_all_photon_figures(histograms_instance, labels=labels):
+            report.add(figure)

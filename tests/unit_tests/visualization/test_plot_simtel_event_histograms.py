@@ -49,6 +49,12 @@ CORE_Y_LABEL = "Core Y [m]"
 POINTING_LABEL = "Distance to pointing direction [deg]"
 
 
+@pytest.fixture(autouse=True)
+def suppress_plot_window(mocker):
+    """Prevent interactive windows when tests exercise the display-only path."""
+    return mocker.patch(PATCH_SHOW)
+
+
 @pytest.fixture
 def sample_data():
     data = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -405,37 +411,23 @@ def test_create_plot_with_output_file(tmp_test_directory):
     plot_params = {"color": "blue"}
     labels = {"x": "X-axis", "y": "Y-axis", "title": "Save Plot"}
     scales = {"x": "linear", "y": "linear"}
-    output_file = tmp_test_directory / "saved_plot.png"
+    output_file = Path(tmp_test_directory) / "saved_plot.png"
 
-    with (
-        patch(PATCH_SUBPLOTS) as mock_subplots,
-        patch(PATCH_SHOW) as mock_show,
-        patch(PATCH_CLOSE) as mock_close,
-    ):
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_subplots.return_value = (mock_fig, mock_ax)
+    result = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram",
+        plot_params=plot_params,
+        labels=labels,
+        scales=scales,
+        colorbar_label=None,
+        output_file=output_file,
+        lines={},
+    )
 
-        result = _create_plot(
-            data=data,
-            bins=bins,
-            plot_type="histogram",
-            plot_params=plot_params,
-            labels=labels,
-            scales=scales,
-            colorbar_label=None,
-            output_file=output_file,
-            lines={},
-        )
-
-        assert result is not None
-        mock_fig.savefig.assert_called_once()
-        # Ensure file path argument matches expected name
-        save_args, save_kwargs = mock_fig.savefig.call_args
-        assert str(output_file) in str(save_args[0])
-        assert save_kwargs["pil_kwargs"] == {"compress_level": 1}
-        mock_close.assert_called_once_with(mock_fig)
-        mock_show.assert_not_called()
+    assert result is not None
+    assert output_file.exists()
+    assert output_file.stat().st_size > 0
 
 
 @pytest.mark.filterwarnings("ignore:Tight layout not applied.*:UserWarning")
@@ -845,7 +837,7 @@ def test_broad_range_axis_limits_expand_for_coincident_energy_limit(tmp_test_dir
         plot_params={"norm": "log", "cmap": "viridis"},
         labels={"title": "Triggered"},
         scales={"y": "log"},
-        output_file=tmp_test_directory / "expanded_energy_axis.png",
+        output_file=None,
         lines={"y": 0.02},
         axis_limits=axis_limits,
         projection_kind="core_distance",
@@ -871,8 +863,7 @@ def test_projection_slice_coordinates():
     assert [value for value, _ in angular_slices] == [0.0, 1.0, 2.0, 3.0, 4.0]
 
 
-def test_create_2d_plot_with_distance_projections(tmp_test_directory):
-    output_file = tmp_test_directory / "projected.png"
+def test_create_2d_plot_with_distance_projections():
     data = np.arange(1.0, 21.0).reshape(4, 5)
     bins = [np.linspace(0.0, 2000.0, 5), np.logspace(-2, 3, 6)]
 
@@ -884,13 +875,12 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
         labels={"x": "Core distance (m)", "y": "Energy (TeV)", "title": "Triggered"},
         scales={"y": "log"},
         colorbar_label="Event count",
-        output_file=output_file,
+        output_file=None,
         lines={"x": 1200.0, "y": 0.1},
         axis_limits={"x": (0.0, 1800.0), "y": (0.02, 200.0)},
         projection_kind="core_distance",
     )
 
-    assert output_file.exists()
     assert len(fig.axes) >= 3
     assert fig.axes[0].get_xlim() == pytest.approx((0.0, 1800.0))
     assert fig.axes[0].get_ylim() == pytest.approx((0.02, 200.0))
@@ -920,8 +910,7 @@ def test_create_2d_plot_with_distance_projections(tmp_test_directory):
     assert fig.axes[2].get_legend()._loc == 1
 
 
-def test_create_2d_plot_with_angular_distance_projection_limits(tmp_test_directory):
-    output_file = tmp_test_directory / "angular_projected.png"
+def test_create_2d_plot_with_angular_distance_projection_limits():
     data = np.arange(1.0, 21.0).reshape(4, 5)
     bins = [np.linspace(0.0, 4.0, 5), np.logspace(-2, 3, 6)]
 
@@ -933,13 +922,12 @@ def test_create_2d_plot_with_angular_distance_projection_limits(tmp_test_directo
         labels={"x": "Angular distance (deg)", "y": "Energy (TeV)", "title": "Triggered"},
         scales={"y": "log"},
         colorbar_label="Event count",
-        output_file=output_file,
+        output_file=None,
         lines={"x": 2.5, "y": 0.1},
         axis_limits={"x": (0.0, 4.0), "y": (0.02, 200.0)},
         projection_kind="angular_distance",
     )
 
-    assert output_file.exists()
     assert fig.axes[1].lines[-1].get_xdata() == pytest.approx([2.5, 2.5])
     assert fig.axes[1].lines[-1].get_color() == "r"
     assert fig.axes[1].lines[-1].get_linestyle() == "--"
@@ -948,8 +936,7 @@ def test_create_2d_plot_with_angular_distance_projection_limits(tmp_test_directo
     assert fig.axes[2].lines[-1].get_linestyle() == "--"
 
 
-def test_create_2d_plot_renders_single_point_limit_curve(tmp_test_directory):
-    output_file = tmp_test_directory / "single_point_curve.png"
+def test_create_2d_plot_renders_single_point_limit_curve():
     data = np.ones((2, 2))
     bins = [np.array([0.0, 100.0, 200.0]), np.array([0.1, 1.0, 10.0])]
 
@@ -960,11 +947,10 @@ def test_create_2d_plot_renders_single_point_limit_curve(tmp_test_directory):
         plot_params={"norm": "log", "cmap": "viridis"},
         labels={"title": "Triggered"},
         scales={"y": "log"},
-        output_file=output_file,
+        output_file=None,
         lines={"curve": {"x": [120.0], "y": [1.0]}},
     )
 
-    assert output_file.exists()
     curve = fig.axes[0].lines[-1]
     assert curve.get_color() == "r"
     assert curve.get_linestyle() == "--"

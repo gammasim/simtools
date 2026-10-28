@@ -1,5 +1,7 @@
 """Shared PSF plotting helpers for ray-tracing workflows."""
 
+from pathlib import Path
+
 import astropy.units as u
 
 from simtools.visualization import visualize
@@ -208,5 +210,6 @@ def save_and_close_figure(fig, file_name):
     file_name : str or pathlib.Path
         Exact output path.
     """
-    fig.savefig(file_name)
-    plt.close(fig)
+    visualize.save_figure(
+        fig, Path(file_name).with_suffix(""), figure_format=[Path(file_name).suffix[1:]], close=True
+    )

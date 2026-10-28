@@ -709,8 +709,9 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
-    mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
-    mock_plt.close.assert_called_once_with(mock_fig)
+    mock_fig.savefig.assert_called_once_with(
+        output_path, format="png", bbox_inches="tight", dpi=200
+    )
     assert output_path.parent.exists()
 
 

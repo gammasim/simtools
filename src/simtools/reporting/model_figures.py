@@ -24,6 +24,7 @@ from simtools.visualization import (
 )
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_pixels import resolve_camera_components
+from simtools.visualization.visualize import save_figure
 
 _FLASHER_X_LABEL = "Time relative to peak [ns]"
 _FLASHER_Y_LABEL = "Pulse-table amplitude"
@@ -237,8 +238,7 @@ def _save_flasher_figure(image_path, telescope_model, time, amplitude):
     axes.set_ylabel(_FLASHER_Y_LABEL)
     axes.grid(True, alpha=0.3)
     axes.legend()
-    figure.savefig(image_path, bbox_inches="tight")
-    plt.close(figure)
+    save_figure(figure, image_path.with_suffix(""), figure_format=["png"], close=True)
 
 
 def plot_nsb_altitude_correction(input_file, output_path):
@@ -280,8 +280,7 @@ def plot_nsb_altitude_correction(input_file, output_path):
         axes.set_xlabel(_NSB_X_LABEL)
         axes.set_ylabel(_NSB_Y_LABEL)
         figure.colorbar(mesh, ax=axes, label="Extinction")
-        figure.savefig(image_path, bbox_inches="tight")
-        plt.close(figure)
+        save_figure(figure, image_path.with_suffix(""), figure_format=["png"], close=True)
     return [image_name] if image_path.is_file() else []
 
 

@@ -11,6 +11,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 Y_AXIS_BIN_COUNT_LABEL = "Density"
 
@@ -74,7 +75,7 @@ def _plot_radius_vs_angle(
     ax.grid(True, alpha=0.3)
     ax.legend(markerscale=3)
     plt.tight_layout()
-    plt.savefig(out_path, dpi=300)
+    save_figure(plt.gcf(), out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], dpi=300)
     plt.close(fig)
 
 
@@ -104,7 +105,7 @@ def _plot_xy_heatmap(
     cb = plt.colorbar(h[3], ax=ax)
     cb.set_label("Counts per bin")
     plt.tight_layout()
-    plt.savefig(out_path, dpi=300)
+    save_figure(plt.gcf(), out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], dpi=300)
     plt.close(fig)
 
 
@@ -129,7 +130,9 @@ def _plot_xy_heatmaps_per_offset(
         cb.set_label("Counts per bin")
         plt.tight_layout()
         out_path = out_dir / f"{file_stem}{off:g}_{label}.png"
-        plt.savefig(out_path, dpi=300)
+        save_figure(
+            plt.gcf(), out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], dpi=300
+        )
         plt.close(fig)
 
 
@@ -238,7 +241,7 @@ def _plot_radius_histograms(
     ax.grid(True, alpha=0.3)
     ax.legend()
     plt.tight_layout()
-    plt.savefig(out_path, dpi=300)
+    save_figure(plt.gcf(), out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], dpi=300)
     plt.close(fig)
 
 
@@ -379,7 +382,7 @@ def _plot_component_angles(
             bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.5},
         )
     plt.tight_layout()
-    plt.savefig(out_path, dpi=300)
+    save_figure(plt.gcf(), out_path.with_suffix(""), figure_format=[out_path.suffix[1:]], dpi=300)
     plt.close(fig)
 
 
@@ -449,7 +452,8 @@ def plot_incident_angles(
                     bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.5},
                 )
             plt.tight_layout()
-            plt.savefig(out_dir / f"incident_angles_multi_{label}.png", dpi=300)
+            output_file = out_dir / f"incident_angles_multi_{label}.png"
+            save_figure(plt.gcf(), output_file.with_suffix(""), figure_format=["png"], dpi=300)
             plt.close(fig)
 
     # Primary and secondary mirror angles

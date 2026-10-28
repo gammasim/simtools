@@ -8,8 +8,8 @@ from matplotlib import colormaps
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import (
+    pdf_report,
     save_figure,
-    save_figures_to_single_document,
 )
 
 _ROLE_STYLE = {
@@ -309,7 +309,9 @@ def _write_compact_report(rows, output_path):
         fig.suptitle(label)
         fig.tight_layout()
         figures.append(fig)
-    save_figures_to_single_document(figures, output_file, close=True)
+    with pdf_report(output_file) as report:
+        for figure in figures:
+            report.add(figure)
     return [output_file]
 
 
