@@ -361,18 +361,35 @@ def test_pdf_report_writes_pages_and_closes_figures(tmp_test_directory):
     plt.close("all")
 
 
-def test_pdf_report_closes_pdf_after_error(tmp_test_directory, mocker):
-    mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
-    figure = mocker.Mock()
+def test_pdf_report_closes_pdf_after_error(tmp_test_directory):
+    output_pdf = Path(tmp_test_directory) / "images.pdf"
+    figure, axis = plt.subplots()
+    axis.plot([0, 1], [0, 1])
 
     def fail_while_writing_report():
-        with visualize.pdf_report(tmp_test_directory / "images.pdf") as report:
+        with visualize.pdf_report(output_pdf) as report:
             report.add(figure)
             raise RuntimeError("failure")
 
     with pytest.raises(RuntimeError, match="failure"):
         fail_while_writing_report()
-    mock_pdf.return_value.close.assert_called_once()
+    assert not plt.fignum_exists(figure.number)
+    assert output_pdf.read_bytes().rstrip().endswith(b"%%EOF")
+
+
+@pytest.mark.parametrize(
+    ("output_name", "expected_name"),
+    [
+        ("psf_za20.0deg_d10.0km", "psf_za20.0deg_d10.0km.png"),
+        ("psf_za20.0deg_d10.0km.pdf", "psf_za20.0deg_d10.0km.png"),
+    ],
+)
+def test_save_figure_keeps_decimal_points_in_name(tmp_test_directory, output_name, expected_name):
+    figure, _ = plt.subplots()
+    visualize.save_figure(
+        figure, tmp_test_directory / output_name, figure_format=["png"], close=True
+    )
+    assert (tmp_test_directory / expected_name).exists()
 
 
 def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker):

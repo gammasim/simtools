@@ -21,6 +21,7 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 gridspec = lazy_module("matplotlib.gridspec")
 pdf_backend = lazy_module("matplotlib.backends.backend_pdf")
 
+_FIGURE_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".ps", ".svg"}
 COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
@@ -615,7 +616,8 @@ def save_figure(
     fig: plt.figure
         Figure to save.
     output_file: Path, str
-        Path to save the figure (without suffix).
+        Path to save the figure. A figure suffix (e.g. ``.pdf``) is replaced by each
+        format; other dots in the name (e.g. ``za20.0deg``) are kept.
     figure_format: list
         List of formats to save the figure. If None, use configured figure formats
         or fall back to ["png"].
@@ -637,9 +639,12 @@ def save_figure(
     png_palette = config.args.get("figure_png_palette", False)
 
     figure_format = figure_format or configured_formats or ["png"]
+    base = Path(output_file)
+    if base.suffix.lower() in _FIGURE_SUFFIXES:
+        base = base.with_suffix("")
 
     for fmt in gen.ensure_list(figure_format):
-        _file = Path(output_file).with_suffix(f".{fmt}")
+        _file = base.with_name(f"{base.name}.{fmt}")
         save_dpi = configured_dpi if fmt == "png" and configured_dpi is not None else dpi
         save_kwargs = {"format": fmt, "bbox_inches": "tight", "dpi": save_dpi}
         if fmt == "png" and pil_kwargs is not None:
