@@ -18,7 +18,7 @@ def _segmentation_json_schema(parameter_name, schema_version):
 
 
 @lru_cache
-def _kind_required_fields(parameter_name, schema_version):
+def kind_required_fields(parameter_name, schema_version):
     """Map schema-declared segmentation kinds to their required fields."""
     definitions = {}
     for item in _segmentation_json_schema(parameter_name, schema_version)["items"]["oneOf"]:
@@ -63,7 +63,7 @@ def validate_segments(
         raise ValueError(f"Invalid mirror segmentation: {exc.message}") from exc
     for record in records:
         validate_finite_json_values(record, path="$[record]")
-        required_fields = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
+        required_fields = kind_required_fields(parameter_name, schema_version)[record["kind"]]
         if "r_min" in required_fields:
             _validate_ring(record)
         elif "vertices" in required_fields:

@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from simtools.data_model.mirror_segmentation import (
-    _kind_required_fields,
+    kind_required_fields,
     make_quantity,
     quantity_value,
     validate_segments,
@@ -55,7 +55,7 @@ def _parse_line(line, parameter_name, schema_version):
     fields = line.replace(",", " ").split()
     kind = fields.pop(0).lower()
     count = int(fields.pop(0))
-    required = _kind_required_fields(parameter_name, schema_version).get(kind)
+    required = kind_required_fields(parameter_name, schema_version).get(kind)
     if required is None:
         raise ValueError(f"Unknown mirror segmentation kind: {kind}")
     if "r_min" in required:
@@ -84,7 +84,7 @@ def write_mirror_segmentation(records, output_path, parameter_name, schema_versi
     output_path.parent.mkdir(parents=True, exist_ok=True)
     lines = []
     for record in records:
-        required = _kind_required_fields(parameter_name, schema_version)[record["kind"]]
+        required = kind_required_fields(parameter_name, schema_version)[record["kind"]]
         if "r_min" in required:
             lines.append(
                 f"RING {record['count']} {quantity_value(record, 'r_min', 'cm')} "

@@ -496,7 +496,7 @@ def _plot_trigger_multiplicity(
     ax.grid(alpha=0.25)
     ax.legend()
 
-    _annotate_comparison_statistics(ax, statistics)
+    annotate_comparison_statistics(ax, statistics)
 
     _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png", figure_format)
     return statistics
@@ -708,7 +708,7 @@ def _plot_grouped_fraction_bars(
     ax.grid(axis="y", alpha=0.25)
     ax.legend()
 
-    _annotate_comparison_statistics(ax, statistics)
+    annotate_comparison_statistics(ax, statistics)
 
     _save_figure(fig, output_path, filename, figure_format)
     return statistics
@@ -960,7 +960,7 @@ def _plot_quantity_distribution(
     ax.grid(alpha=0.25)
     ax.legend(fontsize=8)
 
-    _annotate_comparison_statistics(ax, statistics)
+    annotate_comparison_statistics(ax, statistics)
 
     _save_figure(
         fig, output_path, f"distribution_{quantity_name}{cum_str}{suffix}.png", figure_format
@@ -1224,7 +1224,7 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind):
     return result
 
 
-def _annotate_comparison_statistics(ax, statistics):
+def annotate_comparison_statistics(ax, statistics):
     """Overlay comparison metric values for baseline-vs-candidate comparisons on a plot."""
     if statistics is None or not statistics.get("comparisons"):
         return
@@ -1264,7 +1264,7 @@ def _annotate_comparison_statistics(ax, statistics):
 
 def _annotate_ks_statistics(ax, statistics):
     """Backward-compatible alias for metric-neutral comparison annotations."""
-    _annotate_comparison_statistics(ax, statistics)
+    annotate_comparison_statistics(ax, statistics)
 
 
 def _format_statistic_value(value):

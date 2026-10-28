@@ -1507,6 +1507,6 @@ def test_ignore_existing_parameter_version_is_passed_only_to_accepting_applicati
     option = simtools_runner._IGNORE_EXISTING_PARAMETER_VERSION
     configurations = [{"application": application, "configuration": {}}]
 
-    simtools_runner._apply_execution_overrides(configurations, {option: True}, {}, None)
+    simtools_runner.apply_execution_overrides(configurations, {option: True}, {}, None)
 
     assert (option in configurations[0]["configuration"]) is accepted

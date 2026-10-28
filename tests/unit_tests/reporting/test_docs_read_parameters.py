@@ -8,8 +8,8 @@ import pytest
 from simtools.reporting import docs_read_parameters
 from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
 from simtools.reporting.model_figures import (
-    _write_flasher_pulse_shape_plots,
-    _write_telescope_structure_figure,
+    write_flasher_pulse_shape_plots,
+    write_telescope_structure_figure,
 )
 from simtools.simtel import simtel_file_writer
 from simtools.utils import names
@@ -72,7 +72,7 @@ def test_produce_array_element_report(telescope_model_lst, tmp_test_directory):
             },
         ),
         patch.object(rp2.model_source, "export_model_files"),
-        patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure"),
+        patch("simtools.reporting.docs_read_parameters.write_telescope_structure_figure"),
         patch(
             "simtools.reporting.docs_read_parameters.TelescopeModel",
             return_value=DummyTelescope(
@@ -294,18 +294,18 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
     ("parameter", "parameter_version", "patched_method", "return_value"),
     [
         ("some_param", "1.0.0", "_plot_parameter_tables", ["plot2"]),
-        ("camera_pixel_layout", "1.0.0", "_plot_camera_config", ["camera_plot"]),
-        ("mirror_list", "1.0.0", "_plot_mirror_config", ["mirror_plot"]),
+        ("camera_pixel_layout", "1.0.0", "plot_camera_config", ["camera_plot"]),
+        ("mirror_list", "1.0.0", "plot_mirror_config", ["mirror_plot"]),
         (
             "primary_mirror_segmentation",
             "1.0.0",
-            "_plot_mirror_config",
+            "plot_mirror_config",
             ["mirror_plot"],
         ),
         (
             "secondary_mirror_segmentation",
             "1.0.0",
-            "_plot_mirror_config",
+            "plot_mirror_config",
             ["mirror_plot"],
         ),
         ("some_param", None, None, []),
@@ -344,7 +344,7 @@ def test__generate_plots(
             mock_plot.assert_called_once_with(
                 parameter, parameter_version, tmp_test_directory, model_version=None
             )
-        elif patched_method == "_plot_camera_config":
+        elif patched_method == "plot_camera_config":
             mock_plot.assert_called_once_with(
                 parameter,
                 parameter_version,
@@ -355,7 +355,7 @@ def test__generate_plots(
                 "6.0.0",
                 read_parameters.model_reader,
             )
-        elif patched_method == "_plot_mirror_config":
+        elif patched_method == "plot_mirror_config":
             mock_plot.assert_called_once_with(
                 parameter,
                 parameter_version,
@@ -1240,7 +1240,7 @@ def test__plot_camera_components_reuses_resolved_camera_data(tmp_test_directory,
         return_value={"camera_pixel_layout": {"value": "pixels"}},
     )
     mocker.patch(
-        "simtools.reporting.model_figures._resolve_camera_components",
+        "simtools.reporting.model_figures.resolve_camera_components",
         return_value={"pixels": [(1.0, 2.0)]},
     )
 
@@ -1419,7 +1419,7 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory):
             wraps=simtel_file_writer.write_light_pulse_table_gauss_exp_conv,
         ) as write_table,
     ):
-        _write_flasher_pulse_shape_plots(
+        write_flasher_pulse_shape_plots(
             buf,
             comparison_items,
             "calibration_devices",
@@ -1664,7 +1664,7 @@ def test_produce_array_element_report_writes_design_note_and_dict_table(tmp_path
         ),
     )
     write_dict_table = mocker.patch.object(rp, "_write_dict_table")
-    mocker.patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure")
+    mocker.patch("simtools.reporting.docs_read_parameters.write_telescope_structure_figure")
 
     rp.produce_array_element_report()
 
@@ -1695,7 +1695,7 @@ def test_produce_array_element_report_design_model_lists_all_parameters(tmp_path
         ),
     )
     write_dict_table = mocker.patch.object(rp, "_write_dict_table")
-    mocker.patch("simtools.reporting.docs_read_parameters._write_telescope_structure_figure")
+    mocker.patch("simtools.reporting.docs_read_parameters.write_telescope_structure_figure")
 
     rp.produce_array_element_report()
 
@@ -1733,10 +1733,10 @@ def test_write_telescope_structure_figure_generates_and_links_image(tmp_test_dir
     )
     buf = StringIO()
 
-    _write_telescope_structure_figure(buf, telescope_model, rp._logger)
+    write_telescope_structure_figure(buf, telescope_model, rp._logger)
     telescope_model.model_version = "7.0.0"
     second_buf = StringIO()
-    _write_telescope_structure_figure(second_buf, telescope_model, rp._logger)
+    write_telescope_structure_figure(second_buf, telescope_model, rp._logger)
 
     render.assert_called_once()
     assert "telescope_structure_LSTN-design_" in buf.getvalue()
@@ -1761,7 +1761,7 @@ def test_write_telescope_structure_figure_reports_missing_inputs(tmp_test_direct
     )
     buf = StringIO()
 
-    _write_telescope_structure_figure(buf, telescope_model, rp._logger)
+    write_telescope_structure_figure(buf, telescope_model, rp._logger)
 
     assert "Telescope structure plot unavailable" in buf.getvalue()
     assert "mirror input missing" in buf.getvalue()

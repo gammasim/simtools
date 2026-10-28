@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 from simtools import dependencies, dependency_versions, version
 from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.io import io_handler
-from simtools.model_repository.compatibility import _validate
+from simtools.model_repository.compatibility import validate_release
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
 
@@ -170,7 +170,7 @@ class ApplicationContext:
     run_time: list | None = None
 
 
-def _initialize_runtime(
+def initialize_runtime(
     args_dict,
     setup_io_handler=True,
     resolve_sim_software_executables=True,
@@ -329,7 +329,7 @@ def _validate_model_compatibility(args):
         revision = None if filesystem_path else args.get("simulation_models_git_revision")
         if not filesystem_path and revision is None:
             revision = dependency_versions.model_repository_revision(catalog)
-        args["_dependency_compatibility"] = _validate(
+        args["_dependency_compatibility"] = validate_release(
             path,
             catalog,
             revision=revision,

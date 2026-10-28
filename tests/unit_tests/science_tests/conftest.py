@@ -47,7 +47,7 @@ def workflow(*applications, **extra):
 @pytest.fixture(autouse=True)
 def skip_comparison_input_validation(monkeypatch):
     """Keep orchestration tests independent of production metadata trees."""
-    monkeypatch.setattr(execution, "_validate_comparison_inputs", lambda *_args: None)
+    monkeypatch.setattr(execution, "validate_comparison_inputs", lambda *_args: None)
 
 
 @pytest.fixture

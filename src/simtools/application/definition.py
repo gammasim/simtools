@@ -179,10 +179,10 @@ class ApplicationDefinition:
         args_dict = self._parse()
 
         from simtools.application.control import (  # pylint: disable=import-outside-toplevel
-            _initialize_runtime,
+            initialize_runtime,
         )
 
-        return _initialize_runtime(
+        return initialize_runtime(
             args_dict,
             setup_io_handler=self.setup_io_handler,
             resolve_sim_software_executables=self.resolve_sim_software_executables,

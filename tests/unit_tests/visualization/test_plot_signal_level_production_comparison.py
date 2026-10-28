@@ -147,7 +147,7 @@ def test_plot_forwards_figure_format(mocker, tmp_test_directory):
 def test_plot_annotates_comparison_statistics(mocker, tmp_test_directory):
     annotate = mocker.patch(
         "simtools.visualization.plot_signal_level_production_comparison."
-        "_annotate_comparison_statistics"
+        "annotate_comparison_statistics"
     )
 
     plot_signal_level_production_comparison._plot_observable(

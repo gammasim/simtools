@@ -27,7 +27,7 @@ class _PSFEvaluationJob:
     output_dir: Path
 
 
-def _dispatch_evaluations(parameters, args, measured_data, radius, output_dir, max_workers, worker):
+def dispatch_evaluations(parameters, args, measured_data, radius, output_dir, max_workers, worker):
     """Execute a batch with independent output paths and portable runtime settings."""
     output_root = Path(output_dir).expanduser().resolve()
     output_root.mkdir(parents=True, exist_ok=True)

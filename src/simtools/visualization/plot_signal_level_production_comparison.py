@@ -10,7 +10,7 @@ from simtools.io.file_type import product_filename
 from simtools.statistics import compare_samples_with_statistics
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_event_level_production_comparison import (
-    _annotate_comparison_statistics,
+    annotate_comparison_statistics,
 )
 from simtools.visualization.visualize import save_figure
 
@@ -139,7 +139,7 @@ def _plot_observable(
         "metadata": {"bin_edges": bin_edges.tolist()},
         "comparisons": comparisons,
     }
-    _annotate_comparison_statistics(ax, statistics)
+    annotate_comparison_statistics(ax, statistics)
     ax.legend()
     output_file = Path(output_path) / Path(filename).with_suffix("")
     save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
