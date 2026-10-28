@@ -76,7 +76,7 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 ## Native configuration and file formats
 
 ```{eval-rst}
-.. automodule:: simtools.sim_events.formats.registry
+.. automodule:: simtools.sim_events.formats.readers
    :members:
 
 .. automodule:: simtools.sim_events.formats.eventio_reader

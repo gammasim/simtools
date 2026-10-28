@@ -54,7 +54,8 @@ its writer.
 
 1. Put native parsing and unit/coordinate conversions in
    `simtools.sim_events.formats`. Use `EventioReader` as the current example.
-2. Implement the reader methods needed by the workflow, described below.
+2. Implement the `EventReader` protocol methods in
+   `simtools.sim_events.formats.readers`, described below.
 3. Select the supported format using `simulation_file_format` in an application
    configuration, or `file_format` in `EventDataWriter` and
    `Simulator.write_reduced_event_lists`. The default is `eventio`; file

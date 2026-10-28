@@ -1,6 +1,6 @@
 """Read run information and event counts through simulation-file readers."""
 
-from simtools.sim_events.formats.registry import get_reader
+from simtools.sim_events.formats.readers import get_reader
 
 
 def get_run_number(file, file_format="eventio"):

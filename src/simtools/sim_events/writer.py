@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools.sim_events.formats.registry import get_reader
+from simtools.sim_events.formats.readers import get_reader
 
 
 @dataclass
