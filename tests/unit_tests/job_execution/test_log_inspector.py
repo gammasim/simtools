@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from simtools.testing import log_inspector
+from simtools.job_execution import log_inspector
 
 PATTERN_KEY = "pattern"
 FORBIDDEN_PATTERN_KEY = "forbidden_pattern"
