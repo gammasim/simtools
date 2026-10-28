@@ -55,8 +55,10 @@ pytest -n 4 --dist loadscope tests/unit_tests/
   When file parsing or writing is the behavior under test, generate the
   smallest valid input in `tmp_test_directory` within the test.
 - Keep file-format compatibility and resource-heavy checks in integration tests.
-- Mock external dependencies such as network access, file downloads,
-  and installed simulation software.
+- Mock only external programs (CORSIKA, sim_telarray, container engines,
+  HTCondor), network access, model sources (through the shared model-reader
+  fixtures), and time/uuid/randomness. Do not add patches of other
+  `simtools.*` internals (see [Architecture Rules](architecture.md)).
 - Use `pytest.approx()` for floating-point values.
 - Use `astropy.tests.helper.assert_quantity_allclose` for astropy quantities.
 

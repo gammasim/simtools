@@ -1,0 +1,22 @@
+---
+applications:
+- application: simtools-plot-telescope-structure
+  docs:
+    title: Plot the telescope structure
+    summary: >-
+      Plot the mirrors, camera housing and telescope structure of a telescope model, seen from
+      the sky and from the side.
+  configuration:
+    figure_format:
+    - png
+    model_version: 6.0.2
+    output_path: simtools-output
+    site: North
+    telescope: MSTx-FlashCam
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: plot_telescope_structure_MSTx-FlashCam.png
+  test_name: structure-run
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

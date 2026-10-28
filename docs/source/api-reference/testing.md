@@ -25,16 +25,6 @@ The Testing module provides tools for testing the code. This might be part of th
 ```
 
 
-(loginspectormodule)=
-
-## log_inspector
-
-```{eval-rst}
-.. automodule:: testing.log_inspector
-   :members:
-
-```
-
 (resourcegenerationmodule)=
 
 ## resource_generation

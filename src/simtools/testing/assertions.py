@@ -7,8 +7,8 @@ from pathlib import Path
 import h5py
 import yaml
 
+from simtools.job_execution.log_inspector import check_plain_logs, check_tar_logs
 from simtools.simtel import simtel_output_validator
-from simtools.testing.log_inspector import check_plain_logs, check_tar_logs
 
 _logger = logging.getLogger(__name__)
 
