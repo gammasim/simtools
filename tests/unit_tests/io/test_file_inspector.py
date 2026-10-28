@@ -259,15 +259,6 @@ def test_inspect_table_file_formats_truncated_columns(tmp_path):
     assert "Column list truncated." in report
 
 
-def test_inspect_sim_telarray_file_rejects_when_suffix_check_is_overridden_false(tmp_path, mocker):
-    file_path = tmp_path / "run.simtel.zst"
-    file_path.write_bytes(b"simtel")
-    mocker.patch("simtools.simtel.file_inspector.is_file_type", return_value=False)
-
-    with pytest.raises(ValueError, match="unsupported suffix for sim_telarray inspection"):
-        inspect_sim_telarray_file(file_path)
-
-
 def test_inspect_sim_telarray_file_formats_empty_metadata(tmp_path):
     file_path = tmp_path / "run.simtel.zst"
     file_path.write_bytes(b"simtel")

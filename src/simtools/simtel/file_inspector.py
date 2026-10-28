@@ -2,15 +2,13 @@
 
 from pathlib import Path
 
-from simtools.io.file_type import is_file_type, validate_file_type
+from simtools.io.file_type import validate_file_type
 from simtools.simtel import simtel_io_metadata
 
 
 def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
     """Inspect one sim_telarray file and return a report."""
     file_path = validate_file_type(file_path, "sim_telarray")
-    if not is_file_type(file_path, "sim_telarray"):
-        raise ValueError(f"File '{file_path}' has unsupported suffix for sim_telarray inspection.")
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(file_path)
     sorted_global_items = sorted(global_meta.items()) if global_meta is not None else []
     telescope_ids = sorted(telescope_meta.keys())
