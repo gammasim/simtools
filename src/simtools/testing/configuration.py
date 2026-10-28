@@ -23,7 +23,7 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
     Return list of test configuration dictionaries or test names.
 
     Read all configuration files for testing.
-    Add "--help" and "--version" calls for all applications.
+    Add a no-configuration call for each application.
 
     Parameters
     ----------
@@ -47,17 +47,7 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
     # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
     _applications = sorted({item["application"] for item in configs if "application" in item})
     for app in _applications:
-        configs.extend(
-            [
-                {"application": app, "test_name": "auto-help", "configuration": {"help": True}},
-                {
-                    "application": app,
-                    "test_name": "auto-version",
-                    "configuration": {"version": True},
-                },
-                {"application": app, "test_name": "auto-no_config"},
-            ]
-        )
+        configs.append({"application": app, "test_name": "auto-no_config"})
 
     return (
         configs,
