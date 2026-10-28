@@ -12,7 +12,7 @@ import astropy.units as u
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
-from simtools.io.file_type import _get_product_suffixes
+from simtools.io.file_type import product_suffixes
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
@@ -30,8 +30,7 @@ _FILE_TYPE_PRODUCTS = {
     "trigger_histograms": "trigger_histograms",
 }
 _FILE_TYPE_SUFFIXES = {
-    file_type: _get_product_suffixes(product_id)
-    for file_type, product_id in _FILE_TYPE_PRODUCTS.items()
+    file_type: product_suffixes(product_id) for file_type, product_id in _FILE_TYPE_PRODUCTS.items()
 }
 _MANIFEST_SCHEMAS = {
     "simulate_prod_job": "simulate_prod_job_metadata.schema.yml",

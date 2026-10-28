@@ -21,7 +21,7 @@ from simtools import version as simtools_version
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.job_execution import job_manager
 
 logger = logging.getLogger(__name__)
@@ -274,7 +274,7 @@ def _copy_pattern_files(
     _validate_collection_destination_name(destination_name)
 
     if pattern == "**/comparison_statistics.meta.yml" and any(
-        (source_directory / _get_product_filename("comparison_statistics")).is_file()
+        (source_directory / product_filename("comparison_statistics")).is_file()
         for source_directory in source_directories
     ):
         return inventory
