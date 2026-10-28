@@ -12,6 +12,7 @@ import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
 from simtools.io import ascii_handler, io_handler, legacy_data_handler
+from simtools.reporting.figure_cache import _figure_cache_key
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -35,7 +36,11 @@ def plot(config, output_file, data_path=None, model_reader=None):
         Path to the data files (optional). Expect all files to be in the same directory.
     """
     data = read_table_data(config, data_path, model_reader=model_reader)
+    return _plot_data(data, config, output_file)
 
+
+def _plot_data(data, config, output_file):
+    """Render pre-read table data with the configured table-plot renderer."""
     fig = visualize.plot_1d(
         data,
         **config,
@@ -43,6 +48,24 @@ def plot(config, output_file, data_path=None, model_reader=None):
     visualize.save_figure(fig, output_file, close=True)
 
     return output_file
+
+
+def _get_figure_cache_key(plot_config, data):
+    """Hash effective plot inputs and output settings for per-run figure reuse."""
+    config_for_render = {**plot_config}
+    config_for_render["tables"] = [dict(table) for table in plot_config.get("tables", [])]
+    for table_config in config_for_render.get("tables", []):
+        # This selects the source data; resolved data is hashed separately.
+        table_config.pop("model_version", None)
+    return _figure_cache_key(
+        renderer="plot_tables._plot_data",
+        renderer_modules={
+            "plot_tables": __file__,
+            "visualize": visualize.__file__,
+        },
+        plot_config=config_for_render,
+        rendered_data=data,
+    )
 
 
 def read_table_data(config, data_path=None, model_reader=None):
@@ -228,7 +251,13 @@ def _select_schema_entry(schema_data, schema_version=None):
 
 
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type, model_reader=None
+    parameter,
+    parameter_version,
+    site,
+    telescope,
+    output_path,
+    plot_type,
+    model_reader=None,
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -254,6 +283,28 @@ def generate_plot_configurations(
         Tuple containing a list of plot configurations and a list of output file names.
         Return None, if no plot configurations are found.
     """
+    return _generate_plot_configurations(
+        parameter,
+        parameter_version,
+        site,
+        telescope,
+        output_path,
+        plot_type,
+        model_reader=model_reader,
+    )
+
+
+def _generate_plot_configurations(
+    parameter,
+    parameter_version,
+    site,
+    telescope,
+    output_path,
+    plot_type,
+    model_reader=None,
+    model_version=None,
+):
+    """Generate plotting configurations with an optional exact model version."""
     logger = logging.getLogger(__name__)
     table_config = {
         "parameter": parameter,
@@ -261,6 +312,8 @@ def generate_plot_configurations(
         "telescope": telescope,
         "parameter_version": parameter_version,
     }
+    if model_version:
+        table_config["model_version"] = model_version
     parameter_dict = _read_parameter_dict_from_model_repository(table_config, model_reader)
 
     schema = gen.change_dict_keys_case(
@@ -278,13 +331,7 @@ def generate_plot_configurations(
     table = _read_table_from_model_repository(table_config, model_reader)
     valid_columns = _get_valid_columns(table)
 
-    valid_configs = []
-    for config in configs:
-        if not _filter_config_by_plot_type(config, plot_type):
-            continue
-
-        if _validate_config_columns(config, valid_columns, logger):
-            valid_configs.append(config)
+    valid_configs = _get_valid_plot_configs(configs, plot_type, valid_columns, logger)
 
     if not valid_configs:
         if plot_type != "all":
@@ -297,6 +344,8 @@ def generate_plot_configurations(
             _table["parameter_version"] = parameter_version
             _table["site"] = site
             _table["telescope"] = telescope
+            if model_version:
+                _table["model_version"] = model_version
 
         output_files.append(
             _generate_output_file_name(
@@ -310,6 +359,16 @@ def generate_plot_configurations(
         )
 
     return valid_configs, output_files
+
+
+def _get_valid_plot_configs(configs, plot_type, valid_columns, logger):
+    """Select configurations for the requested type and available table columns."""
+    return [
+        config
+        for config in configs
+        if _filter_config_by_plot_type(config, plot_type)
+        and _validate_config_columns(config, valid_columns, logger)
+    ]
 
 
 def _generate_output_file_name(

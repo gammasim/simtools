@@ -16,12 +16,19 @@ from simtools.application.model_reader import require_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
+from simtools.model_repository.asset_names import get_export_file_name
+from simtools.reporting.model_figures import (
+    _plot_camera_config,
+    _plot_mirror_config,
+    _plot_nsb_altitude_correction,
+    _write_flasher_pulse_shape_plots,
+    _write_telescope_structure_figure,
+)
 from simtools.utils import names
 from simtools.version import base_version_for_patch_delta, sort_versions
-from simtools.visualization import plot_mirrors, plot_pixels, plot_tables
+from simtools.visualization import plot_tables
 
 logger = logging.getLogger()
-MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 
 @dataclass(frozen=True)
@@ -310,33 +317,46 @@ class ReadParameters:
         return True
 
     def _generate_plots(
-        self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
+        self,
+        parameter,
+        parameter_version,
+        input_file,
+        outpath,
+        telescope=None,
+        site=None,
+        model_version=None,
     ):
         """Generate plots based on the parameter type."""
         plot_names = []
-        plot_kwargs = {
-            key: value for key, value in (("telescope", telescope), ("site", site)) if value
-        }
+        plot_kwargs = {k: v for k, v in (("telescope", telescope), ("site", site)) if v}
 
-        if parameter == "camera_pixel_layout":
-            plot_names = self._plot_camera_config(
+        if parameter == "correct_nsb_spectrum_to_telescope_altitude":
+            plot_names = _plot_nsb_altitude_correction(input_file, outpath)
+        elif parameter == "camera_pixel_layout":
+            plot_names = _plot_camera_config(
                 parameter,
                 parameter_version,
                 input_file,
                 outpath,
-                **plot_kwargs,
+                telescope or self.array_element,
+                site or self.site,
+                model_version or self.model_version,
+                self.model_reader,
             )
         elif parameter in (
             "mirror_list",
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
         ):
-            plot_names = self._plot_mirror_config(
+            plot_names = _plot_mirror_config(
                 parameter,
                 parameter_version,
                 input_file,
                 outpath,
-                **plot_kwargs,
+                telescope or self.array_element,
+                site or self.site,
+                model_version or self.model_version,
+                self.model_reader,
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
@@ -344,94 +364,20 @@ class ReadParameters:
                 parameter_version,
                 outpath,
                 **plot_kwargs,
+                model_version=model_version,
             )
-
-        return plot_names
-
-    def _plot_camera_config(
-        self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
-    ):
-        """Generate plots for camera component files."""
-        if not parameter_version:
-            return []
-
-        telescope = telescope or self.array_element
-        site = site or self.site
-        plot_names = []
-        plot_name = input_file.stem.replace(".", "-")
-        plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
-
-        if not plot_path.exists():
-            plot_config = {
-                "file_name": input_file.name,
-                "telescope": telescope,
-                "parameter_version": parameter_version,
-                "site": site,
-                "model_version": self.model_version,
-                "parameter": parameter,
-            }
-
-            plot_pixels.plot(
-                config=plot_config,
-                output_file=Path(f"{outpath}/{plot_name}"),
-                model_reader=self.model_reader,
-            )
-            plot_names.append(plot_name)
-        else:
-            logger.info(
-                "Camera component file plot already exists: %s",
-                plot_path,
-            )
-            plot_names.append(plot_name)
-
-        return plot_names
-
-    def _plot_mirror_config(
-        self, parameter, parameter_version, input_file, outpath, telescope=None, site=None
-    ):
-        """Generate plots for mirror configuration files."""
-        if not parameter_version:
-            return []
-
-        telescope = telescope or self.array_element
-        site = site or self.site
-        plot_names = []
-        plot_name = input_file.stem.replace(".", "-")
-        plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
-
-        if not plot_path.exists():
-            plot_config = {
-                "parameter": parameter,
-                "telescope": telescope,
-                "parameter_version": parameter_version,
-                "site": site,
-                "model_version": self.model_version,
-            }
-
-            plot_mirrors.plot(
-                config=plot_config,
-                output_file=Path(f"{outpath}/{plot_name}"),
-                model_reader=self.model_reader,
-                data_file_path=input_file,
-            )
-            plot_names.append(plot_name)
-        else:
-            logger.info(
-                "Mirror configuration file plot already exists: %s",
-                plot_path,
-            )
-            plot_names.append(plot_name)
 
         return plot_names
 
     def _plot_parameter_tables(
-        self, parameter, parameter_version, outpath, telescope=None, site=None
+        self, parameter, parameter_version, outpath, telescope=None, site=None, model_version=None
     ):
         """Generate plots for parameter tables."""
         site = site or self.site
-        tel = self._get_telescope_identifier(telescope=telescope)
+        tel = self._get_telescope_identifier(model_version, telescope)
 
-        config_data = plot_tables.generate_plot_configurations(
+        # These internal renderer helpers avoid changing the public plotting API.
+        config_data = plot_tables._generate_plot_configurations(  # pylint: disable=protected-access
             parameter=parameter,
             parameter_version=parameter_version,
             site=site,
@@ -439,21 +385,26 @@ class ReadParameters:
             output_path=outpath,
             plot_type="all",
             model_reader=self.model_reader,
+            model_version=model_version or self.model_version,
         )
 
         if not config_data:
             return []
 
         plot_configs, output_files = config_data
-        plot_names = [i.stem for i in output_files]
+        plot_names = []
 
         for plot_config, output_file in zip(plot_configs, output_files):
-            image_output_file = outpath / output_file.name
+            plot_data = plot_tables.read_table_data(plot_config, model_reader=self.model_reader)
+            cache_key = plot_tables._get_figure_cache_key(  # pylint: disable=protected-access
+                plot_config, plot_data
+            )
+            figure_stem = f"{output_file.stem.replace('.', '-')}_{cache_key}"
+            plot_names.append(figure_stem)
+            image_output_file = outpath / figure_stem
             if not image_output_file.with_suffix(".png").exists():
-                plot_tables.plot(
-                    config=plot_config,
-                    output_file=image_output_file,
-                    model_reader=self.model_reader,
+                plot_tables._plot_data(  # pylint: disable=protected-access
+                    plot_data, plot_config, image_output_file
                 )
 
         return plot_names
@@ -493,7 +444,15 @@ class ReadParameters:
             f"simulation-models/model_parameters/{scope}/{parameter}/{Path(file_name).name}"
         )
 
-    def _convert_to_md(self, parameter, parameter_version, input_file, telescope=None, site=None):
+    def _convert_to_md(
+        self,
+        parameter,
+        parameter_version,
+        input_file,
+        telescope=None,
+        site=None,
+        model_version=None,
+    ):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
 
@@ -515,7 +474,12 @@ class ReadParameters:
                 key: value for key, value in (("telescope", telescope), ("site", site)) if value
             }
             plot_names = self._generate_plots(
-                parameter, parameter_version, input_file, outpath, **plot_kwargs
+                parameter,
+                parameter_version,
+                input_file,
+                outpath,
+                **plot_kwargs,
+                model_version=model_version or self.model_version,
             )
             # Write markdown file using the stored path
             file_contents = ascii_handler.read_file_encoded_in_utf_or_latin(input_file)
@@ -551,6 +515,7 @@ class ReadParameters:
         parameter_version=None,
         telescope=None,
         site=None,
+        model_version=None,
     ):
         """Format parameter value based on type."""
         if file_flag:
@@ -564,7 +529,11 @@ class ReadParameters:
                 key: value for key, value in (("telescope", telescope), ("site", site)) if value
             }
             output_file_name = self._convert_to_md(
-                parameter, parameter_version, input_file_name, **plot_kwargs
+                parameter,
+                parameter_version,
+                input_file_name,
+                **plot_kwargs,
+                model_version=model_version,
             )
             return f"[{Path(value_data).name}]({output_file_name})".strip()
 
@@ -779,7 +748,12 @@ class ReadParameters:
             ):
                 dict_tables.append((parameter, value_data, unit))
             value = self._format_parameter_value(
-                parameter, value_data, unit, file_flag, parameter_version
+                parameter,
+                value_data,
+                unit,
+                file_flag,
+                parameter_version,
+                model_version=telescope_model.model_version,
             )
 
             description = parameter_descriptions.get(parameter).get("description")
@@ -843,12 +817,10 @@ class ReadParameters:
 
     def get_simulation_configuration_data(self):
         """Get data and descriptions for simulation configuration parameters."""
-
-        def get_param_data(telescope, site):
-            return self._get_simulation_configuration_data_for_telescope_site(telescope, site)
-
         if self.software == "corsika":
-            return get_param_data(self.array_element, self.site)
+            return self._get_simulation_configuration_data_for_telescope_site(
+                self.array_element, self.site
+            )
 
         results = []
         dict_tables = []
@@ -857,7 +829,9 @@ class ReadParameters:
             valid_site = names.get_site_from_array_element_name(telescope)
             sites = valid_site if isinstance(valid_site, list) else [valid_site]
             for site in sites:
-                data, tables = get_param_data(telescope, site)
+                data, tables = self._get_simulation_configuration_data_for_telescope_site(
+                    telescope, site
+                )
                 results.extend(data)
                 dict_tables.extend(tables)
         return results, dict_tables
@@ -965,6 +939,8 @@ class ReadParameters:
             model_version=self.model_version,
             label="reports",
             ignore_software_version=True,
+            model_reader=self.model_reader,
+            model_directory=Path(self.output_path) / "model",
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
@@ -980,6 +956,7 @@ class ReadParameters:
         with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
             file.write(f"# {telescope_model.name}\n")
+            _write_telescope_structure_figure(file, telescope_model, self._logger)
 
             if not is_design_model:
                 file.write(
@@ -1071,9 +1048,17 @@ class ReadParameters:
                 heading_level=3,
             )
 
-        # If entries reference files, write the image/plot section
         if comparison_data.get(parameter)[0]["file_flag"]:
-            self._write_file_flag_section(file, parameter, comparison_data)
+            self._write_file_flag_section(file, parameter, comparison_data, collection)
+        elif parameter == "flasher_pulse_shape":
+            _write_flasher_pulse_shape_plots(
+                file,
+                comparison_data[parameter],
+                collection,
+                self.model_reader,
+                self.site,
+                self.array_element,
+            )
         file.write("\n\n")
 
     def _write_parameter_header(self, file, parameter, description):
@@ -1098,66 +1083,56 @@ class ReadParameters:
 
         file.write("\n")
 
-    def _write_file_flag_section(self, file, parameter, comparison_data):
+    def _write_file_flag_section(self, file, parameter, comparison_data, collection):
         """Write image/plot references when parameter entries include files."""
         outpath = io_handler.IOHandler().get_output_directory("_images")
-        latest_parameter_version = max(
+        latest_item = max(
             comparison_data.get(parameter),
             key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
-        )["parameter_version"]
+        )
+        latest_parameter_version = latest_item["parameter_version"]
 
-        all_model_versions = []
-        for item in comparison_data.get(parameter):
-            model_versions = item["model_version"].split(", ")
-            all_model_versions.extend(model_versions)
-
-        latest_model_version = max(all_model_versions, key=lambda x: tuple(map(int, x.split("."))))
-        tel = self._get_telescope_identifier(latest_model_version)
-
-        file.write("The latest parameter version is plotted below.\n\n")
-
-        if parameter in (
-            "mirror_list",
-            "primary_mirror_segmentation",
-            "secondary_mirror_segmentation",
+        model_versions = latest_item["model_version"].split(", ")
+        latest_model_version = max(model_versions, key=lambda x: tuple(map(int, x.split("."))))
+        parameter_data = self.model_reader.get_model_parameters(
+            site=self.site,
+            array_element_name=self.array_element,
+            collection=collection,
+            model_version=latest_model_version,
+        )
+        selected_parameter = parameter_data.get(parameter)
+        if (
+            not selected_parameter
+            or selected_parameter.get("parameter_version") != latest_parameter_version
+            or not selected_parameter.get("file")
         ):
-            self._write_file_based_plot(
-                file, parameter, comparison_data, latest_model_version, outpath
+            return
+
+        model_path = Path(self.output_path) / "model"
+        model_path.mkdir(parents=True, exist_ok=True)
+        self.model_reader.export_model_files(parameters=parameter_data, dest=model_path)
+        input_file = model_path / get_export_file_name(selected_parameter)
+        plot_names = self._generate_plots(
+            parameter,
+            latest_parameter_version,
+            input_file,
+            outpath,
+            telescope=self.array_element,
+            site=self.site,
+            model_version=latest_model_version,
+        )
+        image_paths = list(filter(Path.is_file, (outpath / f"{name}.png" for name in plot_names)))
+        if not image_paths:
+            logger.info(
+                "No plot configuration or generated image found for %s version %s",
+                parameter,
+                latest_parameter_version,
             )
             return
 
-        plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
-        image_path = outpath / f"{plot_name}.png"
-        file.write(f"![Parameter plot.]({image_path.as_posix()})")
-
-    def _write_file_based_plot(
-        self, file, parameter, comparison_data, latest_model_version, outpath
-    ):
-        """Write plot reference for file-based parameters."""
-        latest_value = None
-        for item in comparison_data.get(parameter):
-            if latest_model_version in item["model_version"].split(", "):
-                latest_value = item["value"]
-                break
-
-        if latest_value is None:
-            return
-
-        match = MARKDOWN_LINK_RE.search(latest_value)
-        if not match:
-            return
-
-        filename_png = Path(match.group(1)).with_suffix(".png").name
-        image_path = outpath / filename_png
-
-        plot_descriptions = {
-            "mirror_list": "Mirror panel layout",
-            "primary_mirror_segmentation": "Primary mirror segmentation",
-            "secondary_mirror_segmentation": "Secondary mirror segmentation",
-        }
-
-        description = plot_descriptions.get(parameter, "Parameter plot")
-        file.write(f"![{description}.]({image_path.as_posix()})")
+        file.write("The latest parameter version is plotted below.\n\n")
+        for image_path in image_paths:
+            file.write(f"![Parameter plot.]({image_path.as_posix()})\n\n")
 
     def _write_dict_table(self, parameter, file, value_data, unit, heading_level=2):
         """Write a markdown table for parameters that are lists of dictionaries."""
@@ -1251,7 +1226,12 @@ class ReadParameters:
             )
         else:
             formatted_value = self._format_parameter_value(
-                param_name, value, unit, file_flag, parameter_version
+                param_name,
+                value,
+                unit,
+                file_flag,
+                parameter_version,
+                model_version=self.model_version,
             )
             file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
 

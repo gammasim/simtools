@@ -41,6 +41,14 @@ the visualization module.
    :members:
 ```
 
+
+## plot_telescope_structure
+
+```{eval-rst}
+.. automodule:: visualization.plot_telescope_structure
+   :members:
+```
+
 ## plot_corsika_histograms
 
 (corsika-histograms-visualize-1)=

@@ -451,6 +451,66 @@ def test_generate_plot_configurations(
     assert result is None
 
 
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
+def test_generate_plot_configurations_uses_and_names_selected_model_version(
+    mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
+):
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.3.0"}
+    mock_read_table.return_value = Table({"wavelength": [300.0], "reflectivity": [0.9]})
+    mock_collect_data.return_value = {
+        "plot_configuration": [
+            {
+                "type": "mirror_reflectivity",
+                "tables": [{"column_x": "wavelength", "column_y": "reflectivity"}],
+            }
+        ]
+    }
+
+    configs, output_files = plot_tables._generate_plot_configurations(
+        parameter="mirror_reflectivity",
+        parameter_version="2.0.0",
+        site="North",
+        telescope="LSTN-design",
+        output_path=tmp_test_directory,
+        plot_type="all",
+        model_version="8.0.0",
+    )
+
+    assert mock_read_parameter_dict.call_args.args[0]["model_version"] == "8.0.0"
+    assert mock_read_table.call_args.args[0]["model_version"] == "8.0.0"
+    assert configs[0]["tables"][0]["model_version"] == "8.0.0"
+    assert output_files[0].name == "mirror_reflectivity_2.0.0_North_LSTN-design.pdf"
+
+
+def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(monkeypatch):
+    plot_config = {
+        "title": "Reflectivity",
+        "xtitle": "Wavelength [nm]",
+        "tables": [{"model_version": "7.0.0", "label": "Mirror", "column_y": "y"}],
+    }
+    data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
+    from simtools.reporting import figure_cache
+
+    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 120})
+
+    initial_key = plot_tables._get_figure_cache_key(plot_config, data)
+    same_render_from_another_version = {
+        **plot_config,
+        "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
+    }
+    assert plot_tables._get_figure_cache_key(same_render_from_another_version, data) == initial_key
+
+    changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
+    assert plot_tables._get_figure_cache_key(plot_config, changed_data) != initial_key
+    changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
+    assert plot_tables._get_figure_cache_key(changed_config, data) != initial_key
+
+    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 240})
+    assert plot_tables._get_figure_cache_key(plot_config, data) != initial_key
+
+
 def test_get_plotting_label_duplicate_label():
     config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
     data = {"duplicate_label": "data"}

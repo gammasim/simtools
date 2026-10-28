@@ -2,6 +2,8 @@
 
 from importlib import import_module
 
+_BACKEND_NAME = "Agg"
+
 
 class _MatplotlibModuleProxy:
     """Load a plotting dependency only when a visualization uses it."""
@@ -14,7 +16,7 @@ class _MatplotlibModuleProxy:
         """Configure and return the requested Matplotlib module."""
         if self._module is None:
             matplotlib = import_module("matplotlib")
-            matplotlib.use("Agg")
+            matplotlib.use(_BACKEND_NAME)
             self._module = import_module(self._module_name)
         return self._module
 
