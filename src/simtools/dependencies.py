@@ -473,6 +473,12 @@ def canonical_manifest_bytes(manifest):
     ).encode("utf-8")
 
 
+def get_dependency_manifest_digest(run_time=None):
+    """Return the SHA-256 digest of the dependency manifest."""
+    manifest = get_dependency_manifest(run_time)
+    return hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()
+
+
 def write_dependency_manifest(output_file):
     """Write the active dependency manifest and its SHA-256 file.
 

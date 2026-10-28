@@ -17,9 +17,11 @@ from simtools.dependencies import (
     _validate_table_file,
     _validate_table_manifest_structure,
     build_dependency_manifest,
+    canonical_manifest_bytes,
     export_build_info,
     get_corsika_version,
     get_dependency_manifest,
+    get_dependency_manifest_digest,
     get_sim_telarray_version,
     get_software_version,
     get_version_string,
@@ -616,6 +618,17 @@ def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
     schema_path = simtools_root_path / "src/simtools/schemas/dependency_manifest.schema.yml"
     schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
     jsonschema.validate(manifest, schema)
+
+
+def test_manifest_digest_is_independent_of_dictionary_order(mocker):
+    first = {"b": 2, "a": 1}
+    second = {"a": 1, "b": 2}
+    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=first)
+    first_digest = get_dependency_manifest_digest()
+    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=second)
+
+    assert canonical_manifest_bytes(first) == canonical_manifest_bytes(second)
+    assert get_dependency_manifest_digest() == first_digest
 
 
 def test_write_dependency_manifest(mocker, tmp_test_directory):
