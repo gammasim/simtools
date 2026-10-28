@@ -139,7 +139,7 @@ def test_rnda_bounds_clamps_sigma_min_to_positive(monkeypatch):
             }
         }
 
-    monkeypatch.setattr(mpp.names, "model_parameters", _fake_model_parameters)
+    monkeypatch.setattr(mpp.catalog, "model_parameters", _fake_model_parameters)
     bounds = mpp.MirrorPanelPSF._rnda_bounds()
     assert bounds[0][0] == pytest.approx(1e-12)
     assert bounds[1][0] == pytest.approx(0.0)

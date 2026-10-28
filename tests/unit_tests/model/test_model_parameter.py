@@ -224,7 +224,7 @@ def test_apply_simulation_software_overwrites_ignores_unknown_software(telescope
 def test_filter_overwrites_for_target_keeps_unknown_and_drops_ignored(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
     mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        "simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name",
         side_effect=lambda name: {
             "ignored": "configuration_corsika",
             "known": "telescopes",
@@ -253,7 +253,7 @@ def test_filter_overwrites_for_target_returns_input_without_filtering():
 def test_filter_overwrites_for_target_keeps_unknown_nested_parameter(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
     mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        "simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name",
         side_effect=KeyError("unknown"),
     )
 
@@ -266,7 +266,7 @@ def test_filter_overwrites_for_target_keeps_unknown_nested_parameter(mocker):
 def test_overwrite_detection_handles_flat_and_nested_unknown_parameters(mocker):
     model_parameter = ModelParameter.__new__(ModelParameter)
     mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        "simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name",
         side_effect=KeyError("unknown"),
     )
     ignored_collections = ("configuration_corsika",)
@@ -285,7 +285,7 @@ def test_overwrite_detection_distinguishes_ignored_and_ordinary_collections(mock
         "ignored": {"value": 2},
     }
     mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        "simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name",
         side_effect=lambda name: {
             "ordinary": "telescopes",
             "ignored": "configuration_corsika",
@@ -421,7 +421,7 @@ def test_collect_flat_simulation_overwrites(
         return collection
 
     mocker.patch(
-        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        "simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name",
         side_effect=_get_collection_name,
     )
 
@@ -1042,7 +1042,7 @@ def test_check_model_parameter_versions(mocker):
     }
 
     mocker.patch(
-        "simtools.model.model_parameter.names.model_parameters",
+        "simtools.data_model.parameter_catalog.model_parameters",
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
     mock_validate = mocker.patch(
@@ -1068,7 +1068,7 @@ def test_check_model_parameter_versions_allows_older_scalar_schema(mocker):
     }
 
     mocker.patch(
-        "simtools.model.model_parameter.names.model_parameters",
+        "simtools.data_model.parameter_catalog.model_parameters",
         return_value={"num_gains": {"schema_version": "1.0.0"}},
     )
     validate_schema = mocker.patch(

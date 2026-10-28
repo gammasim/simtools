@@ -836,11 +836,11 @@ def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
 
     with (
         mock.patch(
-            "simtools.utils.names.get_simulation_software_name_from_parameter_name",
+            "simtools.data_model.parameter_catalog.get_simulation_software_name_from_parameter_name",
             side_effect=mock_get_name,
         ),
         mock.patch(
-            "simtools.utils.names.get_simulation_software_meta_parameter_mode",
+            "simtools.data_model.parameter_catalog.get_simulation_software_meta_parameter_mode",
             return_value="add",
         ),
         mock.patch("simtools.simtel.simtel_validate_metadata.validate_metadata"),

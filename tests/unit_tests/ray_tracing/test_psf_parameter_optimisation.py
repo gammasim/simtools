@@ -1343,7 +1343,7 @@ def test_get_initial_parameters(optimizer, mock_telescope_model):
 
 def test_is_parameter_within_allowed_range_schema_errors():
     # Test that function handles KeyError and returns True
-    with patch("simtools.utils.names.model_parameters") as mock_params:
+    with patch("simtools.data_model.parameter_catalog.model_parameters") as mock_params:
         mock_params.side_effect = KeyError("Parameter not found")
 
         result = psf_opt._is_parameter_within_allowed_range("nonexistent_param", 0, 0.5)
@@ -1396,19 +1396,19 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
 
 def test_parameter_validation_edge_cases():
     # Test when data is not a list
-    with patch("simtools.utils.names.model_parameters") as mock_params:
+    with patch("simtools.data_model.parameter_catalog.model_parameters") as mock_params:
         mock_params.return_value = {"test_param": {"data": "not_a_list"}}
         result = psf_opt._is_parameter_within_allowed_range("test_param", 0, 0.5)
         assert result is True
 
     # Test when no allowed_range specified
-    with patch("simtools.utils.names.model_parameters") as mock_params:
+    with patch("simtools.data_model.parameter_catalog.model_parameters") as mock_params:
         mock_params.return_value = {"test_param": {"data": [{}]}}
         result = psf_opt._is_parameter_within_allowed_range("test_param", 0, 0.5)
         assert result is True
 
     # Test value below minimum
-    with patch("simtools.utils.names.model_parameters") as mock_params:
+    with patch("simtools.data_model.parameter_catalog.model_parameters") as mock_params:
         mock_params.return_value = {
             "test_param": {"data": [{"allowed_range": {"min": 0.0, "max": 1.0}}]}
         }
@@ -1416,7 +1416,7 @@ def test_parameter_validation_edge_cases():
         assert result is False
 
     # Test value above maximum
-    with patch("simtools.utils.names.model_parameters") as mock_params:
+    with patch("simtools.data_model.parameter_catalog.model_parameters") as mock_params:
         mock_params.return_value = {
             "test_param": {"data": [{"allowed_range": {"min": 0.0, "max": 1.0}}]}
         }

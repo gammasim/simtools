@@ -12,6 +12,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
@@ -348,12 +349,12 @@ class SimtelConfigWriter:
     @staticmethod
     def _get_sim_telarray_config_parameter_name(parameter_name):
         """Return the sim_telarray name when it is an ordinary config parameter."""
-        simtel_name = names.get_simulation_software_name_from_parameter_name(
+        simtel_name = catalog.get_simulation_software_name_from_parameter_name(
             parameter_name, software_name="sim_telarray"
         )
         if (
             simtel_name
-            and names.get_simulation_software_meta_parameter_mode(
+            and catalog.get_simulation_software_meta_parameter_mode(
                 parameter_name, software_name="sim_telarray"
             )
             == "set"
@@ -518,10 +519,10 @@ class SimtelConfigWriter:
         for key, value in model_parameters.items():
             if key == "camera_config_file":
                 continue
-            simtel_name = names.get_simulation_software_name_from_parameter_name(
+            simtel_name = catalog.get_simulation_software_name_from_parameter_name(
                 key, software_name="sim_telarray"
             )
-            mode = names.get_simulation_software_meta_parameter_mode(
+            mode = catalog.get_simulation_software_meta_parameter_mode(
                 key, software_name="sim_telarray"
             )
             if simtel_name and mode == "add":
@@ -579,7 +580,7 @@ class SimtelConfigWriter:
                     **site_model.get_simulation_software_parameters("sim_telarray"),
                     **site_model.parameters,
                 }.items()
-                if not names.is_global_sim_telarray_parameter(name)
+                if not catalog.is_global_sim_telarray_parameter(name)
             }
             self._write_site_parameters(
                 file,
