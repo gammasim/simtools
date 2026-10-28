@@ -14,6 +14,10 @@ simtools-plot-telescope-structure --site North --telescope LSTN-01 \\
   --model_version 7.0.0 --output_path telescope-structure
 ```
 
+To use a telescope structure definition from an ECSV file, pass
+`--telescope_structure_file path/to/structure.ecsv`. This file overrides the
+structure file selected by the telescope model.
+
 Add `--shadowing` to include the shadowing analysis. Its star zenith angle,
 photon count, and random seed can be set with `--zenith_angle`, `--photons`,
 and `--seed`.
