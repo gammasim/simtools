@@ -2,6 +2,7 @@
 
 import gzip
 import hashlib
+import math
 from pathlib import Path
 
 import astropy.units as u
@@ -89,18 +90,18 @@ def test_write_photon_bunches_reads_back(tmp_test_directory, atmospheric_profile
     # CORSIKA words (1-based): run number 2, observation level 6 (run) or 48 (event).
     assert run_header[0] == b"RUNH"
     assert run_header[1][1] == 7
-    assert run_header[1][5] == pytest.approx(214700.0)
+    assert math.isclose(run_header[1][5], 214700.0, rel_tol=1e-6, abs_tol=1e-12)
     assert event_header[0] == b"EVTH"
     assert event_header[1][1] == 2
-    assert event_header[1][47] == pytest.approx(214700.0)
+    assert math.isclose(event_header[1][47], 214700.0, rel_tol=1e-6, abs_tol=1e-12)
     # Word 77: the number of the profile in the file times 1024 plus option bits.
     assert int(event_header[1][76]) >> 10 == atmosphere["id"]
-    assert atmosphere["obslevel"] == pytest.approx(214700.0)
+    assert math.isclose(atmosphere["obslevel"], 214700.0, rel_tol=1e-6, abs_tol=1e-12)
     assert atmosphere["name"] == b"atmospheric_profile"
     assert atmosphere["altitude_km"].tolist() == [0.0, 2.0, 10.0]
     assert atmosphere[PROFILE_THICKNESS_COLUMN].tolist() == [1030.0, 800.0, 270.0]
     assert atmosphere[ATMOSPHERE_REFRACTIVE_INDEX_KEY].tolist() == [2.8e-4, 2.3e-4, 1.0e-4]
-    assert telescopes[0]["r"] == pytest.approx(200.0)
+    assert math.isclose(telescopes[0]["r"], 200.0, rel_tol=1e-6, abs_tol=1e-12)
 
 
 # SHA-256 of the file generated from ``_reference_events`` and ``atmospheric_profile`` with
@@ -148,12 +149,12 @@ def _camera_photons():
 
 def test_camera_bunches_single_mirror_turn_the_frame_about_x():
     bunch = camera_bunches(_camera_photons(), dual_mirror=False, emission_altitude_m=2147.0)[0]
-    assert (bunch["x"], bunch["y"]) == pytest.approx((10.0, -20.0))
-    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.01, -0.02))
-    assert bunch["time"] == pytest.approx(55.0)
-    assert bunch["zem"] == pytest.approx(214700.0)
-    assert bunch["photons"] == pytest.approx(0.7)
-    assert bunch["wavelength"] == pytest.approx(385.0)
+    assert np.allclose((bunch["x"], bunch["y"]), (10.0, -20.0), rtol=1e-6, atol=1e-12)
+    assert np.allclose((bunch["cx"], bunch["cy"]), (0.01, -0.02), rtol=1e-6, atol=1e-12)
+    assert math.isclose(bunch["time"], 55.0, rel_tol=1e-6, abs_tol=1e-12)
+    assert math.isclose(bunch["zem"], 214700.0, rel_tol=1e-6, abs_tol=1e-12)
+    assert math.isclose(bunch["photons"], 0.7, rel_tol=1e-6, abs_tol=1e-12)
+    assert math.isclose(bunch["wavelength"], 385.0, rel_tol=1e-6, abs_tol=1e-12)
     # The camera rotation does not matter for single-mirror telescopes.
     rotated = camera_bunches(
         _camera_photons(), dual_mirror=False, emission_altitude_m=2147.0, camera_rotation_deg=30.0
@@ -165,14 +166,14 @@ def test_camera_bunches_single_mirror_turn_the_frame_about_x():
 
 def test_camera_bunches_dual_mirror_in_the_camera_frame():
     bunch = camera_bunches(_camera_photons(), dual_mirror=True, emission_altitude_m=2147.0)[0]
-    assert (bunch["x"], bunch["y"]) == pytest.approx((10.0, 20.0))
-    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.01, 0.02))
+    assert np.allclose((bunch["x"], bunch["y"]), (10.0, 20.0), rtol=1e-6, atol=1e-12)
+    assert np.allclose((bunch["cx"], bunch["cy"]), (0.01, 0.02), rtol=1e-6, atol=1e-12)
     # Camera rotated by 90 deg: telescope x is camera -y.
     bunch = camera_bunches(
         _camera_photons(), dual_mirror=True, emission_altitude_m=2147.0, camera_rotation_deg=90.0
     )[0]
-    assert (bunch["x"], bunch["y"]) == pytest.approx((20.0, -10.0))
-    assert (bunch["cx"], bunch["cy"]) == pytest.approx((0.02, -0.01))
+    assert np.allclose((bunch["x"], bunch["y"]), (20.0, -10.0), rtol=1e-6, atol=1e-12)
+    assert np.allclose((bunch["cx"], bunch["cy"]), (0.02, -0.01), rtol=1e-6, atol=1e-12)
 
 
 def test_bypass_optics_level():

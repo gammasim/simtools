@@ -8,14 +8,16 @@ parameter records.
 from simtools.utils import names
 
 TELESCOPE_STRUCTURE = "telescope_structure"
+_MIRROR_ALIGN_RANDOM_DISTANCE = "mirror_align_random_distance"
+_MIRROR_ALIGN_RANDOM_VERTICAL = "mirror_align_random_vertical"
 
 # No random mirror errors (focal lengths, reflection angles, alignment).
 PERFECT_MIRROR = {
     "random_focal_length": [0.0, 0.0],
     "mirror_reflection_random_angle": [0.0, 0.0, 0.0],
-    "mirror_align_random_distance": 0.0,
+    _MIRROR_ALIGN_RANDOM_DISTANCE: 0.0,
     "mirror_align_random_horizontal": [0.0, 28.0, 0.0, 0.0],
-    "mirror_align_random_vertical": [0.0, 28.0, 0.0, 0.0],
+    _MIRROR_ALIGN_RANDOM_VERTICAL: [0.0, 28.0, 0.0, 0.0],
 }
 
 
@@ -49,8 +51,8 @@ def single_mirror(mirror_list, mirror_focal_length, camera_distance):
         "camera_body_diameter": 0.0,
         TELESCOPE_STRUCTURE: "none",
         "parabolic_dish": False,
-        "mirror_align_random_distance": 0.0,
-        "mirror_align_random_vertical": [0.0, 28.0, 0.0, 0.0],
+        _MIRROR_ALIGN_RANDOM_DISTANCE: 0.0,
+        _MIRROR_ALIGN_RANDOM_VERTICAL: [0.0, 28.0, 0.0, 0.0],
     }
 
 

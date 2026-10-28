@@ -22,6 +22,7 @@ from obdeect.model import DETECTED, OpticalModel
 
 from simtools.io import io_handler
 from simtools.ray_tracing.backends.interface import image_file_name
+from simtools.ray_tracing.parameter_changes import TELESCOPE_STRUCTURE
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import telescope_pointing
 from simtools.utils import geometry
@@ -91,6 +92,8 @@ class ObdeectRayTracer:
         }
         for name, value in changes.items():
             if name not in records:
+                if name == TELESCOPE_STRUCTURE and value == "none":
+                    continue
                 model = f"{self.telescope_model.name} ({self.telescope_model.model_version})"
                 raise ValueError(
                     f"Ray-tracing change of '{name}' has no record in the telescope model {model}"
