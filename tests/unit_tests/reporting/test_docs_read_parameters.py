@@ -1406,8 +1406,8 @@ def test_flasher_gauss_exponential_uses_simtel_table_writer(tmp_test_directory):
         ),
         patch.object(
             rp.model_reader,
-            "get_array_elements",
-            return_value=["MSTx-NectarCam"],
+            "read_production_table",
+            return_value={"parameters": {"MSTx-NectarCam": {}}},
         ),
         patch(
             "simtools.io.io_handler.IOHandler.get_output_directory",
