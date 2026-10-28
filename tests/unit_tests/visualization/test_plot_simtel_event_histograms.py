@@ -411,7 +411,7 @@ def test_create_plot_with_output_file(tmp_test_directory):
     plot_params = {"color": "blue"}
     labels = {"x": "X-axis", "y": "Y-axis", "title": "Save Plot"}
     scales = {"x": "linear", "y": "linear"}
-    output_file = tmp_test_directory / "saved_plot.png"
+    output_file = Path(tmp_test_directory) / "saved_plot.png"
 
     result = _create_plot(
         data=data,
@@ -427,7 +427,7 @@ def test_create_plot_with_output_file(tmp_test_directory):
 
     assert result is not None
     assert output_file.exists()
-    assert output_file.stat().size > 0
+    assert output_file.stat().st_size > 0
 
 
 @pytest.mark.filterwarnings("ignore:Tight layout not applied.*:UserWarning")
