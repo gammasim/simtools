@@ -100,10 +100,13 @@ class GitStorage:
         return self.object_store.iter_files(self.revision, _relative_path(prefix).as_posix())
 
     def exists(self, path):
-        """Return whether a repository-relative file exists."""
+        """Return whether a repository-relative file exists (directories are not files)."""
+        relative = _relative_path(path).as_posix()
         try:
-            self.object_store.read_blob(self.revision, _relative_path(path).as_posix())
+            self.object_store.read_blob(self.revision, relative)
         except FileNotFoundError:
+            return False
+        except ValueError:  # the path names a tree (directory), not a blob
             return False
         return True
 
@@ -131,8 +134,10 @@ class MemoryStorage:
 
     def iter_files(self, prefix):
         """List repository-relative files below a directory prefix."""
-        directory = _relative_path(prefix).as_posix().rstrip("/") + "/"
-        return sorted(path for path in self.files if path.startswith(directory))
+        directory = _relative_path(prefix).as_posix()
+        if directory == ".":
+            return sorted(self.files)
+        return sorted(path for path in self.files if path.startswith(directory.rstrip("/") + "/"))
 
     def exists(self, path):
         """Return whether a repository-relative file exists."""

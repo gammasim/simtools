@@ -1,5 +1,7 @@
 """Contract tests for model repository storage implementations."""
 
+from pathlib import Path
+
 import pygit2
 import pytest
 
@@ -28,17 +30,17 @@ def _make_git_repository(root, files):
 
 
 @pytest.fixture(params=["directory", "git", "memory"])
-def storage(request, tmp_path):
+def storage(request, tmp_test_directory):
     """Provide each storage with identical generated file content."""
     if request.param == "directory":
-        root = tmp_path / "directory-model"
+        root = Path(tmp_test_directory) / "directory-model"
         for relative, content in FILES.items():
             file_path = root / relative
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_bytes(content)
         return DirectoryStorage(root)
     if request.param == "git":
-        root = tmp_path / "git-model"
+        root = Path(tmp_test_directory) / "git-model"
         root.mkdir()
         _, commit = _make_git_repository(root, FILES)
         return GitStorage(root, commit)
@@ -61,3 +63,13 @@ def test_storage_reads_identical_files(storage):
         storage.read_bytes("simulation-models/missing.json")
     assert storage.config
     assert storage.name
+
+
+@pytest.mark.parametrize("root_prefix", ["", "."])
+def test_storage_lists_all_files_from_repository_root(storage, root_prefix):
+    assert storage.iter_files(root_prefix) == sorted(FILES)
+
+
+def test_storage_exists_is_false_for_directories(storage):
+    assert not storage.exists("simulation-models")
+    assert not storage.exists("simulation-models/productions")
