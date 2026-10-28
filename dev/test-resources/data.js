@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793198696052,
+  "lastUpdate": 1793199032887,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32574,6 +32574,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 481.8359375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce6a3e1c4970ca68149e99f60ebad8d3001007ec",
+          "message": "Add schema-driven table builders for unit tests (#2692)\n\n* Add schema-driven reduced-event and trigger-histogram table builders\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Accept string overrides in table builders\n\nMap the schema type 'string' to str before building arrays.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T15:32:15+01:00",
+          "tree_id": "bfa708b635791ef63d57015f72e7c8205ef1b4eb",
+          "url": "https://github.com/gammasim/simtools/commit/ce6a3e1c4970ca68149e99f60ebad8d3001007ec"
+        },
+        "date": 1793199019651,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 84.79928267800003,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 87.18,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 482.13671875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
