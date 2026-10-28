@@ -9,14 +9,14 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools.io.file_type import _get_product_value
+from simtools.io.file_type import product_value
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 _THRESHOLD_RE = re.compile(r"_(?:[ad]sum|discriminator)(?P<threshold>\d+(?:\.\d+)?)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 _DEFAULT_REDUCED_EVENT_DATA_PATTERN = (
-    f"*{_get_product_value('sim_telarray_event_data', 'default_suffix')}"
+    f"*{product_value('sim_telarray_event_data', 'default_suffix')}"
 )
 
 

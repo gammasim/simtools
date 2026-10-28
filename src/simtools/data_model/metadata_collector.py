@@ -21,7 +21,7 @@ import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA, SIM_TELARRAY_META_PARAMETER_REGISTRY
 from simtools.data_model import metadata_model, schema, schema_loader
 from simtools.io import ascii_handler, io_handler
-from simtools.io.file_type import _get_product_suffixes
+from simtools.io.file_type import product_suffixes
 from simtools.settings import config
 from simtools.sim_events.file_info import get_corsika_run_and_event_headers
 from simtools.simtel import simtel_validate_metadata
@@ -40,7 +40,7 @@ _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
 def _matches_catalog_product(file_path, product_id):
     """Match a product using the caller's existing case-sensitive behavior."""
     file_name = Path(file_path).name
-    return file_name.endswith(_get_product_suffixes(product_id))
+    return file_name.endswith(product_suffixes(product_id))
 
 
 class MetadataCollector:

@@ -6,7 +6,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.production_configuration.production_file_selection import (
     check_manifest,
     discover_product_manifests,
@@ -23,9 +23,9 @@ from simtools.sim_events.production_comparison import (
 from simtools.visualization import plot_event_level_production_comparison
 from simtools.visualization.plot_event_level_production_comparison import _pdf_report, _PdfReport
 
-_COMPARISON_INVENTORY_FILE = _get_product_filename("comparison_inventory")
-_COMPARISON_STATISTICS_FILE = _get_product_filename("comparison_statistics")
-_COMPARISON_METRICS_FILE = _get_product_filename("comparison_metrics")
+_COMPARISON_INVENTORY_FILE = product_filename("comparison_inventory")
+_COMPARISON_STATISTICS_FILE = product_filename("comparison_statistics")
+_COMPARISON_METRICS_FILE = product_filename("comparison_metrics")
 _CONFIGURATION_KEY = "configuration"
 _OUTPUT_PATH_KEY = "output_path"
 _REPORT_MODE_KEY = "report_mode"

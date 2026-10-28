@@ -63,7 +63,7 @@ FILE_TYPE_SUFFIXES = {
 }
 
 
-def _get_product_value(product_id, key):
+def product_value(product_id, key):
     """Return one value from a registered file product."""
     try:
         return _file_catalog()[_PRODUCTS][product_id][key]
@@ -71,13 +71,13 @@ def _get_product_value(product_id, key):
         raise ValueError(_UNKNOWN_PRODUCT.format(product_id=product_id)) from exc
 
 
-def _get_product_suffixes(product_id):
+def product_suffixes(product_id):
     """Return accepted suffixes for one registered file product."""
     catalog = _file_catalog()
     return _product_suffixes(product_id, catalog[_PRODUCTS], catalog[_FORMATS])
 
 
-def _get_product_filename(product_id):
+def product_filename(product_id):
     """Return a fixed filename for one registered file product."""
     catalog = _file_catalog()
     if product_id not in catalog[_PRODUCTS]:
