@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793199163751,
+  "lastUpdate": 1793199384269,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32658,6 +32658,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 465.296875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b7c7174b1c3b9b1bfd89f25997c3459ed75e5e63",
+          "message": "Add CI guards for package layering, unused code and test patches (#2696)\n\n* Add CI guards for layering, unused code and internal test patches\n\nimport-linter layer contract (existing violations listed), vulture with a\nwhitelist, Ruff PLC2701 (private imports) and a ratchet counting patches of\nsimtools internals in unit tests; all run as local pre-commit hooks.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Keep guard configuration in pyproject.toml and .github/scripts\n\nMove the vulture whitelist to [tool.vulture] ignore_names, the patch counter\nto .github/scripts and its maximum to the pre-commit hook arguments; no\ntop-level tools directory.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Scope PLC2701 to library code; count bare patch.object calls\n\nUnit tests may import private helpers of the module under test. The patch\ncounter also counts 'patch.object(...)' imported directly from\nunittest.mock (maximum 1613).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T15:42:25+01:00",
+          "tree_id": "6076598674e2fbb9783f1982464c18f8085607e4",
+          "url": "https://github.com/gammasim/simtools/commit/b7c7174b1c3b9b1bfd89f25997c3459ed75e5e63"
+        },
+        "date": 1793199367554,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 59.30031109999999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 59.26,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 470.1796875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
           }
