@@ -8,6 +8,14 @@ The package is organized in layers. A module may import only from its own or a
 lower layer. Library code never imports `simtools.applications`, and
 production code never imports test helpers.
 
+Import-linter enforces the package layers, and Ruff checks private cross-module
+imports. Three lists are ratchets: reduce them as the architecture cleanup
+proceeds and never add entries or raise the count. They are the
+`ignore_imports` of `[tool.importlinter]` and the `ignore_names` of
+`[tool.vulture]` in `pyproject.toml`, and the `--max` value of the
+`internal-patch-count` hook in `.pre-commit-config.yaml` (patches of
+`simtools.*` internals in unit tests).
+
 ```text
 5  applications/            thin CLI wrappers
 4  workflows                simulate, production, science_tests, reporting, derive_*
