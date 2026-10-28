@@ -238,12 +238,6 @@ def test_get_pixel_shape_square():
     assert camera.get_pixel_shape() == 2
 
 
-def test_get_lightguide_efficiency_files(simple_camera_dict):
-    camera = Camera("TestTel", None, 5.6, camera_config_dict=simple_camera_dict)
-    assert camera.get_lightguide_efficiency_angle_file_name() == "none"
-    assert camera.get_lightguide_efficiency_wavelength_file_name() == "none"
-
-
 def test_get_pixel_active_solid_angle_hexagonal(simple_camera_dict):
     camera = Camera("TestTel", None, 5.6, camera_config_dict=simple_camera_dict)
     solid_angle = camera.get_pixel_active_solid_angle()

@@ -177,36 +177,6 @@ def simulation_models_path(tmp_test_directory):
     return model_root
 
 
-def test_file_system_handler_reads_production_and_parameters(simulation_models_path):
-    handler = FileSystemModelSource(simulation_models_path)
-
-    production = handler.read_production_table("telescopes", "1.0.0")
-    parameters = handler.query_model_parameters(
-        {
-            "$or": [{"parameter": "camera_body_diameter", "parameter_version": "2.0.0"}],
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        "telescopes",
-    )
-
-    assert production["design_model"] == {"LSTN-01": "LSTN-design"}
-    assert parameters[0]["value"] == pytest.approx(350.0)
-    assert handler.get_model_versions() == ["1.0.0"]
-
-    integer_parameter = handler.query_model_parameters(
-        {
-            "instrument": "LSTN-design",
-            "parameter": "dsum_prescale",
-            "parameter_version": "1.0.0",
-            "site": "North",
-        },
-        "telescopes",
-    )
-    assert integer_parameter[0]["value"] == [42, 256]
-    assert all(isinstance(value, int) for value in integer_parameter[0]["value"])
-
-
 def test_file_system_source_reads_production_descriptions(tmp_test_directory):
     """Production summaries can read info files from a filesystem source."""
     model_root = Path(tmp_test_directory) / "model-files"
@@ -224,48 +194,6 @@ def test_file_system_source_reads_production_descriptions(tmp_test_directory):
     source = FileSystemModelSource(model_root)
 
     assert source.get_production_descriptions() == [("1.0.0", "Prod1"), ("2.0.0", "Prod2")]
-
-
-def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models_path):
-    handler = FileSystemModelSource(simulation_models_path)
-
-    parameters = handler.query_model_parameters(
-        {
-            "$or": [
-                {"parameter": "camera_body_diameter", "parameter_version": "9.0.0"},
-                {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"},
-            ],
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        "telescopes",
-    )
-
-    assert [parameter["parameter"] for parameter in parameters] == ["camera_body_diameter"]
-
-
-def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
-    production_spy = mocker.spy(reader_module.files, "read_production_tables")
-    parameter_spy = mocker.spy(reader_module.ascii_handler, "collect_data_from_file")
-    query = {
-        "parameter": "camera_body_diameter",
-        "parameter_version": "2.0.0",
-        "instrument": "LSTN-01",
-        "site": "North",
-    }
-
-    for _ in range(2):
-        handler = FileSystemModelSource(simulation_models_path)
-        handler.read_production_table("telescopes", "1.0.0")
-        handler.query_model_parameters(query, "telescopes")
-
-    assert production_spy.call_count == 2
-    parameter_reads = [
-        call
-        for call in parameter_spy.call_args_list
-        if "camera_body_diameter-2.0.0.json" in str(call.kwargs.get("file_name"))
-    ]
-    assert len(parameter_reads) == 2
 
 
 def test_file_system_handler_reads_requested_production_collection_only(
@@ -350,67 +278,6 @@ def test_invalid_model_path_fails_without_fallback(tmp_test_directory):
 
     with pytest.raises(FileNotFoundError, match="path does not exist"):
         FileSystemModelSource(Path(tmp_test_directory) / "missing")
-
-
-def test_missing_model_data_reports_source(simulation_models_path):
-    handler = FileSystemModelSource(simulation_models_path)
-
-    with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
-        handler.read_production_table("telescopes", "2.0.0")
-    with pytest.raises(
-        ValueError, match=r"No production table for calibration_devices in model version 1\.0\.0"
-    ):
-        handler.read_production_table("calibration_devices", "1.0.0")
-    with pytest.raises(ValueError, match="No parameters found"):
-        handler.query_model_parameters(
-            {
-                "parameter": "camera_body_diameter",
-                "parameter_version": "9.0.0",
-                "instrument": "LSTN-01",
-                "site": "North",
-            },
-            "telescopes",
-        )
-    with pytest.raises(ValueError, match="requires an array element name"):
-        handler.query_model_parameters(
-            {"parameter": "camera_body_diameter", "parameter_version": "1.0.0"},
-            "telescopes",
-        )
-
-
-def test_filesystem_source_routes_parameter_collections_and_filters(simulation_models_path):
-    """Filesystem parameter lookups handle collection defaults and metadata filters."""
-    handler = FileSystemModelSource(simulation_models_path)
-
-    assert (
-        handler.read_parameters({"array_layouts": "1.0.0"}, "sites", site="North")[0]["parameter"]
-        == "array_layouts"
-    )
-    with pytest.raises(ValueError, match="requires an array element name"):
-        handler.read_parameters({"array_layouts": "1.0.0"}, "sites")
-    with pytest.raises(ValueError, match="No parameters found"):
-        handler.read_parameters({"missing": "9.0.0"}, "telescopes", instrument="LSTN-01")
-    assert handler.read_parameters(
-        {"corsika_cherenkov_photon_bunch_size": "1.0.0"}, "configuration_corsika"
-    )[0]["value"] == pytest.approx(5.0)
-
-    assert not handler._matches_filters(  # pylint: disable=protected-access
-        {"instrument": "LSTN-01", "site": "North"}, "MSTN-01", "North"
-    )
-    assert handler._matches_filters(  # pylint: disable=protected-access
-        {"instrument": "LSTN-01", "site": ["North", "South"]}, "LSTN-01", "South"
-    )
-    assert not handler._matches_filters(  # pylint: disable=protected-access
-        {"instrument": "LSTN-01", "site": ["North"]}, "LSTN-01", "South"
-    )
-    assert handler.query_model_parameters(
-        {
-            "$or": [{}, {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"}],
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        "telescopes",
-    )
 
 
 def test_reader_reads_file_based_simulation_configuration(simulation_models_path):

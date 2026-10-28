@@ -234,10 +234,6 @@ class SiteModel(ModelParameter):
             model_directory=model_directory
         )
 
-    def _get_atmospheric_profile_simtel_file_name(self, parameter=None):
-        """Return the native filename used for the CORSIKA atmospheric profile."""
-        return get_model_writer(self).get_atmospheric_profile_file_name(parameter=parameter)
-
     def get_nsb_integrated_flux(self, wavelength_min=300 * u.nm, wavelength_max=650 * u.nm):
         """
         Get the integrated flux for the NSB (Night Sky Background) model.

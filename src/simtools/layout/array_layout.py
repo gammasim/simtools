@@ -23,10 +23,6 @@ class InvalidTelescopeListFileError(Exception):
     """Exception for invalid telescope list file."""
 
 
-class InvalidCoordinateDataTypeError(Exception):
-    """Exception for low-precision coordinate data type."""
-
-
 class ArrayLayout:
     """
     Manage telescope positions at the array layout level.
@@ -461,44 +457,6 @@ class ArrayLayout:
                     para, tel_model.get_parameter_value_with_unit(para)
                 )
 
-    def add_telescope(
-        self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None, design_model=None
-    ):
-        """
-        Add an individual telescope to the telescope list.
-
-        Parameters
-        ----------
-        telescope_name: str
-            Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)
-        crs_name: str
-            Name of coordinate system
-        xx: astropy.units.quantity.Quantity
-            x-coordinate for the given coordinate system
-        yy: astropy.units.quantity.Quantity
-            y-coordinate for the given coordinate system
-        altitude: astropy.units.quantity.Quantity
-            Altitude coordinate in equivalent units of u.m.
-        tel_corsika_z: astropy.units.quantity.Quantity
-            CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
-            center).
-        design_model: str
-            Name of the design model (optional).
-            If none, telescope type + "-design" is used.
-        """
-        tel = TelescopePosition(name=telescope_name)
-        self._set_telescope_auxiliary_parameters(tel, design_model)
-        tel.set_coordinates(crs_name, xx, yy)
-        if altitude is not None:
-            tel.set_altitude(altitude)
-        elif tel_corsika_z is not None:
-            tel.set_altitude(
-                self._altitude_from_corsika_z(
-                    pos_z=tel_corsika_z, telescope_axis_height=tel.get_axis_height()
-                )
-            )
-        self._telescope_list.append(tel)
-
     def _get_export_metadata(self):
         """
         File metadata for export of array element list to file.
@@ -647,17 +605,6 @@ class ArrayLayout:
             "file": False,
             "model_parameter_schema_version": "0.1.0",
         }
-
-    def get_number_of_telescopes(self):
-        """
-        Return the number of telescopes in the list.
-
-        Returns
-        -------
-        int
-            Number of telescopes.
-        """
-        return len(self._telescope_list)
 
     def print_telescope_list(self, crs_name):
         """

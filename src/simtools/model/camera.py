@@ -355,28 +355,6 @@ class Camera:
         """
         return self.pixels["pixel_shape"]
 
-    def get_lightguide_efficiency_angle_file_name(self) -> str:
-        """
-        Get the file name of the light guide efficiency as a function of incidence angle.
-
-        Returns
-        -------
-        str
-            File name of the light guide efficiency as a function of incidence angle.
-        """
-        return self.pixels["lightguide_efficiency_angle_file"]
-
-    def get_lightguide_efficiency_wavelength_file_name(self) -> str:
-        """
-        Get the file name of the light guide efficiency as a function of wavelength.
-
-        Returns
-        -------
-        str
-            File name of the light guide efficiency as a function of wavelength.
-        """
-        return self.pixels["lightguide_efficiency_wavelength_file"]
-
     def get_camera_fill_factor(self) -> float:
         """
         Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2.

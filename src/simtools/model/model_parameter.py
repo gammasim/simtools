@@ -2,7 +2,6 @@
 """Base class for simulation model parameters (e.g., for SiteModel or TelescopeModel)."""
 
 import logging
-import shutil
 from copy import copy, deepcopy
 from pathlib import Path
 
@@ -258,27 +257,6 @@ class ModelParameter:
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a type.")
         return None
-
-    def get_parameter_file_flag(self, par_name):
-        """
-        Get the file flag of an existing model parameter (the ``file`` field).
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        bool
-            True if file flag is set.
-
-        """
-        try:
-            return self._get_parameter_dict(par_name)["file"]
-        except KeyError:
-            self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
-        return False
 
     def get_parameter_version(self, par_name):
         """
@@ -926,23 +904,6 @@ class ModelParameter:
             for key, value in par_value.items()
             if key in ("unit", "model_parameter_schema_version")
         }
-
-    def overwrite_model_file(self, par_name, file_path):
-        """
-        Overwrite the existing model file in the config file directory.
-
-        Keeps track of updated model file with '_added_parameter_files' attribute.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-        file_path: str
-            Path of the file to be added to the config file directory.
-        """
-        self._added_parameter_files = self._added_parameter_files or []
-        self._added_parameter_files.append(par_name)
-        shutil.copy(file_path, self.config_file_directory)
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
