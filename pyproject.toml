@@ -462,6 +462,7 @@ root_packages = [
   "simtools.corsika",
   "simtools.data_model",
   "simtools.io",
+  "simtools.histogram",
   "simtools.job_execution",
   "simtools.layout",
   "simtools.model",
@@ -493,6 +494,7 @@ layers = [
   "simtools.visualization",
   "simtools.model : simtools.model_repository : simtools.layout",
   "simtools.io : simtools.data_model : simtools.sim_events",
+  "simtools.histogram",
   "simtools.utils",
 ]
 ignore_imports = [

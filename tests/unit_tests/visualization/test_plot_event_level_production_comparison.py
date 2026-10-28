@@ -423,29 +423,6 @@ def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
     assert _assert_files_exist(output_path, per_type_files) is None
 
 
-@pytest.mark.parametrize("cumulative", [False, True])
-def test_normalized_histogram_values(cumulative):
-    values, errors = plot_event_level_production_comparison._normalized_histogram_values(
-        np.array([1.0, 3.0]), cumulative=cumulative
-    )
-    assert values.shape == (2,)
-    assert errors.shape == (2,)
-    if cumulative:
-        np.testing.assert_allclose(values, np.array([0.25, 1.0]))
-        np.testing.assert_array_equal(errors, np.array([0.0, 0.0]))
-    else:
-        np.testing.assert_allclose(values, np.array([0.25, 0.75]))
-        np.testing.assert_allclose(errors, np.sqrt(np.array([1.0, 3.0])) / 4.0)
-
-
-def test_normalized_histogram_values_zero_counts():
-    values, errors = plot_event_level_production_comparison._normalized_histogram_values(
-        np.array([0.0, 0.0]), cumulative=False
-    )
-    np.testing.assert_array_equal(values, np.array([0.0, 0.0]))
-    np.testing.assert_array_equal(errors, np.array([0.0, 0.0]))
-
-
 def test_plot_series_and_artist_color():
     fig, ax = plt.subplots(figsize=(4, 3))
     bin_edges = np.array([1.0, 2.0, 3.0])

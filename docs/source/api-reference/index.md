@@ -16,6 +16,7 @@ corsika
 data_model
 dependencies
 io
+histogram
 job_execution
 mc_model
 model_repository
