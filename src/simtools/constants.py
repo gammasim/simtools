@@ -87,7 +87,6 @@ CORSIKA_MAX_SEED = 900000000
 # Default repository URLs for simulations and computing resources
 DEFAULT_SIMULATIONS_REPO = "https://gitlab.cta-observatory.org/cta-science/simulations"
 DEFAULT_COMPUTING_REPO = "https://gitlab.cta-observatory.org/cta-computing"
-DEFAULT_SIMULATION_MODELS = f"{DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models.git"
 DEFAULT_SIMULATION_WORKFLOWS = (
     f"{DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-model-parameter-setting.git"
 )

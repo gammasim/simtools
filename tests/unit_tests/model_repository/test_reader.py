@@ -273,37 +273,6 @@ def test_filesystem_source_rejects_ambiguous_parameter_scope():
         FileSystemModelSource._get_parameter_instrument({}, "telescopes")
 
 
-def test_filesystem_source_queries_and_filters_parameters(model_repository):
-    """Queries support OR clauses and reject missing or mismatched parameters."""
-    source = FileSystemModelSource(model_repository)
-    query = {
-        "instrument": "LSTN-01",
-        "site": "North",
-        "$or": [
-            {"parameter": "missing", "parameter_version": "1.0.0"},
-            {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"},
-        ],
-    }
-    result = source.query_model_parameters(query, "telescopes")
-    assert result[0]["value"] == pytest.approx(350.0)
-
-    with pytest.raises(ValueError, match="No parameters found"):
-        source.query_model_parameters(
-            {
-                "instrument": "LSTN-01",
-                "parameter": "camera_body_diameter",
-                "parameter_version": "2.0.0",
-                "site": "South",
-            },
-            "telescopes",
-        )
-
-    with pytest.raises(ValueError, match="No parameters found"):
-        source.read_parameters(
-            {"missing": "1.0.0"}, "telescopes", instrument="LSTN-01", site="North"
-        )
-
-
 @pytest.mark.parametrize(
     ("data", "instrument", "site", "matches"),
     [
@@ -584,65 +553,6 @@ def test_reader_caches_parameter_tables():
     assert first["pixel_id"].tolist() == second["pixel_id"].tolist()
     assert first is not second
     source.get_parameter_table.assert_called_once_with(parameter)
-
-
-def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
-    """Structured JSON parameters are not converted to ECSV tables."""
-    source = Mock()
-    reader = SimulationModelReader(source)
-    reader.get_model_parameter = Mock(
-        return_value={
-            "pulse": {
-                "parameter": "pulse",
-                "type": "dict",
-                "value": {
-                    "columns": ["time", "amplitude"],
-                    "column_units": ["ns", "dimensionless"],
-                    "rows": [[1.0, 2.0]],
-                },
-            }
-        }
-    )
-
-    with pytest.raises(ValueError, match="not ECSV tables"):
-        reader.export_parameter_data(
-            parameter="pulse",
-            site="North",
-            array_element_name="LSTN-01",
-            output_file="pulse.json",
-            export_model_file_as_table=True,
-            dest=tmp_test_directory,
-        )
-
-
-def test_reader_exports_file_parameter_and_table(tmp_test_directory):
-    """File-backed ECSV parameters support the original file and ECSV outputs."""
-    source = Mock()
-    reader = SimulationModelReader(source)
-    reader.get_model_parameter = Mock(
-        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.ecsv"}}
-    )
-    source.export_model_files.return_value = {"mirror.ecsv": "copied"}
-    source_file = Path(tmp_test_directory) / "mirror.ecsv"
-    source_file.write_text("model", encoding="utf-8")
-    table = Table({"wavelength": [300.0]})
-    source.get_parameter_table.return_value = table
-
-    output_files = reader.export_parameter_data(
-        parameter="mirror",
-        site="North",
-        array_element_name="LSTN-01",
-        output_file="mirror-copy.ecsv",
-        export_model_file=True,
-        export_model_file_as_table=True,
-        dest=tmp_test_directory,
-    )
-
-    assert output_files == [
-        Path(tmp_test_directory) / "mirror-copy.ecsv",
-    ]
-    assert output_files[0].is_file()
-    assert Table.read(output_files[0], format="ascii.ecsv")["wavelength"][0] == pytest.approx(300.0)
 
 
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):

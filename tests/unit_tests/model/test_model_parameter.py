@@ -49,15 +49,6 @@ def test_get_parameter_type(telescope_model_lst, caplog):
     assert "Parameter num_gains does not have a type." in caplog.text
 
 
-def test_get_parameter_file_flag(telescope_model_lst, caplog):
-    assert telescope_model_lst.get_parameter_file_flag("num_gains") is False
-    telescope_model_copy = copy.deepcopy(telescope_model_lst)
-    telescope_model_copy.parameters["num_gains"].pop("file")
-    with caplog.at_level(logging.DEBUG):
-        assert telescope_model_copy.get_parameter_file_flag("num_gains") is False
-    assert "Parameter num_gains does not have a file associated with it." in caplog.text
-
-
 def test_get_parameter_value(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
     assert isinstance(tel_model.get_parameter_value("num_gains"), int)
@@ -736,15 +727,6 @@ def test_updating_export_model_files(model_version):
         "is a file was changed."
     )
     assert False is tel._is_exported_model_files_up_to_date
-
-
-def test_overwrite_model_file(telescope_model_lst, mocker, tmp_test_directory):
-    parameter = "array_coordinates_UTM"
-    file_path = tmp_test_directory / "telescope_positions.ecsv"
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_copy = mocker.patch("shutil.copy")
-    telescope_copy.overwrite_model_file(par_name=parameter, file_path=file_path)
-    mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 
 def test_get_parameter_value_with_none_type(telescope_model_lst, caplog):

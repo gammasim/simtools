@@ -328,11 +328,6 @@ def site_parameters():
     return model_parameters(class_key_list=tuple(collections_to_class_keys["sites"]))
 
 
-def telescope_parameters():
-    """Return telescope model parameters."""
-    return model_parameters(class_key_list=tuple(collections_to_class_keys["telescopes"]))
-
-
 def instrument_class_key_to_collection(class_name):
     """Convert instrument class key to collection name."""
     for collection, classes in collections_to_class_keys.items():
@@ -983,43 +978,6 @@ def generate_file_name(
     name += f"_{extra_label}" if extra_label is not None else ""
     name += f"{suffix}"
     return name
-
-
-def sanitize_name(name):
-    """
-    Sanitize name to be a valid Python identifier.
-
-    - Replaces spaces with underscores
-    - Converts to lowercase
-    - Removes characters that are not alphanumerics or underscores
-    - If the name starts with a number, prepend an underscore
-
-    Parameters
-    ----------
-    name: str
-        name to be sanitized.
-
-    Returns
-    -------
-    str:
-        Sanitized name.
-
-    Raises
-    ------
-    ValueError:
-        if the string name can not be sanitized.
-    """
-    if name is None:
-        return None
-    sanitized = name.lower()
-    sanitized = sanitized.replace(" ", "_")
-    # Remove characters that are not alphanumerics or underscores
-    sanitized = re.sub(r"\W|^(?=\d)", "_", sanitized)
-    if not sanitized.isidentifier():
-        msg = f"The string {name} could not be sanitized."
-        _logger.error(msg)
-        raise ValueError(msg)
-    return sanitized
 
 
 def file_name_with_version(file_name, suffix):

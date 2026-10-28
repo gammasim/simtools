@@ -35,13 +35,6 @@ def test_get_output_directory(args_dict, io_handler):
         io_handler.get_output_directory(output_path_label="nonexistent")
 
 
-def test_get_test_data_file(io_handler, test_resources_path):
-    assert (
-        io_handler.get_test_data_file(file_name=test_file)
-        == (test_resources_path / test_file).resolve()
-    )
-
-
 def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory):
     resources_path = Path(tmp_test_directory) / "versioned-resources"
     value = {

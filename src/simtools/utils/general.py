@@ -667,25 +667,6 @@ def remove_substring_recursively_from_dict(data_dict, substring="\n"):
     return data_dict
 
 
-def user_confirm():
-    """
-    Ask the user to enter y or n (case-insensitive) on the command line.
-
-    Returns
-    -------
-    bool:
-        True if the answer is Y/y.
-
-    """
-    while True:
-        try:
-            answer = input("Is this OK? [y/n]").lower()
-            return answer == "y"
-        except EOFError:
-            break
-    return False
-
-
 def _get_value_dtype(value):
     """
     Get the data type of the given value.
@@ -972,41 +953,6 @@ def find_differences_in_json_objects(obj1, obj2, path=""):
         diffs.append(f"{path}: value changed from {obj1} to {obj2}")
 
     return diffs
-
-
-def get_list_of_files_from_command_line(file_names, suffix_list):
-    """
-    Get a list of files from the command line.
-
-    Files can be given as a list of file names or as a text file containing the list of files.
-    The list of suffixes restrict the files types to be returned. Note that a file list must
-    have a different suffix than those in the suffix list.
-
-    Parameters
-    ----------
-    file_names: list
-        List of file names to be checked.
-    suffix_list: list
-        List of suffixes to be checked.
-
-    Returns
-    -------
-    list
-        List of files with the given suffixes.
-    """
-    _files = []
-    for one_file in file_names:
-        path = Path(one_file)
-        try:
-            if path.suffix in suffix_list:
-                _files.append(one_file)
-            elif len(file_names) == 1:
-                with open(one_file, encoding="utf-8") as file:
-                    _files.extend(line.strip() for line in file)
-        except FileNotFoundError as exc:
-            _logger.error(f"{one_file} is not a file.")
-            raise FileNotFoundError from exc
-    return _files
 
 
 def now_date_time_in_isoformat():

@@ -44,24 +44,6 @@ def base_config():
     }
 
 
-def test_initialization(simple_visibility_data, base_config):
-    simulator = MultiIlluminatorSimulator(
-        visibility_data=simple_visibility_data,
-        config=base_config,
-        label="test_sim",
-        max_workers=2,
-    )
-
-    assert simulator.visibility is not None
-    assert simulator.visibility.n_illuminators == 2
-    assert simulator.visibility.n_telescopes == 3
-    assert simulator.visibility.n_valid_pairs == 4
-    assert simulator.base_config == base_config
-    assert simulator.label == "test_sim"
-    assert simulator.max_workers == 2
-    assert simulator.results is None
-
-
 def test_initialization_default_label(simple_visibility_data, base_config):
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,

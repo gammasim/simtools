@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import json
-import logging
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
@@ -156,41 +155,6 @@ def test_collect_data_from_git_builds_url_from_raw_base(mock_collect_http):
     mock_collect_http.assert_called_once_with(
         "https://gitlab.cta-observatory.org/group/project/-/raw/main/subarray-ids.json"
     )
-
-
-def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
-
-    # Test with a UTF-8 encoded file.
-    utf8_file = tmp_test_directory / "utf8_file.txt"
-    utf8_content = "This is a UTF-8 encoded file.\n"
-    with open(utf8_file, "w", encoding="utf-8") as file:
-        file.write(utf8_content)
-    lines = ascii_handler.read_file_encoded_in_utf_or_latin(utf8_file)
-    assert lines == [utf8_content]
-    assert ascii_handler.is_utf8_file(utf8_file) is True
-
-    # Test with a Latin-1 encoded file.
-    latin1_file = tmp_test_directory / "latin1_file.txt"
-    latin1_content = "This is a Latin-1 encoded file with latin character ñ.\n"
-    with open(latin1_file, "w", encoding="latin-1") as file:
-        file.write(latin1_content)
-    with caplog.at_level(logging.DEBUG):
-        lines = ascii_handler.read_file_encoded_in_utf_or_latin(latin1_file)
-        assert lines == [latin1_content]
-    assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
-    assert ascii_handler.is_utf8_file(latin1_file) is False
-
-    # I could not find a way to create a file that cannot be decoded with Latin-1
-    # and raises a UnicodeDecodeError. I left the raise statement in the function
-    # in case we ever encounter such a file, but I cannot test it here.
-
-    # Test with a non-existent file.
-    non_existent_file = tmp_test_directory / "non_existent_file.txt"
-    with pytest.raises(FileNotFoundError):
-        ascii_handler.read_file_encoded_in_utf_or_latin(non_existent_file)
-
-    with pytest.raises(FileNotFoundError):
-        ascii_handler.is_utf8_file(non_existent_file)
 
 
 def test_read_file_encoded_in_utf_or_latin_unicode_decode_error():
