@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793168302984,
+  "lastUpdate": 1793175485049,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -31944,6 +31944,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 450.69140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1fee1e64f5543c2a0141ef7707edb58b2dddeb07",
+          "message": "Add CTAO Data Product metadata to sim_telarray run configurations (#2671)\n\n* Include CTAO data model into sim_telarray metadata\n\n* simplification\n\n* reviewers comments\n\n* PR number\n\n* metadata name changes\n\n* tmp from simtools-test branch\n\n* simtools-tests back to main\n\n* reviewers comments",
+          "timestamp": "2026-10-28T09:03:28+01:00",
+          "tree_id": "c0effd1e7fb273482e902259f7a66138d370613b",
+          "url": "https://github.com/gammasim/simtools/commit/1fee1e64f5543c2a0141ef7707edb58b2dddeb07"
+        },
+        "date": 1793175473257,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 80.94457108699999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 83.46000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 464.96875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
           }
