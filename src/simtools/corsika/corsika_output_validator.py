@@ -2,8 +2,8 @@
 
 import logging
 
+from simtools.job_execution.log_inspector import check_plain_logs
 from simtools.sim_events import file_info
-from simtools.testing.log_inspector import check_plain_logs
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)

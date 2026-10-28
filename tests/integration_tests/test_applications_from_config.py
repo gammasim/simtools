@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from simtools.testing import configuration, helpers, log_inspector, options, validate_output
+from simtools.job_execution import log_inspector
+from simtools.testing import configuration, helpers, options, validate_output
 
 logger = logging.getLogger()
 
