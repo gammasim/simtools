@@ -4,7 +4,7 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.model import model_repository
+from simtools.model_repository import maintenance
 
 _MODEL_VERSION_KEY = "model_version"
 _INITIALIZE_FROM_KEY = "initialize_from"
@@ -66,12 +66,12 @@ def main():
             model_version = model_version[0]
         if model_version is None:
             raise ValueError("--initialize_from requires --model_version.")
-        model_repository.initialize_production(
+        maintenance.initialize_production(
             simulation_models_path, model_version, initialize_from, initialize_update_type
         )
         return
 
-    model_repository.generate_new_production(
+    maintenance.generate_new_production(
         model_version=model_version,
         simulation_models_path=simulation_models_path,
         setting_workflows_git_tag=app_context.args[_SETTING_WORKFLOWS_GIT_TAG_KEY],
