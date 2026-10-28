@@ -12,6 +12,13 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
+## storage
+
+```{eval-rst}
+.. automodule:: model_repository.storage
+   :members:
+```
+
 ## files
 
 ```{eval-rst}
