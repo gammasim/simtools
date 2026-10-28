@@ -50,7 +50,7 @@ def _build_table(schema_file, overrides, rows, seed):
     for column in definition["data"][0]["table_columns"]:
         name = column["name"]
         if name in overrides:
-            data = np.asarray(overrides[name], dtype=np.dtype(column["type"]))
+            data = np.asarray(overrides[name], dtype=_numpy_dtype(column["type"]))
             if data.ndim == 0:
                 data = np.repeat(data, rows)
         else:
@@ -61,6 +61,11 @@ def _build_table(schema_file, overrides, rows, seed):
         if column.get("unit"):
             table[column["name"]].unit = column["unit"]
     return DataValidator(schema_file=schema_file, data_table=table).validate_and_transform()
+
+
+def _numpy_dtype(data_type):
+    """Return the NumPy dtype for a schema column type (schema ``string`` is ``str``)."""
+    return np.dtype(str) if data_type == "string" else np.dtype(data_type)
 
 
 def _default_values(name, data_type, rows, rng):

@@ -56,3 +56,11 @@ def test_reduced_event_tables_cores_lie_on_disk_and_energies_follow_range():
     assert np.all(radius <= 100.0)
     assert np.all((energy >= 0.1) & (energy <= 100.0))
     assert np.median(energy) < 1.0
+
+
+@pytest.mark.parametrize("file_name", ["input.simtel.gz", ["a.simtel.gz", "b.simtel.gz"]])
+def test_reduced_event_tables_accept_string_overrides(file_name):
+    tables = reduced_event_tables(values={"FILE_INFO": {"file_name": file_name}}, rows=2)
+
+    expected = file_name if isinstance(file_name, list) else [file_name, file_name]
+    assert list(tables["FILE_INFO"]["file_name"]) == expected
