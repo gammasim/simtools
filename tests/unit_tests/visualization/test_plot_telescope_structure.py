@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.applications import plot_telescope_structure as app
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.visualization import plot_telescope_structure as pts
 
 DISH = 19.2  # m, dish sphere of the segmented test telescope
@@ -246,6 +248,30 @@ def test_plot_writes_figure(tmp_path):
     assert list(tmp_path.glob("structure*.png"))
 
 
+def test_sky_view_marks_positive_axes():
+    figure, axis = pts.plt.subplots()
+    try:
+        axis.set_xlim(-2.0, 2.0)
+        axis.set_ylim(-1.0, 1.0)
+        axis.set_aspect("equal")
+        pts._add_orientation_arrows(axis)
+        arrows = [annotation for annotation in axis.texts if not annotation.get_text()]
+        labels = {label.get_text() for label in axis.texts if label.get_text()}
+
+        assert labels == {"top", "right"}
+        assert len(arrows) == 2
+        vectors = {
+            label: axis.transData.transform(arrow.xy) - axis.transData.transform(arrow.xyann)
+            for label, arrow in zip(("top", "right"), arrows, strict=True)
+        }
+        assert vectors["top"][0] < 0
+        assert vectors["top"][1] == pytest.approx(0.0, abs=1e-9)
+        assert vectors["right"][0] == pytest.approx(0.0, abs=1e-9)
+        assert vectors["right"][1] > 0
+    finally:
+        pts.plt.close(figure)
+
+
 def test_plot_with_shares_writes_figure(tmp_path):
     geometry = pts.TelescopeGeometry(
         name="TEST",
@@ -264,3 +290,13 @@ def test_shadowing_without_obdeect_gives_a_clear_error(monkeypatch):
     monkeypatch.setitem(sys.modules, "simtools.ray_tracing.backends.obdeect", None)
     with pytest.raises(ImportError, match="obdeect"):
         pts.shadowing_shares(SimpleNamespace(), 20.0, 10, 1)
+
+
+def test_cli_accepts_telescope_structure_file(tmp_test_directory):
+    structure_file = tmp_test_directory / "structure.ecsv"
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+
+    arguments = parser.parse_args(["--telescope_structure_file", str(structure_file)])
+
+    assert arguments.telescope_structure_file == structure_file

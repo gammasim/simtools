@@ -571,6 +571,40 @@ def _add_legend(ax, geometry):
         ax.legend(handles=handles, loc="lower left", frameon=False, fontsize=8)
 
 
+def _add_orientation_arrows(ax):
+    """Show telescope top (-x) and right (+y) in the sky view."""
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+    length = min(x_max - x_min, y_max - y_min) * 0.12
+    x_start = x_max - 1.6 * length
+    y_start = y_max - 1.6 * length
+    arrow = {"arrowstyle": "->", "color": "0.25", "lw": 1.0}
+    endpoints = {
+        "top": (x_start - length, y_start),
+        "right": (x_start, y_start + length),
+    }
+    for endpoint in endpoints.values():
+        ax.annotate("", xy=endpoint, xytext=(x_start, y_start), arrowprops=arrow)
+    ax.text(
+        x_start - length,
+        y_start - 0.04 * (y_max - y_min),
+        "top",
+        ha="center",
+        va="top",
+        fontsize=8,
+        color="0.25",
+    )
+    ax.text(
+        x_start + 0.04 * (x_max - x_min),
+        y_start + length,
+        "right",
+        ha="left",
+        va="center",
+        fontsize=8,
+        color="0.25",
+    )
+
+
 def plot_telescope_structure(geometry, output_file, shares=None):
     """Plot the telescope seen from the sky (x, y) and from the side (x, z).
 
@@ -593,6 +627,7 @@ def plot_telescope_structure(geometry, output_file, shares=None):
     )
     for ax, view in zip(axes, views, strict=True):
         _draw_view(ax, geometry, shares, top, cmap, view)
+    _add_orientation_arrows(axes[0])
     _add_legend(axes[0], geometry)
     if shares is not None and top > 0:
         mappable = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(0, top))
