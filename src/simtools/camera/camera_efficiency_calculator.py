@@ -202,18 +202,6 @@ def _angle_averaged_curve(
     return _interpolate(unique_wavelengths, curve, wavelengths, clip=clip)
 
 
-def _average_angle_slice(table, wavelength_name, value_name, wavelength, expected_angles, weights):
-    """Average one complete wavelength slice."""
-    return _average_angle_slice_values(
-        _column_values(table, wavelength_name, u.nm),
-        _column_values(table, value_name),
-        _column_values(table, "incidence_angle", u.deg),
-        wavelength,
-        expected_angles,
-        weights,
-    )
-
-
 def _average_angle_slice_values(wavelengths, values, angles, wavelength, expected_angles, weights):
     """Average one complete wavelength slice from already converted columns."""
     selection = np.isclose(wavelengths, wavelength)

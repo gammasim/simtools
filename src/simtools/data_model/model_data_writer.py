@@ -407,26 +407,6 @@ class ModelDataWriter:
             pass
         return False
 
-    def _get_unit_from_schema(self):
-        """
-        Return unit(s) from schema dict.
-
-        Returns
-        -------
-        str or list
-            Parameter unit(s)
-        """
-        try:
-            unit_list = []
-            unit_list = [
-                data["unit"] if data["unit"] != "dimensionless" else None
-                for data in self.schema_dict["data"]
-            ]
-            return unit_list if len(unit_list) > 1 else unit_list[0]
-        except KeyError, IndexError:
-            pass
-        return None
-
     def validate_and_transform(
         self,
         product_data_table=None,
