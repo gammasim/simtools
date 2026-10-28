@@ -213,6 +213,10 @@ jobs:
             sonar_args=(
               "-Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14"
               "-Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de"
+              # Disable python:S1192 across all Python files:
+              "-Dsonar.issue.ignore.multicriteria=e1"
+              "-Dsonar.issue.ignore.multicriteria.e1.ruleKey=python:S1192"
+              "-Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/*.py"
               "-Dsonar.qualitygate.wait=true"
               "-Dsonar.scanner.connectTimeout=60"
               "-Dsonar.scanner.socketTimeout=120"

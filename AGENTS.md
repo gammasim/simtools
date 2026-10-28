@@ -101,9 +101,8 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
   helpers before adding branches to an already complex function. Do not only move
   branches elsewhere or add a suppression.
 - Do not add nested conditional expressions, implicit adjacent string literals inside
-  collections, redundant exception entries, or duplicated long string literals. Use an
-  explicit branch, explicit string construction, a single appropriate exception type,
-  and a named constant respectively.
+  collections, or redundant exception entries. Use an explicit branch, explicit string
+  construction, and a single appropriate exception type respectively.
 - Remove unused private helper parameters and update their callers. Contractual
   signatures follow the API approval rule. Prefix unused noncontractual names with `_`.
   Verify the accepted form; do not add dummy uses or broad suppressions.
@@ -116,6 +115,8 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
   names that vary by model version use `by_version`.
 - Use SHA-256 for integrity and configuration digests. Any other algorithm requires an
   explicit non-security justification in the code.
+- Use a named constant when a repeated value has a meaning of its own (file names, schema
+  names, physical defaults), not to avoid repeating a key.
 - Documentation and comments are version-neutral and describe the current contract and
   behavior. Do not record how behavior was introduced, changed, migrated, or replaced,
   and keep campaign details and schema-transition notes out of general documentation.
@@ -136,9 +137,12 @@ modify files: inspect the diff and rerun the complete pre-commit suite afterward
 - Each library module requires a mirrored `test_<module>.py`, except `__init__.py`,
   `_version.py`, and applications. Prefer local fixtures.
 - Generate inputs in `tmp_test_directory`. Use real I/O only when parsing or writing is
-  the behavior under test. Mock unrelated I/O, network access, model sources, CORSIKA,
-  and sim_telarray. Do not hardcode temporary paths, use `tempfile`, or check in or
-  download unit-test inputs. Resource compatibility belongs in integration tests.
+  the behavior under test. Mock only external programs (CORSIKA, sim_telarray, container
+  engines, HTCondor), network access, model sources (through the shared model-reader
+  fixtures), and time/uuid/randomness; do not add patches of other `simtools.*`
+  internals (see `docs/source/developer-guide/architecture.md`). Do not hardcode
+  temporary paths, use `tempfile`, or check in or download unit-test inputs. Resource
+  compatibility belongs in integration tests.
 - Changed library coverage targets at least 90% of lines and branches, preferably 95%.
   Inspect and explain gaps rather than weakening gates.
 - Never disable checks, remove assertions, or change expectations just to pass. Confirm
@@ -217,29 +221,6 @@ PY
   help and autodoc rather than duplicating options or defaults, and prefer correcting
   existing text over adding sections.
 
-## Mandatory S1192
-
-- Enforce `python:S1192` (duplicated string literals) in all new or modified Python,
-  including scan-excluded applications and tests. Review keys, parameter names, paths,
-  and messages regardless of length. Centralize a literal before adding a repeat.
-- Reuse existing constants, or create descriptive `UPPER_SNAKE_CASE` constants at the
-  narrowest reusable scope. Replace the affected occurrences without changing values,
-  behavior, documentation or annotation semantics, or unrelated code.
-- Scanner: the `sonarqube` job in `.github/workflows/CI-unittests.yml`. Obtain parameters
-  from its assigned Python quality profile or analysis output. Never invent analyzer
-  thresholds or exclusions.
-- Without profile access, use this repository fallback: extract executable literals of at
-  least 5 characters that appear at least twice per file when adding or changing an
-  occurrence. Exclude docstrings, annotation strings, embedded documentation examples,
-  empty or punctuation-only strings, and shorter literals. Exclusions prevail. This is a
-  repository policy, not an analyzer threshold, and it applies to scan-excluded code too.
-- Fix findings introduced or affected by the task; report unrelated existing ones. Never
-  bypass S1192 with `NOSONAR`, exclusions, relaxed thresholds, string splitting, cosmetic
-  rewrites, or other lint exceptions.
-- Check the final-revision SonarQube results. Ruff, pylint, pre-commit, and manual review
-  cannot prove analyzer compliance. For handoff, record the manual and analyzer status,
-  missing settings, scan exclusions, and pending or unavailable results.
-
 ## SonarQube And Workflow Quality
 
 Treat SonarQube findings as defects to prevent during implementation. Before changing a
@@ -287,9 +268,8 @@ complete workflow diff.
   argument. Do not add a broad pylint disable.
 - Ruff or flake8 complexity failures: split the function at a meaningful responsibility
   boundary and rerun both complexity checks.
-- SonarQube maintainability findings: avoid nested conditional expressions, duplicate
-  literals, unused parameters, redundant exception classes, and unclear comprehension
-  rewrites.
+- SonarQube maintainability findings: avoid nested conditional expressions, unused
+  parameters, redundant exception classes, and unclear comprehension rewrites.
 
 ## Handoff
 
