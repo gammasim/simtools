@@ -13,6 +13,7 @@ from astropy.table import Table
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.validate_data import DataValidator
+from simtools.utils import names
 
 _COMMON_DEFINITIONS = "common_definitions.schema.yml"
 _EXAMPLE_STRING = "example"
@@ -35,9 +36,10 @@ def parameter(name, value=None, site=None, instrument=None, version="1.0.0"):
     name : str
         Model parameter name (schema file name without suffix).
     value : object, optional
-        Parameter value; generated from the latest schema version if not given.
+        Parameter value (an astropy table for ``data_table`` parameters); generated from the
+        latest schema version if not given.
     site : str, optional
-        Site name (``North`` or ``South``).
+        Site name (``North`` or ``South``); derived from ``instrument`` if not given.
     instrument : str, optional
         Instrument name.
     version : str
@@ -52,11 +54,7 @@ def parameter(name, value=None, site=None, instrument=None, version="1.0.0"):
     description = schema.get_model_parameter_schema(name)
     data = description["data"]
     if data[0]["type"] == "data_table":
-        columns = _columns(data)
-        table = Table(
-            {column["name"]: [_scalar_value(column)] for column in columns},
-            units={column["name"]: column["unit"] for column in columns if column.get("unit")},
-        )
+        table = _table_value(_columns(data)) if value is None else value
         return DataValidator(
             data_table=table, schema_file=schema.get_model_parameter_schema_file(name)
         ).validate_and_transform()
@@ -70,12 +68,21 @@ def parameter(name, value=None, site=None, instrument=None, version="1.0.0"):
         "unit": _units(data),
         "value": _value(name, data) if value is None else value,
     }
-    if site is not None:
-        record["site"] = site
     if instrument is not None:
         record["instrument"] = instrument
+        site = site or names.get_site_from_array_element_name(instrument)
+    if site is not None:
+        record["site"] = site
     DataValidator.validate_model_parameter(deepcopy(record))
     return record
+
+
+def _table_value(columns):
+    """Return a one-row table built from the column definitions."""
+    return Table(
+        {column["name"]: [_scalar_value(column)] for column in columns},
+        units={column["name"]: column["unit"] for column in columns if column.get("unit")},
+    )
 
 
 def _columns(data):

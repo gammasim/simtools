@@ -90,3 +90,21 @@ def test_file_parameter_value_is_a_file_name():
 
     assert record["file"] is True
     assert record["value"].startswith("mirror_list")
+
+
+def test_parameter_derives_site_from_instrument():
+    """An instrument without a site gets the site of the array element."""
+    record = parameter("camera_body_diameter", instrument="LSTN-01")
+
+    assert record["site"] == "North"
+
+
+def test_parameter_validates_explicit_table_values():
+    """An explicit table for a table-valued parameter is used and validated."""
+    table = parameter("array_coordinates_UTM")
+    table["asset_code"][0] = "MSTN"
+
+    assert parameter("array_coordinates_UTM", value=table)["asset_code"][0] == "MSTN"
+    table.remove_column("asset_code")
+    with pytest.raises(KeyError, match="Missing required column asset_code"):
+        parameter("array_coordinates_UTM", value=table)
