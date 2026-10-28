@@ -189,13 +189,13 @@ def test_reference_filter_rejects_unknown_operator():
 
 def test_reference_value_comparison_handles_model_and_resource_values():
     """Compare nested model values and equivalent resource paths."""
-    assert reference._compare_values({"value": "1.0"}, {"value": [1.0]}, 1.0e-5)
-    assert reference._compare_values([1, 2], (1, 2), 1.0e-5)
-    assert reference._compare_values(
+    assert reference.compare_values({"value": "1.0"}, {"value": [1.0]}, 1.0e-5)
+    assert reference.compare_values([1, 2], (1, 2), 1.0e-5)
+    assert reference.compare_values(
         "tests/generated/model.json", "/work/tests/generated/model.json", 1.0e-5
     )
-    assert reference._compare_values("plain", "plain", 1.0e-5)
-    assert not reference._compare_values("plain", "other", 1.0e-5)
+    assert reference.compare_values("plain", "plain", 1.0e-5)
+    assert not reference.compare_values("plain", "other", 1.0e-5)
     assert reference._compare_model_values("not numeric", "different", 1.0e-5) is False
 
 

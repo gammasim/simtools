@@ -60,7 +60,7 @@ def prepare_workflow(args_dict, replacements=None):
         args_dict.get("activity_id"),
         replacements=replacements,
     )
-    _resolve_nested_configuration_files(configurations, replacements)
+    resolve_nested_configuration_files(configurations, replacements)
     if args_dict.get("runtime_environment") is not None:
         runtime = args_dict["runtime_environment"]
     if args_dict.get("log_file") is not None:
@@ -100,10 +100,10 @@ def run_applications(args_dict, run_time=None, replacements=None):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
-    model_source_options = _model_source_options(args_dict)
-    explicit_env_file = _get_explicit_env_file(args_dict)
+    source_options = model_source_options(args_dict)
+    explicit_env_file = get_explicit_env_file(args_dict)
 
-    _apply_execution_overrides(configurations, args_dict, model_source_options, explicit_env_file)
+    apply_execution_overrides(configurations, args_dict, source_options, explicit_env_file)
     effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
     _write_resolved_workflow(
         args_dict["config_file"],
@@ -177,7 +177,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
             )
 
 
-def _get_explicit_env_file(args_dict):
+def get_explicit_env_file(args_dict):
     """Return the runner env file when it was explicitly supplied on the CLI."""
     configuration_sources = args_dict.get("_metadata_configuration_sources", {})
     if "env_file" not in configuration_sources.get("cli", []):
@@ -444,7 +444,7 @@ def _append_metadata_file(model_parameter_metadata_files, metadata_file):
         model_parameter_metadata_files.append(metadata_file)
 
 
-def _model_source_options(args_dict):
+def model_source_options(args_dict):
     """Return configured model-source options for child applications."""
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
@@ -638,7 +638,7 @@ def _validate_resolved_configuration(configurations, runtime_environment, collec
         raise ValueError("Unresolved workflow placeholder(s): " + ", ".join(unresolved))
 
 
-def _resolve_nested_configuration_files(configurations, replacements):
+def resolve_nested_configuration_files(configurations, replacements):
     """Resolve placeholders in referenced backend configuration files."""
     for config in configurations:
         app_configuration = config.get("configuration", {})
@@ -958,7 +958,7 @@ def _pull_image(engine, image):
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc
 
 
-def _apply_execution_overrides(configurations, args, model_source, env_file):
+def apply_execution_overrides(configurations, args, model_source, env_file):
     """Apply inherited settings before recording or running applications."""
     for config in configurations:
         configuration = config.get("configuration", {})

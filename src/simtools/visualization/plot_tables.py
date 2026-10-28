@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
 from simtools.io import ascii_handler, io_handler, legacy_data_handler
-from simtools.reporting.figure_cache import _figure_cache_key
+from simtools.reporting.figure_cache import figure_cache_key
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -57,7 +57,7 @@ def _get_figure_cache_key(plot_config, data):
     for table_config in config_for_render.get("tables", []):
         # This selects the source data; resolved data is hashed separately.
         table_config.pop("model_version", None)
-    return _figure_cache_key(
+    return figure_cache_key(
         renderer="plot_tables._plot_data",
         renderer_modules={
             "plot_tables": __file__,

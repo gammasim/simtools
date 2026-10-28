@@ -54,7 +54,7 @@ def _contract(catalog):
     }
 
 
-def _validate(path, catalog, revision=None, development=False):
+def validate_release(path, catalog, revision=None, development=False):
     """Check an exact release tag without changing the selected model checkout."""
     contract = _contract(catalog)
     source = str(Path(path).expanduser().resolve())

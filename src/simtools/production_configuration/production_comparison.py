@@ -14,7 +14,7 @@ from simtools.production_configuration.production_file_selection import (
     normalize_for_comparison,
     stable_configuration_hash,
 )
-from simtools.production_configuration.trigger_histograms import _validate_derived_products
+from simtools.production_configuration.trigger_histograms import validate_derived_products
 from simtools.sim_events.production_comparison import (
     ProductionDescriptor,
     collect_production_metrics,
@@ -669,7 +669,7 @@ def _single_trigger_histogram_file(manifest):
     return manifest.directory / path
 
 
-def _validate_comparison_inputs(applications, production_paths):
+def validate_comparison_inputs(applications, production_paths):
     """Check source coverage and freshness before trigger-product comparisons."""
     comparison = next(
         (
@@ -690,4 +690,4 @@ def _validate_comparison_inputs(applications, production_paths):
         }
         if _SELECT_KEY in comparison:
             configuration[_SELECT_KEY] = comparison[_SELECT_KEY]
-        _validate_derived_products(configuration)
+        validate_derived_products(configuration)

@@ -112,7 +112,7 @@ def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_d
         ],
     )
     with pytest.raises(ValueError, match="coverage differs"):
-        trigger_histograms._validate_derived_products(
+        trigger_histograms.validate_derived_products(
             {
                 _PRODUCTION_PATH_KEY: str(tmp_test_directory),
                 _OUTPUT_PATH_KEY: str(tmp_test_directory),
@@ -122,12 +122,12 @@ def test_derived_coverage_rejects_a_partial_configuration_set(mocker, tmp_test_d
 
 @pytest.mark.parametrize(_APPLICATION_KEY, [_HISTOGRAM_APPLICATION, "other-application"])
 def test_product_validation_is_selected_by_application(mocker, application):
-    validate = mocker.patch.object(trigger_histograms, "_validate_derived_products")
+    validate = mocker.patch.object(trigger_histograms, "validate_derived_products")
     configuration = {
         _PRODUCTION_PATH_KEY: _PRODUCTION,
         _OUTPUT_PATH_KEY: _PRODUCTION,
     }
-    trigger_histograms._validate_derived_workflow(
+    trigger_histograms.validate_derived_workflow(
         [{_APPLICATION_KEY: application, _CONFIGURATION_KEY: configuration}]
     )
     if application == _HISTOGRAM_APPLICATION:
@@ -137,8 +137,8 @@ def test_product_validation_is_selected_by_application(mocker, application):
 
 
 def test_product_validation_skips_event_data_application(mocker):
-    validate = mocker.patch.object(trigger_histograms, "_validate_derived_products")
-    trigger_histograms._validate_derived_workflow(
+    validate = mocker.patch.object(trigger_histograms, "validate_derived_products")
+    trigger_histograms.validate_derived_workflow(
         [
             {
                 _APPLICATION_KEY: _HISTOGRAM_APPLICATION,
@@ -168,9 +168,9 @@ def test_derived_products_validate_complete_groups_and_reject_duplicates(
     }
     if duplicate:
         with pytest.raises(ValueError, match="Duplicate derived configuration"):
-            trigger_histograms._validate_derived_products(configuration)
+            trigger_histograms.validate_derived_products(configuration)
     else:
-        trigger_histograms._validate_derived_products(configuration)
+        trigger_histograms.validate_derived_products(configuration)
 
 
 @pytest.mark.parametrize(

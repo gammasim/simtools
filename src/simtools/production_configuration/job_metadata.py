@@ -9,9 +9,9 @@ import h5py
 from astropy import units as u
 
 from simtools.production_configuration.production_file_selection import (
-    _resolve_relative_manifest_path,
     get_manifest_schema_metadata,
     inventory_production_files,
+    resolve_relative_manifest_path,
 )
 from simtools.utils import names
 from simtools.utils.geometry import geographic_to_corsika_azimuth
@@ -171,7 +171,7 @@ def _reduced_event_counts(output_directory, file_inventory):
     triggered_events = 0
     try:
         for relative_path in paths:
-            file_path = _resolve_relative_manifest_path(output_directory, relative_path)
+            file_path = resolve_relative_manifest_path(output_directory, relative_path)
             with h5py.File(file_path, "r") as data_file:
                 simulated_events += len(data_file["SHOWERS"])
                 trigger_table = data_file.get("TRIGGERS")
@@ -191,7 +191,7 @@ def _sim_telarray_log_event_counts(output_directory, file_inventory):
     counts = []
     for relative_path in paths:
         try:
-            file_path = _resolve_relative_manifest_path(output_directory, relative_path)
+            file_path = resolve_relative_manifest_path(output_directory, relative_path)
             count = _read_log_event_count(file_path)
         except EOFError, OSError, ValueError:
             continue

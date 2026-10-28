@@ -13,7 +13,7 @@ from simtools.io import io_handler
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
 from simtools.model_repository.asset_names import get_export_file_name
-from simtools.reporting.figure_cache import _figure_cache_key
+from simtools.reporting.figure_cache import figure_cache_key
 from simtools.simtel import simtel_file_writer
 from simtools.utils import names
 from simtools.visualization import (
@@ -23,7 +23,7 @@ from simtools.visualization import (
     plot_telescope_structure,
 )
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.plot_pixels import _resolve_camera_components
+from simtools.visualization.plot_pixels import resolve_camera_components
 
 _FLASHER_X_LABEL = "Time relative to peak [ns]"
 _FLASHER_Y_LABEL = "Pulse-table amplitude"
@@ -32,7 +32,7 @@ _NSB_X_LABEL = "Wavelength [nm]"
 _NSB_Y_LABEL = "Emission altitude [km]"
 
 
-def _write_telescope_structure_figure(file, telescope_model, logger):
+def write_telescope_structure_figure(file, telescope_model, logger):
     """Generate and link the nominal telescope structure for this model version."""
     _use_exported_model_filenames(telescope_model)
     image_dir = io_handler.IOHandler().get_output_directory("_images")
@@ -48,7 +48,7 @@ def _write_telescope_structure_figure(file, telescope_model, logger):
         file.write(f"**Telescope structure plot unavailable:** {exc}\n\n")
         return
 
-    cache_key = _figure_cache_key(
+    cache_key = figure_cache_key(
         renderer="plot_telescope_structure.plot_telescope_structure",
         renderer_modules={
             "plot_telescope_structure": plot_telescope_structure.__file__,
@@ -81,7 +81,7 @@ def _use_exported_model_filenames(telescope_model):
             parameter["value"] = file_name
 
 
-def _write_flasher_pulse_shape_plots(
+def write_flasher_pulse_shape_plots(
     file, comparison_items, collection, model_reader, site, calibration_device
 ):
     """Render Gauss-Exponential tables using the production pulse-table writer."""
@@ -157,7 +157,7 @@ def _write_flasher_model_figure(
     except (TypeError, ValueError, OSError) as exc:
         logging.getLogger(__name__).info("Unable to generate flasher pulse table: %s", exc)
         return
-    cache_key = _figure_cache_key(
+    cache_key = figure_cache_key(
         renderer="simtel_file_writer.write_light_pulse_table_gauss_exp_conv",
         renderer_modules={
             "model_figures": __file__,
@@ -241,7 +241,7 @@ def _save_flasher_figure(image_path, telescope_model, time, amplitude):
     plt.close(figure)
 
 
-def _plot_nsb_altitude_correction(input_file, output_path):
+def plot_nsb_altitude_correction(input_file, output_path):
     """Plot the spectral extinction grid used to correct the NSB by altitude."""
     table = Table.read(input_file, format="ascii.ecsv")
     wavelength = np.unique(np.asarray(table["wavelength"], dtype=float))
@@ -254,7 +254,7 @@ def _plot_nsb_altitude_correction(input_file, output_path):
         altitude_index = altitude_indices[float(row["altitude"])]
         extinction[altitude_index, wavelength_index] = float(row["extinction"])
 
-    cache_key = _figure_cache_key(
+    cache_key = figure_cache_key(
         renderer="plot_nsb_altitude_correction",
         renderer_modules={"model_figures": __file__},
         plot_config={
@@ -285,7 +285,7 @@ def _plot_nsb_altitude_correction(input_file, output_path):
     return [image_name] if image_path.is_file() else []
 
 
-def _plot_camera_config(
+def plot_camera_config(
     parameter,
     parameter_version,
     input_file,
@@ -312,8 +312,8 @@ def _plot_camera_config(
         model_version=model_version,
     )
     parameters["camera_pixel_layout"] = layout_parameter["camera_pixel_layout"]
-    camera_components = _resolve_camera_components(model_reader, parameters)
-    cache_key = _figure_cache_key(
+    camera_components = resolve_camera_components(model_reader, parameters)
+    cache_key = figure_cache_key(
         renderer="plot_pixels.camera_layout_from_configuration",
         renderer_modules={
             "plot_pixels": plot_pixels.__file__,
@@ -342,7 +342,7 @@ def _plot_camera_config(
     return [plot_name]
 
 
-def _plot_mirror_config(
+def plot_mirror_config(
     parameter,
     parameter_version,
     input_file,
@@ -355,7 +355,7 @@ def _plot_mirror_config(
     """Plot the mirror configuration file using the selected model version."""
     if not parameter_version:
         return []
-    cache_key = _figure_cache_key(
+    cache_key = figure_cache_key(
         renderer="plot_mirrors.plot",
         renderer_modules={
             "plot_mirrors": plot_mirrors.__file__,

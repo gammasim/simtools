@@ -17,11 +17,9 @@ from simtools.production_configuration.production_file_selection import (
     _parse_selection,
     _production_file_type,
     _quantity_matches,
-    _resolve_relative_manifest_path,
     _validate_file_type,
     _validate_filename_run_number,
     _validate_manifest_structure,
-    _values_match,
     check_manifest,
     discover_product_manifests,
     filter_manifests,
@@ -30,10 +28,12 @@ from simtools.production_configuration.production_file_selection import (
     inventory_production_files,
     load_manifest,
     normalize_for_comparison,
+    resolve_relative_manifest_path,
     select_file_groups,
     selection_summary,
     stable_configuration_hash,
     validate_required_production_outputs,
+    values_match,
     write_selection_file,
 )
 
@@ -520,7 +520,7 @@ def test_quantity_selection_rejects_invalid_expected_quantity():
 
 def test_manifest_path_and_file_suffix_validation(tmp_test_directory):
     with pytest.raises(ValueError, match="must be relative"):
-        _resolve_relative_manifest_path(tmp_test_directory, "/absolute/file.simtel.zst")
+        resolve_relative_manifest_path(tmp_test_directory, "/absolute/file.simtel.zst")
     with pytest.raises(ValueError, match="suffix is inconsistent"):
         _validate_file_type(Path(tmp_test_directory) / "file.txt", "sim_telarray", "manifest.yml")
 
@@ -581,7 +581,7 @@ def test_empty_selection_summary_has_no_missing_runs():
     ],
 )
 def test_selection_matches_list_members(value, expected, matches):
-    assert _values_match(value, expected) is matches
+    assert values_match(value, expected) is matches
 
 
 @pytest.mark.parametrize("software", [SIMTEL_SOFTWARE, CORSIKA_SOFTWARE])

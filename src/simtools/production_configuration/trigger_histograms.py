@@ -26,7 +26,6 @@ from simtools.production_configuration.production_event_data_helpers import (
 )
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
-    _values_match,
     check_manifest,
     discover_product_manifests,
     get_manifest_schema_metadata,
@@ -34,6 +33,7 @@ from simtools.production_configuration.production_file_selection import (
     select_file_groups,
     selection_summary,
     stable_configuration_hash,
+    values_match,
 )
 from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
@@ -341,7 +341,7 @@ def _create_dense_histogram_dataset(hdf5_group, dataset_name, data):
     )
 
 
-def _load_dense_histogram_payloads(reference_file):
+def load_dense_histogram_payloads(reference_file):
     """Load dense histogram arrays and edges grouped by reference id."""
     with h5py.File(reference_file, "r") as hdf5_file:
         if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
@@ -1145,7 +1145,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     list[tuple[astropy.table.Row, EventDataHistograms]]
         Metadata row and reconstructed histogram object for each reference.
     """
-    dense_payloads = _load_dense_histogram_payloads(reference_file)
+    dense_payloads = load_dense_histogram_payloads(reference_file)
     metadata = table_handler.read_tables(
         reference_file,
         [TRIGGER_HISTOGRAM_METADATA_TABLE],
@@ -1170,7 +1170,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     return loaded
 
 
-def _validate_derived_workflow(applications):
+def validate_derived_workflow(applications):
     """Check trigger products owned by histogram-writer workflow steps."""
     for application in applications:
         configuration = application.get(_CONFIGURATION_KEY, {})
@@ -1178,10 +1178,10 @@ def _validate_derived_workflow(applications):
             application.get("application") == "simtools-write-trigger-histograms"
             and _PRODUCTION_PATH_KEY in configuration
         ):
-            _validate_derived_products(configuration)
+            validate_derived_products(configuration)
 
 
-def _validate_derived_products(configuration):
+def validate_derived_products(configuration):
     """Check histogram metadata, run coverage, and source freshness without publishing it."""
     groups = select_file_groups(
         configuration[_PRODUCTION_PATH_KEY],
@@ -1226,5 +1226,5 @@ def _validate_derived_group(group, product, configuration):
         raise ValueError("Production inputs changed after derivation")
     for key, value in data[_HISTOGRAM_SETTINGS_KEY].items():
         expected = configuration.get(key, _DEFAULT_HISTOGRAM_SETTINGS.get(key))
-        if not _values_match(value, str(expected)):
+        if not values_match(value, str(expected)):
             raise ValueError(f"Histogram setting changed: {key}")

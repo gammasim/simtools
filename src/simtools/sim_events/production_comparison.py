@@ -11,7 +11,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_METADATA_TABLE,
     TRIGGER_SUBSET_HISTOGRAMS_TABLE,
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
-    _load_dense_histogram_payloads,
+    load_dense_histogram_payloads,
 )
 from simtools.simtel.simtel_event_reader import read_events_for_telescopes
 from simtools.simtel.simtel_io_metadata import (
@@ -240,7 +240,7 @@ def _collect_metrics_from_trigger_histogram_file(
     trigger_histogram_file, accumulators, array_names=None
 ):
     """Collect metrics from one trigger-histogram HDF5 file."""
-    dense_payloads = _load_dense_histogram_payloads(trigger_histogram_file)
+    dense_payloads = load_dense_histogram_payloads(trigger_histogram_file)
     tables = table_handler.read_tables(
         trigger_histogram_file,
         [

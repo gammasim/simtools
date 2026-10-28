@@ -39,18 +39,18 @@ def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
         "rendered_data": {"samples": np.array([1.0, 2.0])},
     }
 
-    initial_key = figure_cache._figure_cache_key(**kwargs)
-    assert figure_cache._figure_cache_key(**kwargs) == initial_key
+    initial_key = figure_cache.figure_cache_key(**kwargs)
+    assert figure_cache.figure_cache_key(**kwargs) == initial_key
 
     changed_data = {**kwargs, "rendered_data": {"samples": np.array([1.0, 3.0])}}
-    assert figure_cache._figure_cache_key(**changed_data) != initial_key
+    assert figure_cache.figure_cache_key(**changed_data) != initial_key
     changed_config = {**kwargs, "plot_config": {"title": "Other"}}
-    assert figure_cache._figure_cache_key(**changed_config) != initial_key
+    assert figure_cache.figure_cache_key(**changed_config) != initial_key
     changed_renderer = {**kwargs, "renderer_modules": {"renderer": renderer_two}}
-    assert figure_cache._figure_cache_key(**changed_renderer) != initial_key
+    assert figure_cache.figure_cache_key(**changed_renderer) != initial_key
 
     monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 240})
-    assert figure_cache._figure_cache_key(**kwargs) != initial_key
+    assert figure_cache.figure_cache_key(**kwargs) != initial_key
 
-    monkeypatch.setattr(figure_cache, "_BACKEND_NAME", "svg")
-    assert figure_cache._figure_cache_key(**kwargs) != initial_key
+    monkeypatch.setattr(figure_cache, "BACKEND_NAME", "svg")
+    assert figure_cache.figure_cache_key(**kwargs) != initial_key
