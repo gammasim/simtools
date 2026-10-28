@@ -257,7 +257,7 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
     simulation_parameters = getattr(simulator, SIMULATION_PARAMETERS, [])
     if not isinstance(simulation_parameters, list):
         simulation_parameters = [simulation_parameters]
-    if simulation_parameters:
+    if args_dict.get("corsika_file") and simulation_parameters:
         parameters = simulation_parameters[0]
         for angle in (_AZIMUTH_ANGLE, _ZENITH_ANGLE):
             value = getattr(parameters, angle, None)

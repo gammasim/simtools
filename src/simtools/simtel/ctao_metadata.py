@@ -39,6 +39,10 @@ _SIMTOOLS_URL = "https://github.com/gammasim/simtools"
 _PRODUCT_DESCRIPTION = "Simulated CTAO air-shower events"
 _SIMULATION_ACTIVITY = "simulate_prod"
 _NSB_SCALING_FACTOR = "nsb_scaling_factor"
+_PRIMARY = "primary"
+_ZENITH_ANGLE = "zenith_angle"
+_AZIMUTH_ANGLE = "azimuth_angle"
+_ACTIVITY_ID = "activity_id"
 # sim_telarray default for nsb_scaling_factor (see its model-parameter schema).
 _DEFAULT_NSB_SCALING_FACTOR = 1.0
 _MESSENGER_NAMES = {
@@ -48,13 +52,13 @@ _MESSENGER_NAMES = {
 }
 _REGISTRY_SAMPLE_ARGS = {
     "site": "North",
-    "primary": "gamma",
-    "zenith_angle": 0.0,
-    "azimuth_angle": 0.0,
+    _PRIMARY: "gamma",
+    _ZENITH_ANGLE: 0.0,
+    _AZIMUTH_ANGLE: 0.0,
     "ha": 0.0,
     "dec": 0.0,
     "label": "simtools-registry",
-    "activity_id": "12345678-1234-5678-1234-567812345678",
+    _ACTIVITY_ID: "12345678-1234-5678-1234-567812345678",
 }
 
 
@@ -112,7 +116,7 @@ def get_ctao_simtel_metadata(args, site_model=None, created=None):
         activity=Activity(
             process=ObservatoryProcess.SIMULATION,
             name=_SIMULATION_ACTIVITY,
-            id=uuid.UUID(str(args["activity_id"])) if args.get("activity_id") else uuid.uuid4(),
+            id=uuid.UUID(str(args[_ACTIVITY_ID])) if args.get(_ACTIVITY_ID) else uuid.uuid4(),
             start=created,
             configuration_id=production_id,
             software=Software(
@@ -167,7 +171,7 @@ def _get_value_type(value):
 
 def _get_primary(args):
     """Resolve the configured primary particle or raise a clear error."""
-    primary_name = args.get("primary")
+    primary_name = args.get(_PRIMARY)
     if not primary_name:
         raise ValueError("A primary particle is required for CTAO sim_telarray metadata.")
     primary_type = args.get("primary_id_type") or "common_name"
@@ -184,8 +188,8 @@ def _get_messenger(primary):
 def _get_simulation_node(args, site_model):
     """Build the phase-space node; unknown sky coordinates keep the model defaults."""
     node_values = {
-        "zenith": _get_angle(args, "zenith_angle", required=True),
-        "azimuth": _get_angle(args, "azimuth_angle", required=True),
+        "zenith": _get_angle(args, _ZENITH_ANGLE, required=True),
+        "azimuth": _get_angle(args, _AZIMUTH_ANGLE, required=True),
         "hour_angle": _get_angle(args, "ha"),
         "declination": _get_angle(args, "dec"),
         "nsb_factor": _get_nsb_factor(args, site_model),

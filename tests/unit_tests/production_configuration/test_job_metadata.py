@@ -183,6 +183,7 @@ def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_
             core_scatter=(1, 840 * u.m),
             showers_per_run=None,
             simulation_software="sim_telarray",
+            corsika_file="showers.dat",
         ),
         simulator,
         output_directory,
@@ -190,6 +191,28 @@ def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_
 
     assert_quantity_allclose(manifest["configuration"]["azimuth_angle"], 180 * u.deg)
     assert_quantity_allclose(manifest["configuration"]["zenith_angle"], 40 * u.deg)
+
+
+def test_build_production_job_manifest_preserves_generated_shower_angle_precision(
+    tmp_test_directory,
+):
+    simulator = _simulator("MSTS-01")
+    simulator.simulation_parameters = [SimpleNamespace(azimuth_angle=190.12, zenith_angle=20.12)]
+    manifest = build_production_job_manifest(
+        _args(
+            azimuth_angle=190.123 * u.deg,
+            zenith_angle=20.123 * u.deg,
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        simulator,
+        Path(tmp_test_directory),
+    )
+
+    assert_quantity_allclose(manifest["configuration"]["azimuth_angle"], 190.123 * u.deg)
+    assert_quantity_allclose(manifest["configuration"]["zenith_angle"], 20.123 * u.deg)
 
 
 def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_directory):
