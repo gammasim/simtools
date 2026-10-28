@@ -47,18 +47,13 @@ def test_get_list_of_test_configurations(integration_test_config_files):
         assert "test_name" in test_config
 
     assert len(test_names) == len(test_configs)
-    applications = {test_config["application"] for test_config in test_configs}
-    no_config_applications = {
-        test_config["application"]
-        for test_config in test_configs
-        if test_config["test_name"] == "auto-no_config"
-    }
-    assert no_config_applications == applications
-    assert sum(test_config["test_name"] == "auto-no_config" for test_config in test_configs) == len(
-        applications
+    expected_count = sum(
+        len(yaml.safe_load(path.read_text())["applications"])
+        for path in integration_test_config_files
     )
+    assert len(test_configs) == expected_count
     assert all(
-        test_config["test_name"] not in {"auto-help", "auto-version"}
+        test_config["test_name"] not in {"auto-help", "auto-version", "auto-no_config"}
         for test_config in test_configs
     )
 
