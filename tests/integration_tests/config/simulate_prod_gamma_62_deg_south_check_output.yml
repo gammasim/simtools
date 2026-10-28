@@ -29,7 +29,7 @@ applications:
     grid_output_path: simtools-grid-output
     primary: gamma
     run_number: 20
-    sim_telarray_seed:
+    simulation_seed:
     - 1745
     - 290
     simulation_software: corsika_sim_telarray

@@ -1,0 +1,202 @@
+%YAML 1.2
+---
+title: Schema for telescope_structure model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: telescope_structure
+description: |-
+  Geometry of the opaque telescope structure (camera support masts,
+  quadrupods, dish frame), traced explicitly by the ray tracing.
+  One row per element, by its shape: a cylinder is given by the end points
+  1 and 2 of its axis and its diameter; a convex polyhedron is the convex
+  hull of its corner points 1, 2, ... (at least four). Columns a row does
+  not use are nan; unused points come last.
+  Coordinates are in the frame of the mirror list (primary_mirror_frame;
+  z = 0 at the dish vertex, z along the optical axis), declared in the table
+  metadata as coordinate_frame.
+  If a model has this parameter, the parameterised shadowing of
+  telescope_transmission is not applied. The camera body shadow
+  (camera_body_diameter, camera_body_shape) is applied in both cases.
+short_description: |-
+  Geometry of the opaque telescope structure (masts, dish frame).
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: id
+        description: Element name.
+        type: string
+        unit: dimensionless
+        required: true
+      - name: group
+        description: Structure group (e.g. camera_support, dish_structure).
+        type: string
+        unit: dimensionless
+        required: false
+      - name: shape
+        description: Element shape.
+        type: string
+        unit: dimensionless
+        required: true
+        allowed_values: [cylinder, convex_polyhedron]
+      - name: diameter
+        description: Cylinder diameter (nan for other shapes).
+        type: float64
+        unit: m
+        required: true
+        input_processing: [allow_nan]
+      - name: x1
+        description: X coordinate of point 1.
+        type: float64
+        unit: m
+        required: true
+      - name: y1
+        description: Y coordinate of point 1.
+        type: float64
+        unit: m
+        required: true
+      - name: z1
+        description: Z coordinate of point 1.
+        type: float64
+        unit: m
+        required: true
+      - name: x2
+        description: X coordinate of point 2.
+        type: float64
+        unit: m
+        required: true
+      - name: y2
+        description: Y coordinate of point 2.
+        type: float64
+        unit: m
+        required: true
+      - name: z2
+        description: Z coordinate of point 2.
+        type: float64
+        unit: m
+        required: true
+      - name: x3
+        description: X coordinate of point 3 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y3
+        description: Y coordinate of point 3 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z3
+        description: Z coordinate of point 3 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: x4
+        description: X coordinate of point 4 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y4
+        description: Y coordinate of point 4 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z4
+        description: Z coordinate of point 4 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: x5
+        description: X coordinate of point 5 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y5
+        description: Y coordinate of point 5 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z5
+        description: Z coordinate of point 5 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: x6
+        description: X coordinate of point 6 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y6
+        description: Y coordinate of point 6 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z6
+        description: Z coordinate of point 6 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: x7
+        description: X coordinate of point 7 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y7
+        description: Y coordinate of point 7 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z7
+        description: Z coordinate of point 7 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: x8
+        description: X coordinate of point 8 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: y8
+        description: Y coordinate of point 8 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+      - name: z8
+        description: Z coordinate of point 8 (nan if unused).
+        type: float64
+        unit: m
+        required: false
+        input_processing: [allow_nan]
+instrument:
+  class: Structure
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetTelescopeShadowingParameters
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeEfficiency
+    - ValidateTelescopeShadowing
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: obdeect

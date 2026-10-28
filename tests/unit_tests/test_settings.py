@@ -23,6 +23,7 @@ def clear_simtools_env():
         "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
         "SIMTOOLS_CORSIKA_HE_INTERACTION",
         "SIMTOOLS_CORSIKA_LE_INTERACTION",
+        "SIMTOOLS_RAY_TRACING_BACKEND",
     ]
     for var in simtools_vars:
         old_env[var] = os.environ.pop(var, None)
@@ -63,6 +64,23 @@ def test_load_with_args(mock_is_dir, config_instance):
     assert config_instance._args == args
     assert config_instance._sim_telarray_path == "/path/to/simtel"
     assert config_instance._corsika_path == "/path/to/corsika"
+    assert config_instance.ray_tracing_backend == "sim_telarray"
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_ray_tracing_backend_can_select_obdeect(config_instance):
+    config_instance.load(
+        args={"ray_tracing_backend": "obdeect"}, resolve_sim_software_executables=False
+    )
+    assert config_instance.ray_tracing_backend == "obdeect"
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_ray_tracing_backend_rejects_unknown_value(config_instance):
+    with pytest.raises(ValueError, match="ray_tracing_backend"):
+        config_instance.load(
+            args={"ray_tracing_backend": "unknown"}, resolve_sim_software_executables=False
+        )
 
 
 @patch("os.access", return_value=True)

@@ -536,6 +536,7 @@ definitions:
       - sim_telarray
       - corsika
       - simtools
+      - obdeect
     title: Name
   Source:
     type: string

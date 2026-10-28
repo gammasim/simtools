@@ -63,8 +63,12 @@ _GROUPING_EXCLUDE_KEYS = {
     "run_number",
     "random_seed",
     "corsika_seeds",
-    "sim_telarray_seed",
+    "simulation_seed",
+    "instrument_seed",
+    "random_instrument_instances",
     "sim_telarray_seed_file",
+    # Keys of manifests written before the seed arguments were renamed.
+    "sim_telarray_seed",
     "sim_telarray_instrument_seed",
     "sim_telarray_random_instrument_instances",
     "event_number_first_shower",

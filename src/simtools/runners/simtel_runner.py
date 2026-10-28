@@ -38,6 +38,9 @@ class SimtelRunner:
         self._base_directory = None
 
         self.runs_per_set = 1
+        # (Instrument seed, simulation seed) of each run of a set; without them (or None)
+        # sim_telarray draws its seeds.
+        self.run_seeds = []
 
         self.runner_service = RunnerServices(
             config, run_type="sim_telarray", label=label, array_model=array_model
@@ -65,13 +68,20 @@ class SimtelRunner:
         runs = 1 if test else self.runs_per_set
         label = "test" if test else f"{self.runs_per_set}x"
         self._logger.info(f"Running ({label}) with command: {command}")
-        for _ in range(runs):
+        for run_index in range(runs):
             job_manager.submit(
-                command,
+                self._command_for_run(command, run_index),
                 out_file=stdout_file,
                 err_file=stderr_file,
                 env=SIM_TELARRAY_ENV,
             )
+
+    def _command_for_run(self, command, run_index):
+        """Return the command of one run of a set, with the seeds of that run."""
+        seeds = self.run_seeds[run_index] if self.run_seeds else None
+        if seeds is None:
+            return command
+        return [*command[:-1], "-C", f"random_seed={seeds[0]},{seeds[1]}", command[-1]]
 
     def make_run_command(self, run_number=None, input_file=None):
         """Make the sim_telarray run command (to implemented in subclasses)."""

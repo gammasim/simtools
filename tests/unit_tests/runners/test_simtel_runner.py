@@ -47,6 +47,21 @@ def test_run_with_runs_per_set(simtel_runner, mocker):
     assert mock_job_manager_submit.call_count == 3
 
 
+def test_run_with_seeds_per_run(simtel_runner, mocker):
+    command = ["sim_telarray", "-c", "telescope.cfg", "input.corsika.gz"]
+    mocker.patch.object(simtel_runner, "make_run_command", return_value=(command, None, None))
+    submit = mocker.patch("simtools.job_execution.job_manager.submit", return_value=0)
+    simtel_runner.runs_per_set = 2
+    simtel_runner.run_seeds = [(1, 2), (3, 4)]
+
+    simtel_runner.run()
+
+    commands = [call.args[0] for call in submit.call_args_list]
+    assert commands == [
+        [*command[:-1], "-C", f"random_seed={i},{s}", command[-1]] for i, s in ((1, 2), (3, 4))
+    ]
+
+
 def test_run_with_test_mode(simtel_runner, mocker):
     mock_make_run_command = mocker.patch.object(
         simtel_runner, "make_run_command", return_value=("echo test", None, None)

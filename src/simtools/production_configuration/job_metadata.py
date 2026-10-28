@@ -269,9 +269,9 @@ def _build_selection_configuration(args_dict, simulator, atmosphere_configuratio
         "corsika_seeds",
         "event_number_first_shower",
         "correct_for_b_field_alignment",
-        "sim_telarray_instrument_seed",
-        "sim_telarray_random_instrument_instances",
-        "sim_telarray_seed",
+        "instrument_seed",
+        "random_instrument_instances",
+        "simulation_seed",
         "sim_telarray_seed_file",
     ):
         _add_optional_configuration_value(configuration, key, args_dict.get(key))

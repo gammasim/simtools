@@ -314,6 +314,28 @@ def test_direct_dependency_manifest_includes_installed_distributions(mocker):
     }
 
 
+def test_direct_dependency_manifest_includes_installed_extras(mocker, tmp_test_directory):
+    """Installed optional dependencies are recorded; extras not installed are not."""
+    import simtools.dependencies as dependencies
+
+    mocker.patch.object(
+        dependencies.metadata,
+        "requires",
+        return_value=["astropy", 'tracer>=0.2; extra == "tracing"', 'pytest; extra == "tests"'],
+    )
+    versions = {"astropy": "8.0.0", "tracer": "0.2.0"}
+    mocker.patch.object(dependencies, "_distribution_version", side_effect=versions.get)
+    assert dependencies.get_direct_python_dependency_versions() == versions
+
+    project = Path(tmp_test_directory) / "pyproject.toml"
+    project.write_text(
+        '[project]\ndependencies = ["astropy"]\n'
+        '[project.optional-dependencies]\ntracing = ["tracer>=0.2"]\ntests = ["pytest"]\n',
+        encoding="utf-8",
+    )
+    assert dependencies._project_dependency_versions(project) == versions
+
+
 def test_get_version_string_without_software_versions(mocker):
     mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
     mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")

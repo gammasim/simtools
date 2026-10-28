@@ -35,6 +35,10 @@ Three modes of operation are supported:
         --telescope MSTN-15 --site North \
         --model_version 7.0.0
 
+    An explicit source position together with downward pointing ``(0, 0, -1)`` places
+    the telescope at the array origin. Other setups use the model telescope position.
+    Both backends use the model's ``telescope_sphere_radius``.
+
 3. Simulate all valid pairs from the visibility table in parallel:
 
     .. code-block:: console

@@ -6,6 +6,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from simtools.configuration import defaults
+from simtools.constants import RAY_TRACING_BACKENDS
 from simtools.corsika.build_options import (
     get_installed_corsika_build_variants,
     select_corsika_build_variant,
@@ -21,6 +22,7 @@ class _Config:
         self._args = {}
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
+        self._ray_tracing_backend = RAY_TRACING_BACKENDS[0]
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
@@ -59,6 +61,17 @@ class _Config:
             "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
             default="sim_telarray",
         )
+        self._ray_tracing_backend = self._get_config_value(
+            args,
+            "ray_tracing_backend",
+            "SIMTOOLS_RAY_TRACING_BACKEND",
+            default=RAY_TRACING_BACKENDS[0],
+        )
+        if self._ray_tracing_backend not in RAY_TRACING_BACKENDS:
+            raise ValueError(
+                f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
+                f"got '{self._ray_tracing_backend}'"
+            )
         self._corsika_path = self._get_config_value(
             args,
             "corsika_path",
@@ -148,6 +161,11 @@ class _Config:
         if self._sim_telarray_path and Path(self._sim_telarray_path).is_dir():
             return Path(self._sim_telarray_path)
         raise FileNotFoundError(f"sim_telarray path not found: {self._sim_telarray_path}")
+
+    @property
+    def ray_tracing_backend(self):
+        """Configured optical ray-tracing backend."""
+        return self._ray_tracing_backend
 
     @property
     def sim_telarray_exe(self):

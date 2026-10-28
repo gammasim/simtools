@@ -31,6 +31,7 @@ repos:
         "-rn",  # Only display messages
         "-sn",  # Don't display the score
         "--init-hook=import sys; sys.path.insert(0, 'src')",
+        "--source-roots=src",
       ]
 # https://github.com/pre-commit/pre-commit-hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks

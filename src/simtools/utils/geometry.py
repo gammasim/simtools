@@ -335,3 +335,55 @@ def _validate_fiducial_sphere_bounds(radii, heights, offsets, angles):
         raise ValueError("Radial extents must be nonnegative and axial bounds ordered.")
     if not 0 <= angles[0] <= angles[1] <= np.pi:
         raise ValueError("Zenith-angle bounds must be ordered within [0, 180] degrees.")
+
+
+def _rotation(alpha, beta):
+    """Rotation by alpha [rad] about z, then by beta [rad] about the new y axis.
+
+    Vectors transform as rows: v' = v @ matrix.
+    """
+    matrix = np.eye(3)
+    for angle, (i, j) in ((beta, (2, 0)), (alpha, (0, 1))):
+        step = np.eye(3)
+        step[i, i] = step[j, j] = math.cos(angle)
+        step[i, j], step[j, i] = math.sin(angle), -math.sin(angle)
+        matrix = step @ matrix
+    return matrix
+
+
+def ground_to_telescope_frame(point, theta_deg, phi_deg, axes_offsets=()):
+    """
+    Transform a point relative to the telescope position into the telescope frame.
+
+    The ground frame is the array frame (x north, y west, z up); the telescope
+    frame has +z along the optical axis.
+
+    Parameters
+    ----------
+    point: array_like
+        Point relative to the telescope position (ground frame).
+    theta_deg, phi_deg: float
+        Telescope pointing: zenith angle and azimuth (array frame) [deg].
+    axes_offsets: sequence of float
+        Offsets azimuth axis - altitude axis and altitude axis - optical axis
+        (same unit as ``point``); missing values are zero.
+
+    Returns
+    -------
+    numpy.ndarray
+        Point in the telescope frame.
+    """
+    offsets = np.zeros(2)
+    offsets[: len(axes_offsets)] = axes_offsets
+    theta, phi = math.radians(theta_deg), math.radians(phi_deg)
+    point = np.asarray(point, dtype=float) @ _rotation(phi, 0.0)
+    point[0] -= offsets[0]
+    point = point @ _rotation(0.0, -theta)
+    point[0] += offsets[1]
+    return point
+
+
+def ground_direction_to_telescope_frame(direction, theta_deg, phi_deg):
+    """Transform a direction from the ground frame into the telescope frame (see above)."""
+    theta, phi = math.radians(theta_deg), math.radians(phi_deg)
+    return np.asarray(direction, dtype=float) @ _rotation(phi, -theta)

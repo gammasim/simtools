@@ -34,7 +34,7 @@ class PSFImage:
     focal_length: float
         Focal length of the system in cm. If not given, PSF can only be computed in cm.
     total_scattered_area: float
-        Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
+        Scatter area of all photons in m^2. If not given, effective area cannot be computed.
     containment_fraction: float
         Containment fraction for PSF calculation.
     """
@@ -166,7 +166,6 @@ class PSFImage:
 
         """
         self._logger.info(f"Reading sim_telarray photon file {photons_file}")
-        self._total_photons = 0
         file_open_function = gzip.open if Path(photons_file).suffix == ".gz" else open
 
         # Local variables avoid repeated attribute lookups in the tight parsing loop.
@@ -209,18 +208,35 @@ class PSFImage:
                 photon_pos_x.append(x * cos_camera_rotation - y * sin_camera_rotation)
                 photon_pos_y.append(y * cos_camera_rotation + x * sin_camera_rotation)
 
-        self._total_photons = total_photons
-        self._total_area = total_area
         self.cos_camera_rotation = cos_camera_rotation
         self.sin_camera_rotation = sin_camera_rotation
-        self.photon_pos_x = np.asarray(photon_pos_x)
-        self.photon_pos_y = np.asarray(photon_pos_y)
-
-        if not self._is_photon_positions_ok():
+        try:
+            self.set_photon_positions(photon_pos_x, photon_pos_y, total_photons, total_area)
+        except RuntimeError as error:
             raise RuntimeError(
                 f"Problems reading sim_telarray photon file {photons_file} - invalid data"
-            )
+            ) from error
 
+    def set_photon_positions(self, x, y, total_photons, total_area):
+        """
+        Set the photon image and compute centroid, effective area and radii.
+
+        Parameters
+        ----------
+        x, y: array_like
+            Photon positions in the camera plane [cm].
+        total_photons: int
+            Number of photons simulated (detected or not).
+        total_area: float
+            Area the photons were sampled on [m^2].
+        """
+        self._stored_psf.clear()
+        self.photon_pos_x = np.asarray(x, dtype=float)
+        self.photon_pos_y = np.asarray(y, dtype=float)
+        if not self._is_photon_positions_ok():
+            raise RuntimeError("Invalid photon positions: empty or of different lengths")
+        self._total_photons = total_photons
+        self._total_area = total_area
         self.centroid_x = np.mean(self.photon_pos_x)
         self.centroid_y = np.mean(self.photon_pos_y)
         self.centroid_x_error = self._compute_centroid_standard_error(self.photon_pos_x)
@@ -378,6 +394,8 @@ class PSFImage:
         fraction: float
             Fraction of photons within the containing radius
         """
+        if not 0 < fraction <= 1:
+            raise ValueError("containment fraction must be in (0, 1]")
         self._stored_psf[fraction] = self._find_psf(fraction)
 
     def _find_psf(self, fraction):

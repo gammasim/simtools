@@ -409,6 +409,8 @@ def _sanitize_build_options(build_options):
 def get_direct_python_dependency_versions():
     """Return installed versions of direct simtools Python dependencies.
 
+    Includes optional dependencies (extras) that are installed.
+
     Returns
     -------
     dict
@@ -423,9 +425,6 @@ def get_direct_python_dependency_versions():
         try:
             parsed_requirement = Requirement(requirement)
         except InvalidRequirement:
-            continue
-        marker = parsed_requirement.marker
-        if marker is not None and "extra" in str(marker) and not marker.evaluate({"extra": ""}):
             continue
         name = parsed_requirement.name.lower().replace("_", "-")
         installed_version = _distribution_version(name)
@@ -530,9 +529,12 @@ def write_development_dependency_manifest(output_file, project_file, build_optio
 
 
 def _project_dependency_versions(project_file):
-    """Return installed versions of direct dependencies declared by a project file."""
+    """Return installed versions of direct (and installed optional) dependencies of a project."""
     with Path(project_file).open("rb") as file:
-        requirements = tomllib.load(file)["project"]["dependencies"]
+        project = tomllib.load(file)["project"]
+    requirements = list(project["dependencies"])
+    for optional in project.get("optional-dependencies", {}).values():
+        requirements.extend(optional)
     versions = {}
     for requirement in requirements:
         match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)

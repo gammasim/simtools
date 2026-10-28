@@ -1,5 +1,6 @@
 """Tests for shared command-line argument definitions."""
 
+from simtools import constants
 from simtools.configuration import arguments
 from simtools.configuration.commandline_parser import CommandLineParser
 
@@ -64,3 +65,35 @@ def test_alias_sets_canonical_destination():
     parser.add_argument_definitions((arguments.FIGURE_DPI(aliases=("dpi",)),))
 
     assert parser.parse_args(["--dpi", "72"]).figure_dpi == 72
+
+
+def test_seed_arguments_accept_previous_names():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.SIM_TELARRAY_ARGUMENTS)
+
+    args = parser.parse_args(
+        [
+            "--sim_telarray_instrument_seed",
+            "7",
+            "--sim_telarray_random_instrument_instances",
+            "3",
+            "--sim_telarray_seed",
+            "11",
+            "13",
+        ]
+    )
+
+    assert args.instrument_seed == 7
+    assert args.random_instrument_instances == 3
+    assert args.simulation_seed == [11, 13]
+
+
+def test_seed_arguments_canonical_names():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(arguments.RAY_TRACING_ARGUMENTS)
+
+    args = parser.parse_args(["--instrument_seed", "5", "--simulation_seed", "9"])
+
+    assert args.instrument_seed == 5
+    assert args.simulation_seed == [9]
+    assert args.random_instrument_instances == constants.RAY_TRACING_INSTRUMENT_INSTANCES

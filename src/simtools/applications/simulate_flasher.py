@@ -68,6 +68,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        cli.RAY_TRACING_BACKEND,
     ),
     validate_simulation_dependencies=True,
 )

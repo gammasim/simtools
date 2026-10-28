@@ -67,6 +67,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
