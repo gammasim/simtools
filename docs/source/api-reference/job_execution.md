@@ -12,6 +12,13 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
+(log-inspector)=
+
+```{eval-rst}
+.. automodule:: job_execution.log_inspector
+   :members:
+```
+
 (process-accounting)=
 
 ```{eval-rst}

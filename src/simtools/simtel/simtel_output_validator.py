@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.job_execution.log_inspector import check_plain_logs
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
@@ -16,7 +17,6 @@ from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
-from simtools.testing.log_inspector import check_plain_logs
 from simtools.utils import general, random
 
 _logger = logging.getLogger(__name__)
