@@ -146,6 +146,7 @@ def test_add_histogram_merges_incompatible_edges_without_dropping_counts():
 
     merged_counts, merged_edges = target["core_distance"]
     np.testing.assert_allclose(merged_edges, [0.0, 100.0, 150.0, 200.0, 300.0])
+    np.testing.assert_allclose(merged_counts, [8.0 / 3.0, 4.0 / 3.0, 2.0, 2.0])
     assert np.sum(merged_counts) == pytest.approx(8.0)
 
 
