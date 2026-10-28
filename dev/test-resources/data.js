@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793185254452,
+  "lastUpdate": 1793185343767,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32112,6 +32112,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 473.10546875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5cdbaa75a7e89589d873f61c3152646b1cf7712c",
+          "message": "Add architecture rules page and stop enforcing S1192 (#2686)\n\n* Add architecture rules page and stop enforcing S1192\n\nNew developer-guide page with the layer, extension-point, public-API and\nunit-test rules. Switch off SonarQube rule python:S1192 (duplicated string\nliterals) in the sonarqube job and remove the mandatory S1192 rules from\nAGENTS.md; named constants remain for values with a meaning of their own.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T11:47:09+01:00",
+          "tree_id": "1b93e8dfb4989deb661d5c30c56369c2cd28e292",
+          "url": "https://github.com/gammasim/simtools/commit/5cdbaa75a7e89589d873f61c3152646b1cf7712c"
+        },
+        "date": 1793185325904,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 79.76333278600003,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 82.74000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 473.08984375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
           }
