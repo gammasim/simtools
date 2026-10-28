@@ -1,41 +1,63 @@
-"""Interface of the ray-tracing backends.
+"""Ray-tracing request types, backend contracts, and helpers.
 
-A backend traces star light through the optics of one telescope model. The
-ray-tracing applications describe what to trace (``StarImageRequest``) and
-analyse what comes back; how a backend traces, which files it writes and what it
-keeps in memory stays inside the backend. Backends:
-
-- ``sim_telarray``: sim_telarray runs writing photon lists
-  (``backends.sim_telarray``);
-- ``obdeect``: obdeect in process (``backends.obdeect``, optional dependency).
-
-Each backend class is constructed with the telescope model, the site model, a
-label, the telescope zenith angle [deg] and the single-mirror flag, and provides:
-
-- ``simulate(requests, test, force, compress_photons, max_workers)``: trace the images;
-- ``psf_image(request, focal_length, containment_fraction, use_rx, save_photons)``:
-  the ``PSFImage`` of one traced image and whether the telescope structure was
-  traced (then ``telescope_transmission`` does not apply);
-- ``incidence_angles(request, work_directory, name, with_mirrors, keep_files)``:
-  per-photon incidence angles on the focal surface (and mirrors) and the
-  intermediate files written.
-
-Backends with ``traces_light_sources`` also make and trace the light of
-calibration light sources (flashers, illuminators; ``LightSourceRequest``):
-
-- ``camera_photons(request)``: for each light pulse, an iterator over blocks of
-  the photons crossing the camera plane (through the focal-surface vertex,
-  normal to the optical axis; telescope frame, metres): ``position_m``,
-  ``direction``, ``time_ns``, ``weight`` (photons) and ``wavelength_nm``.
-
-Otherwise sim_telarray's LightEmission programs make the light and sim_telarray
-traces it.
+See :class:`RayTracingBackend` for the common backend contract.
 """
 
 from dataclasses import dataclass, field
+from importlib import import_module
+from typing import Protocol
 
 from simtools import settings
+from simtools.constants import RAY_TRACING_BACKEND_CLASSES
 from simtools.utils import names
+
+
+class RayTracingBackend(Protocol):
+    """Contract implemented by ray-tracing backends.
+
+    A backend traces star light through the optics of one telescope model. The
+    ray-tracing applications describe what to trace (``StarImageRequest``) and
+    analyse what comes back; how a backend traces, which files it writes and what
+    it keeps in memory stays inside the backend.
+
+    A backend class is constructed with the telescope model, the site model, a
+    label, the telescope zenith angle [deg] and the single-mirror flag. Backends
+    are selected by name through ``get_backend``.
+    """
+
+    def simulate(self, requests, test=False, force=False, compress_photons=True, max_workers=8):
+        """Trace the requested star images."""
+
+    def psf_image(
+        self, request, focal_length, containment_fraction, use_rx=False, save_photons=False
+    ):
+        """Return the ``PSFImage`` of one traced image and whether the structure was traced.
+
+        If the telescope structure was traced, ``telescope_transmission`` does not apply.
+        """
+
+    def incidence_angles(self, request, work_directory, name, with_mirrors, keep_files=False):
+        """Return per-photon incidence angles on the focal surface (and mirrors).
+
+        Also returns the intermediate files written.
+        """
+
+
+class LightSourceRayTracingBackend(RayTracingBackend, Protocol):
+    """Ray-tracing backend that also traces calibration light sources.
+
+    Such backends set ``traces_light_sources``; for other backends sim_telarray's
+    LightEmission programs make the light and sim_telarray traces it.
+    """
+
+    def camera_photons(self, request):
+        """Return, for each light pulse of a ``LightSourceRequest``, an iterator over blocks.
+
+        Each block holds the photons crossing the camera plane (through the
+        focal-surface vertex, normal to the optical axis; telescope frame, metres):
+        ``position_m``, ``direction``, ``time_ns``, ``weight`` (photons) and
+        ``wavelength_nm``.
+        """
 
 
 @dataclass(frozen=True)
@@ -165,11 +187,11 @@ def get_backend(name=None):
         Backend class.
     """
     name = name or settings.config.ray_tracing_backend
-    # pylint: disable=import-outside-toplevel
-    if name == "obdeect":  # Optional dependency: imported only when selected.
-        from simtools.ray_tracing.backends.obdeect import ObdeectBackend
-
-        return ObdeectBackend
-    from simtools.ray_tracing.backends.sim_telarray import SimtelBackend
-
-    return SimtelBackend
+    try:
+        module_name, class_name = RAY_TRACING_BACKEND_CLASSES[name].split(":")
+    except KeyError as exc:
+        valid_names = ", ".join(RAY_TRACING_BACKEND_CLASSES)
+        raise ValueError(
+            f"Unknown ray-tracing backend {name!r}; choose from: {valid_names}"
+        ) from exc
+    return getattr(import_module(module_name), class_name)
