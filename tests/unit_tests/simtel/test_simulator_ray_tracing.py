@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
 import logging
+import math
 
 import astropy.units as u
 import pytest
 
+from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
+from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing, telescope_pointing
 
 logger = logging.getLogger()
 
@@ -50,7 +52,6 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_s
             "off_axis_y": 0.0,
             "source_distance": 10,
             "single_mirror_mode": ray_tracing_sst.single_mirror_mode,
-            "use_random_focal_length": ray_tracing_sst.use_random_focal_length,
             "mirror_numbers": 0,
         },
         label=LABEL,
@@ -68,8 +69,8 @@ def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, si
             "off_axis_y": 0.0,
             "source_distance": 10.0 * u.km,
             "single_mirror_mode": True,
-            "use_random_focal_length": ray_tracing_mst.use_random_focal_length,
             "mirror_numbers": 0,
+            "parameter_changes": parameter_changes.single_mirror("mirror.dat", 1600.0, 3200.0),
         },
         label=LABEL,
     )
@@ -169,17 +170,14 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
     assert stderr_file == stdout_file.with_suffix(".err")
 
 
-def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, mocker):
-    # Mock get_single_mirror_list_file to avoid loading actual mirror list file
-    mocker.patch.object(
-        simulator_ray_tracing_single_mirror.telescope_model,
-        "get_single_mirror_list_file",
-        return_value="single_mirror_list_test.dat",
-    )
+def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
     command, _, _ = simulator_ray_tracing_single_mirror.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
-    assert any("focus_offset" in str(cmd) for cmd in command)
+    # The parameter changes of the single-mirror mode, and the one-pixel camera.
+    assert "focus_offset=0.0,0.0,0.0,0.0" in command
+    assert "mirror_list=mirror.dat" in command
+    assert "camera_pixels=1" in command
 
 
 def test_check_run_result(simulator_ray_tracing_sst):
@@ -191,3 +189,40 @@ def test_check_run_result(simulator_ray_tracing_sst):
     with simulator_ray_tracing_sst._photons_file.open("a") as file:
         file.writelines(150 * [f"{1}\n"])
     assert simulator_ray_tracing_sst._check_run_result()
+
+
+@pytest.mark.parametrize("count", [None, 123456])
+def test_explicit_total_photons(count, telescope_model_sst, site_model_south, mocker):
+    """The photons per run; one run per random instrument instance."""
+    mocker.patch.object(SimulatorRayTracing, "_load_required_files")
+    simulator = SimulatorRayTracing(
+        telescope_model_sst,
+        site_model_south,
+        config_data={
+            "single_mirror_mode": False,
+            "photons_per_run": count,
+            "zenith_angle": 20,
+            "off_axis_x": 0,
+            "off_axis_y": 0,
+            "source_distance": 10,
+            "mirror_numbers": 0,
+            "seeds": [(1, 2), (3, 4)],
+        },
+    )
+    assert simulator.photons_per_run == (100000 if count is None else count)
+    assert simulator.runs_per_set == 2
+    command = ["sim_telarray", "-c", "telescope.cfg", "dummy.corsika.gz"]
+    assert simulator._command_for_run(command, 1) == [
+        *command[:-1],
+        "-C",
+        "random_seed=3,4",
+        command[-1],
+    ]
+
+
+def test_telescope_pointing():
+    assert telescope_pointing(20.0, 1.0, 0.0) == (19.0, 0.0)
+    theta, phi = telescope_pointing(20.0, 0.0, 1.0)
+    assert theta == pytest.approx(20.0)
+    assert phi == pytest.approx(1.0 / math.sin(math.radians(20.0)))
+    assert telescope_pointing(0.0, 0.0, 1.0) == (0.0, 0.0)

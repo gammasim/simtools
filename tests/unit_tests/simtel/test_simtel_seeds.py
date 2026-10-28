@@ -2,7 +2,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from simtools.simtel.simtel_seeds import SimtelSeeds
+from simtools.constants import SIMTEL_MAX_SEED
+from simtools.simtel.simtel_seeds import SimtelSeeds, instance_seed_pairs
+from simtools.utils import random
 
 
 @pytest.fixture
@@ -53,12 +55,12 @@ def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
     seeds = SimtelSeeds()
     seeds.simulation_seed = [1, 2, 3]
 
-    with pytest.raises(ValueError, match="sim_telarray_seed must contain one value"):
+    with pytest.raises(ValueError, match="simulation_seed must contain one value"):
         seeds.initialize_seeds("north", "1.0.0", 20.0, 180.0)
 
 
 def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, mock_config):
-    mock_config.args = {"sim_telarray_instrument_seed": 1745, "sim_telarray_seed": [290]}
+    mock_config.args = {"instrument_seed": 1745, "simulation_seed": [290]}
     random_seed_mock = mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=999)
 
     seeds = SimtelSeeds()
@@ -191,3 +193,51 @@ def test_save_seeds(
     call_args = mock_write.call_args[0]
     assert call_args[0] == path
     assert call_args[1] == {"instrument_seed": instrument, "simulation_seed": simulation}
+
+
+@pytest.mark.parametrize(
+    ("args", "instances", "expected"),
+    [
+        ({"instrument_seed": 5, "simulation_seed": [7]}, 1, [(5, 7)]),
+        ({"simulation_seed": [5, 7]}, 1, [(5, 7)]),  # Fixed test seeds
+        (
+            {"instrument_seed": 5, "simulation_seed": [7]},
+            3,
+            list(
+                zip(
+                    random.instance_seeds(5, 3, max_seed=SIMTEL_MAX_SEED),
+                    random.instance_seeds(7, 3, max_seed=SIMTEL_MAX_SEED),
+                    strict=True,
+                )
+            ),
+        ),
+    ],
+)
+def test_instance_seed_pairs(mock_config, args, instances, expected):
+    mock_config.args = args
+    assert instance_seed_pairs(instances) == expected
+
+
+def test_instance_seed_pairs_draws_missing_seeds(mock_config):
+    mock_config.args = {}
+    (instrument, simulation), *others = instance_seed_pairs(4)
+    assert len(others) == 3
+    assert 1 <= instrument < SIMTEL_MAX_SEED
+    assert 1 <= simulation < SIMTEL_MAX_SEED
+    mock_config.args = {"simulation_seed": [1, 2, 3]}
+    with pytest.raises(ValueError, match="simulation_seed must contain one value"):
+        instance_seed_pairs()
+
+
+def test_seed_file_holds_the_instance_seeds(mock_config, tmp_test_directory):
+    """The sim_telarray seed file and the ray-tracing instances derive seeds alike."""
+    mock_config.args = {
+        "instrument_seed": 5,
+        "random_instrument_instances": 3,
+        "sim_telarray_seed_file": "seeds.txt",
+    }
+    seeds = SimtelSeeds(output_path=tmp_test_directory)
+    lines = seeds.seed_file.read_text(encoding="utf-8").splitlines()
+    assert [int(line) for line in lines if not line.startswith("#")] == random.instance_seeds(
+        5, 3, max_seed=SIMTEL_MAX_SEED
+    )

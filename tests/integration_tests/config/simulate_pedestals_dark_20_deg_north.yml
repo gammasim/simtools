@@ -14,7 +14,7 @@ applications:
     number_of_events: 3
     output_path: simtools-output
     run_number: 10
-    sim_telarray_random_instrument_instances: 100
+    random_instrument_instances: 100
     site: North
     azimuth_angle: 0.0
     zenith_angle: 20

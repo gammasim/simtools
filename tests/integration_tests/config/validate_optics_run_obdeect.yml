@@ -1,0 +1,30 @@
+---
+applications:
+- application: simtools-validate-optics
+  docs:
+    title: Validate the LST optical model with obdeect
+    summary: >-
+      Ray-trace an LST across field angles with the obdeect backend and derive effective focal
+      length and PSF quantities.
+  configuration:
+    max_offset: 1.5
+    offset_step: 0.5
+    model_version: 6.0.2
+    output_path: simtools-output
+    site: North
+    source_distance: 11.0
+    telescope: LSTN-01
+    test: true
+    zenith_angle: 20
+    plot_images: true
+    ray_tracing_backend: obdeect
+    instrument_seed: 17
+    simulation_seed: [17]
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics.ecsv
+      output_sub_path: results
+  test_name: run_obdeect
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0
