@@ -5,9 +5,9 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
-from matplotlib.backends.backend_pdf import PdfPages
 
 from simtools.visualization import plot_science_comparison as plots
+from simtools.visualization.visualize import pdf_report
 
 EMPTY_ECSV = "empty.ecsv"
 
@@ -43,8 +43,9 @@ def test_plot_metric_changes_writes_one_page(tmp_test_directory):
         "cam_eff": {BASELINE: 0.5, CANDIDATE: 0.6, "unit": "", RELATIVE: 0.2},
         "nsb_rate": {BASELINE: 0.0, CANDIDATE: 0.1, "unit": "GHz", RELATIVE: None},
     }
-    with PdfPages(output) as pdf:
+    with pdf_report(output) as pdf:
         plots.plot_metric_changes(changes, TITLE, pdf)
+        assert len(pdf) == 1
     assert output.stat().st_size > 0
 
 
@@ -61,15 +62,16 @@ def test_plot_spectra_compares_common_channels(tmp_test_directory):
         "muon": write_table(root / "c_muon.ecsv"),
         "extra": write_table(root / "c_extra.ecsv"),
     }
-    with PdfPages(root / REPORT_PDF) as pdf:
+    with pdf_report(root / REPORT_PDF) as pdf:
         diagnostics = plots.plot_spectra(baseline, candidate, TITLE, LABELS, pdf)
+        assert len(pdf) == 1
     assert diagnostics == ["Cannot compare muon spectrum: wavelength grids differ"]
     assert (root / REPORT_PDF).stat().st_size > 0
 
 
 def test_plot_spectra_without_comparable_tables_writes_nothing(tmp_test_directory):
     root = Path(tmp_test_directory)
-    with PdfPages(root / REPORT_PDF) as pdf:
+    with pdf_report(root / REPORT_PDF) as pdf:
         assert plots.plot_spectra({}, {}, TITLE, LABELS, pdf) == []
         diagnostics = plots.plot_spectra(
             {"nsb": root / MISSING_ECSV}, {"nsb": root / MISSING_ECSV}, TITLE, LABELS, pdf
@@ -81,9 +83,9 @@ def test_plot_components_writes_absolute_and_relative_pages(tmp_test_directory):
     root = Path(tmp_test_directory)
     baseline = write_table(root / B_ECSV)
     candidate = write_table(root / C_ECSV, scale=1.2)
-    with PdfPages(root / REPORT_PDF) as pdf:
+    with pdf_report(root / REPORT_PDF) as pdf:
         assert plots.plot_components(baseline, candidate, TITLE, LABELS, pdf) is None
-        assert pdf.get_pagecount() == 2
+        assert len(pdf) == 2
 
 
 def test_component_page_limits_absolute_efficiency_to_one():
@@ -103,7 +105,7 @@ def test_plot_components_reports_missing_or_invalid_columns(tmp_test_directory):
     table.write(root / C_ECSV, format=ASCII_ECSV)
     table["qe"] = [np.nan, 1.0, 1.0]
     table.write(root / D_ECSV, format=ASCII_ECSV)
-    with PdfPages(root / REPORT_PDF) as pdf:
+    with pdf_report(root / REPORT_PDF) as pdf:
         missing = plots.plot_components(baseline, root / C_ECSV, TITLE, LABELS, pdf)
         invalid = plots.plot_components(baseline, root / D_ECSV, TITLE, LABELS, pdf)
     assert "qe" in missing
@@ -119,9 +121,9 @@ def test_plot_spectra_falls_back_to_optical_throughput(tmp_test_directory):
         path = root / f"{name}.ecsv"
         table.write(path, format=ASCII_ECSV)
         tables[name] = {SHOWER: path}
-    with PdfPages(root / REPORT_PDF) as pdf:
+    with pdf_report(root / REPORT_PDF) as pdf:
         assert plots.plot_spectra(tables["b"], tables["c"], TITLE, LABELS, pdf) == []
-        assert pdf.get_pagecount() == 1
+        assert len(pdf) == 1
 
 
 def test_read_pair_rejects_invalid_grids_and_columns(tmp_test_directory):

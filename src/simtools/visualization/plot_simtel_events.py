@@ -4,7 +4,6 @@
 import logging
 from contextlib import closing
 from dataclasses import dataclass
-from itertools import chain
 from pathlib import Path
 
 import astropy.units as u
@@ -21,7 +20,7 @@ from simtools.simtel.simtel_io_metadata import (
 from simtools.utils import general as gen
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
-from simtools.visualization.visualize import save_figure, save_figures_to_single_document
+from simtools.visualization.visualize import pdf_report, save_figure
 
 _logger = logging.getLogger(__name__)
 
@@ -81,7 +80,10 @@ def generate_and_save_plots(plots, args, ioh):
         if first is None:
             _logger.warning(NO_FIGURES_MESSAGE, plotter.file_name)
             return
-        save_figures_to_single_document(chain([first], figures), output_file)
+        with pdf_report(output_file) as report:
+            report.add(first)
+            for figure in figures:
+                report.add(figure)
     _logger.info(SAVED_PDF_MESSAGE, output_file)
     MetadataCollector.dump(args, output_file, add_activity_name=True)
 
@@ -234,6 +236,7 @@ class PlotSimtelEvent:
         dpi : int
             DPI for saved PNG files.
         """
+        output_file = Path(output_file)
         plots = self._plots_to_run(plots)
 
         for plot_name in plots:
@@ -242,7 +245,8 @@ class PlotSimtelEvent:
                 if fig is not None:
                     self.figures.append(fig)
                     if save_png:
-                        self._save_plot_as_png(fig, output_file, plot_name, event_index, dpi)
+                        png_path = output_file.with_name(f"{plot_name}_{event_index}.png")
+                        save_figure(fig, png_path, figure_format=["png"], dpi=int(dpi))
 
     def _generate_single_plot(self, plot_name, event_index, args):
         """
@@ -272,17 +276,14 @@ class PlotSimtelEvent:
         kwargs["event_index"] = event_index
         return func(**kwargs)
 
-    def _save_plot_as_png(self, fig, output_file, plot_name, event_index, dpi):
-        """Save a single plot as PNG file."""
-        png_path = output_file.with_name(f"{plot_name}_{event_index}.png")
-        save_figure(fig, png_path, figure_format=["png"], dpi=int(dpi))
-
     def save(self, args, output_file):
         """Save generated plots to files."""
         if not self.figures:
             _logger.warning(NO_FIGURES_MESSAGE, self.file_name)
             return
-        save_figures_to_single_document(self.figures, output_file)
+        with pdf_report(output_file) as report:
+            for figure in self.figures:
+                report.add(figure)
         _logger.info(SAVED_PDF_MESSAGE, output_file)
         MetadataCollector.dump(args, output_file, add_activity_name=True)
 
@@ -652,6 +653,7 @@ class _StreamingPlotter(PlotSimtelEvent):
 
     def stream_figures(self, plots, args, output_file):
         """Generate and close each figure after it has been saved to the PDF."""
+        output_file = Path(output_file)
         for plot_name in self._plots_to_run(plots):
             for event_index in self.event_data:
                 fig = self._generate_single_plot(plot_name, event_index, args)
@@ -660,12 +662,12 @@ class _StreamingPlotter(PlotSimtelEvent):
                 try:
                     yield fig
                     if args.get("save_pngs", False):
-                        self._save_plot_as_png(
+                        png_path = output_file.with_name(f"{plot_name}_{event_index}.png")
+                        save_figure(
                             fig,
-                            output_file,
-                            plot_name,
-                            event_index,
-                            int(args.get("figure_dpi", 300)),
+                            png_path,
+                            figure_format=["png"],
+                            dpi=int(args.get("figure_dpi", 300)),
                         )
                 finally:
                     plt.close(fig)

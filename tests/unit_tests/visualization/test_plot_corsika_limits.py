@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import matplotlib.pyplot as plt
@@ -39,9 +40,8 @@ def create_test_table(
     return Table(columns)
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 @patch("simtools.visualization.plot_corsika_limits.plt.suptitle")
-def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
+def test_plot_limits(mock_suptitle, tmp_test_directory):
     table = vstack(
         [
             create_test_table(20, 0, "dark", "layout1"),
@@ -50,14 +50,15 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
         ]
     )
 
-    output_files = plot_corsika_limits.plot_limits(table, tmp_test_directory)
+    output_files = plot_corsika_limits.plot_limits(table, Path(tmp_test_directory))
     assert len(output_files) == 1
-    mock_savefig.assert_called_once()
+    assert output_files[0].exists()
+    assert output_files[0].stat().st_size > 0
     suptitle_text = mock_suptitle.call_args.args[0]
     assert "gamma" in suptitle_text
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     mock_savefig, tmp_test_directory
 ):
@@ -87,7 +88,7 @@ def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     plt.close(plt.gcf())
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
     table = vstack(
         [

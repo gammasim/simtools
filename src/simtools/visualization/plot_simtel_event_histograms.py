@@ -8,6 +8,7 @@ import numpy as np
 from simtools.production_configuration.trigger_histograms import load_event_data_histograms
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 _logger = logging.getLogger(__name__)
 colors = lazy_module("matplotlib.colors")
@@ -211,6 +212,7 @@ def _plot_monte_carlo_statistics_matrix(
     mask_zero=False,
 ):
     """Plot a 2D diagnostic matrix in log10 energy and angular distance."""
+    output_file = Path(output_file)
     matrix = np.asarray(matrix, dtype=float)
     plot_matrix = np.ma.masked_invalid(matrix)
     if mask_zero:
@@ -226,8 +228,7 @@ def _plot_monte_carlo_statistics_matrix(
         ylabel="Angular distance (deg)",
         title=title,
     )
-    fig.savefig(output_file, dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save_figure(fig, output_file.with_suffix(""), figure_format=["png"], dpi=150, close=True)
 
 
 def _get_limits(name, limits):
@@ -644,12 +645,18 @@ def _create_plot(
 def _finalize_figure(fig, output_file):
     """Save, show, and return a completed figure."""
     if output_file:
+        output_file = Path(output_file)
         _logger.info(f"Saving plot to {output_file}")
         save_kwargs = {"dpi": 300, "bbox_inches": "tight"}
         if Path(output_file).suffix.lower() == ".png":
             save_kwargs["pil_kwargs"] = {"compress_level": 1}
-        fig.savefig(output_file, **save_kwargs)
-        plt.close(fig)
+        save_figure(
+            fig,
+            output_file.with_suffix(""),
+            figure_format=[output_file.suffix[1:]],
+            dpi=save_kwargs.get("dpi", "figure"),
+            close=True,
+        )
     else:
         plt.tight_layout()
         plt.show()

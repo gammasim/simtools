@@ -194,8 +194,8 @@ class PSFParameterOptimizer:
         ----------
         pars : dict
             Dictionary of parameter values to test.
-        pdf_pages : PdfPages, optional
-            PDF pages object for saving plots.
+        pdf_pages : PDF report object, optional
+            Open report for adding plots.
         is_best : bool, optional
             Flag indicating if this is the best parameter set.
         use_cache : bool, optional
@@ -520,7 +520,6 @@ class PSFParameterOptimizer:
             second_metric=best_ks_stat,
         )
         del self.data_to_plot["simulated"]
-        pdf_pages.close()
         logger.info("Cumulative PSF plots saved")
 
     def run_gradient_descent(self, rmsd_threshold, learning_rate, max_iterations=200):
@@ -545,10 +544,15 @@ class PSFParameterOptimizer:
             logger.error("No PSF measurement data provided. Cannot run optimization.")
             return None, None, []
 
-        current_params = self.get_initial_parameters()
-        pdf_pages = plot_psf.setup_pdf_plotting(
+        pdf_context = plot_psf.setup_pdf_plotting(
             self.args_dict, self.output_dir, self.tel_model.name
         )
+        with pdf_context as report:
+            return self._run_descent(rmsd_threshold, learning_rate, max_iterations, report)
+
+    def _run_descent(self, rmsd_threshold, learning_rate, max_iterations, pdf_pages):
+        """Run gradient descent while writing plots to an optional open report."""
+        current_params = self.get_initial_parameters()
         results = []
 
         # Evaluate initial parameters
@@ -886,8 +890,8 @@ def run_psf_simulation(
         Dictionary containing measured PSF data under "measured" key.
     radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
-    pdf_pages : PdfPages, optional
-        PDF pages object for saving plots (default: None).
+    pdf_pages : PDF report object, optional
+        Open report for adding plots (default: None).
     is_best : bool, optional
         Flag indicating if this is the best parameter set (default: False).
     use_ks_statistic : bool, optional
