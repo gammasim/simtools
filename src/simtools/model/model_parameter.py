@@ -9,6 +9,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.application.model_reader import require_model_reader
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.validate_data import DataValidator
@@ -74,7 +75,7 @@ class ModelParameter:
         self.model_reader = require_model_reader(model_reader)
 
         self.parameters = {}
-        self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
+        self._simulation_config_parameters = {sw: {} for sw in catalog.simulation_software()}
         self.collection = collection
         self.label = label
         self.model_version = model_version
@@ -393,7 +394,7 @@ class ModelParameter:
         filtered_parameter_changes = {}
         for par_name, par_value in parameter_changes.items():
             try:
-                parameter_collection = names.get_collection_name_from_parameter_name(par_name)
+                parameter_collection = catalog.get_collection_name_from_parameter_name(par_name)
             except KeyError:
                 self._logger.warning(
                     f"Skipping unknown overwrite parameter '{par_name}' while "
@@ -458,7 +459,7 @@ class ModelParameter:
         for parameter_name in self.overwrite_model_parameter_dict:
             try:
                 if (
-                    names.get_collection_name_from_parameter_name(parameter_name)
+                    catalog.get_collection_name_from_parameter_name(parameter_name)
                     in ignored_collections
                 ):
                     return True
@@ -474,7 +475,7 @@ class ModelParameter:
             for parameter_name in parameters:
                 try:
                     if (
-                        names.get_collection_name_from_parameter_name(parameter_name)
+                        catalog.get_collection_name_from_parameter_name(parameter_name)
                         in ignored_collections
                     ):
                         return True
@@ -513,7 +514,7 @@ class ModelParameter:
         filtered = {}
         for parameter_name, value in parameters.items():
             try:
-                collection = names.get_collection_name_from_parameter_name(parameter_name)
+                collection = catalog.get_collection_name_from_parameter_name(parameter_name)
             except KeyError:
                 filtered[parameter_name] = value
             else:
@@ -540,7 +541,7 @@ class ModelParameter:
         """
         for par_name, par_data in parameters.items():
             validate_finite_json_values(par_data.get("value"))
-            if par_name in (parameter_schema := names.model_parameters()):
+            if par_name in (parameter_schema := catalog.model_parameters()):
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,
@@ -819,7 +820,7 @@ class ModelParameter:
             return False
 
         try:
-            collection_name = names.get_collection_name_from_parameter_name(par_name)
+            collection_name = catalog.get_collection_name_from_parameter_name(par_name)
         except KeyError:
             return False
         return collection_name in ignore_collection
@@ -832,7 +833,7 @@ class ModelParameter:
         # Skip validation for global configuration parameters (e.g., configuration_sim_telarray)
         # These parameters are scoped under configuration classes and not telescope models
         try:
-            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            parameter_class = catalog.get_collection_name_from_parameter_name(par_name)
             if parameter_class == "configuration_sim_telarray":
                 self._logger.debug(
                     f"Skipping validation for global parameter '{par_name}' "
@@ -857,7 +858,7 @@ class ModelParameter:
     def _should_route_to_sim_telarray(self, par_name):
         """Check if parameter should be routed to sim_telarray config."""
         try:
-            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            parameter_class = catalog.get_collection_name_from_parameter_name(par_name)
             return parameter_class == "configuration_sim_telarray"
         except KeyError:
             return False
