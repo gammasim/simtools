@@ -111,9 +111,17 @@ class ModelSource:
         """Read production documents for a version and its patch history."""
         documents = []
         for model_name in self._model_history(model_version):
-            for path in self._iter_files_or_empty(_PRODUCTIONS_PATH / model_name):
-                if path.endswith(".json"):
-                    documents.append((model_name, path, self._read_document(path)))
+            paths = self._iter_files_or_empty(_PRODUCTIONS_PATH / model_name)
+            if not paths and model_name != model_version:
+                raise ValueError(
+                    f"Model version {model_name} in the patch history of {model_version} "
+                    f"not found in {self.source_name}"
+                )
+            documents.extend(
+                (model_name, path, self._read_document(path))
+                for path in paths
+                if path.endswith(".json")
+            )
         if not documents:
             raise ValueError(f"Model version {model_version} not found in {self.source_name}")
         return documents

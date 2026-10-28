@@ -88,6 +88,24 @@ def test_source_combines_patch_history_and_descriptions():
     assert source.get_production_descriptions() == [("1.1.0", "Updated")]
 
 
+def test_source_rejects_missing_patch_history_version():
+    """A patch release must not silently drop a version listed in its history."""
+    storage = MemoryStorage(
+        {
+            "simulation-models/productions/1.1.0/info.yml": (
+                b"description: Updated\nmodel_update: patch_update\n"
+                b"model_version_history:\n  - 1.0.0\n"
+            ),
+            "simulation-models/productions/1.1.0/LSTN-01.json": _json(
+                {"parameters": {"LSTN-01": {"new_parameter": "1.0.0"}}}
+            ),
+        }
+    )
+
+    with pytest.raises(ValueError, match=r"1\.0\.0 in the patch history of 1\.1\.0 not found"):
+        ModelSource(storage).read_production_table("telescopes", "1.1.0")
+
+
 def test_source_reports_missing_tables_and_parameters():
     """Missing versions and scoped parameter data have actionable errors."""
     source = ModelSource(MemoryStorage({}))
