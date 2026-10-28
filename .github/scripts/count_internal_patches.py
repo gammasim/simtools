@@ -28,6 +28,21 @@ def _simtools_names(tree):
     return names
 
 
+def _string_constants(tree):
+    """Return names assigned a string constant at module level (e.g. patch targets)."""
+    constants = {}
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    constants[target.id] = node.value.value
+    return constants
+
+
 def _base_name(node):
     """Return the leftmost name of an attribute chain such as ``a.b.c``."""
     while isinstance(node, ast.Attribute):
@@ -35,22 +50,43 @@ def _base_name(node):
     return node.id if isinstance(node, ast.Name) else None
 
 
-def _is_internal_patch(call, simtools_names):
-    """Return whether a patch call targets a simtools module or object."""
+_PATCH_CALLS = ("patch", "patch.object", "patch.dict", "patch.multiple")
+
+
+def _is_patch_call(call):
+    """Return whether a call is a mock patch or a monkeypatch setattr."""
     if not isinstance(call, ast.Call) or not call.args:
         return False
     name = ast.unparse(call.func)
-    if not (
-        name == "patch"
-        or name.endswith(".patch")
-        or name == "patch.object"
-        or name.endswith(".patch.object")
+    return (
+        name in _PATCH_CALLS
+        or name.endswith(tuple(f".{call_name}" for call_name in _PATCH_CALLS))
         or name.endswith(".setattr")
-    ):
+    )
+
+
+def _target_string(target, string_constants):
+    """Return the (leading) string of a patch target, or None if it is not a string."""
+    if isinstance(target, ast.Name):
+        return string_constants.get(target.id)
+    if isinstance(target, ast.Constant) and isinstance(target.value, str):
+        return target.value
+    if isinstance(target, ast.JoinedStr) and target.values:
+        first = target.values[0]
+        if isinstance(first, ast.FormattedValue):
+            return _target_string(first.value, string_constants) or ""
+        return str(first.value)
+    return None
+
+
+def _is_internal_patch(call, simtools_names, string_constants):
+    """Return whether a patch call targets a simtools module or object."""
+    if not _is_patch_call(call):
         return False
     target = call.args[0]
-    if isinstance(target, ast.Constant) and isinstance(target.value, str):
-        return target.value.startswith("simtools.")
+    target_string = _target_string(target, string_constants)
+    if target_string is not None:
+        return target_string.startswith("simtools")
     return _base_name(target) in simtools_names
 
 
@@ -79,7 +115,10 @@ def main():
     for path in TEST_ROOT.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         simtools_names = _simtools_names(tree)
-        patch_count += sum(_is_internal_patch(node, simtools_names) for node in ast.walk(tree))
+        constants = _string_constants(tree)
+        patch_count += sum(
+            _is_internal_patch(node, simtools_names, constants) for node in ast.walk(tree)
+        )
         reader_count += _reader_magicmocks(tree)
 
     actual = patch_count + reader_count
