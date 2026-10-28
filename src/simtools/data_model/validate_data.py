@@ -344,7 +344,9 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
             return
         if is_json_array:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list[0]
+            self.data_dict["value"] = value_as_list
+            if unit_as_list:
+                self.data_dict["unit"] = unit_as_list[0]
             return
         self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 

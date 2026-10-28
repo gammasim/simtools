@@ -1202,3 +1202,23 @@ def test_validate_model_parameter_keeps_single_item_json_array():
     assert (
         validate_data.DataValidator.validate_model_parameter(validated)["value"] == record["value"]
     )
+
+
+def test_validate_model_parameter_keeps_empty_json_array():
+    """An empty JSON array of a dict parameter (allowed by its schema) stays empty."""
+    record = {
+        "parameter": "array_layouts",
+        "parameter_version": "1.0.0",
+        "model_parameter_schema_version": schema.get_model_parameter_schema("array_layouts")[
+            "schema_version"
+        ],
+        "type": "dict",
+        "unit": None,
+        "file": False,
+        "value": [],
+    }
+
+    validated = validate_data.DataValidator.validate_model_parameter(record)
+
+    assert validated["value"] == []
+    assert validated["unit"] is None
