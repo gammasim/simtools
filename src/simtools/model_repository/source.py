@@ -287,7 +287,11 @@ class ModelSource:
             raise ValueError("Destination path is required to export model files.")
         if parameters is None and file_names:
             raise ValueError("Model file export requires parameter metadata")
-        selected = [p for p in (parameters or {}).values() if isinstance(p, dict) and p.get("file")]
+        selected = [
+            p
+            for p in (parameters or {}).values()
+            if isinstance(p, dict) and p.get("file") and p.get("value")
+        ]
         destination = Path(dest)
         destination.mkdir(parents=True, exist_ok=True)
         exported = {}

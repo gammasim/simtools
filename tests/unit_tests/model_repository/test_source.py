@@ -232,3 +232,14 @@ def test_source_export_reuses_identical_files_and_rejects_ambiguous_exports(
         source.export_model_files(file_names="model.dat", dest=destination)
     with pytest.raises(ValueError, match="Destination path is required"):
         source.export_model_files(parameters={"data": parameter})
+
+
+def test_source_export_skips_file_parameters_without_value(tmp_test_directory):
+    """File parameters without a value (no file configured) are not exported."""
+    source = ModelSource(MemoryStorage({}))
+    parameters = {
+        "unset_file": {"file": True, "value": None, "parameter": "unset_file"},
+        "empty_file": {"file": True, "value": "", "parameter": "empty_file"},
+    }
+
+    assert source.export_model_files(parameters=parameters, dest=tmp_test_directory) == {}
