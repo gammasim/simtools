@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793205577277,
+  "lastUpdate": 1793206728830,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32912,6 +32912,48 @@ window.BENCHMARK_DATA = {
             "value": 470.65234375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261023.334.3 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "14e73acdf6e893c0334eda1b54b365b3b0faf40f",
+          "message": "Update the architecture rules page for the new extension points (#2702)\n\n* Update the architecture rules page for the new extension points\n\nName the Protocols, add model-repository storage, link the ray-tracing\nbackend guide, and point unit tests to the table builders and MemoryStorage.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T17:44:36+01:00",
+          "tree_id": "ddf22211971a10623fb1ec3686535798f122f3d7",
+          "url": "https://github.com/gammasim/simtools/commit/14e73acdf6e893c0334eda1b54b365b3b0faf40f"
+        },
+        "date": 1793206621426,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 72.297931739,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 73.35000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 483.65625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
         ]
       }
