@@ -43,7 +43,7 @@ Each axis where simtools grows has one extension point:
 | Model parameter | schema YAML in `schemas/model_parameters/` |
 | Simulation configuration writer and result reader | see [Simulation formats](simulation_formats.md) |
 | Ray-tracing backend | `ray_tracing/backends/interface.py` |
-| Event-file format | `sim_events/formats/registry.py` |
+| Event-file format | `sim_events/formats/readers.py` |
 | Execution backend | `job_execution/backends/registry.py` |
 | Plot | `plot_tables` and `plot_configuration.metaschema.yml` |
 | Application | `ApplicationDefinition` plus the `[project.scripts]` entry |
