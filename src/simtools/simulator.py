@@ -12,7 +12,7 @@ from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.io import io_handler, table_handler
-from simtools.io.file_type import _get_product_value
+from simtools.io.file_type import product_value
 from simtools.job_execution import job_manager
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
@@ -26,7 +26,7 @@ from simtools.simulation.configuration import get_shower_configuration
 from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general
 
-_REDUCED_EVENT_DATA_SUFFIX = _get_product_value("sim_telarray_event_data", "default_suffix")
+_REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 
 
 def _write_reduced_event_list_batch(job_spec):

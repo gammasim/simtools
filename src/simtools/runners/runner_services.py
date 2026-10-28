@@ -3,7 +3,7 @@
 import logging
 
 from simtools.io import io_handler
-from simtools.io.file_type import _get_product_value
+from simtools.io.file_type import product_value
 from simtools.simulation.parameters import SimulationParameters
 
 _logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ _RUNNER_FILE_PLACEMENT = {
 _RUNNER_PRODUCT_IDS = {"sim_telarray_histogram": _SIM_TELARRAY_HISTOGRAM_PRODUCT}
 FILES_AND_PATHS = {
     file_type: {
-        _FILE_SUFFIX: _get_product_value(
+        _FILE_SUFFIX: product_value(
             _RUNNER_PRODUCT_IDS.get(file_type, file_type), "default_suffix"
         ),
         _SUB_DIRECTORY_TYPE: directory_type,

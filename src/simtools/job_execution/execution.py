@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.settings import config
@@ -55,7 +55,7 @@ def submit_jobs(job_specs, options=None):
                 "Submitted %d job(s) with backend %s; manifest: %s",
                 len(jobs),
                 options.backend,
-                submission.work_dir / _get_product_filename("submission_manifest"),
+                submission.work_dir / product_filename("submission_manifest"),
             )
         else:
             logger.info(
@@ -257,7 +257,7 @@ def _load_backend_config(config_value):
 def _write_manifest(submission):
     """Write a durable submission manifest."""
     submission.work_dir.mkdir(parents=True, exist_ok=True)
-    manifest = submission.work_dir / _get_product_filename("submission_manifest")
+    manifest = submission.work_dir / product_filename("submission_manifest")
     temporary = manifest.with_suffix(".tmp")
     temporary.write_text(
         json.dumps(submission.as_dict(), indent=2, default=str) + "\n",

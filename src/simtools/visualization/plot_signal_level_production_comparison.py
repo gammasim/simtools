@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.io import ascii_handler
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.statistics import compare_samples_with_statistics
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_event_level_production_comparison import (
@@ -56,7 +56,7 @@ def plot(metrics_by_telescope, output_path, bins=40, figure_format=None):
         comparison_statistics = _plot_telescope_comparisons(
             metrics, telescope_path, bins, figure_format
         )
-        statistics_file = telescope_path / _get_product_filename("comparison_statistics")
+        statistics_file = telescope_path / product_filename("comparison_statistics")
         ascii_handler.write_data_to_file(comparison_statistics, statistics_file, sort_keys=True)
         statistics_files.append(statistics_file)
     return statistics_files

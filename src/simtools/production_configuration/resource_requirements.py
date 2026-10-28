@@ -9,7 +9,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.production_configuration.job_metadata import get_sim_telarray_event_counts
 from simtools.production_configuration.production_file_selection import (
     _resolve_relative_manifest_path,
@@ -159,7 +159,7 @@ def write_resource_requirements(args_dict, output_directory, plotter):
         resource_table(rows).write(table_file, format="ascii.ecsv", overwrite=True)
         summary = summarize_resource_requirements(rows)
     environments = _execution_environments(rows)
-    json_file = output_directory / _get_product_filename("resource_requirements")
+    json_file = output_directory / product_filename("resource_requirements")
     json_file.write_text(
         json.dumps(
             {
