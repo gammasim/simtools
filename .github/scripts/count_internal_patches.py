@@ -1,10 +1,10 @@
 """Count internal patch targets and MagicMock model readers in unit tests."""
 
+import argparse
 import ast
 from pathlib import Path
 
 TEST_ROOT = Path("tests/unit_tests")
-COUNT_FILE = Path("tools/internal_patch_count.txt")
 
 
 def _is_magicmock(call):
@@ -68,7 +68,11 @@ def _reader_magicmocks(tree):
 
 
 def main():
-    """Fail when the number of internal test patches exceeds its baseline."""
+    """Fail when the number of internal test patches exceeds the allowed maximum."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--max", type=int, required=True, help="Allowed maximum count.")
+    maximum = parser.parse_args().max
+
     patch_count = 0
     reader_count = 0
     for path in TEST_ROOT.rglob("*.py"):
@@ -78,12 +82,12 @@ def main():
         reader_count += _reader_magicmocks(tree)
 
     actual = patch_count + reader_count
-    baseline = int(COUNT_FILE.read_text(encoding="utf-8").strip())
-    if actual > baseline:
+    if actual > maximum:
         raise SystemExit(
-            f"Internal test patches increased: {actual} exceeds recorded count {baseline}."
+            f"Internal test patches increased: {actual} exceeds the allowed maximum {maximum}. "
+            "Use test builders or fakes instead of patching simtools internals."
         )
-    print(actual)
+    print(f"Internal test patches: {actual} (allowed maximum {maximum})")
 
 
 if __name__ == "__main__":

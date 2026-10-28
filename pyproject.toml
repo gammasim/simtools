@@ -198,7 +198,6 @@ exclude = [
   "__init__.py",
   "pyproject.toml",
   "simtools/_version.py",
-  "tools/vulture_whitelist.py",
 ]
 format.indent-style = "space"
 format.quote-style = "double"
@@ -329,6 +328,62 @@ main.min-public-methods = 1
 
 [tool.codespell]
 ignore-words-list = "chec,arrang,livetime,astroid"
+
+[tool.vulture]
+# Names kept deliberately although vulture reports them as unused (dynamic use,
+# test infrastructure, data fields read by callers).
+paths = [ "src/simtools" ]
+ignore_names = [
+  "_check_run_result",
+  "_export_file_parameter_data",
+  "_fill_activity_meta",
+  "_fill_contact_meta",
+  "_fill_context_meta",
+  "_fill_instrument_meta",
+  "_fill_process_meta",
+  "_fill_product_meta",
+  "_interpolate_corsika_limits",
+  "_parse_line",
+  "_plot_xy_heatmap",
+  "_read_query_parameter",
+  "_remove_line_feed",
+  "add_mirrored_options",
+  "area_weight",
+  "AtmosphericTransmissionWriter",
+  "auto_download",
+  "cache_hits",
+  "cache_misses",
+  "check_array_element",
+  "check_array_triggers_name",
+  "check_astropy_unit",
+  "check_astropy_unit_of_length",
+  "check_astropy_unit_of_time",
+  "check_common_particle_name",
+  "create_detailed_parameter_plot",
+  "curved_atmosphere_min_zenith_angle",
+  "ExecutionBackend",
+  "final_percentage_diff",
+  "get_dependency_manifest_digest",
+  "get_list_of_test_configurations",
+  "get_mirrored_option",
+  "GITHUB_BLOB_BASE",
+  "iers_degraded_accuracy",
+  "number_of_telescopes",
+  "peak_timing",
+  "read_legacy_lst_single_pe",
+  "RpolMatrixWriter",
+  "skip_multiple_version_test",
+  "TEST_RESOURCES_DOWNLOADED",
+  "TEST_RESOURCES_GENERATED",
+  "TEST_RESOURCES_STATIC",
+  "use_network",
+  "validate_application_output",
+  "validate_release_tag",
+  "validate_trigger_histograms_file",
+  "X",
+  "Y",
+]
+min_confidence = 60
 
 [tool.pytest]
 ini_options.minversion = "6.0"

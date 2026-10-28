@@ -25,7 +25,7 @@ repos:
     entry: pylint
     language: system
     types: [python]
-    exclude: ^(tests/|tools/vulture_whitelist\.py$)
+    exclude: ^tests/
     args:
       [
         "-rn",  # Only display messages
@@ -40,12 +40,12 @@ repos:
     pass_filenames: false
   - id: vulture
     name: vulture
-    entry: vulture src/simtools tools/vulture_whitelist.py --min-confidence 60
+    entry: vulture
     language: system
     pass_filenames: false
   - id: internal-patch-count
     name: internal patch count
-    entry: python tools/count_internal_patches.py
+    entry: python .github/scripts/count_internal_patches.py --max 1604
     language: system
     pass_filenames: false
 # https://github.com/pre-commit/pre-commit-hooks
