@@ -50,8 +50,9 @@ Each axis where simtools grows has one extension point:
 | --- | --- |
 | Model parameter | schema YAML in `schemas/model_parameters/` |
 | Simulation configuration writer and result reader | see [Simulation formats](simulation_formats.md) |
-| Ray-tracing backend | `ray_tracing/backends/interface.py` |
-| Event-file format | `sim_events/formats/readers.py` |
+| Ray-tracing backend | `RayTracingBackend` Protocol in `ray_tracing/backends/interface.py`; see [Add a ray-tracing backend](extending/ray-tracing-backend.md) |
+| Event-file format | `EventReader` Protocol in `sim_events/formats/readers.py` |
+| Model-repository storage | `ModelStorage` Protocol in `model_repository/storage.py` |
 | Execution backend | `job_execution/backends/registry.py` |
 | Plot | `plot_tables` and `plot_configuration.metaschema.yml` |
 | Application | `ApplicationDefinition` plus the `[project.scripts]` entry |
@@ -77,7 +78,9 @@ names directly and list each change in the changelog.
 ## Test policy
 
 - Unit tests do not use checked-in or downloaded test resources. Generate
-  inputs in `tmp_test_directory` from the packaged schemas.
+  inputs in `tmp_test_directory` from the packaged schemas; reduced-event and
+  trigger-histogram tables come from `tests/unit_tests/builders/tables.py`,
+  and in-memory model repositories from `MemoryStorage`.
 - Mock only true external boundaries: external programs (CORSIKA,
   sim_telarray, container engines, HTCondor), network access, model sources
   (through the shared model-reader fixtures in `tests/unit_tests/conftest.py`),
