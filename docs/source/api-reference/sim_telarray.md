@@ -112,6 +112,13 @@ incomplete contracts and invalid matrix grids before creating a configuration.
    :members:
 ```
 
+## file_inspector
+
+```{eval-rst}
+.. automodule:: simtel.file_inspector
+   :members:
+```
+
 ## simtel_event_reader
 
 (simtel-event-reader-1)=

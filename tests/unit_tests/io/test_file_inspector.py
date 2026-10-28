@@ -10,7 +10,6 @@ from simtools.io import ascii_handler
 from simtools.io.file_inspector import (
     _format_hdf5_report,
     _format_key_value_report,
-    _format_simtel_report,
     _format_table_report,
     _format_text_report,
     _is_truncated,
@@ -139,7 +138,7 @@ def test_inspect_file_reports_simtel_file_size(tmp_path):
     file_path.write_bytes(b"simtel")
 
     with patch(
-        "simtools.io.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
+        "simtools.simtel.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
         return_value=(
             {"corsika_iact_options": "123", "site": "North"},
             {1: {"camera": "LST"}, 2: {"camera": "MST"}},
@@ -163,7 +162,7 @@ def test_inspect_file_formats_simtel_metadata(tmp_path):
     file_path.write_bytes(b"simtel")
 
     with patch(
-        "simtools.io.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
+        "simtools.simtel.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
         return_value=({"site": "North"}, {7: {"camera": "LST"}}),
     ):
         reports = inspect_file(file_path, format_report=True)
@@ -260,21 +259,12 @@ def test_inspect_table_file_formats_truncated_columns(tmp_path):
     assert "Column list truncated." in report
 
 
-def test_inspect_sim_telarray_file_rejects_when_suffix_check_is_overridden_false(tmp_path, mocker):
-    file_path = tmp_path / "run.simtel.zst"
-    file_path.write_bytes(b"simtel")
-    mocker.patch("simtools.io.file_inspector.is_file_type", return_value=False)
-
-    with pytest.raises(ValueError, match="unsupported suffix for sim_telarray inspection"):
-        inspect_sim_telarray_file(file_path)
-
-
 def test_inspect_sim_telarray_file_formats_empty_metadata(tmp_path):
     file_path = tmp_path / "run.simtel.zst"
     file_path.write_bytes(b"simtel")
 
     with patch(
-        "simtools.io.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
+        "simtools.simtel.file_inspector.simtel_io_metadata.read_sim_telarray_metadata",
         return_value=(None, {}),
     ):
         report = inspect_sim_telarray_file(file_path, format_report=True)
@@ -346,18 +336,3 @@ def test_format_helpers_cover_optional_branches(tmp_path):
         }
     )
     assert "- ... output truncated ..." in text_report
-
-    simtel_report = _format_simtel_report(
-        {
-            "file_path": tmp_path / "run.simtel.zst",
-            "file_type": "sim_telarray",
-            "file_size_bytes": 6,
-            "telescope_count": 3,
-            "telescope_ids": [1, 2],
-            "global_metadata": {"site": "North"},
-            "global_metadata_truncated": True,
-            "telescope_ids_truncated": True,
-        }
-    )
-    assert "- ... metadata truncated ..." in simtel_report
-    assert "telescope_ids_truncated: True" in simtel_report
