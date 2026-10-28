@@ -802,27 +802,6 @@ class Simulator:
                         "flasher_photons_at_pixel", flasher_photons
                     )
 
-    def _get_first_corsika_config(self):
-        """
-        Return first instance from list of CORSIKA configurations.
-
-        Most values stored in the CORSIKA configurations are identical,
-        with the exception of the simulation model version dependent parameters.
-
-        Returns
-        -------
-        CorsikaConfig
-            First CORSIKA configuration instance.
-        """
-        try:
-            return (
-                self.corsika_configurations[0]
-                if isinstance(self.corsika_configurations, list)
-                else self.corsika_configurations
-            )
-        except (IndexError, TypeError) as exc:
-            raise ValueError("CORSIKA configuration not found for verification.") from exc
-
     def validate_simulations(self):
         """
         Validate simulations data and metadata.

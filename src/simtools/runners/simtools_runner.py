@@ -705,16 +705,6 @@ def _write_resolved_workflow(
         )
 
 
-def _get_application_log_file(application, app_configuration, counter):
-    """Return log file path for an application executed via run_applications."""
-    if app_configuration.get("log_file") is not None:
-        return app_configuration["log_file"]
-    output_path = app_configuration.get("output_path")
-    if output_path is None:
-        return None
-    return Path(output_path) / f"{application}-{counter:02d}.log"
-
-
 def _get_model_parameter_metadata_file(app_configuration):
     """
     Return expected metadata file for model-parameter submission applications.
