@@ -98,6 +98,8 @@ nitpicky = True
 # targets, so keep type information in the source API while omitting it from
 # generated signatures.
 autodoc_typehints = "none"
+# Optional ray-tracing backend; documented without installing it.
+autodoc_mock_imports = ["obdeect"]
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.core.Unit"),

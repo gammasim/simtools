@@ -249,15 +249,16 @@ def test__add_illuminator_command_options(simulator_instance):
 
         # Verify structure and key values
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
         assert result[0] == "-x 100.0"  # 1.0m -> 100.0cm
         assert result[1] == "-y 200.0"  # 2.0m -> 200.0cm
         assert result[2] == "-z 1200.0"  # ground altitude plus 9.0m tower height
         assert result[3] == "-d 0.1,0.2,0.3"  # pointing vector from _calibration_pointing_direction
         assert result[4] == "-n 1000000"  # flasher_photons
-        assert result[5] == "-s 450"  # wavelength in nm
-        assert result[6] == "-p square:2.0"  # pulse shape
-        assert result[7] == "-a gauss:5.0"  # angular distribution
+        assert result[5] == "-N 1"  # number of events (default)
+        assert result[6] == "-s 450"  # wavelength in nm
+        assert result[7] == "-p square:2.0"  # pulse shape
+        assert result[8] == "-a gauss:5.0"  # angular distribution
 
 
 def test__add_illuminator_command_options_with_custom_position_and_pointing(simulator_instance):
@@ -286,21 +287,23 @@ def test__add_illuminator_command_options_with_custom_position_and_pointing(simu
             "flasher_photons": 2000000,
             "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m],
             "light_source_pointing": [0.5, 0.6, 0.7],
+            "number_of_events": 20,
         }
 
         result = get_light_source_writer(simulator_instance).add_illuminator_command_options()
 
         # Verify custom values are used
         assert isinstance(result, list)
-        assert len(result) == 8
+        assert len(result) == 9
+        assert result[5] == "-N 20"  # xyzls simulates all requested events
         assert result[0] == "-x 500.0"  # 5.0m -> 500.0cm
         assert result[1] == "-y 600.0"  # 6.0m -> 600.0cm
         assert result[2] == "-z 700.0"  # 7.0m -> 700.0cm
         assert result[3] == "-d 0.5,0.6,0.7"  # custom pointing vector
         assert result[4] == "-n 2000000"  # custom flasher_photons
-        assert result[5] == "-s 380"  # wavelength in nm
-        assert result[6] == "-p gauss"  # pulse shape
-        assert result[7] == "-a uniform"  # angular distribution
+        assert result[6] == "-s 380"  # wavelength in nm
+        assert result[7] == "-p gauss"  # pulse shape
+        assert result[8] == "-a uniform"  # angular distribution
 
 
 def test__add_flasher_command_options(simulator_instance):
@@ -674,11 +677,12 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         mock_atmo.assert_called_once_with("/config/dir")
 
     # Test default path (non-flasher)
+    telescope_position_file = Path(tmp_test_directory) / "telpos.txt"
     with (
         patch.object(
             simulator_instance,
             "write_telescope_position_file",
-            return_value=f"{tmp_test_directory}/telpos.txt",
+            return_value=str(telescope_position_file),
         ) as mock_telpos,
         patch.object(
             simulator_instance,
@@ -686,7 +690,7 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             return_value=[1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
         ),
     ):
-        # Default-down pointing: do not use telpos file.
+        # Every pointing uses the model's telescope position and radius.
         simulator_instance.light_emission_config = {
             "light_source_type": "illuminator",
             "light_source_pointing": [0.0, 0.0, -1.0],
@@ -694,8 +698,9 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 "]
-        mock_telpos.assert_not_called()
+        expected = ["-h  2200 ", f"--telpos-file {telescope_position_file}"]
+        assert result == expected
+        assert mock_telpos.call_count == 1
 
         # Non-default pointing: use telpos file.
         simulator_instance.light_emission_config = {
@@ -705,8 +710,8 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         result = get_light_source_writer(simulator_instance).get_site_command(
             "other-app", "/config/dir", mock_altitude
         )
-        assert result == ["-h  2200 ", f"--telpos-file {tmp_test_directory}/telpos.txt"]
-        assert mock_telpos.call_count == 1
+        assert result == expected
+        assert mock_telpos.call_count == 2
 
 
 def test__make_light_emission_script(simulator_instance):

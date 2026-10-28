@@ -355,6 +355,19 @@ def test_get_simulation_software_name_from_parameter_name():
         )
         == "altitude"
     )
+    # Read by obdeect only, never written to the sim_telarray configuration.
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "telescope_structure", software_name=sim_telarray
+        )
+        is None
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "telescope_structure", software_name="obdeect"
+        )
+        == "telescope_structure"
+    )
     assert (
         names.get_simulation_software_name_from_parameter_name(
             "corsika_observation_level", software_name="corsika"
