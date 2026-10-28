@@ -8,6 +8,11 @@ The package is organized in layers. A module may import only from its own or a
 lower layer. Library code never imports `simtools.applications`, and
 production code never imports test helpers.
 
+Import-linter enforces the package layers, and Ruff checks private cross-module
+imports. The import and unused-code allowlists, and the internal test-patch
+count, are ratchets: reduce them as the architecture cleanup proceeds and do
+not add entries or raise the recorded count.
+
 ```text
 5  applications/            thin CLI wrappers
 4  workflows                simulate, production, science_tests, reporting, derive_*
