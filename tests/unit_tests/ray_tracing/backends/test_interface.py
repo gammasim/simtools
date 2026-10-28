@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from inspect import signature
+
 import pytest
 
 from simtools.ray_tracing.backends import interface
@@ -28,3 +30,83 @@ def test_get_backend_obdeect():
     from simtools.ray_tracing.backends.obdeect import ObdeectBackend
 
     assert interface.get_backend("obdeect") is ObdeectBackend
+
+
+@pytest.mark.parametrize(
+    ("backend_name", "class_name", "expected_methods"),
+    [
+        (
+            "sim_telarray",
+            "SimtelBackend",
+            {
+                "simulate": (
+                    "self",
+                    "requests",
+                    "test",
+                    "force",
+                    "compress_photons",
+                    "max_workers",
+                ),
+                "psf_image": (
+                    "self",
+                    "request",
+                    "focal_length",
+                    "containment_fraction",
+                    "use_rx",
+                    "save_photons",
+                ),
+                "incidence_angles": (
+                    "self",
+                    "request",
+                    "work_directory",
+                    "name",
+                    "with_mirrors",
+                    "keep_files",
+                ),
+            },
+        ),
+        (
+            "obdeect",
+            "ObdeectBackend",
+            {
+                "simulate": (
+                    "self",
+                    "requests",
+                    "test",
+                    "force",
+                    "compress_photons",
+                    "max_workers",
+                ),
+                "psf_image": (
+                    "self",
+                    "request",
+                    "focal_length",
+                    "containment_fraction",
+                    "use_rx",
+                    "save_photons",
+                ),
+                "incidence_angles": (
+                    "self",
+                    "request",
+                    "work_directory",
+                    "name",
+                    "with_mirrors",
+                    "keep_files",
+                ),
+                "camera_photons": ("self", "request"),
+            },
+        ),
+    ],
+)
+def test_backend_contract(backend_name, class_name, expected_methods):
+    if backend_name == "obdeect":
+        pytest.importorskip("obdeect")
+    backend = interface.get_backend(backend_name)
+    assert backend.__name__ == class_name
+    for method_name, expected_parameters in expected_methods.items():
+        assert tuple(signature(getattr(backend, method_name)).parameters) == expected_parameters
+
+
+def test_get_backend_unknown_name():
+    with pytest.raises(ValueError, match="sim_telarray, obdeect"):
+        interface.get_backend("unknown")

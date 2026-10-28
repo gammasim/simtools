@@ -11,6 +11,7 @@ This section outlines how to contribute effectively to the `simtools` project.
 - [Pull Requests](pull_requests.md): How to open a PR via [GitHub](https://github.com/gammasim/simtools/pulls).
 - [Documentation](documentation.md): Contributing to user and developer documentation.
 - [Simulation formats](simulation_formats.md): Add configuration writers and result readers.
+- [Ray-tracing backend](extending/ray-tracing-backend.md): Add a ray-tracing backend.
 - [Testing](testing.md): Unit, integration, and science tests.
 
 ## Automatic Processes
@@ -43,6 +44,7 @@ pull_requests.md
 documentation.md
 testing.md
 simulation_formats.md
+extending/ray-tracing-backend.md
 continuous_integration.md
 simtools_build_images.md
 dependency_versions.md
