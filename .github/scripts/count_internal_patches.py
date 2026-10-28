@@ -43,6 +43,7 @@ def _is_internal_patch(call, simtools_names):
     if not (
         name == "patch"
         or name.endswith(".patch")
+        or name == "patch.object"
         or name.endswith(".patch.object")
         or name.endswith(".setattr")
     ):

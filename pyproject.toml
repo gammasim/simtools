@@ -240,6 +240,7 @@ lint.ignore = [
 lint.explicit-preview-rules = true
 lint.per-file-ignores."**/tests/**" = [
   "D",
+  "PLC2701", # unit tests may test private helpers of the module under test
 ]
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
