@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from simtools.camera import trace_analysis as trace
+from simtools.histogram.histogram import rebin_counts
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_METADATA_TABLE,
@@ -310,17 +311,10 @@ def _add_histogram(target, quantity, counts, bin_edges):
     if merged_edges.size < 2:
         raise ValueError(f"Inconsistent bin edges for quantity '{quantity}'.")
     target[quantity] = (
-        _rebin_histogram(existing_counts, existing_edges, merged_edges)
-        + _rebin_histogram(np.asarray(counts, dtype=float), bin_edges, merged_edges),
+        rebin_counts(existing_counts, existing_edges, merged_edges)
+        + rebin_counts(np.asarray(counts, dtype=float), bin_edges, merged_edges),
         merged_edges,
     )
-
-
-def _rebin_histogram(counts, source_edges, target_edges):
-    """Approximate histogram rebinning by projecting source-bin centers onto target edges."""
-    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
-    rebinned, _ = np.histogram(centers, bins=target_edges, weights=counts)
-    return rebinned
 
 
 def _accumulate_topology_counts_for_reference(topology_rows, accumulators):

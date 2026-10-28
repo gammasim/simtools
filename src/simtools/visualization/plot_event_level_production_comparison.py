@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
+from simtools.histogram.histogram import compute_bin_edges, normalized_counts, rebin_counts
 from simtools.io import ascii_handler, io_handler
 from simtools.io.file_type import product_filename
 from simtools.statistics import (
@@ -785,22 +786,6 @@ def _plot_triggered_vs_quantity(
     )
 
 
-def _get_bin_edges(values, x_scale, bins):
-    """Return robust bin edges for the given values."""
-    if len(values) == 0:
-        return np.linspace(0.0, 1.0, bins + 1)
-
-    min_value = float(np.min(values))
-    max_value = float(np.max(values))
-    if np.isclose(min_value, max_value):
-        max_value = min_value + 1.0
-
-    if x_scale == "log":
-        min_value = max(min_value, np.finfo(float).tiny)
-        return np.logspace(np.log10(min_value), np.log10(max_value), bins + 1)
-    return np.linspace(min_value, max_value, bins + 1)
-
-
 def _get_quantity_arrays(metrics, quantity_name):
     """Return (simulated, triggered) arrays for a named quantity.
 
@@ -962,8 +947,8 @@ def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scal
         all_simulated_values.append(np.asarray(simulated))
 
     if len(all_simulated_values) == 0:
-        return _get_bin_edges(np.array([]), x_scale=x_scale, bins=bins)
-    return _get_bin_edges(np.concatenate(all_simulated_values), x_scale=x_scale, bins=bins)
+        return compute_bin_edges(np.array([]), scale=x_scale, bins=bins)
+    return compute_bin_edges(np.concatenate(all_simulated_values), scale=x_scale, bins=bins)
 
 
 def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
@@ -978,28 +963,7 @@ def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
     source_edges = np.asarray(source_edges, dtype=float)
     if np.array_equal(source_edges, bin_edges):
         return counts, None
-    return _rebin_histogram_counts(counts, source_edges, bin_edges), None
-
-
-def _rebin_histogram_counts(counts, source_edges, target_edges):
-    """Rebin counts by distributing each source bin over its overlapping target bins.
-
-    Counts are assumed to be uniformly distributed within each source bin. This
-    preserves the total count and avoids assigning a complete source bin to one
-    target bin when the target edges split it.
-    """
-    rebinned = np.zeros(len(target_edges) - 1, dtype=float)
-    for count, source_low, source_high in zip(counts, source_edges[:-1], source_edges[1:]):
-        source_width = source_high - source_low
-        target_start = np.searchsorted(target_edges, source_low, side="right") - 1
-        target_stop = np.searchsorted(target_edges, source_high, side="left")
-        for target_index in range(max(0, target_start), min(len(rebinned), target_stop + 1)):
-            overlap = min(source_high, target_edges[target_index + 1]) - max(
-                source_low, target_edges[target_index]
-            )
-            if overlap > 0:
-                rebinned[target_index] += count * overlap / source_width
-    return rebinned
+    return rebin_counts(counts, source_edges, bin_edges), None
 
 
 def _plot_telescope_participation(metrics_per_production, output_path, figure_format=None):
@@ -1327,22 +1291,6 @@ def _plot_series(
     return line
 
 
-def _normalized_histogram_values(counts, cumulative=False):
-    """Return normalized bin values and Poisson errors for histogram counts."""
-    counts = np.asarray(counts, dtype=float)
-    total = counts.sum()
-    if total <= 0:
-        zeros = np.zeros_like(counts, dtype=float)
-        return zeros, zeros
-    if cumulative:
-        values = np.cumsum(counts) / total
-        errors = np.zeros_like(values, dtype=float)
-        return values, errors
-    values = counts / total
-    errors = np.sqrt(counts) / total
-    return values, errors
-
-
 def _plot_distribution_series(
     ax,
     bin_edges,
@@ -1354,7 +1302,7 @@ def _plot_distribution_series(
     linestyle="-",
 ):
     """Plot one normalized distribution series and optional Poisson error bars."""
-    values, errors = _normalized_histogram_values(counts, cumulative=cumulative)
+    values, errors = normalized_counts(counts, cumulative=cumulative)
     artist = _plot_series(
         ax,
         bin_edges,
