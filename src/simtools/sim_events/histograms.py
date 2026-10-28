@@ -1111,11 +1111,6 @@ class EventDataHistograms:
             return np.cumsum(hist[::-1])[::-1]
         return np.cumsum(hist)
 
-    def _calculate_cumulative_2d(self, hist, reverse, axis=None):
-        """Calculate cumulative distribution for 2D histogram."""
-        axis = axis if axis is not None else 1
-        return self._apply_cumsum_along_axis(hist, axis, reverse)
-
     def _apply_cumsum_along_axis(self, hist, axis, reverse):
         """Apply cumulative sum along the specified axis of a 2D histogram."""
 
@@ -1123,46 +1118,6 @@ class EventDataHistograms:
             return np.cumsum(arr[::-1])[::-1] if reverse else np.cumsum(arr)
 
         return np.apply_along_axis(cumsum_func, axis, hist)
-
-    @staticmethod
-    def rebin_2d_histogram(hist, x_bins, y_bins, rebin_factor=2):
-        """
-        Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.
-
-        Parameters
-        ----------
-        hist : np.ndarray
-            Original 2D histogram data
-        x_bins : np.ndarray
-            Original x-axis bin edges (preserved)
-        y_bins : np.ndarray
-            Original y-axis (energy) bin edges
-        rebin_factor : int, optional
-            Factor by which to reduce the number of bins in the energy dimension
-            Default is 2 (merge every 2 bins)
-
-        Returns
-        -------
-        tuple
-            (re-binned_hist, x_bins, re-binned_y_bins)
-        """
-        if rebin_factor <= 1:
-            return hist, x_bins, y_bins
-
-        x_size = hist.shape[0]
-        new_y_size = hist.shape[1] // rebin_factor
-
-        new_hist = np.zeros((x_size, new_y_size), dtype=float)
-
-        for i in range(x_size):
-            for j in range(new_y_size):
-                y_start = j * rebin_factor
-                y_end = (j + 1) * rebin_factor
-                new_hist[i, j] = np.sum(hist[i, y_start:y_end])
-
-        new_y_bins = y_bins[::rebin_factor]
-
-        return new_hist, x_bins, new_y_bins
 
     def print_summary(self):
         """

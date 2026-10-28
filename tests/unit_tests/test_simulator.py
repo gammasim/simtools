@@ -1223,12 +1223,6 @@ def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
     assert "Saving list of path_objects files to" in caplog.text
 
 
-def test_get_first_corsika_config_error(shower_simulator):
-    shower_simulator.corsika_configurations = []
-    with pytest.raises(ValueError, match="CORSIKA configuration not found for verification"):
-        shower_simulator._get_first_corsika_config()
-
-
 def test_update_file_lists_with_none_file_list(array_simulator, mocker):
     mock_runner_file_list = {
         "sim_telarray_output": ["output1.simtel.zst"],

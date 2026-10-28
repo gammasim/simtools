@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 from simtools.production_configuration.simulation_jobs import (
     MAX_SHOWERS_PER_RUN_ARGUMENT,
     NUMBER_OF_RUNS_ARGUMENT,
@@ -35,9 +34,6 @@ from simtools.production_configuration.simulation_jobs import (
     calculate_scaled_showers_per_run,
     calculate_zenith_scaled_showers_per_run,
     generate_job_grid,
-    get_core_scatter_max_for_zenith_angle,
-    get_energy_range_for_zenith_angle,
-    get_viewcone_max_for_zenith_angle,
     normalize_energy_ranges,
     normalize_grid_axes,
     renumber_job_rows,
@@ -522,134 +518,6 @@ def test_normalize_energy_ranges_accepts_quantity_pair_list():
     normalized = normalize_energy_ranges([30 * u.GeV, 100 * u.GeV])
 
     assert normalized == [(30 * u.GeV, 100 * u.GeV)]
-
-
-def test_get_energy_range_for_zenith_angle_without_lookup_returns_configured_pair():
-    energy_range = (30 * u.GeV, 100 * u.GeV)
-
-    assert get_energy_range_for_zenith_angle(20 * u.deg, energy_range, None) == energy_range
-
-
-@patch.object(CorsikaLimitsLookup, "__init__", return_value=None)
-@patch.object(
-    CorsikaLimitsLookup,
-    "interpolate_point",
-    return_value={
-        "lower_energy_limit": 0.2,
-        "upper_radius_limit": 100.0,
-        "viewcone_radius": 2.0,
-    },
-)
-def test_get_energy_range_for_zenith_angle_wraps_lookup_path_and_skips_step(
-    mock_interpolate_point,
-    mock_init,
-):
-
-    energy_range = get_energy_range_for_zenith_angle(
-        20 * u.deg,
-        (30 * u.GeV, 100 * u.GeV),
-        "limits.ecsv",
-    )
-
-    assert energy_range is None
-    mock_init.assert_called_once_with("limits.ecsv")
-    mock_interpolate_point.assert_called_once()
-
-
-@patch.object(CorsikaLimitsLookup, "__init__", return_value=None)
-@patch.object(
-    CorsikaLimitsLookup,
-    "interpolate_point",
-    return_value={
-        "lower_energy_limit": 0.01,
-        "upper_radius_limit": 100.0,
-        "viewcone_radius": 2.0,
-    },
-)
-def test_get_energy_range_for_zenith_angle_keeps_range_below_threshold(
-    mock_interpolate_point,
-    mock_init,
-):
-
-    energy_range = get_energy_range_for_zenith_angle(
-        20 * u.deg,
-        (30 * u.GeV, 100 * u.GeV),
-        "limits.ecsv",
-    )
-
-    assert energy_range == (30 * u.GeV, 100 * u.GeV)
-    mock_init.assert_called_once_with("limits.ecsv")
-    mock_interpolate_point.assert_called_once()
-
-
-def test_get_energy_range_for_zenith_angle_clips_threshold():
-    corsika_limits = CorsikaLimitsLookup("limits.ecsv")
-    corsika_limits.interpolate_point = Mock(
-        return_value={
-            "lower_energy_limit": 0.05,
-            "upper_radius_limit": 100.0,
-            "viewcone_radius": 2.0,
-        }
-    )
-
-    energy_range = get_energy_range_for_zenith_angle(
-        20 * u.deg,
-        (30 * u.GeV, 100 * u.GeV),
-        corsika_limits,
-    )
-
-    assert_quantity_allclose(energy_range[0], 50 * u.GeV)
-    assert_quantity_allclose(energy_range[1], 100 * u.GeV)
-
-
-def test_get_core_scatter_max_for_zenith_angle_clips_value():
-    corsika_limits = CorsikaLimitsLookup("limits.ecsv")
-    corsika_limits.interpolate_point = Mock(
-        return_value={
-            "lower_energy_limit": 0.01,
-            "upper_radius_limit": 100.0,
-            "viewcone_radius": 2.0,
-        }
-    )
-
-    scatter_max = get_core_scatter_max_for_zenith_angle(
-        20 * u.deg,
-        [10, 150 * u.m],
-        corsika_limits,
-    )
-
-    assert scatter_max == 100 * u.m
-
-
-def test_get_core_scatter_max_for_zenith_angle_without_lookup_uses_configured_max():
-    assert get_core_scatter_max_for_zenith_angle(20 * u.deg, [10, 150 * u.m], None) == 150 * u.m
-
-
-def test_get_viewcone_max_for_zenith_angle_without_lookup_uses_configured_max():
-    assert get_viewcone_max_for_zenith_angle(20 * u.deg, [0 * u.deg, 5 * u.deg], None) == 5 * u.deg
-
-
-@patch.object(CorsikaLimitsLookup, "__init__", return_value=None)
-@patch.object(
-    CorsikaLimitsLookup,
-    "interpolate_point",
-    return_value={
-        "lower_energy_limit": 0.01,
-        "upper_radius_limit": 100.0,
-        "viewcone_radius": 2.0,
-    },
-)
-def test_get_viewcone_max_for_zenith_angle_uses_lookup_path(mock_interpolate_point, mock_init):
-
-    viewcone_max = get_viewcone_max_for_zenith_angle(
-        20 * u.deg,
-        [0 * u.deg, 5 * u.deg],
-        "limits.ecsv",
-    )
-
-    assert viewcone_max == 2 * u.deg
-    mock_init.assert_called_once_with("limits.ecsv")
-    mock_interpolate_point.assert_called_once()
 
 
 def test_calculate_log_energy_midpoint_returns_geometric_mean():

@@ -1,8 +1,6 @@
 """Shared helpers for production workflows based on reduced event-data files."""
 
-import re
 from collections import Counter, defaultdict
-from pathlib import Path
 
 import numpy as np
 
@@ -12,74 +10,7 @@ from simtools.layout.array_layout_utils import (
 )
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.utils import names
-from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
-
-
-def get_production_directory_name(production_pattern, existing_names=None):
-    """
-    Generate a readable, filesystem-safe production directory name.
-
-    Parameters
-    ----------
-    production_pattern : str
-        Glob pattern identifying one production input.
-    existing_names : set[str] or None
-        Existing directory names already assigned in this run.
-
-    Returns
-    -------
-    str
-        Safe directory name.
-    """
-
-    def _sanitize(name):
-        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
-        return re.sub(r"_+", "_", name).strip("_")
-
-    pattern_path = Path(production_pattern)
-    stem_name = _sanitize(pattern_path.stem)
-    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
-    readable_name = stem_name or parent_name or "production"
-    base_name = f"production_{readable_name}"
-
-    if existing_names is None:
-        return base_name
-    if base_name not in existing_names:
-        return base_name
-
-    candidate_name = f"{base_name}_{get_uuid()}"
-    while candidate_name in existing_names:
-        candidate_name = f"{base_name}_{get_uuid()}"
-    return candidate_name
-
-
-def build_production_subdirectories(production_patterns, output_dir):
-    """
-    Build and create per-production output subdirectories when needed.
-
-    Parameters
-    ----------
-    production_patterns : list[str]
-        Ordered production patterns processed by the workflow.
-    output_dir : pathlib.Path
-        Root output directory.
-
-    Returns
-    -------
-    dict[str, pathlib.Path]
-        Mapping of production pattern to output subdirectory.
-    """
-    production_subdirs = {}
-    used_subdir_names = set()
-    for production_pattern in production_patterns:
-        subdir_name = get_production_directory_name(production_pattern, used_subdir_names)
-        used_subdir_names.add(subdir_name)
-        output_subdir = output_dir / subdir_name
-        Path(output_subdir).mkdir(parents=True, exist_ok=True)
-        production_subdirs[production_pattern] = output_subdir
-
-    return production_subdirs
 
 
 def resolve_telescope_configs(args_dict):

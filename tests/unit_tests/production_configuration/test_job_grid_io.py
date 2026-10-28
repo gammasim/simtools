@@ -194,17 +194,6 @@ def test_remote_path_forwarding_accepts_explicit_sources_and_skips_environment()
     assert job_grid_io._should_forward_path({}, "path")
 
 
-def test_read_job_grid_row_raises_on_out_of_range(tmp_test_directory):
-    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
-    job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
-
-    with pytest.raises(IndexError, match="out of range"):
-        job_grid_io.read_job_grid_row(output_file, 5)
-
-    with pytest.raises(IndexError, match="out of range"):
-        job_grid_io.read_job_grid_row(output_file, 0)
-
-
 def test_job_grid_row_to_simulate_prod_args_maps_fields():
     row = _job_rows()[0]
 

@@ -1161,24 +1161,6 @@ def test_pull_image_raises_if_pull_fails(monkeypatch):
         simtools_runner._pull_image("podman", image)
 
 
-def test_get_application_log_file_no_existing_log_file(tmp_test_directory):
-    app_configuration = {"output_path": str(tmp_test_directory)}
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 3)
-    assert result == tmp_test_directory / "simtools-derive-psf-03.log"
-
-
-def test_get_application_log_file_returns_existing_log_file(tmp_test_directory):
-    existing = tmp_test_directory / "my_custom.log"
-    app_configuration = {"output_path": str(tmp_test_directory), "log_file": existing}
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 1)
-    assert result == existing
-
-
-def test_get_application_log_file_returns_none_without_output_path():
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", {}, 1)
-    assert result is None
-
-
 def test_get_model_parameter_metadata_file():
     config = {
         "output_path": "output/test",

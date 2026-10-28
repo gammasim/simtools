@@ -31,7 +31,6 @@ from simtools.production_configuration.job_grid_summary import (
 )
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
-from simtools.utils.value_conversion import get_value_as_quantity
 
 logger = logging.getLogger(__name__)
 
@@ -493,62 +492,6 @@ def normalize_energy_ranges(energy_range):
 
     raise ValueError(
         "energy_range must be one pair (e_min, e_max) or a list of (e_min, e_max) pairs."
-    )
-
-
-def get_energy_range_for_zenith_angle(
-    zenith_angle, energy_range_pair, corsika_limits, azimuth_angle=None, nsb_level=1.0
-):
-    """
-    Return a zenith-dependent energy range pair or ``None`` to skip the step.
-
-    The lower energy bound is clipped to the lookup-table threshold for the
-    requested direction. If the threshold exceeds the configured upper bound,
-    the simulation step is skipped.
-    """
-    interpolated_limits = _interpolate_corsika_limits(
-        corsika_limits, zenith_angle, azimuth_angle, nsb_level
-    )
-    if interpolated_limits is None:
-        return energy_range_pair
-    return _clip_energy_range_from_threshold(
-        energy_range_pair,
-        get_value_as_quantity(interpolated_limits["lower_energy_limit"], u.TeV),
-    )
-
-
-def get_core_scatter_max_for_zenith_angle(
-    zenith_angle, core_scatter, corsika_limits, azimuth_angle=None, nsb_level=1.0
-):
-    """
-    Return zenith-dependent max core-scatter value.
-
-    The lookup-table scatter radius is treated as an upper limit and therefore
-    clipped against the user-provided maximum value.
-    """
-    interpolated_limits = _interpolate_corsika_limits(
-        corsika_limits, zenith_angle, azimuth_angle, nsb_level
-    )
-    if interpolated_limits is None:
-        return core_scatter[1]
-    return _clip_max_quantity(
-        core_scatter[1],
-        get_value_as_quantity(interpolated_limits["upper_radius_limit"], u.m),
-    )
-
-
-def get_viewcone_max_for_zenith_angle(
-    zenith_angle, view_cone, corsika_limits, azimuth_angle=None, nsb_level=1.0
-):
-    """Return zenith-dependent max viewcone value."""
-    interpolated_limits = _interpolate_corsika_limits(
-        corsika_limits, zenith_angle, azimuth_angle, nsb_level
-    )
-    if interpolated_limits is None:
-        return view_cone[1]
-    return _clip_max_quantity(
-        view_cone[1],
-        get_value_as_quantity(interpolated_limits["viewcone_radius"], u.deg),
     )
 
 
