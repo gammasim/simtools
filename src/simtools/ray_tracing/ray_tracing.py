@@ -427,7 +427,7 @@ class RayTracing:
         photons = self._photons_per_instance(test)
         seeds = ()
         if for_simulation:
-            seeds = self._instance_seeds(single_instance=test or photons is not None)
+            seeds = self._instance_seeds(single_instance=test)
         return [
             self._request(off_x, off_y, mirror_number, photons or 100000, seeds, for_simulation)
             for off_x, off_y in self.off_axis_angle
@@ -471,8 +471,8 @@ class RayTracing:
     def _instance_seeds(self, single_instance=False):
         """(Instrument seed, simulation seed) of each random instrument instance.
 
-        A single instance in single-mirror mode, for a given number of photons, or
-        if ``single_instance`` is set; otherwise ``random_instrument_instances``.
+        A single instance in single-mirror mode or if ``single_instance`` is set (test
+        mode); otherwise ``random_instrument_instances``.
         Both backends run one simulation per instance with these seeds.
         """
         instances = settings.config.args.get(

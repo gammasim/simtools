@@ -705,7 +705,7 @@ def backend(ray_tracing_lst, mocker):
 
 @pytest.mark.parametrize(
     ("test", "photon_count", "photons_per_instance", "instances"),
-    [(False, None, 100000, 20), (True, None, 5000, 1), (False, 12345, 12345, 1)],
+    [(False, None, 100000, 20), (True, None, 5000, 1), (False, 12345, 12345, 20)],
 )
 def test_simulate_requests(
     ray_tracing_lst, backend, mocker, test, photon_count, photons_per_instance, instances

@@ -1305,3 +1305,12 @@ def test_write_camera_photons(
     # Single mirror: frame turned about x; dual mirror: camera frame (rotated by 90 deg).
     expected = (10.0, -20.0) if mirror_class == 0 else (20.0, -10.0)
     assert (bunches["x"][0], bunches["y"][0]) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("photons", "events", "expected"),
+    [(500, 3, (500, 500, 500)), ([1000, 2000], [2, 1], (1000, 1000, 2000))],
+)
+def test_photons_per_pulse(simulator_instance, photons, events, expected):
+    simulator_instance.light_emission_config = {FLASHER_PHOTONS: photons, NUMBER_OF_EVENTS: events}
+    assert simulator_instance._photons_per_pulse() == expected

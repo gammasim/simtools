@@ -102,6 +102,12 @@ def test_trace_star(toy_telescope):
     assert first.document["provenance"]["telescope"] == "TOY-01"
 
 
+def test_unknown_parameter_change_is_rejected(toy_telescope):
+    tracer = ObdeectRayTracer(toy_telescope)
+    with pytest.raises(ValueError, match="has no record in the telescope model"):
+        tracer.optical_model(20.0, 1, {"no_such_parameter": 1})
+
+
 def test_perfect_and_single_mirror(toy_telescope):
     tracer = ObdeectRayTracer(toy_telescope)
     perfect = parameter_changes.PERFECT_MIRROR

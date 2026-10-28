@@ -91,7 +91,10 @@ class ObdeectRayTracer:
         }
         for name, value in changes.items():
             if name not in records:
-                continue
+                model = f"{self.telescope_model.name} ({self.telescope_model.model_version})"
+                raise ValueError(
+                    f"Ray-tracing change of '{name}' has no record in the telescope model {model}"
+                )
             if records[name].get("file"):
                 files[name] = Path(value)
                 value = Path(value).name

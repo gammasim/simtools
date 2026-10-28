@@ -377,6 +377,11 @@ class SimulatorLightEmission(SimtelRunner):
             run_number=self.light_emission_config.get(RUN_NUMBER) or 1,
         )
 
+    def _photons_per_pulse(self):
+        """Return the photons emitted in each light pulse (one entry per event)."""
+        events, photons = self.build_flasher_event_and_photon_sequences()
+        return tuple(n for count, n in zip(events, photons) for _ in range(count))
+
     def _flasher_request(self, source, level_m):
         """Flasher light, straight from the flasher to the camera (as ff-1m).
 
@@ -398,11 +403,10 @@ class SimulatorLightEmission(SimtelRunner):
             .value,
             self.telescope_model.get_parameter_value("camera_body_shape"),
         )
-        events, photons = self.build_flasher_event_and_photon_sequences()
         request = LightSourceRequest(
             position_m=(x, y, z),
             axis=(0.0, 0.0, 1.0),
-            photons_per_pulse=tuple(n for count, n in zip(events, photons) for _ in range(count)),
+            photons_per_pulse=self._photons_per_pulse(),
             telescope_zenith=0.0,
             inside_telescope=True,
             camera_radius_m=radius,
@@ -447,8 +451,7 @@ class SimulatorLightEmission(SimtelRunner):
             axis=tuple(
                 ground_direction_to_telescope_frame(pointing / np.linalg.norm(pointing), theta, phi)
             ),
-            photons_per_pulse=(float(self.light_emission_config[FLASHER_PHOTONS]),)
-            * int(self.light_emission_config.get(NUMBER_OF_EVENTS) or 1),
+            photons_per_pulse=self._photons_per_pulse(),
             telescope_zenith=theta,
             **source,
         )
