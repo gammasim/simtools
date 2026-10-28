@@ -7,6 +7,9 @@ errors. With ``--shadowing``, the telescope structure is coloured by the light e
 element stops on its own; this needs the optional obdeect package.
 """
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.model.telescope_model import TelescopeModel
@@ -37,6 +40,12 @@ _ARGUMENTS = (
         type=int,
         default=11,
     ),
+    cli.ArgumentDefinition(
+        "telescope_structure_file",
+        help="ECSV file defining the telescope structure (overrides the model file).",
+        type=Path,
+        default=None,
+    ),
 )
 
 
@@ -59,24 +68,43 @@ def main():
     app_context = APPLICATION.start()
     args = app_context.args
     label = "plot_telescope_structure"
-    tel_model = TelescopeModel(
-        site=args["site"],
-        telescope_name=args["telescope"],
-        model_version=args["model_version"],
-        label=label,
-        model_reader=app_context.model_reader,
-    )
-    tel_model.export_model_files()
-    geometry = structure.telescope_geometry(tel_model)
-    shares = None
-    if args["shadowing"]:
-        shares = structure.shadowing_shares(
-            tel_model, args["zenith_angle"], args["photons"], args["seed"]
+    with TemporaryDirectory(prefix="simtools-plot-telescope-structure-") as model_directory:
+        tel_model = TelescopeModel(
+            site=args["site"],
+            telescope_name=args["telescope"],
+            model_version=args["model_version"],
+            label=label,
+            model_reader=app_context.model_reader,
+            model_directory=model_directory,
         )
-    output_dir = app_context.io_handler.get_output_directory()
-    structure.plot_telescope_structure(
-        geometry, output_dir.joinpath(f"{label}_{tel_model.name}"), shares
-    )
+        parameters = tel_model.parameters
+        model_files = {}
+        for parameter in ("mirror_list", "telescope_structure"):
+            record = parameters.get(parameter)
+            if record and record.get("value"):
+                model_files[parameter] = record
+        if args["telescope_structure_file"] is not None:
+            structure_parameter = parameters.get("telescope_structure", {"unit": None})
+            parameters["telescope_structure"] = {
+                **structure_parameter,
+                "value": str(args["telescope_structure_file"].resolve()),
+            }
+            model_files.pop("telescope_structure", None)
+        if model_files:
+            tel_model.model_reader.export_model_files(
+                parameters=model_files,
+                dest=tel_model.config_file_directory,
+            )
+        geometry = structure.telescope_geometry(tel_model)
+        shares = None
+        if args["shadowing"]:
+            shares = structure.shadowing_shares(
+                tel_model, args["zenith_angle"], args["photons"], args["seed"]
+            )
+        output_dir = app_context.io_handler.get_output_directory()
+        structure.plot_telescope_structure(
+            geometry, output_dir.joinpath(f"{label}_{tel_model.name}"), shares
+        )
 
 
 if __name__ == "__main__":
