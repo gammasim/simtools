@@ -481,15 +481,9 @@ def test_plot_histogram_invalid_key(ray_tracing_lst):
 
 
 def test_plot_valid_key(ray_tracing_lst, mocker):
-    mock_visualize_plot_table = mocker.patch(
-        "simtools.ray_tracing.ray_tracing.visualize.plot_table"
-    )
-    mock_plot = mock_visualize_plot_table.return_value
     mock_generate_file_name = mocker.patch.object(
         ray_tracing_lst, "_generate_file_name", return_value="plot_file.pdf"
     )
-    mock_mkdir = mocker.patch("pathlib.Path.mkdir")
-    mock_savefig = mocker.patch.object(mock_plot, "savefig")
 
     ray_tracing_lst._results = QTable(
         {
@@ -504,16 +498,12 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
 
     ray_tracing_lst.plot(key="psf_cm", save=True)
 
-    mock_visualize_plot_table.assert_called_once()
     mock_generate_file_name.assert_called_once_with(
         file_type="ray_tracing",
         suffix=".pdf",
         extra_label="psf_cm",
     )
-    mock_mkdir.assert_called_once_with(exist_ok=True)
-    mock_savefig.assert_called_once_with(
-        ray_tracing_lst.output_directory.joinpath("figures").joinpath("plot_file.pdf")
-    )
+    assert ray_tracing_lst.output_directory.joinpath("figures", "plot_file.pdf").exists()
 
 
 def test_plot_effective_focal_length_includes_error_column(ray_tracing_lst, mocker):

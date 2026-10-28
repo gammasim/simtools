@@ -325,11 +325,11 @@ def test_report_modes_keep_identical_scalar_statistics(tmp_test_directory):
 
 def test_pdf_pages_are_closed_immediately_and_labels_are_retained(tmp_test_directory):
     output = Path(tmp_test_directory) / "streamed.pdf"
-    with plot_event_level_production_comparison._pdf_report(output) as report:
+    with plot_event_level_production_comparison.pdf_report(output) as report:
         for label in (_FIRST, _SECOND):
             figure = plot_event_level_production_comparison.plt.figure()
             figure.set_label(label)
-            report.append(figure)
+            report.add(figure)
             assert not plot_event_level_production_comparison.plt.fignum_exists(figure.number)
         assert report.page_labels == [_FIRST, _SECOND]
         assert len(report) == 2
@@ -338,7 +338,7 @@ def test_pdf_pages_are_closed_immediately_and_labels_are_retained(tmp_test_direc
 
 def test_empty_pdf_report_does_not_create_an_output(tmp_test_directory):
     output = Path(tmp_test_directory) / "unused" / "report.pdf"
-    with plot_event_level_production_comparison._pdf_report(output) as report:
+    with plot_event_level_production_comparison.pdf_report(output) as report:
         assert len(report) == 0
     assert not output.exists()
 

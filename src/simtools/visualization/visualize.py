@@ -4,6 +4,7 @@
 import logging
 import re
 from collections import OrderedDict
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 
@@ -704,6 +705,53 @@ def save_figure(
         plt.close(fig)
 
 
+class _PdfReport:
+    """Write PDF pages and close each figure after it is appended."""
+
+    def __init__(self, path):
+        path = Path(path).absolute()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._document = pdf_backend.PdfPages(path.as_posix())
+        self.page_labels = []
+
+    def add(self, fig):
+        """Append a figure as a page and close it."""
+        try:
+            fig.tight_layout()
+            self._document.savefig(fig)
+            self.page_labels.append(fig.get_label())
+        finally:
+            plt.close(fig)
+
+    def __len__(self):
+        return len(self.page_labels)
+
+    def close(self):
+        """Close the PDF document."""
+        self._document.close()
+
+
+@contextmanager
+def pdf_report(path):
+    """Write figures to a multi-page PDF, closing each figure after it is added.
+
+    Parameters
+    ----------
+    path : pathlib.Path or str
+        Destination PDF path.
+
+    Yields
+    ------
+    _PdfReport
+        Report object with an ``add(fig)`` method.
+    """
+    report = _PdfReport(path)
+    try:
+        yield report
+    finally:
+        report.close()
+
+
 def convert_png_to_palette(png_file):
     """
     Convert a PNG file to an optimized 256-color palette image.
@@ -726,25 +774,3 @@ def convert_png_to_palette(png_file):
     palette_image.save(buffer, format="PNG", optimize=True)
     if buffer.tell() < png_file.stat().st_size:
         png_file.write_bytes(buffer.getvalue())
-
-
-def save_figures_to_single_document(figs, output_file_name, close=False):
-    """
-    Save multiple figures to a single PDF document.
-
-    Parameters
-    ----------
-    figs: iterable
-        Matplotlib figures to save, optionally generated one at a time.
-    output_file_name: Path, str
-        PDF file name
-    close : bool, optional
-        Close each figure after saving. Defaults to False.
-    """
-    _logger.info(f"Saving figures to {output_file_name}")
-    with pdf_backend.PdfPages(Path(output_file_name).absolute().as_posix()) as pdf_pages:
-        for fig in figs:
-            fig.tight_layout()
-            pdf_pages.savefig(fig)
-            if close:
-                plt.close(fig)

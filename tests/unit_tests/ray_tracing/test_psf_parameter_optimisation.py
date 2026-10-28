@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import tempfile
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -549,11 +550,9 @@ def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
     )
 
     with (
-        patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
         patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
     ):
         mock_pages = MagicMock()
-        mock_pdf.return_value = mock_pages
 
         optimizer._create_step_plot(mock_pages, current_params, 3.5, 0.1, 0.8, sample_data)
 
@@ -597,13 +596,11 @@ def test__create_final_plot(optimizer, sample_data):
     data_to_plot = optimizer.data_to_plot
 
     with (
-        patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
         patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_rmsd") as mock_rmsd,
     ):
         mock_pages = MagicMock()
-        mock_pdf.return_value = mock_pages
         mock_sim.return_value = (3.5, 0.08, 0.9, sample_data)
         mock_rmsd.return_value = 0.05
 
@@ -642,8 +639,6 @@ def test__create_final_plot(optimizer, sample_data):
             second_metric=0.08,  # ks_stat from mock_sim
         )
 
-        mock_pages.close.assert_called_once()
-
     # Test early return when pdf_pages is None
     result = optimizer._create_final_plot(
         None,
@@ -671,7 +666,7 @@ def test_run_gradient_descent_optimization(optimizer, sample_data):
     ):
         mock_prev.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
-        mock_setup.return_value = None
+        mock_setup.return_value = nullcontext()
         mock_step.return_value = psf_opt.GradientStepResult(
             params={
                 "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],

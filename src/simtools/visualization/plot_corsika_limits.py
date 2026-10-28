@@ -8,6 +8,7 @@ import numpy as np
 
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
+from simtools.visualization.visualize import save_figure
 
 colors = lazy_module("matplotlib.colors")
 lines = lazy_module("matplotlib.lines")
@@ -311,8 +312,7 @@ def plot_limits(limits_table, output_dir):
         plt.subplots_adjust(bottom=0.15)
 
         output_file = output_dir / f"limits_{array_name}_{primary_particle}.png"
-        plt.savefig(output_file)
-        plt.close(fig)
+        save_figure(fig, output_file.with_suffix(""), figure_format=["png"], close=True)
         output_files.append(output_file)
 
     return output_files

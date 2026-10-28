@@ -263,7 +263,9 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
     max_extent_rounded = _max_image_extent(images_dict)
 
     figures = _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm)
-    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+    with visualize.pdf_report(plot_file) as report:
+        for figure in figures:
+            report.add(figure)
 
 
 def _iter_psf_image_figures(images_dict, telescope_name, max_extent_rounded, eff_flen_cm):

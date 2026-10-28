@@ -879,7 +879,12 @@ class RayTracing:
             self.output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
             self._logger.info(f"Saving fig in {plot_file}")
-            plot.savefig(plot_file)
+            visualize.save_figure(
+                plot,
+                plot_file.with_suffix(""),
+                figure_format=[plot_file.suffix[1:]],
+                close=True,
+            )
 
             for (off_x, off_y), image in self.psf_images.items():
                 image_file_name = self._generate_file_name(

@@ -80,7 +80,7 @@ def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
     mock_savefig.assert_not_called()
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 @patch("simtools.visualization.plot_corsika_limits.plt.suptitle")
 def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
     table = vstack(
@@ -98,7 +98,7 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
     assert "gamma" in suptitle_text
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     mock_savefig, tmp_test_directory
 ):
@@ -128,7 +128,7 @@ def test_plot_limits_combines_azimuths_with_filled_and_open_markers(
     plt.close(plt.gcf())
 
 
-@patch("simtools.visualization.plot_corsika_limits.plt.savefig")
+@patch("simtools.visualization.plot_corsika_limits.save_figure")
 def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
     table = vstack(
         [

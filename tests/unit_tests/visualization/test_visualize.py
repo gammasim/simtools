@@ -345,37 +345,34 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-@pytest.mark.parametrize("figure_container", [list, iter])
-def test_save_figures_to_single_document(tmp_test_directory, figure_container):
+def test_pdf_report_writes_pages_and_closes_figures(tmp_test_directory):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
     output_pdf = tmp_test_directory / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document(
-        figure_container([fig1, fig2]), output_pdf, close=True
-    )
+    with visualize.pdf_report(output_pdf) as report:
+        report.add(fig1)
+        report.add(fig2)
+        assert len(report) == 2
     assert output_pdf.exists()
     assert not plt.fignum_exists(fig1.number)
     assert not plt.fignum_exists(fig2.number)
     plt.close("all")
 
 
-def test_save_figures_to_single_document_closes_pdf_after_generator_error(
-    tmp_test_directory, mocker
-):
+def test_pdf_report_closes_pdf_after_error(tmp_test_directory, mocker):
     mock_pdf = mocker.patch("simtools.visualization.visualize.pdf_backend.PdfPages")
     figure = mocker.Mock()
 
-    def figures():
-        yield figure
-        raise RuntimeError("Cannot create figure")
+    def fail_while_writing_report():
+        with visualize.pdf_report(tmp_test_directory / "images.pdf") as report:
+            report.add(figure)
+            raise RuntimeError("failure")
 
-    with pytest.raises(RuntimeError, match="Cannot create figure"):
-        visualize.save_figures_to_single_document(figures(), tmp_test_directory / "images.pdf")
-
-    mock_pdf.return_value.__enter__.return_value.savefig.assert_called_once_with(figure)
-    mock_pdf.return_value.__exit__.assert_called_once()
+    with pytest.raises(RuntimeError, match="failure"):
+        fail_while_writing_report()
+    mock_pdf.return_value.close.assert_called_once()
 
 
 def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker):
