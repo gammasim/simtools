@@ -53,6 +53,12 @@ _ARGUMENTS = (
         default=None,
     ),
     cli.ArgumentDefinition(
+        "production_id",
+        help="Production identifier written to sim_telarray metadata and the job manifest.",
+        type=str,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
         "save_file_lists",
         help="Save lists of output and log files.",
         action="store_true",
