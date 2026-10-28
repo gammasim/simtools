@@ -1,4 +1,4 @@
-"""Unit tests for model_repository module."""
+"""Unit tests for model_repository.maintenance module."""
 
 import json
 import urllib.error
@@ -8,11 +8,11 @@ from unittest.mock import Mock, patch
 import pytest
 
 from simtools.io import ascii_handler
-from simtools.model import model_repository
+from simtools.model_repository import maintenance
 
 TEST_PRODUCTION_FILE = "test_production.json"
 TEST_MODIFICATIONS_FILE = "modifications.json"
-PATH_PATCH = "simtools.model.model_repository.get_model_parameter_file_path"
+PATH_PATCH = "simtools.model_repository.maintenance.get_model_parameter_file_path"
 INITIALIZATION_BASE_VERSION = "7.0.0"
 INITIALIZATION_TARGET_VERSION = "7.0.1"
 INFO_FILE_NAME = "info.yml"
@@ -42,11 +42,11 @@ def test_verify_simulation_model_production_tables_success(tmp_test_directory):
     production_file.write_text(json.dumps(production_data), encoding="utf-8")
 
     with patch(
-        "simtools.model.model_repository._verify_model_parameters_for_production"
+        "simtools.model_repository.maintenance._verify_model_parameters_for_production"
     ) as mock_verify:
         mock_verify.return_value = ([], 2)
 
-        result = model_repository.verify_simulation_model_production_tables(str(tmp_test_directory))
+        result = maintenance.verify_simulation_model_production_tables(str(tmp_test_directory))
 
         assert result is True
         mock_verify.assert_called_once()
@@ -61,7 +61,7 @@ def test_initialize_production_writes_info_for_existing_base(tmp_test_directory,
     base_info.parent.mkdir(parents=True)
     base_info.write_text("{}", encoding="utf-8")
 
-    model_repository.initialize_production(
+    maintenance.initialize_production(
         root, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION, update_type
     )
 
@@ -89,17 +89,17 @@ def test_initialize_production_preserves_required_history(
     base_version = "7.0.2"
     target_version = "7.0.3"
     ancestors = [INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION]
-    base_directory = model_repository.get_production_directory(root, base_version)
+    base_directory = maintenance.get_production_directory(root, base_version)
     base_directory.mkdir(parents=True)
     ascii_handler.write_data_to_file(
         {MODEL_UPDATE: base_update_type, MODEL_VERSION_HISTORY: ancestors},
         base_directory / INFO_FILE_NAME,
     )
 
-    model_repository.initialize_production(root, target_version, base_version, update_type)
+    maintenance.initialize_production(root, target_version, base_version, update_type)
 
     target_info = ascii_handler.collect_data_from_file(
-        model_repository.get_production_directory(root, target_version) / INFO_FILE_NAME
+        maintenance.get_production_directory(root, target_version) / INFO_FILE_NAME
     )
     expected_history = [base_version]
     if update_type == PATCH_UPDATE and base_update_type == PATCH_UPDATE:
@@ -117,21 +117,21 @@ def test_initialize_production_rejects_existing_target(tmp_test_directory):
     target.mkdir(parents=True)
 
     with pytest.raises(FileExistsError, match="target directory already exists"):
-        model_repository.initialize_production(
+        maintenance.initialize_production(
             tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
         )
 
 
 def test_initialize_production_rejects_missing_base_info(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="base production info file does not exist"):
-        model_repository.initialize_production(
+        maintenance.initialize_production(
             tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
         )
 
 
 def test_initialize_production_rejects_unsupported_update_type(tmp_test_directory):
     with pytest.raises(ValueError, match="Unsupported production update type: invalid"):
-        model_repository.initialize_production(
+        maintenance.initialize_production(
             tmp_test_directory,
             INITIALIZATION_TARGET_VERSION,
             INITIALIZATION_BASE_VERSION,
@@ -147,11 +147,11 @@ def test_verify_simulation_model_production_tables_missing_files(tmp_test_direct
     production_file.write_text('{"parameters": {}}', encoding="utf-8")
 
     with patch(
-        "simtools.model.model_repository._verify_model_parameters_for_production"
+        "simtools.model_repository.maintenance._verify_model_parameters_for_production"
     ) as mock_verify:
         mock_verify.return_value = (["/missing/file.json"], 1)
 
-        result = model_repository.verify_simulation_model_production_tables(str(tmp_test_directory))
+        result = maintenance.verify_simulation_model_production_tables(str(tmp_test_directory))
 
         assert result is False
 
@@ -173,7 +173,7 @@ def test_verify_model_parameters_for_production_with_missing_files(
         mock_file.exists.return_value = False
         mock_get_path.return_value = mock_file
 
-        missing_files, total_checked = model_repository._verify_model_parameters_for_production(
+        missing_files, total_checked = maintenance._verify_model_parameters_for_production(
             str(tmp_test_directory), production_file
         )
 
@@ -195,7 +195,7 @@ def test_verify_model_parameters_for_production_all_files_exist(
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
 
-        missing_files, total_checked = model_repository._verify_model_parameters_for_production(
+        missing_files, total_checked = maintenance._verify_model_parameters_for_production(
             str(tmp_test_directory), production_file
         )
 
@@ -217,7 +217,7 @@ def test_verify_model_parameters_for_production_non_dict_parameters(
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
 
-        _, total_checked = model_repository._verify_model_parameters_for_production(
+        _, total_checked = maintenance._verify_model_parameters_for_production(
             str(tmp_test_directory), production_file
         )
 
@@ -237,7 +237,7 @@ def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, t
         mock_file.exists.return_value = True
         mock_get_path.return_value = mock_file
 
-        _, total_checked = model_repository._verify_model_parameters_for_production(
+        _, total_checked = maintenance._verify_model_parameters_for_production(
             str(tmp_test_directory), production_file
         )
 
@@ -248,7 +248,7 @@ def test_verify_global_corsika_parameters_uses_global_scope(mock_collect_data, t
 
 
 def test_get_model_parameter_file_path_regular_collection(tmp_test_directory):
-    result = model_repository.get_model_parameter_file_path(
+    result = maintenance.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "camera_config", "1.0.0"
     )
 
@@ -264,7 +264,7 @@ def test_get_model_parameter_file_path_regular_collection(tmp_test_directory):
 
 
 def test_get_model_parameter_file_path_configuration_sim_telarray(tmp_test_directory):
-    result = model_repository.get_model_parameter_file_path(
+    result = maintenance.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "sim_telarray_config", "1.0.0"
     )
 
@@ -280,7 +280,7 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(tmp_test_direc
 
 
 def test_get_model_parameter_file_path_configuration_corsika(tmp_test_directory):
-    result = model_repository.get_model_parameter_file_path(
+    result = maintenance.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "corsika_config", "1.0.0"
     )
 
@@ -296,7 +296,7 @@ def test_get_model_parameter_file_path_configuration_corsika(tmp_test_directory)
 
 
 def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
-    result = model_repository.get_model_parameter_file_path(
+    result = maintenance.get_model_parameter_file_path(
         str(tmp_test_directory), None, "corsika_config", "1.0.0"
     )
 
@@ -320,7 +320,7 @@ def test_get_model_parameter_file_path_global_scope(tmp_test_directory):
     ],
 )
 def test_get_model_parameter_scope(telescope, parameter_name, expected_scope):
-    assert model_repository._get_model_parameter_scope(telescope, parameter_name) == expected_scope
+    assert maintenance._get_model_parameter_scope(telescope, parameter_name) == expected_scope
 
 
 def test_check_for_major_version_jump_no_major_jump():
@@ -332,7 +332,7 @@ def test_check_for_major_version_jump_no_major_jump():
     param = "dsum_threshold"
     telescope = "MSTx-FlashCam"
 
-    result = model_repository._check_for_major_version_jump(json_data, param_data, param, telescope)
+    result = maintenance._check_for_major_version_jump(json_data, param_data, param, telescope)
 
     assert result == "4.1.0"
 
@@ -346,12 +346,12 @@ def test_check_for_major_version_jump_major_jump():
     param = "dsum_threshold"
     telescope = "MSTx-FlashCam"
 
-    result = model_repository._check_for_major_version_jump(json_data, param_data, param, telescope)
+    result = maintenance._check_for_major_version_jump(json_data, param_data, param, telescope)
 
     assert result == "6.0.0"
 
 
-@patch("simtools.model.model_repository.Path")
+@patch("simtools.model_repository.maintenance.Path")
 def test_get_latest_model_parameter_file_no_files(mock_path):
     mock_directory = Mock()
     mock_path.return_value = mock_directory
@@ -359,10 +359,10 @@ def test_get_latest_model_parameter_file_no_files(mock_path):
     mock_directory.glob.return_value = []
 
     with pytest.raises(FileNotFoundError, match="No JSON files found for parameter 'parameter'"):
-        model_repository._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
+        maintenance._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
 
 
-@patch("simtools.model.model_repository.Path")
+@patch("simtools.model_repository.maintenance.Path")
 def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     mock_directory = Mock()
     mock_path.return_value = mock_directory
@@ -375,14 +375,12 @@ def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     mock_file_3.stem = "parameter-2.0.0"
     mock_directory.glob.return_value = [mock_file_1, mock_file_3, mock_file_2]
 
-    result = model_repository._get_latest_model_parameter_file(
-        "mock_directory", "parameter", "10.0.0"
-    )
+    result = maintenance._get_latest_model_parameter_file("mock_directory", "parameter", "10.0.0")
 
     assert result == str(mock_file_2)
 
 
-@patch("simtools.model.model_repository.Path")
+@patch("simtools.model_repository.maintenance.Path")
 def test_get_latest_model_parameter_file_no_files_within_max_version(mock_path):
     mock_directory = Mock()
     mock_path.return_value = mock_directory
@@ -392,7 +390,7 @@ def test_get_latest_model_parameter_file_no_files_within_max_version(mock_path):
     mock_directory.glob.return_value = [mock_file]
 
     with pytest.raises(FileNotFoundError, match=r"with version <= 1\.0\.0"):
-        model_repository._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
+        maintenance._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
 
 
 def test_update_parameters_dict_new_function():
@@ -406,7 +404,7 @@ def test_update_parameters_dict_new_function():
     }
     table_name = "MSTx-FlashCam"
 
-    parameters, deprecated = model_repository._update_parameters_dict(
+    parameters, deprecated = maintenance._update_parameters_dict(
         existing_params, changes, table_name
     )
 
@@ -417,7 +415,7 @@ def test_update_parameters_dict_new_function():
 
 
 def test_get_production_table_key_configuration_corsika():
-    assert model_repository._get_production_table_key("configuration_corsika") == "global"
+    assert maintenance._get_production_table_key("configuration_corsika") == "global"
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -439,7 +437,7 @@ def test_apply_changes_to_production_table_update_model_version():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
+    maintenance._apply_changes_to_production_table(
         data["production_table_name"], data, changes, model_version, False
     )
 
@@ -464,7 +462,7 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
+    maintenance._apply_changes_to_production_table(
         data["production_table_name"], data, changes, model_version, False
     )
 
@@ -492,7 +490,7 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
     }
     model_version = "6.5.0"
 
-    model_repository._apply_changes_to_production_table(
+    maintenance._apply_changes_to_production_table(
         data["production_table_name"], data, changes, model_version, True
     )
 
@@ -537,7 +535,7 @@ def test_apply_changes_to_production_tables(tmp_test_directory):
     }
 
     # Apply changes from source to target
-    model_repository._apply_changes_to_production_tables(
+    maintenance._apply_changes_to_production_tables(
         changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
@@ -579,7 +577,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_test_directory):
     }
 
     # Call the function
-    model_repository._apply_changes_to_production_tables(
+    maintenance._apply_changes_to_production_tables(
         changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
@@ -604,14 +602,14 @@ def test_apply_changes_to_production_tables_invalid_data_type(tmp_test_directory
     changes = {"test_table": {"param1": {"version": "4.0.0", "value": 42}}}
 
     with pytest.raises(TypeError, match=r"Unsupported data type .* in .*malformed.json"):
-        model_repository._apply_changes_to_production_tables(
+        maintenance._apply_changes_to_production_tables(
             changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
         )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance._apply_changes_to_production_tables")
+@patch("simtools.model_repository.maintenance._apply_changes_to_model_parameters")
 def test_generate_new_production_empty_version_history(
     mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_test_directory
 ):
@@ -623,7 +621,7 @@ def test_generate_new_production_empty_version_history(
         "changes": {},
     }
 
-    model_repository.generate_new_production("fake_modifications.yml", str(tmp_test_directory))
+    maintenance.generate_new_production("fake_modifications.yml", str(tmp_test_directory))
 
     mock_apply_table_changes.assert_called_once_with(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_test_directory)
@@ -633,10 +631,10 @@ def test_generate_new_production_empty_version_history(
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository._get_changes_to_production")
-@patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance._get_changes_to_production")
+@patch("simtools.model_repository.maintenance._apply_changes_to_production_tables")
+@patch("simtools.model_repository.maintenance._apply_changes_to_model_parameters")
 def test_generate_new_production_separates_recursive_table_changes_from_parameters(
     mock_apply_model_changes,
     mock_apply_table_changes,
@@ -662,7 +660,7 @@ def test_generate_new_production_separates_recursive_table_changes_from_paramete
     }
     mock_get_changes_to_production.return_value = recursive_changes, "6.0.0"
 
-    model_repository.generate_new_production("7.0.0", str(tmp_test_directory))
+    maintenance.generate_new_production("7.0.0", str(tmp_test_directory))
 
     mock_apply_table_changes.assert_called_once_with(
         recursive_changes, "6.0.0", "7.0.0", "full_update", str(tmp_test_directory)
@@ -676,9 +674,9 @@ def test_generate_new_production_separates_recursive_table_changes_from_paramete
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance._apply_changes_to_production_tables")
+@patch("simtools.model_repository.maintenance._apply_changes_to_model_parameters")
 def test_generate_new_production_setting_workflows_git_tag_override(
     mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_test_directory
 ):
@@ -690,7 +688,7 @@ def test_generate_new_production_setting_workflows_git_tag_override(
         "changes": {},
     }
 
-    model_repository.generate_new_production(
+    maintenance.generate_new_production(
         "fake_modifications.yml",
         str(tmp_test_directory),
         setting_workflows_git_tag="from-cli",
@@ -713,7 +711,7 @@ def test_apply_changes_to_production_table_patch_update():
     changes = {"test_table": {"dsum_threshold": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
 
-    result = model_repository._apply_changes_to_production_table(
+    result = maintenance._apply_changes_to_production_table(
         data["production_table_name"], data, changes, model_version, True
     )
 
@@ -727,7 +725,7 @@ def test_apply_changes_to_production_table_patch_update():
         "parameters": {"other_table": {"dsum_threshold": "1.0.0"}},
     }
 
-    result_no_changes = model_repository._apply_changes_to_production_table(
+    result_no_changes = maintenance._apply_changes_to_production_table(
         data_no_changes["production_table_name"], data_no_changes, changes, model_version, True
     )
 
@@ -742,7 +740,7 @@ def test_apply_changes_to_production_table_patch_update_only_sim_telarray_change
     }
     changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
 
-    result = model_repository._apply_changes_to_production_table(
+    result = maintenance._apply_changes_to_production_table(
         data["production_table_name"], data, changes, "6.5.0", True
     )
 
@@ -751,7 +749,7 @@ def test_apply_changes_to_production_table_patch_update_only_sim_telarray_change
     assert data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
 
 
-@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+@patch("simtools.model_repository.maintenance._create_new_model_parameter_entry")
 def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_test_directory):
     model_parameters_dir = tmp_test_directory / "model_parameters"
     changes = {
@@ -762,7 +760,7 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_test_di
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
 
-    model_repository._apply_changes_to_model_parameters(changes, model_parameters_dir)
+    maintenance._apply_changes_to_model_parameters(changes, model_parameters_dir)
 
     # Should only call _create_new_model_parameter_entry for parameters with values
     assert mock_create_entry.call_count == 2
@@ -777,8 +775,8 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_test_di
     )
 
 
-@patch("simtools.model.model_repository._download_model_parameter_from_workflow")
-@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+@patch("simtools.model_repository.maintenance._download_model_parameter_from_workflow")
+@patch("simtools.model_repository.maintenance._create_new_model_parameter_entry")
 def test_apply_changes_to_model_parameters_with_activity_id(
     mock_create_entry, mock_download_workflow, tmp_test_directory
 ):
@@ -793,7 +791,7 @@ def test_apply_changes_to_model_parameters_with_activity_id(
         }
     }
 
-    model_repository._apply_changes_to_model_parameters(
+    maintenance._apply_changes_to_model_parameters(
         changes, model_parameters_dir, setting_workflows_git_tag="release-v1"
     )
 
@@ -815,8 +813,8 @@ def test_apply_changes_to_model_parameters_with_activity_id(
     )
 
 
-@patch("simtools.model.model_repository._download_model_parameter_from_workflow")
-@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+@patch("simtools.model_repository.maintenance._download_model_parameter_from_workflow")
+@patch("simtools.model_repository.maintenance._create_new_model_parameter_entry")
 def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raises(
     mock_create_entry, mock_download_workflow, tmp_test_directory
 ):
@@ -831,13 +829,13 @@ def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raise
     }
 
     with pytest.raises(ValueError, match="Both activity_id and value are set"):
-        model_repository._apply_changes_to_model_parameters(changes, tmp_test_directory)
+        maintenance._apply_changes_to_model_parameters(changes, tmp_test_directory)
 
     mock_download_workflow.assert_not_called()
     mock_create_entry.assert_not_called()
 
 
-@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+@patch("simtools.model_repository.maintenance._create_new_model_parameter_entry")
 def test_apply_changes_to_model_parameters_adds_info_entry_to_error(
     mock_create_entry, tmp_test_directory
 ):
@@ -852,7 +850,7 @@ def test_apply_changes_to_model_parameters_adds_info_entry_to_error(
     }
 
     with pytest.raises(TypeError) as exc_info:
-        model_repository._apply_changes_to_model_parameters(changes, tmp_test_directory)
+        maintenance._apply_changes_to_model_parameters(changes, tmp_test_directory)
 
     assert str(exc_info.value) == (
         "Failed to process info.yml entry 'OBS-South -> array_layouts' "
@@ -861,8 +859,8 @@ def test_apply_changes_to_model_parameters_adds_info_entry_to_error(
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow(
     mock_write_json, mock_collect_data, tmp_test_directory
 ):
@@ -874,7 +872,7 @@ def test_download_model_parameter_from_workflow(
     }
     mock_collect_data.return_value = {"parameter_version": "3.0.0", "value": [1, 2, 3]}
 
-    model_repository._download_model_parameter_from_workflow(
+    maintenance._download_model_parameter_from_workflow(
         telescope=telescope,
         param=param,
         param_data=param_data,
@@ -903,8 +901,8 @@ def test_download_model_parameter_from_workflow(
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 @patch("urllib.request.urlopen")
 def test_download_model_parameter_from_workflow_copies_file_asset(
     mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
@@ -919,7 +917,7 @@ def test_download_model_parameter_from_workflow_copies_file_asset(
     mock_collect_data.return_value = parameter_data
     mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
 
-    model_repository._download_model_parameter_from_workflow(
+    maintenance._download_model_parameter_from_workflow(
         telescope=telescope,
         param=FILE_PARAMETER_NAME,
         param_data={
@@ -950,8 +948,8 @@ def test_download_model_parameter_from_workflow_copies_file_asset(
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 @patch("urllib.request.urlopen")
 def test_download_model_parameter_from_workflow_repairs_missing_file_asset(
     mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
@@ -979,7 +977,7 @@ def test_download_model_parameter_from_workflow_repairs_missing_file_asset(
     )
     mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
 
-    model_repository._download_model_parameter_from_workflow(
+    maintenance._download_model_parameter_from_workflow(
         telescope=telescope,
         param=FILE_PARAMETER_NAME,
         param_data={
@@ -1004,7 +1002,7 @@ def test_copy_model_parameter_asset_from_workflow_preserves_existing_file_asset(
     asset_file = parameter_file.parent / FILE_PARAMETER_ASSET
     asset_file.write_bytes(FILE_PARAMETER_CONTENT)
 
-    model_repository._copy_model_parameter_asset_from_workflow(
+    maintenance._copy_model_parameter_asset_from_workflow(
         {"file": True, "value": FILE_PARAMETER_ASSET},
         parameter_file,
         "output/parameter.json",
@@ -1016,8 +1014,8 @@ def test_copy_model_parameter_asset_from_workflow_preserves_existing_file_asset(
 
 
 def test_copy_model_parameter_asset_from_workflow_skips_non_file_parameters(tmp_test_directory):
-    with patch("simtools.model.model_repository.urllib.request.urlopen") as mock_urlopen:
-        model_repository._copy_model_parameter_asset_from_workflow(
+    with patch("simtools.model_repository.maintenance.urllib.request.urlopen") as mock_urlopen:
+        maintenance._copy_model_parameter_asset_from_workflow(
             {"file": False, "value": 42},
             Path(tmp_test_directory) / "parameter.json",
             "output/parameter.json",
@@ -1030,7 +1028,7 @@ def test_copy_model_parameter_asset_from_workflow_skips_non_file_parameters(tmp_
 
 def test_copy_model_parameter_asset_from_workflow_rejects_invalid_value(tmp_test_directory):
     with pytest.raises(ValueError, match="relative filename"):
-        model_repository._copy_model_parameter_asset_from_workflow(
+        maintenance._copy_model_parameter_asset_from_workflow(
             {"file": True, "value": None},
             Path(tmp_test_directory) / "parameter.json",
             "output/parameter.json",
@@ -1043,7 +1041,7 @@ def test_copy_model_parameter_asset_from_workflow_rejects_directory_target(tmp_t
     parameter_file = Path(tmp_test_directory) / "parameter.json"
     (parameter_file.parent / FILE_PARAMETER_ASSET).mkdir()
     with pytest.raises(IsADirectoryError, match="not a file"):
-        model_repository._copy_model_parameter_asset_from_workflow(
+        maintenance._copy_model_parameter_asset_from_workflow(
             {"file": True, "value": FILE_PARAMETER_ASSET},
             parameter_file,
             "output/parameter.json",
@@ -1061,9 +1059,9 @@ def test_copy_model_parameter_asset_from_raw_repository_url(tmp_test_directory):
     repository_url = "https://example.org/workflows/-/raw"
 
     with patch(
-        "simtools.model.model_repository.urllib.request.urlopen", return_value=response
+        "simtools.model_repository.maintenance.urllib.request.urlopen", return_value=response
     ) as mock_urlopen:
-        model_repository._copy_model_parameter_asset_from_workflow(
+        maintenance._copy_model_parameter_asset_from_workflow(
             {"file": True, "value": FILE_PARAMETER_ASSET},
             parameter_file,
             "output/parameter.json",
@@ -1079,9 +1077,11 @@ def test_copy_model_parameter_asset_from_raw_repository_url(tmp_test_directory):
 
 def test_copy_model_parameter_asset_from_workflow_reports_missing_asset(tmp_test_directory):
     http_error = urllib.error.HTTPError("https://example.org/missing", 404, "Not found", {}, None)
-    with patch("simtools.model.model_repository.urllib.request.urlopen", side_effect=http_error):
+    with patch(
+        "simtools.model_repository.maintenance.urllib.request.urlopen", side_effect=http_error
+    ):
         with pytest.raises(FileNotFoundError, match="Failed to download model parameter asset"):
-            model_repository._copy_model_parameter_asset_from_workflow(
+            maintenance._copy_model_parameter_asset_from_workflow(
                 {"file": True, "value": FILE_PARAMETER_ASSET},
                 Path(tmp_test_directory) / "parameter.json",
                 "output/parameter.json",
@@ -1090,8 +1090,8 @@ def test_copy_model_parameter_asset_from_workflow_reports_missing_asset(tmp_test
             )
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow_keeps_existing_file(
     mock_write_json, mock_collect_data, tmp_test_directory
 ):
@@ -1107,7 +1107,7 @@ def test_download_model_parameter_from_workflow_keeps_existing_file(
     target.parent.mkdir(parents=True)
     target.write_text('{"type": "file"}', encoding="utf-8")
 
-    model_repository._download_model_parameter_from_workflow(
+    maintenance._download_model_parameter_from_workflow(
         telescope="LSTN-design",
         param="fadc_pulse_shape",
         param_data={"version": "2.0.1", "activity_id": "activity-id"},
@@ -1119,8 +1119,8 @@ def test_download_model_parameter_from_workflow_keeps_existing_file(
     assert target.read_text(encoding="utf-8") == '{"type": "file"}'
 
 
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_git")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
     mock_write_json, mock_collect_data, tmp_test_directory
 ):
@@ -1133,7 +1133,7 @@ def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
     mock_collect_data.return_value = {"parameter_version": "2.9.9", "value": [1, 2, 3]}
 
     with pytest.raises(ValueError, match="Version mismatch"):
-        model_repository._download_model_parameter_from_workflow(
+        maintenance._download_model_parameter_from_workflow(
             telescope=telescope,
             param=param,
             param_data=param_data,
@@ -1144,8 +1144,8 @@ def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
     mock_write_json.assert_not_called()
 
 
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+@patch("simtools.model_repository.maintenance._get_latest_model_parameter_file")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp_test_directory):
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
@@ -1157,7 +1157,7 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
     # Mock no existing file
     mock_get_latest.side_effect = FileNotFoundError("No files found")
 
-    model_repository._create_new_model_parameter_entry(
+    maintenance._create_new_model_parameter_entry(
         telescope, param, param_data, Path(tmp_test_directory)
     )
 
@@ -1181,16 +1181,16 @@ def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_dire
 
     # Don't create the telescope directory - the function will create it but fail on schema
     with pytest.raises(FileNotFoundError, match="Schema file not found"):
-        model_repository._create_new_model_parameter_entry(
+        maintenance._create_new_model_parameter_entry(
             telescope, param, param_data, Path(tmp_test_directory)
         )
 
 
-@patch("simtools.model.model_repository.get_model_parameter_file_path")
-@patch("simtools.model.model_repository._check_for_major_version_jump")
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+@patch("simtools.model_repository.maintenance.get_model_parameter_file_path")
+@patch("simtools.model_repository.maintenance._check_for_major_version_jump")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance._get_latest_model_parameter_file")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_with_existing_file(
     mock_dump,
     mock_get_latest,
@@ -1216,7 +1216,7 @@ def test_create_new_model_parameter_entry_with_existing_file(
     }
     mock_check_version.return_value = "2.0.0"
 
-    model_repository._create_new_model_parameter_entry(
+    maintenance._create_new_model_parameter_entry(
         telescope, param, param_data, simulation_models_path
     )
 
@@ -1229,10 +1229,10 @@ def test_create_new_model_parameter_entry_with_existing_file(
     assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
 
 
-@patch("simtools.model.model_repository.get_model_parameter_file_path")
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+@patch("simtools.model_repository.maintenance.get_model_parameter_file_path")
+@patch("simtools.model_repository.maintenance._get_latest_model_parameter_file")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_reuses_matching_existing_file(
     mock_dump,
     mock_collect_data,
@@ -1262,17 +1262,17 @@ def test_create_new_model_parameter_entry_reuses_matching_existing_file(
         "unit": "count",
     }
 
-    model_repository._create_new_model_parameter_entry(
+    maintenance._create_new_model_parameter_entry(
         telescope, param, param_data, Path(tmp_test_directory)
     )
 
     mock_dump.assert_not_called()
 
 
-@patch("simtools.model.model_repository.get_model_parameter_file_path")
-@patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+@patch("simtools.model_repository.maintenance.get_model_parameter_file_path")
+@patch("simtools.model_repository.maintenance._get_latest_model_parameter_file")
+@patch("simtools.model_repository.maintenance.ascii_handler.collect_data_from_file")
+@patch("simtools.model_repository.maintenance.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
     mock_dump,
     mock_collect_data,
@@ -1303,7 +1303,7 @@ def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
     }
 
     with pytest.raises(ValueError, match="does not match the requested value"):
-        model_repository._create_new_model_parameter_entry(
+        maintenance._create_new_model_parameter_entry(
             telescope, param, param_data, Path(tmp_test_directory)
         )
 
@@ -1320,7 +1320,7 @@ def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
     ],
 )
 def test_normalize_units_for_comparison(unit, expected):
-    assert model_repository._normalize_units_for_comparison(unit) == expected
+    assert maintenance._normalize_units_for_comparison(unit) == expected
 
 
 def test_get_changes_to_production_path_update(tmp_test_directory):
@@ -1336,7 +1336,7 @@ def test_get_changes_to_production_path_update(tmp_test_directory):
     with patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect:
         mock_collect.return_value = modifications_data
 
-        changes, base_model_version = model_repository._get_changes_to_production(
+        changes, base_model_version = maintenance._get_changes_to_production(
             modifications_data, tmp_test_directory, "patch_update"
         )
 
@@ -1352,7 +1352,7 @@ def test_update_two_levels_in_changes_dict():
     d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
     u = {"LSTN-design": {"param2": {"version": "2.0.0"}}}
 
-    result = model_repository._update_two_levels_in_changes_dict(d, u)
+    result = maintenance._update_two_levels_in_changes_dict(d, u)
 
     assert "LSTN-design" in result
     assert "param1" in result["LSTN-design"]
@@ -1365,7 +1365,7 @@ def test_update_two_levels_in_changes_dict_new_telescope():
     d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
     u = {"MST-design": {"param2": {"version": "2.0.0"}}}
 
-    result = model_repository._update_two_levels_in_changes_dict(d, u)
+    result = maintenance._update_two_levels_in_changes_dict(d, u)
 
     assert "LSTN-design" in result
     assert "MST-design" in result
@@ -1377,12 +1377,12 @@ def test_update_two_levels_in_changes_dict_non_dict_value():
     d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
     u = {"LSTN-design": "non_dict_value"}
 
-    result = model_repository._update_two_levels_in_changes_dict(d, u)
+    result = maintenance._update_two_levels_in_changes_dict(d, u)
 
     assert result["LSTN-design"] == "non_dict_value"
 
 
-@patch("simtools.model.model_repository._get_changes_dict")
+@patch("simtools.model_repository.maintenance._get_changes_dict")
 def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_directory):
     # Mock data for version 7.0.0 (full_update with history pointing to 6.0.2)
     modification_dict_7_0_0 = {
@@ -1445,7 +1445,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
 
     mock_get_changes_dict.side_effect = get_changes_side_effect
 
-    changes, base_version = model_repository._get_changes_to_production(
+    changes, base_version = maintenance._get_changes_to_production(
         modification_dict_7_0_0, tmp_test_directory, update_type="full_update"
     )
 
@@ -1497,7 +1497,7 @@ def test_apply_changes_to_sim_telarray_production_table_new_params(mock_get_coll
         "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
     }
 
-    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+    has_cst_changes = maintenance._apply_changes_to_sim_telarray_production_table(
         data, changes, "7.0.0", False
     )
 
@@ -1518,7 +1518,7 @@ def test_apply_changes_to_sim_telarray_production_table_existing_telescope(mock_
     }
     changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
 
-    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+    has_cst_changes = maintenance._apply_changes_to_sim_telarray_production_table(
         data, changes, "7.0.0", False
     )
 
@@ -1544,7 +1544,7 @@ def test_apply_changes_to_sim_telarray_production_table_global_parameters():
         },
     }
 
-    assert model_repository._apply_changes_to_sim_telarray_production_table(
+    assert maintenance._apply_changes_to_sim_telarray_production_table(
         data, changes, "7.0.0", False
     )
     assert data["parameters"]["global"]["iobuf_maximum"] == "2.0.0"
@@ -1563,7 +1563,7 @@ def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
     }
     changes = {"LSTN-design": {"min_photons": {"version": "1.0.0", "deprecated": True}}}
 
-    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+    has_cst_changes = maintenance._apply_changes_to_sim_telarray_production_table(
         data, changes, "7.0.0", True
     )
 
@@ -1607,7 +1607,7 @@ def test_apply_changes_to_production_tables_routes_cst_to_correct_table(
         }
     }
 
-    model_repository._apply_changes_to_production_tables(
+    maintenance._apply_changes_to_production_tables(
         changes, "6.0.0", "7.0.0", "patch_update", tmp_test_directory
     )
 

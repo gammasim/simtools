@@ -71,7 +71,7 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 (model-repository)=
 
 ```{eval-rst}
-.. automodule:: model.model_repository
+.. automodule:: model_repository.maintenance
    :members:
 ```
 
