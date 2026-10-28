@@ -20,6 +20,7 @@ from astropy.table import Table
 from scipy import stats
 
 from simtools.data_model import model_data_writer as writer
+from simtools.data_model import parameter_catalog as catalog
 from simtools.io.io_handler import IOHandler
 from simtools.job_execution.backends.base import BackendError
 from simtools.job_execution.backends.local import determine_max_workers
@@ -27,7 +28,6 @@ from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.psf_evaluation import dispatch_evaluations
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
-from simtools.utils import names
 from simtools.visualization import plot_psf
 from simtools.visualization.plot_psf import DEFAULT_FRACTION, get_psf_diameter_label
 
@@ -725,7 +725,7 @@ def _is_parameter_within_allowed_range(param_name, param_index, value):
         Returns True if no range constraints are defined for the parameter.
     """
     try:
-        param_schema = names.model_parameters().get(param_name)
+        param_schema = catalog.model_parameters().get(param_name)
         if param_schema is None:
             return True
 

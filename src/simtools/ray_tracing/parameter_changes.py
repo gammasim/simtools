@@ -5,7 +5,7 @@ model: sim_telarray receives them as configuration options, other backends as ch
 parameter records.
 """
 
-from simtools.utils import names
+from simtools.data_model import parameter_catalog as catalog
 
 TELESCOPE_STRUCTURE = "telescope_structure"
 _MIRROR_ALIGN_RANDOM_DISTANCE = "mirror_align_random_distance"
@@ -85,7 +85,7 @@ def sim_telarray_options(changes):
     options = {}
     for name, value in changes.items():
         try:
-            simtel_name = names.get_simulation_software_name_from_parameter_name(name)
+            simtel_name = catalog.get_simulation_software_name_from_parameter_name(name)
         except KeyError:
             simtel_name = name
         if simtel_name is not None:

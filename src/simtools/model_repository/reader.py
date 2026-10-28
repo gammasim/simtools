@@ -9,6 +9,7 @@ from astropy.table import Table
 from packaging.version import Version
 
 from simtools import settings
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
 from simtools.io import ascii_handler
@@ -114,7 +115,7 @@ class FileSystemModelSource:
 
         parameters = []
         for parameter, parameter_version in parameter_versions.items():
-            parameter_scope = names.get_model_parameter_scope(
+            parameter_scope = catalog.get_model_parameter_scope(
                 collection_name, instrument, parameter
             )
             parameter_path = self._parameter_path(
@@ -149,7 +150,7 @@ class FileSystemModelSource:
         parameter_version = parameter_query.get("parameter_version")
         if not parameter or not parameter_version:
             return None
-        parameter_scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+        parameter_scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
         parameter_path = self._parameter_path(
             collection_name, parameter_scope, parameter, parameter_version
         )
@@ -164,7 +165,7 @@ class FileSystemModelSource:
 
     def _parameter_path(self, collection_name, instrument, parameter, parameter_version):
         """Return the path for one parameter version."""
-        scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+        scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
         return (
             self.model_parameters_path / scope / parameter / f"{parameter}-{parameter_version}.json"
         )
@@ -373,7 +374,7 @@ class SimulationModelReader:
         self, parameter, site, array_element_name, parameter_version=None, model_version=None
     ):
         """Read one model parameter by parameter or model version."""
-        collection = names.get_collection_name_from_parameter_name(parameter)
+        collection = catalog.get_collection_name_from_parameter_name(parameter)
         if model_version:
             if isinstance(model_version, list):
                 raise ValueError(
@@ -637,7 +638,7 @@ class SimulationModelReader:
             )
             design_model = telescope_production["design_model"].get(array_element_name)
         try:
-            return names.get_sim_telarray_parameter_scopes(
+            return catalog.get_sim_telarray_parameter_scopes(
                 array_element_name,
                 design_model,
                 settings.config.args.get("ignore_missing_design_model", False),

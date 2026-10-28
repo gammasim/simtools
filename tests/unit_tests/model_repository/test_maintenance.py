@@ -1477,7 +1477,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     mock_get_changes_dict.assert_any_call("6.0.0", tmp_test_directory)
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+@patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
 def test_apply_changes_to_sim_telarray_production_table_new_params(mock_get_collection):
 
     def collection_side_effect(param):
@@ -1508,7 +1508,7 @@ def test_apply_changes_to_sim_telarray_production_table_new_params(mock_get_coll
     assert "transit_time_random" not in data["parameters"]["LSTN-design"]
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+@patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
 def test_apply_changes_to_sim_telarray_production_table_existing_telescope(mock_get_collection):
     mock_get_collection.side_effect = lambda param: "configuration_sim_telarray"
 
@@ -1551,7 +1551,7 @@ def test_apply_changes_to_sim_telarray_production_table_global_parameters():
     assert "iobuf_maximum" not in data["parameters"]["LSTN-design"]
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+@patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
 def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
     mock_get_collection,
 ):
@@ -1572,7 +1572,7 @@ def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
     assert "min_photons" in data["deprecated_parameters"]
 
 
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+@patch("simtools.data_model.parameter_catalog.get_collection_name_from_parameter_name")
 def test_apply_changes_to_production_tables_routes_cst_to_correct_table(
     mock_get_collection, tmp_test_directory
 ):

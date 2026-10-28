@@ -639,7 +639,7 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     ]
 
     scopes = mocker.patch.object(
-        reader_module.names,
+        reader_module.catalog,
         "get_sim_telarray_parameter_scopes",
         side_effect=KeyError("missing"),
     )

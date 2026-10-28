@@ -5,6 +5,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
+from simtools.data_model import parameter_catalog as catalog
 from simtools.reporting import docs_read_parameters
 from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
 from simtools.reporting.model_figures import (
@@ -1165,7 +1166,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
         },
     }
     monkeypatch.setattr(
-        names, "model_parameters", lambda *a, **k: {"test_param": {}, "none_param": {}}
+        catalog, "model_parameters", lambda *a, **k: {"test_param": {}, "none_param": {}}
     )
     tel = DummyTelescope(
         "North", "LSTN-01", "1.0.0", {"test_param": "1.0.0", "none_param": "1.0.0"}
@@ -1183,7 +1184,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
             "instrument": "LSTN-01",
         },
     }
-    monkeypatch.setattr(names, "model_parameters", lambda *a, **k: {"test_param": {}})
+    monkeypatch.setattr(catalog, "model_parameters", lambda *a, **k: {"test_param": {}})
     data, _dt = rp.get_array_element_parameter_data(telescope_model=tel)
     assert data[0][1] == "***test_param***"
 
@@ -1218,7 +1219,7 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
         "_convert_to_md",
         lambda self, p, pv, f, **_kwargs: "_data_files/myfile.md",
     )
-    monkeypatch.setattr(names, "model_parameters", lambda *a, **k: {"file_param": {}})
+    monkeypatch.setattr(catalog, "model_parameters", lambda *a, **k: {"file_param": {}})
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     tel = DummyTelescope("North", "LSTN-01", "1.0.0", {"file_param": "1.0.0"})
@@ -1584,7 +1585,7 @@ def test_get_array_element_parameter_data_collects_dict_table(tmp_test_directory
         }
     )
 
-    monkeypatch.setattr(names, "model_parameters", lambda *args, **kwargs: {"dict_param": {}})
+    monkeypatch.setattr(catalog, "model_parameters", lambda *args, **kwargs: {"dict_param": {}})
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     tel = DummyTelescope("North", "LSTN-01", "1.0.0", {"dict_param": "1.0.0"})
@@ -1788,7 +1789,9 @@ def test_produce_model_parameter_reports_writes_latest_dict_table(tmp_path, mock
         output_path=tmp_path,
     )
 
-    mocker.patch("simtools.utils.names.model_parameters", return_value={"dict_param": {}})
+    mocker.patch(
+        "simtools.data_model.parameter_catalog.model_parameters", return_value={"dict_param": {}}
+    )
     mocker.patch.object(
         rp.model_source, "get_model_parameters_for_all_model_versions", return_value={}
     )
@@ -2016,7 +2019,10 @@ def test__delta_report_no_changes(
         rp.model_source, "get_model_parameters", side_effect=[param_data, param_data]
     )
     if patch_names_model_parameters:
-        mocker.patch("simtools.utils.names.model_parameters", return_value={"focal_length": {}})
+        mocker.patch(
+            "simtools.data_model.parameter_catalog.model_parameters",
+            return_value={"focal_length": {}},
+        )
 
     report_method = getattr(rp, method_name)
     assert report_method(base_version) is True

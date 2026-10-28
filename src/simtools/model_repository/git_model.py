@@ -10,6 +10,7 @@ from time import perf_counter
 from astropy.table import Table
 from packaging.version import Version
 
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import validate_table_asset
 from simtools.io import ascii_handler
@@ -21,7 +22,6 @@ from simtools.model_repository.asset_names import (
 )
 from simtools.model_repository.git_backend import Pygit2ObjectStore
 from simtools.model_repository.parsing import normalize_model_parameter
-from simtools.utils import names
 
 logger = logging.getLogger(__name__)
 _PRODUCTIONS_PATH = PurePosixPath("simulation-models/productions")
@@ -143,7 +143,7 @@ class GitModelSource:
             if path not in self._parameters:
                 continue
             parameter_data = self._parameters[path]
-            scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+            scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
             if self._matches_filters(parameter_data, scope, site):
                 parameters.append(deepcopy(parameter_data))
         if not parameters:
@@ -241,7 +241,7 @@ class GitModelSource:
     @staticmethod
     def _parameter_path(collection_name, instrument, parameter, parameter_version):
         """Return a repository-relative parameter path."""
-        scope = names.get_model_parameter_scope(collection_name, instrument, parameter)
+        scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
         return (
             PurePosixPath("simulation-models/model_parameters")
             / scope

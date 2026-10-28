@@ -22,9 +22,10 @@ from packaging.version import parse as parse_version
 
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import DEFAULT_SIMULATION_WORKFLOWS
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model.table_asset import resolve_asset_path
 from simtools.io import ascii_handler
-from simtools.utils import names, value_conversion
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 _INFO_FILE_NAME = "info.yml"
@@ -252,7 +253,7 @@ def _get_model_parameter_scope(telescope, parameter_name=None):
     """Return the filesystem scope for a production-table key and parameter."""
     if telescope in (None, "global", "configuration_corsika"):
         return "global"
-    if names.is_global_sim_telarray_parameter(parameter_name):
+    if catalog.is_global_sim_telarray_parameter(parameter_name):
         return "global"
     return telescope
 
@@ -514,7 +515,7 @@ def _apply_sim_telarray_changes_for_telescope(telescope_params, params):
 
     for param_name, param_data in params.items():
         if (
-            names.get_collection_name_from_parameter_name(param_name)
+            catalog.get_collection_name_from_parameter_name(param_name)
             != "configuration_sim_telarray"
         ):
             continue
@@ -538,9 +539,11 @@ def _apply_global_sim_telarray_changes(global_params, params):
     deprecated = []
     has_changes = False
     for param_name, param_data in params.items():
-        if names.get_collection_name_from_parameter_name(
+        if catalog.get_collection_name_from_parameter_name(
             param_name
-        ) != "configuration_sim_telarray" or not names.is_global_sim_telarray_parameter(param_name):
+        ) != "configuration_sim_telarray" or not catalog.is_global_sim_telarray_parameter(
+            param_name
+        ):
             continue
         has_changes = True
         if param_data.get("deprecated", False):
@@ -555,7 +558,7 @@ def _remove_global_sim_telarray_parameters(parameters):
     """Remove migrated global parameters from non-global production scopes."""
     for scope, scope_parameters in parameters.items():
         if scope != "global" and isinstance(scope_parameters, dict):
-            for parameter_name in names.SIM_TELARRAY_GLOBAL_PARAMETERS:
+            for parameter_name in catalog.SIM_TELARRAY_GLOBAL_PARAMETERS:
                 scope_parameters.pop(parameter_name, None)
 
 
@@ -567,7 +570,7 @@ def _apply_sim_telarray_changes_for_scope(parameters, global_params, telescope, 
     telescope_params = {
         param_name: param_data
         for param_name, param_data in params.items()
-        if not names.is_global_sim_telarray_parameter(param_name)
+        if not catalog.is_global_sim_telarray_parameter(param_name)
     }
     telescope_params, deprecated, telescope_has_changes = _apply_sim_telarray_changes_for_telescope(
         parameters.get(telescope), telescope_params
@@ -661,7 +664,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
     deprecated_params = []
 
     for param, data in changes[table_name].items():
-        if names.get_collection_name_from_parameter_name(param) == "configuration_sim_telarray":
+        if catalog.get_collection_name_from_parameter_name(param) == "configuration_sim_telarray":
             continue
         if data.get("deprecated", False):
             _logger.info(f"Removing model parameter '{table_name} - {param}'")

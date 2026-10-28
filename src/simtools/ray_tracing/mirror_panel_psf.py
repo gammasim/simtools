@@ -10,11 +10,11 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.data_model import model_data_writer
+from simtools.data_model import parameter_catalog as catalog
 from simtools.io import io_handler
 from simtools.job_execution.execution import map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.utils import names
 from simtools.visualization import plot_psf
 
 
@@ -202,7 +202,7 @@ class MirrorPanelPSF:
         list of tuple of float
             [(min1, max1), (min2, max2), (min3, max3)]
         """
-        schema = names.model_parameters()["mirror_reflection_random_angle"]["data"]
+        schema = catalog.model_parameters()["mirror_reflection_random_angle"]["data"]
         return [
             (max(schema[0]["allowed_range"]["min"], 1e-12), schema[0]["allowed_range"]["max"]),
             (schema[1]["allowed_range"]["min"], schema[1]["allowed_range"]["max"]),
