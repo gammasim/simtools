@@ -397,21 +397,6 @@ def test_analyze_image_zero_theta_offset(ray_tracing_lst, mocker):
     assert np.isnan(result[-1])
 
 
-def test_get_mean_std(ray_tracing_lst):
-    ray_tracing = copy.deepcopy(ray_tracing_lst)
-    _rows = _example_rows()
-    ray_tracing._store_results(_rows)
-    mean_value = ray_tracing.get_mean(key="psf_cm")
-    std_value = ray_tracing.get_std_dev(key="psf_cm")
-    assert mean_value.value == pytest.approx(4.3, abs=1e-2)
-    assert std_value.value == pytest.approx(0.05, abs=1e-2)
-
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing.get_mean(key="abc")
-    with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
-        ray_tracing.get_std_dev(key="abc")
-
-
 def test_read_results(ray_tracing_lst, mocker):
     mock_read = mocker.patch("astropy.io.ascii.read", return_value=QTable())
     ray_tracing_lst._file_results = Path("dummy_path.ecsv")

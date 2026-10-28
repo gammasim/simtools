@@ -1236,11 +1236,6 @@ def annotate_comparison_statistics(ax, statistics):
     )
 
 
-def _annotate_ks_statistics(ax, statistics):
-    """Backward-compatible alias for metric-neutral comparison annotations."""
-    annotate_comparison_statistics(ax, statistics)
-
-
 def _format_statistic_value(value):
     """Format statistic values for plot text annotations."""
     if value is None:

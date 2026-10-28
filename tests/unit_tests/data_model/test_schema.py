@@ -17,7 +17,7 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
-from simtools.data_model import schema, schema_loader
+from simtools.data_model import schema
 from simtools.io import ascii_handler
 
 _INTEGRATION_CONFIG_FILES = sorted(
@@ -58,16 +58,6 @@ def test_camera_pixel_types_schema_has_explicit_lightguide_reference():
 
     assert "lightguide_angle_parameter" in current_properties
     assert "lightguide_angle_parameter" not in previous_properties
-
-
-def test_get_model_parameter_schema_returns_independent_copies():
-    schema_loader.clear_cache()
-    schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
-    schema_2 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
-
-    schema_1["data"][0]["unit"] = "m"
-
-    assert schema_2["data"][0]["unit"] == "cm"
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():

@@ -1,7 +1,6 @@
 """Plotting utilities for CORSIKA limits tables."""
 
 import logging
-from itertools import product
 from pathlib import Path
 
 import numpy as np
@@ -54,107 +53,6 @@ def _resolve_broad_range_columns(limits_table):
         return None
 
     return resolved_columns
-
-
-def _plot_single_grid_coverage(
-    ax, zeniths, azimuths, nsb, array_name, found_combinations_str, primary_particle
-):
-    """Plot grid coverage for a single NSB and array name."""
-    z_grid = np.zeros((len(zeniths), len(azimuths)))
-    for i, zenith in enumerate(zeniths):
-        for j, azimuth in enumerate(azimuths):
-            point_str = (str(zenith), str(azimuth), str(nsb), str(array_name))
-            if point_str in found_combinations_str:
-                z_grid[i, j] = 1
-
-    az_vals = azimuths.value if hasattr(azimuths, "value") else azimuths
-    zen_vals = zeniths.value if hasattr(zeniths, "value") else zeniths
-    extent = [
-        min(az_vals) - 0.5,
-        max(az_vals) + 0.5,
-        max(zen_vals) + 0.5,
-        min(zen_vals) - 0.5,
-    ]
-
-    im = ax.imshow(
-        z_grid, cmap=colors.ListedColormap(["red", "green"]), vmin=0, vmax=1, extent=extent
-    )
-    cbar = plt.colorbar(im, ax=ax, ticks=[0, 1], label="Coverage", shrink=0.25, pad=0.02)
-    cbar.set_ticklabels(["Missing", "Present"])
-
-    ax.set_title(
-        f"Grid Coverage: NSB={nsb}, Array Name={array_name}, Primary Particle={primary_particle}"
-    )
-    ax.set_xlabel("Azimuth [deg]")
-    ax.set_ylabel(ZENITH_LABEL)
-    ax.set_xticks(az_vals)
-    ax.set_yticks(zen_vals)
-    ax.grid(which="major", linestyle="-", linewidth="0.5", color="black", alpha=0.3)
-
-
-def plot_grid_coverage(limits_table, grid_definition, output_dir):
-    """
-    Generate grid coverage plots for each NSB level and array name combination.
-
-    Parameters
-    ----------
-    limits_table : Table
-        An astropy Table containing the CORSIKA limits data.
-    grid_definition : dict or None
-        A dictionary defining the expected grid points for zenith,
-        azimuth, NSB level, and array name.
-    output_dir : str or Path
-        Directory where the generated grid coverage plots will be saved.
-
-    Returns
-    -------
-    list of Path
-        List of file paths to the generated grid coverage plots.
-    """
-    if not grid_definition:
-        _logger.info("No grid definition provided, skipping grid coverage plots.")
-        return []
-
-    _logger.info("Generating grid coverage plots")
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_files = []
-    primary_particle = _get_primary_particle_label(limits_table)
-
-    found_combinations_str = set(
-        zip(
-            np.array(limits_table["zenith"].value, dtype=str),
-            np.array(limits_table["azimuth"].value, dtype=str),
-            np.array(limits_table["nsb_level"], dtype=str),
-            np.array(limits_table["array_name"], dtype=str),
-        )
-    )
-
-    unique_values = {
-        "zeniths": np.array(grid_definition.get("zenith", [])),
-        "azimuths": np.array(grid_definition.get("azimuth", [])),
-        "nsb_levels": np.array(grid_definition.get("nsb_level", [])),
-        "array_names": np.array(grid_definition.get("array_name", [])),
-    }
-
-    for nsb, array_name in product(unique_values["nsb_levels"], unique_values["array_names"]):
-        _, ax = plt.subplots(figsize=(10, 8))
-        _plot_single_grid_coverage(
-            ax,
-            unique_values["zeniths"],
-            unique_values["azimuths"],
-            nsb,
-            array_name,
-            found_combinations_str,
-            primary_particle,
-        )
-        output_file = output_dir / f"grid_coverage_{nsb}_{array_name}.png"
-        plt.tight_layout()
-        plt.savefig(output_file, bbox_inches="tight")
-        plt.close()
-        output_files.append(output_file)
-
-    return output_files
 
 
 def _plot_limit_series(axes, zeniths, values, color, filled_marker, linestyle):

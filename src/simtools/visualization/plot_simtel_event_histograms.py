@@ -391,28 +391,6 @@ def _get_broad_range_axis_limits(name, limits):
     return axis_limits_by_group.get(_get_broad_range_key_group(name), {})
 
 
-def _get_broad_range_plot_lines(name, limits):
-    """Return reference lines using only broad-range output-table columns."""
-    if not limits:
-        return {}
-    broad_range_values = _extract_broad_range_values(limits)
-    plot_lines_by_group = {
-        "energy": {"x": list(broad_range_values["energy_limits"])},
-        "core_distance_vs_energy": {
-            "x": broad_range_values["core_max"],
-            "y": list(broad_range_values["energy_limits"]),
-        },
-        "angular_distance_vs_energy": {
-            "x": broad_range_values["viewcone_max"],
-            "y": list(broad_range_values["energy_limits"]),
-        },
-        "core_distance": {"x": broad_range_values["core_max"]},
-        "angular_distance": {"x": broad_range_values["viewcone_max"]},
-        "x_core_shower_vs_y_core_shower": {"r": broad_range_values["core_max"]},
-    }
-    return plot_lines_by_group.get(_get_broad_range_key_group(name), {})
-
-
 def _extract_broad_range_values(limits):
     """Extract scalar broad-range values from the limits dictionary."""
     return {

@@ -104,10 +104,6 @@ class VERITASObject:
     """VERITAS Object."""
 
 
-class MeanRadiusOuterEdgeObject:
-    """Object for Mean radius outer edge."""
-
-
 # Pixel handlers
 class _BaseHexPixelHandler:
     """Base class for hexagonal pixel handlers."""
@@ -328,25 +324,6 @@ class VERITASHandler(BaseLegendHandler):
 
     def __init__(self):
         super().__init__("VERITAS")
-
-
-class MeanRadiusOuterEdgeHandler:
-    """Legend handler class to plot the mean radius outer edge of the dish."""
-
-    @staticmethod
-    def legend_artist(_, __, ___, handlebox):
-        """Create a circle patch representing the mean radius outer edge."""
-        x0, y0 = calculate_center(handlebox, 4, 4)
-        radius = handlebox.height
-        patch = mpatches.Circle(
-            xy=(x0, y0),
-            radius=radius,
-            facecolor="none",
-            edgecolor="darkorange",
-            transform=handlebox.get_transform(),
-        )
-        handlebox.add_artist(patch)
-        return patch
 
 
 legend_handler_map = {

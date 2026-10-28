@@ -574,33 +574,6 @@ class CorsikaHistograms:
             if key in self.hist:
                 del self.hist[key]
 
-    def _fill_projected_density_values(self, value):
-        """Extract 1D density by using projection Counts and normalizing by area."""
-        histo_2d = value["projection"][0]
-        source_h = self.hist[histo_2d]["histogram"]
-        project_axis = value["projection"][1]
-
-        if project_axis == "x":
-            h_1d = source_h[:, sum]
-            total_ortho_width = source_h.axes[1].edges[-1] - source_h.axes[1].edges[0]
-        else:
-            h_1d = source_h[sum, :]
-            total_ortho_width = source_h.axes[0].edges[-1] - source_h.axes[0].edges[0]
-
-        areas_1d = h_1d.axes[0].widths * total_ortho_width
-
-        view = h_1d.view()
-        if self._check_for_all_attributes(view):
-            vals = view["value"] / areas_1d
-            uncs = np.sqrt(view["variance"]) / areas_1d
-        else:
-            vals = view / areas_1d
-            uncs = np.sqrt(vals)  # Fallback if no weights
-
-        value["hist_values"] = np.asarray([vals.T])
-        value["x_bin_edges"] = np.asarray([h_1d.axes.edges[0]])
-        value["uncertainties"] = np.asarray([uncs.T])
-
     def _populate_density_from_probes(self):
         """Build density distributions from per-telescope sampling."""
         if not self._density_samples:

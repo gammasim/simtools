@@ -203,57 +203,6 @@ def set_style(palette="default", big_plot=False):
     plt.rc("font", family="serif", size=fontsize[plot_size])
 
 
-def get_colors(palette="default"):
-    """
-    Get the colour list of the palette requested.
-
-    If no palette is provided, the default is returned.
-
-    Parameters
-    ----------
-    palette: str
-        Colour palette.
-
-    Returns
-    -------
-    list
-        Colour list.
-
-    Raises
-    ------
-    KeyError
-        if provided palette does not exist.
-    """
-    if palette not in COLORS:
-        raise KeyError(f"palette must be one of {', '.join(COLORS)}")
-
-    return COLORS[palette]
-
-
-def get_markers():
-    """
-    Get the marker list used in this module.
-
-    Returns
-    -------
-    list
-        List with markers.
-    """
-    return MARKERS
-
-
-def get_lines():
-    """
-    Get the line style list used in this module.
-
-    Returns
-    -------
-    list
-        List with line styles.
-    """
-    return LINES
-
-
 def filter_plot_kwargs(kwargs):
     """Filter out kwargs that are not valid for plt.plot."""
     valid_keys = {
