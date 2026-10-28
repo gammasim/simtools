@@ -65,16 +65,6 @@ def _parse_line(line, parameter_name, schema_version):
     return _parse_shape(fields, line, kind, count)
 
 
-def parse_segmentation_file(path, parameter_name, schema_version):
-    """Parse a sim_telarray segmentation file for migration or diagnostics."""
-    records = []
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
-        line = line.split("#", 1)[0].strip()
-        if line:
-            records.append(_parse_line(line, parameter_name, schema_version))
-    return validate_segments(records, parameter_name, schema_version)
-
-
 def write_mirror_segmentation(records, output_path, parameter_name, schema_version):
     """Serialize validated segmentation records in sim_telarray syntax."""
     validate_segments(records, parameter_name, schema_version)

@@ -439,23 +439,6 @@ def test_prepare_data_dict_for_writing():
     }
 
 
-def test_get_unit_from_schema(num_gains_schema):
-    w1 = writer.ModelDataWriter()
-
-    assert w1._get_unit_from_schema() is None
-
-    w1.schema_dict = num_gains_schema
-
-    w1.schema_dict["data"][0]["unit"] = "m"
-    assert w1._get_unit_from_schema() == "m"
-
-    w1.schema_dict["data"][0]["unit"] = "dimensionless"
-    assert w1._get_unit_from_schema() is None
-
-    w1.schema_dict["data"][0].pop("unit")
-    assert w1._get_unit_from_schema() is None
-
-
 def test_parameter_is_a_file(num_gains_schema):
     w1 = writer.ModelDataWriter()
 

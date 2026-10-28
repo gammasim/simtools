@@ -527,25 +527,6 @@ def assert_n_showers_and_energy_range(file):
     return True
 
 
-def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
-    """
-    Assert that the expected output is present in the sim_telarray file.
-
-    Parameters
-    ----------
-    file: Path
-        Path to the sim_telarray file.
-    expected_sim_telarray_output: dict
-        Expected output values.
-
-    """
-    if expected_sim_telarray_output is None:
-        return True
-
-    item_to_check = _item_to_check_from_sim_telarray(file, expected_sim_telarray_output)
-    return _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
-
-
 def assert_expected_sim_telarray_output_and_event_type(
     file, expected_sim_telarray_output, event_type="shower"
 ):

@@ -331,12 +331,6 @@ class DataValidator:
 
         return expected_types
 
-    def _get_unit_list_for_values(self, value_as_list):
-        """Return a per-value unit list from current data dict unit entry."""
-        if isinstance(self.data_dict.get("unit"), list):
-            return self.data_dict.get("unit", [])
-        return [self.data_dict.get("unit")] * len(value_as_list)
-
     def _assign_validated_values(self, value_as_list, unit_as_list):
         """Assign validated value/unit as scalar or list depending on list length."""
         if len(value_as_list) == 1:

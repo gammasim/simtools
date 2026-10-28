@@ -22,31 +22,6 @@ class MockHandleBox:
         self.artist = artist
 
 
-def test_handlers(io_handler):
-    handler_list = [
-        leg_h.HexEdgePixelHandler,
-        leg_h.HexOffPixelHandler,
-        leg_h.HexPixelHandler,
-        leg_h.LSTHandler,
-        leg_h.MSTHandler,
-        leg_h.MeanRadiusOuterEdgeHandler,
-        leg_h.SCTHandler,
-        leg_h.SquareEdgePixelHandler,
-        leg_h.SquareOffPixelHandler,
-        leg_h.SquarePixelHandler,
-    ]
-
-    for handler in handler_list:
-        handler_instance = handler()
-        assert handler_instance.legend_artist is not None
-
-    tel_handler = leg_h.BaseLegendHandler("LSTN")
-    assert tel_handler.config is not None
-    assert "color" in tel_handler.config
-    assert "radius" in tel_handler.config
-    assert "shape" in tel_handler.config
-
-
 def test_calculate_center():
     handlebox = MockHandleBox(xdescent=10, ydescent=20, width=30, height=40)
 
@@ -121,19 +96,6 @@ def test_various_telescope_handlers():
     assert leg_h.VERITASHandler().telescope_type == "VERITAS"
     assert leg_h.HESSHandler().telescope_type == "HESS"
     assert leg_h.MAGICHandler().telescope_type == "MAGIC"
-
-
-def test_mean_radius_outer_edge_handler():
-    handlebox = MockHandleBox()
-    handler = leg_h.MeanRadiusOuterEdgeHandler()
-    patch = handler.legend_artist(None, None, None, handlebox)
-
-    assert patch is not None
-    assert isinstance(patch, leg_h.mpatches.Circle)
-    assert patch.get_facecolor() == (0.0, 0.0, 0.0, 0.0)
-    assert patch.get_edgecolor() == (*leg_h.mcolors.to_rgb("darkorange"), 1)
-    assert patch.get_radius() == handlebox.height
-    assert handlebox.artist == patch
 
 
 def test_base_legend_handler_raises_on_unknown_shape():

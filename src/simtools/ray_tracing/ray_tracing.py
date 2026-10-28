@@ -930,54 +930,6 @@ class RayTracing:
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 
-    def get_mean(self, key):
-        """
-        Get mean value of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Mean value of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.mean(self._results[key])
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
-    def get_std_dev(self, key):
-        """
-        Get std dev of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Std deviation of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.std(self._results[key])
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
     def images(self):
         """
         Get list of analyzed PSF images.

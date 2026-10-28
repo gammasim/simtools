@@ -854,11 +854,6 @@ def test_epos_flags(corsika_config_mock_array_model, mocker):
     """Test EPOS interaction model flags generation."""
     mocker.patch.object(
         corsika_config_mock_array_model,
-        "corsika_exec",
-        "/path/to/corsika77-epos",
-    )
-    mocker.patch.object(
-        corsika_config_mock_array_model,
         "interaction_table_path",
         "/path/to/corsika/epos",
     )
@@ -880,11 +875,6 @@ def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker
     """Test EPOS flags with different interaction table paths."""
     mocker.patch.object(
         corsika_config_mock_array_model,
-        "corsika_exec",
-        "/custom/corsika77-epos",
-    )
-    mocker.patch.object(
-        corsika_config_mock_array_model,
         "interaction_table_path",
         "/custom/tables",
     )
@@ -900,11 +890,6 @@ def test_corsika_configuration_interaction_flags_with_epos(
     corsika_config_mock_array_model, get_standard_corsika_parameters, mocker
 ):
     """Test interaction flags generation includes EPOS parameters."""
-    mocker.patch.object(
-        corsika_config_mock_array_model,
-        "corsika_exec",
-        "/path/to/corsika77-epos",
-    )
 
     interaction_flags = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
         get_standard_corsika_parameters

@@ -121,15 +121,6 @@ def trace_integration(trace, pedestals, window):
     return np.sum(calibrated[:, int(window[0]) : int(window[1])], axis=1)
 
 
-def find_signal_peaks(trace, prominence=None):
-    """Find peaks using scipy.signal with automatic prominence."""
-    trace = np.asarray(trace)
-    prom = prominence or (np.max(np.abs(trace)) * 0.1 + 1e-6)
-    peaks, _ = signal.find_peaks(trace, prominence=prom)
-
-    return peaks if peaks.size > 0 else np.array([np.argmax(np.abs(trace))])
-
-
 def get_time_axis(time_slice, n_samples):
     """
     Generate a time axis from the sampling period.

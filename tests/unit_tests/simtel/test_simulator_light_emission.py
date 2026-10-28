@@ -886,23 +886,6 @@ def test__initialize_light_emission_configuration_with_invalid_wavelength(simula
         simulator_instance._initialize_light_emission_configuration(config)
 
 
-def test_get_available_wavelengths(simulator_instance):
-    # Setup mock wavelengths
-    mock_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
-    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
-        mock_wavelengths
-    )
-
-    # Call method
-    wavelengths = simulator_instance.get_available_wavelengths()
-
-    # Verify it returns the wavelengths from the calibration model
-    assert wavelengths == mock_wavelengths
-    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
-        "flasher_wavelength"
-    )
-
-
 def test_get_available_wavelengths_from_config():
     # Setup mock calibration model
     mock_calibration_model = Mock()

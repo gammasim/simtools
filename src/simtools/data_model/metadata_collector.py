@@ -835,33 +835,6 @@ class MetadataCollector:
             meta_list.append(new_entry_dict)
         return meta_list
 
-    def _process_metadata_from_file(self, meta_dict):
-        """
-        Process metadata from file to ensure compatibility with metadata model.
-
-        Changes keys to lower case and removes line feeds from description fields.
-
-        Parameters
-        ----------
-        meta_dict: dict
-            Input metadata dictionary.
-
-        Returns
-        -------
-        dict
-            Metadata dictionary.
-
-        """
-        meta_dict = gen.change_dict_keys_case(meta_dict, True)
-        try:
-            meta_dict[self.observatory]["product"]["description"] = self._remove_line_feed(
-                meta_dict[self.observatory]["product"]["description"]
-            )
-        except KeyError, AttributeError:
-            pass
-
-        return meta_dict
-
     @staticmethod
     def _remove_line_feed(string):
         """
@@ -878,28 +851,6 @@ class MetadataCollector:
             with line feeds removed
         """
         return string.replace("\n", " ").replace("\r", "").replace("  ", " ")
-
-    def _copy_list_type_metadata(self, context_dict, _input_metadata, key):
-        """
-        Copy list-type metadata from file.
-
-        Very fine tuned.
-
-        Parameters
-        ----------
-        context_dict: dict
-            Dictionary for top level metadata (context level)
-        _input_metadata: dict
-            Dictionary for metadata from file.
-        key: str
-            Key for metadata entry.
-
-        """
-        try:
-            for document in _input_metadata["context"][key]:
-                context_dict[key] = self._fill_context_sim_list(context_dict[key], document)
-        except KeyError:
-            pass
 
     def _all_values_none(self, input_dict):
         """

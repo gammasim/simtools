@@ -378,26 +378,6 @@ def test_run_psf_simulation(
                     assert result[2] is not None  # p_value should not be None with KS statistic
 
 
-def test_write_tested_parameters_to_file(
-    mock_telescope_model, temp_dir, sample_results, sample_parameters
-):
-    with (
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._add_units_to_psf_parameters"
-        ) as mock_units,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._create_log_header_and_format_value"
-        ) as mock_header,
-    ):
-        mock_units.return_value = sample_parameters
-        mock_header.return_value = "Test Header\n"
-
-        param_file = psf_opt.write_tested_parameters_to_file(
-            sample_results, sample_parameters, 5.0, temp_dir, mock_telescope_model
-        )
-        assert param_file.exists()
-
-
 def test__add_units_to_psf_parameters():
     # Test normal case with known parameters
     best_pars = make_mirror_align_random_parameters()

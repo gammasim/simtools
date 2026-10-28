@@ -507,64 +507,6 @@ def test_fill_context_sim_list(args_dict_site):
     assert _test_none == [_new_element]
 
 
-def test_process_metadata_from_file():
-    _collector = metadata_collector.MetadataCollector({})
-
-    meta_dict_1 = {"cta": {"product": {"description": "This is a sample description"}}}
-    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_1)
-    assert _dict_test_1 == meta_dict_1
-
-    meta_dict_2 = {"cta": {"PRODUCT": {"description": "This is a sample description"}}}
-    _collector._process_metadata_from_file(meta_dict_2)
-
-    meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
-    _collector._process_metadata_from_file(meta_dict_3)
-
-    meta_dict_4 = {"cta": {"product": {"description": None}}}
-    assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
-
-
-def test_copy_list_type_metadata(args_dict_site):
-    top_level_dict = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"}
-            ]
-        }
-    }
-
-    _input_meta = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
-                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
-            ]
-        }
-    }
-
-    _result_meta = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"},
-                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
-                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
-            ]
-        }
-    }
-
-    key = "associated_elements"
-
-    _collector = metadata_collector.MetadataCollector({})
-    _collector._copy_list_type_metadata(top_level_dict["context"], _input_meta, key)
-
-    assert _result_meta["context"][key] == top_level_dict["context"][key]
-
-    key = "documents"
-    _org_top_level_dict = copy.deepcopy(top_level_dict)
-    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
-    assert _org_top_level_dict == top_level_dict
-
-
 def get_generic_input_meta():
     return {
         "contact": "my_name",
