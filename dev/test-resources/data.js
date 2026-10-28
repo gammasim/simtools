@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793194290251,
+  "lastUpdate": 1793194867063,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -32490,6 +32490,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 487.140625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0d5a03da539813aff11c9244b434f905ae8d2f37",
+          "message": "Use one way to save figures and multi-page PDF reports (#2691)\n\n* Use one way to save figures and multi-page PDF reports\n\nvisualize.save_figure writes single figures and the new visualize.pdf_report\ncontext manager writes multi-page PDFs. Replace the module-specific savers\n(_PdfReport, _pdf_report, _save_page, save_figures_to_single_document,\n_save_plot_as_png, _save_figure) and direct savefig/PdfPages calls.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Keep decimal points in figure file names\n\nsave_figure replaced the suffix with Path.with_suffix, which cut names such\nas ray_tracing_..._za20.0deg_psf_cm at the last decimal point, so different\nplots could overwrite each other. Replace only a figure suffix and append\nthe format. Test pdf_report cleanup with a real figure and PDF.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Test limit-plot saving with a real file; use st_size\n\ntest_plot_limits writes the PNG instead of patching save_figure.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T14:22:45+01:00",
+          "tree_id": "a7cb12e0c24b22ab18e1a4505388723ea9b0fb7a",
+          "url": "https://github.com/gammasim/simtools/commit/0d5a03da539813aff11c9244b434f905ae8d2f37"
+        },
+        "date": 1793194853602,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 46.380311518999996,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 45.17,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 481.34765625,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
