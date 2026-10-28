@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 
 from simtools.job_execution import log_inspector
-from simtools.testing import configuration, helpers, options, validate_output
+from simtools.testing import configuration, helpers, options
+from simtools.testing.output_validation.runner import validate_application_output
 
 logger = logging.getLogger()
 
@@ -277,7 +278,7 @@ def test_applications_from_config(
 
     assert log_inspector.inspect([result.stdout, result.stderr])
 
-    validate_output.validate_application_output(
+    validate_application_output(
         tmp_config,
         model_version,
         config_file_model_version or model_version,
