@@ -10,6 +10,7 @@ def test_get_meta_parameter_registry_uses_generated_and_model_parameter_sources(
 
     assert registry["simtools_version"]["source_type"] == "generated"
     assert registry["random_mono_prob"]["source_type"] == "model_parameter"
+    assert registry["simzen"]["source_type"] == "ctao_datamodel"
 
 
 def test_get_meta_parameter_registry_filters_by_source_type():
@@ -46,6 +47,7 @@ def test_validate_metadata_uses_mode_for_required_values():
     simtel_validate_metadata.validate_metadata(["metaparam telescope add asum_clipping"])
     simtel_validate_metadata.validate_metadata(["config_release = test-release"])
     simtel_validate_metadata.validate_metadata(["metaparam global set primary = gamma"])
+    simtel_validate_metadata.validate_metadata(["metaparam global set SIMZEN = 20.0"])
 
     with pytest.raises(ValueError, match=r"value missing for required key latitude"):
         simtel_validate_metadata.validate_metadata(["metaparam global set latitude"])

@@ -22,6 +22,9 @@ these counts are derived from reduced-event data or the sim_telarray log without
 simtel event output.
 When `--grid_output_path` is used, the manifest is written alongside the files packed for grid
 registration.
+sim_telarray event files include CTAO DataProducts metadata. Use `--production_id` to set the
+production name recorded in the file and job manifest; when omitted, `--label` supplies it.
+Existing simtools metadata keys remain available for older readers.
 
 The installed CORSIKA build determines which hadronic interaction-model combinations are
 available. Use `--list_available_corsika_models` to inspect them. For simulations that run

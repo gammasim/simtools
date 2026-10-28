@@ -103,6 +103,14 @@ def test_add_arguments_registers_job_grid_file_and_row():
     assert args.job_grid_row == 3
 
 
+def test_add_arguments_registers_production_id():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+    args = parser.parse_args(["--production_id", "production-42"])
+
+    assert args.production_id == "production-42"
+
+
 def test_add_arguments_job_grid_row_defaults_to_one():
     parser = CommandLineParser()
     parser.add_argument_definitions(app._ARGUMENTS)

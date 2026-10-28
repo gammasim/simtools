@@ -74,7 +74,7 @@ _GROUPING_EXCLUDE_KEYS = {
 }
 _SIMTEL_METADATA_MANIFEST_KEYS = {
     "primary": ("primary", "primary_particle", "particle"),
-    "azimuth_angle": ("azimuth", "azimuth_angle"),
+    "azimuth_angle": ("simaz", "azimuth_angle", "azimuth"),
     "zenith_angle": ("zenith", "zenith_angle"),
     "energy_min": ("energy_min",),
     "energy_max": ("energy_max",),

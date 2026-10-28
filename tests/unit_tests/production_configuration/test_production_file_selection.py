@@ -296,13 +296,14 @@ def test_check_manifest_compares_embedded_simtel_metadata(tmp_test_directory, mo
     manifest_path = _write_manifest(tmp_test_directory, "job-000001", 1)
     mocker.patch(
         "simtools.production_configuration.production_file_selection.read_sim_telarray_metadata",
-        return_value=({"primary": "gamma", "zenith": "20 deg"}, None),
+        return_value=({"primary": "gamma", "zenith": "20 deg", "simaz": "180.0"}, None),
     )
 
     result = check_manifest(manifest_path)
 
     assert "primary" not in result["unverifiable_fields"]
     assert "zenith_angle" not in result["unverifiable_fields"]
+    assert "azimuth_angle" not in result["unverifiable_fields"]
 
 
 def test_compare_simtel_metadata_skips_configuration_fields_without_metadata(mocker):

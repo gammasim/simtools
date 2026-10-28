@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import astropy.units as u
 import h5py
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_metadata import (
@@ -135,6 +136,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
 
     manifest = build_production_job_manifest(
         _args(
+            production_id="production-42",
             energy_range=(0.03 * u.TeV, 300 * u.TeV),
             core_scatter=(10, 500 * u.m),
             showers_per_run=100,
@@ -148,6 +150,7 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
 
     assert manifest["schema_version"] == "1.0.0"
     assert manifest["product_type"] == "simulate_prod_job"
+    assert manifest["production_id"] == "production-42"
     assert manifest["catalog_metadata"]["runNumber"] == 12
     assert manifest["configuration"]["run_number"] == 12
     assert manifest["configuration"]["zenith_angle"] == 20 * u.deg
@@ -156,6 +159,60 @@ def test_build_production_job_manifest_contains_selection_fields(tmp_test_direct
         "reduced_event_data": ["gamma_run000012.reduced_event_data.hdf5"],
         "sim_telarray": ["gamma_run000012.simtel.zst"],
     }
+
+
+def test_build_production_job_manifest_uses_resolved_angles_from_input_file(tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "job-000001"
+    output_directory.mkdir()
+    simulator = _simulator("MSTS-01", run_number=12)
+    simulator.corsika_configurations = [None]
+    simulator.simulation_parameters = [
+        SimpleNamespace(
+            primary_particle=SimpleNamespace(name="gamma"),
+            shower_events=10,
+            azimuth_angle=180.0,
+            zenith_angle=40.0,
+        )
+    ]
+
+    manifest = build_production_job_manifest(
+        _args(
+            azimuth_angle=0 * u.deg,
+            zenith_angle=0 * u.deg,
+            energy_range=(100 * u.GeV, 100 * u.GeV),
+            core_scatter=(1, 840 * u.m),
+            showers_per_run=None,
+            simulation_software="sim_telarray",
+            corsika_file="showers.dat",
+        ),
+        simulator,
+        output_directory,
+    )
+
+    assert_quantity_allclose(manifest["configuration"]["azimuth_angle"], 180 * u.deg)
+    assert_quantity_allclose(manifest["configuration"]["zenith_angle"], 40 * u.deg)
+
+
+def test_build_production_job_manifest_preserves_generated_shower_angle_precision(
+    tmp_test_directory,
+):
+    simulator = _simulator("MSTS-01")
+    simulator.simulation_parameters = [SimpleNamespace(azimuth_angle=190.12, zenith_angle=20.12)]
+    manifest = build_production_job_manifest(
+        _args(
+            azimuth_angle=190.123 * u.deg,
+            zenith_angle=20.123 * u.deg,
+            energy_range=(0.03 * u.TeV, 300 * u.TeV),
+            core_scatter=(10, 500 * u.m),
+            showers_per_run=100,
+            simulation_software="corsika_sim_telarray",
+        ),
+        simulator,
+        Path(tmp_test_directory),
+    )
+
+    assert_quantity_allclose(manifest["configuration"]["azimuth_angle"], 190.123 * u.deg)
+    assert_quantity_allclose(manifest["configuration"]["zenith_angle"], 20.123 * u.deg)
 
 
 def test_build_production_job_manifest_records_reduced_event_counts(tmp_test_directory):

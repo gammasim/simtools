@@ -33,6 +33,16 @@ configuration files is not supported.
    :members:
 ```
 
+## ctao_metadata
+
+The CTAO DataProducts metadata bridge maps resolved production settings to the installed model's
+FITS keywords.
+
+```{eval-rst}
+.. automodule:: simtel.ctao_metadata
+   :members:
+```
+
 ## simtel_validate_metadata
 
 (simtel-validate-metadata-1)=

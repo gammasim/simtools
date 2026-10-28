@@ -25,6 +25,8 @@ on:
   release:
     types: [published]
 
+permissions: {}
+
 jobs:
   check_unit_test_files:
     runs-on: ubuntu-24.04
@@ -63,6 +65,38 @@ jobs:
           if missing:
               raise SystemExit("Modules without unit tests:\n" + "\n".join(sorted(missing)))
           PY
+
+  ctao_datamodel_compatibility:
+    needs: check_unit_test_files
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        ctao-version: ["==1.4.0", "<2"]
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up simtools tests
+        uses: ./.github/actions/setup-simtools-tests
+        with:
+          install-dependencies: "true"
+          extract-simulation-model: "false"
+
+      - name: Install ctao-datamodel release
+        env:
+          CTAO_VERSION_SPEC: ${{ matrix.ctao-version }}
+        run: python -m pip install --upgrade "ctao-datamodel${CTAO_VERSION_SPEC}"
+
+      - name: Test CTAO metadata compatibility
+        run: >-
+          pytest tests/unit_tests/simtel/test_ctao_metadata.py
+          tests/unit_tests/simtel/test_simtel_validate_metadata.py
 
   unit_tests:
     needs: check_unit_test_files
