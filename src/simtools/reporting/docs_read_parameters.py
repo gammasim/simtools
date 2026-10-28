@@ -14,6 +14,7 @@ import numpy as np
 
 from simtools.application.model_reader import require_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
+from simtools.data_model import parameter_catalog as catalog
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.asset_names import get_export_file_name
@@ -253,7 +254,7 @@ class ReadParameters:
         changes = self._build_delta_changes(
             base_parameter_data,
             current_parameter_data,
-            parameters=names.model_parameters(None).keys(),
+            parameters=catalog.model_parameters(None).keys(),
         )
 
         output_filename = Path(self.output_path / f"{self.array_element}.md")
@@ -690,8 +691,8 @@ class ReadParameters:
         """
         parameter_dict = {}
 
-        for instrument_class in names.collection_to_instrument_class_key(collection):
-            for parameter, details in names.model_parameters(instrument_class).items():
+        for instrument_class in catalog.collection_to_instrument_class_key(collection):
+            for parameter, details in catalog.model_parameters(instrument_class).items():
                 parameter_dict[parameter] = {
                     "description": details.get("description"),
                     "short_description": details.get("short_description"),
@@ -731,7 +732,7 @@ class ReadParameters:
         data = []
         dict_tables = []
 
-        for parameter in filter(all_parameter_data.__contains__, names.model_parameters().keys()):
+        for parameter in filter(all_parameter_data.__contains__, catalog.model_parameters().keys()):
             parameter_data = all_parameter_data.get(parameter)
             parameter_version = telescope_model.get_parameter_version(parameter)
             unit = parameter_data.get("unit") or " "
@@ -999,7 +1000,7 @@ class ReadParameters:
             f"Comparing parameters across model versions for Telescope: {self.array_element}"
             f" and Site: {self.site}."
         )
-        all_parameter_names = names.model_parameters(None).keys()
+        all_parameter_names = catalog.model_parameters(None).keys()
         all_parameter_data = self.model_reader.get_model_parameters_for_all_model_versions(
             site=self.site, array_element_name=self.array_element, collection=collection
         )

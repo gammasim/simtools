@@ -1,5 +1,26 @@
 """Select simulation-file readers independently of simulation software."""
 
+from typing import Protocol
+
+
+class EventReader(Protocol):
+    """Read run information, metadata, parameters, and reduced event records."""
+
+    def read_run_number(self):
+        """Return the run number, or None when absent."""
+
+    def count_events(self):
+        """Return shower and event counts."""
+
+    def iter_records(self, file_id=0):
+        """Yield reduced event table names and row dictionaries."""
+
+    def read_metadata(self):
+        """Return metadata collected while iterating reduced records."""
+
+    def read_simulation_parameters(self):
+        """Return physical shower settings."""
+
 
 def _eventio_reader(file_name):
     """Construct the reader for CORSIKA IACT and sim_telarray eventio files."""
@@ -10,12 +31,12 @@ def _eventio_reader(file_name):
     return EventioReader(file_name)
 
 
-_READERS = {"eventio": _eventio_reader}
+READERS = {"eventio": _eventio_reader}
 
 
 def available_formats():
     """Return the registered simulation-file format names."""
-    return tuple(sorted(_READERS))
+    return tuple(sorted(READERS))
 
 
 def get_reader(file_name, file_format="eventio"):
@@ -30,7 +51,7 @@ def get_reader(file_name, file_format="eventio"):
 
     Returns
     -------
-    object
+    EventReader
         Reader supplied by the selected factory.
 
     Raises
@@ -39,7 +60,7 @@ def get_reader(file_name, file_format="eventio"):
         If the requested format is not registered.
     """
     try:
-        factory = _READERS[file_format]
+        factory = READERS[file_format]
     except KeyError as exc:
         raise ValueError(
             f"Unknown simulation-file format '{file_format}'. "

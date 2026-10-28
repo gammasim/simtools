@@ -6,10 +6,10 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.simtel.ctao_metadata import get_ctao_metadata_registry
 from simtools.simtel.simtel_io_metadata import normalize_sim_telarray_metadata
-from simtools.utils import names
 
 META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter", "ctao_datamodel")
 # Sources whose scope and values are fully described by the registry.
@@ -151,7 +151,7 @@ def _build_meta_parameter_registry(registry_source):
             **definition,
         }
 
-    for source_name, model_schema in names.model_parameters().items():
+    for source_name, model_schema in catalog.model_parameters().items():
         try:
             emitted_name, _ = _get_emitted_name_and_mode(model_schema)
         except KeyError:

@@ -7,10 +7,11 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools import settings
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.asset_names import get_simtel_table_file_name
-from simtools.sim_events.formats.registry import get_reader
+from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
 from simtools.simtel.ctao_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -91,7 +92,7 @@ class SimtelModelWriter:
         global_parameters = {
             name: parameter
             for name, parameter in software_parameters.items()
-            if names.is_global_sim_telarray_parameter(name)
+            if catalog.is_global_sim_telarray_parameter(name)
         }
         parameters.update(global_parameters)
         additional_models.export_model_files(
