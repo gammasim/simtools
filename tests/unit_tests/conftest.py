@@ -411,18 +411,6 @@ def _mock_export_model_files(*args, **kwargs):
     return {}
 
 
-def _mock_get_ecsv_file_as_astropy_table(*args, **kwargs):
-    """Mock get_ecsv_file_as_astropy_table with Quantity columns."""
-    from astropy.table import Column, Table
-
-    table = Table()
-    table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
-    table["differential_photon_rate"] = Column(
-        [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
-    )
-    return table
-
-
 def _mock_get_array_elements_of_type(array_element_type, all_elements):
     """Filter array elements by type prefix."""
     return [elem for elem in all_elements if elem.startswith(array_element_type)]
@@ -502,7 +490,6 @@ def mock_model_reader():
     model_source.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
     model_source.export_model_files.side_effect = _mock_export_model_files
     model_source.export_model_file.return_value = None
-    model_source.get_ecsv_file_as_astropy_table.side_effect = _mock_get_ecsv_file_as_astropy_table
     return model_source
 
 

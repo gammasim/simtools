@@ -1,325 +1,15 @@
 """Read simulation models through a source-neutral interface."""
 
-import filecmp
-import shutil
 from copy import deepcopy
 from pathlib import Path
 
-from astropy.table import Table
-from packaging.version import Version
-
 from simtools import settings
 from simtools.data_model import parameter_catalog as catalog
-from simtools.data_model import schema
-from simtools.data_model.table_asset import read_ecsv_asset, resolve_asset_path
-from simtools.io import ascii_handler
-from simtools.model_repository import files
-from simtools.model_repository.asset_names import (
-    ECSV_SUFFIX,
-    SOURCE_VALUE_KEY,
-    qualify_parameter_file_name,
-)
-from simtools.model_repository.git_model import GitModelSource
-from simtools.model_repository.parsing import normalize_model_parameter
+from simtools.model_repository.asset_names import ECSV_SUFFIX, SOURCE_VALUE_KEY
+from simtools.model_repository.source import ModelSource
+from simtools.model_repository.storage import DirectoryStorage, GitStorage, MemoryStorage
 from simtools.utils import names
 from simtools.version import resolve_version_to_latest_patch
-
-
-class FileSystemModelSource:
-    """Read-only source backed by a checked-out simulation-model repository."""
-
-    def __init__(self, simulation_models_path):
-        """Initialize and validate a repository path."""
-        self.simulation_models_path = Path(simulation_models_path).expanduser().resolve()
-        self.productions_path = self.simulation_models_path / "simulation-models/productions"
-        self.model_parameters_path = (
-            self.simulation_models_path / "simulation-models/model_parameters"
-        )
-        self._production_tables = {}
-        self._production_files = {}
-        self._parameters = {}
-        self._model_versions = None
-        self._validate_model_path()
-
-    def is_configured(self):
-        """Return whether this source is ready to read."""
-        return True
-
-    @property
-    def source_name(self):
-        """Return a user-facing description of the model source."""
-        return str(self.simulation_models_path)
-
-    @property
-    def source_config(self):
-        """Return the serializable source selection for worker processes."""
-        return {"type": "filesystem", "path": str(self.simulation_models_path)}
-
-    def _validate_model_path(self):
-        """Validate the required simulation-model directories."""
-        if not self.simulation_models_path.exists():
-            raise FileNotFoundError(
-                f"Simulation models path does not exist: {self.simulation_models_path}"
-            )
-        for required_path in (self.productions_path, self.model_parameters_path):
-            if not required_path.is_dir():
-                raise FileNotFoundError(
-                    f"Expected simulation models directory not found: {required_path}"
-                )
-
-    def get_model_versions(self, collection_name="telescopes"):
-        """Return semantically sorted production versions."""
-        del collection_name
-        if self._model_versions is None:
-            versions = [path.name for path in self.productions_path.iterdir() if path.is_dir()]
-            self._model_versions = sorted(versions, key=Version)
-        return list(self._model_versions)
-
-    def get_production_descriptions(self):
-        """Return model-version descriptions from production info files."""
-        info_files = set(self.productions_path.glob("*/info.yaml")) | set(
-            self.productions_path.glob("*/info.yml")
-        )
-        return files.collect_production_descriptions(
-            info_files, ascii_handler.collect_data_from_file
-        )
-
-    def read_production_table(self, collection_name, model_version):
-        """Return an aggregated production table for a collection and version."""
-        key = (str(model_version), collection_name)
-        if key not in self._production_tables:
-            model_path = self.productions_path / str(model_version)
-            if not model_path.is_dir():
-                raise ValueError(f"Model version {model_version} not found in {self.source_name}")
-            version_key = str(model_version)
-            if version_key not in self._production_files:
-                self._production_files[version_key] = files.get_production_table_files(model_path)
-            tables = files.read_production_tables(
-                model_path,
-                collection_name=collection_name,
-                production_files=self._production_files[version_key],
-            )
-            try:
-                self._production_tables[key] = tables[collection_name]
-            except KeyError as exc:
-                raise ValueError(
-                    f"No production table for {collection_name} in model version {model_version}"
-                ) from exc
-        return deepcopy(self._production_tables[key])
-
-    def read_parameters(self, parameter_versions, collection_name, instrument=None, site=None):
-        """Read parameter files by name and version."""
-        instrument = self._get_parameter_instrument(
-            {"instrument": instrument, "site": site}, collection_name
-        )
-
-        parameters = []
-        for parameter, parameter_version in parameter_versions.items():
-            parameter_scope = catalog.get_model_parameter_scope(
-                collection_name, instrument, parameter
-            )
-            parameter_path = self._parameter_path(
-                collection_name, parameter_scope, parameter, parameter_version
-            )
-            if not parameter_path.is_file():
-                continue
-            parameter_data = self._read_parameter_file(parameter_path)
-            if self._matches_filters(parameter_data, parameter_scope, site):
-                parameters.append(parameter_data)
-        if not parameters:
-            raise ValueError(f"No parameters found for {collection_name}: {parameter_versions}")
-        return parameters
-
-    @staticmethod
-    def _get_parameter_instrument(query, collection_name):
-        """Resolve the instrument scope used for a parameter lookup."""
-        instrument = query.get("instrument")
-        if instrument:
-            return instrument
-        if collection_name == "sites" and query.get("site"):
-            return f"OBS-{query['site']}"
-        if collection_name in ("configuration_corsika", "configuration_sim_telarray"):
-            return "global"
-        raise ValueError(
-            f"Filesystem lookup for collection {collection_name} requires an array element name"
-        )
-
-    def _read_query_parameter(self, parameter_query, query, collection_name, instrument):
-        """Read one parameter selected by a source query."""
-        parameter = parameter_query.get("parameter")
-        parameter_version = parameter_query.get("parameter_version")
-        if not parameter or not parameter_version:
-            return None
-        parameter_scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
-        parameter_path = self._parameter_path(
-            collection_name, parameter_scope, parameter, parameter_version
-        )
-        if not parameter_path.is_file():
-            return None
-        parameter_data = self._read_parameter_file(parameter_path)
-        return (
-            parameter_data
-            if self._matches_filters(parameter_data, parameter_scope, query.get("site"))
-            else None
-        )
-
-    def _parameter_path(self, collection_name, instrument, parameter, parameter_version):
-        """Return the path for one parameter version."""
-        scope = catalog.get_model_parameter_scope(collection_name, instrument, parameter)
-        return (
-            self.model_parameters_path / scope / parameter / f"{parameter}-{parameter_version}.json"
-        )
-
-    def _read_parameter_file(self, parameter_path):
-        """Read and cache one parameter JSON file."""
-        key = str(parameter_path)
-        if key not in self._parameters:
-            data = ascii_handler.collect_data_from_file(file_name=parameter_path)
-            data = normalize_model_parameter(data)
-            self._parameters[key] = data
-        return deepcopy(self._parameters[key])
-
-    @staticmethod
-    def _matches_filters(parameter_data, instrument, site):
-        """Return whether parameter metadata matches source filters."""
-        if instrument == "global":
-            instrument = None
-        if instrument and parameter_data.get("instrument") != instrument:
-            return False
-        parameter_sites = parameter_data.get("site")
-        if site and isinstance(parameter_sites, list):
-            return site in parameter_sites
-        if not site or parameter_sites == site:
-            return True
-        return instrument is None and parameter_sites is None
-
-    def export_model_files(self, parameters=None, file_names=None, dest=None):
-        """Copy referenced model files to a destination directory."""
-        if dest is None:
-            raise ValueError("Destination path is required to export model files.")
-        destination = Path(dest)
-        destination.mkdir(parents=True, exist_ok=True)
-        exported = {}
-        for parameter in self._files_to_export(parameters, file_names):
-            source = self.resolve_parameter_asset(parameter)
-            status = self._copy_model_file(parameter, source, destination)
-            exported[parameter.get("value", source.name)] = status
-        return exported
-
-    @staticmethod
-    def _files_to_export(parameters, file_names):
-        """Return parameter records selected for export."""
-        if parameters is not None and file_names is None:
-            return [
-                parameter
-                for parameter in parameters.values()
-                if isinstance(parameter, dict) and parameter.get("file") and parameter.get("value")
-            ]
-        names_to_export = [file_names] if isinstance(file_names, str) else file_names or []
-        return [{"value": file_name} for file_name in names_to_export]
-
-    def _copy_model_file(self, parameter, source, destination):
-        """Copy one resolved model asset and return its export status."""
-        target = self._prepare_copy_target(parameter, source, destination)
-        if target is None:
-            return "file exists"
-        if not source.is_file():
-            raise FileNotFoundError(f"Model file not found: {source}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        return "copied from filesystem"
-
-    def _prepare_copy_target(self, parameter, source, destination):
-        """Return a safe copy target, or None when the file already exists."""
-        original_name = parameter.get(SOURCE_VALUE_KEY, parameter.get("value", source.name))
-        file_name = self._get_export_file_name(parameter, source)
-        target = destination / file_name
-        if not target.exists():
-            return target
-        if filecmp.cmp(source, target, shallow=False):
-            return None
-        if source.suffix.lower() == ECSV_SUFFIX:
-            self._raise_collision(target, destination)
-
-        file_name = self._get_collision_file_name(original_name, source)
-        target = destination / file_name
-        parameter[SOURCE_VALUE_KEY] = original_name
-        parameter["value"] = file_name
-        if target.exists():
-            if filecmp.cmp(source, target, shallow=False):
-                return None
-            self._raise_collision(target, destination)
-        return target
-
-    @staticmethod
-    def _get_export_file_name(parameter, source):
-        """Return the destination basename for a model asset."""
-        if parameter.get("value") is None:
-            return source.name
-        return qualify_parameter_file_name(parameter, fallback_instrument=source.parent.parent.name)
-
-    @staticmethod
-    def _raise_collision(target, destination):
-        """Raise an error instead of overwriting a colliding model asset."""
-        raise FileExistsError(
-            f"Refusing to overwrite colliding model asset '{target.name}' in {destination}"
-        )
-
-    @staticmethod
-    def _get_collision_file_name(file_name, source):
-        """Return a deterministic basename qualified by the model scope."""
-        path = Path(file_name)
-        scope = source.parent.parent.name
-        return f"{path.stem}-{scope}{path.suffix}"
-
-    def resolve_parameter_asset(self, parameter_data):
-        """Resolve a parameter asset relative to its parameter document."""
-        value = (
-            parameter_data.get(SOURCE_VALUE_KEY, parameter_data.get("value"))
-            if isinstance(parameter_data, dict)
-            else parameter_data
-        )
-        if not isinstance(value, str):
-            raise ValueError(f"Model asset value must be a relative filename, got {value!r}")
-        parameter = parameter_data.get("parameter") if isinstance(parameter_data, dict) else None
-        version = (
-            parameter_data.get("parameter_version") if isinstance(parameter_data, dict) else None
-        )
-        instrument = parameter_data.get("instrument") if isinstance(parameter_data, dict) else None
-        if parameter and version:
-            scope = instrument or "global"
-            parameter_file = (
-                self.model_parameters_path / scope / parameter / f"{parameter}-{version}.json"
-            )
-        else:
-            parameter_file = self.model_parameters_path / "parameter.json"
-        return resolve_asset_path(value, parameter_file)
-
-    def get_parameter_table(self, parameter_data):
-        """Resolve and validate an ECSV table referenced by a parameter record."""
-        parameter = parameter_data.get("parameter")
-        schema_version = parameter_data.get("model_parameter_schema_version")
-        schema_dict = schema.get_model_parameter_schema(parameter, schema_version)
-        data_entries = [
-            entry for entry in schema_dict.get("data", []) if entry.get("type") == "file"
-        ]
-        schema_entry = data_entries[0] if data_entries else None
-        return read_ecsv_asset(
-            self.resolve_parameter_asset(parameter_data),
-            schema_entry=schema_entry,
-            parameter_data=parameter_data,
-        )
-
-    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
-        """Read an ECSV model file."""
-        source = self.resolve_parameter_asset(
-            parameter_data if parameter_data is not None else {"value": file_name}
-        )
-        if not source.is_file():
-            raise FileNotFoundError(f"Model file not found: {source}")
-        if parameter_data is None:
-            return Table.read(source, format="ascii.ecsv")
-        return read_ecsv_asset(source, parameter_data=parameter_data)
 
 
 class SimulationModelReader:
@@ -334,12 +24,25 @@ class SimulationModelReader:
     @classmethod
     def from_files(cls, simulation_models_path):
         """Create a reader for a checked-out model repository."""
-        return cls(FileSystemModelSource(simulation_models_path))
+        storage = DirectoryStorage(simulation_models_path)
+        if not storage.root.exists():
+            raise FileNotFoundError(f"Simulation models path does not exist: {storage.root}")
+        for required in ("simulation-models/productions", "simulation-models/model_parameters"):
+            if not (storage.root / required).is_dir():
+                raise FileNotFoundError(
+                    f"Expected simulation models directory not found: {storage.root / required}"
+                )
+        return cls(ModelSource(storage))
 
     @classmethod
     def from_git(cls, repository_path, revision, object_store=None):
         """Create a reader for one immutable revision of a Git repository."""
-        return cls(GitModelSource(repository_path, revision, object_store=object_store))
+        return cls(ModelSource(GitStorage(repository_path, revision, object_store=object_store)))
+
+    @classmethod
+    def from_memory(cls, files):
+        """Create a reader from in-memory model files."""
+        return cls(ModelSource(MemoryStorage(files)))
 
     @property
     def source_name(self):
@@ -594,12 +297,6 @@ class SimulationModelReader:
                 "exported as a table"
             )
         return None
-
-    def get_ecsv_file_as_astropy_table(self, file_name, parameter_data=None):
-        """Read an ECSV model file through the selected source."""
-        if parameter_data is not None and hasattr(self._source, "get_parameter_table"):
-            return self.get_parameter_table(parameter_data)
-        return self._source.get_ecsv_file_as_astropy_table(file_name)
 
     def _read_parameters(self, parameter_versions, collection, instrument=None, site=None):
         """Read parameters and return them keyed by parameter name."""

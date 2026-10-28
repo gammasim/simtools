@@ -5,7 +5,6 @@ from pathlib import Path
 
 from packaging.version import InvalidVersion, Version
 
-from simtools.io import ascii_handler
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -28,40 +27,6 @@ def collect_production_descriptions(info_files, read_info):
     return descriptions
 
 
-def get_production_table_files(model_path):
-    """Return production JSON files and the model version they belong to."""
-    models = [model_path.name]
-    info_path = model_path / "info.yml"
-    if info_path.exists():
-        info = ascii_handler.collect_data_from_file(file_name=info_path)
-        if info.get("model_update") == "patch_update":
-            models.extend(info.get("model_version_history", []))
-    models = sorted(set(models), key=Version)
-    return [
-        (model, file)
-        for model in models
-        for file in sorted((model_path.parent / model).rglob("*json"))
-    ]
-
-
-def read_production_tables(model_path, collection_name=None, production_files=None):
-    """Read and merge production tables for one model version."""
-    model_dict = {}
-    if production_files is None:
-        production_files = get_production_table_files(model_path)
-    for model, file in production_files:
-        if collection_name and (
-            names.get_collection_name_from_array_element_name(file.stem, False) != collection_name
-        ):
-            continue
-        _read_production_table(model_dict, file, model)
-
-    for table in model_dict.values():
-        table["model_version"] = model_path.name
-    _remove_deprecated_model_parameters(model_dict)
-    return model_dict
-
-
 def read_production_tables_from_documents(model_version, documents, collection_name=None):
     """Read and merge production tables from parsed repository documents.
 
@@ -82,12 +47,6 @@ def read_production_tables_from_documents(model_version, documents, collection_n
         table["model_version"] = model_version
     _remove_deprecated_model_parameters(model_dict)
     return model_dict
-
-
-def _read_production_table(model_dict, file, model_name):
-    """Read one production-table JSON file into an aggregate."""
-    parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
-    _merge_production_table(model_dict, file.stem, model_name, parameter_dict)
 
 
 def _merge_production_table(model_dict, array_element, model_name, parameter_dict):

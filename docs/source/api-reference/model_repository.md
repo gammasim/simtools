@@ -19,6 +19,13 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
+## source
+
+```{eval-rst}
+.. automodule:: model_repository.source
+   :members:
+```
+
 ## files
 
 ```{eval-rst}
@@ -33,12 +40,10 @@ parameters, production tables, and referenced files.
    :members:
 ```
 
-## Git backend and source
+## Git backend
 
 ```{eval-rst}
 .. automodule:: model_repository.git_backend
-   :members:
-.. automodule:: model_repository.git_model
    :members:
 ```
 
