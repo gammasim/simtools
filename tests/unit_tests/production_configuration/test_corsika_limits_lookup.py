@@ -1,7 +1,6 @@
 from itertools import product
 from pathlib import Path
 
-import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
@@ -94,24 +93,6 @@ def test_prepare_point_interpolators_builds_interpolator_state(corsika_limits_fo
         set(interpolators)
     )
     assert {"br_energy_min", "br_energy_max"}.issubset(set(interpolators))
-
-
-def test_interpolate_grid_limits_returns_requested_grid_shape(corsika_limits_for_test_file):
-    lookup = CorsikaLimitsLookup(
-        corsika_limits_for_test_file,
-        array_layout_name=ARRAY_LAYOUT_NAME,
-    )
-
-    interpolated = lookup.interpolate_grid_limits(
-        {
-            "zenith_angle": [20, 40] * u.deg,
-            "azimuth": [0, 180] * u.deg,
-            "nsb_level": [0.24, 0.84] * u.dimensionless_unscaled,
-        }
-    )
-
-    assert interpolated["lower_energy_limit"].shape == (2, 2, 2)
-    assert np.isfinite(interpolated["upper_radius_limit"][0, 0, 0])
 
 
 def test_interpolate_point_returns_interpolated_values(corsika_limits_for_test_file):

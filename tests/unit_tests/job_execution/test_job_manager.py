@@ -14,32 +14,6 @@ _PROFILE_CANDIDATE_FILE = "profile-candidate.ecsv"
 _TRANSMISSION_CANDIDATE_FILE = "transmission-candidate.ecsv"
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "max_attempts", "delay", "expected_calls", "should_raise"),
-    [
-        (None, 3, 1, 1, False),  # success first attempt
-        ([subprocess.CalledProcessError(1, "cmd"), None], 3, 5, 2, False),  # success second attempt
-        (subprocess.CalledProcessError(1, "cmd"), 2, 1, 2, True),  # failure all attempts
-        (None, 10, 2, 1, False),  # default parameters test
-    ],
-)
-def test_retry_command(mocker, side_effect, max_attempts, delay, expected_calls, should_raise):
-    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
-    mock_sleep = mocker.patch("simtools.job_execution.job_manager.time.sleep")
-    mock_run.side_effect = side_effect
-
-    if should_raise:
-        with pytest.raises(subprocess.CalledProcessError):
-            jm.retry_command("test cmd", max_attempts=max_attempts, delay=delay)
-    else:
-        result = jm.retry_command("test cmd", max_attempts=max_attempts, delay=delay)
-        assert result is True
-
-    assert mock_run.call_count == expected_calls
-    if expected_calls > 1:
-        mock_sleep.assert_called_with(delay)
-
-
 @pytest.fixture
 def mock_successful_run(mocker):
     mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")

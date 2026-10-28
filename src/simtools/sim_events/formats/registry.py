@@ -13,31 +13,6 @@ def _eventio_reader(file_name):
 _READERS = {"eventio": _eventio_reader}
 
 
-def register_reader(file_format, factory):
-    """Register a simulation-file reader factory.
-
-    Parameters
-    ----------
-    file_format : str
-        Unique format name, independent of file suffix and simulation software.
-    factory : callable
-        Callable accepting a file path and returning a reader. Readers supply
-        ``iter_records(file_id)``, ``read_metadata()``, ``read_run_number()``,
-        and ``count_events()``. See the simulation-file format documentation
-        for record fields and units.
-
-    Raises
-    ------
-    ValueError
-        If the name is empty, already registered, or the factory is not callable.
-    """
-    if not file_format or not callable(factory):
-        raise ValueError("A format name and callable reader factory are required.")
-    if file_format in _READERS:
-        raise ValueError(f"Simulation-file format '{file_format}' is already registered.")
-    _READERS[file_format] = factory
-
-
 def available_formats():
     """Return the registered simulation-file format names."""
     return tuple(sorted(_READERS))

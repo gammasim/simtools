@@ -63,7 +63,6 @@ class CorsikaLimitsLookup:
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
         self.lookup_interpolation_axes = None
-        self.lookup_points = None
         self.available_lookup_fields = None
         self.lookup_field_units = None
 
@@ -128,7 +127,6 @@ class CorsikaLimitsLookup:
             Interpolators keyed by lookup quantity.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
-        self.lookup_points = lookup_arrays["points"]
         self.lookup_interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
 
         if 1 in self.lookup_interpolation_axes:
@@ -178,70 +176,6 @@ class CorsikaLimitsLookup:
                 "or run without --corsika_limits if limits are not required for this use case."
             ) from exc
         return self.lookup_interpolators_for_point
-
-    def interpolate_grid_limits(self, target_values):
-        """
-        Interpolate lookup values on a regular zenith/azimuth/NSB grid.
-
-        Parameters
-        ----------
-        target_values : dict
-            Generated target-axis values.
-
-        Returns
-        -------
-        dict
-            Interpolated lookup values on the target grid.
-        """
-        lookup_arrays = self.load_matching_lookup_arrays()
-        points = self._build_wrapped_interpolation_points(lookup_arrays["points"])
-        interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
-
-        if len(interpolation_axes) < 2:
-            raise ValueError(
-                "Lookup table does not contain enough unique points for interpolation. "
-                "At least two varying dimensions are required among "
-                "(zenith, azimuth, nsb_level)."
-            )
-
-        target_grid = (
-            np.array(
-                np.meshgrid(
-                    target_values["zenith_angle"].value,
-                    target_values["azimuth"].value,
-                    target_values["nsb_level"].value,
-                    indexing="ij",
-                )
-            )
-            .reshape(3, -1)
-            .T
-        )
-        interpolation_points = points[:, interpolation_axes]
-        interpolation_target = target_grid[:, interpolation_axes]
-
-        def interpolate(values):
-            wrapped_values = self._repeat_wrapped_lookup_values(values)
-            linear_interpolator = LinearNDInterpolator(
-                interpolation_points,
-                wrapped_values,
-                fill_value=np.nan,
-            )
-            nearest_interpolator = NearestNDInterpolator(
-                interpolation_points,
-                wrapped_values,
-            )
-            interpolated = self._interpolate_with_nearest_fallback(
-                linear_interpolator,
-                nearest_interpolator,
-                interpolation_target,
-            )
-            return interpolated.reshape(
-                len(target_values["zenith_angle"]),
-                len(target_values["azimuth"]),
-                len(target_values["nsb_level"]),
-            )
-
-        return {key: interpolate(lookup_arrays[key]) for key in self.available_lookup_fields}
 
     def interpolate_point(self, zenith, azimuth, nsb=1.0):
         """
