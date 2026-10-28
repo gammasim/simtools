@@ -25,6 +25,7 @@ All software components of `simtools` are available as OCI-compatible container 
 - [Building simtools images](simtools_build_images.md):
 - [Dependency versions and provenance](dependency_versions.md): Maintain reproducible software
   versions and inspect container manifests.
+- [CTAO DataProducts metadata](ctao_datamodel.md): Maintain compatibility with ctao-datamodel.
 
 ## Preparing simtools Releases
 
@@ -43,5 +44,6 @@ simulation_formats.md
 continuous_integration.md
 simtools_build_images.md
 dependency_versions.md
+ctao_datamodel.md
 release.md
 ```
