@@ -28,8 +28,8 @@ def test_main_initializes_without_generating(mocker, tmp_test_directory, update_
     application = mocker.Mock()
     application.start.return_value = context
     mocker.patch.object(add_production, APPLICATION_ATTRIBUTE, application)
-    initialize = mocker.patch.object(add_production.model_repository, "initialize_production")
-    generate = mocker.patch.object(add_production.model_repository, "generate_new_production")
+    initialize = mocker.patch.object(add_production.maintenance, "initialize_production")
+    generate = mocker.patch.object(add_production.maintenance, "generate_new_production")
 
     add_production.main()
 
@@ -52,8 +52,8 @@ def test_main_generates_production_without_initialization(mocker, tmp_test_direc
     application = mocker.Mock()
     application.start.return_value = context
     mocker.patch.object(add_production, APPLICATION_ATTRIBUTE, application)
-    initialize = mocker.patch.object(add_production.model_repository, "initialize_production")
-    generate = mocker.patch.object(add_production.model_repository, "generate_new_production")
+    initialize = mocker.patch.object(add_production.maintenance, "initialize_production")
+    generate = mocker.patch.object(add_production.maintenance, "generate_new_production")
 
     add_production.main()
 
