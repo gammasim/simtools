@@ -84,7 +84,7 @@ class GitStorage:
         self.config = {
             "type": "git",
             "repository": str(self.repository),
-            "revision": self.revision,
+            "commit": self.revision,
         }
 
     def read_bytes(self, path):
