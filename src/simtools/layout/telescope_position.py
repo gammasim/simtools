@@ -275,22 +275,6 @@ class TelescopePosition:
             self._logger.error(f"Invalid coordinate system ({crs_name})")
             raise InvalidCoordSystemErrorError from e
 
-    def get_altitude(self):
-        """
-        Get altitude of an array element.
-
-        Returns
-        -------
-        astropy.Quantity
-            telescope altitude.
-
-        """
-        for _crs in self.crs.values():
-            if _crs["zz"]["value"]:
-                return _crs["zz"]["value"] * u.Unit(_crs["zz"]["unit"])
-
-        return np.nan
-
     def set_altitude(self, tel_altitude):
         """
         Set altitude of an array element.

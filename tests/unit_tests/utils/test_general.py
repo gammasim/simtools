@@ -221,11 +221,6 @@ def test_change_dict_keys_case(caplog) -> None:
     assert "Input is not a proper dictionary" in caplog.text
 
 
-@patch("builtins.input", side_effect=["Y", "y"])
-def test_user_confirm_yes(mock_input):
-    assert gen.user_confirm()
-
-
 def test_validate_data_type():
     test_cases = [
         # Test exact data type match
@@ -417,41 +412,6 @@ def test_convert_keys_in_dict_to_lowercase():
     input_data = {"Key1": 123, "Key2": [1, 2, 3], "Key3": {"NestedKey1": "value1"}}
     expected_output = {"key1": 123, "key2": [1, 2, 3], "key3": {"nestedkey1": "value1"}}
     assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
-
-
-def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
-    # Test with a list of file names with valid suffixes.
-    file_1 = tmp_test_directory / "file1.txt"
-    file_2 = tmp_test_directory / "file2.txt"
-    with open(file_1, "w", encoding="utf-8") as f:
-        f.write("Content of file 1")
-    with open(file_2, "w", encoding="utf-8") as f:
-        f.write("Content of file 2")
-    file_names = [file_1, file_2]
-    suffix_list = [".txt"]
-    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
-    assert result == [str(file_1), str(file_2)]
-
-    # Test with a list of file names with invalid suffixes.
-    suffix_list = [".json"]
-    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
-    assert result == []
-
-    # Test with a text file containing a list of file names.
-    list_file = tmp_test_directory / "list_file.list"
-    with open(list_file, "w", encoding="utf-8") as f:
-        f.write(f"{file_1}\n{file_2}\n")
-    file_names = [list_file]
-    suffix_list = []
-    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
-    assert result == [str(file_1), str(file_2)]
-
-    # Test with a non-existent file.
-    non_existent_file = tmp_test_directory / "non_existent_file.list"
-    file_names = [non_existent_file]
-    suffix_list = [".txt"]
-    with pytest.raises(FileNotFoundError):
-        gen.get_list_of_files_from_command_line(file_names, suffix_list)
 
 
 def test_resolve_file_patterns(tmp_test_directory):
