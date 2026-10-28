@@ -14,33 +14,23 @@ IGNORE_DIRECTORIES = {
 }
 INDEX_FILE_NAME = "index.md"
 SITE_TITLE = "Simulation Models and Model Parameters"
-PRODUCTION_DESCRIPTIONS_FILE_NAME = "production_version_descriptions.md"
+KEEP_INDEX_MARKER = "<!-- simtools: keep-index -->"
 TOCTREE_END = "```\n"
 
 
-def _site_introduction(directory):
+def _is_authored_index(directory):
+    """Return whether the directory has an index that the generator must preserve."""
+    index_file = directory / INDEX_FILE_NAME
+    return index_file.exists() and KEEP_INDEX_MARKER in index_file.read_text(encoding="utf-8")
+
+
+def _site_introduction():
     """Return the introduction of the site index page."""
-    content = (
+    return (
         "This site provides comprehensive documentation for"
         " CTAO simulation models and model parameters.\n"
         "Some reports list model parameters used in a production.\n"
         "Others compare a parameter's value across different model versions.\n\n"
-    )
-    description_file = directory / PRODUCTION_DESCRIPTIONS_FILE_NAME
-    if not description_file.exists():
-        return content
-
-    # Skip the first line (title) of the description file
-    lines = description_file.read_text(encoding="utf-8").splitlines(keepends=True)
-    return (
-        content
-        + "The following table describes the various production model versions.\n\n"
-        + "".join(lines[1:])
-        + "\n\n"
-        + "The simulation descriptions can be found here:\n"
-        + "```{toctree}\n:maxdepth: 2\n\n_descriptions/description\n"
-        + TOCTREE_END
-        + "The reports can be found here:\n"
     )
 
 
@@ -60,11 +50,14 @@ def write_index_file(directory, entries, is_site_root=False):
     title = SITE_TITLE if is_site_root else directory.name[:1].upper() + directory.name[1:]
     content = f"# {title}\n\n"
     if is_site_root:
-        content += _site_introduction(directory)
+        content += _site_introduction()
     if entries:
         content += "```{toctree}\n:maxdepth: 1\n\n" + "".join(f"{e}\n" for e in entries)
         content += TOCTREE_END
-    (directory / INDEX_FILE_NAME).write_text(content, encoding="utf-8")
+    index_file = directory / INDEX_FILE_NAME
+    if _is_authored_index(directory):
+        return
+    index_file.write_text(content, encoding="utf-8")
 
 
 def toctree_entries(directory, subdirectories):
@@ -107,4 +100,4 @@ def _generate_directory_toctree(directory, docs_path):
     entries = toctree_entries(directory, subdirectories)
     if entries:
         write_index_file(directory, entries, is_site_root=directory == docs_path)
-    return bool(entries)
+    return bool(entries) or _is_authored_index(directory)
