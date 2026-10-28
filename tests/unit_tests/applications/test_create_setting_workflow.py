@@ -1,11 +1,17 @@
 """CLI wiring for workflow preparation and optional execution."""
 
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from simtools.applications import create_setting_workflow
+from simtools.data_model import setting_workflow
+from simtools.data_model.model_data_writer import ModelDataWriter
+
+PULSE_SHAPE_VALUE = '["Gauss-Exponential", "0.4 ns", "1.59 ns"]'
+VALUE_OPTION = "--value"
 
 
 @pytest.mark.parametrize("execute", [False, True])
@@ -48,7 +54,7 @@ def test_runtime_alias_is_not_prepared_during_startup():
             "LSTN-design",
             "--parameter",
             "min_photons",
-            "--value",
+            VALUE_OPTION,
             "120",
             "--parameter_version",
             "2.0.1",
@@ -60,3 +66,28 @@ def test_runtime_alias_is_not_prepared_during_startup():
     )
     assert str(args.workflow_runtime_file) == "runtime.yml"
     assert not hasattr(args, "runtime_environment_file")
+
+
+def test_value_argument_parses_and_validates_heterogeneous_list():
+    parser = create_setting_workflow.APPLICATION.build_parser()
+    args = parser.parse_args(
+        [
+            "--instrument",
+            "LSFN-design",
+            "--parameter",
+            "flasher_pulse_shape",
+            VALUE_OPTION,
+            PULSE_SHAPE_VALUE,
+            "--parameter_version",
+            "1.0.1",
+            "--description",
+            "Fix mixup of pulse shape parameter.",
+        ]
+    )
+
+    validated = setting_workflow._validated_parameter(ModelDataWriter(), vars(args))
+
+    assert validated["value"][0] == "Gauss-Exponential"
+    assert math.isclose(validated["value"][1], 0.4)
+    assert math.isclose(validated["value"][2], 1.59)
+    assert validated["unit"] == [None, "ns", "ns"]

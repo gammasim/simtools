@@ -71,10 +71,13 @@ def test_setting_workflow_round_trip(
         "https://example.org/measurement"
         in output_metadata["cta"]["context"]["associated_data"][0]["description"]
     )
-    original_output = parameter_file.read_bytes()
+    original_output = json.loads(parameter_file.read_text(encoding="utf-8"))
     subprocess.run([*command, "--run"], capture_output=True, text=True, check=True)
-    assert parameter_file.read_bytes() == original_output
-    assert len(list((root / "output").rglob(f"{parameter}-99.0.1.json"))) == 2
+    retried_output = json.loads(parameter_file.read_text(encoding="utf-8"))
+    original_output.pop("unique_id", None)
+    retried_output.pop("unique_id", None)
+    assert retried_output == original_output
+    assert len(list((root / "output").rglob(f"{parameter}-99.0.1.json"))) == 1
     assert (config_file.read_bytes(), metadata_file.read_bytes()) == original_inputs
     changed = list(command)
     changed[changed.index("--value") + 1] = "122" if unit is None else f"122 {unit}"

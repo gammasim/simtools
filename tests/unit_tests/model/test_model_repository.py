@@ -1,16 +1,33 @@
 """Unit tests for model_repository module."""
 
 import json
+import urllib.error
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
+from simtools.io import ascii_handler
 from simtools.model import model_repository
 
 TEST_PRODUCTION_FILE = "test_production.json"
 TEST_MODIFICATIONS_FILE = "modifications.json"
 PATH_PATCH = "simtools.model.model_repository.get_model_parameter_file_path"
+INITIALIZATION_BASE_VERSION = "7.0.0"
+INITIALIZATION_TARGET_VERSION = "7.0.1"
+INFO_FILE_NAME = "info.yml"
+PATCH_UPDATE = "patch_update"
+FULL_UPDATE = "full_update"
+MODEL_UPDATE = "model_update"
+MODEL_VERSION_HISTORY = "model_version_history"
+UPDATE_TYPE = "update_type"
+FILE_PARAMETER_NAME = "test_file_parameter"
+FILE_PARAMETER_VERSION = "1.0.0"
+FILE_PARAMETER_ACTIVITY_ID = "test-activity-id"
+FILE_PARAMETER_ASSET = "test-file-parameter-1.0.0.ecsv"
+FILE_PARAMETER_CONTENT = b"# test file asset\n"
+WORKFLOW_REPOSITORY = "https://example.org/workflows.git"
+WORKFLOW_BRANCH = "feature-branch"
 
 
 def test_verify_simulation_model_production_tables_success(tmp_test_directory):
@@ -33,6 +50,93 @@ def test_verify_simulation_model_production_tables_success(tmp_test_directory):
 
         assert result is True
         mock_verify.assert_called_once()
+
+
+@pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
+def test_initialize_production_writes_info_for_existing_base(tmp_test_directory, update_type):
+    root = Path(tmp_test_directory)
+    base_info = (
+        root / "simulation-models" / "productions" / INITIALIZATION_BASE_VERSION / INFO_FILE_NAME
+    )
+    base_info.parent.mkdir(parents=True)
+    base_info.write_text("{}", encoding="utf-8")
+
+    model_repository.initialize_production(
+        root, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION, update_type
+    )
+
+    target_info = (
+        root / "simulation-models" / "productions" / INITIALIZATION_TARGET_VERSION / INFO_FILE_NAME
+    )
+    assert ascii_handler.collect_data_from_file(target_info) == {
+        "model_version": INITIALIZATION_TARGET_VERSION,
+        MODEL_UPDATE: update_type,
+        MODEL_VERSION_HISTORY: [INITIALIZATION_BASE_VERSION],
+        "model_status": "development",
+        "description": (
+            f"Initial configuration based on production model {INITIALIZATION_BASE_VERSION}"
+        ),
+        "changes": {},
+    }
+
+
+@pytest.mark.parametrize(UPDATE_TYPE, [PATCH_UPDATE, FULL_UPDATE])
+@pytest.mark.parametrize("base_update_type", [PATCH_UPDATE, FULL_UPDATE])
+def test_initialize_production_preserves_required_history(
+    tmp_test_directory, update_type, base_update_type
+):
+    root = Path(tmp_test_directory)
+    base_version = "7.0.2"
+    target_version = "7.0.3"
+    ancestors = [INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION]
+    base_directory = model_repository.get_production_directory(root, base_version)
+    base_directory.mkdir(parents=True)
+    ascii_handler.write_data_to_file(
+        {MODEL_UPDATE: base_update_type, MODEL_VERSION_HISTORY: ancestors},
+        base_directory / INFO_FILE_NAME,
+    )
+
+    model_repository.initialize_production(root, target_version, base_version, update_type)
+
+    target_info = ascii_handler.collect_data_from_file(
+        model_repository.get_production_directory(root, target_version) / INFO_FILE_NAME
+    )
+    expected_history = [base_version]
+    if update_type == PATCH_UPDATE and base_update_type == PATCH_UPDATE:
+        expected_history.extend(ancestors)
+    assert target_info[MODEL_VERSION_HISTORY] == expected_history
+
+
+def test_initialize_production_rejects_existing_target(tmp_test_directory):
+    target = (
+        Path(tmp_test_directory)
+        / "simulation-models"
+        / "productions"
+        / INITIALIZATION_TARGET_VERSION
+    )
+    target.mkdir(parents=True)
+
+    with pytest.raises(FileExistsError, match="target directory already exists"):
+        model_repository.initialize_production(
+            tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
+        )
+
+
+def test_initialize_production_rejects_missing_base_info(tmp_test_directory):
+    with pytest.raises(FileNotFoundError, match="base production info file does not exist"):
+        model_repository.initialize_production(
+            tmp_test_directory, INITIALIZATION_TARGET_VERSION, INITIALIZATION_BASE_VERSION
+        )
+
+
+def test_initialize_production_rejects_unsupported_update_type(tmp_test_directory):
+    with pytest.raises(ValueError, match="Unsupported production update type: invalid"):
+        model_repository.initialize_production(
+            tmp_test_directory,
+            INITIALIZATION_TARGET_VERSION,
+            INITIALIZATION_BASE_VERSION,
+            update_type="invalid",
+        )
 
 
 def test_verify_simulation_model_production_tables_missing_files(tmp_test_directory):
@@ -513,7 +617,7 @@ def test_generate_new_production_empty_version_history(
 ):
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
-        "model_version_history": [],
+        MODEL_VERSION_HISTORY: [],
         "setting_workflows_git_tag": "v0.3.0",
         "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
@@ -553,7 +657,7 @@ def test_generate_new_production_separates_recursive_table_changes_from_paramete
     }
     mock_collect_data.return_value = {
         "model_version": "7.0.0",
-        "model_version_history": ["6.3.0"],
+        MODEL_VERSION_HISTORY: ["6.3.0"],
         "changes": direct_changes,
     }
     mock_get_changes_to_production.return_value = recursive_changes, "6.0.0"
@@ -580,7 +684,7 @@ def test_generate_new_production_setting_workflows_git_tag_override(
 ):
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
-        "model_version_history": [],
+        MODEL_VERSION_HISTORY: [],
         "setting_workflows_git_tag": "from-info-file",
         "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
@@ -797,6 +901,193 @@ def test_download_model_parameter_from_workflow(
         / "pm_photoelectron_spectrum"
         / "pm_photoelectron_spectrum-3.0.0.json",
     )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("urllib.request.urlopen")
+def test_download_model_parameter_from_workflow_copies_file_asset(
+    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
+):
+    tmp_test_directory = Path(tmp_test_directory)
+    telescope = "LSTN-design"
+    parameter_data = {
+        "file": True,
+        "parameter_version": FILE_PARAMETER_VERSION,
+        "value": FILE_PARAMETER_ASSET,
+    }
+    mock_collect_data.return_value = parameter_data
+    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=FILE_PARAMETER_NAME,
+        param_data={
+            "version": FILE_PARAMETER_VERSION,
+            "activity_id": FILE_PARAMETER_ACTIVITY_ID,
+        },
+        simulation_models_path=tmp_test_directory,
+        setting_workflows_git_tag=WORKFLOW_BRANCH,
+        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
+    )
+
+    parameter_directory = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / telescope
+        / FILE_PARAMETER_NAME
+    )
+    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
+    asset_file = parameter_directory / FILE_PARAMETER_ASSET
+    assert asset_file.read_bytes() == FILE_PARAMETER_CONTENT
+    mock_write_json.assert_called_once_with(parameter_data, parameter_file)
+    mock_urlopen.assert_called_once_with(
+        f"{WORKFLOW_REPOSITORY.removesuffix('.git')}/-/raw/{WORKFLOW_BRANCH}/"
+        f"output/{telescope}/{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ACTIVITY_ID}/"
+        f"{FILE_PARAMETER_NAME}/{FILE_PARAMETER_ASSET}",
+        timeout=30,
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
+@patch("urllib.request.urlopen")
+def test_download_model_parameter_from_workflow_repairs_missing_file_asset(
+    mock_urlopen, mock_write_json, mock_collect_data, tmp_test_directory
+):
+    tmp_test_directory = Path(tmp_test_directory)
+    telescope = "LSTN-design"
+    parameter_directory = (
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / telescope
+        / FILE_PARAMETER_NAME
+    )
+    parameter_directory.mkdir(parents=True)
+    parameter_file = parameter_directory / f"{FILE_PARAMETER_NAME}-{FILE_PARAMETER_VERSION}.json"
+    parameter_file.write_text(
+        json.dumps(
+            {
+                "file": True,
+                "parameter_version": FILE_PARAMETER_VERSION,
+                "value": FILE_PARAMETER_ASSET,
+            }
+        ),
+        encoding="utf-8",
+    )
+    mock_urlopen.return_value.__enter__.return_value.read.return_value = FILE_PARAMETER_CONTENT
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=FILE_PARAMETER_NAME,
+        param_data={
+            "version": FILE_PARAMETER_VERSION,
+            "activity_id": FILE_PARAMETER_ACTIVITY_ID,
+        },
+        simulation_models_path=tmp_test_directory,
+        setting_workflows_git_tag=WORKFLOW_BRANCH,
+        setting_workflows_git_repository=WORKFLOW_REPOSITORY,
+    )
+
+    assert (parameter_directory / FILE_PARAMETER_ASSET).read_bytes() == FILE_PARAMETER_CONTENT
+    mock_collect_data.assert_not_called()
+    mock_write_json.assert_not_called()
+    mock_urlopen.assert_called_once()
+
+
+def test_copy_model_parameter_asset_from_workflow_preserves_existing_file_asset(
+    tmp_test_directory,
+):
+    parameter_file = Path(tmp_test_directory) / "parameter.json"
+    asset_file = parameter_file.parent / FILE_PARAMETER_ASSET
+    asset_file.write_bytes(FILE_PARAMETER_CONTENT)
+
+    model_repository._copy_model_parameter_asset_from_workflow(
+        {"file": True, "value": FILE_PARAMETER_ASSET},
+        parameter_file,
+        "output/parameter.json",
+        WORKFLOW_REPOSITORY,
+        WORKFLOW_BRANCH,
+    )
+
+    assert asset_file.read_bytes() == FILE_PARAMETER_CONTENT
+
+
+def test_copy_model_parameter_asset_from_workflow_skips_non_file_parameters(tmp_test_directory):
+    with patch("simtools.model.model_repository.urllib.request.urlopen") as mock_urlopen:
+        model_repository._copy_model_parameter_asset_from_workflow(
+            {"file": False, "value": 42},
+            Path(tmp_test_directory) / "parameter.json",
+            "output/parameter.json",
+            WORKFLOW_REPOSITORY,
+            WORKFLOW_BRANCH,
+        )
+
+    mock_urlopen.assert_not_called()
+
+
+def test_copy_model_parameter_asset_from_workflow_rejects_invalid_value(tmp_test_directory):
+    with pytest.raises(ValueError, match="relative filename"):
+        model_repository._copy_model_parameter_asset_from_workflow(
+            {"file": True, "value": None},
+            Path(tmp_test_directory) / "parameter.json",
+            "output/parameter.json",
+            WORKFLOW_REPOSITORY,
+            WORKFLOW_BRANCH,
+        )
+
+
+def test_copy_model_parameter_asset_from_workflow_rejects_directory_target(tmp_test_directory):
+    parameter_file = Path(tmp_test_directory) / "parameter.json"
+    (parameter_file.parent / FILE_PARAMETER_ASSET).mkdir()
+    with pytest.raises(IsADirectoryError, match="not a file"):
+        model_repository._copy_model_parameter_asset_from_workflow(
+            {"file": True, "value": FILE_PARAMETER_ASSET},
+            parameter_file,
+            "output/parameter.json",
+            WORKFLOW_REPOSITORY,
+            WORKFLOW_BRANCH,
+        )
+
+
+def test_copy_model_parameter_asset_from_raw_repository_url(tmp_test_directory):
+    parameter_file = Path(tmp_test_directory) / "parameter.json"
+    response = Mock()
+    response.__enter__ = Mock(return_value=response)
+    response.__exit__ = Mock(return_value=False)
+    response.read.return_value = FILE_PARAMETER_CONTENT
+    repository_url = "https://example.org/workflows/-/raw"
+
+    with patch(
+        "simtools.model.model_repository.urllib.request.urlopen", return_value=response
+    ) as mock_urlopen:
+        model_repository._copy_model_parameter_asset_from_workflow(
+            {"file": True, "value": FILE_PARAMETER_ASSET},
+            parameter_file,
+            "output/parameter.json",
+            repository_url,
+            WORKFLOW_BRANCH,
+        )
+
+    mock_urlopen.assert_called_once_with(
+        f"{repository_url}/{WORKFLOW_BRANCH}/output/{FILE_PARAMETER_ASSET}", timeout=30
+    )
+    assert (parameter_file.parent / FILE_PARAMETER_ASSET).read_bytes() == FILE_PARAMETER_CONTENT
+
+
+def test_copy_model_parameter_asset_from_workflow_reports_missing_asset(tmp_test_directory):
+    http_error = urllib.error.HTTPError("https://example.org/missing", 404, "Not found", {}, None)
+    with patch("simtools.model.model_repository.urllib.request.urlopen", side_effect=http_error):
+        with pytest.raises(FileNotFoundError, match="Failed to download model parameter asset"):
+            model_repository._copy_model_parameter_asset_from_workflow(
+                {"file": True, "value": FILE_PARAMETER_ASSET},
+                Path(tmp_test_directory) / "parameter.json",
+                "output/parameter.json",
+                WORKFLOW_REPOSITORY,
+                WORKFLOW_BRANCH,
+            )
 
 
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
@@ -1035,7 +1326,7 @@ def test_normalize_units_for_comparison(unit, expected):
 def test_get_changes_to_production_path_update(tmp_test_directory):
     modifications_data = {
         "model_version": "6.5.0",
-        "model_version_history": ["6.0.0"],
+        MODEL_VERSION_HISTORY: ["6.0.0"],
         "changes": {
             "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62}},
             "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31}},
@@ -1096,8 +1387,8 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 7.0.0 (full_update with history pointing to 6.0.2)
     modification_dict_7_0_0 = {
         "model_version": "7.0.0",
-        "model_update": "full_update",
-        "model_version_history": ["6.0.2"],
+        MODEL_UPDATE: "full_update",
+        MODEL_VERSION_HISTORY: ["6.0.2"],
         "changes": {
             "LSTN-design": {
                 "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
@@ -1114,8 +1405,8 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 6.0.2 (patch_update with history [6.0.1, 6.0.0])
     info_6_0_2 = {
         "model_version": "6.0.2",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.1", "6.0.0"],
+        MODEL_UPDATE: "patch_update",
+        MODEL_VERSION_HISTORY: ["6.0.1", "6.0.0"],
         "changes": {
             "LSTN-design": {"photons_per_run": {"deprecated": True}},
             "MSTx-FlashCam": {
@@ -1130,16 +1421,16 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_d
     # Mock data for version 6.0.1 (patch_update with history [6.0.0])
     info_6_0_1 = {
         "model_version": "6.0.1",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.0"],
+        MODEL_UPDATE: "patch_update",
+        MODEL_VERSION_HISTORY: ["6.0.0"],
         "changes": {"LSTN-design": {"some_parameter": {"version": "1.0.0", "value": 100}}},
     }
 
     # Mock data for version 6.0.0 (base version with no history, marked as full_update)
     info_6_0_0 = {
         "model_version": "6.0.0",
-        "model_update": "full_update",  # This triggers the break statement
-        "model_version_history": [],
+        MODEL_UPDATE: "full_update",  # This triggers the break statement
+        MODEL_VERSION_HISTORY: [],
         "changes": {},
     }
 
