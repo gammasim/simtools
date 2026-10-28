@@ -23,6 +23,13 @@ Provide tools for reading, writing, and processing simulated shower and telescop
    :members:
 ```
 
+## Input metadata
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.metadata_reader
+   :members:
+```
+
 ## Writer
 
 (sim_events_writer-1)=

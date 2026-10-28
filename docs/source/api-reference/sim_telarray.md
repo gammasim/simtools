@@ -52,6 +52,13 @@ FITS keywords.
    :members:
 ```
 
+## metadata_reader
+
+```{eval-rst}
+.. automodule:: simtel.metadata_reader
+   :members:
+```
+
 
 ## simtel_seeds
 

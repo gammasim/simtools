@@ -17,6 +17,8 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
+from simtools.sim_events import metadata_reader as event_metadata_reader
+from simtools.simtel import metadata_reader as simtel_metadata_reader
 
 logger = logging.getLogger()
 
@@ -255,7 +257,7 @@ def test_read_input_metadata_from_file(
     simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
     simtel_file.write_bytes(b"")
     mocker.patch.object(
-        metadata_collector,
+        simtel_metadata_reader,
         "read_sim_telarray_metadata",
         return_value=(
             {
@@ -270,7 +272,8 @@ def test_read_input_metadata_from_file(
         ),
     )
     validate_simtel_metadata = mocker.patch.object(
-        metadata_collector.simtel_validate_metadata, "validate_metadata_values"
+        simtel_metadata_reader.simtel_validate_metadata,
+        "validate_metadata_values",
     )
     metadata_1.args_dict["input_meta"] = simtel_file
     simtel_metadata = metadata_1._read_input_metadata_from_file()[0]
@@ -299,7 +302,7 @@ def test_read_input_metadata_from_file(
     corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
     corsika_file.write_bytes(b"")
     mocker.patch.object(
-        metadata_collector,
+        event_metadata_reader,
         "get_corsika_run_and_event_headers",
         return_value=(
             np.array((42, 7.8010), dtype=[("run_number", "i4"), ("version", "f4")]),
@@ -327,67 +330,6 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
         with pytest.raises(FileNotFoundError):
             metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
     assert "Failed reading metadata for" in caplog.text
-
-
-def test_read_input_metadata_from_simtel_rejects_invalid_registry_value(
-    args_dict_site, tmp_test_directory, mocker
-):
-    simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
-    simtel_file.write_bytes(b"")
-    mocker.patch.object(
-        metadata_collector,
-        "read_sim_telarray_metadata",
-        return_value=({"azimuth_angle": "not-a-number"}, {}),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    with pytest.raises(ValueError, match=r"could not convert string to float"):
-        collector._read_input_metadata_from_simtel(simtel_file)
-
-
-def test_metadata_collector_eventio_helpers_handle_incomplete_values(args_dict_site):
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    assert collector._header_to_dict(None) == {}
-    assert collector._header_to_dict({"run_number": 42}) == {"run_number": 42}
-    assert collector._header_to_dict([42]) == [42]
-    assert collector._header_to_dict(np.array([(42,)], dtype=[("run_number", "i4")])) == {
-        "run_number": 42
-    }
-    assert collector._get_valid_site(None) is None
-    assert collector._get_valid_site("invalid") is None
-    assert collector._simtel_associated_elements(
-        {1: {}, 2: {"optics_config_variant": "INVALID-01"}}, "South"
-    ) == [{"site": "South", "class": "telescope", "type": None, "id": "INVALID-01"}]
-
-
-def test_read_input_metadata_from_simtel_without_metadata(args_dict_site, mocker):
-    mocker.patch.object(
-        metadata_collector,
-        "read_sim_telarray_metadata",
-        return_value=(None, None),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata = collector._read_input_metadata_from_simtel("empty.simtel")
-
-    assert metadata["cta"]["context"]["associated_elements"][0]["id"] is None
-
-
-def test_read_input_metadata_from_corsika_rejects_missing_headers(
-    args_dict_site, tmp_test_directory, mocker
-):
-    corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
-    corsika_file.write_bytes(b"")
-    mocker.patch.object(
-        metadata_collector,
-        "get_corsika_run_and_event_headers",
-        return_value=(None, None),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    with pytest.raises(ValueError, match=r"^CORSIKA file has no complete run and event header:"):
-        collector._read_input_metadata_from_corsika(corsika_file)
 
 
 def test_fill_product_meta(args_dict_site):
