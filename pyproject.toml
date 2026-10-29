@@ -509,7 +509,6 @@ ignore_imports = [
   "simtools.model.site_model -> simtools.corsika.corsika_config",
   "simtools.model.site_model -> simtools.simulation.configuration",
   "simtools.model.telescope_model -> simtools.simulation.configuration",
-  "simtools.production_configuration.job_grid_io -> simtools.configuration.configurator",
   "simtools.production_configuration.simulation_jobs -> simtools.configuration.argument_helpers",
   "simtools.production_configuration.simulation_jobs -> simtools.configuration.defaults",
   "simtools.reporting.docs_auto_report_generator -> simtools.application.model_reader",

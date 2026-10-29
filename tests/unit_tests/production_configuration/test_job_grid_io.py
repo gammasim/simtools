@@ -188,7 +188,7 @@ def test_parameter_scan_overwrites_falls_back_to_file_and_ignores_unknown_set():
 
 
 def test_remote_path_forwarding_accepts_explicit_sources_and_skips_environment():
-    args = {"backend": "htcondor", "_metadata_configuration_sources": {"cli": {"path"}}}
+    args = {"backend": "htcondor", "_metadata_configuration_sources": {"path": "cli"}}
     assert job_grid_io._should_forward_path(args, "path")
     assert not job_grid_io._should_forward_path(args, "other")
     assert job_grid_io._should_forward_path({}, "path")
@@ -384,11 +384,9 @@ def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_di
         "corsika_path": Path("/controller/corsika7"),
         "corsika_interaction_table_path": Path("/controller/tables"),
         "_metadata_configuration_sources": {
-            "environment": {
-                "sim_telarray_path",
-                "corsika_path",
-                "corsika_interaction_table_path",
-            }
+            "sim_telarray_path": "environment",
+            "corsika_path": "environment",
+            "corsika_interaction_table_path": "environment",
         },
     }
 

@@ -94,13 +94,7 @@ def _post_parse(args_dict, config_sources, parser):
         parser.error("'--minimum_triggered_telescopes' must be at least 1.")
 
     if args_dict.get("event_data_directory") or args_dict.get("production_path"):
-        explicit_output_path_sources = set().union(
-            *(
-                config_sources.get(source, set())
-                for source in ("environment", "constructor", "yaml", "cli")
-            )
-        )
-        if "output_path" not in explicit_output_path_sources:
+        if config_sources.get("output_path") not in {"environment", "yaml", "cli"}:
             parser.error("'--output_path' is required with directory or production metadata input.")
 
         if args_dict.get("output_file") and not args_dict.get("output_file_from_default"):

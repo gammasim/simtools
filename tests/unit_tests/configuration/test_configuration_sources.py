@@ -74,28 +74,8 @@ SOURCE_CASES = []
 for case in CASES:
     name, definition, _, _ = case
     for source in ("default", "env", "yaml", "cli"):
-        reason = None
-        if source == "env" and definition.kwargs.get("action") in {"store_true", "store_false"}:
-            reason = "Environment boolean strings are re-tokenized as extra CLI arguments."
-        elif source == "env" and definition.kwargs.get("nargs") and definition.kwargs.get("type"):
-            reason = "Environment lists are passed to argparse as one whitespace-containing token."
-        elif (
-            source == "env"
-            and definition.kwargs.get("action") == "append"
-            and definition.kwargs.get("nargs")
-        ):
-            reason = "Environment values cannot represent repeated append groups."
         parameters = (*case[1:], source)
-        if reason:
-            SOURCE_CASES.append(
-                pytest.param(
-                    *parameters,
-                    id=f"{name}-{source}",
-                    marks=pytest.mark.xfail(strict=True, reason=reason),
-                )
-            )
-        else:
-            SOURCE_CASES.append(pytest.param(*parameters, id=f"{name}-{source}"))
+        SOURCE_CASES.append(pytest.param(*parameters, id=f"{name}-{source}"))
 
 
 def _make_configurator(definition):
@@ -110,7 +90,12 @@ def _environment_arguments(definition, value, tmp_test_directory, monkeypatch):
     if definition.kwargs.get("action") in {"store_true", "store_false"}:
         environment_value = "true" if value else "false"
     elif isinstance(value, list):
-        environment_value = " ".join(str(item) for item in value)
+        flattened = (
+            [item for group in value for item in group]
+            if value and isinstance(value[0], list)
+            else value
+        )
+        environment_value = " ".join(map(str, flattened))
     else:
         environment_value = str(value)
     monkeypatch.setenv(f"SIMTOOLS_{definition.name.upper()}", environment_value)
@@ -165,6 +150,33 @@ def _expected_value(definition, value):
     return converter(value)
 
 
+def _environment_text(value):
+    """Return the environment-variable text for a value (groups are flattened)."""
+    if not isinstance(value, list):
+        return value
+    flattened = (
+        [item for group in value for item in group]
+        if value and isinstance(value[0], list)
+        else value
+    )
+    return " ".join(map(str, flattened))
+
+
+def _expected_from_environment(definition, value):
+    """Return the configured value expected from an environment variable."""
+    text = _environment_text(value)
+    if definition.kwargs.get("action") == "append":
+        items = text.split()
+        count = definition.kwargs.get("nargs")
+        if count:
+            return [items[index : index + count] for index in range(0, len(items), count)]
+        return items
+    if definition.kwargs.get("nargs") is not None:
+        converter = definition.kwargs.get("type")
+        return [converter(item) if converter else item for item in text.split()]
+    return _expected_value(definition, text)
+
+
 @pytest.mark.parametrize(("definition", "yaml_value", "cli_value", "source"), SOURCE_CASES)
 def test_configure_reads_argument_kinds_from_each_source(
     definition, yaml_value, cli_value, source, tmp_test_directory, monkeypatch
@@ -179,21 +191,11 @@ def test_configure_reads_argument_kinds_from_each_source(
         result = _configure_from_source(
             definition, source, yaml_value, tmp_test_directory, monkeypatch
         )
-        environment_value = " ".join(yaml_value) if isinstance(yaml_value, list) else yaml_value
-        expected = _expected_value(definition, environment_value)
-        if definition.kwargs.get("action") == "append":
-            expected = [environment_value]
-    elif source == "yaml":
-        result = _configure_from_source(
-            definition, source, yaml_value, tmp_test_directory, monkeypatch
-        )
-        expected = _expected_value(definition, yaml_value)
+        expected = _expected_from_environment(definition, yaml_value)
     else:
-        result = _configure_from_source(
-            definition, source, cli_value, tmp_test_directory, monkeypatch
-        )
-        expected = cli_value
-        expected = _expected_value(definition, expected)
+        value = yaml_value if source == "yaml" else cli_value
+        result = _configure_from_source(definition, source, value, tmp_test_directory, monkeypatch)
+        expected = _expected_value(definition, value)
     assert result == expected
 
 
@@ -258,3 +260,66 @@ def test_configure_required_argument_missing_from_all_sources_uses_argparse_erro
         configurator.configure()
 
     assert "the following arguments are required" in capsys.readouterr().err
+
+
+def test_configure_converts_the_string_none_to_none(monkeypatch):
+    configurator = _make_configurator(ArgumentDefinition("value", default="default"))
+    monkeypatch.setattr(sys, "argv", ["test", "--value", "None"])
+
+    assert configurator.configure()["value"] is None
+
+
+def test_configure_converts_list_defaults_of_single_value_arguments(monkeypatch):
+    configurator = _make_configurator(
+        ArgumentDefinition("value", type=parse_quantity_pair, default=["0 deg 10 deg"])
+    )
+    monkeypatch.setattr(sys, "argv", ["test", "--label", "x"])
+
+    assert configurator.configure()["value"] == parse_quantity_pair("0 deg 10 deg")
+
+
+def test_configure_cli_value_replaces_exclusive_alternative_from_file(
+    tmp_test_directory, monkeypatch
+):
+    configurator = Configurator(label="test", use_dependency_defaults=False)
+    configurator.parser.add_argument_definitions(
+        (
+            CONFIG,
+            ArgumentDefinition("label", default=None),
+            ArgumentDefinition("first", default=None, exclusive_group="choice"),
+            ArgumentDefinition("second", default=None, exclusive_group="choice"),
+        )
+    )
+    config_file = tmp_test_directory / "exclusive.yml"
+    config_file.write_text(yaml.safe_dump({"first": "from file"}), encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file), "--second", "cli"])
+
+    result = configurator.configure()
+
+    assert result["second"] == "cli"
+    assert result["first"] is None
+    assert configurator.config_sources["first"] == "default"
+
+
+def test_configure_optional_value_flag_from_file_uses_const(tmp_test_directory, monkeypatch):
+    definition = ArgumentDefinition("value", nargs="?", const="flag.png", default=None)
+    configurator = _make_configurator(definition)
+    config_file = tmp_test_directory / "optional.yml"
+    config_file.write_text(yaml.safe_dump({"value": True}), encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file)])
+
+    assert configurator.configure()["value"] == "flag.png"
+
+
+def test_configure_environment_list_keeps_value_with_unit(tmp_test_directory, monkeypatch):
+    definition = ArgumentDefinition("value", nargs="+", type=quantity(u.deg), default=None)
+    configurator = _make_configurator(definition)
+    monkeypatch.setenv("SIMTOOLS_VALUE", "0.1 rad")
+    config_file = tmp_test_directory / "empty-unit.yml"
+    config_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file)])
+
+    result = configurator.configure()["value"]
+
+    assert len(result) == 1
+    assert result[0].to_value(u.rad) == pytest.approx(0.1)

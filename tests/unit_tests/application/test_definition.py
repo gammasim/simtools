@@ -203,13 +203,7 @@ def test_post_parse_hook_receives_configuration_sources(mocker, monkeypatch):
     args = application._parse()
 
     assert args["value"] == 3
-    assert args["_metadata_configuration_sources"] == {
-        "constructor": [],
-        "cli": [],
-        "defaults": [],
-        "environment": [],
-        "yaml": [],
-    }
+    assert args["_metadata_configuration_sources"] == {}
     initialize.assert_called_once()
     hook.assert_called_once()
     assert hook.call_args.args[0] is args
