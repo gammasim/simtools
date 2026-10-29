@@ -10,6 +10,7 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
+from simtools.reporting import docs_read_parameters
 from simtools.visualization import plot_tables
 
 PLOT_INTERSECTION_PROTON_CURVE = (
@@ -117,12 +118,8 @@ def test_read_non_ecsv_table_data_from_file_raises():
         plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED) / "model_parameters")
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_file(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_file(mock_read_legacy_data_as_table):
     config = {
         "tables": [
             {
@@ -134,24 +131,17 @@ def test_read_table_data_from_file(
             },
         ]
     }
-    mock_table = mock.MagicMock()
+    mock_table = Table({"x": [1.0], "y": [2.0]})
     mock_read_legacy_data_as_table.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
 
     result = plot_tables.read_table_data(config, None)
 
     mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
-@mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_model_repository(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_model_repository():
     config = {
         "tables": [
             {
@@ -166,10 +156,7 @@ def test_read_table_data_from_model_repository(
         ]
     }
     model_reader = mock.MagicMock()
-    mock_table = mock.MagicMock()
-    model_reader.export_model_file.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
+    model_reader.export_model_file.return_value = Table({"x": [1.0], "y": [2.0]})
 
     result = plot_tables.read_table_data(config, model_reader=model_reader)
 
@@ -182,8 +169,8 @@ def test_read_table_data_from_model_repository(
         export_file_as_table=True,
         dest=mock.ANY,
     )
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
 def test_read_table_data_no_table_data_defined():
@@ -470,7 +457,7 @@ def test_generate_plot_configurations_uses_and_names_selected_model_version(
         ]
     }
 
-    configs, output_files = plot_tables._generate_plot_configurations(
+    configs, output_files = plot_tables.generate_plot_configurations(
         parameter="mirror_reflectivity",
         parameter_version="2.0.0",
         site="North",
@@ -498,20 +485,23 @@ def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(
 
     runtime_args({"figure_dpi": 120})
 
-    initial_key = plot_tables._get_figure_cache_key(plot_config, data)
+    initial_key = docs_read_parameters._get_figure_cache_key(plot_config, data)
     same_render_from_another_version = {
         **plot_config,
         "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
     }
-    assert plot_tables._get_figure_cache_key(same_render_from_another_version, data) == initial_key
+    assert (
+        docs_read_parameters._get_figure_cache_key(same_render_from_another_version, data)
+        == initial_key
+    )
 
     changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
-    assert plot_tables._get_figure_cache_key(plot_config, changed_data) != initial_key
+    assert docs_read_parameters._get_figure_cache_key(plot_config, changed_data) != initial_key
     changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
-    assert plot_tables._get_figure_cache_key(changed_config, data) != initial_key
+    assert docs_read_parameters._get_figure_cache_key(changed_config, data) != initial_key
 
     runtime_args({"figure_dpi": 240})
-    assert plot_tables._get_figure_cache_key(plot_config, data) != initial_key
+    assert docs_read_parameters._get_figure_cache_key(plot_config, data) != initial_key
 
 
 def test_get_plotting_label_duplicate_label():

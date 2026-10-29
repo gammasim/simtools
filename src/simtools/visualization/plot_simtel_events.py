@@ -17,7 +17,7 @@ from simtools.simtel.simtel_event_reader import read_events
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.plot_camera import plot_pixel_layout_with_image
 from simtools.visualization.visualize import pdf_report, save_figure
@@ -69,7 +69,7 @@ def generate_and_save_plots(plots, args, ioh):
     plotter = _StreamingPlotter(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
-        event_ids=gen.ensure_list(args.get(EVENT_ID_KEY, None)),
+        event_ids=value_conversion.ensure_list(args.get(EVENT_ID_KEY, None)),
         max_events=args.get("max_events", None),
     )
     if args.get("pedestal_source", PEDESTAL_SOURCE_WAVEFORM) == PEDESTAL_SOURCE_MONITORING:
@@ -291,7 +291,7 @@ class PlotSimtelEvent:
         """Generate list of plots to run based on user input."""
         if "all" in plots:
             return list(self._plot_definitions.keys())
-        return gen.ensure_list(plots)
+        return value_conversion.ensure_list(plots)
 
     @property
     def _plot_definitions(self):

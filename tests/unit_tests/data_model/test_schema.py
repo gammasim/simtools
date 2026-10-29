@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import urllib.error
 from pathlib import Path
 
 import jsonschema
@@ -444,19 +445,21 @@ def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
-    mock_url_exists = mocker.patch("simtools.data_model.schema.gen.url_exists")
+    mock_urlopen = mocker.patch("simtools.data_model.schema.urllib.request.urlopen")
+    response = mocker.MagicMock()
+    response.status = 200
+    mock_urlopen.return_value.__enter__.return_value = response
 
     # with valid meta_schema_url
-    mock_url_exists.return_value = True
     data["meta_schema_url"] = "https://github.com/gammasim/simtools"
     schema.validate_dict_using_schema(data, schema_file)
-    mock_url_exists.assert_called_with("https://github.com/gammasim/simtools")
+    mock_urlopen.assert_called_with("https://github.com/gammasim/simtools", timeout=5)
 
-    mock_url_exists.return_value = False
+    mock_urlopen.side_effect = urllib.error.URLError("not found")
     data["meta_schema_url"] = "https://invalid_url"
     with pytest.raises(FileNotFoundError, match=r"^Meta schema URL does not exist:"):
         schema.validate_dict_using_schema(data, schema_file)
-    mock_url_exists.assert_called_with("https://invalid_url")
+    mock_urlopen.assert_called_with("https://invalid_url", timeout=5)
 
 
 def test_validate_schema_astropy_units(caplog):

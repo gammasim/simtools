@@ -16,7 +16,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
 )
 from simtools.sim_events.metadata import validate_simulation_metadata
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def validate_sim_events(data_files, expected_mc_events):
     expected_mc_events: int
         Expected number of simulated MC events.
     """
-    data_files = general.ensure_list(data_files)
+    data_files = value_conversion.ensure_list(data_files)
     validate_event_numbers(data_files, expected_mc_events)
 
 
@@ -72,7 +72,7 @@ def validate_event_numbers(data_files, expected_mc_events):
     ValueError
         If the number of simulated events does not match the expected number.
     """
-    data_files = general.ensure_list(data_files)
+    data_files = value_conversion.ensure_list(data_files)
 
     event_errors = []
     for data_file in data_files:

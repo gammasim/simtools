@@ -30,7 +30,7 @@ from simtools.production_configuration.job_grid_summary import (
     build_job_grid_summary,
 )
 from simtools.production_configuration.observation_grid import ProductionGridEngine
-from simtools.utils.general import ensure_list
+from simtools.utils.value_conversion import ensure_list
 
 logger = logging.getLogger(__name__)
 

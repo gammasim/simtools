@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from astropy import units as u
 
+from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 from simtools.visualization import plot_psf
 
 logger = logging.getLogger(__name__)
@@ -100,16 +100,6 @@ def test__build_parameter_title(sample_parameters):
     assert "* reflection" not in title
 
 
-def test__add_metric_text_box():
-    mock_ax = MagicMock()
-    plot_psf._add_metric_text_box(mock_ax, "Test metrics", is_best=True)
-    mock_ax.text.assert_called_once()
-
-    mock_ax.reset_mock()
-    plot_psf._add_metric_text_box(mock_ax, "Test metrics", is_best=False)
-    mock_ax.text.assert_called_once()
-
-
 def test__add_plot_annotations(sample_parameters):
     mock_ax = MagicMock()
     mock_fig = MagicMock()
@@ -138,47 +128,6 @@ def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
         mock_base.assert_called_once()
         mock_annotations.assert_called_once()
         mock_pdf_pages.add.assert_called_once_with(mock_fig)
-
-
-def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_psf_data):
-    with (
-        patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
-        patch("simtools.visualization.plot_psf._add_plot_annotations") as mock_annotations,
-        patch("simtools.visualization.plot_psf.logger") as mock_logger,
-        patch("matplotlib.pyplot.clf"),
-    ):
-        mock_fig, mock_ax = MagicMock(), MagicMock()
-        mock_base.return_value = (mock_fig, mock_ax)
-        mock_pdf_pages = MagicMock()
-
-        # Test successful case
-        plot_psf.create_detailed_parameter_plot(
-            sample_parameters,
-            0.123,
-            3.5,
-            sample_psf_data,
-            data_to_plot,
-            True,
-            mock_pdf_pages,
-            fraction=0.8,
-            p_value=0.05,
-        )
-        mock_annotations.assert_called_once()
-
-        # Test error case for 100% coverage
-        mock_base.side_effect = ValueError("Plot creation failed")
-        result = plot_psf.create_detailed_parameter_plot(
-            sample_parameters, 0.123, 3.5, sample_psf_data, data_to_plot, True, mock_pdf_pages
-        )
-        assert result is None
-        mock_logger.error.assert_called()
-
-        # Test no simulated data case
-        mock_base.side_effect = None
-        plot_psf.create_detailed_parameter_plot(
-            sample_parameters, 0.123, 3.5, None, data_to_plot, True, mock_pdf_pages
-        )
-        mock_logger.warning.assert_called()
 
 
 def test_create_gradient_descent_convergence_plot(tmp_path):
@@ -249,41 +198,6 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
         assert mock_save.call_count == 1
 
 
-def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
-    mock_telescope_model = MagicMock()
-    mock_telescope_model.name = "LSTN-01"
-    mock_site_model = MagicMock()
-    args_dict = {
-        "fraction": 0.8,
-        "zenith_angle": 20 * u.deg,
-        "source_distance": 10 * u.km,
-    }
-
-    # Mock RayTracing and its methods
-    with (
-        patch("simtools.visualization.plot_psf.RayTracing") as mock_ray_class,
-        patch("simtools.visualization.plot_psf.visualize.save_figure") as mock_save_figure,
-        patch("simtools.visualization.plot_psf.np.linspace") as mock_linspace,
-    ):
-        mock_ray = MagicMock()
-        mock_ray_class.return_value = mock_ray
-        mock_linspace.return_value = np.array([0, 1, 2])
-
-        plot_psf.create_psf_vs_offaxis_plot(
-            mock_telescope_model, mock_site_model, args_dict, sample_parameters, tmp_path
-        )
-        plt.close("all")
-        mock_ray.analyze.assert_called_once()
-        assert mock_ray.analyze.call_args.kwargs["keep_images"] is False
-
-        # Verify telescope parameters were applied and simulation was run
-
-        mock_telescope_model.overwrite_parameters.assert_called_once_with(
-            sample_parameters, flat_dict=True
-        )
-        assert mock_save_figure.call_count >= 1  # At least one save call
-
-
 def test_plot_psf_histogram_returns_none_when_not_configured(tmp_path):
     args_dict = {"output_path": str(tmp_path)}
     assert plot_psf.plot_psf_histogram([10.0], [11.0], args_dict) is None
@@ -335,7 +249,7 @@ def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
 def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
     args_dict = {"plot_all": plot_all, "fraction": 0.8}
 
-    pdf_pages = plot_psf.setup_pdf_plotting(args_dict, tmp_path, "LSTN-01")
+    pdf_pages = psf_opt.setup_pdf_plotting(args_dict, tmp_path, "LSTN-01")
 
     if expected_result == "not_none":
         assert pdf_pages is not None
@@ -356,49 +270,17 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
 
     # Test with save_plots=True - should create plots
     args_dict_with_plots = {"save_plots": True, "fraction": 0.8}
-    plot_psf.create_optimization_plots(
+    psf_opt.create_optimization_plots(
         args_dict_with_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
     assert (tmp_path / "psf_optimization_results_LSTN-01.pdf").exists()
 
     # Test with save_plots=False - should return early without creating plots
     args_dict_no_plots = {"save_plots": False, "fraction": 0.8}
-    result = plot_psf.create_optimization_plots(
+    result = psf_opt.create_optimization_plots(
         args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
     assert result is None
-
-
-def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):
-    mock_telescope_model = MagicMock()
-    mock_site_model = MagicMock()
-    args_dict = {
-        "fraction": 0.8,
-        "zenith_angle": 20 * u.deg,
-        "source_distance": 10 * u.km,
-        "max_offset": 4.0 * u.deg,
-        "offset_step": 0.0 * u.deg,
-    }
-    with pytest.raises(ValueError, match="offset_step must be positive"):
-        plot_psf.create_psf_vs_offaxis_plot(
-            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
-        )
-
-
-def test_create_psf_vs_offaxis_plot_negative_max_offset(sample_parameters):
-    mock_telescope_model = MagicMock()
-    mock_site_model = MagicMock()
-    args_dict = {
-        "fraction": 0.8,
-        "zenith_angle": 20 * u.deg,
-        "source_distance": 10 * u.km,
-        "max_offset": -1.0 * u.deg,
-        "offset_step": 0.5 * u.deg,
-    }
-    with pytest.raises(ValueError, match="max_offset must be non-negative"):
-        plot_psf.create_psf_vs_offaxis_plot(
-            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
-        )
 
 
 def test_psf_difference_is_displayed_as_percentage(data_to_plot, sample_psf_data):

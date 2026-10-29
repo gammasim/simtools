@@ -14,7 +14,7 @@ from collections import Counter
 from pathlib import Path
 
 from simtools.io.file_type import product_filename
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 
 STATUS_KEY = "status"
 REASON_KEY = "reason"

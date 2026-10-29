@@ -170,7 +170,9 @@ def _patch_application_configuration_read(
         "simtools.runners.simtools_runner._set_input_output_directories",
         mock_set_input_output_directories,
     )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.utils.value_conversion.change_dict_keys_case", mock_change_dict_keys_case
+    )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
         placeholder_replacement,
@@ -1213,7 +1215,9 @@ def test_read_application_configuration_prefers_path_uuid7(
         "simtools.runners.simtools_runner._set_input_output_directories",
         mock_set_input_output_directories,
     )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.utils.value_conversion.change_dict_keys_case", mock_change_dict_keys_case
+    )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
         lambda config, output_path, setting_workflow: config,

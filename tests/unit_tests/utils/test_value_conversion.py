@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-import simtools.utils.value_conversion as value_conversion
+from simtools.utils import value_conversion
 
 
 def test_extract_type_of_value() -> None:

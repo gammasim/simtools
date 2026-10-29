@@ -8,7 +8,7 @@ from eventio import SimTelFile
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
             _logger.warning(f"Telescope ID '{tel_id}' not found in file '{file_name}'.")
             return None, None, None
         ids_with_data, events = _collect_events_for_telescope(
-            f, tel_id, tel_id_map, gen.ensure_list(event_ids), max_events, verbose
+            f, tel_id, tel_id_map, value_conversion.ensure_list(event_ids), max_events, verbose
         )
 
     _logger.info(f"Read {len(events)} events for telescope '{telescope}' from file '{file_name}'.")
@@ -111,12 +111,12 @@ def read_events_for_telescopes(
         Event IDs, telescope descriptions by name, and events by telescope name.
         Returns ``(None, None, None)`` if a requested telescope is unavailable.
     """
-    telescope_names = gen.ensure_list(telescopes)
+    telescope_names = value_conversion.ensure_list(telescopes)
     telescope_ids = _telescope_ids_for_names(file_name, telescope_names)
     if telescope_ids is None:
         return None, None, None
 
-    event_ids = gen.ensure_list(event_ids)
+    event_ids = value_conversion.ensure_list(event_ids)
 
     with SimTelFile(file_name, skip_calibration=False) as simtel_file:
         descriptions = _telescope_descriptions(simtel_file, telescope_ids, file_name)

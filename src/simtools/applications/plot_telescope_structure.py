@@ -12,7 +12,9 @@ from tempfile import TemporaryDirectory
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.model import telescope_geometry
 from simtools.model.telescope_model import TelescopeModel
+from simtools.ray_tracing.telescope_shadowing import shadowing_shares
 from simtools.visualization import plot_telescope_structure as structure
 
 _ARGUMENTS = (
@@ -103,10 +105,10 @@ def main():
                 parameters=model_files,
                 dest=tel_model.config_file_directory,
             )
-        geometry = structure.telescope_geometry(tel_model)
+        geometry = telescope_geometry.telescope_geometry(tel_model)
         shares = None
         if args["shadowing"]:
-            shares = structure.shadowing_shares(
+            shares = shadowing_shares(
                 tel_model, args["zenith_angle"], args["photons"], args["seed"]
             )
         output_dir = app_context.io_handler.get_output_directory()

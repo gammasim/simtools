@@ -34,7 +34,7 @@ from astropy.table import Table
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _ECSV_FORMAT = "ascii.ecsv"
 _logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ def _parse_parameter_scan_config(param_scan):
 
     params = []
     for param_spec in param_scan["parameters"]:
-        values = general.ensure_list(param_spec["values"])
+        values = value_conversion.ensure_list(param_spec["values"])
         if not values:
             raise ValueError("'values' must contain at least one scan value.")
         params.append(

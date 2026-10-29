@@ -501,3 +501,17 @@ def test_normalize_array_element_identifier_container():
 
     with pytest.raises(ValueError, match="Invalid JSON list string"):
         names.normalize_array_element_identifier_container("[1, 12")
+
+
+@pytest.mark.parametrize(
+    ("telescope_name", "expected"),
+    [
+        ("LSTN-01", False),
+        ("MSTN-01", False),
+        ("MSTS-01", False),
+        ("SSTS-01", True),
+        ("SCTS-25", True),
+    ],
+)
+def test_is_two_mirror_telescope(telescope_name, expected):
+    assert names.is_two_mirror_telescope(telescope_name) == expected

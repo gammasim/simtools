@@ -12,6 +12,7 @@ from astropy.table import Table
 from simtools.io import io_handler
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
+from simtools.model import telescope_geometry
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.figure_cache import figure_cache_key
 from simtools.simtel import simtel_file_writer
@@ -38,7 +39,7 @@ def write_telescope_structure_figure(file, telescope_model, logger):
     _use_exported_model_filenames(telescope_model)
     image_dir = io_handler.IOHandler().get_output_directory("_images")
     try:
-        geometry = plot_telescope_structure.telescope_geometry(telescope_model)
+        geometry = telescope_geometry.telescope_geometry(telescope_model)
     except (FileNotFoundError, KeyError, ValueError) as exc:
         logger.warning(
             "Telescope structure plot unavailable for %s (%s): %s",
@@ -285,9 +286,7 @@ def plot_nsb_altitude_correction(input_file, output_path):
 
 
 def plot_camera_config(
-    parameter,
     parameter_version,
-    input_file,
     output_path,
     telescope,
     site,
@@ -326,17 +325,11 @@ def plot_camera_config(
     plot_name = f"camera_pixel_layout_{telescope}_{cache_key}"
     plot_path = (Path(output_path) / plot_name).with_suffix(".png")
     if not plot_path.is_file():
+        camera = camera_model.Camera.from_configuration(telescope, camera_components, 1.0)
         plot_pixels.plot(
-            config={
-                "file_name": input_file.name,
-                "telescope": telescope,
-                "parameter_version": parameter_version,
-                "site": site,
-                "model_version": model_version,
-                "parameter": parameter,
-            },
             output_file=Path(output_path) / plot_name,
-            model_reader=model_reader,
+            camera=camera,
+            raw_pixels=plot_pixels.raw_pixels_from_configuration(camera_components),
         )
     return [plot_name]
 
@@ -349,7 +342,6 @@ def plot_mirror_config(
     telescope,
     site,
     model_version,
-    model_reader,
 ):
     """Plot the mirror configuration file using the selected model version."""
     if not parameter_version:
@@ -376,8 +368,8 @@ def plot_mirror_config(
                 "model_version": model_version,
             },
             output_file=Path(output_path) / plot_name,
-            model_reader=model_reader,
             data_file_path=input_file,
+            mirrors=(mirror_model.Mirrors(input_file) if parameter == "mirror_list" else None),
         )
     return [plot_name]
 

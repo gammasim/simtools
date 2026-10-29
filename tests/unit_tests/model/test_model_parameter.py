@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model.telescope_model import TelescopeModel
+from simtools.utils import value_conversion
 
 # Capture the original static method at import time, before autouse fixtures can mock it
 _check_model_parameter_versions = ModelParameter.__dict__[
@@ -127,7 +127,7 @@ def test_handling_parameters(telescope_model_lst):
 
     tel_model.overwrite_model_parameter(
         "mirror_reflection_random_angle",
-        gen.convert_string_to_list(new_mrra),
+        value_conversion.convert_string_to_list(new_mrra),
     )
     assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
         0.0080

@@ -3,10 +3,10 @@
 import sys
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
+from simtools.utils import value_conversion
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -55,10 +55,10 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             continue
 
         try:
-            json1 = gen.remove_key_from_dict(
+            json1 = value_conversion.remove_key_from_dict(
                 ascii_handler.collect_data_from_file(path1), ignore_key
             )
-            json2 = gen.remove_key_from_dict(
+            json2 = value_conversion.remove_key_from_dict(
                 ascii_handler.collect_data_from_file(path2), ignore_key
             )
         except FileNotFoundError as e:
@@ -66,7 +66,7 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             difference_count += 1
             continue
 
-        differences = gen.find_differences_in_json_objects(json1, json2)
+        differences = find_differences_in_json_objects(json1, json2)
         if differences:
             _print_differences(differences, rel_path)
             difference_count += 1
@@ -78,6 +78,59 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
             print(f"Missing in dir1: {rel_path}")
             difference_count += 1
     return difference_count
+
+
+def _find_differences_dict(obj1, obj2, path, diffs):
+    """Recursively find differences between two dictionaries."""
+    for key in sorted(set(obj1) | set(obj2)):
+        subpath = f"{path}['{key}']" if path else f"['{key}']"
+        if key not in obj1:
+            diffs.append(f"{subpath}: added in second object")
+        elif key not in obj2:
+            diffs.append(f"{subpath}: removed in second object")
+        else:
+            diffs.extend(find_differences_in_json_objects(obj1[key], obj2[key], subpath))
+
+
+def find_differences_in_json_objects(obj1, obj2, path=""):
+    """
+    Recursively find differences between two JSON-like objects.
+
+    Parameters
+    ----------
+    obj1: dict, list, or any
+        First object to compare.
+    obj2: dict, list, or any
+        Second object to compare.
+    path: str
+        Path to the current object in the JSON structure, used for reporting differences.
+
+    Returns
+    -------
+    list
+        List of differences found between the two objects, with paths indicating where the
+        differences occur.
+    """
+    diffs = []
+
+    if not isinstance(obj1, type(obj2)):
+        diffs.append(f"{path}: type changed from {type(obj1).__name__} to {type(obj2).__name__}")
+        return diffs
+
+    if isinstance(obj1, dict):
+        _find_differences_dict(obj1, obj2, path, diffs)
+
+    elif isinstance(obj1, list):
+        if len(obj1) != len(obj2):
+            diffs.append(f"{path}: list length changed from {len(obj1)} to {len(obj2)}")
+        for i, (a, b) in enumerate(zip(obj1, obj2)):
+            subpath = f"{path}[{i}]" if path else f"[{i}]"
+            diffs.extend(find_differences_in_json_objects(a, b, subpath))
+
+    elif obj1 != obj2:
+        diffs.append(f"{path}: value changed from {obj1} to {obj2}")
+
+    return diffs
 
 
 def main():

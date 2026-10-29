@@ -13,7 +13,7 @@ from astropy.units import UnitsError
 
 from simtools import constants, version
 from simtools.io import ascii_handler
-from simtools.utils import general, names
+from simtools.utils import general, names, value_conversion
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def configuration_from_file(config_file, parser):
             if config_file
             else None
         )
-        config = general.remove_substring_recursively_from_dict(config, substring="\n")
+        config = value_conversion.remove_substring_recursively_from_dict(config, substring="\n")
         if "configuration" in config.get("applications", [{}])[0]:
             config = config["applications"][0]["configuration"]
         config = version.resolve_by_version(
@@ -38,7 +38,7 @@ def configuration_from_file(config_file, parser):
             config.get("model_version"),
             preserve_inconsistent_keys=parser.preserve_by_version,
         )
-        return general.change_dict_keys_case(config)
+        return value_conversion.change_dict_keys_case(config)
     except TypeError, AttributeError:
         logger.debug("No YAML configuration update applied to configuration dictionary.")
         return {}
@@ -90,7 +90,7 @@ def validate_site_telescope_consistency(config, parser):
     elements.extend(
         config[name] for name in ("telescope", "light_source") if config.get(name) is not None
     )
-    for layout in general.ensure_list(config.get("array_layout_name") or []):
+    for layout in value_conversion.ensure_list(config.get("array_layout_name") or []):
         try:
             elements.append(names.validate_array_element_name(layout))
         except ValueError:
@@ -100,7 +100,7 @@ def validate_site_telescope_consistency(config, parser):
             element_sites = names.get_site_from_array_element_name(element)
         except ValueError as exc:
             parser.error(str(exc))
-        if selected_site not in general.ensure_list(element_sites):
+        if selected_site not in value_conversion.ensure_list(element_sites):
             parser.error(
                 f"array element {element} belongs to site {element_sites}, "
                 f"but site {selected_site} was selected"
@@ -302,7 +302,7 @@ def telescope(value):
     ValueError
         If telescope name(s) are invalid.
     """
-    values = general.ensure_list(value)
+    values = value_conversion.ensure_list(value)
     for telescope_name in values:
         names.validate_array_element_name(str(telescope_name))
     return values if len(values) > 1 else values[0]

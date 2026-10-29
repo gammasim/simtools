@@ -41,7 +41,7 @@ from simtools.science_tests.production import (
 )
 from simtools.science_tests.reports import write_test_report
 from simtools.utils import names
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 from simtools.version import __version__
 
 EXECUTION_LOG = "execution.log"

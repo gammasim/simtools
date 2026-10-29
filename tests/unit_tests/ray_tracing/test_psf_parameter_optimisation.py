@@ -641,7 +641,7 @@ def test_run_gradient_descent_optimization(optimizer, sample_data):
     with (
         patch.object(optimizer, "get_initial_parameters") as mock_prev,
         patch.object(optimizer, "run_simulation") as mock_sim,
-        patch("simtools.visualization.plot_psf.setup_pdf_plotting") as mock_setup,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.setup_pdf_plotting") as mock_setup,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
         mock_prev.return_value = make_mirror_align_random_parameters()
@@ -1466,14 +1466,18 @@ def test_workflow_with_all_features(
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
         ) as mock_opt_cls,
-        patch("simtools.visualization.plot_psf.create_optimization_plots") as mock_opt_plot,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.create_optimization_plots"
+        ) as mock_opt_plot,
         patch(
             "simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"
         ) as mock_conv_plot,
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"
         ) as mock_write_log,
-        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot") as mock_offaxis_plot,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.create_psf_vs_offaxis_plot"
+        ) as mock_offaxis_plot,
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters"
         ) as mock_export,
@@ -1515,10 +1519,10 @@ def test_cleanup_intermediate_files(
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
         patch("simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer") as mock_opt,
-        patch("simtools.visualization.plot_psf.create_optimization_plots"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.create_optimization_plots"),
         patch("simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"),
         patch("simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"),
-        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.create_psf_vs_offaxis_plot"),
     ):
         mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
         mock_opt.return_value.run_gradient_descent.return_value = (
@@ -1543,3 +1547,45 @@ def test_cleanup_intermediate_files(
     assert not (tmp_path / "sim.lis.gz").exists()
     assert (tmp_path / "keep_me.png").exists()
     assert (tmp_path / "keep_me.pdf").exists()
+
+
+_OFFAXIS_PARS = {
+    "mirror_align_random_horizontal": [0.1, 0.2, 0.3, 0.4],
+    "mirror_align_random_vertical": [0.1, 0.2, 0.3, 0.4],
+}
+_OFFAXIS_ARGS = {"fraction": 0.8, "zenith_angle": 20 * u.deg, "source_distance": 10 * u.km}
+
+
+def test_create_psf_vs_offaxis_plot(tmp_path):
+    mock_telescope_model = MagicMock()
+    mock_telescope_model.name = "LSTN-01"
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_ray_class,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.visualize.save_figure") as mock_save,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.plt"),
+    ):
+        psf_opt.create_psf_vs_offaxis_plot(
+            mock_telescope_model, MagicMock(), _OFFAXIS_ARGS, _OFFAXIS_PARS, tmp_path
+        )
+    mock_ray = mock_ray_class.return_value
+    mock_ray.analyze.assert_called_once()
+    assert mock_ray.analyze.call_args.kwargs["keep_images"] is False
+    mock_telescope_model.overwrite_parameters.assert_called_once_with(_OFFAXIS_PARS, flat_dict=True)
+    assert mock_save.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"max_offset": 4.0 * u.deg, "offset_step": 0.0 * u.deg}, "offset_step must be positive"),
+        (
+            {"max_offset": -1.0 * u.deg, "offset_step": 0.5 * u.deg},
+            "max_offset must be non-negative",
+        ),
+    ],
+)
+def test_create_psf_vs_offaxis_plot_rejects_invalid_offsets(overrides, message):
+    with pytest.raises(ValueError, match=message):
+        psf_opt.create_psf_vs_offaxis_plot(
+            MagicMock(), MagicMock(), {**_OFFAXIS_ARGS, **overrides}, _OFFAXIS_PARS, None
+        )
