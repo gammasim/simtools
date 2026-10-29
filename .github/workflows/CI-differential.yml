@@ -26,15 +26,14 @@ jobs:
         run: |
           bash .github/scripts/install_python_dependencies.sh packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+          python src/simtools/applications/dependency_versions.py --format github-output \
+            | sed -n 's/^model_repository=/SIM_MODELS_REPO=/p' >> "$GITHUB_ENV"
       - name: Clone simulation models repository
         env:
           CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
         run: |
           set -euo pipefail
-          repositories=(
-            "https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
-            "https://github.com/gammasim/simulations-models.git"
-          )
+          repositories=("$SIM_MODELS_REPO" "https://github.com/gammasim/simulations-models.git")
           cloned=false
           for repository in "${repositories[@]}"; do
             args=()
@@ -165,18 +164,26 @@ jobs:
           PYTHONPATH: ../base/src
         run: |
           set -euo pipefail
-          python .github/scripts/differential_outputs.py run --checkout ../base --basetemp ../base-outputs \
+          python tests/integration_tests/differential_outputs.py run --checkout ../base \
+            --selection-checkout . --basetemp ../base-outputs \
             --model-versions "$DIFFERENTIAL_MODEL_VERSIONS"
       - name: Run pull-request outputs
         run: |
           set -euo pipefail
-          python .github/scripts/differential_outputs.py run --checkout . --basetemp ../head-outputs \
+          python tests/integration_tests/differential_outputs.py run --checkout . \
+            --selection-checkout . --basetemp ../head-outputs \
             --model-versions "$DIFFERENTIAL_MODEL_VERSIONS"
       - name: Compare outputs
         id: compare
         if: always()
         continue-on-error: true
-        run: python .github/scripts/differential_outputs.py compare --base ../base-outputs --head ../head-outputs --report diff_report.md
+        run: |
+          set +e
+          python tests/integration_tests/differential_outputs.py compare \
+            --base ../base-outputs --head ../head-outputs --report diff_report.md
+          result=$?
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          exit "$result"
       - name: Upload diff report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
@@ -193,10 +200,14 @@ jobs:
         if: always()
         env:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          COMPARE_OUTCOME: ${{ steps.compare.outcome }}
+          COMPARE_RESULT: ${{ steps.compare.outputs.result }}
         run: |
           set -euo pipefail
-          if [[ "$COMPARE_OUTCOME" == success ]]; then exit 0; fi
+          if [[ "$COMPARE_RESULT" == 0 ]]; then exit 0; fi
+          if [[ "$COMPARE_RESULT" != 1 ]]; then
+            echo 'Output comparison failed; the expected-output-change label cannot approve it.'
+            exit 1
+          fi
           if grep -q '"expected-output-change"' <<< "$LABELS"; then
             echo 'Output differences are approved by expected-output-change.'
             exit 0

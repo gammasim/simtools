@@ -239,13 +239,17 @@ configuration text as code.
 
 ## Differential output checks
 
-The pull-request differential job runs the configurations listed in
-`.github/scripts/differential_outputs.txt` against the merge base and the pull
-request using the same model and test-resource revisions. Its `diff_report.md`
-lists changed comparable files and up to 20 differences per file. Text is
-compared after volatile values are normalized; ECSV, FITS, HDF5, JSON, and YAML
-outputs are compared by their contents. Logs are ignored. Binary outputs are
-reported by presence and size for context and do not fail the job.
+The pull-request differential job runs configurations marked with
+`differential_test: true` in their application entry against the merge base
+and the pull request, using the same model and test-resource revisions. The
+pull request's selection is used for both checkouts; a selected case missing
+from the merge base is an error. Its `diff_report.md` lists changed comparable
+files and up to 20 differences per file. ECSV, FITS, HDF5, JSON, and YAML
+outputs are compared by their contents. Only the simtools software version is
+normalized; dates, identifiers, hashes, paths, and other content remain
+significant. Logs are ignored. Binary outputs are reported by presence and size
+for context and do not fail the job. Comparison errors cannot be approved with
+the `expected-output-change` label.
 
 Review every reported difference to determine whether it changes an expected
 scientific product. Add the `expected-output-change` pull-request label when

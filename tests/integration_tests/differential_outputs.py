@@ -19,30 +19,9 @@ IGNORED_SUFFIXES = {".log", ".log_gz"}
 BINARY_SUFFIXES = {".zst", ".simtel", ".png", ".jpg", ".jpeg", ".pdf"}
 NORMALIZATION_PATTERNS = (
     (
-        re.compile(
-            r"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
-            r"(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\b"
-        ),
-        "<TIMESTAMP>",
-    ),
-    (re.compile(r"\b\d{4}-\d{2}-\d{2}\b"), "<DATE>"),
-    (
-        re.compile(
-            r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-"
-            r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b"
-        ),
-        "<UUID>",
-    ),
-    (re.compile(r"\b(?:[0-9a-f]{40}|[0-9a-f]{64})\b", re.IGNORECASE), "<GIT_HASH>"),
-    (
-        re.compile(r"(?m)^(?:host|hostname|user|username)\s*[:=]\s*[^\r\n]+", re.IGNORECASE),
-        "<HOST_OR_USER>",
-    ),
-    (
         re.compile(r"simtools[-_ ]version\s*[:=]\s*[^\s,;]+", re.IGNORECASE),
         "simtools-version=<VERSION>",
     ),
-    (re.compile(r"(?<![A-Za-z0-9])(?:[A-Za-z]:\\|/)(?:[^\s\"']+)", re.IGNORECASE), "<ROOT>"),
 )
 
 
@@ -244,13 +223,10 @@ def _binary_note(relative, base_path, head_path):
 
 
 def _file_differences(base_path, head_path):
-    """Return the differences of one non-binary output present in base and/or head."""
+    """Return differences, raising comparison errors for unreadable outputs."""
     if base_path is None or head_path is None:
         return [f"File is missing from {'base' if base_path is None else 'head'}."]
-    try:
-        return _compare_file(base_path, head_path)
-    except (OSError, ValueError, yaml.YAMLError) as exc:
-        return [f"comparison failed: {exc}"]
+    return _compare_file(base_path, head_path)
 
 
 def compare_trees(base_dir, head_dir, report_path):
@@ -259,6 +235,7 @@ def compare_trees(base_dir, head_dir, report_path):
     base_files, head_files = _relative_files(base_dir), _relative_files(head_dir)
     lines = ["# Differential output report", "", "## Compared outputs", ""]
     failed = not base_dir.is_dir() or not head_dir.is_dir()
+    comparison_error = failed
     if failed:
         missing_dirs = [str(path) for path in (base_dir, head_dir) if not path.is_dir()]
         lines.append(f"Output directory missing: {', '.join(missing_dirs)}.\n")
@@ -268,7 +245,11 @@ def compare_trees(base_dir, head_dir, report_path):
         if relative.suffix.lower() in BINARY_SUFFIXES:
             binary_notes.append(_binary_note(relative, base_path, head_path))
             continue
-        differences = _file_differences(base_path, head_path)
+        try:
+            differences = _file_differences(base_path, head_path)
+        except Exception as exc:  # Comparison failures must remain distinct from differences.
+            differences = [f"comparison failed: {exc}"]
+            comparison_error = True
         if differences:
             failed = True
             lines.extend([f"### `{relative}`", "", *[f"- {item}" for item in differences], ""])
@@ -276,7 +257,7 @@ def compare_trees(base_dir, head_dir, report_path):
         lines.append("No differences found.\n")
     lines.extend(["## Binary outputs (informational)", "", *(binary_notes or ["None found."]), ""])
     Path(report_path).write_text("\n".join(lines), encoding="utf-8")
-    return 1 if failed else 0
+    return 2 if comparison_error else 1 if failed else 0
 
 
 def _pytest_ids(checkout, config_names, model_versions):
@@ -305,28 +286,43 @@ def _pytest_ids(checkout, config_names, model_versions):
     return ids
 
 
+def _selected_configs(checkout):
+    """Return configs opted into differential output checks."""
+    config_dir = Path(checkout) / "tests/integration_tests/config"
+    return sorted(
+        path.name
+        for path in config_dir.glob("*.yml")
+        if any(
+            application.get("differential_test") is True
+            for application in yaml.safe_load(path.read_text(encoding="utf-8")).get(
+                "applications", []
+            )
+        )
+    )
+
+
 def run_integration(
-    checkout, basetemp, model_versions, simulation_models_path=None, simtools_tests_path=None
+    checkout,
+    basetemp,
+    model_versions,
+    selection_checkout=None,
+    simulation_models_path=None,
+    simtools_tests_path=None,
 ):
     """Run selected application integration cases in a checkout."""
     checkout = Path(checkout).resolve()
-    script_dir = Path(__file__).resolve().parent
-    list_file = script_dir / "differential_outputs.txt"
-    if not list_file.exists():
-        list_file = checkout / ".github/scripts/differential_outputs.txt"
-    names = [
-        line.strip()
-        for line in list_file.read_text().splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
+    selection_checkout = Path(selection_checkout or checkout).resolve()
+    names = _selected_configs(selection_checkout)
+    if not names:
+        print(f"No differential_test configs selected in {selection_checkout}.", file=sys.stderr)
+        return 2
     available_names = {
         path.name for path in (checkout / "tests/integration_tests/config").glob("*.yml")
     }
     missing = sorted(set(names) - available_names)
     if missing:
-        print(
-            f"Listed integration configurations are missing: {', '.join(missing)}", file=sys.stderr
-        )
+        print(f"Missing selected configs in {checkout}: {', '.join(missing)}", file=sys.stderr)
+        return 2
     versions = [version.strip() for version in model_versions.split(",") if version.strip()]
     Path(basetemp).mkdir(parents=True, exist_ok=True)
     return_codes = [
@@ -335,6 +331,7 @@ def run_integration(
             Path(basetemp) / version,
             version,
             names,
+            selection_checkout,
             simulation_models_path,
             simtools_tests_path,
         )
@@ -344,10 +341,16 @@ def run_integration(
 
 
 def _run_model_version(
-    checkout, basetemp, model_version, names, simulation_models_path, simtools_tests_path
+    checkout,
+    basetemp,
+    model_version,
+    names,
+    selection_checkout,
+    simulation_models_path,
+    simtools_tests_path,
 ):
     """Run the listed integration cases for one model version."""
-    ids = _pytest_ids(checkout, names, {model_version})
+    ids = _pytest_ids(selection_checkout, names, {model_version})
     if not ids:
         print(f"No listed integration configurations match model version {model_version}.")
         return 0
@@ -387,9 +390,16 @@ def _run_model_version(
         for node in collected_nodes
         if node.rsplit("[", maxsplit=1)[-1].rstrip("]") in expected_ids
     ]
+    collected_ids = {node.rsplit("[", maxsplit=1)[-1].rstrip("]") for node in target_nodes}
+    missing_ids = expected_ids - collected_ids
+    if missing_ids:
+        print(
+            f"Selected integration cases are missing from {checkout} "
+            f"for {model_version}: {', '.join(sorted(missing_ids))}.",
+            file=sys.stderr,
+        )
     if not target_nodes:
-        print("None of the listed integration configurations are present in this checkout.")
-        return 0
+        return 2
     expression = " or ".join(
         "(" + " and ".join(re.findall(r"[A-Za-z0-9_]+", test_id)) + ")" for test_id in ids
     )
@@ -411,7 +421,8 @@ def _run_model_version(
     ]
     target_set = set(target_nodes)
     command.extend(f"--deselect={node}" for node in collected_nodes if node not in target_set)
-    return subprocess.run(command, cwd=checkout, check=False).returncode
+    return_code = subprocess.run(command, cwd=checkout, check=False).returncode
+    return 2 if missing_ids else return_code
 
 
 def main(argv=None):
@@ -420,6 +431,7 @@ def main(argv=None):
     commands = parser.add_subparsers(dest="command", required=True)
     run_parser = commands.add_parser("run", help="run selected integration tests")
     run_parser.add_argument("--checkout", type=Path, required=True)
+    run_parser.add_argument("--selection-checkout", type=Path)
     run_parser.add_argument("--basetemp", type=Path, required=True)
     run_parser.add_argument("--model-versions", default="7.0.0")
     run_parser.add_argument("--simulation_models_path", type=Path)
@@ -434,6 +446,7 @@ def main(argv=None):
             args.checkout,
             args.basetemp,
             args.model_versions,
+            args.selection_checkout,
             args.simulation_models_path,
             args.simtools_tests_path,
         )

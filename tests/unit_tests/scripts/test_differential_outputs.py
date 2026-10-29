@@ -9,19 +9,22 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-SCRIPT_PATH = Path(__file__).resolve().parents[3] / ".github/scripts/differential_outputs.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[2] / "integration_tests/differential_outputs.py"
 SPEC = importlib.util.spec_from_file_location("differential_outputs", SCRIPT_PATH)
 DIFFERENTIAL_OUTPUTS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DIFFERENTIAL_OUTPUTS)
 
 
-def test_normalize_text_replaces_volatile_values():
-    text = "date=2025-02-01T12:30:40Z id=123e4567-e89b-12d3-a456-426614174000"
+def test_normalize_text_preserves_dates_hashes_and_ids():
+    text = (
+        "date=2025-02-01T12:30:40Z "
+        "hash=1234567890abcdef1234567890abcdef12345678 "
+        "id=123e4567-e89b-12d3-a456-426614174000"
+    )
 
     normalized = DIFFERENTIAL_OUTPUTS.normalize_text(text)
 
-    assert "<TIMESTAMP>" in normalized
-    assert "<UUID>" in normalized
+    assert normalized == text
 
 
 def test_compare_table_uses_numeric_tolerance_and_units(tmp_test_directory):
@@ -62,7 +65,7 @@ def test_compare_hdf5_dataset_values(tmp_test_directory):
     assert "values: numeric values differ" in DIFFERENTIAL_OUTPUTS._hdf5_differences(base, head)
 
 
-def test_compare_hdf5_normalizes_json_metadata(tmp_test_directory):
+def test_compare_hdf5_preserves_meaningful_json_metadata(tmp_test_directory):
     base = Path(tmp_test_directory) / "base.hdf5"
     head = Path(tmp_test_directory) / "head.hdf5"
     metadata = [
@@ -85,7 +88,7 @@ def test_compare_hdf5_normalizes_json_metadata(tmp_test_directory):
         with h5py.File(path, "w") as output:
             output.create_dataset("METADATA", data=np.array([value.encode()]))
 
-    assert DIFFERENTIAL_OUTPUTS._hdf5_differences(base, head) == []
+    assert "METADATA: values differ" in DIFFERENTIAL_OUTPUTS._hdf5_differences(base, head)
 
 
 def test_compare_report_exit_code_and_binary_informational(tmp_test_directory):
