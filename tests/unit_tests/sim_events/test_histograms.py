@@ -93,77 +93,9 @@ def test_view_cone_bins(mock_reader, hdf5_file_name):
     assert len(bins) == 100
 
 
-def test_fill_histogram_and_bin_edges_1d_new(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": True,
-        "event_data": mock_reader.return_value,
-        "event_data_column": "simulated_energy",
-        "histogram": Histogram.from_edges([np.array([0, 2, 4, 6])]),
-    }
-    # Patch the attribute to return the test data
-    setattr(mock_reader.return_value, "simulated_energy", np.array([1, 2, 3, 4, 5]))
-    histograms._fill_histogram_and_bin_edges(data)
-    assert data["histogram"] is not None
-    expected_hist, _ = np.histogram(np.array([1, 2, 3, 4, 5]), bins=np.array([0, 2, 4, 6]))
-    assert np.array_equal(data["histogram"].values, expected_hist)
-
-
-def test_fill_histogram_and_bin_edges_1d_existing(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": True,
-        "event_data": mock_reader.return_value,
-        "event_data_column": "simulated_energy",
-        "histogram": Histogram.from_edges([np.array([0, 2, 4, 6])]),
-    }
-    # Patch the attribute to return the test data
-    setattr(mock_reader.return_value, "simulated_energy", np.array([1, 2, 3]))
-    histograms._fill_histogram_and_bin_edges(data)
-    # Add more data
-    setattr(mock_reader.return_value, "simulated_energy", np.array([4, 5, 6]))
-    histograms._fill_histogram_and_bin_edges(data)
-    expected_total_hist, _ = np.histogram(
-        np.concatenate([np.array([1, 2, 3]), np.array([4, 5, 6])]), bins=np.array([0, 2, 4, 6])
-    )
-    assert np.array_equal(data["histogram"].values, expected_total_hist)
-
-
-def test_fill_histogram_and_bin_edges_2d_new(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": False,
-        "event_data": (mock_reader.return_value, mock_reader.return_value),
-        "event_data_column": ("simulated_energy", "core_distance_shower"),
-        "histogram": Histogram.from_edges([np.array([0, 2, 4]), np.array([3, 5, 7])]),
-    }
-    setattr(mock_reader.return_value, "simulated_energy", np.array([1, 2, 3]))
-    setattr(mock_reader.return_value, "core_distance_shower", np.array([4, 5, 6]))
-    histograms._fill_histogram_and_bin_edges(data)
-    assert data["histogram"] is not None
-    expected_hist, _, _ = np.histogram2d(
-        np.array([1, 2, 3]), np.array([4, 5, 6]), bins=[np.array([0, 2, 4]), np.array([3, 5, 7])]
-    )
-    assert np.array_equal(data["histogram"].values, expected_hist)
-
-
-def test_fill_histogram_and_bin_edges_2d_event_data_none(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": False,
-        "event_data": None,
-        "event_data_column": ("simulated_energy", "core_distance_shower"),
-        "histogram": Histogram.from_edges([np.array([0, 2, 4]), np.array([3, 5, 7])]),
-    }
-
-    histograms._fill_histogram_and_bin_edges(data)
-
-    assert not np.any(data["histogram"].values)
-
-
 def test_release_event_data_handles_non_1d_none_event_data(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
-    histograms.histograms = {
+    histograms._fill_state.histogram_specs = {
         "energy": {"1d": True, "event_data": mock_reader.return_value},
         "reuse_mean_vs_core_distance_vs_energy": {"1d": False, "event_data": None},
         "core_distance_vs_energy": {
@@ -174,9 +106,17 @@ def test_release_event_data_handles_non_1d_none_event_data(mock_reader, hdf5_fil
 
     histograms._release_event_data()
 
-    assert histograms.histograms["energy"]["event_data"] is None
-    assert histograms.histograms["reuse_mean_vs_core_distance_vs_energy"]["event_data"] is None
-    assert histograms.histograms["core_distance_vs_energy"]["event_data"] == (None, None)
+    assert histograms._fill_state.histogram_specs["energy"]["event_data"] is None
+    assert (
+        histograms._fill_state.histogram_specs["reuse_mean_vs_core_distance_vs_energy"][
+            "event_data"
+        ]
+        is None
+    )
+    assert histograms._fill_state.histogram_specs["core_distance_vs_energy"]["event_data"] == (
+        None,
+        None,
+    )
 
 
 def test_fill(mock_reader, hdf5_file_name, mocker):
@@ -211,9 +151,10 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     mock_reader.return_value.data_sets = ["test_dataset"]
 
     # Patch _fill_histogram_and_bin_edges to simulate filling histograms with required structure
-    def fake_fill_histogram_and_bin_edges(data):
-        data["histogram"] = Histogram.from_edges([np.arange(4)], values=np.array([1, 2, 3]))
-        data["axis_titles"] = ["x", "y"]
+    def fake_fill_histogram_and_bin_edges(name, data):
+        histogram = histograms._create_histogram(data)
+        histogram.values = np.ones(histogram.shape)
+        histograms.histograms[name] = histogram
 
     mocker.patch.object(
         histograms, "_fill_histogram_and_bin_edges", side_effect=fake_fill_histogram_and_bin_edges
@@ -375,9 +316,7 @@ def test_fill_accumulates_histograms_across_data_sets(
 
     histograms.fill()
 
-    np.testing.assert_array_equal(
-        histograms.histograms["energy"]["histogram"].values, np.array([2, 1])
-    )
+    np.testing.assert_array_equal(histograms.histograms["energy"].values, np.array([2, 1]))
     assert mock_reader.return_value.read_event_data.call_count == 2
 
 
@@ -395,10 +334,7 @@ def test_update_file_info_rejects_mixed_exposure_metadata(
 def test_merge_histograms_rejects_different_bin_edges(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.histograms = {
-        "energy": {
-            "edges": [np.array([0.0, 1.0, 2.0])],
-            "histogram": Histogram.from_edges([np.array([0.0, 1.0, 2.0])], values=np.array([1, 2])),
-        }
+        "energy": Histogram.from_edges([np.array([0.0, 1.0, 2.0])], values=np.array([1, 2]))
     }
 
     with pytest.raises(ValueError, match="different bins"):
@@ -475,7 +411,7 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
         "viewcone_min": 0.0 * u.deg,
         "viewcone_max": 0.6 * u.deg,
     }
-    histograms.histograms = histograms._define_histograms(None, None, None)
+    histograms._fill_state.histogram_specs = histograms._define_histograms(None, None, None)
 
     event_data = mocker.Mock(
         file_id=np.array([0, 0, 0]),
@@ -492,54 +428,54 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
     histograms._accumulate_reuse_histograms(event_data, triggered_data)
 
     np.testing.assert_allclose(
-        histograms.histograms["reuse_mean_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_mean_vs_energy"].values,
         np.array([2.0, 1.0, np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_max_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_max_vs_energy"].values,
         np.array([2.0, 1.0, np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_std_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_std_vs_energy"].values,
         np.array([0.0, 0.0, np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_mean_vs_core_distance"]["histogram"].values,
+        histograms.histograms["reuse_mean_vs_core_distance"].values,
         np.array([5.0 / 3.0, np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_max_vs_core_distance"]["histogram"].values,
+        histograms.histograms["reuse_max_vs_core_distance"].values,
         np.array([2.0, np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_std_vs_core_distance"]["histogram"].values,
+        histograms.histograms["reuse_std_vs_core_distance"].values,
         np.array([np.sqrt(2.0 / 9.0), np.nan]),
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_mean_vs_angular_distance"]["histogram"].values,
+        histograms.histograms["reuse_mean_vs_angular_distance"].values,
         np.array([5.0 / 3.0, np.nan]),
         equal_nan=True,
     )
     expected_2d_mean = np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]])
     expected_2d_std = np.array([[0.0, 0.0, np.nan], [np.nan, np.nan, np.nan]])
     np.testing.assert_allclose(
-        histograms.histograms["reuse_mean_vs_core_distance_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_mean_vs_core_distance_vs_energy"].values,
         expected_2d_mean,
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_std_vs_core_distance_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_std_vs_core_distance_vs_energy"].values,
         expected_2d_std,
         equal_nan=True,
     )
     np.testing.assert_allclose(
-        histograms.histograms["reuse_max_vs_angular_distance_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_max_vs_angular_distance_vs_energy"].values,
         np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]]),
         equal_nan=True,
     )
@@ -559,7 +495,7 @@ def mock_histograms(mocker):
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     mock_edges = np.linspace(0, 1000, 50)
-    histograms.histograms["core_distance_bin_edges"] = mock_edges
+    histograms.loaded_bin_edges["core_distance"] = mock_edges
 
     bins = histograms.core_distance_bins
 
@@ -581,7 +517,7 @@ def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
 def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     mock_bins = np.linspace(0.0, 5.0, 50)
-    histograms.histograms["viewcone_bin_edges"] = mock_bins
+    histograms.loaded_bin_edges["viewcone"] = mock_bins
     bins = histograms.view_cone_bins
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 50
@@ -592,32 +528,17 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
-    # Seed histogram dictionary with minimal required histograms (as dicts)
+    # Seed the public histogram mapping with values and bin edges.
     histograms.histograms = {
-        "energy": {
-            "histogram": Histogram.from_edges([np.arange(5)], values=np.array([10, 20, 30, 40])),
-            "axis_titles": ["E", ""],
-        },
-        "core_distance": {
-            "histogram": Histogram.from_edges([np.arange(5)], values=np.array([5, 15, 25, 35])),
-            "axis_titles": ["r", ""],
-        },
-        "angular_distance": {
-            "histogram": Histogram.from_edges([np.arange(5)], values=np.array([2, 4, 6, 8])),
-            "axis_titles": ["theta", ""],
-        },
-        "core_distance_vs_energy": {
-            "histogram": Histogram.from_edges(
-                [np.arange(3), np.arange(3)], values=np.array([[1, 2], [3, 4]])
-            ),
-            "axis_titles": ["r", "E"],
-        },
-        "angular_distance_vs_energy": {
-            "histogram": Histogram.from_edges(
-                [np.arange(3), np.arange(3)], values=np.array([[2, 3], [4, 5]])
-            ),
-            "axis_titles": ["theta", "E"],
-        },
+        "energy": Histogram.from_edges([np.arange(5)], values=np.array([10, 20, 30, 40])),
+        "core_distance": Histogram.from_edges([np.arange(5)], values=np.array([5, 15, 25, 35])),
+        "angular_distance": Histogram.from_edges([np.arange(5)], values=np.array([2, 4, 6, 8])),
+        "core_distance_vs_energy": Histogram.from_edges(
+            [np.arange(3), np.arange(3)], values=np.array([[1, 2], [3, 4]])
+        ),
+        "angular_distance_vs_energy": Histogram.from_edges(
+            [np.arange(3), np.arange(3)], values=np.array([[2, 3], [4, 5]])
+        ),
     }
     cumulative_data = histograms.calculate_cumulative_data()
     # Expected 1D cumulative distributions
@@ -635,22 +556,22 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
         "energy_cumulative",
     }
     np.testing.assert_array_equal(
-        cumulative_data["energy_cumulative"]["histogram"].values, expected_cumulative_energy
+        cumulative_data["energy_cumulative"].values, expected_cumulative_energy
     )
     np.testing.assert_array_equal(
-        cumulative_data["core_distance_cumulative"]["histogram"].values,
+        cumulative_data["core_distance_cumulative"].values,
         expected_cumulative_core_distance,
     )
     np.testing.assert_array_equal(
-        cumulative_data["angular_distance_cumulative"]["histogram"].values,
+        cumulative_data["angular_distance_cumulative"].values,
         expected_cumulative_angular_distance,
     )
     np.testing.assert_allclose(
-        cumulative_data["core_distance_vs_energy_cumulative"]["histogram"].values,
+        cumulative_data["core_distance_vs_energy_cumulative"].values,
         expected_norm_core_distance_vs_energy,
     )
     np.testing.assert_allclose(
-        cumulative_data["angular_distance_vs_energy_cumulative"]["histogram"].values,
+        cumulative_data["angular_distance_vs_energy_cumulative"].values,
         expected_norm_ang_vs_energy,
     )
 
@@ -659,32 +580,14 @@ def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
-    # Mock histograms for triggered and simulated events (as dicts)
+    # Mock histograms for triggered and simulated events.
     histograms.histograms = {
-        "energy": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([10, 20, 30])),
-            "axis_titles": ["E", ""],
-        },
-        "energy_mc": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
-            "axis_titles": ["E", ""],
-        },
-        "core_distance": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([5, 10, 15])),
-            "axis_titles": ["r", ""],
-        },
-        "core_distance_mc": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([10, 20, 30])),
-            "axis_titles": ["r", ""],
-        },
-        "angular_distance": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([0, 5, 10])),
-            "axis_titles": ["theta", ""],
-        },
-        "angular_distance_mc": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([0, 10, 20])),
-            "axis_titles": ["theta", ""],
-        },
+        "energy": Histogram.from_edges([np.arange(4)], values=np.array([10, 20, 30])),
+        "energy_mc": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
+        "core_distance": Histogram.from_edges([np.arange(4)], values=np.array([5, 10, 15])),
+        "core_distance_mc": Histogram.from_edges([np.arange(4)], values=np.array([10, 20, 30])),
+        "angular_distance": Histogram.from_edges([np.arange(4)], values=np.array([0, 5, 10])),
+        "angular_distance_mc": Histogram.from_edges([np.arange(4)], values=np.array([0, 10, 20])),
     }
     # Call the method
     efficiency_data = histograms.calculate_efficiency_data()
@@ -693,13 +596,13 @@ def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
     assert "core_distance_eff" in efficiency_data
     assert "angular_distance_eff" in efficiency_data
     np.testing.assert_array_almost_equal(
-        efficiency_data["energy_eff"]["histogram"].values, np.array([0.5, 0.5, 0.5])
+        efficiency_data["energy_eff"].values, np.array([0.5, 0.5, 0.5])
     )
     np.testing.assert_array_almost_equal(
-        efficiency_data["core_distance_eff"]["histogram"].values, np.array([0.5, 0.5, 0.5])
+        efficiency_data["core_distance_eff"].values, np.array([0.5, 0.5, 0.5])
     )
     np.testing.assert_array_almost_equal(
-        efficiency_data["angular_distance_eff"]["histogram"].values, np.array([0.0, 0.5, 0.5])
+        efficiency_data["angular_distance_eff"].values, np.array([0.0, 0.5, 0.5])
     )
 
 
@@ -707,14 +610,8 @@ def test_calculate_efficiency_data_shape_mismatch(mock_reader, hdf5_file_name, c
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
     histograms.histograms = {
-        "energy": {
-            "histogram": Histogram.from_edges([np.arange(3)], values=np.array([10, 20])),
-            "axis_titles": ["E", ""],
-        },
-        "energy_mc": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
-            "axis_titles": ["E", ""],
-        },
+        "energy": Histogram.from_edges([np.arange(3)], values=np.array([10, 20])),
+        "energy_mc": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
     }
     with caplog.at_level(logging.WARNING):
         efficiency_data = histograms.calculate_efficiency_data()
@@ -734,10 +631,7 @@ def test_calculate_efficiency_data_missing_histograms(mock_reader, hdf5_file_nam
 
     # Mock histograms with missing triggered histogram (as dict)
     histograms.histograms = {
-        "energy_mc": {
-            "histogram": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
-            "axis_titles": ["E", ""],
-        },
+        "energy_mc": Histogram.from_edges([np.arange(4)], values=np.array([20, 40, 60])),
     }
     efficiency_data = histograms.calculate_efficiency_data()
     # Ensure no efficiency histogram is created
@@ -747,30 +641,9 @@ def test_calculate_efficiency_data_missing_histograms(mock_reader, hdf5_file_nam
 def test_energy_bins_with_histogram_edges(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
     mock_edges = np.linspace(0, 10, 5)
-    histograms.histograms["energy_bin_edges"] = mock_edges
+    histograms.loaded_bin_edges["energy"] = mock_edges
     bins = histograms.energy_bins
     assert np.array_equal(bins, mock_edges)
-
-
-def test_fill_histogram_and_bin_edges_event_data_none(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": True,
-        "event_data": None,
-        "event_data_column": "simulated_energy",
-        "histogram": Histogram.from_edges([np.array([0, 1, 2])]),
-    }
-    histograms._fill_histogram_and_bin_edges(data)
-    assert not np.any(data["histogram"].values)
-
-    data = {
-        "1d": False,
-        "event_data": [None, None],
-        "event_data_column": "simulated_energy",
-        "histogram": Histogram.from_edges([np.array([0, 1, 2])]),
-    }
-    histograms._fill_histogram_and_bin_edges(data)
-    assert not np.any(data["histogram"].values)
 
 
 def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
@@ -800,14 +673,14 @@ def test_accumulate_tracks_angular_distance_range(mock_reader, hdf5_file_name, m
 
 def test_histogram_definitions_are_filled_independently(mocker):
     histograms = EventDataHistograms.create_accumulator()
-    definitions = histograms.get_empty_histogram_definitions()
-    assert all(definition["histogram"] is None for definition in definitions.values())
-    assert all("bin_edges" not in definition for definition in definitions.values())
+    definitions = histograms._define_histograms(None, None, None)
+    assert all("event_data_column" in definition for definition in definitions.values())
     energy = definitions["energy"]
     energy["event_data"] = mocker.Mock(simulated_energy=np.array([1.0]))
-    histograms._fill_histogram_and_bin_edges(energy)
-    assert np.sum(energy["histogram"].values) == 1
-    assert definitions["energy_mc"]["histogram"] is None
+    histograms._fill_state.histogram_specs = definitions
+    histograms._fill_histogram_and_bin_edges("energy", energy)
+    assert np.sum(histograms.histograms["energy"].values) == 1
+    assert "energy_mc" not in histograms.histograms
     np.testing.assert_array_equal(
-        energy["histogram"].edges[0], definitions["energy_mc"]["edges"][0]
+        histograms.histograms["energy"].edges[0], definitions["energy_mc"]["edges"][0]
     )

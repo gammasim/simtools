@@ -10,6 +10,7 @@ from ctao_cr_spectra.definitions import IRFDOC_ELECTRON_SPECTRUM, IRFDOC_PROTON_
 from ctao_cr_spectra.spectral import LogParabola, PowerLaw, PowerLawWithExponentialGaussian
 from scipy import integrate
 
+from simtools.histogram.histogram import Histogram
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_model_repository
 from simtools.sim_events.histograms import EventDataHistograms
@@ -101,7 +102,7 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
         Path to a YAML file describing the cosmic-ray spectrum. If None, the spectrum
         is selected automatically based on the primary particle in the simulation data.
     """
-    efficiency = histograms.histograms.get("energy_eff", {}).get("histogram")
+    efficiency = histograms.histograms.get("energy_eff")
     energy_axis = efficiency.edges[0]
 
     primary_particle = histograms.file_info.get("primary_particle")
@@ -129,19 +130,11 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
     _logger.info(f"Solid angle from MC: {histograms.file_info['solid_angle']}")
     _logger.info(f"Trigger rate for {array_name} array: {trigger_rate.to('Hz')}")
 
-    histograms.histograms["cr_rates_mc"] = histograms.get_histogram_definition(
-        histogram=cr_rates.value,
-        bin_edges=energy_axis,
-        title="Cosmic Ray Rates (MC)",
-        axis_titles=["Energy (TeV)", "Cosmic Ray Rate (Hz)"],
-        plot_scales={"x": "log", "y": "log"},
+    histograms.histograms["cr_rates_mc"] = Histogram.from_edges(
+        [energy_axis], cr_rates.value, axis_names=["energy"], axis_units=["TeV"]
     )
-    histograms.histograms["trigger_rates"] = histograms.get_histogram_definition(
-        histogram=trigger_rates.value,
-        bin_edges=energy_axis,
-        title="Trigger Rates (MC)",
-        axis_titles=["Energy (TeV)", "Trigger Rate (Hz)"],
-        plot_scales={"x": "log", "y": "log"},
+    histograms.histograms["trigger_rates"] = Histogram.from_edges(
+        [energy_axis], trigger_rates.value, axis_names=["energy"], axis_units=["TeV"]
     )
 
     return cr_rates, trigger_rates, trigger_rate
