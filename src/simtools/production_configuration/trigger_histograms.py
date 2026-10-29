@@ -14,6 +14,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
+from simtools.histogram.histogram import Histogram
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import product_value, validate_file_type
@@ -274,14 +275,14 @@ def _create_metadata_table(
                     np.sum(
                         histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
                             "histogram"
-                        ]
+                        ].values
                     )
                 ),
                 "total_triggered_events": int(
                     np.sum(
                         histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
                             "histogram"
-                        ]
+                        ].values
                     )
                 ),
             }
@@ -300,11 +301,7 @@ def _is_persisted_histogram(name, histogram):
 
 def _iter_histogram_edges(histogram):
     """Yield one bin-edge array per histogram axis."""
-    bin_edges = histogram["bin_edges"]
-    if histogram["1d"]:
-        yield 0, bin_edges
-        return
-    yield from enumerate(bin_edges)
+    yield from enumerate(histogram["histogram"].edges)
 
 
 def _write_dense_histogram_payload(reference_specs, output_file):
@@ -319,7 +316,7 @@ def _write_dense_histogram_payload(reference_specs, output_file):
                 _create_dense_histogram_dataset(
                     histogram_group,
                     "values",
-                    data=np.asarray(histogram["histogram"]),
+                    data=np.asarray(histogram["histogram"].values),
                 )
                 for axis_index, edges in _iter_histogram_edges(histogram):
                     _create_dense_histogram_dataset(
@@ -444,13 +441,13 @@ def _create_bin_table(reference_id, production_index, array_name, histograms):
     """Create the flattened per-bin histogram table."""
     triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
         "histogram"
-    ]
+    ].values
     simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
         "histogram"
-    ]
+    ].values
     efficiency_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_eff"][
         "histogram"
-    ]
+    ].values
     energy_edges = histograms.energy_bins
     angular_edges = histograms.view_cone_bins
     core_edges = histograms.core_distance_bins
@@ -1080,16 +1077,12 @@ def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
     for histogram_name, values in values_by_name.items():
         definition = copy.copy(templates.get(histogram_name, {}))
         definition.setdefault("1d", values.ndim == 1)
-        definition["histogram"] = values
         definition["event_data"] = (
             None if definition["1d"] else tuple(None for _ in range(values.ndim))
         )
         axis_edges = edges_by_name[histogram_name]
-        definition["bin_edges"] = (
-            axis_edges[0]
-            if values.ndim == 1
-            else tuple(axis_edges[index] for index in range(values.ndim))
-        )
+        definition["edges"] = [axis_edges[index] for index in range(values.ndim)]
+        definition["histogram"] = Histogram.from_edges(definition["edges"], values=values)
         loaded[histogram_name] = definition
 
     if "energy" in edges_by_name:

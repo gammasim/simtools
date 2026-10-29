@@ -7,6 +7,7 @@ import pytest
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
+from simtools.histogram.histogram import Histogram
 from simtools.visualization import plot_simtel_event_histograms
 from simtools.visualization.plot_simtel_event_histograms import (
     _add_lines,
@@ -579,8 +580,9 @@ def test_execute_plotting_loop():
 
 def test_create_2d_plot_config():
     histograms = {
-        "histogram": np.array([[1, 2], [3, 4]]),
-        "bin_edges": [np.array([0, 1, 2]), np.array([0, 1, 2])],
+        "histogram": Histogram.from_edges(
+            [np.array([0, 1, 2]), np.array([0, 1, 2])], values=np.array([[1, 2], [3, 4]])
+        ),
         "plot_scales": {"y": "log"},
         "title": "Triggered events: core distance vs energy",
         "axis_titles": [CORE_DIST_LABEL, ENERGY_LABEL, EVENT_COUNT],
@@ -629,8 +631,7 @@ def test_create_2d_plot_config():
 
 def test_create_1d_plot_config():
     histograms = {
-        "histogram": np.array([10, 20, 30]),
-        "bin_edges": np.array([0, 1, 2, 3]),
+        "histogram": Histogram.from_edges([np.array([0, 1, 2, 3])], values=np.array([10, 20, 30])),
         "plot_scales": {"x": "log", "y": "log"},
         "title": "energy distribution",
         "axis_titles": [ENERGY_LABEL, EVENT_COUNT],
@@ -721,12 +722,12 @@ def test_generate_plot_configurations():
     histos = {"energy": {"histogram": None}}
     assert plot_simtel_event_histograms._generate_plot_configurations(histos, None) == {}
 
-    histos = {"energy": {"histogram": "abc", "1d": True}}
+    histos = {"energy": {"histogram": Histogram.from_edges([[0, 1]]), "1d": True}}
     with patch(f"{MOD}._create_1d_plot_config") as mock_create_1d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         mock_create_1d.assert_called_once()
 
-    histos = {"energy": {"histogram": "abc", "1d": False}}
+    histos = {"energy": {"histogram": Histogram.from_edges([[0, 1], [0, 1]]), "1d": False}}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         mock_create_2d.assert_called_once()
@@ -735,21 +736,33 @@ def test_generate_plot_configurations():
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "log"
 
-    histos = {"energy_cumulative": {"histogram": "abc", "1d": False}}
+    histos = {
+        "energy_cumulative": {"histogram": Histogram.from_edges([[0, 1], [0, 1]]), "1d": False}
+    }
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
 
-    histos = {"core_distance_vs_energy_eff": {"histogram": "abc", "1d": False}}
+    histos = {
+        "core_distance_vs_energy_eff": {
+            "histogram": Histogram.from_edges([[0, 1], [0, 1]]),
+            "1d": False,
+        }
+    }
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
 
-    histos = {"reuse_mean_vs_core_distance_vs_energy": {"histogram": "abc", "1d": False}}
+    histos = {
+        "reuse_mean_vs_core_distance_vs_energy": {
+            "histogram": Histogram.from_edges([[0, 1], [0, 1]]),
+            "1d": False,
+        }
+    }
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
@@ -757,11 +770,10 @@ def test_generate_plot_configurations():
 
     histos = {
         "reuse_mean_vs_energy": {
-            "histogram": "abc",
+            "histogram": Histogram.from_edges([np.array([0.1, 1.0, 10.0])]),
             "1d": True,
             "axis_titles": ["Energy [TeV]", "Mean Reuse"],
             "title": "Triggered reuse mean",
-            "bin_edges": np.array([0.1, 1.0, 10.0]),
             "plot_scales": {"x": "log", "y": "linear"},
         }
     }

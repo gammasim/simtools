@@ -285,7 +285,7 @@ def _generate_plot_configurations(
     for name, hist in histograms.items():
         if hist["histogram"] is None:
             continue
-        if np.ndim(hist["histogram"]) > 2:
+        if hist["histogram"].ndim > 2:
             _logger.warning(f"Skipping plot {name} - plotting supports only 1D and 2D histograms")
             continue
         plots[name] = _build_plot_configuration(
@@ -457,8 +457,8 @@ def _create_1d_plot_config(histogram, name, plot_params, limits):
     """Create a 1D plot configuration."""
     _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
     return {
-        "data": histogram["histogram"],
-        "bins": histogram["bin_edges"],
+        "data": histogram["histogram"].values,
+        "bins": histogram["histogram"].edges[0],
         "plot_type": "histogram",
         "plot_params": plot_params,
         "labels": {
@@ -476,8 +476,8 @@ def _create_2d_plot_config(histogram, name, plot_params, limits):
     """Create a 2D plot configuration."""
     _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
     return {
-        "data": histogram["histogram"],
-        "bins": [histogram["bin_edges"][0], histogram["bin_edges"][1]],
+        "data": histogram["histogram"].values,
+        "bins": [histogram["histogram"].edges[0], histogram["histogram"].edges[1]],
         "plot_type": "histogram2d",
         "plot_params": plot_params,
         "labels": {
