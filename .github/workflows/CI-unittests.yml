@@ -40,8 +40,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-        with:
-          fetch-depth: 0
 
       - name: Python setup
         uses: ./.github/actions/setup-simtools-tests
@@ -67,7 +65,6 @@ jobs:
           PY
 
   ctao_datamodel_compatibility:
-    needs: check_unit_test_files
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -99,7 +96,6 @@ jobs:
           tests/unit_tests/simtel/test_simtel_validate_metadata.py
 
   unit_tests:
-    needs: check_unit_test_files
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
