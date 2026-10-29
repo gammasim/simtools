@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
@@ -48,6 +49,18 @@ _EXPOSURE_INFO_KEYS = (
     "solid_angle",
     "scatter_area",
 )
+
+
+@dataclass
+class _FillState:
+    """Bookkeeping of one accumulation run (reset together)."""
+
+    histogram_specs: dict = field(default_factory=dict)
+    reuse_stat_accumulators: dict = field(default_factory=dict)
+    filled_data_sets: int = 0
+    contains_triggered_data: bool = False
+    release_event_data_after_fill: bool = False
+    file_info_source: str | None = None
 
 
 class EventDataHistograms:
@@ -108,22 +121,17 @@ class EventDataHistograms:
         self.telescope_list = telescope_list
 
         self.histograms = {}
-        self._histogram_specs = {}
+        self._fill_state = _FillState()
         self.file_info = {}
         self.data_ranges = {}
         self.loaded_bin_edges = {}
-        self._contains_triggered_data = False
-        self._filled_data_sets = 0
-        self._release_event_data_after_fill = False
-        self._reuse_stat_accumulators = {}
-        self._file_info_source = None
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
             self.reader = EventDataReader(
                 self.event_data_files[0], telescope_list=self.telescope_list
             )
-            self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
+            self._fill_state.contains_triggered_data = self._reader_has_triggered_data(self.reader)
 
     @classmethod
     def create_accumulator(
@@ -158,15 +166,12 @@ class EventDataHistograms:
         instance.require_triggered_data = True
         instance.telescope_list = telescope_list
         instance.histograms = {}
-        instance._histogram_specs = {}
+        instance._fill_state = _FillState(
+            contains_triggered_data=True, release_event_data_after_fill=True
+        )
         instance.file_info = {}
         instance.data_ranges = {}
         instance.loaded_bin_edges = {}
-        instance._contains_triggered_data = True
-        instance._filled_data_sets = 0
-        instance._release_event_data_after_fill = True
-        instance._reuse_stat_accumulators = {}
-        instance._file_info_source = None
         instance.reader = None
         return instance
 
@@ -180,16 +185,16 @@ class EventDataHistograms:
     ):
         """Install histogram data loaded from a serialized histogram product."""
         self.histograms = histograms
-        self._histogram_specs = self._define_histograms(None, None, None)
+        self._fill_state.histogram_specs = self._define_histograms(None, None, None)
         if file_info is not None:
             self.file_info = file_info
         if data_ranges is not None:
             self.data_ranges = data_ranges
         if loaded_bin_edges is not None:
             self.loaded_bin_edges = loaded_bin_edges
-        self._filled_data_sets = 1
-        self._contains_triggered_data = contains_triggered_data
-        self._reuse_stat_accumulators = {}
+        self._fill_state.filled_data_sets = 1
+        self._fill_state.contains_triggered_data = contains_triggered_data
+        self._fill_state.reuse_stat_accumulators = {}
 
     @staticmethod
     def _validate_angular_distance_bin_width(angular_distance_bin_width):
@@ -257,8 +262,9 @@ class EventDataHistograms:
                 raise
 
             self.reader = reader
-            self._contains_triggered_data = (
-                self._contains_triggered_data or self._reader_has_triggered_data(self.reader)
+            self._fill_state.contains_triggered_data = (
+                self._fill_state.contains_triggered_data
+                or self._reader_has_triggered_data(self.reader)
             )
             yield event_data_file, self.reader
 
@@ -321,7 +327,7 @@ class EventDataHistograms:
                 if not self._file_info_values_equal(self.file_info.get(key), file_info.get(key))
             ]
             if differing_keys:
-                previous_source = self._file_info_source or "the first input file"
+                previous_source = self._fill_state.file_info_source or "the first input file"
                 current_source = source_file or "current input"
                 details = ", ".join(
                     f"{key}: {self.file_info.get(key)!r} != {file_info.get(key)!r}"
@@ -332,12 +338,12 @@ class EventDataHistograms:
                     f"between {previous_source} and {current_source}: {details}"
                 )
         else:
-            self._file_info_source = source_file
+            self._fill_state.file_info_source = source_file
         self.file_info = file_info
 
     def _merge_histograms(self, current_histograms):
         """Carry over accumulated histogram counts before filling new data."""
-        self._histogram_specs = current_histograms
+        self._fill_state.histogram_specs = current_histograms
         merged = {}
         for name, spec in current_histograms.items():
             previous = self.histograms.get(name)
@@ -359,7 +365,7 @@ class EventDataHistograms:
 
     def _fill_current_histograms(self):
         """Fill all currently defined histograms with their event data."""
-        for name, data in self._histogram_specs.items():
+        for name, data in self._fill_state.histogram_specs.items():
             self._fill_histogram_and_bin_edges(name, data)
 
     def _update_data_range(self, name, values):
@@ -380,7 +386,7 @@ class EventDataHistograms:
 
     def _release_event_data(self):
         """Release raw event references after their histogram counts have been accumulated."""
-        for data in self._histogram_specs.values():
+        for data in self._fill_state.histogram_specs.values():
             if data["1d"] or data["event_data"] is None:
                 data["event_data"] = None
             else:
@@ -396,13 +402,13 @@ class EventDataHistograms:
         self._merge_histograms(current_histograms)
         self._fill_current_histograms()
         self._accumulate_reuse_histograms(event_data, triggered_data)
-        if self._release_event_data_after_fill:
+        if self._fill_state.release_event_data_after_fill:
             self._release_event_data()
-        self._filled_data_sets += 1
+        self._fill_state.filled_data_sets += 1
 
     def finalize(self, fill_efficiency_histogram=True):
         """Finalize accumulated histograms after all event datasets have been added."""
-        if self._filled_data_sets == 0:
+        if self._fill_state.filled_data_sets == 0:
             raise ValueError("No readable event data files or datasets found.")
         self.print_summary()
         if fill_efficiency_histogram:
@@ -661,10 +667,10 @@ class EventDataHistograms:
         for statistic in _REUSE_STAT_LABELS:
             for name, (values, bin_edges) in histogram_specs.items():
                 histogram_name = f"reuse_{statistic}_vs_{name}"
-                spec = self._histogram_specs.get(histogram_name)
+                spec = self._fill_state.histogram_specs.get(histogram_name)
                 if spec is None:
                     continue
-                accumulator = self._reuse_stat_accumulators.setdefault(
+                accumulator = self._fill_state.reuse_stat_accumulators.setdefault(
                     histogram_name,
                     self._create_reuse_stat_accumulator(bin_edges),
                 )
@@ -876,7 +882,9 @@ class EventDataHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
-        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
+        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
+            self.reader
+        ):
             return None
 
         eff_histograms = {}
@@ -994,7 +1002,9 @@ class EventDataHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
-        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
+        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
+            self.reader
+        ):
             return None
 
         cumulative_data = {}

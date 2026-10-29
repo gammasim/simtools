@@ -95,7 +95,7 @@ def test_view_cone_bins(mock_reader, hdf5_file_name):
 
 def test_release_event_data_handles_non_1d_none_event_data(mock_reader, hdf5_file_name):
     histograms = EventDataHistograms(hdf5_file_name)
-    histograms._histogram_specs = {
+    histograms._fill_state.histogram_specs = {
         "energy": {"1d": True, "event_data": mock_reader.return_value},
         "reuse_mean_vs_core_distance_vs_energy": {"1d": False, "event_data": None},
         "core_distance_vs_energy": {
@@ -106,11 +106,17 @@ def test_release_event_data_handles_non_1d_none_event_data(mock_reader, hdf5_fil
 
     histograms._release_event_data()
 
-    assert histograms._histogram_specs["energy"]["event_data"] is None
+    assert histograms._fill_state.histogram_specs["energy"]["event_data"] is None
     assert (
-        histograms._histogram_specs["reuse_mean_vs_core_distance_vs_energy"]["event_data"] is None
+        histograms._fill_state.histogram_specs["reuse_mean_vs_core_distance_vs_energy"][
+            "event_data"
+        ]
+        is None
     )
-    assert histograms._histogram_specs["core_distance_vs_energy"]["event_data"] == (None, None)
+    assert histograms._fill_state.histogram_specs["core_distance_vs_energy"]["event_data"] == (
+        None,
+        None,
+    )
 
 
 def test_fill(mock_reader, hdf5_file_name, mocker):
@@ -405,7 +411,7 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
         "viewcone_min": 0.0 * u.deg,
         "viewcone_max": 0.6 * u.deg,
     }
-    histograms._histogram_specs = histograms._define_histograms(None, None, None)
+    histograms._fill_state.histogram_specs = histograms._define_histograms(None, None, None)
 
     event_data = mocker.Mock(
         file_id=np.array([0, 0, 0]),
@@ -671,7 +677,7 @@ def test_histogram_definitions_are_filled_independently(mocker):
     assert all("event_data_column" in definition for definition in definitions.values())
     energy = definitions["energy"]
     energy["event_data"] = mocker.Mock(simulated_energy=np.array([1.0]))
-    histograms._histogram_specs = definitions
+    histograms._fill_state.histogram_specs = definitions
     histograms._fill_histogram_and_bin_edges("energy", energy)
     assert np.sum(histograms.histograms["energy"].values) == 1
     assert "energy_mc" not in histograms.histograms

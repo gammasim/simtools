@@ -103,7 +103,7 @@ def _full_fake_histograms():
         "solid_angle": 0.1 * u.sr,
     }
     histograms.data_ranges = {"angular_distance": (0.5, 1.5)}
-    histograms._histogram_specs = histograms._define_histograms(None, None, None)
+    histograms._fill_state.histogram_specs = histograms._define_histograms(None, None, None)
     histograms.histograms = {
         name: Histogram.from_edges(
             spec["edges"],
@@ -114,9 +114,9 @@ def _full_fake_histograms():
             axis_names=histograms._create_histogram(spec).axis_names,
             axis_units=histograms._create_histogram(spec).axis_units,
         )
-        for name, spec in histograms._histogram_specs.items()
+        for name, spec in histograms._fill_state.histogram_specs.items()
     }
-    histograms._filled_data_sets = 1
+    histograms._fill_state.filled_data_sets = 1
     histograms.calculate_efficiency_data()
     histograms.calculate_cumulative_data()
     return histograms
