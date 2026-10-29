@@ -54,7 +54,7 @@ patterns so the application can expand them:
 The ``signals.png`` plot compares integrated-signal distributions across pixels and events.
 Its legend identifies productions only; it does not display means or match pixels between files.
 For mean-based scaling, use
-``simtools.sim_events.production_comparison.collect_signal_metrics`` and calculate
+``simtools.production_configuration.comparison.collect_signal_metrics`` and calculate
 ``metrics.signals.mean()`` for each returned production metric, grouped by telescope. See
 :doc:`simtools-compare-productions` for comparison options and outputs.
 

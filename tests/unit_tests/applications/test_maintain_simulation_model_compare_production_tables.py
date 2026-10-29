@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from simtools.applications import maintain_simulation_model_compare_productions as compare
+from simtools.applications import maintain_simulation_model_compare_production_tables as compare
 
 
 def _write_json(path, payload):

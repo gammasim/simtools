@@ -7,10 +7,7 @@ import numpy as np
 from matplotlib import colormaps
 
 from simtools.visualization.matplotlib_backend import pyplot as plt
-from simtools.visualization.visualize import (
-    pdf_report,
-    save_figure,
-)
+from simtools.visualization.visualize import pdf_report, save_figure
 
 _ROLE_STYLE = {
     "sim_telarray": {"marker": "s", "zorder": 3},
@@ -21,29 +18,81 @@ _BYTES_PER_GIGABYTE = 1_000_000_000
 _RESOURCE_CHANGE_WARNING_FACTOR = 1.25
 _RESOURCE_CHANGE_MAJOR_FACTOR = 1.5
 _RATIO_CONFIGURATION_COLUMNS = ("primary", "site", "array_layout_name", "model_version")
-_SIMTELARRAY_STORAGE_LABEL = "sim_telarray storage"
-_SIMTELARRAY_OUTPUT_LABEL = "sim_telarray output"
-_REDUCED_EVENT_DATA_LABEL = "reduced event data"
-_SIMTELARRAY_HISTOGRAM_LABEL = "sim_telarray histogram"
-_ENERGY_MIDPOINT_LABEL = "Energy midpoint (GeV)"
-_BYTE_PLOT_COLUMNS = frozenset(
-    {
-        "peak_rss_bytes",
-        "sim_telarray_storage_bytes",
-        "corsika_output_bytes",
-        "sim_telarray_output_bytes",
-        "reduced_event_data_bytes",
-        "sim_telarray_histogram_bytes",
-        "sim_telarray_storage_bytes_per_event",
-        "corsika_output_bytes_per_event",
+_STORAGE = "sim_telarray storage"
+_SIMTEL = "sim_telarray"
+_CORSIKA = "corsika"
+_SIMTEL_OUTPUT = "sim_telarray output"
+_REDUCED = "reduced event data"
+_HISTOGRAM = "sim_telarray histogram"
+# (column, label, file name stem, process role or None for both roles)
+_DIAGNOSTIC_PLOTS = (
+    ("wall_time_seconds", "Wall time (s/run)", "resource_wall_time_run", None),
+    ("cpu_time_seconds", "CPU time (s/run)", "resource_cpu_time_run", None),
+    ("wall_time_seconds_per_event", "Wall time (s/event)", "resource_wall_time", None),
+    ("cpu_time_seconds_per_event", "CPU time (s/event)", "resource_cpu_time", None),
+    ("peak_rss_bytes", "Peak RSS", "resource_peak_rss", None),
+    ("sim_telarray_storage_bytes", _STORAGE, "resource_storage_run", None),
+    ("sim_telarray_storage_bytes_per_event", _STORAGE, "resource_storage", None),
+    ("corsika_output_bytes", "CORSIKA output", "resource_corsika_output_run", _CORSIKA),
+    ("corsika_output_bytes_per_event", "CORSIKA output", "resource_corsika_output", _CORSIKA),
+    ("sim_telarray_output_bytes", _SIMTEL_OUTPUT, "resource_sim_telarray_output_run", _SIMTEL),
+    (
         "sim_telarray_output_bytes_per_event",
-        "reduced_event_data_bytes_per_event",
+        _SIMTEL_OUTPUT,
+        "resource_sim_telarray_output",
+        _SIMTEL,
+    ),
+    ("reduced_event_data_bytes", _REDUCED, "resource_reduced_event_data_run", _SIMTEL),
+    ("reduced_event_data_bytes_per_event", _REDUCED, "resource_reduced_event_data", _SIMTEL),
+    ("sim_telarray_histogram_bytes", _HISTOGRAM, "resource_sim_telarray_histogram_run", _SIMTEL),
+    (
         "sim_telarray_histogram_bytes_per_event",
+        _HISTOGRAM,
+        "resource_sim_telarray_histogram",
+        _SIMTEL,
+    ),
+    (
+        "wall_time_seconds_per_triggered_event",
+        "Wall time (s/triggered event)",
+        "resource_wall_time_triggered",
+        _SIMTEL,
+    ),
+    (
+        "cpu_time_seconds_per_triggered_event",
+        "CPU time (s/triggered event)",
+        "resource_cpu_time_triggered",
+        _SIMTEL,
+    ),
+    (
         "sim_telarray_storage_bytes_per_triggered_event",
+        _STORAGE,
+        "resource_storage_triggered",
+        _SIMTEL,
+    ),
+    (
         "sim_telarray_output_bytes_per_triggered_event",
+        _SIMTEL_OUTPUT,
+        "resource_sim_telarray_output_triggered",
+        _SIMTEL,
+    ),
+    (
         "reduced_event_data_bytes_per_triggered_event",
+        _REDUCED,
+        "resource_reduced_event_data_triggered",
+        _SIMTEL,
+    ),
+    (
         "sim_telarray_histogram_bytes_per_triggered_event",
-    }
+        _HISTOGRAM,
+        "resource_sim_telarray_histogram_triggered",
+        _SIMTEL,
+    ),
+)
+_COMPACT_PLOTS = (
+    ("wall_time_seconds_per_event", "Wall time (s/event)"),
+    ("cpu_time_seconds_per_event", "CPU time (s/event)"),
+    ("peak_rss_bytes", "Peak RSS (bytes)"),
+    ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
 )
 _logger = logging.getLogger(__name__)
 
@@ -59,6 +108,9 @@ def plot(rows, output_path, figure_format=None, report_mode="diagnostic"):
         Destination directory for the figures.
     figure_format : iterable[str], optional
         File formats passed to :func:`visualization.visualize.save_figure`.
+    report_mode : str, optional
+        ``"diagnostic"`` writes one figure per metric and role, ``"compact"`` a
+        multipage PDF, and ``"none"`` writes nothing.
 
     Returns
     -------
@@ -68,12 +120,11 @@ def plot(rows, output_path, figure_format=None, report_mode="diagnostic"):
     Notes
     -----
     Byte-based quantities are plotted in MB or GB, selected from the largest
-    value in each plot, using decimal units. The input rows and resource table
-    retain byte values. Per-run plots use the ``*_bytes`` and raw time columns;
-    per-event and per-triggered-event plots use their corresponding normalized
-    columns. When both baseline and candidate rows are present, additional
-    plots show candidate-to-baseline ratios for matching primary, site, layout,
-    and model-version configurations.
+    value in each plot, using decimal units. Per-run plots use the ``*_bytes``
+    and raw time columns; per-event and per-triggered-event plots use their
+    normalized columns. When both baseline and candidate rows are present,
+    additional plots show candidate-to-baseline ratios for matching primary,
+    site, layout, and model-version configurations.
     """
     if report_mode not in {"compact", "diagnostic", "none"}:
         raise ValueError(f"Unsupported report mode: {report_mode}")
@@ -83,116 +134,13 @@ def plot(rows, output_path, figure_format=None, report_mode="diagnostic"):
         return []
     if report_mode == "compact":
         return _write_compact_report(rows, output_path)
-    plots = (
-        ("wall_time_seconds", "Wall time (s/run)", "resource_wall_time_run", None),
-        ("cpu_time_seconds", "CPU time (s/run)", "resource_cpu_time_run", None),
-        ("wall_time_seconds_per_event", "Wall time (s/event)", "resource_wall_time", None),
-        ("cpu_time_seconds_per_event", "CPU time (s/event)", "resource_cpu_time", None),
-        ("peak_rss_bytes", "Peak RSS", "resource_peak_rss", None),
-        (
-            "sim_telarray_storage_bytes",
-            _SIMTELARRAY_STORAGE_LABEL,
-            "resource_storage_run",
-            None,
-        ),
-        (
-            "sim_telarray_storage_bytes_per_event",
-            _SIMTELARRAY_STORAGE_LABEL,
-            "resource_storage",
-            None,
-        ),
-        (
-            "corsika_output_bytes",
-            "CORSIKA output",
-            "resource_corsika_output_run",
-            "corsika",
-        ),
-        (
-            "corsika_output_bytes_per_event",
-            "CORSIKA output",
-            "resource_corsika_output",
-            "corsika",
-        ),
-        (
-            "sim_telarray_output_bytes",
-            _SIMTELARRAY_OUTPUT_LABEL,
-            "resource_sim_telarray_output_run",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_output_bytes_per_event",
-            _SIMTELARRAY_OUTPUT_LABEL,
-            "resource_sim_telarray_output",
-            "sim_telarray",
-        ),
-        (
-            "reduced_event_data_bytes",
-            _REDUCED_EVENT_DATA_LABEL,
-            "resource_reduced_event_data_run",
-            "sim_telarray",
-        ),
-        (
-            "reduced_event_data_bytes_per_event",
-            _REDUCED_EVENT_DATA_LABEL,
-            "resource_reduced_event_data",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_histogram_bytes",
-            _SIMTELARRAY_HISTOGRAM_LABEL,
-            "resource_sim_telarray_histogram_run",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_histogram_bytes_per_event",
-            _SIMTELARRAY_HISTOGRAM_LABEL,
-            "resource_sim_telarray_histogram",
-            "sim_telarray",
-        ),
-        (
-            "wall_time_seconds_per_triggered_event",
-            "Wall time (s/triggered event)",
-            "resource_wall_time_triggered",
-            "sim_telarray",
-        ),
-        (
-            "cpu_time_seconds_per_triggered_event",
-            "CPU time (s/triggered event)",
-            "resource_cpu_time_triggered",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_storage_bytes_per_triggered_event",
-            _SIMTELARRAY_STORAGE_LABEL,
-            "resource_storage_triggered",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_output_bytes_per_triggered_event",
-            _SIMTELARRAY_OUTPUT_LABEL,
-            "resource_sim_telarray_output_triggered",
-            "sim_telarray",
-        ),
-        (
-            "reduced_event_data_bytes_per_triggered_event",
-            _REDUCED_EVENT_DATA_LABEL,
-            "resource_reduced_event_data_triggered",
-            "sim_telarray",
-        ),
-        (
-            "sim_telarray_histogram_bytes_per_triggered_event",
-            _SIMTELARRAY_HISTOGRAM_LABEL,
-            "resource_sim_telarray_histogram_triggered",
-            "sim_telarray",
-        ),
-    )
-    return _write_diagnostic_plots(rows, output_path, figure_format, plots)
+    return _write_diagnostic_plots(rows, output_path, figure_format)
 
 
-def _write_diagnostic_plots(rows, output_path, figure_format, plots):
-    """Write detailed absolute and ratio figures for the configured resource metrics."""
+def _write_diagnostic_plots(rows, output_path, figure_format):
+    """Write absolute and ratio figures for the configured resource metrics."""
     output_files = []
-    for column, label, filename, required_role in plots:
+    for column, label, filename, required_role in _DIAGNOSTIC_PLOTS:
         available = [
             row
             for row in rows
@@ -205,24 +153,19 @@ def _write_diagnostic_plots(rows, output_path, figure_format, plots):
         if not available:
             continue
         plot_label, value_scale = _byte_plot_label(column, label, available)
-        zenith_values = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in available})
-        zenith_colors = _zenith_colors(zenith_values)
+        zenith_colors = _zenith_colors(
+            sorted({float(row.get("zenith_angle_deg", 0.0)) for row in available})
+        )
         for role in sorted({row["role"] for row in available}):
             role_rows = [row for row in available if row["role"] == role]
-            output_files.append(
-                _write_resource_role_plot(
-                    role_rows,
-                    output_path,
-                    column,
-                    filename,
-                    plot_label,
-                    value_scale,
-                    zenith_colors,
-                    role,
-                    figure_format,
-                )
-            )
-            ratio_output = _write_resource_ratio_plot(
+            fig, axis = plt.subplots(figsize=(8, 5))
+            _plot_role(axis, role_rows, column, zenith_colors, value_scale=value_scale)
+            axis.set_yscale(_resource_y_scale(role_rows, column))
+            _finish_axis(axis, plot_label, f"{plot_label}: {role}")
+            output_file = output_path / f"{filename}_{role}"
+            save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
+            output_files.append(output_file)
+            ratio_output = _write_ratio_plot(
                 role_rows,
                 output_path,
                 column,
@@ -237,25 +180,7 @@ def _write_diagnostic_plots(rows, output_path, figure_format, plots):
     return output_files
 
 
-def _write_resource_role_plot(
-    rows, output_path, column, filename, plot_label, value_scale, zenith_colors, role, figure_format
-):
-    """Write one absolute resource plot for a process role."""
-    fig, axis = plt.subplots(figsize=(8, 5))
-    _plot_role(axis, rows, column, zenith_colors, value_scale=value_scale)
-    axis.set_xscale("log")
-    axis.set_yscale(_resource_y_scale(rows, column))
-    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
-    axis.set_ylabel(plot_label)
-    axis.set_title(f"{plot_label}: {role}")
-    axis.grid(alpha=0.25)
-    axis.legend()
-    output_file = output_path / f"{filename}_{role}"
-    save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
-    return output_file
-
-
-def _write_resource_ratio_plot(
+def _write_ratio_plot(
     rows, output_path, column, filename, plot_label, zenith_colors, role, figure_format
 ):
     """Write a candidate-to-baseline ratio plot when both roles have valid data."""
@@ -267,13 +192,8 @@ def _write_resource_ratio_plot(
     _plot_ratio(axis, ratio_series, role, zenith_colors)
     ratio_label = f"{labels['candidate']} / {labels['baseline']}"
     _warn_on_large_changes(ratio_series, plot_label, role, ratio_label)
-    axis.set_xscale("log")
-    axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
-    axis.set_ylabel(ratio_label)
-    axis.set_title(f"{plot_label} ratio: {ratio_label}: {role}")
     axis.axhline(1.0, color="black", linestyle="--", linewidth=1.0)
-    axis.grid(alpha=0.25)
-    axis.legend()
+    _finish_axis(axis, ratio_label, f"{plot_label} ratio: {ratio_label}: {role}")
     output_file = output_path / f"{filename}_ratio_{role}"
     save_figure(fig, output_file, figure_format=figure_format, dpi=300, close=True)
     return output_file
@@ -282,14 +202,8 @@ def _write_resource_ratio_plot(
 def _write_compact_report(rows, output_path):
     """Write a short multipage resource report without diagnostic image files."""
     output_file = output_path / "resources-report.pdf"
-    selected = (
-        ("wall_time_seconds_per_event", "Wall time (s/event)"),
-        ("cpu_time_seconds_per_event", "CPU time (s/event)"),
-        ("peak_rss_bytes", "Peak RSS (bytes)"),
-        ("sim_telarray_storage_bytes_per_event", "Storage (bytes/event)"),
-    )
     figures = []
-    for column, label in selected:
+    for column, label in _COMPACT_PLOTS:
         available = [row for row in rows if row.get(column) is not None]
         if not available:
             continue
@@ -299,13 +213,8 @@ def _write_compact_report(rows, output_path):
             role_rows = [row for row in available if row["role"] == role]
             zeniths = sorted({float(row.get("zenith_angle_deg", 0.0)) for row in role_rows})
             _plot_role(axis, role_rows, column, _zenith_colors(zeniths))
-            axis.set_xscale("log")
             axis.set_yscale(_resource_y_scale(role_rows, column))
-            axis.set_xlabel(_ENERGY_MIDPOINT_LABEL)
-            axis.set_ylabel(label)
-            axis.set_title(role)
-            axis.grid(alpha=0.25)
-            axis.legend(fontsize=6)
+            _finish_axis(axis, label, role, fontsize=6)
         fig.suptitle(label)
         fig.tight_layout()
         figures.append(fig)
@@ -315,14 +224,24 @@ def _write_compact_report(rows, output_path):
     return [output_file]
 
 
+def _finish_axis(axis, ylabel, title, **legend_kwargs):
+    """Apply the shared log-energy axis scale, labels, grid, and legend."""
+    axis.set_xscale("log")
+    axis.set_xlabel("Energy midpoint (GeV)")
+    axis.set_ylabel(ylabel)
+    axis.set_title(title)
+    axis.grid(alpha=0.25)
+    axis.legend(**legend_kwargs)
+
+
 def _resource_y_scale(rows, column):
     """Return a y-axis scale that can represent all selected resource values."""
     return "linear" if any(float(row[column]) <= 0 for row in rows) else "log"
 
 
 def _byte_plot_label(column, label, rows):
-    """Return a human-readable byte label and its scale factor."""
-    if column not in _BYTE_PLOT_COLUMNS:
+    """Return a human-readable label and scale factor; byte columns use MB or GB."""
+    if "_bytes" not in column:
         return label, 1.0
     maximum = max(float(row[column]) for row in rows)
     if maximum >= _BYTES_PER_GIGABYTE:
@@ -356,8 +275,7 @@ def _ratio_series(rows, column):
         values.setdefault(key, []).append(float(row[column]))
 
     series = {}
-    configuration_zenith_values = {(key[1], key[2]) for key in values}
-    for configuration, zenith in configuration_zenith_values:
+    for configuration, zenith in {(key[1], key[2]) for key in values}:
         baseline = _statistics_by_energy(values, "baseline", configuration, zenith)
         candidate = _statistics_by_energy(values, "candidate", configuration, zenith)
         points = []
@@ -416,49 +334,38 @@ def _warn_on_large_changes(series, plot_label, role, ratio_label):
         return
     configuration, zenith, energy, ratio = max(changes, key=lambda item: max(item[3], 1 / item[3]))
     factor = max(ratio, 1 / ratio)
-    severity = "Major" if factor >= _RESOURCE_CHANGE_MAJOR_FACTOR else "Large"
-    direction = "increase" if ratio >= 1 else "decrease"
-    location = _ratio_series_label(configuration, zenith, varying_dimensions)
     _logger.warning(
         "%s resource change in %s for %s at %s and energy %.6g GeV: %s shows a %.3g-fold %s.",
-        severity,
+        "Major" if factor >= _RESOURCE_CHANGE_MAJOR_FACTOR else "Large",
         plot_label,
         role,
-        location,
+        _ratio_series_label(configuration, zenith, varying_dimensions),
         energy,
         ratio_label,
         factor,
-        direction,
+        "increase" if ratio >= 1 else "decrease",
     )
 
 
 def _statistics_by_energy(values, production, configuration, zenith):
     """Return means, RMS spreads, and sample counts keyed by energy."""
-    grouped = {
-        energy: samples
-        for (label, sample_configuration, sample_zenith, energy), samples in values.items()
-        if (
-            label == production
-            and sample_configuration == configuration
-            and sample_zenith == zenith
-        )
-    }
     return {
         energy: (
             float(np.mean(samples)),
             float(np.sqrt(np.mean((np.asarray(samples) - np.mean(samples)) ** 2))),
             len(samples),
         )
-        for energy, samples in grouped.items()
+        for (label, sample_configuration, sample_zenith, energy), samples in values.items()
+        if label == production and sample_configuration == configuration and sample_zenith == zenith
     }
 
 
 def _plot_ratio(axis, series, role, zenith_colors):
     """Plot candidate-to-baseline ratios with propagated mean errors."""
     varying_dimensions = _ratio_varying_dimensions(series)
+    style = _ROLE_STYLE.get(role, {})
     for series_index, ((configuration, zenith), points) in enumerate(sorted(series.items())):
         energies, ratios, errors = zip(*points, strict=True)
-        style = _ROLE_STYLE.get(role, {})
         axis.errorbar(
             energies,
             ratios,
@@ -480,9 +387,7 @@ def _plot_ratio(axis, series, role, zenith_colors):
         for _, ratio, error in points
         for bound in (ratio - error, ratio + error)
     ]
-    bounds.append(1.0)
-    lower = min(bounds)
-    upper = max(bounds)
+    lower, upper = min([*bounds, 1.0]), max([*bounds, 1.0])
     margin = max((upper - lower) * 0.1, 0.1)
     axis.set_ylim(max(0.0, lower - margin), upper + margin)
     axis.set_yscale("linear")
@@ -509,60 +414,45 @@ def _ratio_series_label(configuration, zenith, varying_dimensions):
     return f"{configuration_label}; za={zenith:g} deg"
 
 
+def _series_key(row):
+    """Return the identity of one plotted series (production, version, production id, zenith)."""
+    return (
+        row.get("production_label", "production"),
+        row.get("model_version", row.get("simtools_version", "unknown")),
+        row.get("production_id", "unknown"),
+        float(row.get("zenith_angle_deg", 0.0)),
+    )
+
+
 def _plot_role(axis, rows, column, zenith_colors, value_scale=1.0):
     """Plot individual samples and averages for one process role."""
-    labels = sorted(
-        {
-            (
-                row.get("production_label", "production"),
-                row.get("model_version", row.get("simtools_version", "unknown")),
-                row.get("production_id", "unknown"),
-                float(row.get("zenith_angle_deg", 0.0)),
-            )
-            for row in rows
-        }
-    )
+    keys = sorted({_series_key(row) for row in rows})
     role = rows[0]["role"]
     show_production_labels = any(row.get("production_label") for row in rows)
     comparison_roles = {_comparison_role(row) for row in rows}
     is_comparison = {"baseline", "candidate"} <= comparison_roles
     seen_series = set()
-    for series_index, (production, version, production_id, zenith) in enumerate(labels):
-        series_rows = [
-            row
-            for row in rows
-            if (
-                row.get("production_label", "production"),
-                row.get("model_version", row.get("simtools_version", "unknown")),
-                row.get("production_id", "unknown"),
-                float(row.get("zenith_angle_deg", 0.0)),
-            )
-            == (production, version, production_id, zenith)
-        ]
-        color = zenith_colors[zenith]
-        series_key = (production, zenith)
-        comparison_role = _comparison_role(series_rows[0])
-        if series_key in seen_series:
+    for series_index, key in enumerate(keys):
+        production, _, _, zenith = key
+        series_rows = [row for row in rows if _series_key(row) == key]
+        series_id = (production, zenith)
+        if series_id in seen_series:
             legend_label = "_nolegend_"
-        elif is_comparison:
-            legend_label = f"{production}: za={zenith:g} deg"
-        elif "baseline" in comparison_roles:
-            legend_label = f"za={zenith:g} deg"
-        elif show_production_labels:
+        elif is_comparison or (show_production_labels and "baseline" not in comparison_roles):
             legend_label = f"{production}: za={zenith:g} deg"
         else:
             legend_label = f"za={zenith:g} deg"
-        seen_series.add(series_key)
+        seen_series.add(series_id)
         _plot_averages(
             axis,
             series_rows,
             column,
             role,
-            color,
+            zenith_colors[zenith],
             legend_label,
             series_index,
             value_scale,
-            comparison_role,
+            _comparison_role(series_rows[0]),
         )
 
 

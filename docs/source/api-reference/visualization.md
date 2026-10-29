@@ -99,10 +99,10 @@ the visualization module.
    :members:
 ```
 
-## plot_signal_level_production_comparison
+## plot_production_comparison
 
 ```{eval-rst}
-.. automodule:: visualization.plot_signal_level_production_comparison
+.. automodule:: visualization.plot_production_comparison
    :members:
 ```
 
@@ -148,13 +148,6 @@ the visualization module.
 
 ```{eval-rst}
 .. automodule:: visualization.camera_plot_utils
-   :members:
-```
-
-## plot_event_level_production_comparison
-
-```{eval-rst}
-.. automodule:: visualization.plot_event_level_production_comparison
    :members:
 ```
 

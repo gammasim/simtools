@@ -13,7 +13,7 @@ from pathlib import Path
 from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
-from simtools.production_configuration.job_grid_io import read_job_grid
+from simtools.production_configuration.jobs_io import read_job_grid
 from simtools.production_configuration.production_file_selection import (
     discover_manifests,
     normalize_for_comparison,

@@ -3,6 +3,7 @@
 import hashlib
 import json
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from math import isclose
 from pathlib import Path
@@ -18,8 +19,6 @@ from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 SIMULATE_PROD_JOB_METADATA = "simulate_prod_job_metadata.yml"
 
 _RUN_NUMBER_PATTERN = re.compile(r"(?:^|_)run0*(\d+)(?:_|\.|$)")
-
-
 _FILE_TYPE_PRODUCTS = {
     "reduced_event_data": "production_reduced_event_data",
     "sim_telarray": "production_sim_telarray",
@@ -36,45 +35,13 @@ _MANIFEST_SCHEMAS = {
     "simulate_prod_job": "simulate_prod_job_metadata.schema.yml",
     "trigger_histograms": "trigger_histograms_metadata.schema.yml",
 }
-
-
-def get_manifest_schema_metadata(product_type):
-    """Return the current schema name and version for a manifest product type."""
-    schema_file = _MANIFEST_SCHEMAS.get(product_type)
-    if schema_file is None:
-        raise ValueError(f"Unknown production manifest product type: {product_type}")
-    definition = schema.load_schema(SCHEMA_PATH / schema_file, "latest")
-    return {
-        "schema_name": str(definition["schema_name"]).removesuffix(".schema"),
-        "schema_version": str(definition["schema_version"]),
-    }
-
-
-def _get_registered_manifest_schema_versions():
-    """Return schema versions registered for known manifest product types."""
-    return {
-        get_manifest_schema_metadata(product_type)["schema_version"]
-        for product_type in _MANIFEST_SCHEMAS
-    }
-
-
-_GROUPING_EXCLUDE_KEYS = {
-    "run_number",
-    "random_seed",
-    "corsika_seeds",
-    "simulation_seed",
-    "instrument_seed",
-    "random_instrument_instances",
-    "sim_telarray_seed_file",
-    # Keys of manifests written before the seed arguments were renamed.
-    "sim_telarray_seed",
-    "sim_telarray_instrument_seed",
-    "sim_telarray_random_instrument_instances",
-    "event_number_first_shower",
-    "correct_for_b_field_alignment",
-    "output_path",
-    "grid_output_path",
-}
+_GROUPING_EXCLUDE_KEYS = frozenset(
+    """run_number random_seed corsika_seeds simulation_seed instrument_seed
+    random_instrument_instances sim_telarray_seed_file event_number_first_shower
+    correct_for_b_field_alignment output_path grid_output_path
+    sim_telarray_seed sim_telarray_instrument_seed sim_telarray_random_instrument_instances
+    """.split()
+)  # The last three keys belong to manifests written before the seed arguments were renamed.
 _SIMTEL_METADATA_MANIFEST_KEYS = {
     "primary": ("primary", "primary_particle", "particle"),
     "azimuth_angle": ("simaz", "azimuth_angle", "azimuth"),
@@ -117,12 +84,23 @@ class ProductionFileGroup:
     files_by_run_number: dict[int, list[Path]] = field(default_factory=dict, repr=False)
 
 
+def get_manifest_schema_metadata(product_type):
+    """Return the current schema name and version for a manifest product type."""
+    schema_file = _MANIFEST_SCHEMAS.get(product_type)
+    if schema_file is None:
+        raise ValueError(f"Unknown production manifest product type: {product_type}")
+    definition = schema.load_schema(SCHEMA_PATH / schema_file, "latest")
+    return {
+        "schema_name": str(definition["schema_name"]).removesuffix(".schema"),
+        "schema_version": str(definition["schema_version"]),
+    }
+
+
 def find_manifests(production_path, manifest_name=SIMULATE_PROD_JOB_METADATA):
     """Return sorted production metadata manifests below a directory."""
-    production_path = Path(production_path)
-    if not production_path.is_dir():
+    if not Path(production_path).is_dir():
         raise FileNotFoundError(f"Production path not found: {production_path}")
-    return sorted(path for path in production_path.rglob(manifest_name) if path.is_file())
+    return sorted(path for path in Path(production_path).rglob(manifest_name) if path.is_file())
 
 
 def load_manifest(manifest_path):
@@ -194,24 +172,26 @@ def group_selected_files(manifests, file_type="reduced_event_data"):
     groups = {}
     for manifest in manifests:
         check_manifest(manifest)
-        files = _manifest_files(manifest, file_type)
+        relative_paths = manifest.data.get("files", {}).get(file_type, [])
+        files = [resolve_relative_manifest_path(manifest.directory, p) for p in relative_paths]
         if not files:
             raise ValueError(f"Manifest {manifest.path} lists no files of type '{file_type}'.")
-        key = _normalized_group_key(manifest.data.get("configuration", {}))
+        configuration = _configuration_without_excluded_keys(manifest.data.get("configuration", {}))
         group = groups.setdefault(
-            key,
-            ProductionFileGroup(
-                configuration=_configuration_without_excluded_keys(
-                    manifest.data.get("configuration", {})
-                )
-            ),
+            normalize_for_comparison(configuration),
+            ProductionFileGroup(configuration=configuration),
         )
         group.run_numbers.append(manifest.run_number)
         group.files_by_run_number.setdefault(manifest.run_number, []).extend(files)
 
     grouped = list(groups.values())
     for group in grouped:
-        _sort_group_by_run_number(group)
+        group.run_numbers.sort()
+        group.file_paths = [
+            file_path
+            for run_number in group.run_numbers
+            for file_path in group.files_by_run_number[run_number]
+        ]
         group.duplicate_run_numbers = _duplicate_run_numbers(group.run_numbers)
         if group.duplicate_run_numbers:
             raise ValueError(
@@ -228,6 +208,14 @@ def check_manifest(manifest):
         manifest = load_manifest(manifest)
 
     _validate_manifest_structure(manifest.data, manifest.path)
+    seen_paths, unverifiable_fields = _validate_listed_files(manifest)
+    if manifest.data["product_type"] == "simulate_prod_job":
+        _validate_no_unlisted_files(manifest, seen_paths)
+    return {"valid": True, "unverifiable_fields": unverifiable_fields}
+
+
+def _validate_listed_files(manifest):
+    """Validate each listed manifest file; return resolved paths and unverifiable fields."""
     seen_paths = set()
     unverifiable_fields = sorted(manifest.data.get("configuration", {}))
     for file_type, relative_paths in manifest.data.get("files", {}).items():
@@ -246,14 +234,23 @@ def check_manifest(manifest):
             _validate_filename_run_number(file_path, manifest)
             if file_type == "sim_telarray":
                 unverifiable_fields = _compare_simtel_metadata(
-                    file_path,
-                    manifest,
-                    unverifiable_fields,
+                    file_path, manifest, unverifiable_fields
                 )
-    if manifest.data["product_type"] == "simulate_prod_job":
-        _check_declared_production_inventory(manifest, seen_paths)
+    return seen_paths, unverifiable_fields
 
-    return {"valid": True, "unverifiable_fields": unverifiable_fields}
+
+def _validate_no_unlisted_files(manifest, seen_paths):
+    """Reject production files in the job directory that the manifest does not list."""
+    actual_paths = {
+        (manifest.directory / relative_path).resolve()
+        for paths in inventory_production_files(manifest.directory).values()
+        for relative_path in paths
+    }
+    unexpected = sorted(path.name for path in actual_paths - seen_paths)
+    if unexpected:
+        raise ValueError(
+            f"Unexpected production files not listed in {manifest.path}: " + ", ".join(unexpected)
+        )
 
 
 def inventory_production_files(job_directory):
@@ -284,8 +281,7 @@ def validate_required_production_outputs(file_inventory, simulation_software, jo
 
 def stable_configuration_hash(value, length=8):
     """Return a short stable hash for normalized configuration data."""
-    normalized = normalize_for_comparison(value)
-    payload = json.dumps(normalized, sort_keys=True, default=str).encode()
+    payload = json.dumps(normalize_for_comparison(value), sort_keys=True, default=str).encode()
     return hashlib.sha256(payload).hexdigest()[:length]
 
 
@@ -293,8 +289,7 @@ def write_selection_file(selection_result, output_file):
     """Write selected file groups to a YAML file."""
     output = {
         "product_type": "production_file_selection",
-        "metadata_files_read": selection_result["metadata_files_read"],
-        "matching_jobs": selection_result["matching_jobs"],
+        **{key: selection_result[key] for key in ("metadata_files_read", "matching_jobs")},
         "configuration_groups": selection_result["configuration_groups"],
         "groups": [
             {
@@ -312,11 +307,7 @@ def write_selection_file(selection_result, output_file):
 def selection_summary(selection_result):
     """Return a compact summary string for logging or console output."""
     missing = sorted(
-        {
-            run_number
-            for group in selection_result["groups"]
-            for run_number in group.missing_run_numbers
-        }
+        {run for group in selection_result["groups"] for run in group.missing_run_numbers}
     )
     return (
         f"Metadata files read: {selection_result['metadata_files_read']}\n"
@@ -329,9 +320,10 @@ def selection_summary(selection_result):
 def normalize_for_comparison(value):
     """Normalize quantities and containers for exact matching and grouping."""
     if isinstance(value, u.Quantity):
-        return _quantity_comparison_value(value.value, value.unit)
+        value = {"value": value.value, "unit": value.unit}
     if isinstance(value, dict) and set(value) == {"value", "unit"}:
-        return _quantity_comparison_value(value["value"], value["unit"])
+        quantity = float(value["value"]) * u.Unit(value["unit"])
+        return (round(float(quantity.si.value), 12), str(quantity.si.unit))
     if isinstance(value, dict):
         return tuple(
             (key, normalize_for_comparison(value[key]))
@@ -345,23 +337,21 @@ def normalize_for_comparison(value):
 
 def _validate_manifest_structure(data, manifest_path):
     """Validate required manifest fields and supported version."""
+
+    def malformed(detail):
+        return ValueError(f"Malformed metadata in {manifest_path}: {detail}")
+
     if not isinstance(data, dict):
-        raise ValueError(f"Malformed metadata in {manifest_path}: expected a mapping.")
+        raise malformed("expected a mapping.")
     for key in ("schema_version", "product_type", "status", "configuration", "files"):
         if key not in data:
-            raise ValueError(f"Malformed metadata in {manifest_path}: missing '{key}'.")
+            raise malformed(f"missing '{key}'.")
     product_type = data["product_type"]
-    expected_version = (
-        get_manifest_schema_metadata(product_type)["schema_version"]
-        if product_type in _MANIFEST_SCHEMAS
-        else None
-    )
-    if str(data["schema_version"]) not in _get_registered_manifest_schema_versions():
-        raise ValueError(
-            f"Unsupported production metadata schema version in {manifest_path}: "
-            f"{data['schema_version']}"
-        )
-    if expected_version is not None and str(data["schema_version"]) != expected_version:
+    if product_type in _MANIFEST_SCHEMAS:
+        supported = {get_manifest_schema_metadata(product_type)["schema_version"]}
+    else:
+        supported = {get_manifest_schema_metadata(t)["schema_version"] for t in _MANIFEST_SCHEMAS}
+    if str(data["schema_version"]) not in supported:
         raise ValueError(
             f"Unsupported production metadata schema version in {manifest_path}: "
             f"{data['schema_version']}"
@@ -369,19 +359,14 @@ def _validate_manifest_structure(data, manifest_path):
     if data["status"] != "complete":
         raise ValueError(f"Production job is not complete in {manifest_path}.")
     if not isinstance(data["configuration"], dict):
-        raise ValueError(f"Malformed metadata in {manifest_path}: configuration is not a mapping.")
-    if data["product_type"] == "simulate_prod_job" and "run_number" not in data["configuration"]:
-        raise ValueError(
-            f"Malformed metadata in {manifest_path}: missing configuration.run_number."
-        )
+        raise malformed("configuration is not a mapping.")
+    if product_type == "simulate_prod_job" and "run_number" not in data["configuration"]:
+        raise malformed("missing configuration.run_number.")
     if not isinstance(data["files"], dict):
-        raise ValueError(f"Malformed metadata in {manifest_path}: files is not a mapping.")
-    schema_file = _MANIFEST_SCHEMAS.get(data["product_type"])
-    if schema_file is not None:
+        raise malformed("files is not a mapping.")
+    if (schema_file := _MANIFEST_SCHEMAS.get(product_type)) is not None:
         schema.validate_dict_using_schema(
-            ascii_handler.to_builtin(data),
-            schema_file=SCHEMA_PATH / schema_file,
-            offline=True,
+            ascii_handler.to_builtin(data), schema_file=SCHEMA_PATH / schema_file, offline=True
         )
 
 
@@ -438,28 +423,9 @@ def _quantity_matches(value, expected):
     )
 
 
-def _quantity_comparison_value(value, unit):
-    """Return a normalized comparable representation of a quantity."""
-    quantity = float(value) * u.Unit(unit)
-    return (round(float(quantity.si.value), 12), str(quantity.si.unit))
-
-
 def _configuration_without_excluded_keys(configuration):
     """Return configuration fields used for grouping."""
     return {key: value for key, value in configuration.items() if key not in _GROUPING_EXCLUDE_KEYS}
-
-
-def _normalized_group_key(configuration):
-    """Return a stable normalized grouping key for a configuration."""
-    return normalize_for_comparison(_configuration_without_excluded_keys(configuration))
-
-
-def _manifest_files(manifest, file_type):
-    """Return absolute paths for files of the requested manifest file type."""
-    return [
-        resolve_relative_manifest_path(manifest.directory, relative_path)
-        for relative_path in manifest.data.get("files", {}).get(file_type, [])
-    ]
 
 
 def resolve_relative_manifest_path(directory, relative_path):
@@ -488,25 +454,11 @@ def _validate_file_type(file_path, file_type, manifest_path):
 def _production_file_type(file_path):
     """Return the manifest type for a recognized production output file."""
     for file_type, suffixes in _FILE_TYPE_SUFFIXES.items():
-        if file_type == "trigger_histograms":
-            continue
-        if any(file_path.name.endswith(suffix) for suffix in suffixes):
+        if file_type != "trigger_histograms" and any(
+            file_path.name.endswith(suffix) for suffix in suffixes
+        ):
             return file_type
     return None
-
-
-def _check_declared_production_inventory(manifest, declared_paths):
-    """Require the manifest to list every recognized production output."""
-    actual_paths = {
-        (manifest.directory / relative_path).resolve()
-        for paths in inventory_production_files(manifest.directory).values()
-        for relative_path in paths
-    }
-    unexpected = sorted(path.name for path in actual_paths - declared_paths)
-    if unexpected:
-        raise ValueError(
-            f"Unexpected production files not listed in {manifest.path}: " + ", ".join(unexpected)
-        )
 
 
 def _validate_filename_run_number(file_path, manifest):
@@ -531,10 +483,8 @@ def _compare_simtel_metadata(file_path, manifest, unverifiable_fields):
     remaining = set(unverifiable_fields)
     configuration = manifest.data.get("configuration", {})
     for manifest_key, metadata_keys in _SIMTEL_METADATA_MANIFEST_KEYS.items():
-        if manifest_key not in configuration:
-            continue
         metadata_key = next((key for key in metadata_keys if key in metadata), None)
-        if metadata_key is None:
+        if manifest_key not in configuration or metadata_key is None:
             continue
         if not _embedded_metadata_matches(configuration[manifest_key], metadata[metadata_key]):
             raise ValueError(
@@ -554,25 +504,9 @@ def _embedded_metadata_matches(manifest_value, metadata_value):
     return str(manifest_value).lower() == str(metadata_value).lower()
 
 
-def _sort_group_by_run_number(group):
-    """Sort grouped run numbers and files by run number."""
-    group.run_numbers.sort()
-    group.file_paths = [
-        file_path
-        for run_number in group.run_numbers
-        for file_path in group.files_by_run_number[run_number]
-    ]
-
-
 def _duplicate_run_numbers(run_numbers):
     """Return sorted duplicate run numbers."""
-    seen = set()
-    duplicates = set()
-    for run_number in run_numbers:
-        if run_number in seen:
-            duplicates.add(run_number)
-        seen.add(run_number)
-    return sorted(duplicates)
+    return sorted(number for number, count in Counter(run_numbers).items() if count > 1)
 
 
 def _missing_run_numbers(run_numbers):
@@ -580,8 +514,4 @@ def _missing_run_numbers(run_numbers):
     if not run_numbers:
         return []
     present = set(run_numbers)
-    return [
-        run_number
-        for run_number in range(min(present), max(present) + 1)
-        if run_number not in present
-    ]
+    return [number for number in range(min(present), max(present) + 1) if number not in present]

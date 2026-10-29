@@ -7,7 +7,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA
+from simtools.production_configuration.jobs_io import JOB_GRID_SCHEMA
 from simtools.visualization.matplotlib_backend import pyplot as plt
 from simtools.visualization.visualize import save_figure
 

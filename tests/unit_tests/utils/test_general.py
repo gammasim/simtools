@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import simtools.applications.maintain_simulation_model_compare_productions as compare_productions
+import simtools.applications.maintain_simulation_model_compare_production_tables as compare_productions
 import simtools.job_execution.log_inspector as log_inspector
 import simtools.utils.general as gen
 from simtools.utils import value_conversion

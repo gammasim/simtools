@@ -9,8 +9,11 @@ from matplotlib import pyplot as plt
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.sim_events.production_comparison import ProductionEventMetrics
-from simtools.visualization import plot_event_level_production_comparison
+from simtools.production_configuration.comparison import (
+    ProductionEventMetrics,
+    ProductionSignalMetrics,
+)
+from simtools.visualization import plot_production_comparison
 
 _FIRST = "first"
 _SECOND = "second"
@@ -55,9 +58,10 @@ def test_metadata_suppression_converts_units_and_tolerates_roundoff(fixed_pair_c
     offset = 1e-13
     assert np.isclose(offset, 0.0, rtol=0.0, atol=1e-12)
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][VIEW_CONE_MAX_KEY] = offset
-    assert plot_event_level_production_comparison._metadata_suppressed_distributions(
-        fixed_pair_context
-    ) == {ENERGY, ANGULAR_DISTANCE}
+    assert plot_production_comparison._metadata_suppressed_distributions(fixed_pair_context) == {
+        ENERGY,
+        ANGULAR_DISTANCE,
+    }
 
 
 @pytest.mark.parametrize(
@@ -76,9 +80,7 @@ def test_metadata_suppression_keeps_uncertain_distributions(
 ):
     fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE][key] = value
     assert (
-        plot_event_level_production_comparison._metadata_suppressed_distributions(
-            fixed_pair_context
-        )
+        plot_production_comparison._metadata_suppressed_distributions(fixed_pair_context)
         == expected
     )
 
@@ -93,35 +95,35 @@ def test_metadata_suppression_keeps_uncertain_distributions(
     ],
 )
 def test_metadata_suppression_requires_both_productions(context):
-    assert not plot_event_level_production_comparison._metadata_suppressed_distributions(context)
+    assert not plot_production_comparison._metadata_suppressed_distributions(context)
 
 
 def test_metadata_suppression_keeps_different_fixed_energies(fixed_pair_context):
     configuration = fixed_pair_context[CONFIGURATIONS_KEY][CANDIDATE]
     configuration[ENERGY_MIN_KEY] = configuration[ENERGY_MAX_KEY] = 3000.0
-    assert plot_event_level_production_comparison._metadata_suppressed_distributions(
-        fixed_pair_context
-    ) == {ANGULAR_DISTANCE}
+    assert plot_production_comparison._metadata_suppressed_distributions(fixed_pair_context) == {
+        ANGULAR_DISTANCE
+    }
 
 
 def test_metadata_suppression_keeps_nonzero_fixed_view_cone(fixed_pair_context):
     for configuration in fixed_pair_context[CONFIGURATIONS_KEY].values():
         configuration[VIEW_CONE_MIN_KEY] = configuration[VIEW_CONE_MAX_KEY] = 1.0
-    assert plot_event_level_production_comparison._metadata_suppressed_distributions(
-        fixed_pair_context
-    ) == {ENERGY}
+    assert plot_production_comparison._metadata_suppressed_distributions(fixed_pair_context) == {
+        ENERGY
+    }
 
 
 def test_compact_figure_label_identifies_the_report_plot(tmp_test_directory):
     figure = plt.figure()
     figures = []
-    token = plot_event_level_production_comparison._COMPACT_FIGURES.set(figures)
+    token = plot_production_comparison._COMPACT_FIGURES.set(figures)
     try:
-        plot_event_level_production_comparison._save_figure(
+        plot_production_comparison._save_figure(
             figure, Path(tmp_test_directory), "distribution_core_distance.png"
         )
     finally:
-        plot_event_level_production_comparison._COMPACT_FIGURES.reset(token)
+        plot_production_comparison._COMPACT_FIGURES.reset(token)
 
     assert figures == [figure]
     assert figure.get_label() == "distribution_core_distance"
@@ -139,12 +141,12 @@ def test_distribution_suppression_covers_overall_and_telescope_types(
     for metric in metrics:
         metric.per_type = {"LSTN": _build_metrics(metric.label, 1.0, 1.0)}
     save = mocker.patch.object(
-        plot_event_level_production_comparison,
+        plot_production_comparison,
         "_save_figure",
         side_effect=lambda figure, *_args, **_kwargs: plt.close(figure),
     )
-    record = mocker.spy(plot_event_level_production_comparison, "record_plot_statistics")
-    path = plot_event_level_production_comparison.plot(
+    record = mocker.spy(plot_production_comparison, "record_plot_statistics")
+    path = plot_production_comparison.plot_event_level_comparison(
         metrics,
         output_path=Path(tmp_test_directory),
         report_mode=report_mode,
@@ -201,7 +203,7 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
     ]
 
-    statistics_file = plot_event_level_production_comparison.plot(
+    statistics_file = plot_production_comparison.plot_event_level_comparison(
         metrics, output_path=output_path, bins=8
     )
 
@@ -253,7 +255,7 @@ def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
         _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
     ]
 
-    plot_event_level_production_comparison.plot(
+    plot_production_comparison.plot_event_level_comparison(
         metrics, output_path=output_path, bins=8, figure_format=["pdf"]
     )
 
@@ -269,7 +271,7 @@ def test_compact_report_writes_one_pdf_and_retains_statistics(tmp_test_directory
         _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
     ]
 
-    statistics_file = plot_event_level_production_comparison.plot(
+    statistics_file = plot_production_comparison.plot_event_level_comparison(
         metrics, output_path=output_path, report_mode=COMPACT_REPORT
     )
 
@@ -295,7 +297,7 @@ def test_no_plot_mode_retains_statistics(tmp_test_directory, monkeypatch):
 
     monkeypatch.setattr(plt, "subplots", reject_figure)
 
-    statistics_file = plot_event_level_production_comparison.plot(
+    statistics_file = plot_production_comparison.plot_event_level_comparison(
         metrics, output_path=output_path, report_mode="none"
     )
 
@@ -311,7 +313,7 @@ def test_report_modes_keep_identical_scalar_statistics(tmp_test_directory):
     ]
     payloads = []
     for mode in (COMPACT_REPORT, "none"):
-        path = plot_event_level_production_comparison.plot(
+        path = plot_production_comparison.plot_event_level_comparison(
             metrics, output_path=root / mode, report_mode=mode
         )
         payloads.append(json.loads(path.read_text(encoding=TEXT_ENCODING)))
@@ -325,12 +327,12 @@ def test_report_modes_keep_identical_scalar_statistics(tmp_test_directory):
 
 def test_pdf_pages_are_closed_immediately_and_labels_are_retained(tmp_test_directory):
     output = Path(tmp_test_directory) / "streamed.pdf"
-    with plot_event_level_production_comparison.pdf_report(output) as report:
+    with plot_production_comparison.pdf_report(output) as report:
         for label in (_FIRST, _SECOND):
-            figure = plot_event_level_production_comparison.plt.figure()
+            figure = plot_production_comparison.plt.figure()
             figure.set_label(label)
             report.add(figure)
-            assert not plot_event_level_production_comparison.plt.fignum_exists(figure.number)
+            assert not plot_production_comparison.plt.fignum_exists(figure.number)
         assert report.page_labels == [_FIRST, _SECOND]
         assert len(report) == 2
     assert output.is_file()
@@ -338,7 +340,7 @@ def test_pdf_pages_are_closed_immediately_and_labels_are_retained(tmp_test_direc
 
 def test_empty_pdf_report_does_not_create_an_output(tmp_test_directory):
     output = Path(tmp_test_directory) / "unused" / "report.pdf"
-    with plot_event_level_production_comparison.pdf_report(output) as report:
+    with plot_production_comparison.pdf_report(output) as report:
         assert len(report) == 0
     assert not output.exists()
 
@@ -349,7 +351,7 @@ def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
         _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
     ]
 
-    plot_event_level_production_comparison.plot(
+    plot_production_comparison.plot_event_level_comparison(
         metrics, output_path=Path(tmp_test_directory), figure_format=["svg"]
     )
 
@@ -359,7 +361,7 @@ def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
 def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
-    plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
+    plot_production_comparison.plot_event_level_comparison(metrics, output_path=output_path, bins=8)
     with (output_path / "comparison_statistics.json").open(encoding=TEXT_ENCODING) as file_handle:
         statistics = json.load(file_handle)
     comparison_schema = schema.load_schema(
@@ -371,23 +373,24 @@ def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_di
         jsonschema.validate(statistics, comparison_schema)
 
 
-def test_output_directory_for_array_layout_selection_uses_single_layout_name(tmp_test_directory):
+def test_array_layout_selection_writes_into_layout_directory(tmp_test_directory):
     output_dir = Path(tmp_test_directory) / "plots"
+    metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
 
-    selected = plot_event_level_production_comparison._output_directory_for_array_layout_selection(
-        output_dir,
-        "CTAO-North Alpha",
+    plot_production_comparison.plot_event_level_comparison(
+        metrics, output_path=output_dir, array_layout_name=["CTAO-North Alpha"], bins=8
     )
 
-    assert selected == output_dir / "CTAO-North Alpha"
-    assert selected.exists()
+    assert (output_dir / "CTAO-North Alpha" / "comparison_statistics.json").exists()
 
 
-def test_output_directory_for_array_layout_selection_rejects_multiple_layouts(tmp_test_directory):
+def test_array_layout_selection_rejects_multiple_layouts(tmp_test_directory):
+    metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
     with pytest.raises(ValueError, match="one array layout"):
-        plot_event_level_production_comparison._output_directory_for_array_layout_selection(
-            Path(tmp_test_directory),
-            ["CTAO-North Alpha", "MSTN-01"],
+        plot_production_comparison.plot_event_level_comparison(
+            metrics,
+            output_path=Path(tmp_test_directory),
+            array_layout_name=["CTAO-North Alpha", "MSTN-01"],
         )
 
 
@@ -411,7 +414,7 @@ def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
         )
     ]
 
-    plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
+    plot_production_comparison.plot_event_level_comparison(metrics, output_path=output_path, bins=8)
 
     per_type_files = [
         "trigger_multiplicity_LSTN.png",
@@ -423,21 +426,12 @@ def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
     assert _assert_files_exist(output_path, per_type_files) is None
 
 
-def test_plot_series_and_artist_color():
+def test_artist_color():
     fig, ax = plt.subplots(figsize=(4, 3))
-    bin_edges = np.array([1.0, 2.0, 3.0])
-    values = np.array([0.4, 0.6])
-    line_artist = plot_event_level_production_comparison._plot_series(
-        ax, bin_edges, values, "line", CORE_DISTANCE
-    )
-    hist_artist = plot_event_level_production_comparison._plot_series(
-        ax, bin_edges, values, "hist", CORE_DISTANCE, force_histogram=True
-    )
-    assert line_artist is not None
-    assert hist_artist is not None
-    assert plot_event_level_production_comparison._artist_color(None) == "black"
-    assert plot_event_level_production_comparison._artist_color(line_artist) is not None
-    assert plot_event_level_production_comparison._artist_color(hist_artist) is not None
+    stairs_artist = ax.stairs(np.array([0.4, 0.6]), np.array([1.0, 2.0, 3.0]))
+    assert plot_production_comparison._artist_color(None) == "black"
+    assert plot_production_comparison._artist_color(stairs_artist) is not None
+    assert plot_production_comparison._artist_color(ax.plot([1, 2], [1, 2])[0]) is not None
     plt.close(fig)
 
 
@@ -448,65 +442,18 @@ def test_trigger_fraction_and_skip_paths(tmp_test_directory):
     empty_metric.trigger_multiplicity = np.array([], dtype=int)
     empty_metric.trigger_combinations = Counter()
     empty_metric.telescope_participation = Counter()
-    plot_event_level_production_comparison._plot_trigger_multiplicity([empty_metric], output_path)
-    plot_event_level_production_comparison._plot_trigger_combinations([empty_metric], output_path)
-    plot_event_level_production_comparison._plot_telescope_participation(
-        [empty_metric], output_path
-    )
+    plot_production_comparison._plot_trigger_multiplicity([empty_metric], output_path)
+    plot_production_comparison._plot_trigger_combinations([empty_metric], output_path)
+    plot_production_comparison._plot_telescope_participation([empty_metric], output_path)
     assert not (output_path / "trigger_multiplicity_empty.png").exists()
-
-
-def test_plot_invokes_triggered_fraction_branch_when_enabled(tmp_test_directory, mocker):
-    output_path = Path(tmp_test_directory)
-    metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
-    mock_trigger = mocker.patch(
-        "simtools.visualization.plot_event_level_production_comparison._plot_triggered_vs_quantity"
-    )
-    mocker.patch(
-        "simtools.visualization.plot_event_level_production_comparison._TRIGGERED_FRACTION_QUANTITIES",
-        {CORE_DISTANCE},
-    )
-
-    plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
-
-    mock_trigger.assert_called_once()
-
-
-def test_triggered_vs_quantity_outputs_and_empty_skip(tmp_test_directory):
-    output_path = Path(tmp_test_directory)
-    metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
-    plot_event_level_production_comparison._plot_triggered_vs_quantity(
-        metrics,
-        output_path,
-        quantity_name=CORE_DISTANCE,
-        x_label="Core Distance (m)",
-        x_scale="linear",
-        bins=8,
-    )
-    assert (output_path / "triggered_fraction_vs_core_distance.png").exists()
-
-    empty_metric = _build_metrics("empty", simulated_scale=1.0, triggered_scale=1.0)
-    empty_metric.simulated_core_distances = np.array([], dtype=float)
-    plot_event_level_production_comparison._plot_triggered_vs_quantity(
-        [empty_metric],
-        output_path,
-        quantity_name=CORE_DISTANCE,
-        x_label="Core Distance (m)",
-        x_scale="linear",
-        bins=8,
-        suffix="_empty",
-    )
-    assert not (output_path / "triggered_fraction_vs_core_distance_empty.png").exists()
 
 
 def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     metric = _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)
     metric.trigger_combinations = Counter({"LSTN-01,MSTN-01,SSTS-01": 2})
-    plot_event_level_production_comparison._plot_single_telescope_trigger_frequencies(
-        [metric], output_path
-    )
-    plot_event_level_production_comparison._plot_mixed_trigger_combinations([metric], output_path)
+    plot_production_comparison._plot_single_telescope_trigger_frequencies([metric], output_path)
+    plot_production_comparison._plot_mixed_trigger_combinations([metric], output_path)
     assert not (output_path / "single_telescope_trigger_distribution.png").exists()
     assert not (output_path / "mixed_trigger_combinations.png").exists()
 
@@ -522,7 +469,7 @@ def test_mixed_trigger_combination_plot_limits_categories(tmp_test_directory):
         }
     )
 
-    statistics = plot_event_level_production_comparison._plot_mixed_trigger_combinations(
+    statistics = plot_production_comparison._plot_mixed_trigger_combinations(
         [metric], output_path, top_n=2
     )
 
@@ -538,7 +485,7 @@ def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_direc
     baseline.trigger_combinations = Counter({"LSTN-01": 100, "MSTN-01": 1})
     candidate.trigger_combinations = Counter({"LSTN-01": 100, "MSTN-01": 100})
 
-    statistics = plot_event_level_production_comparison._plot_trigger_combinations(
+    statistics = plot_production_comparison._plot_trigger_combinations(
         [baseline, candidate], output_path, top_n=1
     )
 
@@ -567,7 +514,7 @@ def test_global_quantity_bin_edges_union_histogram_supports():
         }
     }
 
-    edges = plot_event_level_production_comparison._get_global_quantity_bin_edges(
+    edges = plot_production_comparison._get_global_quantity_bin_edges(
         [baseline, candidate], ENERGY, "log", bins=4
     )
 
@@ -582,12 +529,151 @@ def test_quantity_count_rebinning_preserves_distribution_when_edges_split():
         }
     }
 
-    counts, samples = plot_event_level_production_comparison._get_quantity_counts(
+    counts = plot_production_comparison._get_quantity_counts(
         metric,
         ENERGY,
         np.array([0.0, 1.0, 2.0]),
         "simulated",
     )
 
-    assert samples is None
     np.testing.assert_allclose(counts, np.array([50.0, 50.0]))
+
+
+def _metrics(label, scale=1.0):
+    return ProductionSignalMetrics(
+        label=label,
+        pedestals=np.array([1.0, 2.0, 3.0]) * scale,
+        signals=np.array([4.0, 5.0, 6.0]) * scale,
+        peak_timing=np.array([2.0, 3.0, 4.0]),
+        triggered_pixels=np.array([2.0, 3.0, 4.0]) * scale,
+    )
+
+
+def test_plot_writes_one_set_per_telescope(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    statistics_files = plot_production_comparison.plot_signal_level_comparison(
+        {
+            "LSTN-01": [_metrics("baseline"), _metrics("candidate", 1.2)],
+            "MSTN-01": [_metrics("baseline"), _metrics("candidate", 1.1)],
+        },
+        output_path,
+        bins=4,
+    )
+
+    assert statistics_files == [
+        output_path / "LSTN-01" / "comparison_statistics.json",
+        output_path / "MSTN-01" / "comparison_statistics.json",
+    ]
+    telescope_path = output_path / "LSTN-01"
+    assert {path.name for path in telescope_path.iterdir()} == {
+        "pedestals.png",
+        "signals.png",
+        "peak_timing.png",
+        "triggered_pixels.png",
+        "comparison_statistics.json",
+    }
+
+    with (telescope_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        statistics = json.load(file_handle)
+    assert statistics["baseline"]["label"] == "baseline"
+    assert statistics["comparison_sets"][0]["label"] == "candidate"
+    assert set(statistics["plot_statistics"]) == {
+        "pedestals",
+        "signals",
+        "peak_timing",
+        "triggered_pixels",
+    }
+    assert statistics["plot_statistics"]["signals"]["comparisons"][0]["candidate_label"] == (
+        "candidate"
+    )
+    assert statistics["plot_statistics"]["signals"]["comparisons"][0]["valid"]
+    assert statistics["plot_statistics"]["signals"]["metric_type"] == "sample_distribution"
+    assert statistics["plot_statistics"]["signals"]["metric"] == "ks"
+    assert statistics["plot_statistics"]["triggered_pixels"]["metric"] == "wasserstein"
+
+
+def test_plot_skips_observable_without_values(tmp_test_directory):
+    metrics = [_metrics("baseline"), _metrics("candidate")]
+    for item in metrics:
+        item.peak_timing = np.array([])
+
+    output_path = Path(tmp_test_directory)
+    plot_production_comparison.plot_signal_level_comparison(
+        {"LSTN-01": metrics},
+        output_path,
+        bins=4,
+    )
+
+    telescope_path = output_path / "LSTN-01"
+    assert not (telescope_path / "peak_timing.png").exists()
+    with (telescope_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        statistics = json.load(file_handle)
+    assert "peak_timing" not in statistics["plot_statistics"]
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        ("pedestals", "Pedestal", "pedestals.png", "ks", True),
+        ("signals", "Integrated signal", "signals.png", "ks", True),
+    ],
+)
+def test_plot_uses_log_y_axis_for_pedestals_and_signals(mocker, tmp_test_directory, spec):
+    figure = mocker.MagicMock()
+    axes = mocker.MagicMock()
+    mocker.patch(
+        "simtools.visualization.plot_production_comparison.plt.subplots",
+        return_value=(figure, axes),
+    )
+    mocker.patch("simtools.visualization.plot_production_comparison.save_figure")
+
+    plot_production_comparison._plot_observable(
+        [_metrics("baseline")], Path(tmp_test_directory), spec, 4
+    )
+
+    axes.set_yscale.assert_called_once_with("log")
+
+
+def test_plot_forwards_figure_format(mocker, tmp_test_directory):
+    figure = mocker.MagicMock()
+    axes = mocker.MagicMock()
+    mocker.patch(
+        "simtools.visualization.plot_production_comparison.plt.subplots",
+        return_value=(figure, axes),
+    )
+    save_figure = mocker.patch("simtools.visualization.plot_production_comparison.save_figure")
+
+    plot_production_comparison._plot_observable(
+        [_metrics("baseline")],
+        Path(tmp_test_directory),
+        ("signals", "Integrated signal", "signals.png", "ks", True),
+        4,
+        figure_format=["pdf"],
+    )
+
+    save_figure.assert_called_once_with(
+        figure,
+        Path(tmp_test_directory) / "signals",
+        figure_format=["pdf"],
+        dpi=300,
+        close=True,
+        pil_kwargs={"compress_level": 1},
+    )
+
+
+def test_plot_annotates_comparison_statistics(mocker, tmp_test_directory):
+    annotate = mocker.patch(
+        "simtools.visualization.plot_production_comparison.annotate_comparison_statistics"
+    )
+
+    plot_production_comparison._plot_observable(
+        [_metrics("baseline"), _metrics("candidate", 1.2)],
+        Path(tmp_test_directory),
+        ("signals", "Integrated signal", "signals.png", "ks", False),
+        4,
+    )
+
+    annotate.assert_called_once()
+    statistics = annotate.call_args.args[1]
+    assert statistics["metric"] == "ks"
+    assert statistics["comparisons"][0]["candidate_label"] == "candidate"

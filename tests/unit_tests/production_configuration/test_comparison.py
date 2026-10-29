@@ -10,11 +10,11 @@ from matplotlib import pyplot as plt
 
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.production_configuration import production_comparison
+from simtools.production_configuration import comparison as production_comparison
+from simtools.production_configuration.comparison import ProductionDescriptor
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
 )
-from simtools.sim_events.production_comparison import ProductionDescriptor
 
 _FIRST = "first"
 _SECOND = "second"
@@ -87,10 +87,12 @@ def test_comparison_product_validation_does_not_depend_on_acceptance_rule(mocker
 def test_compare_array_layout_passes_metadata_to_plotting(mocker, tmp_test_directory):
     mocker.patch.object(production_comparison, "collect_production_metrics", return_value=[])
     mocker.patch.object(production_comparison, "_comparison_title", return_value=None)
-    plot = mocker.patch.object(production_comparison.plot_event_level_production_comparison, "plot")
+    plot = mocker.patch.object(
+        production_comparison.plot_production_comparison, "plot_event_level_comparison"
+    )
     context = {CONFIGURATIONS_KEY: {}}
-    production_comparison._compare_array_layout(
-        [], {}, None, Path(tmp_test_directory), comparison_context=context
+    production_comparison._write_array_layout_comparisons(
+        [], {}, Path(tmp_test_directory), [None], comparison_context=context
     )
     assert plot.call_args.kwargs["comparison_context"] is context
 
@@ -101,20 +103,20 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
     second_statistics_file = output_directory / _SECOND / _COMPARISON_STATISTICS_JSON
     descriptors = mocker.sentinel.production_descriptors
     mocker.patch(
-        "simtools.production_configuration.production_comparison.parse_production_arguments",
+        "simtools.production_configuration.comparison.parse_production_arguments",
         return_value=descriptors,
     )
     mock_collect = mocker.patch(
-        "simtools.production_configuration.production_comparison.collect_production_metrics",
+        "simtools.production_configuration.comparison.collect_production_metrics",
         side_effect=[mocker.sentinel.first_metrics, mocker.sentinel.second_metrics],
     )
     mock_plot = mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "plot_event_level_production_comparison.plot",
+        "simtools.production_configuration.comparison."
+        "plot_production_comparison.plot_event_level_comparison",
         side_effect=[first_statistics_file, second_statistics_file],
     )
     mock_summary = mocker.patch(
-        "simtools.production_configuration.production_comparison._write_comparison_summary"
+        "simtools.production_configuration.comparison._write_comparison_summary"
     )
 
     production_comparison.write_production_comparison(
@@ -137,7 +139,9 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             array_layout_name=_FIRST,
             figure_format=["png"],
             report_mode="diagnostic",
+            compact_figures=None,
             comparison_title="Layout: first",
+            comparison_context=None,
         ),
         mocker.call(
             mocker.sentinel.second_metrics,
@@ -145,7 +149,9 @@ def test_write_production_comparison_writes_each_selected_array_layout(mocker, t
             array_layout_name=_SECOND,
             figure_format=["png"],
             report_mode="diagnostic",
+            compact_figures=None,
             comparison_title="Layout: second",
+            comparison_context=None,
         ),
     ]
     mock_summary.assert_called_once_with(
@@ -176,8 +182,7 @@ def test_production_descriptor_pairs_from_metadata_matches_configurations(
         )
 
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_selected_trigger_histogram_manifests",
+        "simtools.production_configuration.comparison._selected_trigger_histogram_manifests",
         side_effect=[
             [manifest(BASELINE_KEY, "qgs3", 20), manifest(BASELINE_KEY, "qgs3", 40)],
             [manifest(_CANDIDATE, "epos", 20), manifest(_CANDIDATE, "epos", 40)],
@@ -211,12 +216,11 @@ def test_write_production_comparison_uses_metadata_pair_output_directory(
         ProductionDescriptor(_CANDIDATE, [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_production_descriptor_pairs_from_metadata",
+        "simtools.production_configuration.comparison._production_descriptor_pairs_from_metadata",
         return_value=[(pairing_key, descriptors)],
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+        "simtools.production_configuration.comparison._write_array_layout_comparisons"
     )
 
     production_comparison.write_production_comparison(
@@ -243,19 +247,23 @@ def test_compact_metadata_comparison_writes_one_site_report(mocker, tmp_test_dir
         ProductionDescriptor(_CANDIDATE, [_CANDIDATE_HDF5]),
     ]
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_production_descriptor_pairs_from_metadata",
+        "simtools.production_configuration.comparison._production_descriptor_pairs_from_metadata",
         return_value=[({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors)],
     )
     figure = plt.figure()
     figure.set_label("distribution_core_distance")
     statistics_file = output_directory / "pair" / _ALPHA / _STATISTICS_JSON
 
-    def write_pair(*args, **_kwargs):
-        args[4].add(figure)
+    def write_pair(_metrics, **kwargs):
+        kwargs["compact_figures"].add(figure)
         return statistics_file
 
-    mocker.patch.object(production_comparison, "_compare_array_layout", side_effect=write_pair)
+    mocker.patch.object(production_comparison, "collect_production_metrics", return_value=[])
+    mocker.patch.object(
+        production_comparison.plot_production_comparison,
+        "plot_event_level_comparison",
+        side_effect=write_pair,
+    )
 
     summary = mocker.patch.object(production_comparison, "_write_comparison_summary")
 
@@ -284,15 +292,14 @@ def test_write_production_comparison_uses_hash_only_for_duplicate_input_stems(
         ProductionDescriptor(_CANDIDATE, [f"{input_stem}.hdf5"]),
     ]
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_production_descriptor_pairs_from_metadata",
+        "simtools.production_configuration.comparison._production_descriptor_pairs_from_metadata",
         return_value=[
             ({CONFIGURATION_KEY: {"zenith_angle": 20}}, descriptors),
             ({CONFIGURATION_KEY: {"zenith_angle": 40}}, descriptors),
         ],
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+        "simtools.production_configuration.comparison._write_array_layout_comparisons"
     )
 
     production_comparison.write_production_comparison(
@@ -313,8 +320,7 @@ def test_production_descriptor_pairs_rejects_unmatched_metadata(mocker, tmp_test
         data={CONFIGURATION_KEY: {}, _FILES_KEY: {_TRIGGER_HISTOGRAMS: [_BASELINE_HDF5]}},
     )
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_selected_trigger_histogram_manifests",
+        "simtools.production_configuration.comparison._selected_trigger_histogram_manifests",
         side_effect=[[manifest], []],
     )
 
@@ -339,15 +345,14 @@ def test_write_production_comparison_writes_matched_pairs_before_reporting_unmat
         )
 
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_selected_trigger_histogram_manifests",
+        "simtools.production_configuration.comparison._selected_trigger_histogram_manifests",
         side_effect=[
             [manifest(BASELINE_KEY, 20), manifest(BASELINE_KEY, 40)],
             [manifest(_CANDIDATE, 20)],
         ],
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+        "simtools.production_configuration.comparison._write_array_layout_comparisons"
     )
 
     with caplog.at_level(logging.WARNING, logger=production_comparison.__name__):
@@ -376,12 +381,11 @@ def test_write_production_comparison_rejects_completely_unmatched_metadata(
         [],
     )
     mocker.patch(
-        "simtools.production_configuration.production_comparison."
-        "_production_descriptor_pairs_from_metadata",
+        "simtools.production_configuration.comparison._production_descriptor_pairs_from_metadata",
         side_effect=pairing_error,
     )
     mock_write = mocker.patch(
-        "simtools.production_configuration.production_comparison._write_array_layout_comparisons"
+        "simtools.production_configuration.comparison._write_array_layout_comparisons"
     )
 
     with pytest.raises(ValueError, match="pairing failed"):
@@ -396,16 +400,14 @@ def test_write_production_comparison_rejects_completely_unmatched_metadata(
 def test_selected_trigger_histogram_manifests_checks_matches(mocker):
     manifest = mocker.sentinel.manifest
     mocker.patch(
-        "simtools.production_configuration.production_comparison.discover_product_manifests",
+        "simtools.production_configuration.comparison.discover_product_manifests",
         return_value=[manifest],
     )
     mocker.patch(
-        "simtools.production_configuration.production_comparison.filter_manifests",
+        "simtools.production_configuration.comparison.filter_manifests",
         return_value=[manifest],
     )
-    mock_check = mocker.patch(
-        "simtools.production_configuration.production_comparison.check_manifest"
-    )
+    mock_check = mocker.patch("simtools.production_configuration.comparison.check_manifest")
 
     selected = production_comparison._selected_trigger_histogram_manifests(_PRODUCTION, [])
 
@@ -415,11 +417,11 @@ def test_selected_trigger_histogram_manifests_checks_matches(mocker):
 
 def test_selected_trigger_histogram_manifests_rejects_empty_selection(mocker):
     mocker.patch(
-        "simtools.production_configuration.production_comparison.discover_product_manifests",
+        "simtools.production_configuration.comparison.discover_product_manifests",
         return_value=[],
     )
     mocker.patch(
-        "simtools.production_configuration.production_comparison.filter_manifests",
+        "simtools.production_configuration.comparison.filter_manifests",
         return_value=[],
     )
 
