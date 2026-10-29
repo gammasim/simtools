@@ -339,7 +339,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
 
     simulator_instance.runner_service.get_file_name.side_effect = get_file_name_side_effect
 
-    with patch("simtools.job_execution.job_manager.submit") as mock_job_submit:
+    with patch("simtools.job_execution.execution.run_command") as mock_job_submit:
         # Mock make_run_command to return a simple script
         with patch.object(
             simulator_instance, MAKE_RUN_COMMAND, return_value=[BASH_SCRIPT, "echo test\n"]
@@ -350,7 +350,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
         mock_output_file.parent.mkdir(parents=True, exist_ok=True)
         mock_output_file.touch()
 
-        # Verify job_manager.submit was called correctly
+        # Verify run_command was called correctly
         mock_job_submit.assert_called_once()
         call_args = mock_job_submit.call_args
         assert call_args[0][0] == mock_script_path  # First positional arg is the script

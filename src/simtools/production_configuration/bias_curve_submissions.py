@@ -17,9 +17,9 @@ trigger response in both simulations.
 """
 
 from simtools.io import ascii_handler
-from simtools.job_execution import parameter_scan_generator
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.telescope_model import TelescopeModel
+from simtools.production_configuration import parameter_scan_generator
 from simtools.production_configuration.simulation_jobs import generate_job_grid
 
 _PRODUCTION_GRID_ARGS = [

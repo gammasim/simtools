@@ -22,7 +22,8 @@ from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
 from simtools.io.file_type import product_filename
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
+from simtools.job_execution.execution import JobExecutionError
 
 logger = logging.getLogger(__name__)
 _SIMULATION_MODELS_PATH = "simulation_models_path"
@@ -157,7 +158,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
 
                 file.write("=" * 80 + "\n")
                 file.write(
-                    f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
+                    f"Application: {app}\nSTDOUT:\n{result.output}\n"
+                    f"STDERR:\n{result.error_output}\n"
                 )
 
             _copy_collection_files(
@@ -498,10 +500,10 @@ def _submit_application_and_collect_metadata(
     _append_metadata_file(model_parameter_metadata_files, metadata_file)
 
     logger.info(f"Running application: {app}")
-    result = job_manager.submit(
+    result = execution.run_command(
         app,
-        out_file=None,
-        err_file=None,
+        stdout=None,
+        stderr=None,
         configuration=app_configuration,
         runtime_environment=runtime_environment,
     )
@@ -938,13 +940,13 @@ def _pull_image(engine, image):
     image : str
         Image to pull.
     """
-    inspect_result = job_manager.submit([engine, "image", "inspect", image], check=False)
-    if inspect_result and inspect_result.returncode == 0:
+    inspect_result = execution.run_command([engine, "image", "inspect", image], check=False)
+    if inspect_result and inspect_result.return_code == 0:
         return
 
     try:
-        job_manager.submit([engine, "pull", image], capture_output=False)
-    except job_manager.JobExecutionError as exc:
+        execution.run_command([engine, "pull", image], capture_output=False)
+    except JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc
 
 

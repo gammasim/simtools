@@ -5,7 +5,7 @@ import pytest
 import yaml
 from jsonschema.exceptions import ValidationError
 
-from simtools.job_execution import parameter_scan_generator
+from simtools.production_configuration import parameter_scan_generator
 
 
 def _overwrite_base():
@@ -201,8 +201,8 @@ def test_generate_parameter_combinations_uses_compact_labels():
     ]
 
 
-@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
-@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+@mock.patch("simtools.production_configuration.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.production_configuration.parameter_scan_generator.read_job_grid")
 def test_expand_job_grid_with_scan_uses_sanitized_default_label_and_description(
     mock_read_grid,
     mock_serialize_grid,
@@ -246,8 +246,8 @@ def test_expand_job_grid_with_scan_uses_sanitized_default_label_and_description(
     }
 
 
-@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
-@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+@mock.patch("simtools.production_configuration.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.production_configuration.parameter_scan_generator.read_job_grid")
 def test_expand_job_grid_with_scan_uses_explicit_compact_label(
     mock_read_grid,
     mock_serialize_grid,

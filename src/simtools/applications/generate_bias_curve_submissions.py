@@ -6,7 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import parse_quantity_pair
-from simtools.job_execution import bias_curve_submissions
+from simtools.production_configuration import bias_curve_submissions
 
 _ARGUMENTS = (
     cli.SITE(required=True),

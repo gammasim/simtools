@@ -99,7 +99,7 @@ def test_incidence_script_points_the_telescope(backend, tmp_test_directory, offs
 
 
 @pytest.mark.parametrize("keep_files", [False, True])
-def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_files):
+def test_incidence_angles_run(backend, tmp_test_directory, command_runner, keep_files):
     rows = [(10.0, 1.0, 2.0, 300.0, 400.0, 30.0, -40.0), (20.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0)]
 
     def run(script):
@@ -107,7 +107,7 @@ def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_fil
         photons = Path(re.search(r"IMAGING_LIST=(\S+)", text).group(1))
         photons.write_text(photons.read_text() + _imaging_rows(rows), encoding="utf-8")
 
-    monkeypatch.setattr(backend_module.job_manager, "submit", run)
+    command_runner.side_effect = run
     data, files = backend.incidence_angles(
         _request(), Path(tmp_test_directory), "name", True, keep_files=keep_files
     )
@@ -120,11 +120,11 @@ def test_incidence_angles_run(backend, tmp_test_directory, monkeypatch, keep_fil
     assert ("incident_angles_photons_name.lis" in names) is not keep_files
 
 
-def test_incidence_angles_run_failure(backend, tmp_test_directory, monkeypatch):
+def test_incidence_angles_run_failure(backend, tmp_test_directory, command_runner):
     def fail(*_):
-        raise backend_module.job_manager.JobExecutionError("failed")
+        raise backend_module.JobExecutionError("failed")
 
-    monkeypatch.setattr(backend_module.job_manager, "submit", fail)
+    command_runner.side_effect = fail
     with pytest.raises(RuntimeError, match="Incident angles run failed, see log"):
         backend.incidence_angles(_request(), Path(tmp_test_directory), "name", False)
 
