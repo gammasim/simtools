@@ -79,9 +79,25 @@ class IOHandler(metaclass=IOHandlerSingleton):
         """Initialize IOHandler."""
         self.logger = logging.getLogger(__name__)
         self._paths = OutputPaths()
-        self.output_path = self._paths.output_path
-        self.model_path = self._paths.model_path
         self.test_resources_path = self._paths.test_resources_path
+
+    @property
+    def output_path(self):
+        """Output paths by label."""
+        return self._paths.output_path
+
+    @output_path.setter
+    def output_path(self, output_path):
+        self._paths.output_path = output_path
+
+    @property
+    def model_path(self):
+        """Model file directory."""
+        return self._paths.model_path
+
+    @model_path.setter
+    def model_path(self, model_path):
+        self._paths.model_path = model_path
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
@@ -98,7 +114,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
         """
         self.output_path[output_path_label] = output_path
         self.model_path = model_path
-        self._paths.model_path = model_path
 
     def get_output_directory(self, sub_dir=None, output_path_label="default"):
         """

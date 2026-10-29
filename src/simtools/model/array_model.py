@@ -74,7 +74,7 @@ class ArrayModel:
         self.io_handler = self.context.paths
 
         self.overwrite_model_parameter_dict = read_overwrite_model_parameter_dict(
-            overwrite_model_parameters
+            overwrite_model_parameters, context=self.context
         )
 
         self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
