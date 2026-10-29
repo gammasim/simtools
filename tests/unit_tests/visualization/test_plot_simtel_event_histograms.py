@@ -755,6 +755,12 @@ def test_histogram_style_table_preserves_plot_configuration():
         "reuse_mean_vs_energy": Histogram.from_edges(
             [axis], values=[2.0, 1.0], axis_names=["energy"], axis_units=["TeV"]
         ),
+        "reuse_mean_vs_core_distance_vs_energy": Histogram.from_edges(
+            [np.array([0, 1, 2]), axis],
+            values=np.ones((2, 2)),
+            axis_names=["core_distance", "energy"],
+            axis_units=["m", "TeV"],
+        ),
     }
 
     plots = plot_simtel_event_histograms._generate_plot_configurations(histograms, None)
@@ -770,6 +776,10 @@ def test_histogram_style_table_preserves_plot_configuration():
     assert plots["energy_cumulative"]["labels"]["y"] == "Fraction of Events"
     assert plots["reuse_mean_vs_energy"]["labels"]["y"] == "Mean Reuse"
     assert plots["reuse_mean_vs_energy"]["scales"] == {"x": "log", "y": "linear"}
+    assert plots["reuse_mean_vs_core_distance_vs_energy"]["scales"] == {
+        "x": "linear",
+        "y": "log",
+    }
 
 
 def test_broad_range_axis_limits_are_used_for_distance_histograms():

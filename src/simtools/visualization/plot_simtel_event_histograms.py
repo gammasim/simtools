@@ -511,8 +511,11 @@ def _histogram_scales(name, histogram, style_key):
 
 def _reuse_histogram_scales(histogram):
     """Return axis scales of a reuse-statistic histogram (log for energy axes)."""
-    energy_scale = "log" if "energy" in (histogram.axis_names or []) else "linear"
-    return {"x": energy_scale, "y": energy_scale if histogram.ndim == 2 else "linear"}
+    scales = {"x": "linear", "y": "linear"}
+    for axis, name in zip(("x", "y"), histogram.axis_names or []):
+        if name == "energy":
+            scales[axis] = "log"
+    return scales
 
 
 def _histogram_value_label(name, style, style_key):

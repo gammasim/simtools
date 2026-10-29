@@ -23,8 +23,7 @@ Trigger-histogram products store dense arrays below
 Each histogram group contains a `values` dataset and one `edges_<axis>` dataset for every axis.
 The `axis_names` and `axis_units` attributes are JSON arrays with one entry per axis, or JSON `null`
 when metadata is absent; individual units may also be `null`. The parent `TRIGGER_HISTOGRAM_DENSE`
-group has a `format_version` attribute set to `2`. Readers require format version 2; regenerate
-files written with earlier versions before using them.
+group has a `format_version` attribute set to `2`.
 
 ## Configuration and parameter files
 
