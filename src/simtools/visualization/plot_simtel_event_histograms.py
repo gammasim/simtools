@@ -32,6 +32,35 @@ _BROAD_RANGE_KEY_GROUPS = (
     ("x_core_shower_vs_y_core_shower", ("x_core_shower_vs_y_core_shower",)),
 )
 
+_AXIS_LABELS = {
+    "energy": "Energy (TeV)",
+    "core_distance": "Core Distance (m)",
+    "angular_distance": "Angular Distance (deg)",
+    "core_x": "Core X (m)",
+    "core_y": "Core Y (m)",
+}
+
+_HISTOGRAM_STYLES = {
+    "cr_rates_mc": {
+        "title": "Cosmic Ray Rates (MC)",
+        "value_label": "Cosmic Ray Rate (Hz)",
+        "scales": {"x": "log", "y": "log"},
+    },
+    "trigger_rates": {
+        "title": "Trigger Rates (MC)",
+        "value_label": "Trigger Rate (Hz)",
+        "scales": {"x": "log", "y": "log"},
+    },
+    "*_mc": {"title": "Simulated Events"},
+    "*_eff": {"title": "Efficiency", "value_label": "Efficiency"},
+    "*_cumulative": {
+        "title": "Cumulative triggered events",
+        "value_label": "Fraction of Events",
+    },
+    "reuse_*": {"title": "Triggered reuse"},
+    "*": {"title": "Triggered Events"},
+}
+
 
 def _is_reuse_histogram(name):
     """Return whether the histogram contains reuse summary statistics."""
@@ -122,12 +151,7 @@ def _selected_array_names(array_layout_name):
 
 def _plottable_histograms(histograms):
     """Return histogram definitions that can be rendered as 1D or 2D plots."""
-    return {
-        name: histogram
-        for name, histogram in histograms.items()
-        if isinstance(histogram, dict) and histogram.get("histogram") is not None
-        if getattr(histogram["histogram"], "ndim", 0) <= 2
-    }
+    return {name: histogram for name, histogram in histograms.items() if histogram.ndim <= 2}
 
 
 def plot_monte_carlo_statistics_diagnostics(
@@ -283,9 +307,7 @@ def _generate_plot_configurations(
     hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis"}
     plots = {}
     for name, hist in histograms.items():
-        if hist["histogram"] is None:
-            continue
-        if hist["histogram"].ndim > 2:
+        if hist.ndim > 2:
             _logger.warning(f"Skipping plot {name} - plotting supports only 1D and 2D histograms")
             continue
         plots[name] = _build_plot_configuration(
@@ -315,7 +337,7 @@ def _build_plot_configuration(
     hist_2d_normalized_params,
 ):
     """Build a base plot configuration for one histogram."""
-    if hist["1d"]:
+    if hist.ndim == 1:
         return _create_1d_plot_config(hist, name=name, plot_params=hist_1d_params, limits=limits)
     return _create_2d_plot_config(
         hist,
@@ -440,33 +462,86 @@ def _get_symmetric_limits(limit):
     return (-limit, limit)
 
 
-def _get_axis_title(axis_titles, axis):
-    """Return axis title for given axis."""
-    if axis_titles is None:
-        return None
-    if axis == "x" and len(axis_titles) > 0:
-        return axis_titles[0]
-    if axis == "y" and len(axis_titles) > 1:
-        return axis_titles[1]
-    if axis == "z" and len(axis_titles) > 2:
-        return axis_titles[2]
-    return None
+def _histogram_style(name, histogram):
+    """Return plot labels and scales selected by histogram-name pattern."""
+    style_key = _style_key(name)
+    style = _HISTOGRAM_STYLES[style_key]
+    title = style["title"]
+    if style_key == "reuse_*":
+        statistic = name.split("_", maxsplit=2)[1]
+        title = f"{title} {statistic}"
+    axis_labels = [_AXIS_LABELS.get(axis, axis) for axis in (histogram.axis_names or [])]
+    scales = dict(style.get("scales", _histogram_scales(name, histogram, style_key)))
+    value_label = _histogram_value_label(name, style, style_key)
+    return title, axis_labels, scales, value_label
+
+
+def _style_key(name):
+    """Return the style-table key matching a histogram name."""
+    if name in {"cr_rates_mc", "trigger_rates"}:
+        return name
+    if name.endswith("_mc"):
+        return "*_mc"
+    if name.endswith("_eff"):
+        return "*_eff"
+    if name.endswith("_cumulative"):
+        return "*_cumulative"
+    if _is_reuse_histogram(name):
+        return "reuse_*"
+    return "*"
+
+
+def _histogram_scales(name, histogram, style_key):
+    """Return logarithmic or linear axis scales for a histogram style."""
+    scales = {}
+    base_name = name
+    for suffix in ("_mc", "_eff", "_cumulative"):
+        if base_name.endswith(suffix):
+            base_name = base_name.removesuffix(suffix)
+    if histogram.ndim == 1 and base_name == "energy":
+        scales = {"x": "log", "y": "log"}
+    elif histogram.ndim == 1 and base_name in {"core_distance", "angular_distance"}:
+        scales["y"] = "log"
+    elif histogram.ndim == 2 and "energy" in (histogram.axis_names or []):
+        scales["y"] = "log"
+    if style_key == "reuse_*":
+        scales = _reuse_histogram_scales(histogram)
+    return scales
+
+
+def _reuse_histogram_scales(histogram):
+    """Return axis scales of a reuse-statistic histogram (log for energy axes)."""
+    scales = {"x": "linear", "y": "linear"}
+    for axis, name in zip(("x", "y"), histogram.axis_names or []):
+        if name == "energy":
+            scales[axis] = "log"
+    return scales
+
+
+def _histogram_value_label(name, style, style_key):
+    """Return the count or reuse label displayed with histogram values."""
+    reuse_labels = {"mean": "Mean Reuse", "max": "Max Reuse", "std": "Reuse Std Dev"}
+    default_value_label = "Event Count"
+    if style_key == "reuse_*":
+        default_value_label = reuse_labels.get(name.split("_")[1], default_value_label)
+    return style.get("value_label", default_value_label)
 
 
 def _create_1d_plot_config(histogram, name, plot_params, limits):
     """Create a 1D plot configuration."""
     _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
+    title, axis_labels, scales, value_label = _histogram_style(name, histogram)
     return {
-        "data": histogram["histogram"].values,
-        "bins": histogram["histogram"].edges[0],
+        "data": histogram.values,
+        "bins": histogram.edges[0],
         "plot_type": "histogram",
         "plot_params": plot_params,
         "labels": {
-            "x": _get_axis_title(histogram.get("axis_titles"), "x"),
-            "y": _get_axis_title(histogram.get("axis_titles"), "y"),
-            "title": f"{histogram['title']}: {name.replace('_', ' ')}",
+            "x": axis_labels[0] if axis_labels else None,
+            "y": value_label,
+            "title": f"{title}: {name.replace('_', ' ')}",
         },
-        "scales": histogram["plot_scales"],
+        "scales": scales,
         "lines": _get_limits(name, limits) if limits else {},
         "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
@@ -475,19 +550,20 @@ def _create_1d_plot_config(histogram, name, plot_params, limits):
 def _create_2d_plot_config(histogram, name, plot_params, limits):
     """Create a 2D plot configuration."""
     _logger.debug(f"Creating plot config for {name} with params: {plot_params}")
+    title, axis_labels, scales, value_label = _histogram_style(name, histogram)
     return {
-        "data": histogram["histogram"].values,
-        "bins": [histogram["histogram"].edges[0], histogram["histogram"].edges[1]],
+        "data": histogram.values,
+        "bins": [histogram.edges[0], histogram.edges[1]],
         "plot_type": "histogram2d",
         "plot_params": plot_params,
         "labels": {
-            "x": _get_axis_title(histogram.get("axis_titles"), "x"),
-            "y": _get_axis_title(histogram.get("axis_titles"), "y"),
-            "title": f"{histogram['title']}: {name.replace('_', ' ')}",
+            "x": axis_labels[0] if axis_labels else None,
+            "y": axis_labels[1] if len(axis_labels) > 1 else None,
+            "title": f"{title}: {name.replace('_', ' ')}",
         },
         "lines": _get_limits(name, limits) if limits else {},
-        "scales": histogram["plot_scales"],
-        "colorbar_label": _get_axis_title(histogram.get("axis_titles"), "z"),
+        "scales": scales,
+        "colorbar_label": value_label,
         "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
 

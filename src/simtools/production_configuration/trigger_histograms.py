@@ -1,6 +1,5 @@
 """Build and load trigger-histogram products from reduced event data."""
 
-import copy
 import logging
 import os
 import re
@@ -15,6 +14,7 @@ from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
 from simtools.histogram.hdf5 import read_histograms, write_histograms
+from simtools.histogram.histogram import Histogram
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import product_value, validate_file_type
@@ -71,6 +71,7 @@ TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
 TRIGGER_TOPOLOGY_COUNTS_TABLE = "TRIGGER_TOPOLOGY_COUNTS"
 TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
+_DENSE_HISTOGRAM_FORMAT_VERSION = 2
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
@@ -273,16 +274,14 @@ def _create_metadata_table(
                 "core_distance_bin_count": len(histograms.core_distance_bins) - 1,
                 "total_simulated_events": int(
                     np.sum(
-                        histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
-                            "histogram"
+                        histograms.histograms[
+                            "angular_distance_vs_energy_vs_core_distance_mc"
                         ].values
                     )
                 ),
                 "total_triggered_events": int(
                     np.sum(
-                        histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
-                            "histogram"
-                        ].values
+                        histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values
                     )
                 ),
             }
@@ -296,22 +295,19 @@ def _is_persisted_histogram(name, histogram):
     """Return True for base histograms that should be serialized."""
     if name.endswith(_DERIVED_HISTOGRAM_SUFFIXES):
         return False
-    return isinstance(histogram, dict) and histogram.get("histogram") is not None
+    return isinstance(histogram, Histogram)
 
 
 def _write_dense_histogram_payload(reference_specs, output_file):
     """Write persisted histogram arrays and bin edges as dense HDF5 datasets."""
     with h5py.File(output_file, "a") as hdf5_file:
         dense_group = hdf5_file.require_group(TRIGGER_HISTOGRAM_DENSE_GROUP)
-        dense_group.attrs["format_version"] = 1
+        dense_group.attrs["format_version"] = _DENSE_HISTOGRAM_FORMAT_VERSION
         for spec in reference_specs:
             reference_group = dense_group.create_group(str(spec["reference_id"]))
             write_histograms(
                 reference_group,
-                {
-                    name: definition["histogram"]
-                    for name, definition in _iter_persisted_histograms(spec["histograms"])
-                },
+                dict(_iter_persisted_histograms(spec["histograms"])),
             )
 
 
@@ -322,6 +318,12 @@ def load_dense_histogram_payloads(reference_file):
             return {}
 
         dense_group = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
+        version = dense_group.attrs.get("format_version")
+        if version != _DENSE_HISTOGRAM_FORMAT_VERSION:
+            raise ValueError(
+                f"Unsupported trigger histogram format in '{reference_file}': found "
+                f"{version}, supported version is {_DENSE_HISTOGRAM_FORMAT_VERSION}."
+            )
         return {
             reference_id: read_histograms(reference_group)
             for reference_id, reference_group in dense_group.items()
@@ -405,14 +407,10 @@ def _format_trigger_histogram_inspection(report):
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
     """Create the flattened per-bin histogram table."""
-    triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
-        "histogram"
-    ].values
-    simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
-        "histogram"
-    ].values
-    efficiency_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_eff"][
-        "histogram"
+    triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values
+    simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"].values
+    efficiency_hist = histograms.histograms[
+        "angular_distance_vs_energy_vs_core_distance_eff"
     ].values
     energy_edges = histograms.energy_bins
     angular_edges = histograms.view_cone_bins
@@ -1030,26 +1028,10 @@ def _metadata_data_ranges(row):
     return {"angular_distance": (float(angular_min), float(angular_max))}
 
 
-def _template_histograms(histograms):
-    """Create metadata-rich empty histogram definitions for a loaded histogram object."""
-    return histograms.get_empty_histogram_definitions()
-
-
-def _apply_loaded_histograms(histograms, loaded_histograms):
+def _apply_loaded_histograms(loaded_histograms):
     """Attach loaded histograms and exact bin edges to a histogram object."""
-    templates = _template_histograms(histograms)
-    loaded = {}
+    loaded = dict(loaded_histograms)
     loaded_bin_edges = {}
-    for histogram_name, histogram in loaded_histograms.items():
-        definition = copy.copy(templates.get(histogram_name, {}))
-        definition.setdefault("1d", histogram.ndim == 1)
-        definition["event_data"] = (
-            None if definition["1d"] else tuple(None for _ in range(histogram.ndim))
-        )
-        definition["edges"] = histogram.edges
-        definition["histogram"] = histogram
-        loaded[histogram_name] = definition
-
     for histogram_name, edges_key in (
         ("energy", "energy"),
         ("core_distance", "core_distance"),
@@ -1071,7 +1053,7 @@ def _histograms_from_reference_row_dense(row, loaded_histograms):
         angular_distance_bin_width=_row_value(row, "angular_distance_bin_width"),
         core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
     )
-    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(histograms, loaded_histograms)
+    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(loaded_histograms)
     histograms.set_loaded_histograms(
         loaded_histograms,
         file_info=_metadata_file_info(row),
