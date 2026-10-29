@@ -52,7 +52,7 @@ def config_instance(mocker):
         for he_model in ("epos", "qgs3")
         for geometry in ("flat", "curved")
     )
-    mocker.patch("simtools.settings.get_installed_corsika_build_variants", return_value=variants)
+    mocker.patch("simtools.context.get_installed_corsika_build_variants", return_value=variants)
     return _Config()
 
 
@@ -61,9 +61,9 @@ def config_instance(mocker):
 def test_load_with_args(mock_is_dir, config_instance):
     args = {"sim_telarray_path": "/path/to/simtel", "corsika_path": "/path/to/corsika"}
     config_instance.load(args=args)
-    assert config_instance._args == args
-    assert config_instance._sim_telarray_path == "/path/to/simtel"
-    assert config_instance._corsika_path == "/path/to/corsika"
+    assert config_instance.args == args
+    assert config_instance.context.software.sim_telarray_root == "/path/to/simtel"
+    assert config_instance.context.software.corsika_root == "/path/to/corsika"
     assert config_instance.ray_tracing_backend == "sim_telarray"
 
 
@@ -153,7 +153,6 @@ def test_corsika_exe_curved_property(
 
 def test_corsika_exe_curved_none():
     config = _Config()
-    config._corsika_exe = None
     with pytest.raises(FileNotFoundError, match="manifest has not been loaded"):
         _ = config.corsika_exe_curved
 

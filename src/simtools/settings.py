@@ -1,41 +1,23 @@
-"""Centralized settings object with command line and environment variables."""
+"""Process-wide run context of the running application."""
 
-import os
-import socket
-from pathlib import Path
-from types import MappingProxyType
-
-from simtools.configuration import defaults
-from simtools.constants import RAY_TRACING_BACKENDS
-from simtools.corsika.build_options import (
-    get_installed_corsika_build_variants,
-    select_corsika_build_variant,
-)
-from simtools.utils.general import find_executable_in_dir, get_uuid
+from simtools.context import RunContext
+from simtools.io import io_handler
 
 
 class _Config:
-    """Centralized settings object with command line and environment variables."""
+    """Hold the run context of the running application.
+
+    Code that receives a ``RunContext`` reads it directly; this object serves code that has
+    not been given one yet.
+    """
 
     def __init__(self):
-        """Initialize empty config."""
-        self._args = {}
-        self._sim_telarray_path = None
-        self._sim_telarray_exe = None
-        self._ray_tracing_backend = RAY_TRACING_BACKENDS[0]
-        self._corsika_path = None
-        self._corsika_interaction_table_path = None
-        self._corsika_exe = None
-        self._corsika_build_variants = None
-        self._model_reader = None
-        self.user = os.getenv("USER", "unknown")
-        self.hostname = socket.gethostname()
-        self.activity_id = get_uuid()
-        self.activity_name = None
+        """Initialize with an empty context (nothing read from arguments or environment)."""
+        self._context = RunContext(paths=io_handler.IOHandler())
 
     def load(self, args=None, resolve_sim_software_executables=True):
         """
-        Load configuration from command line arguments and environment variables.
+        Load the run context from command line arguments and environment variables.
 
         Priority order: command line argument > environment variable > built-in default.
 
@@ -48,189 +30,100 @@ class _Config:
             If False, skip resolving CORSIKA executable.
 
         """
-        self._model_reader = None
-        self._args = MappingProxyType(args) if args is not None else {}
-        self.activity_id = self._get_activity_id(args)
-        self.activity_name = args.get("application_label") if args is not None else None
-        self._sim_telarray_path = self._get_config_value(
-            args, "sim_telarray_path", "SIMTOOLS_SIM_TELARRAY_PATH"
-        )
-        self._sim_telarray_exe = self._get_config_value(
+        self._context = RunContext.from_arguments(
             args,
-            "sim_telarray_executable",
-            "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
-            default="sim_telarray",
+            paths=io_handler.IOHandler(),
+            resolve_sim_software_executables=resolve_sim_software_executables,
         )
-        self._ray_tracing_backend = self._get_config_value(
-            args,
-            "ray_tracing_backend",
-            "SIMTOOLS_RAY_TRACING_BACKEND",
-            default=RAY_TRACING_BACKENDS[0],
-        )
-        if self._ray_tracing_backend not in RAY_TRACING_BACKENDS:
-            raise ValueError(
-                f"ray_tracing_backend must be one of {RAY_TRACING_BACKENDS}, "
-                f"got '{self._ray_tracing_backend}'"
-            )
-        self._corsika_path = self._get_config_value(
-            args,
-            "corsika_path",
-            "SIMTOOLS_CORSIKA_PATH",
-            default=defaults.CORSIKA_PATH,
-        )
-        self._corsika_interaction_table_path = self._get_config_value(
-            args,
-            "corsika_interaction_table_path",
-            "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
-            default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
-        )
-        self._corsika_build_variants = None
-        if (
-            resolve_sim_software_executables
-            and self._corsika_path is not None
-            and Path(self._corsika_path).is_dir()
-        ):
-            self._corsika_build_variants = self._load_corsika_build_variants()
-            self._corsika_exe = self._get_corsika_exec("flat")
-        else:
-            self._corsika_exe = None
 
-    @staticmethod
-    def _get_config_value(args, arg_key, env_key, default=None):
-        """Get configuration value from arguments, environment variable, or built-in default."""
-        val = args.get(arg_key) if args is not None else None
-        if val is not None:
-            return val
-        return os.getenv(env_key, default)
-
-    @staticmethod
-    def _get_activity_id(args):
-        """Get activity ID from arguments or generate a new one."""
-        activity_id = args.get("activity_id") if args is not None else None
-        return activity_id if activity_id is not None else get_uuid()
-
-    def _load_corsika_build_variants(self):
-        """Load the required CORSIKA build manifest."""
-        if self._corsika_path is None:
-            return None
-        return get_installed_corsika_build_variants(self._corsika_path)
-
-    def _get_corsika_interaction_models(self):
-        """Return normalized high- and low-energy interaction model names."""
-        he_model = self._get_config_value(
-            self._args,
-            "corsika_he_interaction",
-            "SIMTOOLS_CORSIKA_HE_INTERACTION",
-            default=defaults.CORSIKA_HE_INTERACTION,
-        )
-        le_model = self._get_config_value(
-            self._args,
-            "corsika_le_interaction",
-            "SIMTOOLS_CORSIKA_LE_INTERACTION",
-            default=defaults.CORSIKA_LE_INTERACTION,
-        )
-        return str(he_model).lower(), str(le_model).lower()
-
-    def _get_corsika_exec(self, geometry):
-        """Get the exact CORSIKA executable declared by the build manifest."""
-        if self._corsika_build_variants is None:
-            raise FileNotFoundError("CORSIKA build manifest has not been loaded")
-        he_model, le_model = self._get_corsika_interaction_models()
-        variant = select_corsika_build_variant(
-            self._corsika_build_variants, he_model, le_model, geometry
-        )
-        return self.corsika_path / variant.executable
+    @property
+    def context(self):
+        """Run context of the running application."""
+        return self._context
 
     @property
     def args(self):
         """Command line arguments."""
-        return self._args
+        return self._context.args
 
     @property
     def model_reader(self):
         """Reader selected for the current application context."""
-        return self._model_reader
+        return self._context.model_reader
 
     def set_model_reader(self, reader):
         """Set the reader selected for the current application context."""
-        self._model_reader = reader
+        self._context = self._context.replace(model_reader=reader)
 
     @property
-    def sim_telarray_path(self):
-        """Path to the sim_telarray installation directory."""
-        if self._sim_telarray_path and Path(self._sim_telarray_path).is_dir():
-            return Path(self._sim_telarray_path)
-        raise FileNotFoundError(f"sim_telarray path not found: {self._sim_telarray_path}")
+    def activity_id(self):
+        """Activity ID."""
+        return self._context.activity.activity_id
+
+    @property
+    def activity_name(self):
+        """Activity name (application label)."""
+        return self._context.activity.activity_name
+
+    @property
+    def user(self):
+        """User name."""
+        return self._context.activity.user
+
+    @property
+    def hostname(self):
+        """Host name."""
+        return self._context.activity.hostname
 
     @property
     def ray_tracing_backend(self):
         """Configured optical ray-tracing backend."""
-        return self._ray_tracing_backend
+        return self._context.software.ray_tracing_backend
+
+    @property
+    def sim_telarray_path(self):
+        """Path to the sim_telarray installation directory."""
+        return self._context.software.sim_telarray_path
 
     @property
     def sim_telarray_exe(self):
         """Path to the sim_telarray executable."""
-        return find_executable_in_dir(
-            self._sim_telarray_exe,
-            self.sim_telarray_path / "bin",
-        )
+        return self._context.software.sim_telarray_exe
 
     @property
     def sim_telarray_exe_debug_trace(self):
         """Path to the debug trace version of the sim_telarray executable."""
-        return find_executable_in_dir(
-            self._sim_telarray_exe + "_debug_trace",
-            self.sim_telarray_path / "bin",
-        )
+        return self._context.software.sim_telarray_exe_debug_trace
 
     @property
     def corsika_path(self):
         """Path to the CORSIKA installation directory."""
-        if self._corsika_path and Path(self._corsika_path).is_dir():
-            return Path(self._corsika_path)
-        raise FileNotFoundError(f"CORSIKA path not found: {self._corsika_path}")
+        return self._context.software.corsika_path
 
     @property
     def corsika_interaction_table_path(self):
         """Path to the CORSIKA interaction table directory."""
-        if (
-            self._corsika_interaction_table_path
-            and Path(self._corsika_interaction_table_path).is_dir()
-        ):
-            return Path(self._corsika_interaction_table_path)
-        raise FileNotFoundError(
-            f"CORSIKA interaction table path not found: {self._corsika_interaction_table_path}"
-        )
+        return self._context.software.corsika_interaction_table_path
 
     @property
     def corsika_exe(self):
         """Path to the CORSIKA executable."""
-        if self._corsika_exe is None:
-            return None
-        return find_executable_in_dir(self._corsika_exe, self.corsika_path)
+        return self._context.software.corsika_exe
 
     @property
     def corsika_exe_curved(self):
         """Path to the curved version of the CORSIKA executable."""
-        return find_executable_in_dir(self._get_corsika_exec("curved"), self.corsika_path)
+        return self._context.software.corsika_exe_curved
 
     @property
     def corsika_interaction_models(self):
         """Configured high- and low-energy CORSIKA interaction models."""
-        return self._get_corsika_interaction_models()
+        return self._context.software.corsika_interaction_models
 
     @property
     def corsika_dummy_file(self):
-        """
-        Path to a dummy CORSIKA file required by sim_telarray for ray-tracing simulations.
-
-        This file does not need to exist; sim_telarray only requires a file path.
-        """
-        return (
-            self.sim_telarray_path / "run9991.corsika.gz"
-            if self._sim_telarray_path is not None
-            else None
-        )
+        """Path to a dummy CORSIKA file required by sim_telarray for ray-tracing simulations."""
+        return self._context.software.corsika_dummy_file
 
 
 config = _Config()

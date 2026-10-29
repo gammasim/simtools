@@ -109,3 +109,14 @@ def test_get_output_file_creates_nested_parent(tmp_path):
 
     assert output_file == (tmp_path / "pm_photoelectron_spectrum/spectrum.ecsv").absolute()
     assert output_file.parent.is_dir()
+
+
+def test_reassigned_output_paths_are_used(io_handler, tmp_test_directory):
+    original = dict(io_handler.output_path)
+    io_handler.output_path = {"default": str(tmp_test_directory), "other": str(tmp_test_directory)}
+
+    assert (
+        io_handler.get_output_directory(output_path_label="other")
+        == Path(tmp_test_directory).resolve()
+    )
+    io_handler.output_path = original

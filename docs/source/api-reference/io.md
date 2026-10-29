@@ -13,6 +13,15 @@ This module include I/O related functionality.
    :members:
 ```
 
+(io_output_paths)=
+
+## output_paths
+
+```{eval-rst}
+.. automodule:: simtools.io.output_paths
+   :members:
+```
+
 (io_ascii_handler)=
 
 ## ascii_handler

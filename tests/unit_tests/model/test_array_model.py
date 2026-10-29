@@ -96,6 +96,7 @@ def test_export_array_elements_as_table(array_model_north):
 
 def test_export_array_elements_as_table_with_calibration_elements_flag():
     array_model = Mock(spec=ArrayModel)
+    array_model.context = None
     array_model.layout_name = "test_layout"
     array_model.site_model = Mock()
     array_model.site_model.site = "South"
@@ -172,7 +173,7 @@ def test_get_all_array_elements_of_type(array_model_north, site_model_north):
     assert len(am._get_all_array_elements_of_type("MSTE", site_model_north)) == 0
 
 
-def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version):
+def test_pack_model_files(array_model_north, model_version):
     mock_tarfile = MagicMock()
     mock_tarfile_open = MagicMock()
     # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
@@ -182,14 +183,12 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     mock_cm.__exit__.side_effect = lambda *args: mock_tarfile.close()
     mock_tarfile_open.return_value = mock_cm
     # Return files under the mocked config directory so relative_to(base) works
-    mock_output_dir = tmp_path / "output" / "directory" / "model" / model_version
+    mock_output_dir = array_model_north.get_config_directory()
     mock_rglob = MagicMock(return_value=[mock_output_dir / "file1", mock_output_dir / "file2"])
-    mock_get_output_directory = MagicMock(return_value=mock_output_dir)
 
     with (
         patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
-        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", return_value=True),
     ):
         archive_path = array_model_north.pack_model_files()
@@ -202,7 +201,6 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     with (
         patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
-        patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):
         assert array_model_north.pack_model_files() is None
 
@@ -210,6 +208,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
 def test_build_calibration_models():
 
     array_model_north = Mock(spec=ArrayModel)
+    array_model_north.context = None
     array_model_north._build_calibration_models = ArrayModel._build_calibration_models
     telescope_model = Mock()
     telescope_model.get_calibration_device_name = Mock()

@@ -11,6 +11,7 @@ from astropy.utils import iers
 import simtools.utils.general as gen
 from simtools import dependencies, dependency_versions, version
 from simtools.application.model_reader import create_model_reader_from_configuration
+from simtools.context import RunContext
 from simtools.io import io_handler
 from simtools.model_repository.compatibility import validate_release
 from simtools.runners.simtools_runner import prepare_runtime_environment
@@ -168,6 +169,7 @@ class ApplicationContext:
     io_handler: io_handler.IOHandler | None
     model_reader: object | None
     run_time: list | None = None
+    context: RunContext | None = None
 
 
 def initialize_runtime(
@@ -198,8 +200,8 @@ def initialize_runtime(
     Returns
     -------
     ApplicationContext
-        Container holding parsed arguments, logger, and optional IO handler and
-        model-reader instances.
+        Container holding parsed arguments, logger, optional IO handler and
+        model-reader instances, and the run context.
 
     """
     _configure_iers_from_env()
@@ -238,6 +240,7 @@ def initialize_runtime(
         io_handler=io_handler_instance,
         model_reader=model_reader,
         run_time=run_time,
+        context=config.context,
     )
 
 

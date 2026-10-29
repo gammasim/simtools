@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from simtools import constants
+from simtools.io.output_paths import OutputPaths
 
 _TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
 _TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
@@ -77,9 +78,26 @@ class IOHandler(metaclass=IOHandlerSingleton):
     def __init__(self):
         """Initialize IOHandler."""
         self.logger = logging.getLogger(__name__)
-        self.output_path = {}
-        self.model_path = None
-        self.test_resources_path = constants.get_test_resources_root().resolve()
+        self._paths = OutputPaths()
+        self.test_resources_path = self._paths.test_resources_path
+
+    @property
+    def output_path(self):
+        """Output paths by label."""
+        return self._paths.output_path
+
+    @output_path.setter
+    def output_path(self, output_path):
+        self._paths.output_path = output_path
+
+    @property
+    def model_path(self):
+        """Model file directory."""
+        return self._paths.model_path
+
+    @model_path.setter
+    def model_path(self, model_path):
+        self._paths.model_path = model_path
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
@@ -117,23 +135,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         FileNotFoundError
             if the directory cannot be created
         """
-        if sub_dir is None:
-            parts = []
-        elif isinstance(sub_dir, list | tuple):
-            parts = sub_dir
-        else:
-            parts = [sub_dir]
-        try:
-            output_path = Path(self.output_path[output_path_label], *parts)
-        except KeyError as exc:
-            raise KeyError(f"Output path label '{output_path_label}' not found") from exc
-
-        try:
-            output_path.mkdir(parents=True, exist_ok=True)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error creating directory {output_path!s}") from exc
-
-        return output_path.resolve()
+        return self._paths.get_output_directory(sub_dir, output_path_label)
 
     def get_output_file(self, file_name, sub_dir=None, output_path_label="default"):
         """
@@ -152,13 +154,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         -------
         Path
         """
-        output_file = (
-            self.get_output_directory(sub_dir, output_path_label=output_path_label)
-            .joinpath(file_name)
-            .absolute()
-        )
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        return output_file
+        return self._paths.get_output_file(file_name, sub_dir, output_path_label)
 
     def get_model_configuration_directory(self, model_version, sub_dir=None):
         """
@@ -177,6 +173,4 @@ class IOHandler(metaclass=IOHandlerSingleton):
         -------
         Path
         """
-        return self.get_output_directory(
-            sub_dir=["model", sub_dir, model_version] if sub_dir else ["model", model_version]
-        )
+        return self._paths.get_model_configuration_directory(model_version, sub_dir)
