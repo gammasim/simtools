@@ -47,6 +47,7 @@ class TelescopeModel(ModelParameter):
         ignore_software_version=False,
         model_reader=None,
         model_directory=None,
+        context=None,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -58,6 +59,7 @@ class TelescopeModel(ModelParameter):
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
             model_directory=model_directory,
+            context=context,
         )
 
         self._logger = logging.getLogger(__name__)

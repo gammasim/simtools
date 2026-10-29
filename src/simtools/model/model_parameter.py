@@ -8,12 +8,11 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.validate_data import DataValidator
-from simtools.io import io_handler
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names, value_conversion
 
@@ -69,10 +68,14 @@ class ModelParameter:
         model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
+        context=None,
     ):
         self._logger = logging.getLogger(__name__)
-        self.io_handler = io_handler.IOHandler()
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.io_handler = self.context.paths
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
 
         self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in catalog.simulation_software()}

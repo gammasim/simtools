@@ -6,9 +6,8 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
-from simtools.io import io_handler
 from simtools.io.ascii_handler import to_builtin
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_parameter import InvalidModelParameterError
@@ -54,12 +53,16 @@ class ArrayModel:
         ignore_software_version=False,
         model_directory_subdir=None,
         model_reader=None,
+        context=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self.model_version = model_version
         self.ignore_software_version = ignore_software_version
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
         self.label = label
         self.layout_name = (
             layout_name[0]
@@ -68,7 +71,7 @@ class ArrayModel:
         )
         self._config_file_path = None
         self._config_file_directory = None
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
 
         self.overwrite_model_parameter_dict = read_overwrite_model_parameter_dict(
             overwrite_model_parameters
@@ -118,6 +121,7 @@ class ArrayModel:
             overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
             ignore_software_version=self.ignore_software_version,
             model_reader=self.model_reader,
+            context=self.context,
         )
 
         # Case 1: array_elements is a file name
@@ -271,6 +275,7 @@ class ArrayModel:
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                 ignore_software_version=self.ignore_software_version,
                 model_reader=self.model_reader,
+                context=self.context,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],
@@ -304,6 +309,7 @@ class ArrayModel:
                 label=self.label,
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                 model_reader=self.model_reader,
+                context=self.context,
             )
         return calibration_models
 
@@ -542,6 +548,7 @@ class ArrayModel:
                     label=self.label,
                     overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
                     model_reader=self.model_reader,
+                    context=self.context,
                 )
 
                 xyz = calibration_model.get_parameter_value_with_unit(

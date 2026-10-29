@@ -484,16 +484,17 @@ def test_generate_plot_configurations_uses_and_names_selected_model_version(
     assert output_files[0].name == "mirror_reflectivity_2.0.0_North_LSTN-design.pdf"
 
 
-def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(monkeypatch):
+def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(
+    monkeypatch, runtime_args
+):
     plot_config = {
         "title": "Reflectivity",
         "xtitle": "Wavelength [nm]",
         "tables": [{"model_version": "7.0.0", "label": "Mirror", "column_y": "y"}],
     }
     data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
-    from simtools.reporting import figure_cache
 
-    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 120})
+    runtime_args({"figure_dpi": 120})
 
     initial_key = plot_tables._get_figure_cache_key(plot_config, data)
     same_render_from_another_version = {
@@ -507,7 +508,7 @@ def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(monkey
     changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
     assert plot_tables._get_figure_cache_key(changed_config, data) != initial_key
 
-    monkeypatch.setattr(figure_cache.simtools_config, "_args", {"figure_dpi": 240})
+    runtime_args({"figure_dpi": 240})
     assert plot_tables._get_figure_cache_key(plot_config, data) != initial_key
 
 

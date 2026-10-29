@@ -223,11 +223,11 @@ def test_write_model_parameter(tmp_test_directory):
         mock_repository_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
-def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, tmp_test_directory):
+def test_write_model_parameter_ignores_existing_parameter_version(runtime_args, tmp_test_directory):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
-    monkeypatch.setattr(settings.config, "_args", {"ignore_existing_parameter_version": True})
+    runtime_args({"ignore_existing_parameter_version": True})
 
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"

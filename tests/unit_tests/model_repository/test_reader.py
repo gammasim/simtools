@@ -421,13 +421,13 @@ def test_reader_facade_selects_all_array_element_scope_branches(mocker):
     ]
 
 
-def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, runtime_args):
     """Concrete sim_telarray scopes use design data or configured fallbacks."""
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
     args = {"ignore_missing_design_model": False}
-    mocker.patch.object(reader_module.settings.config, "_args", new=args)
+    runtime_args(args)
 
     assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
         "global",
