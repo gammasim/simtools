@@ -52,7 +52,7 @@ class SinglePhotonElectronSpectrum:
         self._logger.debug("Initialize SinglePhotonElectronSpectrum class.")
 
         self.context = context or RunContext.from_environment()
-        self.args_dict = args_dict
+        self.args_dict = dict(args_dict)
         # default output is of ecsv format
         self.args_dict["output_file"] = str(
             Path(self.args_dict["output_file"]).with_suffix(ECSV_SUFFIX)

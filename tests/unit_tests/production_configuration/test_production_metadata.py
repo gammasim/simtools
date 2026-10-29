@@ -199,13 +199,15 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(
     assert manifest["configuration"]["atmosphere"] == {}
 
 
-def test_write_manifests_requires_primary_and_existing_production_path(tmp_test_directory):
+def test_write_manifests_requires_primary_and_existing_production_path(
+    tmp_test_directory, run_context
+):
     job_grid = Path(tmp_test_directory) / "job-grid.ecsv"
     jobs_io.serialize_job_grid([{**_job_grid_row(), "nsb_rate": 1.0, "primary": ""}], job_grid)
     (Path(tmp_test_directory) / "job-000001").mkdir()
 
     with pytest.raises(KeyError, match="primary"):
-        production_metadata._write_manifests(Path(tmp_test_directory), job_grid, {})
+        production_metadata._write_manifests(Path(tmp_test_directory), job_grid, {}, run_context)
     with pytest.raises(FileNotFoundError, match="Production path not found"):
         production_metadata._check_existing_manifests(Path(tmp_test_directory) / "missing")
 
