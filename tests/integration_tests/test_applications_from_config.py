@@ -101,7 +101,7 @@ def _set_simulation_model_source_configuration(config, simulation_models_path, g
     if not simulation_models_path and not git_source:
         return
     source_config = config.get("configuration")
-    if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
+    if source_config is None:
         return
     model_source_arguments = _get_model_source_arguments(config["application"])
     if simulation_models_path and "simulation_models_path" not in model_source_arguments:
