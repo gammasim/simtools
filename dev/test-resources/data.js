@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793284127386,
+  "lastUpdate": 1793284559573,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33748,6 +33748,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 494.30859375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "65942dd7c9727c4c5a610aa6e12231c4e6d5a139",
+          "message": "Build simulations from replaceable stages (CORSIKA, sim_telarray) (#2719)\n\n* Build simulations from stages connected by data products\n\nSteps 3.1a+b (D13, D15): runners.stages (data products, SimulationStage\nprotocol, registry, SimulationChain), CorsikaStage, SimTelArrayStage and\nChainRunner replace CorsikaRunner, CorsikaSimtelRunner and\nSimulatorArray.prepare_run; Simulator uses the chain.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Address review: file hand-over per instance, resources record, public register_stage\n\n- Chain runner: a file hand-over feeds all downstream instances from a single\n  upstream instance, or pairs instances in order when counts match; otherwise\n  raises ValueError naming both stages.\n- sim_telarray stage: always record sim_telarray_resources, including streamed runs.\n- stages: add public register_stage(name, factory) and document the registry.\n\nCo-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T15:26:13+01:00",
+          "tree_id": "cd66e1be7183f422266e54da565d66a28ad9868f",
+          "url": "https://github.com/gammasim/simtools/commit/65942dd7c9727c4c5a610aa6e12231c4e6d5a139"
+        },
+        "date": 1793284544360,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 121.19633225999999,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 124.03,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 494.61328125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
