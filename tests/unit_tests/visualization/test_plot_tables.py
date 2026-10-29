@@ -965,3 +965,30 @@ def test_fit_bias_curve_filters_invalid_points():
     )
     assert thresholds == pytest.approx([7, 8])
     assert coefficients == pytest.approx([-1, 9])
+
+
+def test_documented_library_plot_example(tmp_test_directory):
+    data_path = Path(tmp_test_directory)
+    Table({"wavelength": [300.0, 400.0], "efficiency": [0.2, 0.8]}).write(
+        data_path / "response.ecsv", format="ascii.ecsv"
+    )
+    config = {
+        "type": "example_response",
+        "title": "Detector response",
+        "xtitle": "Wavelength [nm]",
+        "ytitle": "Response",
+        "tables": [
+            {
+                "file_name": "response.ecsv",
+                "label": "Response",
+                "column_x": "wavelength",
+                "column_y": "efficiency",
+            }
+        ],
+    }
+    output_file = data_path / "response.png"
+
+    result = plot_tables.plot(config, output_file, data_path=data_path)
+
+    assert result == output_file
+    assert output_file.exists()
