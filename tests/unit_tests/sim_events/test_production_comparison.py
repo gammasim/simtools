@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.histogram.histogram import Histogram
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_METADATA_TABLE,
@@ -83,33 +84,39 @@ def _write_minimal_dense_trigger_histogram_file(output_file):
         def __init__(self):
             self.histograms = {
                 "energy_mc": {
-                    "histogram": np.array([3.0, 1.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([3.0, 1.0])
+                    ),
                     "1d": True,
                 },
                 "energy": {
-                    "histogram": np.array([1.0, 1.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
+                    ),
                     "1d": True,
                 },
                 "core_distance_mc": {
-                    "histogram": np.array([2.0, 2.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
+                    ),
                     "1d": True,
                 },
                 "core_distance": {
-                    "histogram": np.array([0.0, 2.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([0.0, 2.0])
+                    ),
                     "1d": True,
                 },
                 "angular_distance_mc": {
-                    "histogram": np.array([2.0, 2.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
+                    ),
                     "1d": True,
                 },
                 "angular_distance": {
-                    "histogram": np.array([1.0, 1.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
+                    ),
                     "1d": True,
                 },
             }
@@ -238,33 +245,39 @@ def test_collect_production_metrics_filters_by_array_layout_name(tmp_path):
         def __init__(self, simulated, triggered):
             self.histograms = {
                 "energy_mc": {
-                    "histogram": np.array([simulated, 0.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([simulated, 0.0])
+                    ),
                     "1d": True,
                 },
                 "energy": {
-                    "histogram": np.array([triggered, 0.0]),
-                    "bin_edges": np.array([0.1, 1.0, 10.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.1, 1.0, 10.0])], values=np.array([triggered, 0.0])
+                    ),
                     "1d": True,
                 },
                 "core_distance_mc": {
-                    "histogram": np.array([simulated, 0.0]),
-                    "bin_edges": np.array([0.0, 50.0, 100.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.0, 50.0, 100.0])], values=np.array([simulated, 0.0])
+                    ),
                     "1d": True,
                 },
                 "core_distance": {
-                    "histogram": np.array([triggered, 0.0]),
-                    "bin_edges": np.array([0.0, 50.0, 100.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.0, 50.0, 100.0])], values=np.array([triggered, 0.0])
+                    ),
                     "1d": True,
                 },
                 "angular_distance_mc": {
-                    "histogram": np.array([simulated, 0.0]),
-                    "bin_edges": np.array([0.0, 1.0, 2.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.0, 1.0, 2.0])], values=np.array([simulated, 0.0])
+                    ),
                     "1d": True,
                 },
                 "angular_distance": {
-                    "histogram": np.array([triggered, 0.0]),
-                    "bin_edges": np.array([0.0, 1.0, 2.0]),
+                    "histogram": Histogram.from_edges(
+                        [np.array([0.0, 1.0, 2.0])], values=np.array([triggered, 0.0])
+                    ),
                     "1d": True,
                 },
             }

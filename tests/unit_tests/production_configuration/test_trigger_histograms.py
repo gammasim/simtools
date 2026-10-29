@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.histogram.histogram import Histogram
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.trigger_histograms import (
@@ -60,13 +61,22 @@ class _FakeHistograms:
         }
         self.histograms = {
             "angular_distance_vs_energy_vs_core_distance": {
-                "histogram": np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]])
+                "histogram": Histogram.from_edges(
+                    [np.arange(3), np.arange(3), np.arange(3)],
+                    values=np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]]),
+                )
             },
             "angular_distance_vs_energy_vs_core_distance_mc": {
-                "histogram": np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]])
+                "histogram": Histogram.from_edges(
+                    [np.arange(3), np.arange(3), np.arange(3)],
+                    values=np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]]),
+                )
             },
             "angular_distance_vs_energy_vs_core_distance_eff": {
-                "histogram": np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]])
+                "histogram": Histogram.from_edges(
+                    [np.arange(3), np.arange(3), np.arange(3)],
+                    values=np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]]),
+                )
             },
         }
         self.energy_bins = np.array([0.1, 1.0, 10.0])
@@ -100,11 +110,10 @@ def _full_fake_histograms():
     histograms.data_ranges = {"angular_distance": (0.5, 1.5)}
     histograms.histograms = histograms._define_histograms(None, None, None)
     for name, histogram in histograms.histograms.items():
-        if histogram["1d"]:
-            shape = (len(histogram["bin_edges"]) - 1,)
-        else:
-            shape = tuple(len(edges) - 1 for edges in histogram["bin_edges"])
-        histogram["histogram"] = np.full(shape, 2.0 if name.endswith("_mc") else 1.0)
+        shape = tuple(len(edges) - 1 for edges in histogram["edges"])
+        histogram["histogram"] = Histogram.from_edges(
+            histogram["edges"], values=np.full(shape, 2.0 if name.endswith("_mc") else 1.0)
+        )
         histogram["event_data"] = (
             None if histogram["1d"] else tuple(None for _ in histogram["event_data_column"])
         )
@@ -146,7 +155,7 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert np.all(bin_table["trigger_efficiency"] >= 0.0)
 
 
-def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
+def test_event_data_histograms_round_trip_via_hdf5(tmp_test_directory):
     histograms = _full_fake_histograms()
     reference_specs = [
         {
@@ -159,7 +168,7 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    output_file = tmp_path / "trigger_histograms.hdf5"
+    output_file = tmp_test_directory / "trigger_histograms.hdf5"
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,
@@ -178,17 +187,36 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     assert loaded_histograms.file_info["spectral_index"] == pytest.approx(-2.0)
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
     assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
+    for name, definition in histograms.histograms.items():
+        actual = loaded_histograms.histograms[name]
+        assert isinstance(actual["histogram"], Histogram)
+        assert "bin_edges" not in actual
+        np.testing.assert_array_equal(actual["histogram"].values, definition["histogram"].values)
+        for actual_edges, expected_edges in zip(
+            actual["histogram"].edges, definition["histogram"].edges, strict=True
+        ):
+            np.testing.assert_array_equal(actual_edges, expected_edges)
+    with h5py.File(output_file) as hdf5_file:
+        dense = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
+        assert dense.attrs["format_version"] == 1
+        for name, group in dense["ref-1"].items():
+            histogram = histograms.histograms[name]["histogram"]
+            assert set(group) == {"values", *(f"edges_{axis}" for axis in range(histogram.ndim))}
+            assert group["values"].dtype == histogram.values.dtype
+            np.testing.assert_array_equal(group["values"][()], histogram.values)
     np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)
     np.testing.assert_allclose(
-        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
-        histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
+        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
+            "histogram"
+        ].values,
+        histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"].values,
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
     assert "reuse_mean_vs_energy" in loaded_histograms.histograms
     np.testing.assert_allclose(
-        loaded_histograms.histograms["reuse_mean_vs_energy"]["histogram"],
-        histograms.histograms["reuse_mean_vs_energy"]["histogram"],
+        loaded_histograms.histograms["reuse_mean_vs_energy"]["histogram"].values,
+        histograms.histograms["reuse_mean_vs_energy"]["histogram"].values,
     )
 
     with h5py.File(output_file, "r") as hdf5_file:
@@ -229,7 +257,7 @@ def test_trigger_topology_tables_are_created_from_reference_specs():
     assert np.sum(subset_histogram_table["count"]) == 6
 
 
-def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
+def test_event_data_histograms_hdf5_filter_by_array_name(tmp_test_directory):
     histograms = _full_fake_histograms()
     reference_specs = [
         {
@@ -242,7 +270,7 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    output_file = tmp_path / "trigger_histograms.hdf5"
+    output_file = tmp_test_directory / "trigger_histograms.hdf5"
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,

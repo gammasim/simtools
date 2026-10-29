@@ -6,6 +6,7 @@ import logging
 import astropy.units as u
 import numpy as np
 
+from simtools.histogram.histogram import Histogram
 from simtools.sim_events.reader import EventDataReader
 from simtools.utils.general import resolve_file_patterns
 from simtools.utils.value_conversion import get_value_as_quantity
@@ -338,18 +339,12 @@ class EventDataHistograms:
     @staticmethod
     def _histogram_bin_edges_equal(first, second):
         """Return whether two histogram definitions use identical bin edges."""
-        first_edges = first.get("bin_edges")
-        second_edges = second.get("bin_edges")
-        if isinstance(first_edges, (tuple, list)) or isinstance(second_edges, (tuple, list)):
-            if not isinstance(first_edges, (tuple, list)) or not isinstance(
-                second_edges, (tuple, list)
-            ):
-                return False
-            return len(first_edges) == len(second_edges) and all(
-                np.array_equal(first_edge, second_edge)
-                for first_edge, second_edge in zip(first_edges, second_edges)
-            )
-        return np.array_equal(first_edges, second_edges)
+        first_edges = first["edges"]
+        second_edges = second["edges"]
+        return len(first_edges) == len(second_edges) and all(
+            np.array_equal(first_edge, second_edge)
+            for first_edge, second_edge in zip(first_edges, second_edges)
+        )
 
     def _fill_current_histograms(self):
         """Fill all currently defined histograms with their event data."""
@@ -652,7 +647,10 @@ class EventDataHistograms:
                     self._create_reuse_stat_accumulator(bin_edges),
                 )
                 self._update_reuse_stat_accumulator(accumulator, values, reuse_counts, bin_edges)
-                histogram["histogram"] = self._finalize_reuse_statistic(accumulator, statistic)
+                histogram["histogram"] = Histogram.from_edges(
+                    histogram["edges"],
+                    self._finalize_reuse_statistic(accumulator, statistic),
+                )
 
     @staticmethod
     def _can_accumulate_reuse_histograms(event_data, triggered_data):
@@ -793,13 +791,16 @@ class EventDataHistograms:
         is_1d=True,
         plot_scales=None,
     ):
-        """Return a single histogram definition."""
+        """Return a single histogram definition (histogram is None until filled)."""
+        edges = [bin_edges] if is_1d else list(bin_edges)
+        if histogram is not None and not isinstance(histogram, Histogram):
+            histogram = Histogram.from_edges(edges, values=histogram)
         return {
             "histogram": histogram,
+            "edges": edges,
             "event_data_column": event_data_column,
             "event_data": event_data,
             "1d": is_1d,
-            "bin_edges": bin_edges,
             "title": title,
             "title_fontsize": "xx-small",
             "axis_titles": axis_titles,
@@ -816,9 +817,7 @@ class EventDataHistograms:
         if data["1d"]:
             if data["event_data"] is None:
                 return
-            hist, _ = np.histogram(
-                getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]
-            )
+            values = [getattr(data["event_data"], data["event_data_column"])]
         else:
             if data["event_data"] is None:
                 return
@@ -828,19 +827,9 @@ class EventDataHistograms:
                 getattr(event_data, column_name)
                 for event_data, column_name in zip(data["event_data"], data["event_data_column"])
             ]
-            if len(values) == 2:
-                hist, _, _ = np.histogram2d(
-                    values[0],
-                    values[1],
-                    bins=[data["bin_edges"][0], data["bin_edges"][1]],
-                )
-            else:
-                hist, _ = np.histogramdd(
-                    np.column_stack(values),
-                    bins=data["bin_edges"],
-                )
-
-        data["histogram"] = hist if data["histogram"] is None else data["histogram"] + hist
+        if data["histogram"] is None:
+            data["histogram"] = Histogram.from_edges(data["edges"])
+        data["histogram"].fill(*values)
 
     def calculate_efficiency_data(self):
         """
@@ -856,15 +845,6 @@ class EventDataHistograms:
         """
         if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
             return None
-
-        def calculate_efficiency(trig_hist, mc_hist):
-            with np.errstate(divide="ignore", invalid="ignore"):
-                return np.divide(
-                    trig_hist,
-                    mc_hist,
-                    out=np.zeros_like(trig_hist, dtype=float),
-                    where=mc_hist > 0,
-                )
 
         eff_histograms = {}
         for name, mc_hist in self.histograms.items():
@@ -885,7 +865,7 @@ class EventDataHistograms:
             eff = copy.copy(mc_hist)
             eff.update(
                 {
-                    "histogram": calculate_efficiency(trig_hist["histogram"], mc_hist["histogram"]),
+                    "histogram": trig_hist["histogram"].efficiency(mc_hist["histogram"]),
                     "suffix": "_eff",
                     "title": "Efficiency",
                 }
@@ -1005,7 +985,8 @@ class EventDataHistograms:
 
         def add_cumulative(name, hist, **kwargs):
             new = copy.copy(hist)
-            new["histogram"] = self._calculate_cumulative_histogram(hist["histogram"], **kwargs)
+            if hist["histogram"] is not None:
+                new["histogram"] = hist["histogram"].cumulative(**kwargs)
             new["axis_titles"] = copy.copy(hist["axis_titles"])
             new.update(
                 {
@@ -1033,100 +1014,16 @@ class EventDataHistograms:
         self.histograms.update(cumulative_data)
         return cumulative_data
 
-    def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None, normalize=False):
-        """
-        Calculate cumulative distribution of a histogram.
-
-        Works with both 1D and 2D histograms.
-
-        Parameters
-        ----------
-        hist : np.ndarray
-            Histogram (1D or 2D)
-        reverse : bool, optional
-            If True, sum from high to low values
-        axis : int, optional
-            For 2D histograms, axis along which to compute cumulative sum
-            None means default behavior: for 1D just cumsum, for 2D along rows
-        normalize : bool, optional
-            If True, normalize by the total sum for each slice along the specified axis
-            For 1D histograms, normalizes by the total sum
-
-        Returns
-        -------
-        np.ndarray
-            Histogram with cumulative counts, optionally normalized
-        """
-        if hist is None:
-            return None
-
-        if hist.ndim == 1:
-            result = self._calculate_cumulative_1d(hist, reverse)
-            if normalize and np.sum(hist) > 0:
-                result = result / np.sum(hist)
-            return result
-
-        axis = axis if axis is not None else 1
-        result = self._apply_cumsum_along_axis(hist.copy(), axis, reverse)
-
-        if normalize:
-            # Ensure floating dtype to allow in-place normalization without casting errors
-            if not np.issubdtype(result.dtype, np.floating):
-                result = result.astype(float)
-            self._normalize_along_axis(result, hist, axis)
-
-        return result
-
-    def _normalize_along_axis(self, result, hist, axis):
-        """
-        Normalize cumulative histogram along the specified axis.
-
-        Parameters
-        ----------
-        result : np.ndarray
-            Cumulative histogram to normalize (modified in-place)
-        hist : np.ndarray
-            Original histogram (for calculating totals)
-        axis : int
-            Axis along which normalization should be applied
-        """
-        normalized = np.zeros_like(result, dtype=float)
-
-        if axis == 0:
-            for i in range(result.shape[1]):
-                col_total = np.sum(hist[:, i])
-                if col_total > 0:
-                    normalized[:, i] = result[:, i] / col_total
-        else:  # axis == 1
-            for i in range(result.shape[0]):
-                row_total = np.sum(hist[i, :])
-                if row_total > 0:
-                    normalized[i, :] = result[i, :] / row_total
-
-        np.copyto(result, normalized)
-
-    def _calculate_cumulative_1d(self, hist, reverse):
-        """Calculate cumulative distribution for 1D histogram."""
-        if reverse:
-            return np.cumsum(hist[::-1])[::-1]
-        return np.cumsum(hist)
-
-    def _apply_cumsum_along_axis(self, hist, axis, reverse):
-        """Apply cumulative sum along the specified axis of a 2D histogram."""
-
-        def cumsum_func(arr):
-            return np.cumsum(arr[::-1])[::-1] if reverse else np.cumsum(arr)
-
-        return np.apply_along_axis(cumsum_func, axis, hist)
-
     def print_summary(self):
         """
         Print a summary of the histogram statistics.
 
         Total number of events is retrieved from the 'energy' histograms.
         """
-        total_simulated = np.sum(self.histograms.get("energy_mc", {}).get("histogram", []))
-        total_triggered = np.sum(self.histograms.get("energy", {}).get("histogram", []))
+        simulated = self.histograms.get("energy_mc", {}).get("histogram")
+        triggered = self.histograms.get("energy", {}).get("histogram")
+        total_simulated = np.sum(simulated.values) if simulated is not None else 0
+        total_triggered = np.sum(triggered.values) if triggered is not None else 0
 
         self._logger.info(f"Total simulated events: {total_simulated}")
         self._logger.info(f"Total triggered events: {total_triggered}")

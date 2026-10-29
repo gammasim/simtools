@@ -102,7 +102,7 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
         is selected automatically based on the primary particle in the simulation data.
     """
     efficiency = histograms.histograms.get("energy_eff", {}).get("histogram")
-    energy_axis = histograms.histograms.get("energy_eff", {}).get("bin_edges")
+    energy_axis = efficiency.edges[0]
 
     primary_particle = histograms.file_info.get("primary_particle")
     cr_spectrum = get_cosmic_ray_spectrum(primary_particle, cr_spectrum_file)
@@ -122,7 +122,7 @@ def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
         * histograms.file_info["solid_angle"].to("sr").value
         * u.Hz
     )
-    trigger_rates = efficiency * cr_rates
+    trigger_rates = efficiency.values * cr_rates
     trigger_rate = np.sum(trigger_rates, axis=0)
 
     _logger.info(f"Scatter area from MC: {histograms.file_info['scatter_area'].to('m2')}")
