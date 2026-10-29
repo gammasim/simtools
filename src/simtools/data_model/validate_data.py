@@ -332,9 +332,21 @@ class DataValidator:
         return expected_types
 
     def _assign_validated_values(self, value_as_list, unit_as_list):
-        """Assign validated value/unit as scalar or list depending on list length."""
-        if len(value_as_list) == 1:
+        """Assign validated value/unit as scalar or list depending on list length.
+
+        A list value of a ``dict`` parameter is a JSON array and stays a list, also with
+        a single item (its JSON schema requires an array).
+        """
+        is_json_array = self._get_data_description(0).get("type") == "dict" and isinstance(
+            self.data_dict["value"], list
+        )
+        if len(value_as_list) == 1 and not is_json_array:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+            return
+        if is_json_array:
+            self.data_dict["value"] = value_as_list
+            if unit_as_list:
+                self.data_dict["unit"] = unit_as_list[0]
             return
         self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 

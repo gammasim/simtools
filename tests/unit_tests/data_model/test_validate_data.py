@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import sys
 from pathlib import Path
@@ -1169,3 +1170,55 @@ def test_empty_table_columns_validate_units_without_value_ranges(required_range)
         validator._validate_data_columns()
         assert validator.data_table["distance"].unit == u.m
         assert len(validator.data_table) == 0
+
+
+def test_validate_model_parameter_keeps_single_item_json_array():
+    """A one-item JSON array of a dict parameter stays a list and validates again."""
+    record = {
+        "parameter": "camera_pixel_types",
+        "parameter_version": "1.0.0",
+        "model_parameter_schema_version": schema.get_model_parameter_schema("camera_pixel_types")[
+            "schema_version"
+        ],
+        "type": "dict",
+        "unit": None,
+        "file": False,
+        "value": [
+            {
+                "type_id": 1,
+                "pmt_type": 0,
+                "cathode_shape": 0,
+                "cathode_diameter_cm": 2.5,
+                "funnel_shape": 3,
+                "funnel_diameter_cm": 4.9,
+                "funnel_depth_cm": 5.1,
+            }
+        ],
+    }
+
+    validated = validate_data.DataValidator.validate_model_parameter(copy.deepcopy(record))
+
+    assert validated["value"] == record["value"]
+    assert (
+        validate_data.DataValidator.validate_model_parameter(validated)["value"] == record["value"]
+    )
+
+
+def test_validate_model_parameter_keeps_empty_json_array():
+    """An empty JSON array of a dict parameter (allowed by its schema) stays empty."""
+    record = {
+        "parameter": "array_layouts",
+        "parameter_version": "1.0.0",
+        "model_parameter_schema_version": schema.get_model_parameter_schema("array_layouts")[
+            "schema_version"
+        ],
+        "type": "dict",
+        "unit": None,
+        "file": False,
+        "value": [],
+    }
+
+    validated = validate_data.DataValidator.validate_model_parameter(record)
+
+    assert validated["value"] == []
+    assert validated["unit"] is None
