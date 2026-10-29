@@ -184,7 +184,7 @@ class Histogram:
     @staticmethod
     def _normalize_along_axis(result, hist, axis):
         """
-        Normalize cumulative histogram along the specified axis.
+        Normalize a cumulative histogram by the total of each slice along an axis.
 
         Parameters
         ----------
@@ -193,21 +193,15 @@ class Histogram:
         hist : np.ndarray
             Original histogram (for calculating totals)
         axis : int
-            Axis along which normalization should be applied
+            Axis along which the cumulative sum was computed
         """
-        normalized = np.zeros_like(result, dtype=float)
-
-        if axis == 0:
-            for i in range(result.shape[1]):
-                col_total = np.sum(hist[:, i])
-                if col_total > 0:
-                    normalized[:, i] = result[:, i] / col_total
-        else:  # axis == 1
-            for i in range(result.shape[0]):
-                row_total = np.sum(hist[i, :])
-                if row_total > 0:
-                    normalized[i, :] = result[i, :] / row_total
-
+        totals = np.sum(hist, axis=axis, keepdims=True)
+        normalized = np.divide(
+            result,
+            totals,
+            out=np.zeros_like(result, dtype=float),
+            where=np.broadcast_to(totals > 0, result.shape),
+        )
         np.copyto(result, normalized)
 
     @staticmethod

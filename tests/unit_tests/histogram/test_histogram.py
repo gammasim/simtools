@@ -242,3 +242,13 @@ def test_normalized_cumulative_histogram():
     )
     expected_reverse = np.array([1.0, 0.9, 0.7, 0.4])
     np.testing.assert_allclose(result_reverse, expected_reverse)
+
+
+def test_cumulative_normalizes_each_slice_of_a_3d_histogram():
+    """Normalized cumulative values reach one in every slice along the axis."""
+    histogram = Histogram.from_edges([np.arange(3)] * 3, values=np.ones((2, 2, 2)))
+
+    result = histogram.cumulative(axis=0, normalize=True)
+
+    np.testing.assert_allclose(result.values[0], 0.5)
+    np.testing.assert_allclose(result.values[1], 1.0)
