@@ -106,9 +106,7 @@ def test_backend_failure_is_not_treated_as_simulation_failure(optimizer, mocker)
 
 
 @pytest.mark.parametrize("fails", [False, True])
-def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
-    handler = psf.IOHandler()
-    before_paths, before_model = dict(handler.output_path), handler.model_path
+def test_worker_isolates_models_and_paths(optimizer, mocker, fails, run_context):
     output_dir = optimizer.output_dir / "evaluation"
     args = optimizer.args_dict | {psf.CLEANUP: True, psf.KS_STATISTIC: True}
     job = evaluation._PSFEvaluationJob(args, {}, {}, np.array([1.0]), output_dir)
@@ -117,7 +115,7 @@ def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
     expected = (3.0, 0.2, 0.7, None)
 
     def simulate(*args, **kwargs):
-        assert handler.output_path["default"] == output_dir
+        assert kwargs["context"].paths.get_output_directory() == output_dir
         assert args[:2] == (telescope, site)
         assert kwargs["use_ks_statistic"] is True
         if fails:
@@ -126,22 +124,18 @@ def test_worker_isolates_models_and_restores_paths(optimizer, mocker, fails):
 
     mocker.patch.object(psf, SIMULATE, side_effect=simulate)
     cleanup = mocker.patch.object(psf.gen, "cleanup_intermediate_files")
-    result = psf._run_psf_evaluation(job)
+    result = psf._run_psf_evaluation(job, context=run_context)
     assert result == (None if fails else expected)
     assert initialize.call_args.kwargs["model_directory"] == output_dir / "model"
-    assert handler.output_path == before_paths
-    assert handler.model_path == before_model
+    assert initialize.call_args.kwargs["context"].paths.get_output_directory() == output_dir
     cleanup.assert_not_called()
 
 
-def test_worker_restores_paths_after_unexpected_failure(optimizer, mocker):
-    handler = psf.IOHandler()
-    before_paths = dict(handler.output_path)
+def test_worker_propagates_unexpected_failure(optimizer, mocker, run_context):
     mocker.patch.object(psf, INITIALIZE_MODELS, side_effect=OSError(ERROR_MESSAGE))
     job = evaluation._PSFEvaluationJob(optimizer.args_dict, {}, {}, None, optimizer.output_dir)
     with pytest.raises(OSError, match=ERROR_MESSAGE):
-        psf._run_psf_evaluation(job)
-    assert handler.output_path == before_paths
+        psf._run_psf_evaluation(job, context=run_context)
 
 
 def test_monte_carlo_aggregates_successes_in_order(optimizer, mocker):

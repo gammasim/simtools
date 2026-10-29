@@ -9,9 +9,9 @@ import packaging.version
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
-from simtools.io import ascii_handler, io_handler, legacy_data_handler
+from simtools.context import RunContext
+from simtools.io import ascii_handler, legacy_data_handler
 from simtools.reporting.figure_cache import figure_cache_key
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 PROTON_INTERSECTION_FRACTION = 0.1
 
 
-def plot(config, output_file, data_path=None, model_reader=None):
+def plot(config, output_file, data_path=None, model_reader=None, *, context=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -35,7 +35,8 @@ def plot(config, output_file, data_path=None, model_reader=None):
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
     """
-    data = read_table_data(config, data_path, model_reader=model_reader)
+    context = context or RunContext.from_environment()
+    data = read_table_data(config, data_path, model_reader=model_reader, context=context)
     return _plot_data(data, config, output_file)
 
 
@@ -68,7 +69,7 @@ def _get_figure_cache_key(plot_config, data):
     )
 
 
-def read_table_data(config, data_path=None, model_reader=None):
+def read_table_data(config, data_path=None, model_reader=None, *, context=None):
     """
     Read table data from file or parameter repository.
 
@@ -84,21 +85,23 @@ def read_table_data(config, data_path=None, model_reader=None):
     Dict
         Dict with table data (astropy tables).
     """
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
     data = {}
 
     for _config in config["tables"]:
-        table = _read_configured_table(_config, data_path, model_reader)
+        table = _read_configured_table(_config, data_path, model_reader, context)
         data[_get_plotting_label(_config, data)] = _process_table_data(table, _config)
 
     return data
 
 
-def _read_configured_table(table_config, data_path, model_reader):
+def _read_configured_table(table_config, data_path, model_reader, context):
     """Read one table from a configured file or model parameter."""
     if "file_name" in table_config:
         return _read_table_file(table_config, data_path)
     if "parameter" in table_config:
-        return _read_table_from_model_repository(table_config, model_reader)
+        return _read_table_from_model_repository(table_config, model_reader, context=context)
     raise ValueError("No table data defined in configuration.")
 
 
@@ -153,7 +156,7 @@ def _process_table_data(table, _config):
     )
 
 
-def _read_table_from_model_repository(table_config, model_reader=None):
+def _read_table_from_model_repository(table_config, model_reader=None, *, context=None):
     """
     Read table data from the simulation-model repository.
 
@@ -167,10 +170,11 @@ def _read_table_from_model_repository(table_config, model_reader=None):
     Table
         Astropy table
     """
-    model_reader = require_model_reader(model_reader)
-    destination = (
-        table_config.get("model_export_path") or io_handler.IOHandler().get_output_directory()
-    )
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
+    if model_reader is None:
+        raise RuntimeError("No simulation model reader is configured.")
+    destination = table_config.get("model_export_path") or context.paths.get_output_directory()
     return model_reader.export_model_file(
         parameter=table_config["parameter"],
         site=table_config["site"],
@@ -182,9 +186,12 @@ def _read_table_from_model_repository(table_config, model_reader=None):
     )
 
 
-def _read_parameter_dict_from_model_repository(table_config, model_reader=None):
+def _read_parameter_dict_from_model_repository(table_config, model_reader=None, *, context=None):
     """Read a model parameter dictionary from the simulation-model repository."""
-    model_reader = require_model_reader(model_reader)
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
+    if model_reader is None:
+        raise RuntimeError("No simulation model reader is configured.")
     parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
         site=table_config["site"],
@@ -258,6 +265,8 @@ def generate_plot_configurations(
     output_path,
     plot_type,
     model_reader=None,
+    *,
+    context=None,
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -291,6 +300,7 @@ def generate_plot_configurations(
         output_path,
         plot_type,
         model_reader=model_reader,
+        context=context,
     )
 
 
@@ -303,6 +313,7 @@ def _generate_plot_configurations(
     plot_type,
     model_reader=None,
     model_version=None,
+    context=None,
 ):
     """Generate plotting configurations with an optional exact model version."""
     logger = logging.getLogger(__name__)
@@ -314,7 +325,9 @@ def _generate_plot_configurations(
     }
     if model_version:
         table_config["model_version"] = model_version
-    parameter_dict = _read_parameter_dict_from_model_repository(table_config, model_reader)
+    parameter_dict = _read_parameter_dict_from_model_repository(
+        table_config, model_reader, context=context
+    )
 
     schema = gen.change_dict_keys_case(
         _select_schema_entry(

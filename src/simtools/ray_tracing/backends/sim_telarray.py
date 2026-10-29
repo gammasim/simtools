@@ -13,8 +13,7 @@ import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 
-from simtools import settings
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.job_execution import job_manager
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends.interface import image_file_name
@@ -43,14 +42,17 @@ class SimtelBackend:
     # Calibration light: sim_telarray's LightEmission programs and optics.
     traces_light_sources = False
 
-    def __init__(self, telescope_model, site_model, label, zenith_angle, single_mirror_mode):
+    def __init__(
+        self, telescope_model, site_model, label, zenith_angle, single_mirror_mode, *, context=None
+    ):
         self._logger = logging.getLogger(__name__)
+        self.context = context or RunContext.from_environment()
         self.telescope_model = telescope_model
         self.site_model = site_model
         self.label = label
         self.zenith_angle = zenith_angle
         self.single_mirror_mode = single_mirror_mode
-        self._output_directory = io_handler.IOHandler().get_output_directory()
+        self._output_directory = self.context.paths.get_output_directory()
 
     def simulate(self, requests, test=False, force=False, compress_photons=True, max_workers=8):
         """
@@ -158,7 +160,11 @@ class SimtelBackend:
         photons_file = photons_file_gz
         if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
             photons_file = photons_file_lis
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
+        image = PSFImage(
+            focal_length=focal_length,
+            containment_fraction=containment_fraction,
+            context=self.context,
+        )
         image.process_photon_list(photons_file, use_rx)
         if not save_photons:
             for file in (photons_file_lis, photons_file_gz, stars_file):
@@ -257,11 +263,11 @@ class SimtelBackend:
         } | parameter_changes.sim_telarray_options(request.parameter_changes)
         command = " ".join(
             [
-                str(settings.config.sim_telarray_exe_debug_trace),
+                str(self.context.software.sim_telarray_exe_debug_trace),
                 f"-c {self.telescope_model.config_file_path}",
                 f"-I{self.telescope_model.config_file_directory}",
                 *(f"-C {key}={value}" for key, value in options.items()),
-                str(settings.config.corsika_dummy_file),
+                str(self.context.software.corsika_dummy_file),
             ]
         )
         with script.open("w", encoding="utf-8") as file:

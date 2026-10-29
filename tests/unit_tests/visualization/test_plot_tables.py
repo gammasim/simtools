@@ -19,7 +19,7 @@ PLOT_INTERSECTION_PROTON_CURVE = (
 
 @mock.patch("simtools.visualization.plot_tables.visualize")
 @mock.patch("simtools.visualization.plot_tables.read_table_data")
-def test_plot(mock_read_table_data, mock_visualize):
+def test_plot(mock_read_table_data, mock_visualize, run_context):
     config = {
         "tables": [
             {
@@ -37,9 +37,11 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_fig = mock.MagicMock()
     mock_visualize.plot_1d.return_value = mock_fig
 
-    plot_tables.plot(config, output_file)
+    plot_tables.plot(config, output_file, context=run_context)
 
-    mock_read_table_data.assert_called_once_with(config, None, model_reader=None)
+    mock_read_table_data.assert_called_once_with(
+        config, None, model_reader=None, context=run_context
+    )
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
 

@@ -16,13 +16,11 @@ def test_star_image_request_key():
     assert changed == request
 
 
-def test_get_backend(mocker):
+def test_get_backend(run_context):
     from simtools.ray_tracing.backends.sim_telarray import SimtelBackend
 
     assert interface.get_backend("sim_telarray") is SimtelBackend
-    settings = mocker.patch.object(interface, "settings")
-    settings.config.ray_tracing_backend = "sim_telarray"
-    assert interface.get_backend() is SimtelBackend
+    assert interface.get_backend(context=run_context) is SimtelBackend
 
 
 def test_get_backend_obdeect():

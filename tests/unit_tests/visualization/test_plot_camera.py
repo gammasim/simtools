@@ -1,6 +1,5 @@
 """Comprehensive unit tests for plot_camera module."""
 
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -291,7 +290,7 @@ def test_parse_pixel_ids_to_print_invalid_raises():
 @pytest.mark.parametrize(
     ("patch_ids", PIXEL), [(None, None), ([0, 1, 2], None), (None, 0), ([0, 1], 0)]
 )
-def test_plot_camera_pixel_layout_from_args(tmp_test_directory, patch_ids, pixel):
+def test_plot_camera_pixel_layout_from_args(tmp_test_directory, patch_ids, pixel, run_context):
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -301,9 +300,14 @@ def test_plot_camera_pixel_layout_from_args(tmp_test_directory, patch_ids, pixel
         "trigger_patches": patch_ids,
         TRIGGER_PIXEL: pixel,
     }
-    io_handler = MagicMock()
-    io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler, model_reader=MagicMock())
+    from simtools.io.output_paths import OutputPaths
+
+    context = run_context.replace(paths=OutputPaths(output_path=tmp_test_directory))
+    app_context = SimpleNamespace(
+        args=args_dict,
+        model_reader=MagicMock(),
+        context=context,
+    )
 
     mock_camera = _mock_camera()
     mock_tel_model = MagicMock()
@@ -336,6 +340,7 @@ def test_plot_camera_pixel_layout_from_args(tmp_test_directory, patch_ids, pixel
             model_version="5.0.0",
             label="plot_camera_pixel_layout",
             model_reader=app_context.model_reader,
+            context=app_context.context,
         )
         mock_tel_model.export_model_files.assert_called_once()
         mock_camera.calc_fov.assert_called_once()
