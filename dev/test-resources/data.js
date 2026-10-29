@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793306312805,
+  "lastUpdate": 1793306697727,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33874,6 +33874,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 493.39453125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "232261445d25cfff219c3655681ed18ed90c4ad8",
+          "message": "Consolidate production configuration into grid, jobs I/O, metadata and one comparison (#2726)\n\n* Consolidate production configuration into grid, jobs I/O, metadata and one comparison\n\n- grid.py replaces angle_ranges, observation_grid, simulation_jobs,\n  job_generation_summary and job_grid_summary; jobs_io.py replaces\n  job_grid_io; one production_metadata module; parameter_scans.py replaces\n  parameter_scan_generator and bias_curve_submissions.\n- comparison.py replaces the two production_comparison modules; one\n  plot_production_comparison module replaces the event- and signal-level\n  plot modules.\n- production_definition schema validates the resolved grid definition.\n- Rename maintain_simulation_model_compare_productions to\n  maintain_simulation_model_compare_production_tables.\n\nGenerated grids, job specs and bias scan grids are unchanged.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add change fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Fix review findings: test job-grid reading with a real file, dict from map\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* unit tests\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T21:35:25+01:00",
+          "tree_id": "5921e70ef715dafadb3c8c4689f5f31d292e57d6",
+          "url": "https://github.com/gammasim/simtools/commit/232261445d25cfff219c3655681ed18ed90c4ad8"
+        },
+        "date": 1793306682156,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 70.89531028099998,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 70.03000000000002,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 491.2578125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
