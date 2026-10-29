@@ -158,6 +158,8 @@ jobs:
           cp dependency_versions.yml ../base/dependency_versions.yml
           cp ../base-runtime.env ../base/.env
           bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests,dev,doc,obdeect]'
+          # The merge base runs from source (PYTHONPATH); give it the generated version file.
+          cp src/simtools/_version.py ../base/src/simtools/_version.py
       - name: Run merge-base outputs
         env:
           PYTHONPATH: ../base/src
