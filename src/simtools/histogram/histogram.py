@@ -67,10 +67,16 @@ class Histogram:
         Bin values. Defaults to zeros of the shape defined by edges.
     metadata : dict, optional
         Metadata associated with the histogram.
+    axis_names : list[str], optional
+        One name per histogram axis.
+    axis_units : list[str | None], optional
+        One unit per histogram axis, or ``None`` for unitless axes.
     """
 
-    def __init__(self, edges, values=None, metadata=None):
+    def __init__(self, edges, values=None, metadata=None, axis_names=None, axis_units=None):
         self.edges = [np.asarray(axis_edges) for axis_edges in edges]
+        self.axis_names = self._axis_metadata(axis_names, "axis_names", str)
+        self.axis_units = self._axis_metadata(axis_units, "axis_units", (str, type(None)))
         shape = tuple(len(axis_edges) - 1 for axis_edges in self.edges)
         dtype = np.int64 if len(shape) == 1 else float
         self.values = np.zeros(shape, dtype=dtype) if values is None else np.asarray(values)
@@ -78,8 +84,20 @@ class Histogram:
             raise ValueError(f"Histogram values have shape {self.values.shape}; expected {shape}.")
         self.metadata = dict(metadata) if metadata is not None else {}
 
+    def _axis_metadata(self, values, name, value_type):
+        """Validate and copy optional metadata associated with each axis."""
+        if values is None:
+            return None
+        if not isinstance(values, list):
+            raise ValueError(f"{name} must be a list with one value per histogram axis.")
+        if len(values) != len(self.edges):
+            raise ValueError(f"{name} must contain one value per histogram axis.")
+        if not all(isinstance(value, value_type) for value in values):
+            raise ValueError(f"Every {name} entry must be {value_type}.")
+        return list(values)
+
     @classmethod
-    def from_edges(cls, edges, values=None, metadata=None):
+    def from_edges(cls, edges, values=None, metadata=None, axis_names=None, axis_units=None):
         """Create a histogram from one bin-edge array per axis.
 
         Parameters
@@ -90,13 +108,23 @@ class Histogram:
             Initial bin values, defaulting to zeros.
         metadata : dict, optional
             Histogram metadata.
+        axis_names : list[str], optional
+            One name per histogram axis.
+        axis_units : list[str | None], optional
+            One unit per histogram axis.
 
         Returns
         -------
         Histogram
             Histogram with the supplied binning and values.
         """
-        return cls(edges, values=values, metadata=metadata)
+        return cls(
+            edges,
+            values=values,
+            metadata=metadata,
+            axis_names=axis_names,
+            axis_units=axis_units,
+        )
 
     @property
     def ndim(self):
@@ -127,7 +155,13 @@ class Histogram:
             np.array_equal(first, second) for first, second in zip(self.edges, other.edges)
         ):
             raise ValueError("Histograms must have the same edges to be added.")
-        return self.from_edges(self.edges, self.values + other.values, self.metadata)
+        return self.from_edges(
+            self.edges,
+            self.values + other.values,
+            self.metadata,
+            self.axis_names,
+            self.axis_units,
+        )
 
     def cumulative(self, axis=0, reverse=False, normalize=False):
         """Return cumulative bin values along an axis.
@@ -157,7 +191,7 @@ class Histogram:
                 if not np.issubdtype(result.dtype, np.floating):
                     result = result.astype(float)
                 self._normalize_along_axis(result, hist, axis)
-        return self.from_edges(self.edges, result, self.metadata)
+        return self.from_edges(self.edges, result, self.metadata, self.axis_names, self.axis_units)
 
     def efficiency(self, simulated):
         """Return triggered counts divided by simulated counts.
@@ -179,7 +213,7 @@ class Histogram:
                 out=np.zeros_like(self.values, dtype=float),
                 where=simulated.values > 0,
             )
-        return self.from_edges(self.edges, values, self.metadata)
+        return self.from_edges(self.edges, values, self.metadata, self.axis_names, self.axis_units)
 
     @staticmethod
     def _normalize_along_axis(result, hist, axis):

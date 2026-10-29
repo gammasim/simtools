@@ -48,7 +48,12 @@ def test_normalized_counts_zero_total():
 
 def test_histogram_fill_and_add():
     edges = [np.array([0, 1, 2]), np.array([0, 2, 4])]
-    histogram = Histogram.from_edges(edges, metadata={"quantity": "events"})
+    histogram = Histogram.from_edges(
+        edges,
+        metadata={"quantity": "events"},
+        axis_names=["energy", "core_distance"],
+        axis_units=["TeV", "m"],
+    )
     assert histogram.ndim == 2
     assert histogram.shape == (2, 2)
     histogram.fill([0, 1, 2, -1], [0, 2, 4, 1])
@@ -59,6 +64,8 @@ def test_histogram_fill_and_add():
     np.testing.assert_array_equal(histogram.values, [[2, 0], [0, 2]])
     assert summed.metadata == {"quantity": "events"}
     assert summed.metadata is not histogram.metadata
+    assert summed.axis_names == histogram.axis_names
+    assert summed.axis_units == histogram.axis_units
     with pytest.raises(ValueError, match="same edges"):
         histogram + Histogram.from_edges([np.array([0, 1, 3]), edges[1]])
     with pytest.raises(ValueError, match="same edges"):
@@ -68,6 +75,20 @@ def test_histogram_fill_and_add():
 def test_histogram_values_shape():
     with pytest.raises(ValueError, match="shape"):
         Histogram.from_edges([[0, 1, 2]], values=[1])
+
+
+@pytest.mark.parametrize(
+    ("axis_names", "axis_units", "message"),
+    [
+        (["energy", "core"], None, "axis_names"),
+        (None, ["TeV", "m"], "axis_units"),
+        ([1], None, "axis_names"),
+        (None, [1], "axis_units"),
+    ],
+)
+def test_histogram_axis_metadata_validation(axis_names, axis_units, message):
+    with pytest.raises(ValueError, match=message):
+        Histogram.from_edges([[0, 1]], axis_names=axis_names, axis_units=axis_units)
 
 
 @pytest.mark.parametrize("ndim", [1, 2, 3])
@@ -95,6 +116,8 @@ def test_histogram_cumulative_1d(reverse, normalize):
     np.testing.assert_array_equal(result.values, expected)
     np.testing.assert_array_equal(histogram.values, [1, 2, 3, 4])
     np.testing.assert_array_equal(result.edges[0], histogram.edges[0])
+    assert result.axis_names == histogram.axis_names
+    assert result.axis_units == histogram.axis_units
 
 
 @pytest.mark.parametrize("axis", [0, 1])
@@ -119,7 +142,12 @@ def test_histogram_cumulative_2d(axis, reverse, normalize):
 def test_histogram_efficiency_and_empty_cumulative():
     triggered = Histogram.from_edges([[0, 1, 2, 3]], values=[0, 2, 4])
     simulated = Histogram.from_edges(triggered.edges, values=[0, 4, 8])
-    np.testing.assert_array_equal(triggered.efficiency(simulated).values, [0, 0.5, 0.5])
+    triggered.axis_names = ["energy"]
+    triggered.axis_units = ["TeV"]
+    result = triggered.efficiency(simulated)
+    np.testing.assert_array_equal(result.values, [0, 0.5, 0.5])
+    assert result.axis_names == ["energy"]
+    assert result.axis_units == ["TeV"]
     empty = Histogram.from_edges(triggered.edges)
     np.testing.assert_array_equal(empty.cumulative(normalize=True).values, [0, 0, 0])
 

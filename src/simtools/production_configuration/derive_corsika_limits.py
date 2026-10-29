@@ -15,6 +15,7 @@ from astropy.table import Column, Table
 from simtools import settings
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.histogram.histogram import Histogram
 from simtools.io import ascii_handler, io_handler, table_handler
 from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
@@ -381,18 +382,10 @@ def _has_positive_energy_histogram(histograms):
     if not isinstance(histogram_definitions, dict):
         return True
 
-    energy_definition = histogram_definitions.get("energy")
-    if not isinstance(energy_definition, dict):
+    energy = histogram_definitions.get("energy")
+    if not isinstance(energy, Histogram):
         return False
-
-    counts = energy_definition.get("histogram")
-    if counts is None:
-        return False
-
-    try:
-        return bool(np.any(np.asarray(counts.values, dtype=float) > 0))
-    except TypeError, ValueError:
-        return False
+    return bool(np.any(np.asarray(energy.values, dtype=float) > 0))
 
 
 def _generate_corsika_limits_from_histogram_directory(
@@ -667,7 +660,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
             )
         elif bins_per_decade > 0:
             axis_max, curve_x, curve_y = _differential_upper_limits(
-                histograms.histograms[f"{axis_name}_vs_energy"]["histogram"].values,
+                histograms.histograms[f"{axis_name}_vs_energy"].values,
                 config["x_bins"],
                 histograms.energy_bins,
                 differential_energy_bins,
@@ -677,7 +670,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
             )
         else:
             axis_max = _integral_limits(
-                histograms.histograms[axis_name]["histogram"].values,
+                histograms.histograms[axis_name].values,
                 config["x_bins"],
                 allowed_losses[axis_name]["loss_fraction"],
                 allowed_losses[axis_name]["loss_min_events"],
@@ -1059,7 +1052,7 @@ def compute_lower_energy_limit(histograms, threshold_fraction):
     """
     energy_min = (
         _find_low_energy_threshold_from_histogram(
-            histograms.histograms["energy"]["histogram"].values,
+            histograms.histograms["energy"].values,
             histograms.energy_bins,
             threshold_fraction=threshold_fraction,
         )

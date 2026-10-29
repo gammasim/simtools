@@ -8,11 +8,16 @@ from simtools.histogram.histogram import Histogram
 def test_histograms_round_trip_1d_and_3d_with_compression(tmp_test_directory):
     expected = {
         "one_dimensional": Histogram.from_edges(
-            [np.array([0.0, 1.0, 3.0])], values=np.array([2, 4])
+            [np.array([0.0, 1.0, 3.0])],
+            values=np.array([2, 4]),
+            axis_names=["energy"],
+            axis_units=["TeV"],
         ),
         "three_dimensional": Histogram.from_edges(
             [np.array([0.0, 2.0]), np.array([1.0, 3.0, 4.0]), np.array([-1.0, 0.0])],
             values=np.arange(2).reshape(1, 2, 1),
+            axis_names=["x", "y", "z"],
+            axis_units=["m", None, "deg"],
         ),
     }
     file_path = tmp_test_directory / "histograms.hdf5"
@@ -27,6 +32,8 @@ def test_histograms_round_trip_1d_and_3d_with_compression(tmp_test_directory):
                 assert dataset.compression_opts == 6
                 assert dataset.shuffle
             np.testing.assert_array_equal(actual[name].values, histogram.values)
+            assert actual[name].axis_names == histogram.axis_names
+            assert actual[name].axis_units == histogram.axis_units
             for actual_edges, expected_edges in zip(
                 actual[name].edges, histogram.edges, strict=True
             ):

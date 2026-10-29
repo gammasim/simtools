@@ -33,6 +33,7 @@ from simtools.production_configuration.trigger_histograms import (
     _write_trigger_histogram_metadata,
     discover_event_data_groups,
     inspect_trigger_histogram_file,
+    load_dense_histogram_payloads,
     load_event_data_histograms,
     write_trigger_histograms,
 )
@@ -60,24 +61,18 @@ class _FakeHistograms:
             "solid_angle": 0.1 * u.sr,
         }
         self.histograms = {
-            "angular_distance_vs_energy_vs_core_distance": {
-                "histogram": Histogram.from_edges(
-                    [np.arange(3), np.arange(3), np.arange(3)],
-                    values=np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]]),
-                )
-            },
-            "angular_distance_vs_energy_vs_core_distance_mc": {
-                "histogram": Histogram.from_edges(
-                    [np.arange(3), np.arange(3), np.arange(3)],
-                    values=np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]]),
-                )
-            },
-            "angular_distance_vs_energy_vs_core_distance_eff": {
-                "histogram": Histogram.from_edges(
-                    [np.arange(3), np.arange(3), np.arange(3)],
-                    values=np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]]),
-                )
-            },
+            "angular_distance_vs_energy_vs_core_distance": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]]),
+            ),
+            "angular_distance_vs_energy_vs_core_distance_mc": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]]),
+            ),
+            "angular_distance_vs_energy_vs_core_distance_eff": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]]),
+            ),
         }
         self.energy_bins = np.array([0.1, 1.0, 10.0])
         self.view_cone_bins = np.array([0.0, 1.0, 2.0])
@@ -108,16 +103,20 @@ def _full_fake_histograms():
         "solid_angle": 0.1 * u.sr,
     }
     histograms.data_ranges = {"angular_distance": (0.5, 1.5)}
-    histograms.histograms = histograms._define_histograms(None, None, None)
-    for name, histogram in histograms.histograms.items():
-        shape = tuple(len(edges) - 1 for edges in histogram["edges"])
-        histogram["histogram"] = Histogram.from_edges(
-            histogram["edges"], values=np.full(shape, 2.0 if name.endswith("_mc") else 1.0)
+    histograms._fill_state.histogram_specs = histograms._define_histograms(None, None, None)
+    histograms.histograms = {
+        name: Histogram.from_edges(
+            spec["edges"],
+            values=np.full(
+                tuple(len(edges) - 1 for edges in spec["edges"]),
+                2.0 if name.endswith("_mc") else 1.0,
+            ),
+            axis_names=histograms._create_histogram(spec).axis_names,
+            axis_units=histograms._create_histogram(spec).axis_units,
         )
-        histogram["event_data"] = (
-            None if histogram["1d"] else tuple(None for _ in histogram["event_data_column"])
-        )
-    histograms._filled_data_sets = 1
+        for name, spec in histograms._fill_state.histogram_specs.items()
+    }
+    histograms._fill_state.filled_data_sets = 1
     histograms.calculate_efficiency_data()
     histograms.calculate_cumulative_data()
     return histograms
@@ -186,41 +185,48 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_test_directory):
     assert loaded_histograms.file_info["primary_particle"] == "gamma"
     assert loaded_histograms.file_info["spectral_index"] == pytest.approx(-2.0)
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
-    assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
+    assert all(
+        isinstance(histogram, Histogram) for histogram in loaded_histograms.histograms.values()
+    )
     for name, definition in histograms.histograms.items():
         actual = loaded_histograms.histograms[name]
-        assert isinstance(actual["histogram"], Histogram)
-        assert "bin_edges" not in actual
-        np.testing.assert_array_equal(actual["histogram"].values, definition["histogram"].values)
-        for actual_edges, expected_edges in zip(
-            actual["histogram"].edges, definition["histogram"].edges, strict=True
-        ):
+        np.testing.assert_array_equal(actual.values, definition.values)
+        assert actual.axis_names == definition.axis_names
+        assert actual.axis_units == definition.axis_units
+        for actual_edges, expected_edges in zip(actual.edges, definition.edges, strict=True):
             np.testing.assert_array_equal(actual_edges, expected_edges)
     with h5py.File(output_file) as hdf5_file:
         dense = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
-        assert dense.attrs["format_version"] == 1
+        assert dense.attrs["format_version"] == 2
         for name, group in dense["ref-1"].items():
-            histogram = histograms.histograms[name]["histogram"]
+            histogram = histograms.histograms[name]
             assert set(group) == {"values", *(f"edges_{axis}" for axis in range(histogram.ndim))}
             assert group["values"].dtype == histogram.values.dtype
             np.testing.assert_array_equal(group["values"][()], histogram.values)
     np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)
     np.testing.assert_allclose(
-        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
-            "histogram"
-        ].values,
-        histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"].values,
+        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values,
+        histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values,
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
     assert "reuse_mean_vs_energy" in loaded_histograms.histograms
     np.testing.assert_allclose(
-        loaded_histograms.histograms["reuse_mean_vs_energy"]["histogram"].values,
-        histograms.histograms["reuse_mean_vs_energy"]["histogram"].values,
+        loaded_histograms.histograms["reuse_mean_vs_energy"].values,
+        histograms.histograms["reuse_mean_vs_energy"].values,
     )
 
     with h5py.File(output_file, "r") as hdf5_file:
         assert TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file
+
+
+def test_load_dense_histograms_rejects_unsupported_format_version(tmp_test_directory):
+    file_path = tmp_test_directory / "old_histograms.hdf5"
+    with h5py.File(file_path, "w") as hdf5_file:
+        hdf5_file.create_group(TRIGGER_HISTOGRAM_DENSE_GROUP).attrs["format_version"] = 1
+
+    with pytest.raises(ValueError, match=r"old_histograms\.hdf5.*found 1.*supported version is 2"):
+        load_dense_histogram_payloads(file_path)
 
 
 def test_trigger_topology_tables_are_created_from_reference_specs():

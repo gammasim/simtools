@@ -1,5 +1,7 @@
 """HDF5 storage for histogram payloads."""
 
+import json
+
 import numpy as np
 
 from simtools.histogram.histogram import Histogram
@@ -22,6 +24,8 @@ def write_histograms(group, histograms):
             _create_dense_histogram_dataset(
                 histogram_group, f"edges_{axis_index}", np.asarray(edges, dtype=float)
             )
+        histogram_group.attrs["axis_names"] = json.dumps(histogram.axis_names)
+        histogram_group.attrs["axis_units"] = json.dumps(histogram.axis_units)
 
 
 def read_histograms(group) -> dict[str, Histogram]:
@@ -44,7 +48,11 @@ def read_histograms(group) -> dict[str, Histogram]:
             np.asarray(histogram_group[f"edges_{axis_index}"], dtype=float)
             for axis_index in range(values.ndim)
         ]
-        histograms[name] = Histogram.from_edges(edges, values=values)
+        axis_names = json.loads(histogram_group.attrs.get("axis_names", "null"))
+        axis_units = json.loads(histogram_group.attrs.get("axis_units", "null"))
+        histograms[name] = Histogram.from_edges(
+            edges, values=values, axis_names=axis_names, axis_units=axis_units
+        )
     return histograms
 
 
