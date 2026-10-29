@@ -64,15 +64,6 @@ Provide tools for reading, writing, and processing simulated shower and telescop
    :members:
 ```
 
-## Production comparison
-
-(sim_events_production_comparison-1)=
-
-```{eval-rst}
-.. automodule:: simtools.sim_events.production_comparison
-   :members:
-```
-
 ## Native configuration and file formats
 
 ```{eval-rst}

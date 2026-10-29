@@ -12,73 +12,63 @@ from simtools import __version__, dependency_versions, version
 from simtools.model_repository.compatibility import validate_release
 
 IMAGE_KEY = "container_image"
-
-logger = logging.getLogger(__name__)
 CATALOG_KEY = "catalog"
 TARGET_KEY = "target_simtools"
 PATH_KEY = "simulation_models_path"
 GIT_PATH_KEY = "simulation_models_git_path"
 GIT_REVISION_KEY = "simulation_models_git_revision"
+logger = logging.getLogger(__name__)
 
 
 def _bundled_catalog_path():
     """Locate a runtime's own catalog without consulting its working directory."""
     filename = dependency_versions.DEPENDENCY_VERSIONS_FILENAME
-    candidates = [
+    for path in (
         Path(dependency_versions.__file__).resolve().parents[2] / filename,
         Path(sys.prefix) / "simtools" / filename,
-    ]
-    for path in candidates:
+    ):
         if path.is_file():
             return path
     raise RuntimeError("Target installation has no bundled dependency catalog.")
 
 
-BUNDLED_CATALOG_CODE = (
+# Runs inside the target image: read its own catalog and report simtools version and catalog.
+INFO_CODE = (
     "import os, sys\nfrom pathlib import Path\nfrom simtools import dependency_versions\n"
     + inspect.getsource(_bundled_catalog_path)
     + "\ncatalog_path = _bundled_catalog_path()\n"
     + "os.environ['SIMTOOLS_DEPENDENCY_VERSIONS'] = str(catalog_path)\n"
+    + "import json\nfrom simtools import __version__\n"
+    + "print(json.dumps({'target_simtools': __version__, 'catalog': "
+    + "dependency_versions.load_dependency_catalog(catalog_path, validate=False)}))\n"
 )
-INFO_CODE = (
-    BUNDLED_CATALOG_CODE
-    + """
-import json
-from simtools import __version__
-print(
-    json.dumps(
-        {
-            'target_simtools': __version__,
-            'catalog': dependency_versions.load_dependency_catalog(
-                catalog_path, validate=False
-            ),
+
+
+def _target_runtime(image):
+    """Return the target simtools version and catalog, from an image or the host."""
+    if not image:
+        return {
+            TARGET_KEY: __version__,
+            CATALOG_KEY: dependency_versions.load_dependency_catalog(_bundled_catalog_path()),
         }
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.endswith(("PYTHONPATH", "PYTHONHOME", "SIMTOOLS_DEPENDENCY_VERSIONS"))
+    }
+    result = subprocess.run(
+        ["apptainer", "exec", "--cleanenv", str(image), "python", "-P", "-c", INFO_CODE],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
     )
-)
-"""
-)
+    return json.loads(result.stdout)
 
 
 def preview(args, image=None):
     """Check selected models using the target installation's bundled catalog."""
-    if image:
-        result = subprocess.run(
-            ["apptainer", "exec", "--cleanenv", str(image), "python", "-P", "-c", INFO_CODE],
-            check=True,
-            capture_output=True,
-            text=True,
-            env={
-                key: value
-                for key, value in os.environ.items()
-                if not key.endswith(("PYTHONPATH", "PYTHONHOME", "SIMTOOLS_DEPENDENCY_VERSIONS"))
-            },
-        )
-        target = json.loads(result.stdout)
-    else:
-        target = {
-            TARGET_KEY: __version__,
-            CATALOG_KEY: dependency_versions.load_dependency_catalog(_bundled_catalog_path()),
-        }
+    target = _target_runtime(image)
     path = args.get(PATH_KEY) or args.get(GIT_PATH_KEY)
     if not path:
         raise ValueError("Production requires an explicit simulation-model source path.")
