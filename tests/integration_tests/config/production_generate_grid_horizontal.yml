@@ -101,6 +101,7 @@ applications:
           equals: table.column_sum
           column: showers_per_run
   model_version_use_current: true
+  differential_test: true
   test_name: production_generate_grid_horizontal
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0
