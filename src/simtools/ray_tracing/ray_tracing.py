@@ -17,13 +17,12 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools import constants, settings
-from simtools.io import io_handler
+from simtools import constants
+from simtools.context import RunContext
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends import interface
 from simtools.ray_tracing.backends.interface import StarImageRequest
-from simtools.simtel import simtel_seeds
 from simtools.utils import names, random
 from simtools.visualization import visualize
 
@@ -88,11 +87,13 @@ class RayTracing:
         mirror_numbers="all",
         offset_file=None,
         offset_directions=None,
+        context=None,
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
 
-        self._io_handler = io_handler.IOHandler()
+        self.context = context or RunContext.from_environment()
+        self._io_handler = self.context.paths
 
         self.telescope_model, self.site_model = telescope_model, site_model
         self.label = label if label is not None else self.telescope_model.label
@@ -409,12 +410,13 @@ class RayTracing:
     def _get_backend(self):
         """Return the ray-tracing backend (created on first use)."""
         if self._backend is None:
-            self._backend = interface.get_backend()(
+            self._backend = interface.get_backend(context=self.context)(
                 self.telescope_model,
                 self.site_model,
                 self.label,
                 self.zenith_angle,
                 self.single_mirror_mode,
+                context=self.context,
             )
         return self._backend
 
@@ -434,12 +436,11 @@ class RayTracing:
             for mirror_number in self.mirrors
         ]
 
-    @staticmethod
-    def _photons_per_instance(test):
+    def _photons_per_instance(self, test):
         """Photons per instance: 5000 in test mode, else ``number_of_photons`` (or None)."""
         if test:
             return 5000
-        photons = settings.config.args.get("number_of_photons")
+        photons = self.context.args.get("number_of_photons")
         if photons is not None and (
             isinstance(photons, bool) or not isinstance(photons, int) or photons < 1
         ):
@@ -475,12 +476,37 @@ class RayTracing:
         mode); otherwise ``random_instrument_instances``.
         Both backends run one simulation per instance with these seeds.
         """
-        instances = settings.config.args.get(
+        instances = self.context.args.get(
             "random_instrument_instances", constants.RAY_TRACING_INSTRUMENT_INSTANCES
         )
         if single_instance or self.single_mirror_mode:
             instances = 1
-        return simtel_seeds.instance_seed_pairs(instances)
+        instrument_seed = self.context.args.get("instrument_seed")
+        simulation_seed = self.context.args.get("simulation_seed")
+        if isinstance(simulation_seed, list | tuple):
+            if len(simulation_seed) == 2:
+                instrument_seed = simulation_seed[0]
+                simulation_seed = simulation_seed[1]
+            elif len(simulation_seed) == 1:
+                simulation_seed = simulation_seed[0]
+            else:
+                raise ValueError(
+                    "simulation_seed must contain one value (simulation seed) or two values "
+                    "(instrument seed, simulation seed)."
+                )
+        instrument_seed = instrument_seed or random.seeds(max_seed=constants.SIMTEL_MAX_SEED)
+        simulation_seed = simulation_seed or random.seeds(max_seed=constants.SIMTEL_MAX_SEED)
+        return list(
+            zip(
+                random.instance_seeds(
+                    instrument_seed, instances, max_seed=constants.SIMTEL_MAX_SEED
+                ),
+                random.instance_seeds(
+                    simulation_seed, instances, max_seed=constants.SIMTEL_MAX_SEED
+                ),
+                strict=True,
+            )
+        )
 
     def _mirror_seeds(self, seeds, mirror_number):
         """Seeds of one mirror in single-mirror mode (each mirror has its own errors)."""
@@ -539,7 +565,8 @@ class RayTracing:
         if not do_analyze:
             self._read_results()
             do_analyze = (
-                self._results.meta.get(BACKEND_METADATA) != settings.config.ray_tracing_backend
+                self._results.meta.get(BACKEND_METADATA)
+                != self.context.software.ray_tracing_backend
             )
 
         tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
@@ -780,7 +807,7 @@ class RayTracing:
         if self.single_mirror_mode:
             _columns.append("mirror_number")
         self._results = QTable(rows=_rows, names=_columns)
-        self._results.meta[BACKEND_METADATA] = settings.config.ray_tracing_backend
+        self._results.meta[BACKEND_METADATA] = self.context.software.ray_tracing_backend
 
     def export_results(self):
         """Export results to a csv file."""

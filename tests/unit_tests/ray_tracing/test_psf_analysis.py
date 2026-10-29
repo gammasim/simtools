@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools import settings
 from simtools.ray_tracing.psf_analysis import PSFImage
 
 
@@ -28,8 +27,21 @@ def shutil_copyfileobj():
 
 
 @pytest.fixture
-def psf_image():
-    image = PSFImage(focal_length=2800.0, containment_fraction=0.8, total_scattered_area=100)
+def psf_image(run_context, _mock_settings_env_vars):
+    from simtools.context import RunContext
+
+    run_context = RunContext.from_arguments(
+        {},
+        model_reader=run_context.model_reader,
+        paths=run_context.paths,
+        resolve_sim_software_executables=False,
+    )
+    image = PSFImage(
+        focal_length=2800.0,
+        containment_fraction=0.8,
+        total_scattered_area=100,
+        context=run_context,
+    )
     rng = np.random.default_rng(seed=42)
     image.photon_pos_x = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
     image.photon_pos_y = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
@@ -270,7 +282,7 @@ def test_process_simtel_file_using_rx_success(
     mock_job_submit.assert_called_once()
     call_args = mock_job_submit.call_args
     assert call_args[0][0] == [
-        f"{settings.config.sim_telarray_path}/bin/rx",
+        str(image.context.software.sim_telarray_path / "bin" / "rx"),
         "-f",
         "0.80",
         "-v",

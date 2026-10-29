@@ -6,6 +6,7 @@ import re
 import shlex
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -36,8 +37,19 @@ def models():
 
 
 @pytest.fixture
-def backend(models):
-    return SimtelBackend(models.tel, models.site, "test", 20.0, False)
+def backend(models, run_context, _mock_settings_env_vars):
+    from simtools.context import RunContext
+
+    context = RunContext.from_arguments(
+        {},
+        model_reader=run_context.model_reader,
+        paths=run_context.paths,
+        resolve_sim_software_executables=False,
+    )
+    debug_executable = context.software.sim_telarray_path / "bin" / "sim_telarray_debug_trace"
+    debug_executable.touch()
+    debug_executable.chmod(0o755)
+    return SimtelBackend(models.tel, models.site, "test", 20.0, False, context=context)
 
 
 def _request(off_axis_x=0.0, changes=None, **kwargs):
@@ -388,7 +400,9 @@ def test_psf_image_reads_and_removes_photon_lists(backend, mocker, save_photons)
 
     image, traced_structure = backend.psf_image(request, 2800.0, 0.8, save_photons=save_photons)
 
-    psf_image.assert_called_once_with(focal_length=2800.0, containment_fraction=0.8)
+    psf_image.assert_called_once_with(
+        focal_length=2800.0, containment_fraction=0.8, context=mock.ANY
+    )
     psf_image.return_value.process_photon_list.assert_called_once_with(files[0], False)
     assert image is psf_image.return_value
     assert traced_structure is False
