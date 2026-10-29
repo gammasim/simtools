@@ -245,9 +245,10 @@ and the pull request, using the same model and test-resource revisions. The
 pull request's selection is used for both checkouts; a selected case missing
 from the merge base is an error. Its `diff_report.md` lists changed comparable
 files and up to 20 differences per file. ECSV, FITS, HDF5, JSON, and YAML
-outputs are compared by their contents. Only the simtools software version is
-normalized; dates, identifiers, hashes, paths, and other content remain
-significant. Logs are ignored. Binary outputs are reported by presence and size
+outputs are compared by their contents. Generated activity and product identifiers,
+timestamps, temporary test paths in provenance, and the simtools software version
+are normalized. Other metadata and scientific values remain significant. Temporary
+test configuration files and logs are ignored. Binary outputs are reported by presence and size
 for context and do not fail the job. Comparison errors cannot be approved with
 the `expected-output-change` label.
 

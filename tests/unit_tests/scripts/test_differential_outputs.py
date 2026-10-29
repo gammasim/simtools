@@ -27,6 +27,37 @@ def test_normalize_text_preserves_dates_hashes_and_ids():
     assert normalized == text
 
 
+def test_normalize_generated_metadata_preserves_scientific_changes():
+    def metadata(root, activity, energy):
+        return {
+            "created": activity,
+            "energy": energy,
+            "cta": {
+                "activity": {"id": activity, "start": activity, "end": activity},
+                "product": {"id": activity, "creation_time": activity},
+                "context": {
+                    "application_configuration": {
+                        "arguments": {
+                            "activity_id": activity,
+                            "output_path": f"{root}/test-data1/app/output",
+                        }
+                    }
+                },
+            },
+        }
+
+    base = DIFFERENTIAL_OUTPUTS.normalize_value(metadata("/tmp/base", "one", 1))
+    assert base == DIFFERENTIAL_OUTPUTS.normalize_value(metadata("/tmp/head", "two", 1))
+    assert base != DIFFERENTIAL_OUTPUTS.normalize_value(metadata("/tmp/head", "two", 2))
+
+
+def test_relative_files_excludes_generated_config(tmp_test_directory):
+    root = Path(tmp_test_directory)
+    (root / "tmp_config.yml").write_text("temporary: true\n")
+    (root / "result.yml").write_text("value: 1\n")
+    assert set(DIFFERENTIAL_OUTPUTS._relative_files(root)) == {Path("result.yml")}
+
+
 def test_compare_table_uses_numeric_tolerance_and_units(tmp_test_directory):
     base = Path(tmp_test_directory) / "base.ecsv"
     head = Path(tmp_test_directory) / "head.ecsv"

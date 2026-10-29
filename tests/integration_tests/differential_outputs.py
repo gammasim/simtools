@@ -32,18 +32,43 @@ def normalize_text(value):
     return value
 
 
-def normalize_value(value):
+def normalize_value(value, path=()):
     """Normalize strings recursively while preserving structured values."""
     if isinstance(value, str):
+        if path[:1] == ("cta",):
+            value = re.sub(r"(?:/[^/\s]+)*/test-data\d+/", "<TEST_ROOT>/", value)
         return normalize_text(value)
     if isinstance(value, list):
-        return [normalize_value(item) for item in value]
+        return [normalize_value(item, path) for item in value]
     if isinstance(value, dict):
-        normalized = {normalize_value(key): normalize_value(item) for key, item in value.items()}
-        if str(value.get("name", "")).lower() == "simtools" and "version" in normalized:
-            normalized["version"] = "<VERSION>"
-        return normalized
+        return _normalize_mapping(value, path)
     return value
+
+
+def _normalize_mapping(value, path):
+    """Normalize generated metadata fields in a mapping."""
+    normalized = {}
+    for key, item in value.items():
+        field = (*path, key)
+        if (
+            field
+            in {
+                ("created",),
+                ("cta", "activity", "id"),
+                ("cta", "activity", "start"),
+                ("cta", "activity", "end"),
+                ("cta", "product", "id"),
+                ("cta", "product", "creation_time"),
+                ("cta", "context", "application_configuration", "arguments", "activity_id"),
+            }
+            and item is not None
+        ):
+            normalized[key] = "<GENERATED>"
+        else:
+            normalized[key] = normalize_value(item, field)
+    if str(value.get("name", "")).lower() == "simtools" and "version" in normalized:
+        normalized["version"] = "<VERSION>"
+    return normalized
 
 
 def _equal_values(base, head):
@@ -201,7 +226,11 @@ def _relative_files(root):
     """Map comparable output paths to files, excluding pytest scaffolding."""
     files = {}
     for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() in IGNORED_SUFFIXES:
+        if (
+            not path.is_file()
+            or path.name == "tmp_config.yml"
+            or path.suffix.lower() in IGNORED_SUFFIXES
+        ):
             continue
         parts = [
             part
