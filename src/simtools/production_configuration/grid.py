@@ -564,7 +564,7 @@ def _iter_compact_axis_specs(args_dict):
 
 def _resolve_axis_configs(args_dict):
     """Resolve compact axis definitions into one normalized mapping."""
-    return dict(_parse_axis_spec(spec) for spec in _iter_compact_axis_specs(args_dict))
+    return dict(map(_parse_axis_spec, _iter_compact_axis_specs(args_dict)))
 
 
 def _parse_direction_grid_density(density_value):

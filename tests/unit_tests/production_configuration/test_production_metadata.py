@@ -9,7 +9,7 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.production_configuration import production_metadata
+from simtools.production_configuration import jobs_io, production_metadata
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
     check_manifest,
@@ -185,15 +185,13 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(mocker, tmp
     assert manifest["configuration"]["atmosphere"] == {}
 
 
-def test_write_manifests_requires_primary_and_existing_production_path(mocker, tmp_test_directory):
-    mocker.patch(
-        "simtools.production_configuration.production_metadata.read_job_grid",
-        return_value=([{**_job_grid_row(), "primary": None}], {}),
-    )
+def test_write_manifests_requires_primary_and_existing_production_path(tmp_test_directory):
+    job_grid = Path(tmp_test_directory) / "job-grid.ecsv"
+    jobs_io.serialize_job_grid([{**_job_grid_row(), "nsb_rate": 1.0, "primary": ""}], job_grid)
     (Path(tmp_test_directory) / "job-000001").mkdir()
 
-    with pytest.raises(ValueError, match="primary"):
-        production_metadata._write_manifests(Path(tmp_test_directory), "job-grid.ecsv", {})
+    with pytest.raises(KeyError, match="primary"):
+        production_metadata._write_manifests(Path(tmp_test_directory), job_grid, {})
     with pytest.raises(FileNotFoundError, match="Production path not found"):
         production_metadata._check_existing_manifests(Path(tmp_test_directory) / "missing")
 
