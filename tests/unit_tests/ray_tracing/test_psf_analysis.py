@@ -255,9 +255,9 @@ def test_process_simtel_file_using_rx_success(
     mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
 
     mock_result = mocker.Mock()
-    mock_result.stdout = mock_rx_output
+    mock_result.output = mock_rx_output
     mock_job_submit = mocker.patch(
-        "simtools.job_execution.job_manager.submit", return_value=mock_result
+        "simtools.job_execution.execution.run_command", return_value=mock_result
     )
 
     # Mock tempfile creation
@@ -329,8 +329,8 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
 
     # Test case 1: Empty output
     mock_result = mocker.Mock()
-    mock_result.stdout = ""
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = ""
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     dummy_data = b"dummy data"
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
@@ -339,15 +339,15 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 2: Insufficient data
-    mock_result.stdout = "1.0\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = "1.0\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     with pytest.raises(IndexError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 3: Invalid data format
-    mock_result.stdout = "not_a_good_return_value\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = "not_a_good_return_value\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     with pytest.raises(ValueError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)

@@ -11,7 +11,7 @@ from simtools import settings
 from simtools.application.model_reader import require_model_reader
 from simtools.atmosphere.transmission import AtmosphericTransmission
 from simtools.io import io_handler
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import (
@@ -246,10 +246,10 @@ class SimulatorLightEmission(SimtelRunner):
     def simulate(self):
         """Simulate light emission."""
         run_script = self.prepare_run()
-        job_manager.submit(
+        execution.run_command(
             run_script,
-            out_file=self.submission_files.get_file_name("sub_out"),
-            err_file=self.submission_files.get_file_name("sub_err"),
+            stdout=self.submission_files.get_file_name("sub_out"),
+            stderr=self.submission_files.get_file_name("sub_err"),
         )
 
     def prepare_run(self):

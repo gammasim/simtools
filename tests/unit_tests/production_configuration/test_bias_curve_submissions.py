@@ -5,7 +5,7 @@ import pytest
 import yaml
 
 from simtools.io.io_handler import IOHandler
-from simtools.job_execution import bias_curve_submissions
+from simtools.production_configuration import bias_curve_submissions
 
 
 def _base_args(tmp_test_directory):
@@ -31,9 +31,9 @@ def _base_args(tmp_test_directory):
     }
 
 
-@patch("simtools.job_execution.bias_curve_submissions._generate_scan_grid")
+@patch("simtools.production_configuration.bias_curve_submissions._generate_scan_grid")
 @patch(
-    "simtools.job_execution.bias_curve_submissions._threshold_param_name",
+    "simtools.production_configuration.bias_curve_submissions._threshold_param_name",
     return_value="asum_threshold",
 )
 def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_args(
@@ -76,7 +76,7 @@ def test_threshold_parameter_is_chosen_from_telescope_model(
 ):
     args = _base_args(tmp_test_directory)
 
-    with patch("simtools.job_execution.bias_curve_submissions.TelescopeModel") as model:
+    with patch("simtools.production_configuration.bias_curve_submissions.TelescopeModel") as model:
         model.return_value.get_parameter_value.return_value = default_trigger
 
         assert bias_curve_submissions._threshold_param_name(args) == expected_param
@@ -220,10 +220,10 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
 
     with (
         patch(
-            "simtools.job_execution.bias_curve_submissions.generate_job_grid"
+            "simtools.production_configuration.bias_curve_submissions.generate_job_grid"
         ) as mock_generate_job_grid,
         patch(
-            "simtools.job_execution.bias_curve_submissions."
+            "simtools.production_configuration.bias_curve_submissions."
             "parameter_scan_generator.expand_job_grid_with_scan"
         ) as mock_expand_job_grid,
     ):

@@ -1,6 +1,6 @@
 """Process-wide run context of the running application."""
 
-from simtools.context import RunContext
+from simtools.context import RunContext, register_application_context_provider
 from simtools.io import io_handler
 
 
@@ -127,3 +127,4 @@ class _Config:
 
 
 config = _Config()
+register_application_context_provider(lambda: config.context)

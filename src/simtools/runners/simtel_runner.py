@@ -2,7 +2,7 @@
 
 import logging
 
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
 from simtools.runners.runner_services import RunnerServices
 
 SIM_TELARRAY_ENV = {
@@ -69,10 +69,10 @@ class SimtelRunner:
         label = "test" if test else f"{self.runs_per_set}x"
         self._logger.info(f"Running ({label}) with command: {command}")
         for run_index in range(runs):
-            job_manager.submit(
+            execution.run_command(
                 self._command_for_run(command, run_index),
-                out_file=stdout_file,
-                err_file=stderr_file,
+                stdout=stdout_file,
+                stderr=stderr_file,
                 env=SIM_TELARRAY_ENV,
             )
 

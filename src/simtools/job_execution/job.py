@@ -6,6 +6,21 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class CommandOptions:
+    """Streams, environment and checks of a command job."""
+
+    stdin: Any = None
+    stdout: Path | None = None
+    stderr: Path | None = None
+    env: dict[str, str] | None = None
+    runtime_environment: tuple[str, ...] | str | None = None
+    configuration: dict[str, Any] | None = None
+    application_log: Path | None = None
+    check: bool = True
+    capture_output: bool = False
+
+
+@dataclass(frozen=True)
 class JobSpec:
     """Describe one independent unit of work."""
 
@@ -13,7 +28,8 @@ class JobSpec:
     index: int
     function: Any = None
     item: Any = None
-    command: tuple[str, ...] | None = None
+    command: tuple[str, ...] | str | Path | None = None
+    options: CommandOptions | None = None
     initializer: Any = None
     initargs: tuple[Any, ...] = ()
     runtime_args: dict[str, Any] | None = None
@@ -31,6 +47,8 @@ class JobSpec:
             raise ValueError("A JobSpec must define exactly one of function or command.")
         if has_command and not self.command:
             raise ValueError("A command JobSpec must contain at least one argument.")
+        if self.options is None:
+            object.__setattr__(self, "options", CommandOptions())
 
 
 @dataclass
@@ -57,6 +75,9 @@ class JobResult:
     stdout: Path | None = None
     stderr: Path | None = None
     error: str | None = None
+    runtime: float = 0.0
+    output: str | None = None
+    error_output: str | None = None
 
 
 @dataclass

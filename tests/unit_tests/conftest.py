@@ -96,6 +96,15 @@ def _apply_mock_param_defaults(parameters):
     }
 
 
+@pytest.fixture
+def command_runner(mocker):
+    """Record execution-layer command calls without invoking external programs."""
+    runner = mocker.patch("simtools.job_execution.execution.run_command")
+    runner.commands = []
+    runner.side_effect = lambda *args, **kwargs: runner.commands.append((args, kwargs))
+    return runner
+
+
 @pytest.fixture(autouse=True)
 def simtools_settings(tmp_test_directory):
     """Load simtools settings for the test session."""
