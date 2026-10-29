@@ -29,7 +29,7 @@ def check_astropy_unit_of_time(unit_string):
     return True
 
 
-@format_checker.checks("astropy_unit_of_length)")
+@format_checker.checks("astropy_unit_of_length")
 def check_astropy_unit_of_length(unit_string):
     """Validate astropy units that this is an astropy unit of length."""
     u.Unit(unit_string).to("m")
@@ -43,7 +43,7 @@ def check_array_element(element):
     return True
 
 
-@format_checker.checks("array_triggers_name")
+@format_checker.checks("array_trigger_name")
 def check_array_triggers_name(name):
     """Validate array trigger names for jsonschema."""
     pattern = r"(.*)(?=_single_telescope|_array)"
