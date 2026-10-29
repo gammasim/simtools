@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793278633253,
+  "lastUpdate": 1793279183653,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33622,6 +33622,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 490.93359375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f4cf05ad4f6468bc55cdc53d998715907f28af49",
+          "message": "Read settings from all sources without generated command lines; record each setting's source (#2717)\n\n* Merge configuration sources without the argv round trip\n\nSteps 2.5b and 2.5c (D11): CLI parsed with defaults suspended; defaults,\nenvironment and YAML converted with the argument declarations and merged\nper key; required checks after merging; per-key sources in metadata\n(metaschema 2.1.0); constructor source and round-trip helpers removed.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Convert defaults like other sources; CLI values replace exclusive alternatives\n\nCodex review and integration tests of #2717: list defaults of single-value\narguments (view_cone, core_scatter) are converted again; a CLI option drops\nenvironment and file values of the other members of its exclusive group.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Keep optional-value and unit-bearing environment semantics\n\nCodex review of #2717: nargs='?' arguments set to true in a configuration\nfile get their const value (derive-mirror-rnda psf_hist); an environment\nlist value that the converter accepts as a whole (e.g. '0.1 rad') is not split.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T13:45:53+01:00",
+          "tree_id": "5972db77ff49581fc725de3b11e95e8264579415",
+          "url": "https://github.com/gammasim/simtools/commit/f4cf05ad4f6468bc55cdc53d998715907f28af49"
+        },
+        "date": 1793279168317,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 83.69867621,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 85.99000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 489.57421875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
