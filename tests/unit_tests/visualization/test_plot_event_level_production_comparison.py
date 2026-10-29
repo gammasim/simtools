@@ -143,7 +143,7 @@ def test_distribution_suppression_covers_overall_and_telescope_types(
         "_save_figure",
         side_effect=lambda figure, *_args, **_kwargs: plt.close(figure),
     )
-    record = mocker.spy(plot_event_level_production_comparison, "_record_plot_statistics")
+    record = mocker.spy(plot_event_level_production_comparison, "record_plot_statistics")
     path = plot_event_level_production_comparison.plot(
         metrics,
         output_path=Path(tmp_test_directory),
@@ -549,31 +549,6 @@ def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_direc
     assert comparison[VALUE_KEY] > 0
     assert statistics["metadata"]["category_count"] == 2
     assert statistics["metadata"]["display_categories"] == ["LSTN-01"]
-
-
-def test_histogram_quantity_comparison_uses_binned_ks():
-    baseline = {
-        "simulated": np.array([3.0, 1.0]),
-        "triggered": np.array([3.0, 1.0]),
-        "simulated_samples": None,
-        "triggered_samples": None,
-    }
-    candidate = {
-        "simulated": np.array([1.0, 3.0]),
-        "triggered": np.array([1.0, 3.0]),
-        "simulated_samples": None,
-        "triggered_samples": None,
-    }
-    baseline["bin_edges"] = np.array([0.0, 1.0, 2.0])
-    candidate["bin_edges"] = np.array([0.0, 1.0, 2.0])
-
-    result = plot_event_level_production_comparison._compare_distribution_data(
-        baseline, candidate, "simulated"
-    )
-
-    assert result["metric"] == "ks"
-    assert result["ks_statistic"] == pytest.approx(0.5)
-    assert result[VALUE_KEY] == pytest.approx(0.5)
 
 
 def test_global_quantity_bin_edges_union_histogram_supports():

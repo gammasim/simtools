@@ -82,3 +82,10 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 .. automodule:: simtools.sim_events.formats.eventio_reader
    :members:
 ```
+
+## production_comparison_statistics
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.production_comparison_statistics
+   :members:
+```
