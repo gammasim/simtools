@@ -134,6 +134,8 @@ def _coerce_value(definition, value, source):
         return _coerce_append(value, kwargs)
     if kwargs.get("nargs") is not None:
         return _coerce_list(value, kwargs, source)
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
     return _convert_argument_value(value, kwargs.get("type"))
 
 
@@ -152,6 +154,8 @@ def _coerce_boolean(value, source):
 
 def _coerce_append(value, kwargs):
     """Convert append values, preserving repeated groups when nargs is used."""
+    if value == []:
+        return []
     nargs = kwargs.get("nargs")
     converter = kwargs.get("type")
     if nargs is None:

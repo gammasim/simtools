@@ -110,17 +110,35 @@ class Configurator:
         destinations = {action.dest for action in self.parser._actions}  # pylint: disable=protected-access
         self.config = {}
         self.config_sources = {}
+        superseded = self._superseded_by_cli(dict(sources).get("cli", {}))
         for source, values in sources:
             for key, value in values.items():
                 if key not in destinations:
                     self.parser.error(f"unrecognized arguments: --{key}")
-                definition = definitions.get(key)
-                if value == "None":
-                    value = None
-                if source != "cli" and definition is not None:
-                    value = self._convert_external_value(definition, value, source)
-                self.config[key] = value
+                if source not in ("default", "cli") and key in superseded:
+                    continue
+                self.config[key] = self._source_value(definitions.get(key), value, source)
                 self.config_sources[key] = source
+
+    def _source_value(self, definition, value, source):
+        """Return a source value converted by its argument declaration."""
+        if value == "None":
+            return None
+        if source == "cli" or definition is None:
+            return value
+        return self._convert_external_value(definition, value, source)
+
+    def _superseded_by_cli(self, cli_config):
+        """Return keys whose environment and file values a CLI option replaces.
+
+        These are the CLI keys and the other members of their mutually exclusive groups.
+        """
+        superseded = set(cli_config)
+        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
+            members = {action.dest for action in group._group_actions}  # pylint: disable=protected-access
+            if members & cli_config.keys():
+                superseded.update(members)
+        return superseded
 
     def _convert_external_value(self, definition, value, source):
         """Convert a value from defaults, environment or configuration file.
@@ -128,8 +146,8 @@ class Configurator:
         Arguments with a custom argparse action are parsed by that action, so that a value
         means the same from every source.
         """
-        if source == "default":
-            return self._default_value(definition, value)
+        if source == "default" and value == "":
+            return value
         action = definition.kwargs.get("action")
         if not isinstance(action, type) or value is None:
             return coerce(definition, value, source)
@@ -137,14 +155,6 @@ class Configurator:
             return value
         tokens = [str(item) for item in value] if isinstance(value, list | tuple) else [str(value)]
         return self.parser.parse_explicit_args([f"--{definition.name}", *tokens])[definition.name]
-
-    @staticmethod
-    def _default_value(definition, value):
-        """Return a declared default as argparse fills it in (only string defaults are typed)."""
-        converter = definition.kwargs.get("type")
-        if converter is not None and isinstance(value, str):
-            return converter(value)
-        return value
 
     def _validate_merged_required(self):
         """Validate required arguments and exclusive groups after source merging."""

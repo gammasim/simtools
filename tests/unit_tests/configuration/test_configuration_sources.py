@@ -267,3 +267,35 @@ def test_configure_converts_the_string_none_to_none(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["test", "--value", "None"])
 
     assert configurator.configure()["value"] is None
+
+
+def test_configure_converts_list_defaults_of_single_value_arguments(monkeypatch):
+    configurator = _make_configurator(
+        ArgumentDefinition("value", type=parse_quantity_pair, default=["0 deg 10 deg"])
+    )
+    monkeypatch.setattr(sys, "argv", ["test", "--label", "x"])
+
+    assert configurator.configure()["value"] == parse_quantity_pair("0 deg 10 deg")
+
+
+def test_configure_cli_value_replaces_exclusive_alternative_from_file(
+    tmp_test_directory, monkeypatch
+):
+    configurator = Configurator(label="test", use_dependency_defaults=False)
+    configurator.parser.add_argument_definitions(
+        (
+            CONFIG,
+            ArgumentDefinition("label", default=None),
+            ArgumentDefinition("first", default=None, exclusive_group="choice"),
+            ArgumentDefinition("second", default=None, exclusive_group="choice"),
+        )
+    )
+    config_file = tmp_test_directory / "exclusive.yml"
+    config_file.write_text(yaml.safe_dump({"first": "from file"}), encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file), "--second", "cli"])
+
+    result = configurator.configure()
+
+    assert result["second"] == "cli"
+    assert result["first"] is None
+    assert configurator.config_sources["first"] == "default"
