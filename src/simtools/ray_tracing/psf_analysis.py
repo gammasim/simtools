@@ -17,7 +17,6 @@ import numpy as np
 
 from simtools.context import RunContext
 from simtools.job_execution import execution
-from simtools.utils.general import collect_kwargs, set_default_kwargs
 from simtools.visualization import plot_ray_tracing_psf
 
 
@@ -511,17 +510,25 @@ class PSFImage:
         """
         data = self.get_image_data(centralized)
 
-        kwargs = set_default_kwargs(
-            kwargs,
-            image_bins=150,
-            image_cmap="gist_heat_r",
-            psf_color="k",
-            psf_fill=False,
-            psf_lw=2,
-            psf_ls="--",
-        )
-        kwargs_for_image = collect_kwargs("image", kwargs)
-        kwargs_for_psf = collect_kwargs("psf", kwargs)
+        for key, value in {
+            "image_bins": 150,
+            "image_cmap": "gist_heat_r",
+            "psf_color": "k",
+            "psf_fill": False,
+            "psf_lw": 2,
+            "psf_ls": "--",
+        }.items():
+            kwargs.setdefault(key, value)
+        kwargs_for_image = {
+            key.removeprefix("image_"): value
+            for key, value in kwargs.items()
+            if key.startswith("image_")
+        }
+        kwargs_for_psf = {
+            key.removeprefix("psf_"): value
+            for key, value in kwargs.items()
+            if key.startswith("psf_")
+        }
 
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)

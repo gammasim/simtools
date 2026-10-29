@@ -25,7 +25,7 @@ from simtools.science_tests.definitions import (
     CANDIDATE_PATH,
     CANDIDATE_SITE_PATH,
 )
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 
 SUBMISSION_FILE = product_filename("submission_manifest")
 _ENCODING = "utf-8"

@@ -1,7 +1,7 @@
 """Derive CORSIKA limits from trigger histograms."""
 
 import argparse
-import datetime
+import datetime as dt
 import logging
 import math
 import os
@@ -836,7 +836,7 @@ def _create_results_table(results, allowed_losses, energy_threshold_fraction):
 
     table.meta.update(
         {
-            "created": datetime.datetime.now().isoformat(),
+            "created": dt.datetime.now().isoformat(),
             "description": "Lookup table for CORSIKA limits computed from simulations.",
         }
     )
