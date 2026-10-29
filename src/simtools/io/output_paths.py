@@ -15,9 +15,12 @@ class OutputPaths:
 
     def get_output_directory(self, sub_dir=None, output_path_label="default"):
         """Create and return an output directory."""
-        parts = (
-            [] if sub_dir is None else sub_dir if isinstance(sub_dir, list | tuple) else [sub_dir]
-        )
+        if sub_dir is None:
+            parts = []
+        elif isinstance(sub_dir, list | tuple):
+            parts = sub_dir
+        else:
+            parts = [sub_dir]
         try:
             output_path = Path(self.output_path[output_path_label], *parts)
         except KeyError as exc:
