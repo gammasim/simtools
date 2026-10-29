@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793260003328,
+  "lastUpdate": 1793267070147,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33538,6 +33538,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 490.234375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "123417ff08c1754c4954aa6f811218a2baaf7452",
+          "message": "Event histograms with axis names and units; trigger-histogram files format 2 (#2718)\n\n* Store event-data histograms as Histogram objects with axis metadata\n\nStep 4.1e: EventDataHistograms.histograms is dict[str, Histogram] with axis\nnames and units; plot styling moves to the plot module; trigger-histogram\nfiles use format_version 2 with axis attributes and reject other versions.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Group the accumulation bookkeeping of EventDataHistograms in one state object\n\nSix private attributes that are set and reset together move into _FillState\n(pylint too-many-instance-attributes 21 -> 16). No behaviour change.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* reviewers comments\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T10:33:32+01:00",
+          "tree_id": "e8a47abbb62ecad272b71defe0759529dba532fc",
+          "url": "https://github.com/gammasim/simtools/commit/123417ff08c1754c4954aa6f811218a2baaf7452"
+        },
+        "date": 1793267058447,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 83.272794331,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 85.58999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 493.37109375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
