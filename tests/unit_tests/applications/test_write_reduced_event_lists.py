@@ -98,6 +98,6 @@ def test_main_passes_application_arguments_to_metadata_builder(file_format):
     ):
         write_reduced_event_lists.main()
 
-    assert mock_write.call_args.kwargs["metadata_args"] is args
+    assert mock_write.call_args.kwargs["context"] is app_context
     assert mock_write.call_args.kwargs["file_format"] == file_format
     assert mock_write.call_args.kwargs["input_file_list_pattern"] is None

@@ -545,7 +545,9 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     }
 
 
-def test_write_reduced_event_lists_passes_activity_id_to_hdf5_writer(mocker, tmp_test_directory):
+def test_write_reduced_event_lists_passes_activity_id_to_hdf5_writer(
+    mocker, tmp_test_directory, run_context
+):
     """Pass the application activity ID to retained incomplete HDF5 filenames."""
     input_file = Path(tmp_test_directory) / "output_file.simtel.zst"
     activity_id = "019d85b6-1f98-715b-b92b-bfbcd06d7cd8"
@@ -554,7 +556,7 @@ def test_write_reduced_event_lists_passes_activity_id_to_hdf5_writer(mocker, tmp
 
     Simulator.write_reduced_event_lists(
         input_files=[input_file],
-        metadata_args={"activity_id": activity_id},
+        context=run_context.replace(args={"activity_id": activity_id}),
     )
 
     assert mock_table_handler.write_table_chunks.call_args.kwargs["activity_id"] == activity_id

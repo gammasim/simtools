@@ -428,7 +428,6 @@ class Simulator:
             output_files=value_conversion.ensure_list(
                 self.get_files(file_type="sim_telarray_event_data")
             ),
-            metadata_args=self.context.args,
             array_models=self.array_models,
             context=self.context,
         )
@@ -444,7 +443,6 @@ class Simulator:
         backend="local",
         backend_config=None,
         wait_for_completion=True,
-        metadata_args=None,
         array_models=None,
         input_file_list_pattern=None,
         file_format="eventio",
@@ -474,8 +472,6 @@ class Simulator:
         max_workers : int, optional
             Maximum number of output-file worker processes. ``None`` uses 60% of
             available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
-        metadata_args : dict, optional
-            Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
         input_file_list_pattern : str, optional
@@ -489,6 +485,8 @@ class Simulator:
         wait_for_completion : bool, optional
             Wait for all backend jobs before returning. Submit-only mode is
             available for asynchronous backends such as HTCondor.
+        context : RunContext, optional
+            Run context; its arguments build the embedded standard metadata document.
 
         Returns
         -------
@@ -553,7 +551,10 @@ class Simulator:
             backend=backend,
             backend_config=backend_config,
             wait_for_completion=wait_for_completion,
-            metadata_args={**(metadata_args or {}), "simulation_file_format": file_format},
+            metadata_args={
+                **(context.args if context is not None else {}),
+                "simulation_file_format": file_format,
+            },
             array_models=array_models,
             context=context,
         )
