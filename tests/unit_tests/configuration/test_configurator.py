@@ -2,10 +2,8 @@
 
 import logging
 import sys
-from copy import copy
 from unittest.mock import MagicMock
 
-import astropy.units as u
 import pytest
 import yaml
 
@@ -284,97 +282,6 @@ def test_config_from_file_does_not_resolve_test_resource_paths_without_environme
     assert loaded_config["input"] == "${generated:input.ecsv}"
 
 
-def test_arglist_from_config():
-    _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"], "e": 5.0 * u.m}
-
-    assert [
-        "--a",
-        "1.0",
-        "--c",
-        "--d",
-        "d1",
-        "d2",
-        "d3",
-        "--e",
-        "5.0 m",
-    ] == Configurator._arglist_from_config(_tmp_dict)
-
-    assert [] == Configurator._arglist_from_config({})
-    assert [] == Configurator._arglist_from_config({"select": []})
-
-    assert [] == Configurator._arglist_from_config(None)
-    assert [] == Configurator._arglist_from_config(5.0)
-
-    assert ["--a", "1.0", "--b", "None", "--c"] == Configurator._arglist_from_config(
-        ["--a", "1.0", "--b", None, "--c"]
-    )
-
-
-def test_arglist_from_config_splits_scalar_for_fixed_nargs():
-    configurator = Configurator()
-    configurator.parser.add_argument("--showers_per_run_power_law", nargs=3, type=str)
-
-    assert [
-        "--showers_per_run_power_law",
-        "0.0",
-        "1",
-        "TeV",
-    ] == Configurator._arglist_from_config(
-        {"showers_per_run_power_law": "0.0 1 TeV"},
-        parser=configurator.parser,
-    )
-
-
-def test_arglist_from_config_repeats_single_value_append_options():
-    configurator = Configurator()
-    configurator.parser.add_argument("--select", action="append")
-
-    assert [
-        "--select",
-        "configuration.primary=gamma",
-        "--select",
-        "configuration.site=North",
-    ] == Configurator._arglist_from_config(
-        {"select": ["configuration.primary=gamma", "configuration.site=North"]},
-        parser=configurator.parser,
-    )
-
-
-def test_arglist_from_config_keeps_multi_value_append_options_together():
-    configurator = Configurator()
-    configurator.parser.add_argument("--production", action="append", nargs="+")
-
-    assert ["--production", "baseline", "*.hdf5"] == Configurator._arglist_from_config(
-        {"production": ["baseline", "*.hdf5"]}, parser=configurator.parser
-    )
-
-
-def test_arglist_from_config_repeats_nested_multi_value_append_options():
-    configurator = Configurator()
-    option = "--atmosphere"
-    configurator.parser.add_argument(option, action="append", nargs=3)
-    result = Configurator._arglist_from_config(
-        {"atmosphere": [["North", "1", "2"], ["South", "3", "4"]]},
-        parser=configurator.parser,
-    )
-    assert result == [option, "North", "1", "2", option, "South", "3", "4"]
-
-
-def test_convert_string_none_to_none():
-    assert {} == Configurator._convert_string_none_to_none({})
-
-    _tmp_dict = {
-        "a": 1.0,
-        "b": None,
-        "c": True,
-        "d": "None",
-    }
-    _tmp_none = copy(_tmp_dict)
-    _tmp_none["d"] = None
-
-    assert _tmp_none == Configurator._convert_string_none_to_none(_tmp_dict)
-
-
 def test_initialize_output(configurator):
     configurator.config.update(output_file=None, output_file_format="ecsv")
 
@@ -403,16 +310,13 @@ def test_initialize_output(configurator):
     assert configurator.config["output_file"] == "unit_test.txt"
 
 
-def test_required_argument_can_be_supplied_by_constructor_configuration(monkeypatch):
-    configurator = Configurator(config={"arg": "configured"})
+def test_required_argument_must_be_supplied_by_supported_source(monkeypatch):
+    configurator = Configurator()
     configurator.parser.add_argument("--arg", required=True)
-    configurator.parser.add_argument("--label")
     monkeypatch.setattr("sys.argv", ["application", "--label", "test"])
 
-    config = configurator.configure()
-
-    assert config["arg"] == "configured"
-    assert next(action for action in configurator.parser._actions if action.dest == "arg").required
+    with pytest.raises(SystemExit):
+        configurator.configure()
 
 
 def test_set_model_versions(configurator):
@@ -466,17 +370,6 @@ def test_dependency_defaults_select_model_ref(model, expected, mocker):
     }
 
 
-def test_arglist_from_dict_preserves_bare_star_argument():
-    parser = Configurator().parser
-    parser.add_argument_definitions(
-        (ArgumentDefinition("plot_histograms", nargs="*", action="store"),)
-    )
-
-    assert Configurator.arglist_from_dict({"plot_histograms": []}, parser=parser) == [
-        "--plot_histograms"
-    ]
-
-
 def test_initialize(configurator):
     configurator._get_cli_arglist = MagicMock(return_value=[])
     configurator._config_from_env = MagicMock(return_value={})
@@ -507,25 +400,3 @@ def test_initialize(configurator):
     configurator._initialize_model_versions.assert_called()
     configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()
-
-    # test activity_id and label
-    configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
-    configurator.configure()
-    assert configurator.config["activity_id"] == "test_activity_id"
-    assert configurator.config["label"] == "test_label"
-
-
-def test_normalize_scalar_config_value_serializes_dict():
-    import json
-
-    # Test that a dictionary value is serialized to a JSON string
-    value = {"key": "value", "nested": {"a": 1}}
-    result = Configurator._normalize_scalar_config_value("some_key", value)
-    assert result == [json.dumps(value)]
-
-
-def test_normalize_scalar_config_value_passes_through_non_dict():
-    # Test that non-dict values are converted to strings
-    assert Configurator._normalize_scalar_config_value("int_key", 42) == ["42"]
-    assert Configurator._normalize_scalar_config_value("str_key", "hello") == ["hello"]
-    assert Configurator._normalize_scalar_config_value("bool_key", True) == ["True"]

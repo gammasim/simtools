@@ -76,7 +76,7 @@ def test_add_arguments_accepts_production_path_and_selection():
         ]
     )
     args.output_path = "output"
-    write_trigger_histograms._post_parse(args.__dict__, {"cli": {"output_path"}}, parser)
+    write_trigger_histograms._post_parse(args.__dict__, {"output_path": "cli"}, parser)
 
     assert args.production_path == "grid-output"
     assert args.select == [
@@ -95,7 +95,7 @@ def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
-        {"defaults": {"output_path"}},
+        {"output_path": "default"},
         parser,
     )
 
@@ -104,7 +104,7 @@ def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
     )
 
 
-@pytest.mark.parametrize("source", ["environment", "constructor", "yaml", "cli"])
+@pytest.mark.parametrize("source", ["environment", "yaml", "cli"])
 def test_post_parse_accepts_explicit_output_path_for_directory_mode(mocker, source):
     parser = mocker.Mock()
 
@@ -115,7 +115,7 @@ def test_post_parse_accepts_explicit_output_path_for_directory_mode(mocker, sour
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
-        {source: {"output_path"}},
+        {"output_path": source},
         parser,
     )
 
@@ -132,7 +132,7 @@ def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
             "output_file": "trigger_histograms.hdf5",
             "output_file_from_default": False,
         },
-        {"cli": {"output_path"}},
+        {"output_path": "cli"},
         parser,
     )
 
@@ -150,7 +150,7 @@ def test_post_parse_allows_production_metadata_without_layout_selection(mocker):
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
-        {"cli": {"output_path"}},
+        {"output_path": "cli"},
         parser,
     )
 

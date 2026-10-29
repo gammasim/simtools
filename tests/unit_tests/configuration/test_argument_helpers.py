@@ -11,9 +11,26 @@ from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.configuration.argument_helpers as helpers
 import simtools.configuration.commandline_parser as parser
-from simtools.configuration.arguments import ENERGY_RANGE, PRIMARY
+from simtools.configuration.arguments import ENERGY_RANGE, PRIMARY, ArgumentDefinition
 
 PLAIN_STRING = "plain_string"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("true", True), ("false", False), ("1", True), ("0", False), ("yes", True), ("no", False)],
+)
+def test_coerce_environment_boolean_values(value, expected):
+    definition = ArgumentDefinition("flag", action="store_true")
+
+    assert helpers.coerce(definition, value, "environment") is expected
+
+
+def test_coerce_rejects_unknown_environment_boolean():
+    definition = ArgumentDefinition("flag", action="store_true")
+
+    with pytest.raises(ValueError, match="--flag from environment"):
+        helpers.coerce(definition, "enabled", "environment")
 
 
 def test_scientific_int():

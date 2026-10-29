@@ -1,5 +1,6 @@
 """Read and write executable job grids for production preparation."""
 
+import json
 import logging
 import sys
 from dataclasses import dataclass
@@ -9,7 +10,6 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.configuration.configurator import Configurator
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
@@ -489,7 +489,7 @@ def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, me
         "--backend",
         "local",
     ]
-    command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
+    command.extend(_job_arguments_to_cli(job_args, parser))
     return JobSpec(
         job_name,
         index,
@@ -497,6 +497,51 @@ def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, me
         mount_paths=tuple(mount_paths),
         output_paths=tuple(output_paths),
     )
+
+
+def _job_arguments_to_cli(job_args, parser):
+    """Encode job arguments as CLI options for the child application."""
+    tokens = []
+    for key, value in job_args.items():
+        action = parser._option_string_actions.get(f"--{key}")  # pylint: disable=protected-access
+        tokens.extend(_job_argument_tokens(key, value, action))
+    return tokens
+
+
+def _job_argument_tokens(key, value, action):
+    """Encode one worker job value using its child parser action."""
+    if value is None:
+        return []
+    option = f"--{key}"
+    if isinstance(value, bool):
+        return _job_boolean_tokens(option, value, action)
+    if isinstance(value, dict):
+        return [option, json.dumps(value)]
+    if (
+        isinstance(value, list)
+        and action is not None
+        and action.__class__.__name__ == "_AppendAction"
+    ):
+        return _job_append_tokens(option, value, action)
+    values = list(map(str, value)) if isinstance(value, list) else [str(value)]
+    return [option, *values]
+
+
+def _job_boolean_tokens(option, value, action):
+    """Encode boolean actions, including positive and negative optional flags."""
+    if action is not None and action.__class__.__name__ == "BooleanOptionalAction":
+        return [option if value else action.option_strings[1]]
+    if action is not None and action.__class__.__name__ == "_StoreFalseAction":
+        return [option] if not value else []
+    return [option] if value else []
+
+
+def _job_append_tokens(option, value, action):
+    """Encode repeated append values or fixed groups."""
+    groups = value if action.nargs is not None and value and isinstance(value[0], list) else None
+    if groups is not None:
+        return [token for group in groups for token in (option, *map(str, group))]
+    return [token for item in value for token in (option, str(item))]
 
 
 def _job_args_for_simulate_prod(args_dict, row, parser, metadata):
@@ -537,9 +582,8 @@ def _add_scan_label(job_args, row):
 def _normalize_simulate_prod_paths(job_args, args_dict):
     """Normalize paths while allowing remote environments to provide them."""
     for key in _SIMULATE_PROD_PATH_FIELDS:
-        # Scan-derived overwrite_model_parameters is a dict of actual override values
-        # so it must always be forwarded to the job, regardless
-        # of whether it was explicitly given on the CLI/YAML/constructor.
+        # Scan-derived overwrite_model_parameters is a dict of actual override values,
+        # so it must always be forwarded regardless of the value's source.
         if isinstance(job_args.get(key), dict):
             continue
         if not _should_forward_path(args_dict, key):
@@ -566,13 +610,12 @@ def _should_forward_path(args_dict, key):
         return True
 
     sources = args_dict.get("_metadata_configuration_sources", {})
-    explicit_sources = ("cli", "yaml", "constructor")
-    return any(key in sources.get(source, ()) for source in explicit_sources)
+    return sources.get(key) in {"cli", "yaml"}
 
 
 def resolve_job_grid_arguments(args_dict, config_sources, parser):
     """Merge selected job-grid row values into args after rejecting ambiguous input."""
-    explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
+    explicit_keys = {key for key, source in config_sources.items() if source in {"cli", "yaml"}}
     job_grid_row_is_explicit = "job_grid_row" in explicit_keys
 
     if not _handle_no_job_grid_file(args_dict, job_grid_row_is_explicit, parser):

@@ -180,7 +180,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
 def get_explicit_env_file(args_dict):
     """Return the runner env file when it was explicitly supplied on the CLI."""
     configuration_sources = args_dict.get("_metadata_configuration_sources", {})
-    if "env_file" not in configuration_sources.get("cli", []):
+    if configuration_sources.get("env_file") != "cli":
         return None
     return args_dict.get("env_file")
 

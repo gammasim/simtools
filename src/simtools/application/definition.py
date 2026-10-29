@@ -10,7 +10,7 @@ from simtools.configuration import configurator
 from simtools.configuration.arguments import STANDARD_ARGUMENTS, ArgumentDefinition
 from simtools.settings import config
 
-PostParseHook = Callable[[dict, Mapping[str, set], object], None]
+PostParseHook = Callable[[dict, Mapping[str, str], object], None]
 
 
 @dataclass(frozen=True)
@@ -134,9 +134,7 @@ class ApplicationDefinition:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
         if defer_required_validation:
             self._validate_required_values(args_dict, config_builder.parser)
-        args_dict["_metadata_configuration_sources"] = {
-            source: sorted(keys) for source, keys in config_builder.config_sources.items()
-        }
+        args_dict["_metadata_configuration_sources"] = dict(config_builder.config_sources)
         return args_dict
 
     @staticmethod
