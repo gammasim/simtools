@@ -122,10 +122,9 @@ def plot_limits(limits_table, output_dir):
 
     for group in limits_table.group_by(group_columns).groups:
         array_name = group["array_name"][0]
-        particles = np.unique(np.array(group["primary_particle"], dtype=str))
-        primary_particle = (
-            "unknown" if "primary_particle" not in group.colnames else "/".join(particles)
-        )
+        primary_particle = "unknown"
+        if has_particle:
+            primary_particle = "/".join(np.unique(np.array(group["primary_particle"], dtype=str)))
 
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))
         legend_handles, legend_labels, azimuth_values = _plot_limit_group(

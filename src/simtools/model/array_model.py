@@ -380,7 +380,9 @@ class ArrayModel:
         base = Path(os.path.commonpath([path.resolve() for path in files])).resolve()
         if any(not path.is_file() or not path.resolve().is_relative_to(base) for path in files):
             raise ValueError("Model files contain an unsafe path.")
-        with tarfile.open(archive_name, "w:gz", compresslevel=1) as archive:
+        # Archive creation, not expansion of untrusted input: files are validated above and
+        # added non-recursively.
+        with tarfile.open(archive_name, "w:gz", compresslevel=1) as archive:  # NOSONAR
             for path in files:
                 archive.add(
                     path,

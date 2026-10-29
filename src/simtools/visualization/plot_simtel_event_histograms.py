@@ -313,20 +313,20 @@ def _build_plot_config(name, histogram, limits):
     normalized = (
         lowered.startswith("reuse_") or "cumulative" in lowered or "efficiency" in lowered
     ) or lowered.endswith("_eff")
+    if is_1d:
+        plot_params = _HIST_1D_PARAMS
+        y_label = value_label
+    else:
+        plot_params = _HIST_2D_NORMALIZED_PARAMS if normalized else _HIST_2D_PARAMS
+        y_label = axis_labels[1] if len(axis_labels) > 1 else None
     config = {
         "data": histogram.values,
         "bins": histogram.edges[0] if is_1d else [histogram.edges[0], histogram.edges[1]],
         "plot_type": "histogram" if is_1d else "histogram2d",
-        "plot_params": (
-            _HIST_1D_PARAMS
-            if is_1d
-            else _HIST_2D_NORMALIZED_PARAMS
-            if normalized
-            else _HIST_2D_PARAMS
-        ),
+        "plot_params": plot_params,
         "labels": {
             "x": axis_labels[0] if axis_labels else None,
-            "y": value_label if is_1d else (axis_labels[1] if len(axis_labels) > 1 else None),
+            "y": y_label,
             "title": f"{title}: {name.replace('_', ' ')}",
         },
         "scales": scales,
