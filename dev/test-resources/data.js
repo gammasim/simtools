@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793267070147,
+  "lastUpdate": 1793278633253,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33580,6 +33580,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 493.37109375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d2d0811f6ba26580f40b4392f90194459a92a761",
+          "message": "One run context instead of globals for the model classes (#2716)\n\n* Introduce RunContext and pass it to the model classes\n\nSteps 2.4a and 2.4b (D10): simtools.context (RunContext, SimulationSoftware,\nActivity) and io.output_paths.OutputPaths; settings.config holds one\nRunContext; model classes take context= and no longer read the globals.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Keep IOHandler paths delegated after reassignment; pass the array context to overrides\n\nCodex review of #2716: IOHandler.output_path and model_path are properties of\nthe delegated OutputPaths, so reassigning them keeps lookups consistent (also\nthe random-order unit-test failure); ArrayModel reads parameter overrides\nfrom its own context.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Replace nested conditional expression in OutputPaths\n\nSonarQube new-code finding on #2716.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T13:45:28+01:00",
+          "tree_id": "1246f11515f1f0cc991605391877b0c0656f200f",
+          "url": "https://github.com/gammasim/simtools/commit/d2d0811f6ba26580f40b4392f90194459a92a761"
+        },
+        "date": 1793278616576,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 85.49647822600002,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 88.02,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 490.93359375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
