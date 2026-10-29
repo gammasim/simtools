@@ -257,7 +257,9 @@ def compare_trees(base_dir, head_dir, report_path):
         lines.append("No differences found.\n")
     lines.extend(["## Binary outputs (informational)", "", *(binary_notes or ["None found."]), ""])
     Path(report_path).write_text("\n".join(lines), encoding="utf-8")
-    return 2 if comparison_error else 1 if failed else 0
+    if comparison_error:
+        return 2
+    return 1 if failed else 0
 
 
 def _pytest_ids(checkout, config_names, model_versions):
@@ -401,7 +403,7 @@ def _run_model_version(
     if not target_nodes:
         return 2
     expression = " or ".join(
-        "(" + " and ".join(re.findall(r"[A-Za-z0-9_]+", test_id)) + ")" for test_id in ids
+        "(" + " and ".join(re.findall(r"\w+", test_id, flags=re.ASCII)) + ")" for test_id in ids
     )
     command = [
         sys.executable,

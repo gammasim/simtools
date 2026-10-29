@@ -135,3 +135,48 @@ def test_tables_with_different_row_counts(tmp_test_directory):
     Table({"value": [1]}).write(base_file, overwrite=True)
     Table({"value": [1, 2]}).write(head_file, overwrite=True)
     assert DIFFERENTIAL_OUTPUTS._compare_tables(base_file, head_file) == ["rows: 1 != 2"]
+
+
+def test_selected_configs_uses_differential_test_flag(tmp_test_directory):
+    config_dir = Path(tmp_test_directory) / "tests/integration_tests/config"
+    config_dir.mkdir(parents=True)
+    (config_dir / "selected.yml").write_text(
+        "applications:\n- application: simtools-example\n  differential_test: true\n"
+    )
+    (config_dir / "ordinary.yml").write_text("applications:\n- application: simtools-example\n")
+
+    assert DIFFERENTIAL_OUTPUTS._selected_configs(tmp_test_directory) == ["selected.yml"]
+
+
+def test_compare_trees_distinguishes_difference_and_comparison_error(tmp_test_directory):
+    base = Path(tmp_test_directory) / "base"
+    head = Path(tmp_test_directory) / "head"
+    base.mkdir()
+    head.mkdir()
+    (base / "result.yml").write_text("value: 1\n")
+    (head / "result.yml").write_text("value: 2\n")
+
+    assert DIFFERENTIAL_OUTPUTS.compare_trees(base, head, Path(tmp_test_directory) / "diff.md") == 1
+
+    (base / "result.yml").write_text("invalid: [\n")
+    assert (
+        DIFFERENTIAL_OUTPUTS.compare_trees(base, head, Path(tmp_test_directory) / "error.md") == 2
+    )
+    assert "comparison failed" in (Path(tmp_test_directory) / "error.md").read_text()
+
+
+def test_normalization_preserves_paths_and_content_changes():
+    assert DIFFERENTIAL_OUTPUTS.normalize_text("output=/tmp/base/result.txt") != (
+        DIFFERENTIAL_OUTPUTS.normalize_text("output=/tmp/head/result.txt")
+    )
+
+
+def test_run_integration_rejects_empty_selection(tmp_test_directory):
+    (Path(tmp_test_directory) / "tests/integration_tests/config").mkdir(parents=True)
+
+    assert (
+        DIFFERENTIAL_OUTPUTS.run_integration(
+            tmp_test_directory, Path(tmp_test_directory) / "outputs", "7.0.0"
+        )
+        == 2
+    )
