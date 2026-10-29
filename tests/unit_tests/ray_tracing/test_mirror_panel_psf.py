@@ -8,8 +8,8 @@ from unittest.mock import MagicMock
 import pytest
 from astropy.table import Table
 
-from simtools.context import RunContext
 import simtools.ray_tracing.mirror_panel_psf as mpp
+from simtools.context import RunContext
 
 
 def _make_dummy_tel(label="orig", config_dir=None):

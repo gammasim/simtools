@@ -4,7 +4,7 @@ import logging
 
 from simtools.job_execution.log_inspector import check_plain_logs
 from simtools.sim_events import file_info
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ def validate_corsika_output(data_files, log_files, expected_shower_events=None, 
     curved_atmo: bool, optional
         Whether the CORSIKA simulation was run with the curved atmosphere option.
     """
-    data_files = general.ensure_list(data_files)
-    log_files = general.ensure_list(log_files)
+    data_files = value_conversion.ensure_list(data_files)
+    log_files = value_conversion.ensure_list(log_files)
 
     validate_event_numbers(data_files, expected_shower_events)
     validate_log_files(

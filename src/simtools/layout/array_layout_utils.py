@@ -15,7 +15,7 @@ from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 _logger = logging.getLogger(__name__)
 SUBARRAY_IDS_FILE_NAME = "subarray-ids.json"
@@ -520,7 +520,7 @@ def get_array_layouts_from_model_repository(
     """
     layout_names = []
     if layout_name:
-        layout_names = gen.ensure_list(layout_name)
+        layout_names = value_conversion.ensure_list(layout_name)
     else:
         site_model = SiteModel(
             site=site,

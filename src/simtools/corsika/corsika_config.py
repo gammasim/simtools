@@ -13,7 +13,7 @@ from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.simulation.configuration import get_model_writer
 from simtools.simulation.parameters import SimulationParameters
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
 
@@ -161,7 +161,7 @@ class CorsikaConfig:
 
         config.update(
             self._fill_corsika_configuration_from_repository(
-                gen.ensure_list(args.get("model_version"))
+                value_conversion.ensure_list(args.get("model_version"))
             )
         )
         return config
@@ -875,7 +875,10 @@ def get_site_config_parameters(site_model, model_directory=None):
         # We always use a custom profile by filename, so this has to be set to 99
         "ATMOSPHERE": [99, "Y"],
         "IACT ATMOFILE": [
-            model_directory / get_model_writer(site_model, context=site_model.context).get_atmospheric_profile_file_name()
+            model_directory
+            / get_model_writer(
+                site_model, context=site_model.context
+            ).get_atmospheric_profile_file_name()
         ],
         "MAGNET": [
             site_model.get_parameter_value("geomag_horizontal"),

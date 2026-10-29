@@ -162,7 +162,9 @@ def test_calculate_proton_statistics_for_threshold_uses_non_none_rates(tmp_path,
         "simtools.simtel.bias_curve_generator._calculate_proton_rate_for_file",
         side_effect=[10.0, None, 20.0],
     ):
-        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(files, {}, run_context)
+        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
+            files, {}, run_context
+        )
 
     assert stats["runs"] == {1: 10.0, 3: 20.0}
     assert stats["rate_hz"] == pytest.approx(15.0)
@@ -176,8 +178,8 @@ def test_calculate_proton_statistics_for_threshold_returns_nan_when_no_rates(tmp
         return_value=None,
     ):
         stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
-            {1: tmp_path / "run1.hdf5"}, {}
-        , run_context)
+            {1: tmp_path / "run1.hdf5"}, {}, run_context
+        )
 
     assert stats["runs"] == {}
     assert np.isnan(stats["rate_hz"])
@@ -193,12 +195,16 @@ def test_calculate_proton_rate_for_file_with_array_layout(tmp_path, run_context)
         return_value={"array": 5 * u.Hz},
     ):
         assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args, run_context)
+            bias_curve_generator._calculate_proton_rate_for_file(
+                tmp_path / "events.hdf5", args, run_context
+            )
             == 5
         )
 
 
-def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histograms(tmp_path, run_context):
+def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histograms(
+    tmp_path, run_context
+):
     args = _base_args(tmp_path)
 
     with patch(
@@ -206,7 +212,9 @@ def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histogr
         side_effect=TypeError("'NoneType' object is not subscriptable"),
     ):
         assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args, run_context)
+            bias_curve_generator._calculate_proton_rate_for_file(
+                tmp_path / "events.hdf5", args, run_context
+            )
             == 0
         )
 
@@ -219,14 +227,21 @@ def test_calculate_proton_rate_for_file_returns_none_for_other_errors(tmp_path, 
         side_effect=ValueError("bad file"),
     ):
         assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args, run_context)
+            bias_curve_generator._calculate_proton_rate_for_file(
+                tmp_path / "events.hdf5", args, run_context
+            )
             is None
         )
 
 
-def test_calculate_proton_rate_for_file_returns_none_without_telescope_config(tmp_path, run_context):
+def test_calculate_proton_rate_for_file_returns_none_without_telescope_config(
+    tmp_path, run_context
+):
     assert (
-        bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", {}, run_context) is None
+        bias_curve_generator._calculate_proton_rate_for_file(
+            tmp_path / "events.hdf5", {}, run_context
+        )
+        is None
     )
 
 
@@ -598,7 +613,9 @@ def test_calculate_proton_statistics_single_run(tmp_path, run_context):
         "simtools.simtel.bias_curve_generator._calculate_proton_rate_for_file",
         return_value=10.0,
     ):
-        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(files, {}, run_context)
+        stats = bias_curve_generator._calculate_proton_statistics_for_threshold(
+            files, {}, run_context
+        )
 
     assert stats["runs"] == {1: 10.0}
     assert stats["rate_hz"] == pytest.approx(10.0)
@@ -615,8 +632,8 @@ def test_calculate_proton_rate_for_file_handles_oserror(tmp_path, run_context):
         side_effect=OSError("File not found"),
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        , run_context)
+            tmp_path / "events.hdf5", args, run_context
+        )
         assert result is None
 
 
@@ -629,8 +646,8 @@ def test_calculate_proton_rate_for_file_handles_keyerror(tmp_path, run_context):
         side_effect=KeyError("missing_key"),
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        , run_context)
+            tmp_path / "events.hdf5", args, run_context
+        )
         assert result is None
 
 
@@ -643,8 +660,8 @@ def test_calculate_proton_rate_for_file_handles_valueerror(tmp_path, run_context
         side_effect=ValueError("Invalid value"),
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        , run_context)
+            tmp_path / "events.hdf5", args, run_context
+        )
         assert result is None
 
 
@@ -657,8 +674,8 @@ def test_calculate_proton_rate_for_file_handles_attributeerror(tmp_path, run_con
         side_effect=AttributeError("Missing attribute"),
     ):
         result = bias_curve_generator._calculate_proton_rate_for_file(
-            tmp_path / "events.hdf5", args
-        , run_context)
+            tmp_path / "events.hdf5", args, run_context
+        )
         assert result is None
 
 

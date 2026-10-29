@@ -25,7 +25,7 @@ from simtools.sim_events.metadata import build_simulation_metadata, build_standa
 from simtools.simtel import simtel_output_validator
 from simtools.simulation.configuration import get_shower_configuration
 from simtools.simulation.parameters import SimulationParameters
-from simtools.utils import general
+from simtools.utils import general, value_conversion
 
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 
@@ -54,6 +54,20 @@ def _write_reduced_event_list_batch(job_spec, context=None):
         metadata_documents=build_metadata_documents,
         activity_id=metadata_args.get("activity_id") if metadata_args else None,
     )
+
+
+def _simtools_log_file_path():
+    """Return the path of the first file log handler in the simtools logger hierarchy."""
+    logger = logging.getLogger("simtools")
+    while logger:
+        file_handler = next(
+            (handler for handler in logger.handlers if isinstance(handler, logging.FileHandler)),
+            None,
+        )
+        if file_handler is not None:
+            return file_handler.baseFilename
+        logger = logger.parent
+    return None
 
 
 class Simulator:
@@ -155,7 +169,7 @@ class Simulator:
         list, list
             List of ArrayModel and CorsikaConfig objects.
         """
-        versions = general.ensure_list(self.model_version)
+        versions = value_conversion.ensure_list(self.model_version)
 
         array_model = []
         corsika_configurations = []
@@ -167,7 +181,9 @@ class Simulator:
                 label=self.label,
                 site=self.site,
                 layout_name=self.context.args.get("array_layout_name"),
-                array_elements=general.ensure_list(self.context.args.get("telescopes", [])),
+                array_elements=value_conversion.ensure_list(
+                    self.context.args.get("telescopes", [])
+                ),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=self.context.args.get("overwrite_model_parameters"),
@@ -214,7 +230,7 @@ class Simulator:
         inputs = StageInputs(
             array_models=tuple(self.array_models[models]),
             simulation_parameters=tuple(self.simulation_parameters[models]),
-            shower_configurations=tuple(general.ensure_list(self.corsika_configurations)),
+            shower_configurations=tuple(value_conversion.ensure_list(self.corsika_configurations)),
             args=dict(self.context.args),
             context=self.context,
         )
@@ -269,8 +285,8 @@ class Simulator:
         base_args = dict(context.args)
         base_run_number = int(base_args.get("run_number", 1))
 
-        events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
-        photons = general.parse_typed_sequence(base_args.get("flasher_photons"), int)
+        events = value_conversion.parse_typed_sequence(base_args.get("number_of_events", 1), int)
+        photons = value_conversion.parse_typed_sequence(base_args.get("flasher_photons"), int)
 
         n_runs = max(len(events), len(photons), 1)
 
@@ -406,8 +422,12 @@ class Simulator:
             return
 
         Simulator.write_reduced_event_lists(
-            input_files=general.ensure_list(self.get_files(file_type="sim_telarray_output")),
-            output_files=general.ensure_list(self.get_files(file_type="sim_telarray_event_data")),
+            input_files=value_conversion.ensure_list(
+                self.get_files(file_type="sim_telarray_output")
+            ),
+            output_files=value_conversion.ensure_list(
+                self.get_files(file_type="sim_telarray_event_data")
+            ),
             metadata_args=self.context.args,
             array_models=self.array_models,
             context=self.context,
@@ -691,21 +711,27 @@ class Simulator:
         self.logger.info(
             f"Packing output files for registering on the grid ({directory_for_grid_upload})"
         )
-        output_files = general.ensure_list(self.get_files(file_type="sim_telarray_output"))
-        log_files = general.ensure_list(self.get_files(file_type="sim_telarray_log"))
-        simtools_log_file = general.get_simtools_log_file()
-        histogram_files = general.ensure_list(self.get_files(file_type="sim_telarray_histogram"))
-        corsika_log_files = general.ensure_list(self.get_files(file_type="corsika_log"))
-        resource_files = general.ensure_list(self.get_files(file_type="corsika_resources"))
-        resource_files += general.ensure_list(self.get_files(file_type="sim_telarray_resources"))
-        resource_files += general.ensure_list(self.get_files(file_type="multi_pipe_resources"))
+        output_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_output"))
+        log_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_log"))
+        simtools_log_file = _simtools_log_file_path()
+        histogram_files = value_conversion.ensure_list(
+            self.get_files(file_type="sim_telarray_histogram")
+        )
+        corsika_log_files = value_conversion.ensure_list(self.get_files(file_type="corsika_log"))
+        resource_files = value_conversion.ensure_list(self.get_files(file_type="corsika_resources"))
+        resource_files += value_conversion.ensure_list(
+            self.get_files(file_type="sim_telarray_resources")
+        )
+        resource_files += value_conversion.ensure_list(
+            self.get_files(file_type="multi_pipe_resources")
+        )
         corsika_output_files = (
-            general.ensure_list(self.get_files(file_type="corsika_output"))
+            value_conversion.ensure_list(self.get_files(file_type="corsika_output"))
             if self.context.args.get("save_corsika_output")
             else []
         )
         reduced_event_files = (
-            general.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
+            value_conversion.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
             if self.context.args.get("reduced_event_lists")
             else []
         )
@@ -717,13 +743,13 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        stderr_files = general.ensure_list(self.get_files(file_type="sim_telarray_err"))
-        stderr_files += general.ensure_list(self.get_files(file_type="corsika_err"))
+        stderr_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_err"))
+        stderr_files += value_conversion.ensure_list(self.get_files(file_type="corsika_err"))
         files_to_copy = (
             log_files + histogram_files + corsika_log_files + resource_files + stderr_files
         )
         for model in self.array_models:
-            files_to_copy += general.ensure_list(model.pack_model_files())
+            files_to_copy += value_conversion.ensure_list(model.pack_model_files())
 
         for file_to_copy in files_to_copy:
             destination_file = directory_for_grid_upload / Path(file_to_copy).name
@@ -774,7 +800,7 @@ class Simulator:
         if self.run_mode != "direct_injection" or flasher_photons is None:
             return
 
-        for array_model in general.ensure_list(self.array_models):
+        for array_model in value_conversion.ensure_list(self.array_models):
             for calibration_models in array_model.calibration_models.values():
                 for calibration_model in calibration_models.values():
                     calibration_model.overwrite_model_parameter(

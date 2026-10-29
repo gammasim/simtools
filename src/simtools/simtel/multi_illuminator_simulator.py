@@ -7,7 +7,7 @@ from simtools.context import RunContext
 from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -230,9 +230,9 @@ class MultiIlluminatorSimulator:
 
         # Determine wavelengths: explicit param > config > model
         if wavelengths is not None:
-            wavelengths = general.ensure_list(wavelengths)
+            wavelengths = value_conversion.ensure_list(wavelengths)
         elif "wavelength" in self.base_config and self.base_config["wavelength"] is not None:
-            wavelengths = general.ensure_list(self.base_config["wavelength"])
+            wavelengths = value_conversion.ensure_list(self.base_config["wavelength"])
         else:
             # Fetch from model using a sample pair
             self._logger.info("No wavelength specified, fetching from model")

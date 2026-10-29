@@ -2,9 +2,9 @@
 
 """Plot simulated events from sim_telarray files."""
 
-import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.utils import value_conversion
 from simtools.visualization.plot_simtel_events import (
     PEDESTAL_SOURCE_MONITORING,
     PEDESTAL_SOURCE_WAVEFORM,
@@ -110,7 +110,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    plots = gen.ensure_list(app_context.args.get("plots"))
+    plots = value_conversion.ensure_list(app_context.args.get("plots"))
     generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.paths)
 
 

@@ -15,16 +15,16 @@ from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.compatibility import prepare_jobs
-from simtools.production_configuration.job_grid_io import (
+from simtools.production_configuration.jobs_io import (
     build_simulate_prod_job_specs,
     resolve_job_grid_arguments,
 )
-from simtools.production_configuration.job_metadata import build_production_job_manifest
 from simtools.production_configuration.production_file_selection import (
     ProductionManifest,
     check_manifest,
     validate_required_production_outputs,
 )
+from simtools.production_configuration.production_metadata import build_production_job_manifest
 from simtools.simulator import Simulator
 
 logger = logging.getLogger(__name__)

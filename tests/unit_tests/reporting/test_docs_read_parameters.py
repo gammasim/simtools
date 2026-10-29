@@ -3,7 +3,9 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
+import astropy.units as u
 import pytest
+from astropy.table import Table
 
 from simtools.data_model import parameter_catalog as catalog
 from simtools.reporting import docs_read_parameters
@@ -354,9 +356,7 @@ def test__generate_plots(
             )
         elif patched_method == "plot_camera_config":
             mock_plot.assert_called_once_with(
-                parameter,
                 parameter_version,
-                input_file,
                 tmp_test_directory,
                 "LSTN-design",
                 "North",
@@ -373,7 +373,6 @@ def test__generate_plots(
                 "LSTN-design",
                 "North",
                 "6.0.0",
-                read_parameters.model_reader,
                 context=run_context,
             )
 
@@ -393,12 +392,12 @@ def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
     }
     mock_files = [Path("pm_photoelectron_spectrum_1.0.0_North_LSTN-design.png")]
     mocker.patch.object(
-        plot_tables, "_generate_plot_configurations", return_value=([mock_config], mock_files)
+        plot_tables, "generate_plot_configurations", return_value=([mock_config], mock_files)
     )
 
     # Mock plot_tables.plot to avoid actual plotting
     mocker.patch.object(plot_tables, "read_table_data", return_value={"test_table": []})
-    mocker.patch.object(plot_tables, "_get_figure_cache_key", return_value="cached-key")
+    mocker.patch.object(docs_read_parameters, "_get_figure_cache_key", return_value="cached-key")
     mock_render = mocker.patch.object(plot_tables, "_plot_data")
 
     result = read_parameters._plot_parameter_tables(
@@ -411,7 +410,7 @@ def test__plot_parameter_tables(tmp_test_directory, mocker, run_context):
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory, context=run_context)
 
     # Mock to return None (empty)
-    mocker.patch.object(plot_tables, "_generate_plot_configurations", return_value=None)
+    mocker.patch.object(plot_tables, "generate_plot_configurations", return_value=None)
 
     result = read_parameters._plot_parameter_tables(
         "camera_pixel_layout", "1.0.0", Path(tmp_test_directory)
@@ -439,7 +438,7 @@ def test__plot_parameter_tables_reuses_only_identical_rendered_inputs(
     ]
     mocker.patch.object(
         plot_tables,
-        "_generate_plot_configurations",
+        "generate_plot_configurations",
         side_effect=[([config], [image_base]) for config in configs],
     )
     mocker.patch.object(
@@ -879,7 +878,7 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(
         }
     )
     generate_plot_configurations = mocker.patch(
-        "simtools.reporting.docs_read_parameters.plot_tables._generate_plot_configurations",
+        "simtools.reporting.docs_read_parameters.plot_tables.generate_plot_configurations",
         return_value=None,
     )
 
@@ -1268,6 +1267,8 @@ def test__plot_camera_components_reuses_resolved_camera_data(
         "simtools.reporting.model_figures.resolve_camera_components",
         return_value={"pixels": [(1.0, 2.0)]},
     )
+    mocker.patch("simtools.reporting.model_figures.camera_model.Camera.from_configuration")
+    mocker.patch("simtools.reporting.model_figures.plot_pixels.raw_pixels_from_configuration")
 
     def save_image(_config=None, output_file=None, **_kwargs):
         output_path = Path(output_file).with_suffix(".png")
@@ -1743,7 +1744,7 @@ def test_produce_array_element_report_design_model_lists_all_parameters(
 def test_write_telescope_structure_figure_generates_and_links_image(
     tmp_test_directory, mocker, run_context
 ):
-    from simtools.visualization.plot_telescope_structure import TelescopeGeometry
+    from simtools.model.telescope_geometry import TelescopeGeometry
 
     rp = ReadParameters(
         args={"site": "North", "telescope": "LSTN-design", "model_version": "6.0.0"},
@@ -1755,7 +1756,7 @@ def test_write_telescope_structure_figure_generates_and_links_image(
     telescope_model.model_version = "6.0.0"
     rp.context.paths.output_path["default"] = Path(tmp_test_directory)
     mocker.patch(
-        "simtools.reporting.model_figures.plot_telescope_structure.telescope_geometry",
+        "simtools.reporting.model_figures.telescope_geometry.telescope_geometry",
         return_value=TelescopeGeometry(name="LSTN-design"),
     )
 
@@ -1793,7 +1794,7 @@ def test_write_telescope_structure_figure_reports_missing_inputs(
     telescope_model.name = "LSTN-design"
     telescope_model.model_version = "6.0.0"
     mocker.patch(
-        "simtools.reporting.model_figures.plot_telescope_structure.telescope_geometry",
+        "simtools.reporting.model_figures.telescope_geometry.telescope_geometry",
         side_effect=FileNotFoundError("mirror input missing"),
     )
     buf = StringIO()
@@ -2080,8 +2081,17 @@ def test__plot_mirror_config(
         output_path=tmp_test_directory,
         context=run_context,
     )
-    input_file = Path(tmp_test_directory / "mirror_config.dat")
-    input_file.write_text("dummy mirror content")
+    input_file = Path(tmp_test_directory / "mirror_config.ecsv")
+    Table(
+        {
+            "mirror_panel_id": [0],
+            "mirror_x": [0.0] * u.cm,
+            "mirror_y": [0.0] * u.cm,
+            "mirror_diameter": [100.0] * u.cm,
+            "focal_length": [1000.0] * u.cm,
+            "shape_type": [1],
+        }
+    ).write(input_file, format="ascii.ecsv")
     mock_plot = mocker.patch("simtools.reporting.model_figures.plot_mirrors.plot")
     result = read_parameters._generate_plots(
         "mirror_list", parameter_version, input_file, tmp_test_directory
@@ -2106,7 +2116,6 @@ def test__plot_mirror_config(
                     "model_version": "6.0.0",
                 },
                 output_file=Path(tmp_test_directory / result[0]),
-                model_reader=read_parameters.model_reader,
                 data_file_path=input_file,
-                context=run_context,
+                mirrors=mock_plot.call_args.kwargs["mirrors"],
             )

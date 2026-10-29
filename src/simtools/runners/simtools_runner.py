@@ -24,6 +24,7 @@ from simtools.io import ascii_handler
 from simtools.io.file_type import product_filename
 from simtools.job_execution import execution
 from simtools.job_execution.execution import JobExecutionError
+from simtools.utils import value_conversion
 
 logger = logging.getLogger(__name__)
 _SIMULATION_MODELS_PATH = "simulation_models_path"
@@ -593,13 +594,15 @@ def _read_application_configuration(
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
-    job_configuration = gen.replace_placeholders_recursively(job_configuration, replacements or {})
+    job_configuration = value_conversion.replace_placeholders_recursively(
+        job_configuration, replacements or {}
+    )
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
     derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
-    collection_config = gen.replace_placeholders_recursively(
+    collection_config = value_conversion.replace_placeholders_recursively(
         job_configuration.get("collection"),
         {"__SETTING_WORKFLOW__": setting_workflow},
     )
@@ -607,7 +610,7 @@ def _read_application_configuration(
     output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
-        config = gen.change_dict_keys_case(config, True)
+        config = value_conversion.change_dict_keys_case(config, True)
         app_config = config.get("configuration", {})
         if "output_path" not in app_config:
             output_path_used_as_default = True
@@ -664,7 +667,7 @@ def resolve_nested_configuration_files(configurations, replacements):
         backend_values = ascii_handler.collect_data_from_file(backend_path)
         if not isinstance(backend_values, dict):
             raise ValueError(f"Backend configuration must contain a mapping: {backend_path}")
-        app_configuration["backend_config"] = gen.replace_placeholders_recursively(
+        app_configuration["backend_config"] = value_conversion.replace_placeholders_recursively(
             backend_values,
             replacements,
         )
@@ -801,7 +804,7 @@ def _replace_placeholders_in_configuration(
     dict
         Configuration dictionary with placeholders replaced.
     """
-    configuration = gen.replace_placeholders_recursively(
+    configuration = value_conversion.replace_placeholders_recursively(
         configuration,
         {place_holder: setting_workflow},
     )

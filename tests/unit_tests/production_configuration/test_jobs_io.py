@@ -8,7 +8,7 @@ from astropy.table import Table
 import simtools.applications.simulate_prod as app
 from simtools.constants import SCHEMA_PATH
 from simtools.io.ascii_handler import collect_data_from_file
-from simtools.production_configuration import job_grid_io
+from simtools.production_configuration import jobs_io
 
 _FILESYSTEM_MODELS = "simulation_models_path"
 _GIT_MODELS = "simulation_models_git_path"
@@ -51,19 +51,19 @@ def test_job_grid_schema_keeps_previous_format_document():
     schemas = collect_data_from_file(SCHEMA_PATH / "job_grid_density.schema.yml")
 
     assert [schema["schema_version"] for schema in schemas] == ["0.4.0", "0.3.0"]
-    assert "telescope" not in job_grid_io.JOB_GRID_SCHEMA.columns
+    assert "telescope" not in jobs_io.JOB_GRID_SCHEMA.columns
     assert "telescope" in {column["name"] for column in schemas[1]["data"][0]["table_columns"]}
 
 
 def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
 
-    job_grid_io.serialize_job_grid([], output_file, metadata=_metadata())
+    jobs_io.serialize_job_grid([], output_file, metadata=_metadata())
     output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert output_table.colnames == [
-        *job_grid_io.JOB_GRID_COLUMNS,
-        *job_grid_io.JOB_GRID_SCHEMA.optional_columns,
+        *jobs_io.JOB_GRID_COLUMNS,
+        *jobs_io.JOB_GRID_SCHEMA.optional_columns,
     ]
     assert output_table.meta["job_grid_summary"]["simulation_rows"] == 0
     assert output_table.meta["job_grid_format_version"] == "0.4.0"
@@ -82,8 +82,8 @@ def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_direct
         }
     )
 
-    job_grid_io.serialize_job_grid(rows, output_file, metadata=_metadata())
-    read_rows, _ = job_grid_io.read_job_grid(output_file)
+    jobs_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+    read_rows, _ = jobs_io.read_job_grid(output_file)
 
     assert "overwrite_model_parameters" not in read_rows[0]
     assert read_rows[1]["overwrite_model_parameters"] == "overwrite file.yaml"
@@ -94,7 +94,7 @@ def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.txt"
 
     with pytest.raises(ValueError, match="\\.ecsv"):
-        job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+        jobs_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
 
 
 def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
@@ -103,7 +103,7 @@ def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
     rows[0].pop("nsb_rate")
 
     with pytest.raises(KeyError, match="nsb_rate"):
-        job_grid_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+        jobs_io.serialize_job_grid(rows, output_file, metadata=_metadata())
 
 
 def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
@@ -111,32 +111,29 @@ def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
     input_file.write_text("dummy", encoding="utf-8")
 
     with pytest.raises(ValueError, match="\\.ecsv"):
-        job_grid_io.read_job_grid(input_file)
+        jobs_io.read_job_grid(input_file)
 
 
 def test_read_job_grid_rejects_non_integral_integer_columns(tmp_test_directory):
     input_file = Path(tmp_test_directory) / "job_grid.ecsv"
-    job_grid_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+    jobs_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
 
     table = Table.read(input_file, format="ascii.ecsv")
     table["run_number"] = [10.5]
     table.write(input_file, format="ascii.ecsv", overwrite=True)
 
     with pytest.raises(TypeError):
-        job_grid_io.read_job_grid(input_file)
+        jobs_io.read_job_grid(input_file)
 
 
-def test_job_grid_helpers_handle_optional_and_required_values():
-    assert job_grid_io._get_job_row_value({}, "scan_label") is job_grid_io._MISSING
-    with pytest.raises(KeyError):
-        job_grid_io._get_job_row_value({}, "run_number")
+def test_serialize_job_row_handles_optional_and_required_values():
+    row = _job_rows()[0]
+
+    assert "scan_label" not in jobs_io._serialize_job_row(row)
+    assert jobs_io._serialize_job_row({**row, "scan_label": 123})["scan_label"] == "123"
     with pytest.raises(TypeError, match="run_number"):
-        job_grid_io._get_job_row_value({"run_number": None}, "run_number")
-
-    assert job_grid_io._serialize_field_value("scan_label", 123) == "123"
-    assert (
-        job_grid_io._cast_scalar("7", job_grid_io.JOB_GRID_SCHEMA.column_dtypes["run_number"]) == 7
-    )
+        jobs_io._serialize_job_row({**row, "run_number": None})
+    assert jobs_io._cast_scalar("7", jobs_io.JOB_GRID_SCHEMA.column_dtypes["run_number"]) == 7
 
 
 def test_deserialize_job_row_skips_masked_blank_and_none_values():
@@ -147,19 +144,18 @@ def test_deserialize_job_row_skips_masked_blank_and_none_values():
         "primary": "gamma",
     }
 
-    assert job_grid_io._deserialize_job_row(row) == {"primary": "gamma"}
+    assert jobs_io._deserialize_job_row(row) == {"primary": "gamma"}
 
 
-def test_normalize_job_grid_table_dtypes_only_casts_finite_integral_floats():
-    table = Table(
-        {"run_number": [1.0], "showers_per_run": [np.inf]},
-        dtype=[float, float],
-    )
+def test_validate_job_grid_table_restores_integral_float_columns(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    jobs_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+    table = Table.read(input_file, format="ascii.ecsv")
+    table["run_number"] = table["run_number"].astype(float)
 
-    normalized = job_grid_io._normalize_job_grid_table_dtypes(table)
+    validated = jobs_io._validate_job_grid_table(table)
 
-    assert normalized["run_number"].dtype.kind == "i"
-    assert normalized["showers_per_run"].dtype.kind == "f"
+    assert validated["run_number"].dtype.kind == "i"
 
 
 def test_parameter_scan_overwrites_merge_existing_dict():
@@ -167,7 +163,7 @@ def test_parameter_scan_overwrites_merge_existing_dict():
     metadata = {"model_parameter_sets": {"scan": {"LSTN-01": {"asum_threshold": {"value": 220}}}}}
     row["overwrite_model_parameters"] = {"LSTN-01": {"other": {"value": 1}}}
 
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata)
 
     assert args["overwrite_model_parameters"] == {
         "LSTN-01": {
@@ -179,25 +175,35 @@ def test_parameter_scan_overwrites_merge_existing_dict():
 
 def test_parameter_scan_overwrites_falls_back_to_file_and_ignores_unknown_set():
     row = {**_job_rows()[0], "overwrite_model_parameters": "base.yml"}
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
     assert args["overwrite_model_parameters"] == "base.yml"
 
     row["model_parameter_set"] = "missing"
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, {"model_parameter_sets": {}})
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row, {"model_parameter_sets": {}})
     assert args["overwrite_model_parameters"] == "base.yml"
 
 
-def test_remote_path_forwarding_accepts_explicit_sources_and_skips_environment():
-    args = {"backend": "htcondor", "_metadata_configuration_sources": {"path": "cli"}}
-    assert job_grid_io._should_forward_path(args, "path")
-    assert not job_grid_io._should_forward_path(args, "other")
-    assert job_grid_io._should_forward_path({}, "path")
+def test_remote_path_forwarding_follows_configuration_sources(tmp_test_directory):
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "backend": "htcondor",
+        "corsika_path": Path("/controller/corsika7"),
+        "sim_telarray_path": Path("/controller/sim_telarray"),
+        "_metadata_configuration_sources": {"corsika_path": "cli"},
+    }
+
+    command = jobs_io.build_simulate_prod_job_specs(
+        args, _job_rows(), app.APPLICATION.build_parser(), _metadata()
+    )[0].command
+
+    assert "--corsika_path" in command
+    assert "--sim_telarray_path" not in command
 
 
 def test_job_grid_row_to_simulate_prod_args_maps_fields():
     row = _job_rows()[0]
 
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
 
     assert args["primary"] == "gamma"
     assert args["azimuth_angle"] == 45 * u.deg
@@ -222,7 +228,7 @@ def test_job_grid_row_to_simulate_prod_args_omits_missing_hadec_coordinates():
     row.pop("ha")
     row.pop("dec")
 
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
 
     assert "ha" not in args
     assert "dec" not in args
@@ -232,7 +238,7 @@ def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy(
     row = _job_rows()[0]
     row["corsika_hadronic_transition_energy"] = 120 * u.GeV
 
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row)
 
     assert args["corsika_hadronic_transition_energy"] == 120 * u.GeV
 
@@ -241,7 +247,7 @@ def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software(
     row = _job_rows()[0]
     metadata = _metadata()
 
-    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata)
+    args = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata)
 
     assert args["site"] == "North"
     assert args["simulation_software"] == "corsika_sim_telarray"
@@ -250,8 +256,8 @@ def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software(
 def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
     row = _job_rows()[0]
 
-    args_no_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata=None)
-    args_empty_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata={})
+    args_no_meta = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata=None)
+    args_empty_meta = jobs_io.job_grid_row_to_simulate_prod_args(row, metadata={})
 
     for args in (args_no_meta, args_empty_meta):
         assert "site" not in args
@@ -279,7 +285,7 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
         "corsika_file": corsika_path,
     }
 
-    jobs = job_grid_io.build_simulate_prod_job_specs(
+    jobs = jobs_io.build_simulate_prod_job_specs(
         args,
         [row],
         app.APPLICATION.build_parser(),
@@ -336,7 +342,7 @@ def test_job_commands_forward_git_revision_only_for_git_models(tmp_test_director
     if model_key == _FILESYSTEM_MODELS:
         args[_GIT_MODELS] = tmp_test_directory / "inherited-git-models"
 
-    job = job_grid_io.build_simulate_prod_job_specs(
+    job = jobs_io.build_simulate_prod_job_specs(
         args, [_job_rows()[0]], app.APPLICATION.build_parser(), _metadata()
     )[0]
 
@@ -355,7 +361,7 @@ def test_build_simulate_prod_job_specs_uses_one_based_job_names(tmp_test_directo
     rows = _job_rows()
     rows.append({**rows[0], "run_number": 11})
 
-    jobs = job_grid_io.build_simulate_prod_job_specs(
+    jobs = jobs_io.build_simulate_prod_job_specs(
         args,
         rows,
         app.APPLICATION.build_parser(),
@@ -390,7 +396,7 @@ def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_di
         },
     }
 
-    jobs = job_grid_io.build_simulate_prod_job_specs(
+    jobs = jobs_io.build_simulate_prod_job_specs(
         args,
         _job_rows(),
         app.APPLICATION.build_parser(),
@@ -403,42 +409,22 @@ def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_di
     assert "--corsika_interaction_table_path" not in command
 
 
-def test_add_parameter_scan_overwrites_early_exit_copies_existing_overwrites():
-    args = {}
-    job_row = {"run_number": 1, "overwrite_model_parameters": {"param1": 10}}
-    job_grid_io._add_parameter_scan_overwrites(args, job_row, None)
-    assert args == {"overwrite_model_parameters": {"param1": 10}}
-
-
-def test_add_parameter_scan_overwrites_skips_missing_param_set():
-    args = {}
-    job_row = {"run_number": 1, "model_parameter_set": "missing_set"}
-    metadata = {"model_parameter_sets": {"set1": {"param": 1}}}
-    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
-    assert args == {}
-
-
-def test_add_parameter_scan_overwrites_merges_or_assigns():
-    args = {}
+@pytest.mark.parametrize(
+    ("row_updates", "expected"),
+    [
+        ({"overwrite_model_parameters": {"param1": 10}}, {"param1": 10}),
+        ({"model_parameter_set": "missing_set"}, None),
+        ({"model_parameter_set": "set1"}, {"param": 1}),
+        (
+            {"model_parameter_set": "set1", "overwrite_model_parameters": {"existing": 100}},
+            {"existing": 100, "param": 1},
+        ),
+        ({"model_parameter_set": "set1", "overwrite_model_parameters": "old"}, {"param": 1}),
+    ],
+)
+def test_parameter_scan_overwrites_assign_merge_or_skip(row_updates, expected):
     metadata = {"model_parameter_sets": {"set1": {"param": 1}}}
 
-    # Case 1: Assign fresh
-    job_row = {"run_number": 1, "model_parameter_set": "set1"}
-    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
-    assert args == {"overwrite_model_parameters": {"param": 1}}
+    args = jobs_io.job_grid_row_to_simulate_prod_args({**_job_rows()[0], **row_updates}, metadata)
 
-    # Case 2: Merge with existing dict
-    args.clear()
-    job_row = {
-        "run_number": 1,
-        "model_parameter_set": "set1",
-        "overwrite_model_parameters": {"existing": 100},
-    }
-    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
-    assert args == {"overwrite_model_parameters": {"existing": 100, "param": 1}}
-
-    # Case 3: Replace non-dict existing
-    args.clear()
-    job_row = {"run_number": 1, "model_parameter_set": "set1", "overwrite_model_parameters": "old"}
-    job_grid_io._add_parameter_scan_overwrites(args, job_row, metadata)
-    assert args == {"overwrite_model_parameters": {"param": 1}}
+    assert args.get("overwrite_model_parameters") == expected

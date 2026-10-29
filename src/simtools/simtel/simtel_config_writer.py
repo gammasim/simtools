@@ -8,7 +8,6 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
@@ -24,7 +23,7 @@ from simtools.simtel import (
     simtel_validate_metadata,
     table_serializers,
 )
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 logger = logging.getLogger(__name__)
 
@@ -435,7 +434,7 @@ class SimtelConfigWriter:
         if isinstance(value, bool):
             value = 1 if value else 0
         elif isinstance(value, list | np.ndarray):
-            value = gen.convert_list_to_string(value, shorten_list=True)
+            value = value_conversion.convert_list_to_string(value, shorten_list=True)
         return value
 
     def _get_sim_telarray_metadata(

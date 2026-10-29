@@ -9,7 +9,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
-from simtools.utils import general, names
+from simtools.utils import general, names, value_conversion
 from simtools.version import is_valid_semantic_version
 
 _SUBMIT_APPLICATION = "simtools-submit-model-parameter-from-external"
@@ -82,7 +82,7 @@ def _setting_site(args):
     supplied = args.get("site")
     if supplied is not None:
         supplied = names.validate_site_name(supplied)
-        allowed = general.ensure_list(inferred)
+        allowed = value_conversion.ensure_list(inferred)
         if supplied not in allowed:
             raise ValueError(f"Site {supplied} does not match instrument {args['instrument']}.")
         return supplied
@@ -178,7 +178,7 @@ def _input_metadata(args, context):
     metadata["cta"]["product"]["data"]["model"].update(
         {"name": args["parameter"], "version": args["parameter_version"]}
     )
-    metadata = ascii_handler.to_builtin(general.change_dict_keys_case(metadata, True))
+    metadata = ascii_handler.to_builtin(value_conversion.change_dict_keys_case(metadata, True))
     schema.validate_dict_using_schema(metadata, schema_file=METADATA_JSON_SCHEMA, offline=True)
     return metadata
 

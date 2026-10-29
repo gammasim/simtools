@@ -9,8 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.context import RunContext
-from simtools.visualization import matplotlib_backend
+from simtools.visualization import matplotlib_backend, visualize
 from simtools.visualization.matplotlib_backend import BACKEND_NAME
 
 
@@ -26,7 +25,7 @@ def figure_cache_key(renderer, renderer_modules, plot_config, rendered_data, con
         for name, module_path in renderer_modules.items()
     }
     output_settings = {
-        key: (context or RunContext.from_environment()).args.get(key)
+        key: visualize.figure_output_settings(context).get(key)
         for key in ("figure_format", "figure_dpi", "figure_png_palette")
     }
     output_settings.update(

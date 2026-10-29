@@ -21,8 +21,8 @@ import yaml
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io.ascii_handler import to_builtin
+from simtools.production_configuration.comparison import validate_comparison_inputs
 from simtools.production_configuration.compatibility import preview
-from simtools.production_configuration.production_comparison import validate_comparison_inputs
 from simtools.production_configuration.production_file_selection import normalize_for_comparison
 from simtools.production_configuration.trigger_histograms import validate_derived_workflow
 from simtools.runners.simtools_runner import (
@@ -41,7 +41,7 @@ from simtools.science_tests.production import (
 )
 from simtools.science_tests.reports import write_test_report
 from simtools.utils import names
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 from simtools.version import __version__
 
 EXECUTION_LOG = "execution.log"

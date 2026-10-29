@@ -7,7 +7,6 @@ from pathlib import Path
 
 import astropy.units as u
 
-import simtools.utils.general as gen
 from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
@@ -184,7 +183,7 @@ class ModelParameter:
                 AttributeError,
             ):  # float - in case we don't know
                 _is_float = True
-            value = gen.convert_string_to_list(value, is_float=_is_float)
+            value = value_conversion.convert_string_to_list(value, is_float=_is_float)
             if len(value) == 1:
                 value = value[0]
 
@@ -626,7 +625,9 @@ class ModelParameter:
             DataValidator.validate_model_parameter(
                 self._update_parameter_dict(
                     par_name,
-                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                    value_conversion.convert_string_to_list(value)
+                    if isinstance(value, str)
+                    else value,
                     parameter_version,
                     metadata,
                     parameter_store=parameter_store,
@@ -1004,9 +1005,9 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
-        return get_model_writer(self, context=self.context).export_nsb_spectrum_to_telescope_altitude_correction_file(
-            model_directory=model_directory
-        )
+        return get_model_writer(
+            self, context=self.context
+        ).export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory=model_directory)
 
     def export_model_parameter_as_simtel_file(
         self, parameter_name, model_directory, table_format, output_name

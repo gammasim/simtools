@@ -217,9 +217,7 @@ def test_show_corsika_interactions_include_environment(monkeypatch):
         ),
     ]
     monkeypatch.setattr(show_options, "get_installed_corsika_build_variants", lambda path: variants)
-    monkeypatch.setattr(
-        show_options, "get_corsika_version", lambda context=None: "7.7400"
-    )
+    monkeypatch.setattr(show_options, "get_corsika_version", lambda context=None: "7.7400")
 
     high_result = show_options.resolve_show_options(
         {"show_options": "corsika_he_interaction", "corsika_path": "/corsika"}

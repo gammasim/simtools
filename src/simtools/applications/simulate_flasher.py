@@ -8,7 +8,7 @@ from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _LIGHT_SOURCE_GROUP = "light source"
 _TARGET_GROUP = "target"
@@ -99,7 +99,7 @@ def main():
                 context=app_context,
             )
             if app_context.args.get("array_layout_name") is not None
-            else general.ensure_list(app_context.args["telescopes"])
+            else value_conversion.ensure_list(app_context.args["telescopes"])
         )
         for tel in telescopes:
             light_source = SimulatorLightEmission(

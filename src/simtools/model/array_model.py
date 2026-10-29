@@ -1,6 +1,8 @@
 """Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
+import os
+import tarfile
 from pathlib import Path
 
 import astropy.units as u
@@ -15,7 +17,7 @@ from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simulation.configuration import get_model_writer
-from simtools.utils import general, names
+from simtools.utils import names
 
 
 class ArrayModel:
@@ -326,7 +328,9 @@ class ArrayModel:
         simulation_software : str
             Registered configuration format.
         """
-        return get_model_writer(self, simulation_software, context=self.context).export_config_files()
+        return get_model_writer(
+            self, simulation_software, context=self.context
+        ).export_config_files()
 
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
@@ -374,12 +378,19 @@ class ArrayModel:
             return None
 
         archive_name = self.get_config_directory() / f"model_files_{self.model_version}.tar.gz"
-        general.pack_tar_file(
-            archive_name,
-            model_files,
-            sub_dir=f"model/{self.model_version}",
-            compression_level=1,
-        )
+        files = [Path(path) for path in model_files]
+        base = Path(os.path.commonpath([path.resolve() for path in files])).resolve()
+        if any(not path.is_file() or not path.resolve().is_relative_to(base) for path in files):
+            raise ValueError("Model files contain an unsafe path.")
+        # Archive creation, not expansion of untrusted input: files are validated above and
+        # added non-recursively.
+        with tarfile.open(archive_name, "w:gz", compresslevel=1) as archive:  # NOSONAR
+            for path in files:
+                archive.add(
+                    path,
+                    arcname=str(Path(f"model/{self.model_version}") / path.name),
+                    recursive=False,
+                )
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
