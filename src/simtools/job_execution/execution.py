@@ -40,13 +40,49 @@ def run_command(
     check=True,
     capture_output=True,
 ):
-    """Run one command synchronously through the local execution worker."""
+    """
+    Run one command synchronously through the execution worker.
+
+    Parameters
+    ----------
+    command : str or list[str] or Path
+        Command (a string or script path runs through the shell) or argument list.
+    stdin : file object or str or Path, optional
+        Standard input: an open file, or a file path that is opened for reading.
+    stdout, stderr : str or Path, optional
+        Files receiving standard output and standard error.
+    env : dict, optional
+        Environment variables added to the current environment.
+    runtime_environment : str or list[str], optional
+        Command prefix running the command in a container.
+    configuration : dict, optional
+        Application configuration appended as command-line arguments.
+    application_log : str or Path, optional
+        Application log; an excerpt is added to the error message on failure.
+    check : bool, optional
+        Raise ``JobExecutionError`` on a non-zero return code.
+    capture_output : bool, optional
+        Capture standard output and error that are not written to files; otherwise they are
+        inherited.
+
+    Returns
+    -------
+    JobResult
+        Return code, wall-clock runtime and the captured output (``output``) and error
+        output (``error_output``).
+
+    Raises
+    ------
+    JobExecutionError
+        If the command fails and ``check`` is True; the message contains the return code,
+        the captured standard error and excerpts from the log files.
+    """
     job = JobSpec(
         job_id="command",
         index=0,
         command=tuple(command) if isinstance(command, list) else command,
         options=CommandOptions(
-            stdin=Path(stdin) if isinstance(stdin, (str, Path)) else stdin,
+            stdin=stdin,
             stdout=Path(stdout) if stdout is not None else None,
             stderr=Path(stderr) if stderr is not None else None,
             env=dict(env or {}),
@@ -58,7 +94,7 @@ def run_command(
         ),
     )
     try:
-        return_code, runtime, output = execute_command(job)
+        return_code, runtime, output, error_output = execute_command(job)
     except subprocess.CalledProcessError as exc:
         _raise_command_error(exc, job)
     return JobResult(
@@ -67,26 +103,22 @@ def run_command(
         return_code=return_code,
         runtime=runtime,
         output=output,
+        error_output=error_output,
     )
 
 
 def _raise_command_error(exc, job):
-    """Raise a command error with excerpts from available logs."""
-    excerpts = []
+    """Raise a command error with the return code, captured stderr and log excerpts."""
+    details = [f"Command failed with return code {exc.returncode}."]
+    if exc.stderr:
+        details.append(f"Standard error:\n{exc.stderr}")
     for label, path in (("Output", job.options.stdout), ("Error", job.options.stderr)):
         if path is not None:
-            excerpts.append(f"{label} log excerpt from {path}:\n{general.get_log_excerpt(path)}")
-    if job.options.application_log and job.options.application_log.exists():
-        if general.get_file_age(job.options.application_log) < 5:
-            excerpts.append(
-                f"Application log excerpt from {job.options.application_log}:\n"
-                f"{general.get_log_excerpt(job.options.application_log)}"
-            )
-    detail = "\n".join(excerpts)
-    message = "See excerpt from log file above"
-    if detail:
-        message = f"{message}\n{detail}"
-    raise JobExecutionError(message) from exc
+            details.append(f"{label} log excerpt from {path}:\n{general.get_log_excerpt(path)}")
+    log = job.options.application_log
+    if log and log.exists() and general.get_file_age(log) < 5:
+        details.append(f"Application log excerpt from {log}:\n{general.get_log_excerpt(log)}")
+    raise JobExecutionError("\n".join(details)) from exc
 
 
 def execute_jobs(job_specs, options=None):

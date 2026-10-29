@@ -59,17 +59,3 @@ This is mostly used for small productions during the validation or verification 
 .. automodule:: job_execution.worker
    :members:
 ```
-
-(parameter-scan-generator)=
-
-```{eval-rst}
-.. automodule:: production_configuration.parameter_scan_generator
-   :members:
-```
-
-(bias-curve-submissions)=
-
-```{eval-rst}
-.. automodule:: production_configuration.bias_curve_submissions
-   :members:
-```

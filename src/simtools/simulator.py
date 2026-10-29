@@ -231,7 +231,7 @@ class Simulator:
         Prepare and submit a run script as a job.
 
         Writes submission scripts using the simulation runners and submits the
-        run script to the job manager. Collects generated files.
+        run script through the execution layer. Collects generated files.
         """
         self._simulation_runner.prepare_run(
             run_number=self.run_number,

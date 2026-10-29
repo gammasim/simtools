@@ -552,8 +552,8 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None):
         submit_calls.append({"app": app, "configuration": configuration})
         result_mock = mock.Mock()
-        result_mock.stdout = f"{app}_stdout"
-        result_mock.stderr = f"{app}_stderr"
+        result_mock.output = f"{app}_stdout"
+        result_mock.error_output = f"{app}_stderr"
         return result_mock
 
     monkeypatch.setattr("simtools.job_execution.execution.run_command", mock_submit)

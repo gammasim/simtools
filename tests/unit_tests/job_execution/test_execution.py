@@ -525,3 +525,23 @@ def test_run_command_raises_with_log_excerpt(tmp_test_directory):
 
     result = execution.run_command([sys.executable, "-c", "import sys; sys.exit(3)"], check=False)
     assert result.return_code == 3
+
+
+def test_run_command_captures_error_output_and_reads_stdin_path(tmp_test_directory):
+    stdin = Path(tmp_test_directory) / "stdin.txt"
+    stdin.write_text("from file", encoding="utf-8")
+
+    result = execution.run_command(
+        [sys.executable, "-c", "import sys; print(sys.stdin.read()); sys.stderr.write('warn')"],
+        stdin=stdin,
+    )
+
+    assert result.output.strip() == "from file"
+    assert result.error_output == "warn"
+
+
+def test_run_command_error_reports_return_code_and_stderr():
+    with pytest.raises(execution.JobExecutionError, match=r"return code 3(.|\n)*boom"):
+        execution.run_command(
+            [sys.executable, "-c", "import sys; sys.stderr.write('boom'); sys.exit(3)"]
+        )

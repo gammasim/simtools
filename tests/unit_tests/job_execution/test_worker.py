@@ -1,6 +1,7 @@
 """Tests for serialized remote worker execution."""
 
 import pickle
+import sys
 from pathlib import Path
 
 from simtools.job_execution.job import CommandOptions, JobSpec
@@ -18,15 +19,15 @@ def test_execute_job_spec_runs_commands(mocker):
     completed.return_value.returncode = 0
     job = JobSpec("job-000000", 0, command=("example", "--flag"))
 
-    return_code, runtime, _ = execute_command(job)
+    return_code, runtime, _, _ = execute_command(job)
 
     assert return_code == 0
     assert runtime >= 0
     call_args = completed.call_args
     assert call_args.args == (("example", "--flag"),)
     assert call_args.kwargs["check"] is True
-    assert call_args.kwargs["stdout"] == -1
-    assert call_args.kwargs["stderr"] == -1
+    assert call_args.kwargs["stdout"] is None
+    assert call_args.kwargs["stderr"] is None
 
 
 def test_execute_command_applies_runtime_streams_environment_and_configuration(
@@ -60,7 +61,7 @@ def test_execute_command_applies_runtime_streams_environment_and_configuration(
         ),
     )
 
-    return_code, runtime, _ = execute_command(job)
+    return_code, runtime, _, _ = execute_command(job)
 
     assert return_code == 7
     assert runtime >= 0
@@ -151,3 +152,10 @@ def test_write_job_payload_is_readable_by_worker(tmp_test_directory):
         payload = pickle.load(handle)
     assert payload["job_spec"] == job
     assert payload["payload_version"] == 1
+
+
+def test_command_job_without_options_inherits_output(capfd):
+    job = JobSpec("job-000002", 2, command=(sys.executable, "-c", "print('child output')"))
+
+    assert execute_job_spec(job) == 0
+    assert "child output" in capfd.readouterr().out

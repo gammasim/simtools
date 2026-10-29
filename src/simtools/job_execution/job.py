@@ -17,7 +17,7 @@ class CommandOptions:
     configuration: dict[str, Any] | None = None
     application_log: Path | None = None
     check: bool = True
-    capture_output: bool = True
+    capture_output: bool = False
 
 
 @dataclass(frozen=True)
@@ -77,6 +77,7 @@ class JobResult:
     error: str | None = None
     runtime: float = 0.0
     output: str | None = None
+    error_output: str | None = None
 
 
 @dataclass

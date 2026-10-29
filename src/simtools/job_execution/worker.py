@@ -70,8 +70,8 @@ def execute_command(job_spec):
     Returns
     -------
     tuple
-        Return code, wall-clock runtime in seconds, and the captured standard output
-        (None unless captured).
+        Return code, wall-clock runtime in seconds, and the captured standard output and
+        standard error (None unless captured).
     """
     command = job_spec.command
     if isinstance(command, (str, Path)) and Path(command).is_file():
@@ -89,6 +89,9 @@ def execute_command(job_spec):
     environment.update(job_spec.options.env or {})
     started = time.perf_counter()
     with ExitStack() as streams:
+        stdin = job_spec.options.stdin
+        if isinstance(stdin, (str, Path)):
+            stdin = streams.enter_context(Path(stdin).open(encoding="utf-8"))
         stdout = _stream(streams, job_spec.options.stdout, job_spec.options.capture_output)
         stderr = _stream(streams, job_spec.options.stderr, job_spec.options.capture_output)
         result = subprocess.run(
@@ -96,13 +99,17 @@ def execute_command(job_spec):
             shell=isinstance(command, str),
             check=job_spec.options.check,
             text=True,
-            stdin=job_spec.options.stdin,
+            stdin=stdin,
             stdout=stdout,
             stderr=stderr,
             env=environment,
         )
-    output = result.stdout if isinstance(result.stdout, str) else None
-    return result.returncode, time.perf_counter() - started, output
+    return (
+        result.returncode,
+        time.perf_counter() - started,
+        result.stdout if isinstance(result.stdout, str) else None,
+        result.stderr if isinstance(result.stderr, str) else None,
+    )
 
 
 def _stream(streams, path, capture_output):

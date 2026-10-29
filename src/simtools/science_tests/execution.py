@@ -21,7 +21,6 @@ import yaml
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io.ascii_handler import to_builtin
-from simtools.job_execution.execution import JobExecutionError
 from simtools.production_configuration.compatibility import preview
 from simtools.production_configuration.production_comparison import validate_comparison_inputs
 from simtools.production_configuration.production_file_selection import normalize_for_comparison
@@ -246,7 +245,6 @@ def run_test(test, release_dir, run_id, overwrite=False):
         ValueError,
         RuntimeError,
         subprocess.SubprocessError,
-        JobExecutionError,
     ) as exc:
         result.update(status="incomplete", execution="failed", error=str(exc))
     write_test_report(

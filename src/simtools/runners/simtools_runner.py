@@ -158,7 +158,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
 
                 file.write("=" * 80 + "\n")
                 file.write(
-                    f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
+                    f"Application: {app}\nSTDOUT:\n{result.output}\n"
+                    f"STDERR:\n{result.error_output}\n"
                 )
 
             _copy_collection_files(
