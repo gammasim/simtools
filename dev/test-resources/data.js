@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793282670244,
+  "lastUpdate": 1793284127386,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33706,6 +33706,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 496.15625,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9525a8f2416088143000137a8c85821bc8bb887",
+          "message": "Run all commands through the execution layer; remove job_manager (#2721)\n\n* Run single commands through the execution layer; remove job_manager\n\nStep 3.7 (D14): execution.run_command runs command JobSpecs (CommandOptions)\nthrough the worker; callers migrated; job_manager deleted; backend protocol\ndeclares is_finished/collect; scan helpers moved to production_configuration.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add changelog fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Break the context/settings import cycle\n\nsettings registers the application-context provider with context, so\nRunContext.from_environment no longer imports settings (pylint R0401 in CI).\nWithout a registered provider it returns a fresh context from the environment.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Keep command output and diagnostics of the former job manager\n\nReview of #2721: run_command returns captured stdout and stderr\n(JobResult.output/error_output) and the application log in simtools_runner\nuses them; command jobs without options inherit stdout/stderr again; stdin\npaths are opened; failures report the return code and captured stderr;\nredundant JobExecutionError catch removed; moved modules documented on the\nproduction_configuration page; run_command docstring completed.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T15:14:53+01:00",
+          "tree_id": "4b2b5a97bacd67c0d2a70ee38f064c2f1b2d771e",
+          "url": "https://github.com/gammasim/simtools/commit/a9525a8f2416088143000137a8c85821bc8bb887"
+        },
+        "date": 1793284111186,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 89.541750038,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 89.47999999999999,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 494.30859375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
