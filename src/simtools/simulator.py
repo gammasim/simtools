@@ -17,11 +17,12 @@ from simtools.job_execution import execution
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
-from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
+from simtools.runners import runner_services
+from simtools.runners.chain_runner import ChainRunner
+from simtools.runners.stages import SimulationChain, StageInputs
 from simtools.sim_events import file_info, output_validator, writer
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.simtel import simtel_output_validator
-from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulation.configuration import get_shower_configuration
 from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general
@@ -126,6 +127,7 @@ class Simulator:
         if simulation_software not in defaults.SIMULATION_SOFTWARE_CHOICES:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
+        self.chain = SimulationChain.from_software(self._simulation_software)
 
     def _initialize_from_tool_configuration(self):
         """Initialize simulator from tool configuration."""
@@ -168,7 +170,7 @@ class Simulator:
                 model_directory_subdir=model_subdir,
                 model_reader=self.model_reader,
             )
-            if self.simulation_software == "sim_telarray":
+            if not self.chain.starts_with_showers:
                 cfg = None
                 parameters = SimulationParameters.from_args(
                     settings.config.args, self.run_number, model.site_model
@@ -184,47 +186,30 @@ class Simulator:
             array_model.append(model)
             corsika_configurations.append(cfg)
 
-        #  'corsika_sim_telarray' allows for multiple model versions (multipipe option)
+        # chains with several stages run several model versions (one per array model)
         corsika_configurations = (
-            corsika_configurations
-            if self.simulation_software == "corsika_sim_telarray"
-            else corsika_configurations[0]
+            corsika_configurations if len(self.chain.stages) > 1 else corsika_configurations[0]
         )
 
         return array_model, corsika_configurations
 
     def _initialize_simulation_runner(self):
         """
-        Initialize corsika configuration and simulation runners.
+        Initialize the runner of the simulation chain.
 
         Returns
         -------
-        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
-            Simulation runner object.
+        ChainRunner
+            Runner writing the run script of all chain stages.
         """
-        if self.simulation_software == "sim_telarray":
-            return SimulatorArray(
-                simulation_parameters=self.simulation_parameters[0],
-                array_model=self.array_models[0],
-                label=self.label,
-            )
-        runner_class = {
-            "corsika": corsika_runner.CorsikaRunner,
-            "corsika_sim_telarray": corsika_simtel_runner.CorsikaSimtelRunner,
-        }.get(self.simulation_software)
-
-        runner_args = {
-            "label": self.label,
-            "corsika_config": self.corsika_configurations,
-        }
-
-        if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
-            runner_args["sequential"] = settings.config.args.get("sequential", False)
-            runner_args["save_corsika_output"] = settings.config.args.get(
-                "save_corsika_output", False
-            )
-
-        return runner_class(**runner_args)
+        models = slice(None) if len(self.chain.stages) > 1 else slice(0, 1)
+        inputs = StageInputs(
+            array_models=tuple(self.array_models[models]),
+            simulation_parameters=tuple(self.simulation_parameters[models]),
+            shower_configurations=tuple(general.ensure_list(self.corsika_configurations)),
+            args=dict(settings.config.args),
+        )
+        return ChainRunner(self.chain, inputs, label=self.label)
 
     def simulate(self):
         """
@@ -235,26 +220,12 @@ class Simulator:
         """
         self._simulation_runner.prepare_run(
             run_number=self.run_number,
-            corsika_file=self._get_corsika_file(),
             sub_script=self.runner_service.get_file_name("sub_script", self.run_number),
+            input_file=self._get_corsika_file(),
             extra_commands=self._extra_commands,
         )
         self.update_file_lists()
-
-        job_environment = dict(simtel_runner.SIM_TELARRAY_ENV)
-        if self.simulation_software != "sim_telarray":
-            he_model, le_model = settings.config.corsika_interaction_models
-            job_environment.update(
-                {
-                    "SIMTOOLS_CORSIKA_HE_INTERACTION": he_model,
-                    "SIMTOOLS_CORSIKA_LE_INTERACTION": le_model,
-                }
-            )
-            transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
-            if transition_energy is not None:
-                job_environment["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = str(
-                    transition_energy.to_value("GeV")
-                )
+        job_environment = self._simulation_runner.environment()
 
         result = execution.run_command(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
@@ -341,7 +312,7 @@ class Simulator:
         Path, None
             Path to the CORSIKA input file.
         """
-        if self.simulation_software == "sim_telarray":
+        if self.chain.reads_input_file:
             return settings.config.args.get("corsika_file", None)
         return None
 
@@ -426,7 +397,7 @@ class Simulator:
 
         The files are saved using the configured simulation file list entries.
         """
-        if "sim_telarray" not in self.simulation_software:
+        if not self.chain.has("sim_telarray"):
             self.logger.warning(
                 "Reduced event lists can only be saved for sim_telarray simulations."
             )
@@ -817,7 +788,7 @@ class Simulator:
             f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
         )
 
-        if "sim_telarray" in self.simulation_software:
+        if self.chain.has("sim_telarray"):
             simtel_output_validator.validate_sim_telarray(
                 data_files=self.get_files(file_type="sim_telarray_output"),
                 log_files=self.get_files(file_type="sim_telarray_log"),
@@ -827,10 +798,10 @@ class Simulator:
                 curved_atmo=parameters.use_curved_atmosphere,
                 allow_for_changes=["nsb_scaling_factor", "stars"],
             )
-        if "corsika" in self.simulation_software:
+        if self.chain.has("corsika"):
             corsika_output_validator.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
-                if self.simulation_software == "corsika"
+                if self.chain.stages == ("corsika",)
                 or settings.config.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
