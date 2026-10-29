@@ -9,7 +9,6 @@ from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import names
 
 
 def initialize_simulation_models(
@@ -153,26 +152,6 @@ def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
 
     t = math.sin(off_axis * _deg_to_rad) / (pars[3] * _deg_to_rad)
     return pars[0] / (1.0 + pars[2] * t ** pars[4])
-
-
-def is_two_mirror_telescope(telescope_model_name: str) -> bool:
-    """
-    Determine if the telescope model is a two-mirror telescope.
-
-    Parameters
-    ----------
-    telescope_model_name: str
-        Name of the telescope model.
-
-    Returns
-    -------
-    bool
-        True if it is a two-mirror telescope.
-    """
-    tel_type = names.get_array_element_type_from_name(telescope_model_name)
-    if "SST" in tel_type or "SCT" in tel_type:
-        return True
-    return False
 
 
 def get_array_elements_for_layout(

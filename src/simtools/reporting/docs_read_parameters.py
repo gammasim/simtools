@@ -18,6 +18,7 @@ from simtools.data_model import parameter_catalog as catalog
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.asset_names import get_export_file_name
+from simtools.reporting.figure_cache import figure_cache_key
 from simtools.reporting.model_figures import (
     plot_camera_config,
     plot_mirror_config,
@@ -27,7 +28,7 @@ from simtools.reporting.model_figures import (
 )
 from simtools.utils import names
 from simtools.version import base_version_for_patch_delta, sort_versions
-from simtools.visualization import plot_tables
+from simtools.visualization import plot_tables, visualize
 
 logger = logging.getLogger()
 
@@ -72,6 +73,24 @@ class ParameterDelta:
             base_value=value_formatter(parameter, base_param_data),
             new_value=value_formatter(parameter, current_param_data),
         )
+
+
+def _get_figure_cache_key(plot_config, data):
+    """Hash effective table-plot inputs and output settings for per-run figure reuse."""
+    config_for_render = {**plot_config}
+    config_for_render["tables"] = [dict(table) for table in plot_config.get("tables", [])]
+    for table_config in config_for_render.get("tables", []):
+        # This selects the source data; resolved data is hashed separately.
+        table_config.pop("model_version", None)
+    return figure_cache_key(
+        renderer="plot_tables._plot_data",
+        renderer_modules={
+            "plot_tables": plot_tables.__file__,
+            "visualize": visualize.__file__,
+        },
+        plot_config=config_for_render,
+        rendered_data=data,
+    )
 
 
 class ReadParameters:
@@ -335,9 +354,7 @@ class ReadParameters:
             plot_names = plot_nsb_altitude_correction(input_file, outpath)
         elif parameter == "camera_pixel_layout":
             plot_names = plot_camera_config(
-                parameter,
                 parameter_version,
-                input_file,
                 outpath,
                 telescope or self.array_element,
                 site or self.site,
@@ -357,7 +374,6 @@ class ReadParameters:
                 telescope or self.array_element,
                 site or self.site,
                 model_version or self.model_version,
-                self.model_reader,
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
@@ -377,8 +393,7 @@ class ReadParameters:
         site = site or self.site
         tel = self._get_telescope_identifier(model_version, telescope)
 
-        # These internal renderer helpers avoid changing the public plotting API.
-        config_data = plot_tables._generate_plot_configurations(  # pylint: disable=protected-access
+        config_data = plot_tables.generate_plot_configurations(
             parameter=parameter,
             parameter_version=parameter_version,
             site=site,
@@ -397,9 +412,7 @@ class ReadParameters:
 
         for plot_config, output_file in zip(plot_configs, output_files):
             plot_data = plot_tables.read_table_data(plot_config, model_reader=self.model_reader)
-            cache_key = plot_tables._get_figure_cache_key(  # pylint: disable=protected-access
-                plot_config, plot_data
-            )
+            cache_key = _get_figure_cache_key(plot_config, plot_data)
             figure_stem = f"{output_file.stem.replace('.', '-')}_{cache_key}"
             plot_names.append(figure_stem)
             image_output_file = outpath / figure_stem

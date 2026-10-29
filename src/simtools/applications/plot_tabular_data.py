@@ -8,6 +8,7 @@ from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
+from simtools.utils import value_conversion
 from simtools.visualization import plot_tables
 
 _ARGUMENTS = (
@@ -22,6 +23,15 @@ _ARGUMENTS = (
         "output_file", help="Output file name (without suffix)", type=str, required=True
     ),
 )
+
+
+def _lower_dict_keys(value):
+    """Recursively convert dictionary keys to lowercase."""
+    if isinstance(value, dict):
+        return {key.lower(): _lower_dict_keys(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_lower_dict_keys(item) for item in value]
+    return value
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -44,18 +54,17 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    plot_config = gen.convert_keys_in_dict_to_lowercase(
-        schema.validate_dict_using_schema(
-            ascii_handler.collect_data_from_file(app_context.args["plot_config"]),
-            PLOT_CONFIG_SCHEMA,
-        )
+    plot_config = schema.validate_dict_using_schema(
+        ascii_handler.collect_data_from_file(app_context.args["plot_config"]),
+        PLOT_CONFIG_SCHEMA,
     )
+    plot_config = _lower_dict_keys(plot_config)
     if "__SETTING_WORKFLOW__" in str(plot_config):
         setting_workflow = gen.extract_subdirectories_from_path(
             app_context.args["plot_config"],
             anchor="input",
         )
-        plot_config = gen.replace_placeholders_recursively(
+        plot_config = value_conversion.replace_placeholders_recursively(
             plot_config,
             {"__SETTING_WORKFLOW__": setting_workflow},
         )
