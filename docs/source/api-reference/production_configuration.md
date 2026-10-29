@@ -160,3 +160,19 @@ related production-configuration helpers used by the supported workflows.
 .. automodule:: production_configuration.compatibility
    :members:
 ```
+
+## Parameter scans and bias-curve submissions
+
+(parameter-scan-generator)=
+
+```{eval-rst}
+.. automodule:: production_configuration.parameter_scan_generator
+   :members:
+```
+
+(bias-curve-submissions)=
+
+```{eval-rst}
+.. automodule:: production_configuration.bias_curve_submissions
+   :members:
+```

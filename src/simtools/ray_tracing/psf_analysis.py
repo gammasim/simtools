@@ -15,8 +15,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools import settings
-from simtools.job_execution import job_manager
+from simtools.context import RunContext
+from simtools.job_execution import execution
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 from simtools.visualization import plot_ray_tracing_psf
 
@@ -47,9 +47,11 @@ class PSFImage:
         focal_length=None,
         total_scattered_area=None,
         containment_fraction=None,
+        context=None,
     ):
         """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
+        self.context = context or RunContext.from_environment()
 
         self._total_photons = None
         self._number_of_detected_photons = None
@@ -101,7 +103,7 @@ class PSFImage:
             Name of sim_telarray file with photon list.
         """
         rx_command = [
-            f"{settings.config.sim_telarray_path}/bin/rx",
+            str(self.context.software.sim_telarray_path / "bin" / "rx"),
             "-f",
             f"{self._containment_fraction:.2f}",
             "-v",
@@ -115,11 +117,11 @@ class PSFImage:
 
             try:
                 with open(tmp_file_path, "rb") as tmp_f:
-                    result = job_manager.submit(rx_command, stdin=tmp_f)
+                    result = execution.run_command(rx_command, stdin=tmp_f)
 
                 data_lines = [
                     line.strip()
-                    for line in result.stdout.strip().split("\n")
+                    for line in result.output.strip().split("\n")
                     if line.strip() and not line.startswith("#")
                 ]
 

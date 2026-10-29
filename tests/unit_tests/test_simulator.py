@@ -1087,7 +1087,7 @@ def test_simulate(array_simulator, mocker):
     mocker.patch.object(array_simulator, "_get_corsika_file", return_value="/path/to/corsika.file")
     mocker.patch.object(array_simulator, "update_file_lists")
     mock_submit = mocker.patch(
-        "simtools.job_execution.job_manager.submit", return_value=(None, 2.5)
+        "simtools.job_execution.execution.run_command", return_value=mock.Mock(runtime=2.5)
     )
 
     array_simulator.simulate()
@@ -1100,13 +1100,12 @@ def test_simulate(array_simulator, mocker):
         extra_commands=["echo test"],
     )
 
-    # Verify the job manager submitted the job
+    # Verify the execution layer ran the command
     mock_submit.assert_called_once_with(
         command="script_42.sh",
-        out_file="output_42.out",
-        err_file="output_42.err",
+        stdout="output_42.out",
+        stderr="output_42.err",
         env={"SIM_TELARRAY_CONFIG_PATH": ""},
-        return_runtime=True,
     )
     assert array_simulator._runtime == pytest.approx(2.5)
 

@@ -25,6 +25,18 @@ def _config_value(args, arg_key, env_key, default=None):
     return os.getenv(env_key, default)
 
 
+_APPLICATION_CONTEXT_PROVIDER = []
+
+
+def register_application_context_provider(provider):
+    """Register the function returning the context of the running application.
+
+    ``simtools.settings`` registers itself; library calls without an explicit context then use
+    the application's context. ``None`` removes the provider.
+    """
+    _APPLICATION_CONTEXT_PROVIDER[:] = [provider] if provider is not None else []
+
+
 @dataclass(frozen=True)
 class Activity:
     """Identity of one simtools activity."""
@@ -271,9 +283,9 @@ class RunContext:
         Inside an application this is the context the application started with; otherwise a
         context built from the environment variables.
         """
-        from simtools import settings  # pylint: disable=import-outside-toplevel
-
-        return settings.config.context
+        if _APPLICATION_CONTEXT_PROVIDER:
+            return _APPLICATION_CONTEXT_PROVIDER[0]()
+        return cls.from_arguments({}, resolve_sim_software_executables=False)
 
     @property
     def ray_tracing_backend(self):

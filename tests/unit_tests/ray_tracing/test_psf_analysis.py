@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 from astropy import units as u
 
-from simtools import settings
 from simtools.ray_tracing.psf_analysis import PSFImage
 
 
@@ -28,8 +27,21 @@ def shutil_copyfileobj():
 
 
 @pytest.fixture
-def psf_image():
-    image = PSFImage(focal_length=2800.0, containment_fraction=0.8, total_scattered_area=100)
+def psf_image(run_context, _mock_settings_env_vars):
+    from simtools.context import RunContext
+
+    run_context = RunContext.from_arguments(
+        {},
+        model_reader=run_context.model_reader,
+        paths=run_context.paths,
+        resolve_sim_software_executables=False,
+    )
+    image = PSFImage(
+        focal_length=2800.0,
+        containment_fraction=0.8,
+        total_scattered_area=100,
+        context=run_context,
+    )
     rng = np.random.default_rng(seed=42)
     image.photon_pos_x = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
     image.photon_pos_y = rng.normal(loc=0.0, scale=1.0, size=1000).tolist()
@@ -243,9 +255,9 @@ def test_process_simtel_file_using_rx_success(
     mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
 
     mock_result = mocker.Mock()
-    mock_result.stdout = mock_rx_output
+    mock_result.output = mock_rx_output
     mock_job_submit = mocker.patch(
-        "simtools.job_execution.job_manager.submit", return_value=mock_result
+        "simtools.job_execution.execution.run_command", return_value=mock_result
     )
 
     # Mock tempfile creation
@@ -270,7 +282,7 @@ def test_process_simtel_file_using_rx_success(
     mock_job_submit.assert_called_once()
     call_args = mock_job_submit.call_args
     assert call_args[0][0] == [
-        f"{settings.config.sim_telarray_path}/bin/rx",
+        str(image.context.software.sim_telarray_path / "bin" / "rx"),
         "-f",
         "0.80",
         "-v",
@@ -317,8 +329,8 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
 
     # Test case 1: Empty output
     mock_result = mocker.Mock()
-    mock_result.stdout = ""
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = ""
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     dummy_data = b"dummy data"
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
@@ -327,15 +339,15 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 2: Insufficient data
-    mock_result.stdout = "1.0\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = "1.0\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     with pytest.raises(IndexError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 3: Invalid data format
-    mock_result.stdout = "not_a_good_return_value\n"
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
+    mock_result.output = "not_a_good_return_value\n"
+    mocker.patch("simtools.job_execution.execution.run_command", return_value=mock_result)
 
     with pytest.raises(ValueError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
