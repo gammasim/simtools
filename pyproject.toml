@@ -377,6 +377,7 @@ ignore_names = [
   "ObdeectBackend",
   "peak_timing",
   "read_legacy_lst_single_pe",
+  "register_stage",
   "RpolMatrixWriter",
   "SimtelBackend",
   "skip_multiple_version_test",

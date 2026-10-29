@@ -39,7 +39,7 @@ from simtools.io.output_paths import OutputPaths
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_stage import CorsikaStage
 from tests.unit_tests.builders import model_repository
 
 logger = logging.getLogger()
@@ -729,12 +729,8 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
 
 
 @pytest.fixture
-def corsika_runner_mock_array_model(corsika_config_mock_array_model):
-    return CorsikaRunner(
-        corsika_config=corsika_config_mock_array_model,
-        label="test-corsika-runner",
-        use_multipipe=False,
-    )
+def corsika_stage_mock_array_model(corsika_config_mock_array_model):
+    return CorsikaStage(corsika_config_mock_array_model, label="test-corsika-runner")
 
 
 @pytest.fixture

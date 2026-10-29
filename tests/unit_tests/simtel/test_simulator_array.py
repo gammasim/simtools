@@ -30,62 +30,6 @@ def test_init_simulator_array(corsika_config_mock_array_model):
     assert simulator._log_file is None
 
 
-def test_prepare_run(simtel_runner, tmp_path, mocker):
-    # Mock make_run_command
-    mocker.patch.object(simtel_runner, "make_run_command", return_value=["echo", "'test command'"])
-
-    # Set up test data
-    run_number = 42
-    sub_script = tmp_path / "test_script.sh"
-    corsika_file = "/path/to/corsika.file"
-    extra_commands = ["export TEST_VAR=1", "echo 'extra command'"]
-
-    # Execute prepare_run
-    simtel_runner.prepare_run(
-        run_number=run_number,
-        sub_script=sub_script,
-        corsika_file=corsika_file,
-        extra_commands=extra_commands,
-    )
-
-    # Check script content
-    content = sub_script.read_text(encoding="utf-8")
-    assert "#!/usr/bin/env bash" in content
-    assert "set -e" in content
-    assert "set -o pipefail" in content
-    assert "export TEST_VAR=1" in content
-    assert "echo 'extra command'" in content
-    assert "test command" in content
-
-
-def test_prepare_run_no_extra_commands(simtel_runner, tmp_path, mocker):
-    mocker.patch.object(simtel_runner, "make_run_command", return_value=["sim_telarray", "command"])
-
-    sub_script = tmp_path / "simple_script.sh"
-    simtel_runner.prepare_run(run_number=1, sub_script=sub_script, corsika_file="test.corsika")
-
-    content = sub_script.read_text(encoding="utf-8")
-    assert "# Writing extras" not in content
-    assert "sim_telarray command" in content
-
-
-def test_prepare_run_keeps_resource_record_for_each_run(simtel_runner, tmp_test_directory, mocker):
-    mocker.patch.object(simtel_runner, "make_run_command", return_value=["sim_telarray", "command"])
-    simtel_runner.file_list = {}
-    simtel_runner.runs_per_set = 2
-    sub_script = tmp_test_directory / "repeated_script.sh"
-
-    simtel_runner.prepare_run(run_number=1, sub_script=sub_script, corsika_file="input.corsika")
-
-    resource_files = simtel_runner.file_list["sim_telarray_resources"]
-    assert len(resource_files) == 2
-    assert resource_files[0] != resource_files[1]
-    content = sub_script.read_text(encoding="utf-8")
-    assert content.count("process_accounting") == 2
-    assert str(resource_files[0]) in content
-    assert str(resource_files[1]) in content
-
-
 def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.load_files.return_value = {}
