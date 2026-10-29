@@ -390,7 +390,7 @@ def _has_positive_energy_histogram(histograms):
         return False
 
     try:
-        return bool(np.any(np.asarray(counts, dtype=float) > 0))
+        return bool(np.any(np.asarray(counts.values, dtype=float) > 0))
     except TypeError, ValueError:
         return False
 
@@ -667,7 +667,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
             )
         elif bins_per_decade > 0:
             axis_max, curve_x, curve_y = _differential_upper_limits(
-                histograms.histograms[f"{axis_name}_vs_energy"]["histogram"],
+                histograms.histograms[f"{axis_name}_vs_energy"]["histogram"].values,
                 config["x_bins"],
                 histograms.energy_bins,
                 differential_energy_bins,
@@ -677,7 +677,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
             )
         else:
             axis_max = _integral_limits(
-                histograms.histograms[axis_name]["histogram"],
+                histograms.histograms[axis_name]["histogram"].values,
                 config["x_bins"],
                 allowed_losses[axis_name]["loss_fraction"],
                 allowed_losses[axis_name]["loss_min_events"],
@@ -1059,7 +1059,7 @@ def compute_lower_energy_limit(histograms, threshold_fraction):
     """
     energy_min = (
         _find_low_energy_threshold_from_histogram(
-            histograms.histograms["energy"]["histogram"],
+            histograms.histograms["energy"]["histogram"].values,
             histograms.energy_bins,
             threshold_fraction=threshold_fraction,
         )

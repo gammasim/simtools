@@ -8,6 +8,7 @@ from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
 import simtools.production_configuration.production_event_data_helpers as event_data_helpers
+from simtools.histogram.histogram import Histogram
 from simtools.io import table_handler
 
 # Constants
@@ -256,9 +257,13 @@ def test_generate_corsika_limits_grid_skips_empty_energy_histograms(
         ]
     )
     empty_histograms = mocker.Mock()
-    empty_histograms.histograms = {"energy": {"histogram": np.zeros(2)}}
+    empty_histograms.histograms = {
+        "energy": {"histogram": Histogram.from_edges([np.arange(3)], values=np.zeros(2))}
+    }
     valid_histograms = mocker.Mock()
-    valid_histograms.histograms = {"energy": {"histogram": np.array([0.0, 1.0])}}
+    valid_histograms.histograms = {
+        "energy": {"histogram": Histogram.from_edges([np.arange(3)], values=np.array([0.0, 1.0]))}
+    }
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
         return_value=[
@@ -694,7 +699,9 @@ def test_compute_lower_energy_limit(mocker):
 
     # Mock the histograms object
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"energy": {"histogram": mock_hist}}
+    mock_histograms.histograms = {
+        "energy": {"histogram": Histogram.from_edges([mock_bins], values=mock_hist)}
+    }
     mock_histograms.energy_bins = mock_bins
     mock_histograms.file_info = {}
 
@@ -720,7 +727,9 @@ def test_compute_lower_energy_limit_never_below_broad_range_min(mocker):
     mock_bins = np.array([0.01, 0.02, 0.04, 0.08, 0.16, 0.32])
 
     mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"energy": {"histogram": mock_hist}}
+    mock_histograms.histograms = {
+        "energy": {"histogram": Histogram.from_edges([mock_bins], values=mock_hist)}
+    }
     mock_histograms.energy_bins = mock_bins
     mock_histograms.file_info = {"energy_min": 0.014 * u.TeV}
 
@@ -844,8 +853,12 @@ def test_compute_limits(mocker, file_info, expected_core_scatter_max, expected_v
     histograms.core_distance_bins = np.array([0.0, 100.0])
     histograms.view_cone_bins = np.array([0.0, 5.0])
     histograms.histograms = {
-        "core_distance_vs_energy": {"histogram": "core-hist"},
-        "angular_distance_vs_energy": {"histogram": "viewcone-hist"},
+        "core_distance_vs_energy": {
+            "histogram": Histogram.from_edges([[0, 100], [1, 10]], values=[[1]])
+        },
+        "angular_distance_vs_energy": {
+            "histogram": Histogram.from_edges([[0, 5], [1, 10]], values=[[2]])
+        },
     }
     histograms.file_info = file_info
 
@@ -866,9 +879,9 @@ def test_compute_limits(mocker, file_info, expected_core_scatter_max, expected_v
     expected_diff_bins = np.logspace(0, 1, 3)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[1].args[3], expected_diff_bins)
-    assert mock_diff_limits.call_args_list[0].args[0] == "core-hist"
+    np.testing.assert_array_equal(mock_diff_limits.call_args_list[0].args[0], [[1]])
     assert mock_diff_limits.call_args_list[0].args[5:] == ("core_scatter", "m")
-    assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
+    np.testing.assert_array_equal(mock_diff_limits.call_args_list[1].args[0], [[2]])
     assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
     assert mock_diff_limits.call_args_list[0].args[4] == DEFAULT_ALLOWED_LOSSES["core_distance"]
     assert mock_diff_limits.call_args_list[1].args[4] == DEFAULT_ALLOWED_LOSSES["angular_distance"]
@@ -885,8 +898,12 @@ def test_compute_limits_with_integral_fallback_curves(mocker):
     histograms.core_distance_bins = np.array([0.0, 100.0])
     histograms.view_cone_bins = np.array([0.0, 5.0])
     histograms.histograms = {
-        "core_distance": {"histogram": np.array([1.0, 2.0])},
-        "angular_distance": {"histogram": np.array([3.0, 4.0])},
+        "core_distance": {
+            "histogram": Histogram.from_edges([np.arange(3)], values=np.array([1.0, 2.0]))
+        },
+        "angular_distance": {
+            "histogram": Histogram.from_edges([np.arange(3)], values=np.array([3.0, 4.0]))
+        },
     }
     histograms.file_info = {}
 
@@ -921,8 +938,12 @@ def test_compute_limits_uses_exact_constant_angular_distance(mocker):
     histograms.view_cone_bins = np.array([0.0, 0.5])
     histograms.data_ranges = {"angular_distance": (0.0, 0.0)}
     histograms.histograms = {
-        "core_distance": {"histogram": np.array([10.0])},
-        "angular_distance": {"histogram": np.array([10.0])},
+        "core_distance": {
+            "histogram": Histogram.from_edges([np.arange(2)], values=np.array([10.0]))
+        },
+        "angular_distance": {
+            "histogram": Histogram.from_edges([np.arange(2)], values=np.array([10.0]))
+        },
     }
     histograms.file_info = {"viewcone_max": 0.0 * u.deg}
 
@@ -1011,10 +1032,22 @@ def test_constant_angular_distance_distributions_are_not_plotted(mocker, tmp_tes
     histograms = mocker.MagicMock()
     histograms.file_info = {}
     histograms.histograms = {
-        "energy": {"histogram": np.array([1.0])},
-        "angular_distance_vs_energy": {"histogram": np.array([[1.0]])},
-        "angular_distance_vs_energy_mc": {"histogram": np.array([[1.0]])},
-        "angular_distance_vs_energy_cumulative": {"histogram": np.array([[1.0]])},
+        "energy": {"histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))},
+        "angular_distance_vs_energy": {
+            "histogram": Histogram.from_edges(
+                [np.arange(2), np.arange(2)], values=np.array([[1.0]])
+            )
+        },
+        "angular_distance_vs_energy_mc": {
+            "histogram": Histogram.from_edges(
+                [np.arange(2), np.arange(2)], values=np.array([[1.0]])
+            )
+        },
+        "angular_distance_vs_energy_cumulative": {
+            "histogram": Histogram.from_edges(
+                [np.arange(2), np.arange(2)], values=np.array([[1.0]])
+            )
+        },
     }
     mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
     mocker.patch(
@@ -1053,14 +1086,21 @@ def test_reduced_histogram_plot_selection(mocker, tmp_test_directory):
     histograms = mocker.MagicMock()
     histograms.file_info = {}
     histograms.histograms = {
-        name: {"histogram": np.array([1.0])} for name in reduced_histogram_names
+        name: {"histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))}
+        for name in reduced_histogram_names
     }
     histograms.histograms.update(
         {
-            "energy": {"histogram": np.array([1.0])},
-            "core_distance": {"histogram": np.array([1.0])},
-            "reuse_max_vs_core_distance_vs_energy": {"histogram": np.array([1.0])},
-            "x_core_shower_vs_y_core_shower": {"histogram": np.array([1.0])},
+            "energy": {"histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))},
+            "core_distance": {
+                "histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))
+            },
+            "reuse_max_vs_core_distance_vs_energy": {
+                "histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))
+            },
+            "x_core_shower_vs_y_core_shower": {
+                "histogram": Histogram.from_edges([np.arange(2)], values=np.array([1.0]))
+            },
         }
     )
     mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
