@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from importlib import import_module
 from typing import Protocol
 
-from simtools import settings
 from simtools.constants import RAY_TRACING_BACKEND_CLASSES
+from simtools.context import RunContext
 from simtools.utils import names
 
 
@@ -172,21 +172,24 @@ def image_file_name(backend, request, file_type, suffix):
     )
 
 
-def get_backend(name=None):
+def get_backend(name=None, *, context=None):
     """
     Return the ray-tracing backend class.
 
     Parameters
     ----------
     name: str or None
-        Backend name; default: the configured ``ray_tracing_backend``.
+        Backend name; defaults to the context's configured backend.
+    context : RunContext, optional
+        Run configuration. The environment context is used when omitted.
 
     Returns
     -------
     type
         Backend class.
     """
-    name = name or settings.config.ray_tracing_backend
+    context = context or RunContext.from_environment()
+    name = name or context.software.ray_tracing_backend
     try:
         module_name, class_name = RAY_TRACING_BACKEND_CLASSES[name].split(":")
     except KeyError as exc:

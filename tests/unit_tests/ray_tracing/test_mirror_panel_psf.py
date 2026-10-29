@@ -187,23 +187,20 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     assert inst.final_percentage_diff == pytest.approx(20.0)
 
 
-def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker, tmp_path):
+def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker, run_context):
     dummy = SimpleNamespace(optimize_single_mirror=MagicMock(return_value={"ok": True}))
     constructor = mocker.patch.object(mpp, "MirrorPanelPSF", return_value=dummy)
-    directory = mocker.patch.object(
-        mpp.io_handler.IOHandler,
-        "get_model_configuration_directory",
-        side_effect=lambda version, sub_dir: tmp_path / sub_dir / version,
-    )
     args = {"site": "North", "model_version": "6.0.0"}
     job = mpp.MirrorOptimizationJob("test", args, 1, 12.25)
 
-    result = mpp._optimize_single_mirror_worker(job)
+    model_directory = run_context.paths.get_model_configuration_directory(
+        "6.0.0", sub_dir="mirror_1"
+    )
+    result = mpp._optimize_single_mirror_worker(job, context=run_context)
 
     # Parallel mirrors must not share configuration files (they hold the trial RNDA).
-    directory.assert_called_once_with("6.0.0", sub_dir="mirror_1")
     constructor.assert_called_once_with(
-        "test", args, model_directory=tmp_path / "mirror_1" / "6.0.0"
+        "test", args, model_directory=model_directory, context=run_context
     )
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}

@@ -4,6 +4,7 @@ import copy
 import logging
 from math import pi, tan
 from pathlib import Path
+from types import MappingProxyType
 from unittest.mock import call
 
 import astropy.units as u
@@ -49,6 +50,11 @@ def _example_rows():
     ]
 
 
+def _set_runtime_args(ray, args):
+    """Set read-only arguments on the test run context."""
+    ray.context = ray.context.replace(args=MappingProxyType(args))
+
+
 def _example_rows_single_mirror():
     return [
         (*row, mirror_number) for row, mirror_number in zip(_example_rows(), [1, 2], strict=True)
@@ -85,7 +91,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
+def ray_tracing_lst(telescope_model_lst_mock, site_model_north, run_context):
     """A RayTracing instance with a local output directory."""
 
     ray_tracing_lst = RayTracing(
@@ -96,6 +102,7 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
         zenith_angle=20 * u.deg,
         off_axis_angle=[0] * u.deg,
         offset_directions=["N"],
+        context=run_context,
     )
 
     ray_tracing_lst.output_directory.mkdir(parents=True, exist_ok=True)
@@ -103,7 +110,7 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
 
 
 @pytest.fixture
-def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north):
+def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north, run_context):
     telescope_model_lst_mock.write_sim_telarray_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
@@ -115,6 +122,7 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_nort
         single_mirror_mode=True,
         mirror_numbers=[0, 2],
         offset_directions=["N"],
+        context=run_context,
     )
 
 
@@ -683,10 +691,12 @@ def backend(ray_tracing_lst, mocker):
     [(False, None, 100000, 20), (True, None, 5000, 1), (False, 12345, 12345, 20)],
 )
 def test_simulate_requests(
-    ray_tracing_lst, backend, mocker, test, photon_count, photons_per_instance, instances
+    ray_tracing_lst, backend, test, photon_count, photons_per_instance, instances
 ):
-    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
-    config.args = {"number_of_photons": photon_count, "instrument_seed": 5, "simulation_seed": [7]}
+    _set_runtime_args(
+        ray_tracing_lst,
+        {"number_of_photons": photon_count, "instrument_seed": 5, "simulation_seed": [7]},
+    )
     ray_tracing_lst.off_axis_angle = [(0.0, 0.0), (1.0, -0.5)]
 
     ray_tracing_lst.simulate(test=test, force=True, compress_photons=False, max_workers=3)
@@ -715,9 +725,8 @@ def test_simulate_requests(
 
 
 @pytest.mark.parametrize("photon_count", [0, -1, True, 1.5])
-def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, mocker, photon_count):
-    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
-    config.args = {"number_of_photons": photon_count}
+def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, photon_count):
+    _set_runtime_args(ray_tracing_lst, {"number_of_photons": photon_count})
     with pytest.raises(ValueError, match="positive integer"):
         ray_tracing_lst.simulate()
 
@@ -725,8 +734,7 @@ def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, mocker,
 def test_simulate_single_mirror_requests(ray_tracing_lst_single_mirror_mode, mocker):
     ray_tracing = ray_tracing_lst_single_mirror_mode
     backend = ray_tracing._backend = mocker.Mock()
-    config = mocker.patch("simtools.ray_tracing.ray_tracing.settings.config")
-    config.args = {"instrument_seed": 5, "simulation_seed": [7]}
+    _set_runtime_args(ray_tracing, {"instrument_seed": 5, "simulation_seed": [7]})
     ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
 
     ray_tracing.simulate()
@@ -793,4 +801,5 @@ def test_backend_is_selected_by_configuration(ray_tracing_lst, mocker):
         ray_tracing_lst.label,
         ray_tracing_lst.zenith_angle,
         False,
+        context=ray_tracing_lst.context,
     )

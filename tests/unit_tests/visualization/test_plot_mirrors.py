@@ -19,7 +19,7 @@ PYPLOT_SUBPLOTS_TARGET = "simtools.visualization.plot_mirrors.plt.subplots"
 @mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
 @mock.patch("simtools.visualization.plot_mirrors.Mirrors")
 @mock.patch("simtools.visualization.plot_mirrors.TelescopeModel")
-def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, tmp_path):
+def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, run_context):
     config = {
         "parameter": "mirror_list",
         "site": "North",
@@ -35,25 +35,23 @@ def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, t
     mock_fig = mock.MagicMock()
     mock_plot_layout.return_value = mock_fig
 
-    with mock.patch("simtools.visualization.plot_mirrors.io_handler.IOHandler") as mock_io:
-        mock_io_instance = mock.MagicMock()
-        mock_io.return_value = mock_io_instance
-        mock_io_instance.get_output_directory.return_value = tmp_path
+    output_path = run_context.paths.get_output_directory()
+    plot_mirrors.plot(config, "test.png", context=run_context)
 
-        plot_mirrors.plot(config, "test.png")
+    mock_telescope_model.assert_called_once_with(
+        site="North",
+        telescope_name="LSTN-01",
+        model_version="6.0.0",
+        ignore_software_version=True,
+        model_reader=run_context.model_reader,
+        context=run_context,
+    )
+    mock_tel_instance.get_parameter_value.assert_called_once_with("mirror_list")
+    mock_tel_instance.export_model_files.assert_called_once_with(destination_path=output_path)
 
-        mock_telescope_model.assert_called_once_with(
-            site="North",
-            telescope_name="LSTN-01",
-            model_version="6.0.0",
-            ignore_software_version=True,
-        )
-        mock_tel_instance.get_parameter_value.assert_called_once_with("mirror_list")
-        mock_tel_instance.export_model_files.assert_called_once_with(destination_path=tmp_path)
-
-        expected_path = tmp_path / "mirror_list.ecsv"
-        mock_mirrors.assert_called_once_with(mirror_list_file=expected_path)
-        mock_save.assert_called_once_with(mock_fig, "test.png")
+    expected_path = output_path / "mirror_list.ecsv"
+    mock_mirrors.assert_called_once_with(mirror_list_file=expected_path)
+    mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
 @mock.patch("simtools.visualization.plot_mirrors.plot_mirror_layout")
@@ -61,26 +59,24 @@ def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, t
 @mock.patch("simtools.visualization.plot_mirrors.Mirrors")
 @mock.patch("simtools.visualization.plot_mirrors.TelescopeModel")
 def test_plot_uses_explicit_data_file_path(
-    mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, tmp_path
+    mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, tmp_test_directory, run_context
 ):
     config = {
         "parameter": "mirror_list",
         "site": "North",
         "telescope": "LSTN-01",
     }
-    data_file_path = tmp_path / "mirror_list-2.0.0-LSTN-design.ecsv"
+    data_file_path = tmp_test_directory / "mirror_list-2.0.0-LSTN-design.ecsv"
     mock_fig = mock.MagicMock()
     mock_plot_layout.return_value = mock_fig
 
-    with mock.patch("simtools.visualization.plot_mirrors.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
-
-        plot_mirrors.plot(
-            config,
-            "test.png",
-            model_reader=mock.sentinel.model_reader,
-            data_file_path=data_file_path,
-        )
+    plot_mirrors.plot(
+        config,
+        "test.png",
+        model_reader=mock.sentinel.model_reader,
+        data_file_path=data_file_path,
+        context=run_context,
+    )
 
     mock_telescope_model.assert_not_called()
     mock_mirrors.assert_called_once_with(mirror_list_file=data_file_path)
@@ -113,7 +109,14 @@ def test_plot_uses_explicit_data_file_path(
 @mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
 @mock.patch("simtools.visualization.plot_mirrors.TelescopeModel")
 def test_plot_segmentation_types(
-    mock_telescope_model, mock_save, tmp_path, telescope, file_name, file_content, plot_function
+    mock_telescope_model,
+    mock_save,
+    tmp_test_directory,
+    telescope,
+    file_name,
+    file_content,
+    plot_function,
+    run_context,
 ):
     config = {
         "parameter": "primary_mirror_segmentation",
@@ -127,25 +130,16 @@ def test_plot_segmentation_types(
     mock_telescope_model.return_value = mock_tel_instance
     mock_tel_instance.get_parameter_value.return_value = file_name
 
-    seg_file = tmp_path / file_name
+    seg_file = run_context.paths.get_output_directory() / file_name
     seg_file.write_text(file_content)
 
     mock_fig = mock.MagicMock()
-    mock_io_instance = mock.MagicMock()
-    mock_io_instance.get_output_directory.return_value = tmp_path
+    with mock.patch(
+        f"simtools.visualization.plot_mirrors.{plot_function}", return_value=mock_fig
+    ) as mock_plot_func:
+        plot_mirrors.plot(config, "test.png", context=run_context)
 
-    with (
-        mock.patch(
-            "simtools.visualization.plot_mirrors.io_handler.IOHandler",
-            return_value=mock_io_instance,
-        ),
-        mock.patch(
-            f"simtools.visualization.plot_mirrors.{plot_function}", return_value=mock_fig
-        ) as mock_plot_func,
-    ):
-        plot_mirrors.plot(config, "test.png")
-
-        expected_path = tmp_path / file_name
+        expected_path = run_context.paths.get_output_directory() / file_name
         mock_plot_func.assert_called_once_with(
             data_file_path=expected_path,
             telescope_model_name=telescope,
