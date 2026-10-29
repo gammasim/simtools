@@ -1,0 +1,216 @@
+---
+name: CI-differential
+
+permissions: {}
+
+env:
+  # Model versions compared (comma-separated); configurations pinned to other versions are skipped.
+  DIFFERENTIAL_MODEL_VERSIONS: "7.0.0,6.0.2"
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+    paths-ignore:
+      - 'docs/**'
+      - 'tests/unit_tests/**'
+
+jobs:
+  prepare_simulation_models:
+    name: download simulation models
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Export dependency environment
+        run: |
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
+          python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+          python src/simtools/applications/dependency_versions.py --format github-output \
+            | sed -n 's/^model_repository=/SIM_MODELS_REPO=/p' >> "$GITHUB_ENV"
+      - name: Clone simulation models repository
+        env:
+          CTAO_GITLAB_MIRROR: ${{ secrets.CTAO_GITLAB_MIRROR }}
+        run: |
+          set -euo pipefail
+          repositories=("$SIM_MODELS_REPO" "https://github.com/gammasim/simulations-models.git")
+          cloned=false
+          for repository in "${repositories[@]}"; do
+            args=()
+            if [[ "$repository" == https://github.com/* ]]; then
+              if [[ -z "$CTAO_GITLAB_MIRROR" ]]; then
+                continue
+              fi
+              auth=$(printf 'x-access-token:%s' "$CTAO_GITLAB_MIRROR" | base64 -w0)
+              args=(-c "http.extraheader=AUTHORIZATION: basic $auth")
+            fi
+            if git "${args[@]}" clone --bare --depth 1 --branch "$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION" "$repository" simulation-models.git; then
+              cloned=true
+              break
+            fi
+            rm -rf simulation-models.git
+          done
+          if [[ "$cloned" != true ]]; then
+            echo 'Could not clone the configured simulation-model repository.'
+            exit 1
+          fi
+          git --git-dir=simulation-models.git rev-parse --verify HEAD
+          (cd simulation-models.git && python -m zipfile -c ../simulation-models.git.zip .)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: simulation-models-repo
+          path: simulation-models.git.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  prepare_test_resources:
+    name: download test resources
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      resource_version: ${{ steps.version.outputs.resource_version }}
+      repository: ${{ steps.version.outputs.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Export dependency environment
+        run: |
+          bash .github/scripts/install_python_dependencies.sh packaging pyyaml
+          python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+      - id: version
+        name: Set test-resource revision
+        run: |
+          echo "resource_version=$SIMTOOLS_TESTS_RESOURCE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "repository=$SIMTOOLS_TESTS_REPOSITORY" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          repository: ${{ steps.version.outputs.repository }}
+          ref: main
+          path: simtools-tests
+          sparse-checkout: simtools-tests/${{ steps.version.outputs.resource_version }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: simtools-test-resources
+          path: simtools-tests
+          if-no-files-found: error
+          retention-days: 1
+
+  differential:
+    name: Compare integration outputs
+    needs: [prepare_simulation_models, prepare_test_resources]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    container:
+      image: ${{ vars.SIMTOOLS_DEV_IMAGE || 'ghcr.io/gammasim/simtools-dev:latest' }}
+      options: --user 0
+    env:
+      SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
+      SIMTOOLS_SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
+      SIMTOOLS_SIMULATION_MODELS_GIT_REVISION: HEAD
+      SIMTOOLS_TESTS_PATH: ${{ github.workspace }}/simtools-tests/simtools-tests
+      SIMTOOLS_TESTS_RESOURCE_VERSION: ${{ needs.prepare_test_resources.outputs.resource_version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+      - name: Download test resources
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          name: simtools-test-resources
+          path: simtools-tests
+      - name: Download simulation models repository
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          name: simulation-models-repo
+          path: .
+      - name: Extract simulation models repository
+        run: |
+          set -euo pipefail
+          mkdir simulation-models.git
+          python -m zipfile -t simulation-models.git.zip
+          python -m zipfile -e simulation-models.git.zip simulation-models.git
+          git --git-dir=simulation-models.git rev-parse --verify HEAD
+      - name: Create runtime environment (.env)
+        run: |
+          set -euo pipefail
+          {
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
+            echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=${SIMTOOLS_SIM_TELARRAY_PATH:-}"
+            echo "SIMTOOLS_CORSIKA_PATH=${SIMTOOLS_CORSIKA_PATH:-}"
+            echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=${SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH:-}"
+          } | tee .env >> "$GITHUB_ENV"
+          cp .env ../base-runtime.env
+      - name: Initialize differential report
+        run: |
+          printf '# Differential output report\n\nIntegration output comparison did not complete.\n' > diff_report.md
+      - name: Install head and merge-base checkouts
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory '*'
+          base_commit="$(git merge-base "origin/$BASE_REF" HEAD)"
+          git worktree add ../base "$base_commit"
+          cp dependency_versions.yml ../base/dependency_versions.yml
+          cp ../base-runtime.env ../base/.env
+          bash .github/scripts/install_python_dependencies.sh --no-cache-dir -e '.[tests,dev,doc,obdeect]'
+          # The merge base runs from source (PYTHONPATH); give it the generated version file.
+          cp src/simtools/_version.py ../base/src/simtools/_version.py
+      - name: Run merge-base outputs
+        env:
+          PYTHONPATH: ../base/src
+        run: |
+          set -euo pipefail
+          python tests/integration_tests/differential_outputs.py run --checkout ../base \
+            --selection-checkout . --basetemp ../base-outputs \
+            --model-versions "$DIFFERENTIAL_MODEL_VERSIONS"
+      - name: Run pull-request outputs
+        run: |
+          set -euo pipefail
+          python tests/integration_tests/differential_outputs.py run --checkout . \
+            --selection-checkout . --basetemp ../head-outputs \
+            --model-versions "$DIFFERENTIAL_MODEL_VERSIONS"
+      - name: Compare outputs
+        id: compare
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          python tests/integration_tests/differential_outputs.py compare \
+            --base ../base-outputs --head ../head-outputs --report diff_report.md
+          result=$?
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          exit "$result"
+      - name: Upload diff report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: differential-output-report
+          path: diff_report.md
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Add diff report to summary
+        if: always()
+        run: |
+          if [[ -f diff_report.md ]]; then cat diff_report.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Enforce expected-output-change label
+        if: always()
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          COMPARE_RESULT: ${{ steps.compare.outputs.result }}
+        run: |
+          set -euo pipefail
+          if [[ "$COMPARE_RESULT" == 0 ]]; then exit 0; fi
+          if [[ "$COMPARE_RESULT" != 1 ]]; then
+            echo 'Output comparison failed; the expected-output-change label cannot approve it.'
+            exit 1
+          fi
+          if grep -q '"expected-output-change"' <<< "$LABELS"; then
+            echo 'Output differences are approved by expected-output-change.'
+            exit 0
+          fi
+          echo 'Output differences require the expected-output-change pull-request label.'
+          exit 1

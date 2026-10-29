@@ -14,6 +14,7 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
     site: North
+  differential_test: true
   test_name: run
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

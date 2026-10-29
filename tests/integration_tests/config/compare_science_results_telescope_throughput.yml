@@ -1,6 +1,7 @@
 ---
 applications:
 - application: simtools-compare-science-results
+  differential_test: true
   docs:
     title: Compare telescope-throughput science results
     summary: Compare exported telescope-throughput evidence without rerunning calculations.
