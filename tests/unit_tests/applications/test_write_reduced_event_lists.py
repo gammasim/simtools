@@ -84,7 +84,7 @@ def test_main_passes_application_arguments_to_metadata_builder(file_format):
     }
     app_context = SimpleNamespace(
         args=args,
-        io_handler=SimpleNamespace(get_output_directory=lambda: "output"),
+        paths=SimpleNamespace(get_output_directory=lambda: "output"),
     )
 
     with (

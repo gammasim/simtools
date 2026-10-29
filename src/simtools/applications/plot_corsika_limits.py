@@ -23,7 +23,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 
@@ -33,7 +33,7 @@ def main():
 
     plot_limits(
         data_reader.read_table_from_file(app_context.args["corsika_limits_file"]),
-        app_context.io_handler.get_output_directory(),
+        app_context.paths.get_output_directory(),
     )
 
 

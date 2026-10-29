@@ -60,6 +60,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 

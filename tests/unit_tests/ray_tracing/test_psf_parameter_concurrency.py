@@ -5,7 +5,7 @@ import pickle
 import time
 from multiprocessing import get_context
 from pathlib import Path
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import numpy as np
 import pytest
@@ -29,11 +29,19 @@ SOURCE_CONFIG = {"kind": "test"}
 
 
 @pytest.fixture
-def optimizer(mocker, tmp_test_directory):
+def optimizer(mocker, tmp_test_directory, run_context):
     args = {"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0"}
-    mocker.patch.object(evaluation, "config", SimpleNamespace(args=args, model_reader=None))
+    context = run_context.replace(
+        args=MappingProxyType(args), model_reader=SimpleNamespace(source_config=SOURCE_CONFIG)
+    )
     return psf.PSFParameterOptimizer(
-        object(), object(), args, {"measured": [1.0]}, np.array([1.0]), Path(tmp_test_directory)
+        object(),
+        object(),
+        args,
+        {"measured": [1.0]},
+        np.array([1.0]),
+        Path(tmp_test_directory),
+        context=context,
     )
 
 
@@ -78,7 +86,6 @@ def test_empty_batch_does_not_submit(optimizer, mocker):
 @pytest.mark.parametrize(BACKEND, ["local", "htcondor"])
 def test_dispatch_serializable_jobs_with_unique_paths(optimizer, mocker, backend):
     optimizer.args_dict.update({BACKEND: backend, "backend_config": {}})
-    evaluation.config.model_reader = SimpleNamespace(source_config=SOURCE_CONFIG)
     execute = mocker.patch.object(
         evaluation, EXECUTE, return_value=[JobResult("first", 0, 2.0), JobResult("second", 1, 3.0)]
     )
@@ -92,8 +99,8 @@ def test_dispatch_serializable_jobs_with_unique_paths(optimizer, mocker, backend
     for job in jobs:
         restored = pickle.loads(pickle.dumps(job))
         assert restored.item.parameters == job.item.parameters
-        assert restored.runtime_args == optimizer.args_dict
-        assert restored.model_source_config == SOURCE_CONFIG
+        assert restored.context_spec["args"] == optimizer.args_dict
+        assert restored.context_spec["model_source"] == SOURCE_CONFIG
     previous_paths = [job.item.output_dir for job in jobs]
     optimizer._dispatch_parameter_evaluations([{SIGMA: 3}])
     assert execute.call_args.args[0][0].item.output_dir not in previous_paths

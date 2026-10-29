@@ -38,9 +38,8 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS, cli.IGNORE_EXISTING_PARAMETER_VERSION),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
     usage="simtools-run-application --config_file config_file_name",
+    needs=("model",),
 )
 
 

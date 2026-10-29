@@ -219,8 +219,8 @@ def generate_scan_grids(args, io_handler):
     ----------
     args : dict
         Application arguments for production-grid and bias-curve scan configuration.
-    io_handler : IOHandler
-        IOHandler for file output.
+    io_handler : OutputPaths
+        Paths used for output files.
     """
     _validate_required_args(args)
 

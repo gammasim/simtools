@@ -24,6 +24,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 

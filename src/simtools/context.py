@@ -1,12 +1,17 @@
 """Run context: the configuration and services of one simtools run."""
 
+from __future__ import annotations
+
+import logging
 import os
 import socket
 from dataclasses import dataclass, field
 from dataclasses import replace as dataclass_replace
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
+from simtools.application import model_reader as application_model_reader
 from simtools.configuration import defaults
 from simtools.constants import RAY_TRACING_BACKENDS
 from simtools.corsika.build_options import (
@@ -16,6 +21,9 @@ from simtools.corsika.build_options import (
 from simtools.io.output_paths import OutputPaths
 from simtools.utils.general import find_executable_in_dir, get_uuid
 
+if TYPE_CHECKING:
+    from simtools.model_repository.reader import SimulationModelReader
+
 
 def _config_value(args, arg_key, env_key, default=None):
     """Return a value from the arguments, else the environment variable, else the default."""
@@ -23,18 +31,6 @@ def _config_value(args, arg_key, env_key, default=None):
     if value is not None:
         return value
     return os.getenv(env_key, default)
-
-
-_APPLICATION_CONTEXT_PROVIDER = []
-
-
-def register_application_context_provider(provider):
-    """Register the function returning the context of the running application.
-
-    ``simtools.settings`` registers itself; library calls without an explicit context then use
-    the application's context. ``None`` removes the provider.
-    """
-    _APPLICATION_CONTEXT_PROVIDER[:] = [provider] if provider is not None else []
 
 
 @dataclass(frozen=True)
@@ -244,11 +240,13 @@ class RunContext:
         Read-only view of the parsed application arguments.
     """
 
-    model_reader: object = None
+    model_reader: SimulationModelReader | None = None
     paths: OutputPaths = field(default_factory=OutputPaths)
     software: SimulationSoftware = field(default_factory=SimulationSoftware)
     activity: Activity = field(default_factory=Activity)
     args: MappingProxyType = field(default_factory=lambda: MappingProxyType({}))
+    logger: logging.Logger | None = None
+    run_time: list | None = None
 
     @classmethod
     def from_arguments(
@@ -278,14 +276,20 @@ class RunContext:
 
     @classmethod
     def from_environment(cls):
-        """Return the context for library calls made without an explicit context.
-
-        Inside an application this is the context the application started with; otherwise a
-        context built from the environment variables.
-        """
-        if _APPLICATION_CONTEXT_PROVIDER:
-            return _APPLICATION_CONTEXT_PROVIDER[0]()
-        return cls.from_arguments({}, resolve_sim_software_executables=False)
+        """Return a fresh context built from environment."""
+        model_source_configured = any(
+            os.getenv(name)
+            for name in (
+                "SIMTOOLS_SIMULATION_MODELS_PATH",
+                "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
+            )
+        )
+        model_reader = None
+        if model_source_configured:
+            model_reader = application_model_reader.create_model_reader()
+        return cls.from_arguments(
+            {}, model_reader=model_reader, resolve_sim_software_executables=False
+        )
 
     @property
     def ray_tracing_backend(self):
@@ -295,6 +299,34 @@ class RunContext:
     def replace(self, **changes):
         """Return a copy with the given fields replaced."""
         return dataclass_replace(self, **changes)
+
+    def to_spec(self):
+        """Return the JSON-serializable configuration needed to rebuild this context."""
+        source_config = getattr(self.model_reader, "source_config", None)
+        return {
+            "args": dict(self.args),
+            "model_source": source_config,
+            "model_path": str(self.paths.model_path) if self.paths.model_path else None,
+        }
+
+    @classmethod
+    def from_spec(cls, spec):
+        """Rebuild a worker context from :meth:`to_spec` output."""
+        if not isinstance(spec, dict) or not isinstance(spec.get("args"), dict):
+            raise ValueError("Run context specification must contain an args dictionary.")
+        source = spec.get("model_source")
+        reader = (
+            application_model_reader.create_model_reader_from_source_config(source)
+            if source
+            else None
+        )
+        paths = OutputPaths(spec["args"].get("output_path"), spec.get("model_path"))
+        return cls.from_arguments(
+            spec["args"],
+            model_reader=reader,
+            paths=paths,
+            resolve_sim_software_executables=False,
+        )
 
     def __deepcopy__(self, _memo):
         """Return this context: it is immutable and shared by deep-copied models."""

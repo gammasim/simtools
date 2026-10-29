@@ -38,9 +38,7 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Build-options YAML files to merge in development mode.",
         ),
     ),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
+    needs=(),
 )
 
 

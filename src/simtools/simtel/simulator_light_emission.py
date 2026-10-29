@@ -7,10 +7,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools import settings
-from simtools.application.model_reader import require_model_reader
 from simtools.atmosphere.transmission import AtmosphericTransmission
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.job_execution import execution
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.model.calibration_model import CalibrationModel
@@ -108,19 +106,22 @@ class SimulatorLightEmission(SimtelRunner):
             "label": f"temp_wavelength_query_{light_source}",
             "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(),
         }
-        calibration_kwargs["model_reader"] = require_model_reader(model_reader)
+        calibration_kwargs["model_reader"] = model_reader
         calibration_model = CalibrationModel(**calibration_kwargs)
 
         wavelengths = calibration_model.get_parameter_value_with_unit(FLASHER_WAVELENGTH)
         return general.ensure_list(wavelengths)
 
-    def __init__(self, light_emission_config, telescope=None, label=None, model_reader=None):
+    def __init__(
+        self, light_emission_config, telescope=None, label=None, model_reader=None, context=None
+    ):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.configuration_writers = {}
         self._seed_pair = None
-        self.model_reader = require_model_reader(model_reader)
-        self.io_handler = io_handler.IOHandler()
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        self.io_handler = self.context.paths
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
 
@@ -133,9 +134,9 @@ class SimulatorLightEmission(SimtelRunner):
             wl_str = f"{wl.to(u.nm).value:.0f}nm"
             label = f"{label}_{wl_str}"
 
-        super().__init__(label=label, config=light_emission_config)
+        super().__init__(label=label, config=light_emission_config, context=self.context)
         self.submission_files = runner_services.RunnerServices(
-            light_emission_config, run_type="sub", label=label
+            light_emission_config, run_type="sub", label=label, context=self.context
         )
 
         model_kwargs = {
@@ -287,7 +288,7 @@ class SimulatorLightEmission(SimtelRunner):
     def _seeds(self):
         """Return the (instrument seed, simulation seed) of this run."""
         if self._seed_pair is None:
-            self._seed_pair = instance_seed_pairs()[0]
+            self._seed_pair = instance_seed_pairs(context=self.context)[0]
         return self._seed_pair
 
     def _dual_mirror(self):
@@ -689,7 +690,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         bypass = self._bypass_optics()
         theta, phi = (0.0, 0.0) if bypass else self._get_telescope_pointing()
-        simtel_bin = str(settings.config.sim_telarray_exe)
+        simtel_bin = str(self.context.software.sim_telarray_exe)
 
         parts = [
             simtel_bin,

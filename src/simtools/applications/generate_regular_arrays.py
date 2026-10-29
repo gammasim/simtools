@@ -43,7 +43,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("corsika", "output"),
 )
 
 
@@ -85,8 +85,7 @@ def main():
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            app_context.io_handler.get_output_directory()
-            / Path(output_file).with_suffix(".info.yml"),
+            app_context.paths.get_output_directory() / Path(output_file).with_suffix(".info.yml"),
         )
 
 

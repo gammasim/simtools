@@ -159,7 +159,7 @@ def test_show_model_versions_uses_configured_git_source(mocker):
     )
 
 
-def test_show_array_layout_names_groups_all_sites(monkeypatch):
+def test_show_array_layout_names_groups_all_sites(monkeypatch, run_context):
     class FakeSiteModel:
         def __init__(self, site, model_version, model_reader):
             self.site = site
@@ -172,7 +172,8 @@ def test_show_array_layout_names_groups_all_sites(monkeypatch):
     monkeypatch.setattr(show_options.names, "site_names", lambda: ("South", "North"))
 
     result = show_options.resolve_show_options(
-        {"show_options": "array_layout_name", "model_version": ["7.0.0"]}
+        {"show_options": "array_layout_name", "model_version": ["7.0.0"]},
+        context=run_context,
     )
 
     assert result.grouped_values == {
@@ -182,7 +183,7 @@ def test_show_array_layout_names_groups_all_sites(monkeypatch):
     assert result.notes == ("Provide --site to limit array layouts to one site.",)
 
 
-def test_show_array_layout_names_limits_to_selected_site(monkeypatch):
+def test_show_array_layout_names_limits_to_selected_site(monkeypatch, run_context):
     class FakeSiteModel:
         def __init__(self, site, model_version, model_reader):
             self.site = site
@@ -194,7 +195,8 @@ def test_show_array_layout_names_limits_to_selected_site(monkeypatch):
     monkeypatch.setattr(show_options, "SiteModel", FakeSiteModel)
 
     result = show_options.resolve_show_options(
-        {"show_options": "array_layout_name", "model_version": "7.0.0", "site": "North"}
+        {"show_options": "array_layout_name", "model_version": "7.0.0", "site": "North"},
+        context=run_context,
     )
 
     assert result.grouped_values == {"North": ("North-7.0.0",)}

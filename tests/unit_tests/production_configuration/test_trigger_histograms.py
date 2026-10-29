@@ -8,7 +8,7 @@ import pytest
 from astropy.table import Table
 
 from simtools.histogram.histogram import Histogram
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_BINS_TABLE,
@@ -373,7 +373,9 @@ def test_discover_event_data_groups_rejects_empty_directory(tmp_test_directory):
         discover_event_data_groups(input_directory)
 
 
-def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_directory):
+def test_write_directory_products_submits_one_job_per_group(
+    mocker, tmp_test_directory, run_context
+):
     tmp_test_directory = Path(tmp_test_directory)
     input_directory = tmp_test_directory / "reduced_event_data"
     input_directory.mkdir()
@@ -383,9 +385,7 @@ def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_dir
         "proton.reduced_event_data.hdf5",
     ):
         (input_directory / file_name).touch()
-    mocker.patch(
-        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory / "output"
+    run_context.paths.output_path["default"] = tmp_test_directory / "output"
     submit_jobs = mocker.patch("simtools.production_configuration.trigger_histograms.submit_jobs")
 
     _write_directory_products(
@@ -395,7 +395,8 @@ def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_dir
             "backend": "htcondor",
             "backend_config": {},
             "max_workers": 4,
-        }
+        },
+        context=run_context,
     )
 
     jobs = submit_jobs.call_args.args[0]
@@ -522,7 +523,7 @@ def test_group_output_stem_includes_selections_without_hash():
     [(1, False), (2, True)],
 )
 def test_production_selection_controls_hash_for_number_of_outputs(
-    mocker, tmp_test_directory, group_count, expected_hash
+    mocker, tmp_test_directory, run_context, group_count, expected_hash
 ):
     configuration = {
         "array_layout_name": ["CTAO-South-Beta"],
@@ -560,7 +561,7 @@ def test_production_selection_controls_hash_for_number_of_outputs(
         "simtools.production_configuration.trigger_histograms.submit_jobs",
         return_value=None,
     )
-    io_handler.IOHandler().set_paths(output_path=tmp_test_directory)
+    run_context.paths.output_path["default"] = tmp_test_directory
 
     write_trigger_histograms_args = {
         "production_path": str(tmp_test_directory),
@@ -574,7 +575,7 @@ def test_production_selection_controls_hash_for_number_of_outputs(
         "core_distance_bin_width": 20.0 * u.m,
         "minimum_triggered_telescopes": 2,
     }
-    _write_production_selection_products(write_trigger_histograms_args)
+    _write_production_selection_products(write_trigger_histograms_args, context=run_context)
 
     assert len(submit_jobs.call_args.args[0]) == group_count
     hash_values = [call.kwargs["include_hash"] for call in stem.call_args_list]
@@ -630,7 +631,9 @@ def test_production_metadata_histograms_reject_non_event_data_file_types():
         write_trigger_histograms({"production_path": "production", "file_type": "sim_telarray"})
 
 
-def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):
+def test_write_trigger_histograms_dispatches_one_job_per_pattern(
+    mocker, tmp_test_directory, run_context
+):
     mocker.patch(
         "simtools.production_configuration.trigger_histograms.resolve_telescope_configs",
         return_value={"alpha": ["LSTN-01"]},
@@ -639,9 +642,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "simtools.production_configuration.trigger_histograms.normalize_telescope_configs",
         return_value=[{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
     )
-    mocker.patch(
-        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
-    ).return_value.get_output_file.return_value = tmp_path / "trigger_histograms.hdf5"
+    run_context.paths.output_path["default"] = tmp_test_directory
     mock_process_pool = mocker.patch(
         "simtools.production_configuration.trigger_histograms.map_ordered",
         return_value=[
@@ -684,7 +685,8 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "max_workers": 24,
             "site": "North",
             "output_file": "trigger_histograms.hdf5",
-        }
+        },
+        context=run_context,
     )
 
     mock_process_pool.assert_called_once()
@@ -714,11 +716,13 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "site": "North",
             "output_file": "trigger_histograms.hdf5",
         },
-        tmp_path / "trigger_histograms.hdf5",
+        Path(tmp_test_directory) / "trigger_histograms.hdf5",
         product_data_name="trigger_histograms",
     )
     assert (
-        table_handler.read_metadata_document(tmp_path / "trigger_histograms.hdf5", "METADATA")
+        table_handler.read_metadata_document(
+            Path(tmp_test_directory) / "trigger_histograms.hdf5", "METADATA"
+        )
         == metadata_document
     )
 

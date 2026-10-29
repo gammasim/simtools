@@ -121,15 +121,15 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
     post_parse=_post_parse,
+    needs=("model", "corsika", "output"),
 )
 
 
 def main():
     """Run the trigger-histogram writer CLI application."""
     app_context = APPLICATION.start()
-    write_trigger_histograms(app_context.args)
+    write_trigger_histograms(app_context.args, context=app_context)
 
 
 if __name__ == "__main__":

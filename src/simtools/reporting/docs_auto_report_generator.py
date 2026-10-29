@@ -6,7 +6,7 @@ import logging
 from collections.abc import Generator
 from pathlib import Path
 
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import names
 
@@ -23,10 +23,11 @@ def _is_missing_calibration_devices_error(message):
 class ReportGenerator:
     """Automate report generation."""
 
-    def __init__(self, args, output_path, model_reader=None):
+    def __init__(self, args, output_path, model_reader=None, context=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
         self.args = args
         self.output_path = output_path
 
@@ -41,7 +42,7 @@ class ReportGenerator:
 
     def _read_parameters(self, args, output_path):
         """Construct a report reader with the selected source."""
-        return ReadParameters(args, output_path, self.model_reader)
+        return ReadParameters(args, output_path, self.model_reader, context=self.context)
 
     def _add_design_models_to_telescopes(self, model_version, telescopes):
         """Add design models to the list of telescopes for a given model version."""

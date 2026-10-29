@@ -427,6 +427,7 @@ class ArrayLayout:
             telescope_name=telescope_name,
             model_version=self.model_version,
             label=self.label,
+            context=self.context,
         )
 
     def _set_telescope_auxiliary_parameters(self, telescope, telescope_name=None):

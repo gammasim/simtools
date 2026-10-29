@@ -39,8 +39,7 @@ if __package__:
                 default=None,
             ),
         ),
-        setup_io_handler=False,
-        resolve_sim_software_executables=False,
+        needs=(),
     )
 
 

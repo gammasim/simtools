@@ -12,6 +12,7 @@ _ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS,),
+    needs=("corsika",),
 )
 
 

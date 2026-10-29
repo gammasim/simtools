@@ -676,12 +676,13 @@ data:
     assert param_dict["type"] == ["str", "float64", "float64"]
 
 
-def test_updating_export_model_files(model_version):
+def test_updating_export_model_files(model_version, run_context):
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model-2",
+        context=run_context,
     )
 
     logger.debug(
@@ -860,7 +861,7 @@ def test_export_nsb_spectrum_skips_missing_correction(
     export_spy.assert_not_called()
 
 
-def test_check_model_parameter_with_overwrite(model_version):
+def test_check_model_parameter_with_overwrite(model_version, run_context):
 
     # Create a temporary telescope model to get the current value of num_gains of the telescope,
     # to make sure we change it to a different value in the test
@@ -871,6 +872,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         telescope_name=telescope_name,
         model_version=model_version,
         label="test-telescope-model",
+        context=run_context,
     )
 
     changes = {
@@ -889,6 +891,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context,
     )
 
     # The overwrite should have been applied during initialization
@@ -897,7 +900,7 @@ def test_check_model_parameter_with_overwrite(model_version):
     )
 
 
-def test_check_simulation_software_parameter_with_overwrite(model_version):
+def test_check_simulation_software_parameter_with_overwrite(model_version, run_context):
 
     site = "North"
     telescope_name = "LSTN-01"
@@ -915,6 +918,7 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context,
     )
 
     assert (
@@ -931,7 +935,7 @@ def test_check_simulation_software_parameter_with_overwrite(model_version):
 
 
 def test_check_corsika_simulation_software_parameter_with_overwrite(
-    model_version, mock_model_reader
+    model_version, mock_model_reader, run_context
 ):
 
     site = "North"
@@ -963,6 +967,7 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context.replace(model_reader=mock_model_reader),
     )
 
     assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][
@@ -970,7 +975,9 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(
     ] == pytest.approx(2.5)
 
 
-def test_check_corsika_overwrite_with_configuration_key(model_version, mock_model_reader):
+def test_check_corsika_overwrite_with_configuration_key(
+    model_version, mock_model_reader, run_context
+):
 
     site = "North"
     telescope_name = "LSTN-01"
@@ -1002,6 +1009,7 @@ def test_check_corsika_overwrite_with_configuration_key(model_version, mock_mode
         model_version=model_version,
         label="test-telescope-model",
         overwrite_model_parameter_dict=changes,
+        context=run_context.replace(model_reader=mock_model_reader),
     )
 
     assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][

@@ -127,10 +127,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=False,
-    initialize_model_reader=False,
     excluded_standard_arguments=("test",),
     post_parse=_post_parse,
+    needs=("corsika",),
 )
 
 
@@ -141,7 +140,7 @@ def main():
     if comparison_level == "events":
         write_production_comparison(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
         )
         return
     if comparison_level == "signal":
@@ -149,7 +148,7 @@ def main():
     elif comparison_level == "computing":
         write_resource_requirements(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
             plot_resource_requirements.plot,
         )
         return
@@ -171,7 +170,7 @@ def _run_signal_comparison(app_context):
         (statistics_file, None)
         for statistics_file in plot_signal_level_production_comparison.plot(
             metrics_by_telescope,
-            output_path=app_context.io_handler.get_output_directory(),
+            output_path=app_context.paths.get_output_directory(),
             figure_format=app_context.args.get("figure_format"),
         )
     ]

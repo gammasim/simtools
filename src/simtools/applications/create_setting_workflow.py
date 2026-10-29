@@ -11,8 +11,6 @@ from simtools.data_model.setting_workflow import create_setting_workflow, run_se
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    resolve_sim_software_executables=False,
-    setup_io_handler=False,
     excluded_standard_arguments=("runtime_environment_file",),
     arguments=(
         cli.ArgumentDefinition(
@@ -48,6 +46,7 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         cli.ArgumentDefinition("run", action="store_true", help="Run the prepared workflow."),
     ),
+    needs=("model",),
 )
 
 

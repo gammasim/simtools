@@ -2,7 +2,7 @@
 
 import logging
 
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.io.file_type import product_value
 from simtools.simulation.parameters import SimulationParameters
 
@@ -113,13 +113,14 @@ class RunnerServices:
         Label.
     """
 
-    def __init__(self, config, run_type, label=None, array_model=None):
+    def __init__(self, config, run_type, label=None, array_model=None, context=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.array_model = array_model or getattr(config, "array_model", None)
         self.config = getattr(config, "simulation_parameters", config)
         self.run_type = run_type
+        self.context = context or RunContext.from_environment()
         self.directory = self.load_data_directory()
 
     def load_data_directory(self):
@@ -131,8 +132,7 @@ class RunnerServices:
         Path
             Path to the created directory.
         """
-        ioh = io_handler.IOHandler()
-        directory = ioh.get_output_directory(self.run_type)
+        directory = self.context.paths.get_output_directory(self.run_type)
         self._logger.debug(f"Data directories for {self.run_type}: {directory}")
 
         return directory

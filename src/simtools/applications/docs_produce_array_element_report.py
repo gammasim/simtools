@@ -34,13 +34,14 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    output_path = app_context.io_handler.get_output_directory()
+    output_path = app_context.paths.get_output_directory()
 
     if any(
         [

@@ -25,7 +25,7 @@ def test_main_writes_plots_to_output_path(mocker):
             "azimuth_center": 180.0,
             "azimuth_width": 1.0,
         },
-        io_handler=io_handler,
+        paths=io_handler,
     )
     plotter = mocker.patch("simtools.applications.plot_production_grid.ProductionGridPlotter")
 

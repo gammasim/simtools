@@ -659,9 +659,8 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             "prepare_flasher_atmosphere_files",
             return_value="atm_id_123",
         ) as mock_atmo,
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
         result = get_light_source_writer(simulator_instance).get_site_command(
             "ff-1m", "/config/dir", mock_altitude
         )
@@ -743,11 +742,10 @@ def test__make_light_emission_script(simulator_instance):
             "get_light_source_command",
             return_value=["--photons 1000000"],
         ) as mock_light_source,
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
         # Test flat_fielding (no atmospheric profile)
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path("/output/ff-1m.log.gz")
@@ -789,10 +787,9 @@ def test__make_light_emission_script(simulator_instance):
             "get_light_source_command",
             return_value=["-x 100", "-y 200"],
         ),
-        patch("simtools.simtel.light_emission_config_writer.settings") as mock_settings,
     ):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path(

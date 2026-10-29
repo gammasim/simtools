@@ -7,8 +7,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.context import RunContext
 from simtools.data_model import model_data_writer
-from simtools.io import io_handler
 from simtools.io.file_type import product_value
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 
 
-def generate_bias_curves(args):
+def generate_bias_curves(args, context=None):
     """Generate bias curves from NSB/proton reduced event-data HDF5 files."""
     time_window = _calculate_time_window(args)
     _logger.info(f"Calculated time window: {time_window * 1e9:.2f} ns")
@@ -67,7 +67,7 @@ def generate_bias_curves(args):
     _logger.info("Plotting bias curves...")
     plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
-    _export_trigger_threshold_as_model_parameter(args, trigger_threshold)
+    _export_trigger_threshold_as_model_parameter(args, trigger_threshold, context=context)
 
     _logger.info(f"Bias curve plot written to {plot_output_path}")
     _logger.info(f"Bias curve table written to {bias_curve_table_output}")
@@ -416,7 +416,7 @@ def _calculate_trigger_threshold(args, nsb_stats, proton_stats):
     return float(trigger_threshold)
 
 
-def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
+def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, context=None):
     """
     Export trigger threshold as a model parameter.
 
@@ -468,7 +468,8 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold):
             )
             return
 
-        output_path = io_handler.IOHandler().get_output_directory()
+        context = context or RunContext.from_environment()
+        output_path = context.paths.get_output_directory()
         output_file = f"{parameter_name}-{parameter_version}.json"
         model_data_writer.ModelDataWriter.write_model_parameter(
             parameter_name=parameter_name,

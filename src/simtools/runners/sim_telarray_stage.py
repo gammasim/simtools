@@ -27,10 +27,13 @@ class SimTelArrayStage:
     produces = CAMERA_EVENTS
     streams = True
 
-    def __init__(self, simulation_parameters, array_model, label=None):
+    def __init__(self, simulation_parameters, array_model, label=None, context=None):
         """Initialize SimTelArrayStage."""
         self.simulator_array = SimulatorArray(
-            simulation_parameters=simulation_parameters, array_model=array_model, label=label
+            simulation_parameters=simulation_parameters,
+            array_model=array_model,
+            label=label,
+            context=context,
         )
         self.array_model = array_model
 
@@ -38,7 +41,12 @@ class SimTelArrayStage:
     def instances(cls, inputs, label=None):
         """Return one sim_telarray stage per array model."""
         return [
-            cls(simulation_parameters=parameters, array_model=array_model, label=label)
+            cls(
+                simulation_parameters=parameters,
+                array_model=array_model,
+                label=label,
+                context=inputs.context,
+            )
             for parameters, array_model in zip(inputs.simulation_parameters, inputs.array_models)
         ]
 

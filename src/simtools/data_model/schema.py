@@ -9,6 +9,7 @@ from astropy.table import Table
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
+from simtools import dependencies
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -16,7 +17,6 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers, schema_loader
-from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 from simtools.version import check_version_constraint
@@ -315,7 +315,7 @@ def validate_deprecation_and_version(data, software_name=None, ignore_software_v
         if software_name is not None and name.lower() != software_name.lower():
             continue
 
-        software_version = get_software_version(name)
+        software_version = dependencies.get_software_version(name)
         if check_version_constraint(software_version, constraint):
             continue
 

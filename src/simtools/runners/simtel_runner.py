@@ -2,6 +2,7 @@
 
 import logging
 
+from simtools.context import RunContext
 from simtools.job_execution import execution
 from simtools.runners.runner_services import RunnerServices
 
@@ -30,11 +31,12 @@ class SimtelRunner:
         Configuration parameters.
     """
 
-    def __init__(self, label=None, config=None, array_model=None):
+    def __init__(self, label=None, config=None, array_model=None, context=None):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
+        self.context = context or getattr(config, "context", None) or RunContext.from_environment()
         self._base_directory = None
 
         self.runs_per_set = 1
@@ -43,7 +45,11 @@ class SimtelRunner:
         self.run_seeds = []
 
         self.runner_service = RunnerServices(
-            config, run_type="sim_telarray", label=label, array_model=array_model
+            config,
+            run_type="sim_telarray",
+            label=label,
+            array_model=array_model,
+            context=self.context,
         )
         self.file_list = None
 

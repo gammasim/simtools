@@ -26,8 +26,6 @@ TEXT_ENCODING = "utf-8"
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
-    resolve_sim_software_executables=False,
-    validate_simulation_dependencies=False,
     arguments=(
         cli.ArgumentDefinition(
             OUTPUT_FILE,
@@ -42,6 +40,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE(required=True),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model",),
 )
 
 
@@ -65,7 +64,7 @@ def run(app_context):
     )
 
     output_name = args.get(OUTPUT_FILE) or f"trigger-patches-{telescope.name}"
-    pdf_path = app_context.io_handler.get_output_file(f"{output_name}.pdf")
+    pdf_path = app_context.paths.get_output_file(f"{output_name}.pdf")
     page_summary = write_trigger_patch_report(
         telescope.camera,
         pixel_table,

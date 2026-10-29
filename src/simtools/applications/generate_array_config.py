@@ -19,6 +19,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.layout_selection_arguments(),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 

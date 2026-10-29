@@ -4,7 +4,6 @@ import copy
 import logging
 from math import pi, tan
 from pathlib import Path
-from types import MappingProxyType
 from unittest.mock import call
 
 import astropy.units as u
@@ -50,9 +49,9 @@ def _example_rows():
     ]
 
 
-def _set_runtime_args(ray, args):
+def _set_context_args(ray, args):
     """Set read-only arguments on the test run context."""
-    ray.context = ray.context.replace(args=MappingProxyType(args))
+    ray.context = ray.context.replace(args=args)
 
 
 def _example_rows_single_mirror():
@@ -126,7 +125,7 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_nort
     )
 
 
-def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
+def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog, run_context):
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
@@ -136,13 +135,16 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
             offset_directions=["N"],
+            context=run_context,
         )
 
     assert ray.zenith_angle == pytest.approx(30)
     assert len(ray.off_axis_angle) == 2
 
 
-def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_north, caplog):
+def test_ray_tracing_single_mirror_mode(
+    telescope_model_lst_mock, site_model_north, caplog, run_context
+):
     telescope_model_lst_mock.write_sim_telarray_config_file()
 
     with caplog.at_level(logging.DEBUG):
@@ -156,6 +158,7 @@ def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_nor
             single_mirror_mode=True,
             mirror_numbers="all",
             offset_directions=["N"],
+            context=run_context,
         )
 
     assert ray.zenith_angle == pytest.approx(30)
@@ -166,7 +169,7 @@ def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_nor
 
 
 def test_ray_tracing_single_mirror_mode_mirror_numbers(
-    telescope_model_lst_mock, site_model_north, mocker
+    telescope_model_lst_mock, site_model_north, mocker, run_context
 ):
     telescope_model_lst_mock.write_sim_telarray_config_file()
     ray = RayTracing(
@@ -178,6 +181,7 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
         off_axis_angle=[0, 2] * u.deg,
         single_mirror_mode=True,
         mirror_numbers=[1, 2, 3],
+        context=run_context,
     )
 
     assert list(ray.mirrors.keys()) == [1, 2, 3]
@@ -595,7 +599,9 @@ def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker):
     assert img1.plot_cumulative.call_args.kwargs["psf_diameter_cm"] == pytest.approx(12.3)
 
 
-def test_load_offset_file_valid(tmp_test_directory, telescope_model_lst_mock, site_model_north):
+def test_load_offset_file_valid(
+    tmp_test_directory, telescope_model_lst_mock, site_model_north, run_context
+):
     offset_file = tmp_test_directory.join("offsets.ecsv")
     offset_content = """# %ECSV 1.0
 # ---
@@ -616,6 +622,7 @@ x y
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         offset_file=offset_file,
+        context=run_context,
     )
 
     assert len(ray_tracing.off_axis_angle) == 3
@@ -624,7 +631,7 @@ x y
     assert ray_tracing.off_axis_angle[2] == (2.0, 1.5)
 
 
-def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north):
+def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north, run_context):
     with pytest.raises(FileNotFoundError, match="Offset file not found"):
         RayTracing(
             telescope_model=telescope_model_lst_mock,
@@ -633,11 +640,12 @@ def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north):
             zenith_angle=20 * u.deg,
             source_distance=10 * u.km,
             offset_file="/nonexistent/path/offsets.ecsv",
+            context=run_context,
         )
 
 
 def test_load_offset_file_missing_columns(
-    tmp_test_directory, telescope_model_lst_mock, site_model_north
+    tmp_test_directory, telescope_model_lst_mock, site_model_north, run_context
 ):
     offset_file = tmp_test_directory.join("offsets.ecsv")
     offset_content = """# %ECSV 1.0
@@ -658,11 +666,12 @@ x
             zenith_angle=20 * u.deg,
             source_distance=10 * u.km,
             offset_file=offset_file,
+            context=run_context,
         )
 
 
 def test_process_offset_angles_unknown_direction(
-    telescope_model_lst_mock, site_model_north, caplog
+    telescope_model_lst_mock, site_model_north, caplog, run_context
 ):
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
@@ -670,6 +679,7 @@ def test_process_offset_angles_unknown_direction(
         label="test",
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
+        context=run_context,
     )
     with caplog.at_level(logging.WARNING):
         result = ray._process_offset_angles([1.0] * u.deg, ["N", "X"])
@@ -693,7 +703,7 @@ def backend(ray_tracing_lst, mocker):
 def test_simulate_requests(
     ray_tracing_lst, backend, test, photon_count, photons_per_instance, instances
 ):
-    _set_runtime_args(
+    _set_context_args(
         ray_tracing_lst,
         {"number_of_photons": photon_count, "instrument_seed": 5, "simulation_seed": [7]},
     )
@@ -726,7 +736,7 @@ def test_simulate_requests(
 
 @pytest.mark.parametrize("photon_count", [0, -1, True, 1.5])
 def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, photon_count):
-    _set_runtime_args(ray_tracing_lst, {"number_of_photons": photon_count})
+    _set_context_args(ray_tracing_lst, {"number_of_photons": photon_count})
     with pytest.raises(ValueError, match="positive integer"):
         ray_tracing_lst.simulate()
 
@@ -734,7 +744,7 @@ def test_simulate_rejects_invalid_photon_count(ray_tracing_lst, backend, photon_
 def test_simulate_single_mirror_requests(ray_tracing_lst_single_mirror_mode, mocker):
     ray_tracing = ray_tracing_lst_single_mirror_mode
     backend = ray_tracing._backend = mocker.Mock()
-    _set_runtime_args(ray_tracing, {"instrument_seed": 5, "simulation_seed": [7]})
+    _set_context_args(ray_tracing, {"instrument_seed": 5, "simulation_seed": [7]})
     ray_tracing.telescope_model.get_single_mirror_list_file.return_value = Path("mirror.dat")
 
     ray_tracing.simulate()

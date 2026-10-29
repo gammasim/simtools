@@ -49,9 +49,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS,),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
+    needs=(),
 )
 
 

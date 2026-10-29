@@ -54,8 +54,12 @@ class ModelDataWriter:
             self.context = self.context.replace(paths=paths)
         self.io_handler = self.context.paths
         try:
-            self.output_file = self.io_handler.get_output_file(
-                file_name=output_file, output_path_label=self.output_label
+            self.output_file = (
+                self.io_handler.get_output_file(
+                    file_name=output_file, output_path_label=self.output_label
+                )
+                if self.output_label in self.io_handler.output_path
+                else None
             )
         except TypeError:
             self.output_file = None

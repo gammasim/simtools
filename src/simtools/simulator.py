@@ -7,11 +7,10 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools import settings
-from simtools.application.model_reader import require_model_reader
 from simtools.configuration import defaults
+from simtools.context import RunContext
 from simtools.corsika import corsika_output_validator
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 from simtools.io.file_type import product_value
 from simtools.job_execution import execution
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
@@ -71,21 +70,24 @@ class Simulator:
         Extra commands to be added to the run script before the run command.
     """
 
-    def __init__(self, label=None, extra_commands=None, model_reader=None):
+    def __init__(self, label=None, extra_commands=None, model_reader=None, context=None):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if model_reader is not None and model_reader is not self.context.model_reader:
+            self.context = self.context.replace(model_reader=model_reader)
 
-        self.site = settings.config.args.get("site", None)
-        self.model_version = settings.config.args.get("model_version", None)
+        self.site = self.context.args.get("site", None)
+        self.model_version = self.context.args.get("model_version", None)
 
-        self.simulation_software = settings.config.args.get(
+        self.simulation_software = self.context.args.get(
             "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
         )
-        self.run_mode = settings.config.args.get("run_mode", None)
+        self.run_mode = self.context.args.get("run_mode", None)
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
 
         self._extra_commands = extra_commands
         self._runtime = None
@@ -99,6 +101,7 @@ class Simulator:
             "sub",
             label,
             array_model=self.array_models[0],
+            context=self.context,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
 
@@ -131,15 +134,15 @@ class Simulator:
 
     def _initialize_from_tool_configuration(self):
         """Initialize simulator from tool configuration."""
-        if settings.config.args.get("corsika_file"):
+        if self.context.args.get("corsika_file"):
             run_number = file_info.get_corsika_run_number(
-                settings.config.args["corsika_file"],
-                file_format=settings.config.args.get("simulation_file_format", "eventio"),
+                self.context.args["corsika_file"],
+                file_format=self.context.args.get("simulation_file_format", "eventio"),
             )
         else:
-            run_number = settings.config.args.get(
-                "run_number_offset", 0
-            ) + settings.config.args.get("run_number", 1)
+            run_number = self.context.args.get("run_number_offset", 0) + self.context.args.get(
+                "run_number", 1
+            )
         return runner_services.validate_corsika_run_number(run_number)
 
     def _initialize_array_models(self):
@@ -162,22 +165,26 @@ class Simulator:
             model = ArrayModel(
                 label=self.label,
                 site=self.site,
-                layout_name=settings.config.args.get("array_layout_name"),
-                array_elements=general.ensure_list(settings.config.args.get("telescopes", [])),
+                layout_name=self.context.args.get("array_layout_name"),
+                array_elements=general.ensure_list(self.context.args.get("telescopes", [])),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
-                overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
+                overwrite_model_parameters=self.context.args.get("overwrite_model_parameters"),
                 model_directory_subdir=model_subdir,
                 model_reader=self.model_reader,
+                context=self.context,
             )
             if not self.chain.starts_with_showers:
                 cfg = None
                 parameters = SimulationParameters.from_args(
-                    settings.config.args, self.run_number, model.site_model
+                    self.context.args, self.run_number, model.site_model
                 )
             else:
                 cfg = get_shower_configuration(
-                    array_model=model, label=self.label, run_number=self.run_number
+                    array_model=model,
+                    label=self.label,
+                    run_number=self.run_number,
+                    context=self.context,
                 )
                 parameters = cfg.simulation_parameters
             self.simulation_parameters.append(parameters)
@@ -207,7 +214,8 @@ class Simulator:
             array_models=tuple(self.array_models[models]),
             simulation_parameters=tuple(self.simulation_parameters[models]),
             shower_configurations=tuple(general.ensure_list(self.corsika_configurations)),
-            args=dict(settings.config.args),
+            args=dict(self.context.args),
+            context=self.context,
         )
         return ChainRunner(self.chain, inputs, label=self.label)
 
@@ -236,7 +244,7 @@ class Simulator:
         self._runtime = result.runtime
 
     @classmethod
-    def simulate_direct_injection_sequence(cls, label=None):
+    def simulate_direct_injection_sequence(cls, label=None, context=None):
         """Run direct-injection simulations for one or multiple intensity settings.
 
         This method supports filter-wheel-like sequences by allowing
@@ -256,8 +264,9 @@ class Simulator:
                 This method runs simulations as side effects and does not return a
                 value.
         """
-        base_args = dict(settings.config.args)
-        model_reader = settings.config.model_reader
+        context = context or RunContext.from_environment()
+        base_args = dict(context.args)
+        model_reader = context.model_reader
         base_run_number = int(base_args.get("run_number", 1))
 
         events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
@@ -293,15 +302,19 @@ class Simulator:
                 if photons[idx] is not None:
                     run_args["flasher_photons"] = photons[idx]
 
-                settings.config.load(args=run_args)
-                settings.config.set_model_reader(model_reader)
+                run_context = RunContext.from_arguments(
+                    run_args,
+                    model_reader=model_reader,
+                    paths=context.paths,
+                    resolve_sim_software_executables=False,
+                )
+                run_context = run_context.replace(model_reader=model_reader)
 
-                simulator = cls(label=label)
+                simulator = cls(label=label, context=run_context)
                 simulator.simulate()
                 simulator.validate_simulations()
         finally:
-            settings.config.load(args=base_args)
-            settings.config.set_model_reader(model_reader)
+            pass
 
     def _get_corsika_file(self):
         """
@@ -313,7 +326,7 @@ class Simulator:
             Path to the CORSIKA input file.
         """
         if self.chain.reads_input_file:
-            return settings.config.args.get("corsika_file", None)
+            return self.context.args.get("corsika_file", None)
         return None
 
     def get_files(self, file_type):
@@ -406,7 +419,7 @@ class Simulator:
         Simulator.write_reduced_event_lists(
             input_files=general.ensure_list(self.get_files(file_type="sim_telarray_output")),
             output_files=general.ensure_list(self.get_files(file_type="sim_telarray_event_data")),
-            metadata_args=settings.config.args,
+            metadata_args=self.context.args,
             array_models=self.array_models,
         )
 
@@ -693,12 +706,12 @@ class Simulator:
         resource_files += general.ensure_list(self.get_files(file_type="multi_pipe_resources"))
         corsika_output_files = (
             general.ensure_list(self.get_files(file_type="corsika_output"))
-            if settings.config.args.get("save_corsika_output")
+            if self.context.args.get("save_corsika_output")
             else []
         )
         reduced_event_files = (
             general.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
-            if settings.config.args.get("reduced_event_lists")
+            if self.context.args.get("reduced_event_lists")
             else []
         )
 
@@ -762,7 +775,7 @@ class Simulator:
 
     def _overwrite_flasher_photons_for_direct_injection(self):
         """Overwrite direct-injection photons-per-pixel in calibration models."""
-        flasher_photons = settings.config.args.get("flasher_photons")
+        flasher_photons = self.context.args.get("flasher_photons")
         if self.run_mode != "direct_injection" or flasher_photons is None:
             return
 
@@ -801,15 +814,14 @@ class Simulator:
         if self.chain.has("corsika"):
             corsika_output_validator.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
-                if self.chain.stages == ("corsika",)
-                or settings.config.args.get("save_corsika_output")
+                if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,
                 curved_atmo=parameters.use_curved_atmosphere,
             )
 
-        if settings.config.args.get("reduced_event_lists"):
+        if self.context.args.get("reduced_event_lists"):
             output_validator.validate_sim_events(
                 data_files=self.get_files(file_type="sim_telarray_event_data"),
                 expected_mc_events=expected_mc_events,

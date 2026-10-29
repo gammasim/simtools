@@ -27,8 +27,8 @@ ECSV_FORMAT = "ascii.ecsv"
 
 
 def test_application_does_not_resolve_simulation_executables():
-    assert plot_trigger_patches.APPLICATION.resolve_sim_software_executables is False
-    assert plot_trigger_patches.APPLICATION.validate_simulation_dependencies is False
+    assert "corsika" not in plot_trigger_patches.APPLICATION.needs
+    assert "sim_telarray" not in plot_trigger_patches.APPLICATION.needs
 
 
 def test_cli_requires_model_inputs_and_has_no_simulation_stimulus_options(capsys):
@@ -101,7 +101,7 @@ def test_run_writes_configuration_report_without_exporting_simulation_files(
             "output_file": None,
             "overwrite_model_parameters": None,
         },
-        io_handler=SimpleNamespace(
+        paths=SimpleNamespace(
             get_output_directory=lambda: tmp_test_directory,
             get_output_file=lambda file_name: Path(tmp_test_directory) / file_name,
         ),

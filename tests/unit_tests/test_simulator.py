@@ -110,6 +110,7 @@ def configure_runner_mock(io_handler):
 @pytest.fixture
 def array_simulator(
     io_handler,
+    run_context,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -118,22 +119,20 @@ def array_simulator(
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "sim_telarray"
 
-    mock_config = mocker.Mock()
-    mock_config.args = args_dict
-    mocker.patch("simtools.settings.config", mock_config)
-
     patch_simulator_core()
     mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
         label=args_dict["label"],
+        context=run_context.replace(args=args_dict, paths=io_handler),
     )
 
 
 @pytest.fixture
 def shower_simulator(
     io_handler,
+    run_context,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -143,22 +142,20 @@ def shower_simulator(
     args_dict["simulation_software"] = "corsika"
     args_dict["label"] = "test-shower-simulator"
 
-    mock_config = mocker.Mock()
-    mock_config.args = args_dict
-    mocker.patch("simtools.settings.config", mock_config)
-
     patch_simulator_core()
     mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner, add_resources=True)
 
     return Simulator(
         label=args_dict["label"],
+        context=run_context.replace(args=args_dict, paths=io_handler),
     )
 
 
 @pytest.fixture
 def shower_array_simulator(
     io_handler,
+    run_context,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -169,23 +166,20 @@ def shower_array_simulator(
     args_dict["label"] = "test-shower-array-simulator"
     args_dict["sequential"] = True
 
-    # Mock the entire settings.config object with a Mock that has an args property
-    mock_config = mocker.Mock()
-    mock_config.args = args_dict
-    mocker.patch("simtools.settings.config", mock_config)
-
     patch_simulator_core()
     mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
         label=args_dict["label"],
+        context=run_context.replace(args=args_dict, paths=io_handler),
     )
 
 
 @pytest.fixture
 def calibration_simulator(
     io_handler,
+    run_context,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -197,16 +191,13 @@ def calibration_simulator(
     args_dict["sequential"] = True
     args_dict["run_mode"] = "pedestals_nsb_only"
 
-    mock_config = mocker.Mock()
-    mock_config.args = args_dict
-    mocker.patch("simtools.settings.config", mock_config)
-
     patch_simulator_core()
     mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
         label=args_dict["label"],
+        context=run_context.replace(args=args_dict, paths=io_handler),
     )
 
 
@@ -325,10 +316,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
 
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
     corsika_file = "test_corsika.corsika.gz"
-
-    mock_config = mocker.Mock()
-    mock_config.args = {"corsika_file": corsika_file}
-    mocker.patch("simtools.settings.config", mock_config)
+    shower_simulator.context = shower_simulator.context.replace(args={"corsika_file": corsika_file})
 
     mocker.patch("simtools.sim_events.file_info.get_corsika_run_number", return_value=42)
 
@@ -338,7 +326,13 @@ def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, 
 
 
 def test_pack_for_register_with_multiple_versions(
-    io_handler, simulations_args_dict, mocker, caplog, tmp_test_directory, model_version
+    io_handler,
+    simulations_args_dict,
+    mocker,
+    caplog,
+    tmp_test_directory,
+    model_version,
+    run_context,
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
@@ -376,11 +370,9 @@ def test_pack_for_register_with_multiple_versions(
     mocker.patch("simtools.simulator.get_shower_configuration", return_value=mock_corsika_config)
     mocker.patch("simtools.simulator.ChainRunner")
 
-    mock_config = mocker.Mock()
-    mock_config.args = args_dict
-    mocker.patch("simtools.settings.config", mock_config)
-
-    local_shower_array_simulator = Simulator(label=args_dict["label"])
+    local_shower_array_simulator = Simulator(
+        label=args_dict["label"], context=run_context.replace(args=args_dict, paths=io_handler)
+    )
 
     file_patterns = {
         "output": "output_file_{}_simtel.zst",
@@ -746,8 +738,9 @@ def test_get_calibration_device_types(run_mode, expected_devices):
     assert Simulator._get_calibration_device_types(run_mode) == expected_devices
 
 
-def test_overwrite_flasher_photons_for_direct_injection(mocker):
+def test_overwrite_flasher_photons_for_direct_injection(mocker, run_context):
     simulator = Simulator.__new__(Simulator)
+    simulator.context = run_context.replace(args={"flasher_photons": 1234567})
     simulator.run_mode = "direct_injection"
     simulator.logger = mocker.Mock()
 
@@ -759,10 +752,6 @@ def test_overwrite_flasher_photons_for_direct_injection(mocker):
         "TEL02": {"CAL02": calib_2},
     }
     simulator.array_models = [array_model]
-
-    mock_settings = mocker.Mock()
-    mock_settings.config.args = {"flasher_photons": 1234567}
-    mocker.patch("simtools.simulator.settings", mock_settings)
 
     for calib in (calib_1, calib_2):
         calib.name = "CAL"
@@ -782,8 +771,9 @@ def test_overwrite_flasher_photons_for_direct_injection(mocker):
     assert calib_2.overwrite_model_parameter.call_args_list == expected_calls
 
 
-def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocker):
+def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocker, run_context):
     simulator = Simulator.__new__(Simulator)
+    simulator.context = run_context.replace(args={"flasher_photons": None})
     simulator.run_mode = "direct_injection"
     simulator.logger = mocker.Mock()
 
@@ -792,16 +782,12 @@ def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocke
     array_model.calibration_models = {"TEL01": {"CAL01": calib}}
     simulator.array_models = [array_model]
 
-    mock_settings = mocker.Mock()
-    mock_settings.config.args = {"flasher_photons": None}
-    mocker.patch("simtools.simulator.settings", mock_settings)
-
     simulator._overwrite_flasher_photons_for_direct_injection()
 
     calib.overwrite_model_parameter.assert_not_called()
 
 
-def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
+def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker, run_context):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -809,25 +795,21 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
         "flasher_photons": ["1e6", "2e6", "3e6"],
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
     mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
     mock_simulate = mocker.patch.object(Simulator, "simulate")
     mock_validate = mocker.patch.object(Simulator, "validate_simulations")
 
-    Simulator.simulate_direct_injection_sequence(label="test-label")
+    Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
     assert mock_init.call_count == 3
     assert mock_simulate.call_count == 3
     assert mock_validate.call_count == 3
 
-    assert mock_config.load.call_count == 4
-    run0_args = mock_config.load.call_args_list[0].kwargs["args"]
-    run1_args = mock_config.load.call_args_list[1].kwargs["args"]
-    run2_args = mock_config.load.call_args_list[2].kwargs["args"]
-    restore_args = mock_config.load.call_args_list[3].kwargs["args"]
+    run0_args = mock_init.call_args_list[0].kwargs["context"].args
+    run1_args = mock_init.call_args_list[1].kwargs["context"].args
+    run2_args = mock_init.call_args_list[2].kwargs["context"].args
 
     assert run0_args["run_number"] == 10
     assert run1_args["run_number"] == 11
@@ -838,10 +820,11 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
     assert run0_args["flasher_photons"] == 1000000
     assert run1_args["flasher_photons"] == 2000000
     assert run2_args["flasher_photons"] == 3000000
-    assert restore_args == base_args
 
 
-def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_missing(mocker):
+def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_missing(
+    mocker, run_context
+):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -849,23 +832,23 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
         "flasher_photons": None,
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
-    mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
     mocker.patch.object(Simulator, "simulate")
     mocker.patch.object(Simulator, "validate_simulations")
 
-    Simulator.simulate_direct_injection_sequence(label="test-label")
+    Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
-    run_args = mock_config.load.call_args_list[0].kwargs["args"]
+    run_args = mock_init.call_args_list[0].kwargs["context"].args
     assert run_args["run_number"] == 10
     assert run_args["number_of_events"] == 1
     assert run_args.get("flasher_photons") is None
 
 
-def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(mocker):
+def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(
+    mocker, run_context
+):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 20,
@@ -873,23 +856,23 @@ def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_ph
         "flasher_photons": [100, 200],
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
-    mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
     mocker.patch.object(Simulator, "simulate")
     mocker.patch.object(Simulator, "validate_simulations")
 
-    Simulator.simulate_direct_injection_sequence(label="test-label")
+    Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
-    run0_args = mock_config.load.call_args_list[0].kwargs["args"]
-    run1_args = mock_config.load.call_args_list[1].kwargs["args"]
+    run0_args = mock_init.call_args_list[0].kwargs["context"].args
+    run1_args = mock_init.call_args_list[1].kwargs["context"].args
     assert run0_args["number_of_events"] == 3
     assert run1_args["number_of_events"] == 3
 
 
-def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length(mocker):
+def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length(
+    run_context,
+):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -897,18 +880,16 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length
         "flasher_photons": [100, 200, 300],
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
     with pytest.raises(
         ValueError,
         match="Invalid number_of_events list length for direct_injection",
     ):
-        Simulator.simulate_direct_injection_sequence(label="test-label")
+        Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
 
-def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_length(mocker):
+def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_length(run_context):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -916,18 +897,16 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_lengt
         "flasher_photons": [100, 200],
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
     with pytest.raises(
         ValueError,
         match="Invalid flasher_photons list length for direct_injection",
     ):
-        Simulator.simulate_direct_injection_sequence(label="test-label")
+        Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
 
-def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker):
+def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker, run_context):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -935,18 +914,15 @@ def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker
         "flasher_photons": 100,
     }
 
-    mock_config = mocker.Mock()
-    mock_config.args = base_args
-    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+    context = run_context.replace(args=base_args)
 
     mocker.patch.object(Simulator, "__init__", return_value=None)
     mocker.patch.object(Simulator, "simulate", side_effect=RuntimeError("boom"))
 
     with pytest.raises(RuntimeError, match="boom"):
-        Simulator.simulate_direct_injection_sequence(label="test-label")
+        Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
-    assert mock_config.load.call_count == 2
-    assert mock_config.load.call_args_list[-1].kwargs["args"] == base_args
+    assert context.args == base_args
 
 
 def test_report(array_simulator, mocker, caplog):
@@ -1035,21 +1011,18 @@ def test_make_resources_report(array_simulator, mocker):
     assert ", #events/run: 500" in result
 
 
-def test_get_corsika_file(array_simulator, mocker):
-    # Mock settings.config to return various corsika file scenarios
-    mock_config = mocker.Mock()
-    mocker.patch("simtools.settings.config", mock_config)
-
+def test_get_corsika_file(array_simulator):
     # Test case 1: sim_telarray with corsika_file in args
     array_simulator.simulation_software = "sim_telarray"
-    mock_config.args.get.return_value = "/path/to/corsika_file.corsika"
+    array_simulator.context = array_simulator.context.replace(
+        args={"corsika_file": "/path/to/corsika_file.corsika"}
+    )
 
     result = array_simulator._get_corsika_file()
     assert result == "/path/to/corsika_file.corsika"
-    mock_config.args.get.assert_called_with("corsika_file", None)
 
     # Test case 2: sim_telarray without corsika_file in args
-    mock_config.args.get.return_value = None
+    array_simulator.context = array_simulator.context.replace(args={})
 
     result = array_simulator._get_corsika_file()
     assert result is None
@@ -1341,8 +1314,9 @@ def test_validate_simulations_corsika_sim_telarray(
             "corsika_output": mock_corsika_output_files,
         }.get(file_type, []),
     )
-    mock_config = mocker.patch("simtools.simulator.settings.config")
-    mock_config.args = {"save_corsika_output": save_corsika_output}
+    shower_array_simulator.context = shower_array_simulator.context.replace(
+        args={"save_corsika_output": save_corsika_output}
+    )
 
     with caplog.at_level(logging.INFO):
         shower_array_simulator.validate_simulations()
@@ -1385,9 +1359,7 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
         }.get(file_type, []),
     )
 
-    mock_config = mocker.Mock()
-    mock_config.args.get.return_value = True
-    mocker.patch("simtools.simulator.settings.config", mock_config)
+    array_simulator.context = array_simulator.context.replace(args={"reduced_event_lists": True})
 
     with caplog.at_level(logging.INFO):
         array_simulator.validate_simulations()

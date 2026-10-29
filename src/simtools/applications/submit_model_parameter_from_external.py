@@ -60,7 +60,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -85,7 +85,7 @@ def main():
         validate_finite_json_values(value)
 
     if app_context.args.get("output_path"):
-        output_path = app_context.io_handler.get_output_directory(
+        output_path = app_context.paths.get_output_directory(
             sub_dir=app_context.args.get("parameter")
         )
     else:

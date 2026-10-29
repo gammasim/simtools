@@ -112,7 +112,9 @@ class PSFParameterOptimizer:
     LR_MAXIMUM_THRESHOLD = 0.01
     LR_RESET_VALUE = 0.0001
 
-    def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
+    def __init__(
+        self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir, context=None
+    ):
         """Initialize the PSF parameter optimizer."""
         self.tel_model = tel_model
         self.site_model = site_model
@@ -120,6 +122,7 @@ class PSFParameterOptimizer:
         self.data_to_plot = data_to_plot
         self.radius = radius
         self.output_dir = output_dir
+        self.context = (context or RunContext.from_environment()).replace(args=args_dict)
         self.use_ks_statistic = args_dict.get(KS_STATISTIC, False)
         self.fraction = args_dict.get("fraction", DEFAULT_FRACTION)
         self.simulation_cache = {}
@@ -316,6 +319,7 @@ class PSFParameterOptimizer:
             self.output_dir,
             self.max_workers,
             _run_psf_evaluation,
+            context=self.context,
         )
 
     def apply_gradient_step(self, current_params, gradients, learning_rate):
@@ -1344,6 +1348,7 @@ class PSFOptimizationJob:
 
     args: dict
     output_dir: Path
+    context: RunContext | None = None
 
 
 def run_psf_optimization_job(job):
@@ -1359,11 +1364,12 @@ def run_psf_optimization_job(job):
         site=job.args["site"],
         telescope_name=job.args[TELESCOPE],
         model_version=job.args[MODEL_VERSION],
+        context=job.context,
     )
-    run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir)
+    run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir, job.context)
 
 
-def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
+def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, context=None):
     """
     Run the complete PSF parameter optimization workflow using gradient descent.
 
@@ -1374,7 +1380,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
 
     # Create optimizer instance to encapsulate state and methods
     optimizer = PSFParameterOptimizer(
-        tel_model, site_model, args_dict, data_to_plot, radius, output_dir
+        tel_model, site_model, args_dict, data_to_plot, radius, output_dir, context=context
     )
 
     # Handle Monte Carlo analysis if requested

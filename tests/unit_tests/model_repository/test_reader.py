@@ -421,28 +421,31 @@ def test_reader_facade_selects_all_array_element_scope_branches(mocker):
     ]
 
 
-def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, runtime_args):
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, run_context):
     """Concrete sim_telarray scopes use design data or configured fallbacks."""
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
-    args = {"ignore_missing_design_model": False}
-    runtime_args(args)
+    context = run_context.replace(args={"ignore_missing_design_model": False})
 
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, context
+    ) == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
-    assert reader._get_sim_telarray_array_element_list("global", {}) == ["global"]
-    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}) == [
+    assert reader._get_sim_telarray_array_element_list("global", {}, context) == ["global"]
+    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}, context) == [
         "global",
         "LSTN-design",
     ]
 
     source.read_production_table.return_value = {"design_model": {}}
-    args["ignore_missing_design_model"] = True
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    context = run_context.replace(args={"ignore_missing_design_model": True})
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, context
+    ) == [
         "global",
         "LSTN-01",
         "LSTN-01",

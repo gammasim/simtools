@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.model import camera as camera_model
 from simtools.model import mirrors as mirror_model
 from simtools.model_repository.asset_names import get_export_file_name
@@ -33,10 +33,11 @@ _NSB_X_LABEL = "Wavelength [nm]"
 _NSB_Y_LABEL = "Emission altitude [km]"
 
 
-def write_telescope_structure_figure(file, telescope_model, logger):
+def write_telescope_structure_figure(file, telescope_model, logger, context=None):
     """Generate and link the nominal telescope structure for this model version."""
     _use_exported_model_filenames(telescope_model)
-    image_dir = io_handler.IOHandler().get_output_directory("_images")
+    context = context or RunContext.from_environment()
+    image_dir = context.paths.get_output_directory("_images")
     try:
         geometry = plot_telescope_structure.telescope_geometry(telescope_model)
     except (FileNotFoundError, KeyError, ValueError) as exc:
@@ -83,10 +84,11 @@ def _use_exported_model_filenames(telescope_model):
 
 
 def write_flasher_pulse_shape_plots(
-    file, comparison_items, collection, model_reader, site, calibration_device
+    file, comparison_items, collection, model_reader, site, calibration_device, context=None
 ):
     """Render Gauss-Exponential tables using the production pulse-table writer."""
-    image_dir = Path(io_handler.IOHandler().get_output_directory("_images"))
+    context = context or RunContext.from_environment()
+    image_dir = Path(context.paths.get_output_directory("_images"))
     for item in comparison_items:
         _write_flasher_pulse_version(
             file,

@@ -1,6 +1,7 @@
 """Shared option-discovery helpers for selected command-line arguments."""
 
 import argparse
+import inspect
 import os
 import sys
 from dataclasses import dataclass, field
@@ -27,13 +28,13 @@ class ShowOptionsResult:
     notes: tuple = ()
 
 
-def handle_show_options(args_dict, parser):
+def handle_show_options(args_dict, parser, context=None):
     """Print available values for a supported option and exit."""
     if not args_dict.get("show_options"):
         return False
 
     try:
-        result = resolve_show_options(args_dict, parser)
+        result = resolve_show_options(args_dict, parser, context=context)
     except (FileNotFoundError, PermissionError, ValueError) as exc:
         parser.error(str(exc))
 
@@ -42,12 +43,16 @@ def handle_show_options(args_dict, parser):
     return True
 
 
-def resolve_show_options(args_dict, parser=None):
+def resolve_show_options(args_dict, parser=None, context=None):
     """Resolve ``--show_options`` using a custom provider or parser metadata."""
     option_name = args_dict["show_options"]
     provider = _SHOW_OPTION_PROVIDERS.get(option_name)
     if provider is not None:
-        return _with_argparse_help(provider(args_dict), parser)
+        if "context" in inspect.signature(provider).parameters:
+            result = provider(args_dict, context=context)
+        else:
+            result = provider(args_dict)
+        return _with_argparse_help(result, parser)
     if parser is not None:
         return _show_argparse_option(option_name, parser)
     supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
@@ -140,17 +145,17 @@ def _show_sites(_args_dict):
     return ShowOptionsResult(option_name="site", values=tuple(names.site_names()))
 
 
-def _show_model_versions(args_dict):
-    model_reader = _create_model_reader(args_dict)
+def _show_model_versions(args_dict, context=None):
+    model_reader = _create_model_reader(args_dict, context=context)
     return ShowOptionsResult(
         option_name="model_version",
         values=tuple(model_reader.get_model_versions()),
     )
 
 
-def _show_array_layout_names(args_dict):
+def _show_array_layout_names(args_dict, context=None):
     model_version = _get_single_model_version(args_dict, "array_layout_name")
-    model_reader = _create_model_reader(args_dict)
+    model_reader = _create_model_reader(args_dict, context=context)
     site = args_dict.get("site")
     sites = [site] if site else sorted(names.site_names())
     grouped_values = {
@@ -175,8 +180,10 @@ def _show_array_layout_names(args_dict):
     )
 
 
-def _create_model_reader(args_dict):
+def _create_model_reader(args_dict, context=None):
     """Create a configured model reader for an option provider."""
+    if context is not None and context.model_reader is not None:
+        return context.model_reader
     return create_model_reader_from_configuration(args_dict)
 
 

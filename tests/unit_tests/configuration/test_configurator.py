@@ -348,7 +348,6 @@ def test_configure_can_disable_dependency_defaults(configurator):
     configurator._config_from_env = MagicMock(return_value={})
     configurator._config_from_file = MagicMock(return_value={})
     configurator._initialize_model_versions = MagicMock()
-    configurator._initialize_io_handler = MagicMock()
 
 
 @pytest.mark.parametrize(
@@ -375,7 +374,6 @@ def test_initialize(configurator):
     configurator._config_from_env = MagicMock(return_value={})
     configurator._config_from_file = MagicMock(return_value={})
     configurator._initialize_model_versions = MagicMock()
-    configurator._initialize_io_handler = MagicMock()
     configurator._initialize_output = MagicMock()
     config = configurator.configure()
 
@@ -384,7 +382,6 @@ def test_initialize(configurator):
     configurator._config_from_env.assert_called_once_with(".env")
     configurator._config_from_file.assert_called_once_with(None)
     configurator._initialize_model_versions.assert_called_once()
-    configurator._initialize_io_handler.assert_called_once()
     configurator._initialize_output.assert_not_called()
 
     # Assert that activity_id and label are set
@@ -398,5 +395,4 @@ def test_initialize(configurator):
     configurator._config_from_env.assert_called()
     configurator._config_from_file.assert_called()
     configurator._initialize_model_versions.assert_called()
-    configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()

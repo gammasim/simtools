@@ -6,7 +6,6 @@ import shutil
 
 import astropy.units as u
 
-from simtools import settings
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
@@ -94,7 +93,9 @@ class LightEmissionConfigWriter:
 
         app = self.get_light_emission_application_name()
         cmd = [
-            shlex.quote(str(settings.config.sim_telarray_path / "LightEmission" / app)),
+            shlex.quote(
+                str(self.simulation.context.software.sim_telarray_path / "LightEmission" / app)
+            ),
             *self.get_site_command(app, config_directory, obs_level),
             *self.get_light_source_command(),
         ]
@@ -130,7 +131,7 @@ class LightEmissionConfigWriter:
             atmo_id = self.prepare_flasher_atmosphere_files(config_directory)
             return [
                 "-I.",
-                f"-I{settings.config.sim_telarray_path / 'cfg'}",
+                f"-I{self.simulation.context.software.sim_telarray_path / 'cfg'}",
                 f"-I{config_directory}",
                 f"--altitude {corsika_observation_level.to(u.m).value}",
                 f"--atmosphere {atmo_id}",

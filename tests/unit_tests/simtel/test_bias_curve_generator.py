@@ -404,7 +404,7 @@ def test_calculate_trigger_threshold_with_nan_values():
     assert 250 <= threshold <= 280
 
 
-def test_export_trigger_threshold_as_model_parameter(tmp_path):
+def test_export_trigger_threshold_as_model_parameter(run_context):
     """Test successful export of trigger threshold as model parameter."""
     args = {
         "telescope": "LSTN-01",
@@ -413,18 +413,17 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
         "parameter_version": "1.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = "DigitalSum"
+            mock_tel.return_value = mock_model
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "DigitalSum"
-                mock_tel.return_value = mock_model
-
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.0, context=run_context
+            )
 
         # Verify the model parameter was written with correct values
         mock_write.assert_called_once()
@@ -441,9 +440,7 @@ def test_export_trigger_threshold_as_model_parameter(tmp_path):
     ("default_trigger", PARAMETER_NAME),
     [("AnalogSum", "asum_threshold"), ("Majority", "discriminator_threshold")],
 )
-def test_export_trigger_threshold_in_millivolts(
-    tmp_test_directory, default_trigger, parameter_name
-):
+def test_export_trigger_threshold_in_millivolts(default_trigger, parameter_name, run_context):
     """Export rounded floating-point thresholds for AnalogSum and Majority."""
     args = {
         "telescope": "LSTN-01",
@@ -452,18 +449,17 @@ def test_export_trigger_threshold_in_millivolts(
         "parameter_version": "1.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = default_trigger
+            mock_tel.return_value = mock_model
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = default_trigger
-                mock_tel.return_value = mock_model
-
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.567)
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.567, context=run_context
+            )
 
         # Verify the parameter, unit, type, and rounding for each trigger.
         mock_write.assert_called_once()
@@ -477,18 +473,17 @@ def test_export_trigger_threshold_in_millivolts(
         assert call_kwargs["check_for_existing_parameter"] is False
 
 
-def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
+def test_export_trigger_threshold_handles_missing_telescope(run_context):
     """Test that missing telescope name defaults to 'unknown' and function returns early."""
     args = {"parameter_version": "1.0.0"}  # No telescope, no site, no model_version
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
-
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
-                bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
+            bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                args, 250.0, context=run_context
+            )
 
         # Should warn about missing telescope and then fail when trying to create TelescopeModel
         assert mock_logger.warning.call_count >= 1
@@ -496,7 +491,7 @@ def test_export_trigger_threshold_handles_missing_telescope(tmp_path):
         mock_write.assert_not_called()
 
 
-def test_export_trigger_threshold_handles_exception(tmp_path):
+def test_export_trigger_threshold_handles_exception(run_context):
     """Test that exceptions during export are caught and logged."""
     args = {
         "telescope": "LSTN-01",
@@ -505,21 +500,20 @@ def test_export_trigger_threshold_handles_exception(tmp_path):
         "model_version": "7.0.0",
     }
 
-    with patch("simtools.simtel.bias_curve_generator.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = tmp_path
+    with patch(
+        "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
+    ) as mock_write:
+        mock_write.side_effect = OSError("Disk full")
 
-        with patch(
-            "simtools.simtel.bias_curve_generator.model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write:
-            mock_write.side_effect = OSError("Disk full")
+        with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
+            mock_model = MagicMock()
+            mock_model.get_parameter_value.return_value = "DigitalSum"
+            mock_tel.return_value = mock_model
 
-            with patch("simtools.simtel.bias_curve_generator.TelescopeModel") as mock_tel:
-                mock_model = MagicMock()
-                mock_model.get_parameter_value.return_value = "DigitalSum"
-                mock_tel.return_value = mock_model
-
-                with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
-                    bias_curve_generator._export_trigger_threshold_as_model_parameter(args, 250.0)
+            with patch("simtools.simtel.bias_curve_generator._logger") as mock_logger:
+                bias_curve_generator._export_trigger_threshold_as_model_parameter(
+                    args, 250.0, context=run_context
+                )
 
             # Should catch the exception and log warning
             mock_logger.warning.assert_called_once_with(

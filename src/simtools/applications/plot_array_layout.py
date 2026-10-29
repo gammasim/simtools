@@ -136,6 +136,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     post_parse=_validate_parameter_file_layout_selection,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
+    needs=("model", "corsika"),
 )
 
 
@@ -160,7 +161,7 @@ def main():
             )
             plot_array_layouts(
                 run_args,
-                app_context.io_handler.get_output_directory(),
+                app_context.paths.get_output_directory(),
                 layouts,
                 background_layout,
             )
@@ -170,7 +171,7 @@ def main():
         )
         plot_array_layouts(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
             layouts,
             background_layout,
         )

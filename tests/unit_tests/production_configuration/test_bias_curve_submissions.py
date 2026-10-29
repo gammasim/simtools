@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import yaml
 
-from simtools.io.io_handler import IOHandler
+from simtools.io.output_paths import OutputPaths
 from simtools.production_configuration import bias_curve_submissions
 
 
@@ -215,8 +215,7 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
-    io_handler = IOHandler()
-    io_handler.set_paths(output_path=output_root)
+    paths = OutputPaths(output_path=output_root)
 
     with (
         patch(
@@ -231,7 +230,7 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
             curve_name="nsb",
             curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
             args=args,
-            io_handler=io_handler,
+            io_handler=paths,
         )
 
     scan_config_file = curve_directory / "scan_config.yaml"

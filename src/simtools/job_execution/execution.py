@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from simtools.context import RunContext
 from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.job import (
@@ -17,7 +18,6 @@ from simtools.job_execution.job import (
     SubmissionHandle,
 )
 from simtools.job_execution.worker import execute_command
-from simtools.settings import config
 from simtools.utils import general
 
 logger = logging.getLogger(__name__)
@@ -297,14 +297,10 @@ def map_ordered(
     initargs=(),
     mp_start_method="fork",
     work_dir=None,
+    context=None,
 ):
     """Apply ``function`` to items and return values in input order."""
-    runtime_args = dict(config.args) if backend != "local" else None
-    model_source_config = (
-        dict(config.model_reader.source_config)
-        if backend != "local" and config.model_reader is not None
-        else None
-    )
+    context = context or RunContext.from_environment()
     job_specs = [
         JobSpec(
             job_id=f"job-{index:06d}",
@@ -313,8 +309,7 @@ def map_ordered(
             item=item,
             initializer=initializer if backend != "local" else None,
             initargs=tuple(initargs) if backend != "local" else (),
-            runtime_args=runtime_args,
-            model_source_config=model_source_config,
+            context_spec=context.to_spec() if backend != "local" else None,
         )
         for index, item in enumerate(items)
     ]

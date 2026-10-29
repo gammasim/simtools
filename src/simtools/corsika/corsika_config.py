@@ -7,10 +7,8 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
-from simtools import settings
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.simulation.configuration import get_model_writer
@@ -39,7 +37,7 @@ class CorsikaConfig:
         Instance label.
     """
 
-    def __init__(self, array_model, run_number, label=None):
+    def __init__(self, array_model, run_number, label=None, context=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
 
@@ -48,15 +46,16 @@ class CorsikaConfig:
         self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
         self.run_number = run_number
-        self.primary_particle = settings.config.args  # see setter for primary_particle
-        self.use_curved_atmosphere = settings.config.args  # see setter for use_curved_atmosphere
-        self.run_mode = settings.config.args.get("run_mode")
+        self.context = context or array_model.context
+        self.primary_particle = self.context.args  # see setter for primary_particle
+        self.use_curved_atmosphere = self.context.args  # see setter for use_curved_atmosphere
+        self.run_mode = self.context.args.get("run_mode")
 
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self.array_model = array_model
-        self.interaction_table_path = settings.config.corsika_interaction_table_path
-        self.config = self._fill_corsika_configuration(settings.config.args)
-        self._initialize_from_config(settings.config.args)
+        self.interaction_table_path = self.context.software.corsika_interaction_table_path
+        self.config = self._fill_corsika_configuration(self.context.args)
+        self._initialize_from_config(self.context.args)
 
     @property
     def simulation_parameters(self):
@@ -149,8 +148,8 @@ class CorsikaConfig:
 
         config = {}
         config["RUNNR"] = [self.run_number]
-        config["USER"] = [settings.config.user]
-        config["HOST"] = [settings.config.hostname]
+        config["USER"] = [self.context.activity.user]
+        config["HOST"] = [self.context.activity.hostname]
         if self.is_calibration_run():
             config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args)
         elif args.get("corsika_file", None) is not None:
@@ -254,7 +253,7 @@ class CorsikaConfig:
 
         # Get parameters for all model versions
         for model_version in model_versions:
-            model_parameters = ModelParameter(model_version=model_version)
+            model_parameters = ModelParameter(model_version=model_version, context=self.context)
             parameters_from_repository_list.append(
                 model_parameters.get_simulation_software_parameters("corsika")
             )
@@ -460,11 +459,11 @@ class CorsikaConfig:
         )
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
-        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        transition_energy = self.context.args.get("corsika_hadronic_transition_energy")
         if transition_energy is not None:
             parameters["HILOW"] = [transition_energy.to_value("GeV")]
 
-        if settings.config.corsika_interaction_models[0] == "epos":
+        if self.context.software.corsika_interaction_models[0] == "epos":
             parameters.update(self._epos_flags())
 
         self._logger.debug(f"Interaction parameters: {parameters}")
@@ -800,7 +799,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        corsika_seeds = settings.config.args.get("corsika_seeds", False)
+        corsika_seeds = self.context.args.get("corsika_seeds", False)
         if not corsika_seeds:
             corsika_seeds = seeds(n_seeds=4, max_seed=CORSIKA_MAX_SEED)
         if len(corsika_seeds) != 4:

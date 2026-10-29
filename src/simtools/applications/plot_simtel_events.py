@@ -101,9 +101,8 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
     excluded_standard_arguments=("figure_dpi",),
-    initialize_model_reader=False,
+    needs=("corsika", "output"),
 )
 
 
@@ -112,7 +111,7 @@ def main():
     app_context = APPLICATION.start()
 
     plots = gen.ensure_list(app_context.args.get("plots"))
-    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)
+    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.paths)
 
 
 if __name__ == "__main__":

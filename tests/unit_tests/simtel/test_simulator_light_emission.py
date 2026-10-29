@@ -12,6 +12,7 @@ import pytest
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
+from simtools.io.output_paths import OutputPaths
 from simtools.simtel.simulator_light_emission import LIGHT_SOURCE_POSITION, SimulatorLightEmission
 from simtools.simulation.configuration import get_light_source_writer
 
@@ -28,7 +29,6 @@ FLASHER_APPLICATION = "ff-1m"
 IACT_OUTPUT = "iact_output"
 SIMTEL_OUTPUT = "sim_telarray_output"
 TELESCOPE_POINTING_METHOD = "_get_telescope_pointing"
-SETTINGS_TARGET = "simtools.simtel.simulator_light_emission.settings"
 TEXT_ENCODING = "utf-8"
 
 
@@ -64,10 +64,7 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
             "get_light_emission_application_name",
             return_value=FLASHER_APPLICATION,
         ),
-        patch(SETTINGS_TARGET) as mock_settings,
     ):
-        mock_settings.config.sim_telarray_exe = SIMTEL_EXECUTABLE
-        mock_settings.config.sim_telarray_path = Path("/mock/simtel")
         # Test flat_fielding - should include Bypass_Optics
         simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: FLAT_FIELDING}
 
@@ -92,10 +89,7 @@ def test__make_simtel_script_uses_generated_atmospheric_transmission_file(simula
 
     with (
         patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=[0, 0]),
-        patch(SETTINGS_TARGET) as mock_settings,
     ):
-        mock_settings.config.sim_telarray_exe = SIMTEL_EXECUTABLE
-
         script = simulator_instance._make_simtel_script()
 
     assert "-C atmospheric_transmission=atmospheric_transmission-CTAO-MSTN-04.dat" in script
@@ -447,19 +441,14 @@ def test__initialize_light_emission_configuration_with_position(simulator_instan
     assert LIGHT_SOURCE_TYPE not in result
 
 
-def test___init__(tmp_test_directory):
+def test___init__(tmp_test_directory, run_context):
 
     # Mock the dependencies
-    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
     models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+    output_path = Path(tmp_test_directory) / "output"
+    context = run_context.replace(paths=OutputPaths(output_path, run_context.paths.model_path))
 
-    with patch(io_handler_path) as mock_io_handler, patch(models_path) as mock_init_models:
-        # Setup mock returns
-        mock_io_instance = Mock()
-        output_path = Path(tmp_test_directory) / "output"
-        mock_io_instance.get_output_directory.return_value = output_path
-        mock_io_handler.return_value = mock_io_instance
-
+    with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
         mock_site_model = Mock()
         mock_calibration_model = Mock()
@@ -479,7 +468,9 @@ def test___init__(tmp_test_directory):
         }
 
         # Create instance
-        simulator_light_emission_instance = SimulatorLightEmission(config, label="test_label")
+        simulator_light_emission_instance = SimulatorLightEmission(
+            config, label="test_label", context=context
+        )
 
         # Verify initialization
         assert hasattr(simulator_light_emission_instance, "_logger")
@@ -506,13 +497,12 @@ def test___init__(tmp_test_directory):
         )
 
 
-def test___init___passes_custom_model_directory(tmp_test_directory):
+def test___init___passes_custom_model_directory(tmp_test_directory, run_context):
     """A configured model directory is passed to the simulation models."""
-    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
     models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
     model_directory = Path(tmp_test_directory) / "model" / "isolated"
 
-    with patch(io_handler_path), patch(models_path) as mock_init_models:
+    with patch(models_path) as mock_init_models:
         mock_init_models.return_value = (Mock(), Mock(), Mock())
         SimulatorLightEmission(
             {
@@ -523,24 +513,20 @@ def test___init___passes_custom_model_directory(tmp_test_directory):
                 "model_directory": model_directory,
             },
             label="test_label",
+            context=run_context,
         )
 
     assert mock_init_models.call_args.kwargs["model_directory"] == model_directory
 
 
-def test___init___with_wavelength(tmp_test_directory):
+def test___init___with_wavelength(tmp_test_directory, run_context):
 
     # Mock the dependencies
-    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
     models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+    output_path = Path(tmp_test_directory) / "output"
+    context = run_context.replace(paths=OutputPaths(output_path, run_context.paths.model_path))
 
-    with patch(io_handler_path) as mock_io_handler, patch(models_path) as mock_init_models:
-        # Setup mock returns
-        mock_io_instance = Mock()
-        output_path = Path(tmp_test_directory) / "output"
-        mock_io_instance.get_output_directory.return_value = output_path
-        mock_io_handler.return_value = mock_io_instance
-
+    with patch(models_path) as mock_init_models:
         mock_telescope_model = Mock()
         mock_site_model = Mock()
         mock_calibration_model = Mock()
@@ -566,7 +552,7 @@ def test___init___with_wavelength(tmp_test_directory):
         }
 
         # Create instance
-        _ = SimulatorLightEmission(config, label="test_label")
+        _ = SimulatorLightEmission(config, label="test_label", context=context)
 
         # Verify models were initialized with label including telescope and wavelength
         mock_init_models.assert_called_once_with(
@@ -656,12 +642,12 @@ def test_write_telescope_position_file(simulator_instance, tmp_test_directory):
     # Use real temporary directory for file writing
     mock_output_dir = Path(tmp_test_directory)
     mock_output_dir.mkdir(parents=True, exist_ok=True)
-    simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
+    simulator_instance.context.paths.output_path["default"] = mock_output_dir
     simulator_instance.light_emission_config = {
         "telescope": "MSTS-04",
         "light_source": "ILLS-02",
     }
-    expected_file = mock_output_dir / "telescope_position_MSTS-04_ILLS-02.dat"
+    expected_file = mock_output_dir / "light_emission" / "telescope_position_MSTS-04_ILLS-02.dat"
 
     # Call the method
     result = simulator_instance.write_telescope_position_file(
@@ -1034,11 +1020,8 @@ def test_run_script_separates_diagnostics(
     mocker.patch.object(writer, "get_site_command", return_value=[])
     mocker.patch.object(writer, "get_light_source_command", return_value=[])
     mocker.patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=(0, 0))
-    mock_settings = mocker.Mock()
-    mock_settings.config.sim_telarray_path = root
-    mock_settings.config.sim_telarray_exe = simtel
-    mocker.patch("simtools.simtel.light_emission_config_writer.settings", mock_settings)
-    mocker.patch(SETTINGS_TARGET, mock_settings)
+    simulator_instance.context.software.sim_telarray_path = root
+    simulator_instance.context.software.sim_telarray_exe = simtel
     mocker.patch(
         "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
     )
@@ -1082,7 +1065,6 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
     simulator_instance.light_emission_config = {LIGHT_SOURCE_TYPE: ILLUMINATOR}
     simulator_instance.runner_service.get_file_name.return_value = Path("/out/photons.iact.gz")
     with (
-        patch(SETTINGS_TARGET) as mock_settings,
         patch.object(simulator_instance, "_backend", return_value=_tracing_backend()),
         patch.object(simulator_instance, "_seeds", return_value=(5, 3)),
         patch.object(simulator_instance, TELESCOPE_POINTING_METHOD) as pointing,
@@ -1090,7 +1072,7 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
             get_light_source_writer(simulator_instance), MAKE_COMMAND_METHOD
         ) as light_emission,
     ):
-        mock_settings.config.sim_telarray_exe = SIMTEL_EXECUTABLE
+        simulator_instance.context.software.sim_telarray_exe = SIMTEL_EXECUTABLE
         lines = simulator_instance.make_run_command()
 
     script = "".join(lines)
@@ -1109,7 +1091,7 @@ def test_seeds_are_drawn_once(simulator_instance, mocker):
     )
     assert simulator_instance._seeds() == (5, 3)
     assert simulator_instance._seeds() == (5, 3)
-    pairs.assert_called_once_with()
+    pairs.assert_called_once_with(context=simulator_instance.context)
 
 
 def test_backend_only_if_it_traces_light_sources(simulator_instance, mocker):

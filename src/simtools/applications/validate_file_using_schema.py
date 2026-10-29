@@ -45,7 +45,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS,),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 

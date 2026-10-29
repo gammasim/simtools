@@ -45,8 +45,8 @@ def _post_parse(args_dict, _config_sources, parser):
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=_ARGUMENTS,
-    initialize_output=False,
     post_parse=_post_parse,
+    needs=("corsika",),
 )
 
 

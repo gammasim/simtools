@@ -51,7 +51,7 @@ def _plot_data(data, config, output_file):
     return output_file
 
 
-def _get_figure_cache_key(plot_config, data):
+def _get_figure_cache_key(plot_config, data, context=None):
     """Hash effective plot inputs and output settings for per-run figure reuse."""
     config_for_render = {**plot_config}
     config_for_render["tables"] = [dict(table) for table in plot_config.get("tables", [])]
@@ -66,6 +66,7 @@ def _get_figure_cache_key(plot_config, data):
         },
         plot_config=config_for_render,
         rendered_data=data,
+        context=context,
     )
 
 

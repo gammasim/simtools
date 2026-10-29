@@ -31,14 +31,14 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    output_dir = app_context.io_handler.get_output_directory()
+    output_dir = app_context.paths.get_output_directory()
 
     app_context.logger.info(
         f"Loading trigger histogram file from: {app_context.args['trigger_histogram_file']}"

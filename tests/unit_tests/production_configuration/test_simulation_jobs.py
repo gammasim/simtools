@@ -363,7 +363,7 @@ def test_generate_job_grid_adds_default_metadata_to_ecsv_header(
 
     generate_job_grid(args, "job_grid.ecsv", metadata=default_metadata)
 
-    mock_build_simulation_jobs.assert_called_once_with(args)
+    mock_build_simulation_jobs.assert_called_once_with(args, context=None)
     assert mock_serialize_job_grid.call_args.kwargs["metadata"] == {
         **default_metadata,
         "site": "North",
@@ -383,7 +383,7 @@ def test_build_observing_location_uses_site_model(mock_site_model):
     location = build_observing_location("North", ["7.0.0"])
 
     assert isinstance(location, EarthLocation)
-    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North")
+    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")
@@ -433,8 +433,10 @@ def test_build_production_grid_engine_resolves_layout_name(
         array_layout_name="beta",
         lookup_nsb_rate=0.42,
     )
-    mock_build_observing_location.assert_called_once_with(site="North", model_version="7.0.0")
-    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North")
+    mock_build_observing_location.assert_called_once_with(
+        site="North", model_version="7.0.0", context=None
+    )
+    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
 
 
 @patch("simtools.production_configuration.simulation_jobs.build_observing_location")
@@ -463,8 +465,10 @@ def test_build_production_grid_engine_builds_observing_location_for_hadec(
         }
     )
 
-    mock_build_observing_location.assert_called_once_with(site="North", model_version="7.0.0")
-    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North")
+    mock_build_observing_location.assert_called_once_with(
+        site="North", model_version="7.0.0", context=None
+    )
+    mock_site_model.assert_called_once_with(model_version="7.0.0", site="North", context=None)
     assert mock_production_grid_engine.call_args.kwargs["observing_location"] == location
 
 
@@ -994,6 +998,7 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
 def test_build_simulation_jobs_expands_runs_from_observation_grid(
     mock_generate_observation_grids_per_layout,
+    run_context,
 ):
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
@@ -1008,7 +1013,7 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
     )
     args_dict = _base_simulation_jobs_args()
     args_dict[NUMBER_OF_RUNS_ARGUMENT] = 2
-    rows = build_simulation_jobs(args_dict)
+    rows = build_simulation_jobs(args_dict, context=run_context)
 
     assert [row["run_number"] for row in rows] == [11, 12]
     assert rows[0]["array_layout_name"] == "alpha"
@@ -1023,6 +1028,7 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
 def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
     mock_generate_observation_grids_per_layout,
+    run_context,
 ):
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
@@ -1033,7 +1039,7 @@ def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
             "viewcone_radius": 2 * u.deg,
         }
     )
-    rows = build_simulation_jobs(_base_simulation_jobs_args())
+    rows = build_simulation_jobs(_base_simulation_jobs_args(), context=run_context)
 
     assert "ha" not in rows[0]
     assert "dec" not in rows[0]
@@ -1043,6 +1049,7 @@ def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
 def test_build_simulation_jobs_propagates_explicit_hadronic_transition_energy(
     mock_generate_observation_grids_per_layout,
+    run_context,
 ):
     mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
         {
@@ -1056,7 +1063,7 @@ def test_build_simulation_jobs_propagates_explicit_hadronic_transition_energy(
     args_dict = _base_simulation_jobs_args()
     args_dict["corsika_hadronic_transition_energy"] = 120 * u.GeV
 
-    rows = build_simulation_jobs(args_dict)
+    rows = build_simulation_jobs(args_dict, context=run_context)
 
     assert rows[0]["corsika_hadronic_transition_energy"] == 120 * u.GeV
 

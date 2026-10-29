@@ -68,7 +68,7 @@ def test_runtime_alias_is_not_prepared_during_startup():
     assert not hasattr(args, "runtime_environment_file")
 
 
-def test_value_argument_parses_and_validates_heterogeneous_list():
+def test_value_argument_parses_and_validates_heterogeneous_list(run_context):
     parser = create_setting_workflow.APPLICATION.build_parser()
     args = parser.parse_args(
         [
@@ -85,7 +85,9 @@ def test_value_argument_parses_and_validates_heterogeneous_list():
         ]
     )
 
-    validated = setting_workflow._validated_parameter(ModelDataWriter(), vars(args))
+    validated = setting_workflow._validated_parameter(
+        ModelDataWriter(context=run_context), vars(args)
+    )
 
     assert validated["value"][0] == "Gauss-Exponential"
     assert math.isclose(validated["value"][1], 0.4)

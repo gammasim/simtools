@@ -70,7 +70,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
         cli.RAY_TRACING_BACKEND,
     ),
-    validate_simulation_dependencies=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -105,11 +105,14 @@ def main():
                 telescope=tel,
                 label=app_context.args.get("label"),
                 model_reader=app_context.model_reader,
+                context=app_context,
             )
             light_source.simulate()
             light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
-        Simulator.simulate_direct_injection_sequence(label=app_context.args.get("label"))
+        Simulator.simulate_direct_injection_sequence(
+            label=app_context.args.get("label"), context=app_context
+        )
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 

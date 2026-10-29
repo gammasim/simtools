@@ -82,11 +82,9 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Create a new release directory from the shared setup templates and exit.",
         ),
     ),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
     excluded_standard_arguments=("test",),
     post_parse=_post_parse,
+    needs=(),
 )
 
 

@@ -12,10 +12,10 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.application.model_reader import require_model_reader
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
+from simtools.context import RunContext
 from simtools.data_model import parameter_catalog as catalog
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.model_repository.asset_names import get_export_file_name
 from simtools.reporting.model_figures import (
@@ -77,10 +77,11 @@ class ParameterDelta:
 class ReadParameters:
     """Read and manage model parameter data for report generation."""
 
-    def __init__(self, args, output_path, model_reader=None):
+    def __init__(self, args, output_path, model_reader=None, context=None):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
@@ -468,7 +469,7 @@ class ReadParameters:
         markdown_output_file = output_data_path / output_file_name
 
         if not markdown_output_file.exists():
-            outpath = io_handler.IOHandler().get_output_directory("_images")
+            outpath = self.context.paths.get_output_directory("_images")
             outpath.mkdir(parents=True, exist_ok=True)
 
             plot_kwargs = {
@@ -957,7 +958,9 @@ class ReadParameters:
         with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
             file.write(f"# {telescope_model.name}\n")
-            write_telescope_structure_figure(file, telescope_model, self._logger)
+            write_telescope_structure_figure(
+                file, telescope_model, self._logger, context=self.context
+            )
 
             if not is_design_model:
                 file.write(
@@ -1059,6 +1062,7 @@ class ReadParameters:
                 self.model_reader,
                 self.site,
                 self.array_element,
+                self.context,
             )
         file.write("\n\n")
 
@@ -1086,7 +1090,7 @@ class ReadParameters:
 
     def _write_file_flag_section(self, file, parameter, comparison_data, collection):
         """Write image/plot references when parameter entries include files."""
-        outpath = io_handler.IOHandler().get_output_directory("_images")
+        outpath = self.context.paths.get_output_directory("_images")
         latest_item = max(
             comparison_data.get(parameter),
             key=lambda x: tuple(map(int, x["parameter_version"].split("."))),

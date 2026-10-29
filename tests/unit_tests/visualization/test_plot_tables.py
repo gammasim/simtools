@@ -151,6 +151,7 @@ def test_read_table_data_from_file(
 def test_read_table_data_from_model_repository(
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
+    run_context,
 ):
     config = {
         "tables": [
@@ -171,7 +172,7 @@ def test_read_table_data_from_model_repository(
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
-    result = plot_tables.read_table_data(config, model_reader=model_reader)
+    result = plot_tables.read_table_data(config, model_reader=model_reader, context=run_context)
 
     model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
@@ -193,7 +194,7 @@ def test_read_table_data_no_table_data_defined():
         plot_tables.read_table_data(config)
 
 
-def test_export_model_file():
+def test_export_model_file(run_context):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
@@ -209,7 +210,7 @@ def test_export_model_file():
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config, model_reader=model_reader)
+    plot_tables.read_table_data(config, model_reader=model_reader, context=run_context)
 
     model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
@@ -486,9 +487,7 @@ def test_generate_plot_configurations_uses_and_names_selected_model_version(
     assert output_files[0].name == "mirror_reflectivity_2.0.0_North_LSTN-design.pdf"
 
 
-def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(
-    monkeypatch, runtime_args
-):
+def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(monkeypatch, run_context):
     plot_config = {
         "title": "Reflectivity",
         "xtitle": "Wavelength [nm]",
@@ -496,22 +495,25 @@ def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(
     }
     data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
 
-    runtime_args({"figure_dpi": 120})
+    context = run_context.replace(args={"figure_dpi": 120})
 
-    initial_key = plot_tables._get_figure_cache_key(plot_config, data)
+    initial_key = plot_tables._get_figure_cache_key(plot_config, data, context)
     same_render_from_another_version = {
         **plot_config,
         "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
     }
-    assert plot_tables._get_figure_cache_key(same_render_from_another_version, data) == initial_key
+    assert (
+        plot_tables._get_figure_cache_key(same_render_from_another_version, data, context)
+        == initial_key
+    )
 
     changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
-    assert plot_tables._get_figure_cache_key(plot_config, changed_data) != initial_key
+    assert plot_tables._get_figure_cache_key(plot_config, changed_data, context) != initial_key
     changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
-    assert plot_tables._get_figure_cache_key(changed_config, data) != initial_key
+    assert plot_tables._get_figure_cache_key(changed_config, data, context) != initial_key
 
-    runtime_args({"figure_dpi": 240})
-    assert plot_tables._get_figure_cache_key(plot_config, data) != initial_key
+    changed_context = run_context.replace(args={"figure_dpi": 240})
+    assert plot_tables._get_figure_cache_key(plot_config, data, changed_context) != initial_key
 
 
 def test_get_plotting_label_duplicate_label():

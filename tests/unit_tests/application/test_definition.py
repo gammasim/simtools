@@ -77,17 +77,14 @@ def test_start_delegates_to_common_startup(mocker):
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
         description="Test application.",
-        setup_io_handler=False,
+        needs=(),
     )
     mocker.patch.object(ApplicationDefinition, "_parse", return_value={"value": 3})
 
     assert application.start() == "context"
     assert startup.call_args.args == ({"value": 3},)
     assert startup.call_args.kwargs == {
-        "setup_io_handler": False,
-        "resolve_sim_software_executables": True,
-        "validate_simulation_dependencies": False,
-        "initialize_model_reader": False,
+        "needs": (),
     }
 
 
@@ -99,7 +96,7 @@ def test_model_repository_definitions_initialize_the_reader_by_default():
         model_repository=True,
     )
 
-    assert application.initialize_model_reader is True
+    assert "model" in application.needs
 
 
 def test_start_can_skip_model_reader_initialization(mocker):
@@ -110,12 +107,12 @@ def test_start_can_skip_model_reader_initialization(mocker):
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
         description="Test application.",
-        initialize_model_reader=False,
+        needs=(),
     )
     mocker.patch.object(ApplicationDefinition, "_parse", return_value={})
 
     assert application.start() == "context"
-    assert startup.call_args.kwargs["initialize_model_reader"] is False
+    assert startup.call_args.kwargs["needs"] == ()
 
 
 @pytest.mark.parametrize("arguments", [[], ["--help"], ["-h"]])
@@ -142,7 +139,7 @@ def test_array_position_writer_does_not_require_model_reader():
         "simtools.applications.maintain_simulation_model_write_array_element_positions"
     ).APPLICATION
 
-    assert application.initialize_model_reader is False
+    assert "model" not in application.needs
     argument_names = {argument.name for argument in application.all_arguments}
     assert "output_path" in argument_names
     assert "simulation_models_path" not in argument_names

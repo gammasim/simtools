@@ -62,6 +62,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -69,7 +70,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    generate_bias_curves(app_context.args)
+    generate_bias_curves(app_context.args, context=app_context)
 
 
 if __name__ == "__main__":

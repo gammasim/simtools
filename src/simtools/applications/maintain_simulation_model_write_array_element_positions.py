@@ -28,7 +28,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OUTPUT_PATH,
         cli.PARAMETER_VERSION,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 

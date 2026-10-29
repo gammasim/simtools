@@ -9,12 +9,12 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.settings import config as simtools_config
+from simtools.context import RunContext
 from simtools.visualization import matplotlib_backend
 from simtools.visualization.matplotlib_backend import BACKEND_NAME
 
 
-def figure_cache_key(renderer, renderer_modules, plot_config, rendered_data):
+def figure_cache_key(renderer, renderer_modules, plot_config, rendered_data, context=None):
     """Return a SHA-256 key for identical plot inputs and rendering settings."""
     renderer_modules = {
         "figure_cache": __file__,
@@ -26,7 +26,7 @@ def figure_cache_key(renderer, renderer_modules, plot_config, rendered_data):
         for name, module_path in renderer_modules.items()
     }
     output_settings = {
-        key: simtools_config.args.get(key)
+        key: (context or RunContext.from_environment()).args.get(key)
         for key in ("figure_format", "figure_dpi", "figure_png_palette")
     }
     output_settings.update(

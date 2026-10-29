@@ -8,7 +8,7 @@ from simtools.applications import validate_file_using_schema
 
 def test_application_does_not_initialize_model_reader():
     """Schema validation does not need simulation-model data."""
-    assert validate_file_using_schema.APPLICATION.initialize_model_reader is False
+    assert "model" not in validate_file_using_schema.APPLICATION.needs
 
 
 @patch("simtools.applications.validate_file_using_schema.output_validator")

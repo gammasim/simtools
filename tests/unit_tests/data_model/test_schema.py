@@ -576,7 +576,7 @@ def test_add_array_elements():
 
 
 def _mock_software_version(monkeypatch):
-    monkeypatch.setattr("simtools.data_model.schema.get_software_version", lambda _: "1.0.0")
+    monkeypatch.setattr("simtools.dependencies.get_software_version", lambda _: "1.0.0")
 
 
 @pytest.mark.parametrize(

@@ -13,9 +13,10 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
+from simtools.context import RunContext
 from simtools.histogram.hdf5 import read_histograms, write_histograms
 from simtools.histogram.histogram import Histogram
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import product_value, validate_file_type
 from simtools.job_execution.execution import map_ordered, options_from_args, submit_jobs
@@ -36,7 +37,6 @@ from simtools.production_configuration.production_file_selection import (
     stable_configuration_hash,
     values_match,
 )
-from simtools.settings import config as settings_config
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
 
@@ -549,6 +549,7 @@ def _write_trigger_histogram_product(
     output_file,
     product_metadata=None,
     telescope_configs=None,
+    context=None,
 ):
     """Build and write one trigger-histogram product from production sources."""
     telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict)
@@ -580,6 +581,7 @@ def _write_trigger_histogram_product(
         backend=args_dict.get("backend", "local"),
         max_workers=args_dict.get("max_workers", 1),
         backend_config=args_dict.get("backend_config"),
+        context=context,
     ):
         for spec in production_result:
             reference_specs.append(spec | {"reference_id": f"reference_{len(reference_specs)}"})
@@ -638,7 +640,7 @@ def _write_trigger_histogram_metadata(args_dict, output_file, product_metadata):
     write_data_to_file(manifest, metadata_file)
 
 
-def _write_directory_group_job(job_spec):
+def _write_directory_group_job(job_spec, context=None):
     """Build one directory-discovered trigger-histogram product."""
     args_dict = job_spec["args_dict"] | {
         "event_data_files": job_spec["event_data_files"],
@@ -652,18 +654,17 @@ def _write_directory_group_job(job_spec):
         job_spec["output_file"],
         product_metadata=job_spec.get("product_metadata"),
         telescope_configs=job_spec.get("telescope_configs"),
+        context=context,
     )
     return str(job_spec["output_file"])
 
 
-def _write_directory_products(args_dict):
+def _write_directory_products(args_dict, context=None):
     """Submit or execute one independent trigger-histogram product per directory group."""
-    output_directory = io_handler.IOHandler().get_output_directory()
+    context = context or RunContext.from_environment()
+    output_directory = context.paths.get_output_directory()
     event_data_directory = Path(args_dict["event_data_directory"]).resolve()
     groups = discover_event_data_groups(event_data_directory)
-    runtime_args = (
-        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
-    )
     jobs = []
     for index, (group_name, event_data_files) in enumerate(groups):
         output_file = validate_file_type(
@@ -680,7 +681,9 @@ def _write_directory_products(args_dict):
                     "event_data_files": [str(file_path) for file_path in event_data_files],
                     "output_file": output_file,
                 },
-                runtime_args=runtime_args,
+                context_spec=context.to_spec()
+                if args_dict.get("backend", "local") != "local"
+                else None,
                 mount_paths=(event_data_directory,),
                 output_paths=(output_file,),
             )
@@ -689,11 +692,12 @@ def _write_directory_products(args_dict):
     return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
 
 
-def _write_production_selection_products(args_dict):
+def _write_production_selection_products(args_dict, context=None):
     """Submit one trigger-histogram product per selected production configuration group."""
+    context = context or RunContext.from_environment()
     if args_dict.get("file_type", _REDUCED_EVENT_DATA) != _REDUCED_EVENT_DATA:
         raise ValueError("Production metadata input requires file_type='reduced_event_data'.")
-    output_directory = io_handler.IOHandler().get_output_directory()
+    output_directory = context.paths.get_output_directory()
     selection_result = select_file_groups(
         args_dict[_PRODUCTION_PATH_KEY],
         selections=args_dict.get(_SELECT_KEY),
@@ -705,9 +709,6 @@ def _write_production_selection_products(args_dict):
         raise ValueError("Production metadata selection did not match any files.")
 
     production_path = Path(args_dict[_PRODUCTION_PATH_KEY]).resolve()
-    runtime_args = (
-        dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
-    )
     products = []
     for group in selection_result[_GROUPS_KEY]:
         telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
@@ -754,7 +755,9 @@ def _write_production_selection_products(args_dict):
                     },
                     "telescope_configs": telescope_configs,
                 },
-                runtime_args=runtime_args,
+                context_spec=context.to_spec()
+                if args_dict.get("backend", "local") != "local"
+                else None,
                 mount_paths=(production_path,),
                 output_paths=(output_file, metadata_file),
             )
@@ -763,7 +766,7 @@ def _write_production_selection_products(args_dict):
     return submit_jobs(jobs, options_from_args(args_dict, max_workers=args_dict.get("max_workers")))
 
 
-def write_trigger_histograms(args_dict):
+def write_trigger_histograms(args_dict, context=None):
     """
     Build trigger histograms and write them to file.
 
@@ -784,13 +787,14 @@ def write_trigger_histograms(args_dict):
         If the output file does not use an HDF5 suffix or no supported telescope
         selection is provided.
     """
+    context = context or RunContext.from_environment()
     if args_dict.get("event_data_directory"):
-        return _write_directory_products(args_dict)
+        return _write_directory_products(args_dict, context)
     if args_dict.get(_PRODUCTION_PATH_KEY):
-        return _write_production_selection_products(args_dict)
+        return _write_production_selection_products(args_dict, context)
 
     production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
-    output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
+    output_file = context.paths.get_output_file(args_dict["output_file"])
     return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
 
 

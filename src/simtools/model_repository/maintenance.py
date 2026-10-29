@@ -258,7 +258,9 @@ def _get_model_parameter_scope(telescope, parameter_name=None):
     return telescope
 
 
-def generate_new_production(model_version, simulation_models_path, setting_workflows_git_tag=None):
+def generate_new_production(
+    model_version, simulation_models_path, setting_workflows_git_tag=None, context=None
+):
     """
     Generate a new production definition (production tables and model parameters).
 
@@ -280,6 +282,8 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
         Branch or tag used to download parameters from the simulation workflow repository.
         If provided, this value overrides ``setting_workflows_git_tag`` from ``info.yml``.
         If None, the value from ``info.yml`` is used, with ``"main"`` as fallback.
+    context : RunContext, optional
+        Run configuration and model reader used to write model parameters.
     """
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
     update_type = modification_dict.get(_MODEL_UPDATE, "full_update")
@@ -306,6 +310,7 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
         simulation_models_path,
         setting_workflows_git_tag,
         setting_workflows_git_repository,
+        context=context,
     )
 
 
@@ -685,6 +690,7 @@ def _apply_model_parameter_change(
     simulation_models_path,
     setting_workflows_git_tag,
     setting_workflows_git_repository,
+    context=None,
 ):
     """Apply one model parameter change."""
     if param_data.get("activity_id") is not None and param_data.get("value") is not None:
@@ -703,7 +709,9 @@ def _apply_model_parameter_change(
             setting_workflows_git_repository,
         )
     elif param_data.get("value") is not None:
-        _create_new_model_parameter_entry(telescope, param, param_data, simulation_models_path)
+        _create_new_model_parameter_entry(
+            telescope, param, param_data, simulation_models_path, context=context
+        )
 
 
 def _format_model_parameter_entry(param_data):
@@ -720,6 +728,7 @@ def _process_model_parameter_change(
     simulation_models_path,
     setting_workflows_git_tag,
     setting_workflows_git_repository,
+    context=None,
 ):
     """Apply one model parameter change and add context to failures."""
     try:
@@ -730,6 +739,7 @@ def _process_model_parameter_change(
             simulation_models_path,
             setting_workflows_git_tag,
             setting_workflows_git_repository,
+            context=context,
         )
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         entry_details = _format_model_parameter_entry(param_data)
@@ -743,6 +753,7 @@ def _apply_changes_to_model_parameters(
     simulation_models_path,
     setting_workflows_git_tag="main",
     setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
+    context=None,
 ):
     """
     Apply changes to model parameters by creating new parameter entries.
@@ -772,6 +783,7 @@ def _apply_changes_to_model_parameters(
                 simulation_models_path,
                 setting_workflows_git_tag,
                 setting_workflows_git_repository,
+                context=context,
             )
 
 
@@ -901,7 +913,9 @@ def _copy_model_parameter_asset_from_workflow(
     target_asset.write_bytes(asset_content)
 
 
-def _create_new_model_parameter_entry(telescope, param, param_data, simulation_models_path):
+def _create_new_model_parameter_entry(
+    telescope, param, param_data, simulation_models_path, context=None
+):
     """
     Create new model parameter entry in the model parameters directory.
 
@@ -962,6 +976,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         output_path=param_dir,
         unit=param_data.get("unit"),
         model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
+        context=context,
     )
 
 
