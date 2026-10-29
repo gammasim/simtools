@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793284559573,
+  "lastUpdate": 1793304355186,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33790,6 +33790,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 494.61328125,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0ee4a554d06668b3e06a53432e56e57274979fd8",
+          "message": "Shrink utilities and plotting modules; plots receive data (#2725)\n\n* Shrink utilities and plotting modules; plots receive data\n\n- utils/general.py 1092 -> 294 lines: conversion helpers move to\n  utils/value_conversion.py, single-use helpers move to their consumer.\n- visualization 12.1k -> 9.1k lines: duplicated helpers merged, unused\n  functions removed, PSF, camera, pixel and mirror plots receive data\n  instead of reading models; computation moves to ray_tracing, model and\n  the applications.\n- import-linter contract: visualization does not import model, camera or\n  ray tracing (plot_simtel_events kept as ignore).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add change fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Fix review findings: optional primary-particle column, explicit plot-style branches\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T20:56:50+01:00",
+          "tree_id": "df89fc606ab2b3c168a6cfc022683a79013a84ab",
+          "url": "https://github.com/gammasim/simtools/commit/0ee4a554d06668b3e06a53432e56e57274979fd8"
+        },
+        "date": 1793304340766,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 85.867377492,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 85.89,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 493.73046875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
