@@ -30,6 +30,10 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
         check-latest: true
+        cache: ${{ inputs.install-dependencies == 'true' && 'pip' || '' }}
+        cache-dependency-path: |
+          pyproject.toml
+          .github/actions/setup-simtools-tests/action.yml
 
     - name: Python dependencies
       if: ${{ inputs.install-dependencies == 'true' }}
