@@ -68,10 +68,10 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
-## production_comparison
+## comparison
 
 ```{eval-rst}
-.. automodule:: production_configuration.production_comparison
+.. automodule:: production_configuration.comparison
    :members:
 ```
 
@@ -79,6 +79,13 @@ related production-configuration helpers used by the supported workflows.
 
 ```{eval-rst}
 .. automodule:: production_configuration.resource_requirements
+   :members:
+```
+
+## production_definition
+
+```{eval-rst}
+.. automodule:: production_configuration.production_definition
    :members:
 ```
 
@@ -90,67 +97,21 @@ related production-configuration helpers used by the supported workflows.
 ```
 
 
-(angle-ranges)=
+(production-grid)=
 
-## angle_ranges
+## grid
 
 ```{eval-rst}
-.. automodule:: production_configuration.angle_ranges
+.. automodule:: production_configuration.grid
    :members:
 ```
 
+(production-jobs-io)=
 
-(job-grid-io)=
-
-## job_grid_io
-
-```{eval-rst}
-.. automodule:: production_configuration.job_grid_io
-   :members:
-```
-
-(job-metadata)=
-
-## job_metadata
+## jobs_io
 
 ```{eval-rst}
-.. automodule:: production_configuration.job_metadata
-   :members:
-```
-
-(job-generation-summary)=
-
-## job_generation_summary
-
-```{eval-rst}
-.. automodule:: production_configuration.job_generation_summary
-   :members:
-```
-
-(job-grid-summary)=
-
-## job_grid_summary
-
-```{eval-rst}
-.. automodule:: production_configuration.job_grid_summary
-   :members:
-```
-
-(observation-grid)=
-
-## observation_grid
-
-```{eval-rst}
-.. automodule:: production_configuration.observation_grid
-   :members:
-```
-
-(simulation-jobs)=
-
-## simulation_jobs
-
-```{eval-rst}
-.. automodule:: production_configuration.simulation_jobs
+.. automodule:: production_configuration.jobs_io
    :members:
 ```
 
@@ -161,18 +122,11 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
-## Parameter scans and bias-curve submissions
+## Parameter scans
 
-(parameter-scan-generator)=
-
-```{eval-rst}
-.. automodule:: production_configuration.parameter_scan_generator
-   :members:
-```
-
-(bias-curve-submissions)=
+(parameter-scans)=
 
 ```{eval-rst}
-.. automodule:: production_configuration.bias_curve_submissions
+.. automodule:: production_configuration.parameter_scans
    :members:
 ```

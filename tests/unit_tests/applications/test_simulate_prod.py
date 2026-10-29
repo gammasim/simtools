@@ -12,7 +12,7 @@ import pytest
 
 import simtools.applications.simulate_prod as app
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.production_configuration import job_grid_io
+from simtools.production_configuration import jobs_io
 
 pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
 
@@ -41,7 +41,7 @@ def job_grid_file(tmp_test_directory):
         "corsika_le_interaction": "urqmd",
         "corsika_he_interaction": "epos",
     }
-    job_grid_io.serialize_job_grid(
+    jobs_io.serialize_job_grid(
         [
             row,
             {

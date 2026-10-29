@@ -7,7 +7,7 @@ from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import scientific_int
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.production_configuration.simulation_jobs import (
+from simtools.production_configuration.grid import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     generate_job_grid,
 )

@@ -29,7 +29,7 @@ from simtools.simtel.photon_bunch_file import (
 from simtools.simtel.simtel_seeds import instance_seed_pairs
 from simtools.simulation.configuration import get_light_source_writer
 from simtools.simulation.light_source_profiles import angular_profile, pulse_profile
-from simtools.utils import general
+from simtools.utils import value_conversion
 from simtools.utils.geometry import (
     fiducial_radius_from_shape,
     ground_direction_to_telescope_frame,
@@ -110,7 +110,7 @@ class SimulatorLightEmission(SimtelRunner):
         calibration_model = CalibrationModel(**calibration_kwargs)
 
         wavelengths = calibration_model.get_parameter_value_with_unit(FLASHER_WAVELENGTH)
-        return general.ensure_list(wavelengths)
+        return value_conversion.ensure_list(wavelengths)
 
     def __init__(
         self, light_emission_config, telescope=None, label=None, model_reader=None, context=None
@@ -168,7 +168,7 @@ class SimulatorLightEmission(SimtelRunner):
                 config["run_mode"] = config[LIGHT_SOURCE_TYPE]
 
         if config.get(FLASHER_PHOTONS) is not None:
-            photons = general.parse_typed_sequence(config[FLASHER_PHOTONS], int)
+            photons = value_conversion.parse_typed_sequence(config[FLASHER_PHOTONS], int)
             if len(photons) == 1:
                 photon_value = photons[0]
                 self.calibration_model.overwrite_model_parameter(FLASHER_PHOTONS, photon_value)
@@ -186,7 +186,9 @@ class SimulatorLightEmission(SimtelRunner):
                 FLASHER_WAVELENGTH
             )
             # Ensure it's a list (could be scalar Quantity)
-            allowed_wavelengths_with_unit = general.ensure_list(allowed_wavelengths_with_unit)
+            allowed_wavelengths_with_unit = value_conversion.ensure_list(
+                allowed_wavelengths_with_unit
+            )
             # Convert to nm for comparison
             allowed_wavelengths = [wl.to(u.nm) for wl in allowed_wavelengths_with_unit]
 
@@ -233,11 +235,11 @@ class SimulatorLightEmission(SimtelRunner):
 
     def build_flasher_event_and_photon_sequences(self):
         """Build ff-1m-compatible events/photons sequences."""
-        photons_int = general.parse_typed_sequence(
+        photons_int = value_conversion.parse_typed_sequence(
             self.light_emission_config.get(FLASHER_PHOTONS), int
         )
 
-        events = general.parse_typed_sequence(
+        events = value_conversion.parse_typed_sequence(
             self.light_emission_config.get(NUMBER_OF_EVENTS, 1), int
         )
         events_int = self._repeat_or_map_events(events, len(photons_int))
@@ -784,7 +786,7 @@ class SimulatorLightEmission(SimtelRunner):
         values = self.telescope_model.get_parameter_value_with_unit("focus_offset")
         if values is None:
             return 0.0 * u.m
-        values = general.ensure_list(values)
+        values = value_conversion.ensure_list(values)
         offset = values[0].to(u.m)
         if len(values) < 4 or not (values[2].value and values[3].value):
             return offset

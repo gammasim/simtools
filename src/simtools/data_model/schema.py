@@ -1,6 +1,8 @@
 """Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
+import urllib.error
+import urllib.request
 from functools import lru_cache
 from pathlib import Path
 
@@ -8,8 +10,6 @@ import jsonschema
 from astropy.table import Table
 from referencing import Registry, Resource
 
-import simtools.utils.general as gen
-from simtools import dependencies
 from simtools.constants import (
     METADATA_JSON_SCHEMA,
     MODEL_PARAMETER_METASCHEMA,
@@ -17,6 +17,7 @@ from simtools.constants import (
     SCHEMA_PATH,
 )
 from simtools.data_model import format_checkers, schema_loader
+from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
 from simtools.version import check_version_constraint
@@ -171,8 +172,15 @@ def _validate_meta_schema_url(data):
     if not isinstance(data, dict):
         return
 
-    if data.get("meta_schema_url") is not None and not gen.url_exists(data["meta_schema_url"]):
-        raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
+    meta_schema_url = data.get("meta_schema_url")
+    if meta_schema_url is not None:
+        try:
+            with urllib.request.urlopen(meta_schema_url, timeout=5) as response:
+                url_exists = response.status == 200
+        except urllib.error.URLError, AttributeError:
+            url_exists = False
+        if not url_exists:
+            raise FileNotFoundError(f"Meta schema URL does not exist: {meta_schema_url}")
 
 
 @lru_cache
@@ -315,7 +323,7 @@ def validate_deprecation_and_version(data, software_name=None, ignore_software_v
         if software_name is not None and name.lower() != software_name.lower():
             continue
 
-        software_version = dependencies.get_software_version(name)
+        software_version = get_software_version(name)
         if check_version_constraint(software_version, constraint):
             continue
 

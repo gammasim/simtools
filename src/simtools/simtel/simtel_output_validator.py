@@ -17,7 +17,7 @@ from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
-from simtools.utils import general, random
+from simtools.utils import random, value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ def validate_sim_telarray(
     ValueError
         If the sim_telarray output files or metadata are not consistent with the array models.
     """
-    data_files = general.ensure_list(data_files)
-    log_files = general.ensure_list(log_files)
+    data_files = value_conversion.ensure_list(data_files)
+    log_files = value_conversion.ensure_list(log_files)
 
     if array_models:
         validate_metadata(data_files, array_models, allow_for_changes)
@@ -445,7 +445,7 @@ def validate_event_numbers(data_files, expected_mc_events, expected_shower_event
         If the number of simulated events does not match the expected number.
     """
     event_errors = []
-    for file in general.ensure_list(data_files):
+    for file in value_conversion.ensure_list(data_files):
         shower_events, mc_events = file_info.get_simulated_events(file)
 
         if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):

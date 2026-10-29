@@ -1,9 +1,8 @@
 """Unit tests for simtools.visualization.plot_ray_tracing_psf."""
 
-from unittest.mock import MagicMock, patch
-
 import astropy.units as u
 import numpy as np
+import pytest
 
 from simtools.visualization import plot_ray_tracing_psf
 
@@ -13,107 +12,64 @@ def test_create_cumulative_psf_figure_draws_curve_and_markers():
         [(0.0, 0.0), (1.0, 0.5), (2.0, 1.0)],
         dtype=[("Radius [cm]", "f8"), ("Cumulative PSF", "f8")],
     )
-    mock_fig = MagicMock()
-    mock_ax = MagicMock()
-
-    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
-        mock_subplots.return_value = (mock_fig, mock_ax)
-        fig, ax = plot_ray_tracing_psf.create_cumulative_psf_figure(
-            data,
-            radius_key="Radius [cm]",
-            cumulative_key="Cumulative PSF",
-            containment_radius_cm=1.5,
-            psf_diameter_cm=4.0,
-            color="blue",
-        )
-
-    assert fig == mock_fig
-    assert ax == mock_ax
-    mock_ax.plot.assert_called_once()
-    assert mock_ax.axvline.call_count == 2
+    _fig, ax = plot_ray_tracing_psf.create_cumulative_psf_figure(
+        data,
+        radius_key="Radius [cm]",
+        cumulative_key="Cumulative PSF",
+        containment_radius_cm=1.5,
+        psf_diameter_cm=4.0,
+        color="blue",
+    )
+    assert ax.get_xlabel() == "Radius (cm)"
+    assert ax.get_ylabel() == "Contained light %"
+    # One curve plus two vertical markers (containment radius and PSF diameter / 2)
+    assert len(ax.lines) == 3
+    assert ax.lines[1].get_xdata()[0] == pytest.approx(1.5)
+    assert ax.lines[2].get_xdata()[0] == pytest.approx(2.0)
 
 
 def test_create_psf_image_figure_draws_histogram_circle_and_axes():
     data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
-    mock_fig = MagicMock()
-    mock_ax = MagicMock()
-    mock_ax.figure = mock_fig
-
-    mock_fig.gca.return_value = mock_ax
-    with patch(
-        "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
-        return_value=mock_fig,
-    ) as mock_plot_hist:
-        fig, ax = plot_ray_tracing_psf.create_psf_image_figure(
-            data,
-            containment_radius=2.0,
-            center=(0.0, 0.0),
-            bins=80,
-            image_range=[[-1.0, 1.0], [-1.0, 1.0]],
-            psf_kwargs={"color": "k", "fill": False},
-        )
-
-    assert fig == mock_fig
-    assert ax == mock_ax
-    mock_plot_hist.assert_called_once_with(
+    _fig, ax = plot_ray_tracing_psf.create_psf_image_figure(
         data,
-        ax=None,
-        bins=80,
-        range=[[-1.0, 1.0], [-1.0, 1.0]],
+        containment_radius=2.0,
+        center=(0.0, 0.0),
+        bins=10,
+        image_range=[[-3.0, 3.0], [-3.0, 3.0]],
+        psf_kwargs={"color": "k", "fill": False},
     )
-    mock_ax.add_artist.assert_called_once()
-    mock_ax.axhline.assert_called_once()
-    mock_ax.axvline.assert_called_once()
+    assert ax.get_xlabel() == "X Position (cm)"
+    assert ax.get_ylabel() == "Y Position (cm)"
+    assert len(ax.patches) == 1  # containment circle
+    assert len(ax.lines) == 2  # reference axes
 
 
 def test_create_annotated_psf_image_figure_adds_text():
     data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
-    mock_fig = MagicMock()
-    mock_ax = MagicMock()
-
-    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
-        mock_subplots.return_value = (mock_fig, mock_ax)
-        with patch(
-            "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
-            return_value=mock_fig,
-        ):
-            fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
-                data,
-                off_x=0.5,
-                off_y=-0.5,
-                psf=4.2 * u.cm,
-                containment_radius=2.1 * u.cm,
-                image_range=[[-1.0, 1.0], [-1.0, 1.0]],
-                cmap="gist_heat_r",
-            )
-
-    assert fig == mock_fig
-    mock_ax.text.assert_called_once()
-    annotation_text = mock_ax.text.call_args.args[2]
-    assert "Offset" in annotation_text
-    assert "PSF" in annotation_text
+    fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+        data,
+        off_x=0.5,
+        off_y=-0.5,
+        psf=4.2 * u.cm,
+        containment_radius=2.1 * u.cm,
+        image_range=[[-3.0, 3.0], [-3.0, 3.0]],
+        cmap="gist_heat_r",
+        telescope_name="LSTN-01",
+    )
+    ax = fig.axes[0]
+    assert ax.get_xlabel() == "X Position (cm)"
+    assert ax.texts[0].get_text() == ("LSTN-01\nOffset: (+0.50 deg, -0.50 deg)\nPSF: 4.20 cm")
 
 
-def test_create_annotated_psf_image_figure_includes_telescope_name():
+def test_create_annotated_psf_image_figure_without_telescope_name():
     data = np.array([(0.0, 0.0)], dtype=[("X", "f8"), ("Y", "f8")])
-    mock_fig = MagicMock()
-    mock_ax = MagicMock()
-
-    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
-        mock_subplots.return_value = (mock_fig, mock_ax)
-        with patch(
-            "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
-            return_value=mock_fig,
-        ):
-            plot_ray_tracing_psf.create_annotated_psf_image_figure(
-                data,
-                off_x=0.0,
-                off_y=0.0,
-                psf=2.0 * u.cm,
-                containment_radius=1.0 * u.cm,
-                image_range=[[-1.0, 1.0], [-1.0, 1.0]],
-                telescope_name="LSTN-01",
-            )
-
-    annotation_text = mock_ax.text.call_args.args[2]
-    assert "LSTN-01" in annotation_text
+    fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+        data,
+        off_x=0.0,
+        off_y=0.0,
+        psf=0.05 * u.deg,
+        containment_radius=0.02 * u.deg,
+        image_range=[[-1.0, 1.0], [-1.0, 1.0]],
+    )
+    text = fig.axes[0].texts[0].get_text()
+    assert text == "Offset: (+0.00 deg, +0.00 deg)\nPSF: 0.0500 deg"

@@ -12,7 +12,6 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
-import simtools.utils.general as gen
 from simtools.context import RunContext
 from simtools.histogram.hdf5 import read_histograms, write_histograms
 from simtools.histogram.histogram import Histogram
@@ -39,6 +38,7 @@ from simtools.production_configuration.production_file_selection import (
 )
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.sim_events.metadata import build_standard_metadata
+from simtools.utils import value_conversion
 
 _RUN_NUMBERS = "run_numbers"
 
@@ -793,7 +793,7 @@ def write_trigger_histograms(args_dict, context=None):
     if args_dict.get(_PRODUCTION_PATH_KEY):
         return _write_production_selection_products(args_dict, context)
 
-    production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
+    production_patterns = value_conversion.ensure_string_lists(args_dict["event_data_files"])
     output_file = context.paths.get_output_file(args_dict["output_file"])
     return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
 

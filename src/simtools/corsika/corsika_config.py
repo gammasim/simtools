@@ -13,7 +13,7 @@ from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.simulation.configuration import get_model_writer
 from simtools.simulation.parameters import SimulationParameters
-from simtools.utils import general as gen
+from simtools.utils import value_conversion
 from simtools.utils.geometry import geographic_to_corsika_azimuth
 from simtools.utils.random import seeds
 
@@ -161,7 +161,7 @@ class CorsikaConfig:
 
         config.update(
             self._fill_corsika_configuration_from_repository(
-                gen.ensure_list(args.get("model_version"))
+                value_conversion.ensure_list(args.get("model_version"))
             )
         )
         return config

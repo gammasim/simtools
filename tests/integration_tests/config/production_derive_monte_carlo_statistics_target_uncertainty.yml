@@ -64,6 +64,7 @@ applications:
         - cta.product
         - spectral_index
         - target_relative_uncertainty
+  differential_test: true
   test_name: production_derive_monte_carlo_statistics_uncertainty
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

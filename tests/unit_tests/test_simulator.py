@@ -226,7 +226,9 @@ def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
     assert array_simulator.get_files("unknown_file_type") == []
 
 
-def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_test_directory):
+def test_pack_for_register(
+    array_simulator, mocker, model_version, caplog, tmp_test_directory, request
+):
     source_dir = Path(str(tmp_test_directory)) / "source"
     source_dir.mkdir(parents=True, exist_ok=True)
     output_file = source_dir / f"output_file_{model_version}_simtel.zst"
@@ -272,9 +274,11 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     )
     array_simulator.array_models = [mocker.Mock(model_version=model_version)]
     array_simulator.array_models[0].pack_model_files.return_value = str(model_archive)
-    mocker.patch(
-        "simtools.utils.general.get_simtools_log_file", return_value=str(simtools_log_file)
-    )
+    simtools_logger = logging.getLogger("simtools")
+    file_handler = logging.FileHandler(simtools_log_file)
+    file_handler.setLevel(logging.CRITICAL)
+    mocker.patch.object(simtools_logger, "handlers", [file_handler])
+    request.addfinalizer(file_handler.close)
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
@@ -402,7 +406,7 @@ def test_pack_for_register_with_multiple_versions(
     mocker.patch("shutil.copy2")
     mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("simtools.utils.general.get_simtools_log_file", return_value=None)
+    mocker.patch.object(logging.getLogger("simtools"), "handlers", [])
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):

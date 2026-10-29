@@ -7,7 +7,6 @@ from pathlib import Path
 
 from astropy.utils import iers
 
-import simtools.utils.general as gen
 from simtools import dependencies, dependency_versions, version
 from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.context import RunContext
@@ -61,7 +60,18 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None, activity_id
         logger = logging.getLogger(logger_name)
     else:
         logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(log_level))
+    possible_levels = {
+        "info": logging.INFO,
+        "debug": logging.DEBUG,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }
+    level = log_level.lower() if isinstance(log_level, str) else log_level
+    if level not in possible_levels:
+        raise ValueError(
+            f"'{log_level}' is not a logging level, only possible ones are {list(possible_levels)}"
+        )
+    logger.setLevel(possible_levels[level])
 
     if logger.hasHandlers():
         for handler in logger.handlers[:]:

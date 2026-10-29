@@ -132,6 +132,7 @@ applications:
         - left: job_grid_summary.simulation_rows
           equals: table.row_count
   model_version_use_current: true
+  differential_test: true
   test_name: generate_bias_curve_submissions_lstn-01
 schema_name: application_workflow.metaschema
 schema_version: 0.5.0

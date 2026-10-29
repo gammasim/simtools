@@ -3,6 +3,7 @@
 import json
 import logging
 import subprocess
+import time
 from pathlib import Path
 
 import yaml
@@ -17,8 +18,8 @@ from simtools.job_execution.job import (
     JobSpec,
     SubmissionHandle,
 )
+from simtools.job_execution.log_inspector import get_log_excerpt
 from simtools.job_execution.worker import execute_command
-from simtools.utils import general
 
 logger = logging.getLogger(__name__)
 
@@ -114,10 +115,10 @@ def _raise_command_error(exc, job):
         details.append(f"Standard error:\n{exc.stderr}")
     for label, path in (("Output", job.options.stdout), ("Error", job.options.stderr)):
         if path is not None:
-            details.append(f"{label} log excerpt from {path}:\n{general.get_log_excerpt(path)}")
+            details.append(f"{label} log excerpt from {path}:\n{get_log_excerpt(path)}")
     log = job.options.application_log
-    if log and log.exists() and general.get_file_age(log) < 5:
-        details.append(f"Application log excerpt from {log}:\n{general.get_log_excerpt(log)}")
+    if log and log.exists() and (time.time() - log.stat().st_mtime) / 60 < 5:
+        details.append(f"Application log excerpt from {log}:\n{get_log_excerpt(log)}")
     raise JobExecutionError("\n".join(details)) from exc
 
 
