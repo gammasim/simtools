@@ -32,11 +32,20 @@ def normalize_text(value):
     return value
 
 
+def _normalize_test_path(value):
+    """Replace a pytest test-data path prefix without backtracking regexes."""
+    parts = value.split("/")
+    for index, part in enumerate(parts):
+        if part.startswith("test-data") and part.removeprefix("test-data").isdigit():
+            return "/".join(["<TEST_ROOT>", *parts[index + 1 :]])
+    return value
+
+
 def normalize_value(value, path=()):
     """Normalize strings recursively while preserving structured values."""
     if isinstance(value, str):
         if path[:1] == ("cta",):
-            value = re.sub(r"(?:/[^/\s]+)*/test-data\d+/", "<TEST_ROOT>/", value)
+            value = _normalize_test_path(value)
         return normalize_text(value)
     if isinstance(value, list):
         return [normalize_value(item, path) for item in value]
