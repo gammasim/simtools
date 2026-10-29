@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793304355186,
+  "lastUpdate": 1793306312805,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -33832,6 +33832,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 493.73046875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ca79cc7aac6cd63c85ba627846176e90ab270306",
+          "message": "Add a CI job comparing application outputs before and after a pull request (#2724)\n\n* Add a CI job comparing application outputs before and after a pull request\n\nRuns a list of deterministic integration-test configurations on the merge\nbase and on the pull request and reports differing outputs. Binary outputs\nare informational. Label expected-output-change for intended changes.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Add change fragment\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Fix review findings: optional engine paths, simtools version normalization, row-count differences\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Mark the checkout as safe for git inside the container\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Give the merge-base checkout the generated version file\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Simplified setup of differential tests\n\n* two more tests\n\n* two more tests\n\n* sonar\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T21:26:43+01:00",
+          "tree_id": "40e5430ca5b1fb543bc1df8c4fea0630cf75a19c",
+          "url": "https://github.com/gammasim/simtools/commit/ca79cc7aac6cd63c85ba627846176e90ab270306"
+        },
+        "date": 1793306294334,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 106.311574145,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 109.32000000000001,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 493.39453125,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
