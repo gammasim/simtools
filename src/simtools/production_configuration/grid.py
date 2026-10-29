@@ -31,7 +31,7 @@ from simtools.production_configuration.jobs_io import (
 from simtools.production_configuration.production_definition import (
     production_definition_from_arguments,
 )
-from simtools.utils.general import ensure_list
+from simtools.utils.value_conversion import ensure_list
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,6 @@ from astropy import units as u
 from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
-import simtools.utils.general as gen
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
@@ -301,7 +300,7 @@ class DataValidator:
             )
 
         for i, (value, expected_type) in enumerate(zip(value_list, expected_types)):
-            if not gen.validate_data_type(
+            if not value_conversion.validate_data_type(
                 reference_dtype=expected_type,
                 value=value,
                 dtype=None,
@@ -657,7 +656,7 @@ class DataValidator:
 
         """
         reference_dtype = self._get_data_description(column_name).get("type", None)
-        if not gen.validate_data_type(
+        if not value_conversion.validate_data_type(
             reference_dtype=reference_dtype,
             value=value,
             dtype=dtype,
@@ -1056,7 +1055,7 @@ class DataValidator:
             if normalized is None:
                 self.data_dict["unit"] = None
             else:
-                self.data_dict["unit"] = gen.convert_string_to_list(
+                self.data_dict["unit"] = value_conversion.convert_string_to_list(
                     normalized, force_comma_separation=True
                 )
 
@@ -1068,9 +1067,9 @@ class DataValidator:
         """
         value = self.data_dict["value"]
         if isinstance(value, list):
-            self.data_dict["value"] = gen.convert_list_to_string(value)
+            self.data_dict["value"] = value_conversion.convert_list_to_string(value)
         if isinstance(self.data_dict["unit"], list):
-            self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
+            self.data_dict["unit"] = value_conversion.convert_list_to_string(self.data_dict["unit"])
 
     def _check_site_and_array_element_consistency(self, instrument, site):
         """

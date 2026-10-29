@@ -5,7 +5,7 @@ import numpy as np
 from simtools.application.model_reader import create_model_reader_from_configuration
 from simtools.io import ascii_handler
 from simtools.testing.output_validation.reference import compare_values
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 
 def validate(path, rule, configuration, model_reader=None):
@@ -31,7 +31,7 @@ def validate(path, rule, configuration, model_reader=None):
     reference_value = reference[parameter_name]["value"]
     scaling = rule.get("scaling", 1.0)
     comparable_value = (
-        general.convert_string_to_list(generated_value)
+        value_conversion.convert_string_to_list(generated_value)
         if isinstance(generated_value, str)
         else generated_value
     )

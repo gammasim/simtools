@@ -98,3 +98,12 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
 .. automodule:: simtools.ray_tracing.psf_evaluation
    :members:
 ```
+
+(telescopeshadowingmodule)=
+
+## telescope_shadowing
+
+```{eval-rst}
+.. automodule:: ray_tracing.telescope_shadowing
+   :members:
+```

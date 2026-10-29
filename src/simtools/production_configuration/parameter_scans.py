@@ -25,7 +25,7 @@ from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.telescope_model import TelescopeModel
 from simtools.production_configuration.grid import generate_job_grid
 from simtools.production_configuration.jobs_io import read_job_grid, serialize_job_grid
-from simtools.utils import general
+from simtools.utils.value_conversion import ensure_list
 
 _ECSV_FORMAT = "ascii.ecsv"
 _KEPT_METADATA = (
@@ -130,7 +130,7 @@ def _parse_parameters(param_scan):
     return [
         {
             "path": spec["path"],
-            "values": general.ensure_list(spec["values"]),
+            "values": ensure_list(spec["values"]),
             "version": spec.get("version"),
             "label": spec.get("label", spec["name"]),
             "label_separator": spec.get("label_separator", "_"),

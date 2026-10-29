@@ -6,20 +6,6 @@ from simtools.model import model_utils
 
 
 @pytest.mark.parametrize(
-    ("telescope_name", "expected"),
-    [
-        ("LSTN-01", False),
-        ("MSTN-01", False),
-        ("MSTS-01", False),
-        ("SSTS-01", True),
-        ("SCTS-25", True),
-    ],
-)
-def test_is_two_mirror_telescope(telescope_name, expected):
-    assert model_utils.is_two_mirror_telescope(telescope_name) == expected
-
-
-@pytest.mark.parametrize(
     ("pars", "off_axis", "expected"),
     [
         ([0.8, 0, 0.0, 0.0, 0.0], 0.0, 0.8),

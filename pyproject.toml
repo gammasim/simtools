@@ -370,20 +370,33 @@ ignore_names = [
   "get_list_of_test_configurations",
   "get_mirrored_option",
   "GITHUB_BLOB_BASE",
+  "HESSHandler",
+  "HexEdgePixelHandler",
+  "HexOffPixelHandler",
+  # Legend handlers are looked up by name (getattr) in camera_plot_utils and by telescope type.
+  "HexPixelHandler",
   "iers_degraded_accuracy",
   "LightSourceRayTracingBackend",
+  "LSTHandler",
+  "MAGICHandler",
   "ModelStorage",
+  "MSTHandler",
   "number_of_telescopes",
   "ObdeectBackend",
   "peak_timing",
   "read_legacy_lst_single_pe",
   "register_stage",
   "RpolMatrixWriter",
+  "SCTHandler",
   "SimtelBackend",
   "simulated_angular_distances",
   "simulated_core_distances",
   "simulated_energies",
   "skip_multiple_version_test",
+  "SquareEdgePixelHandler",
+  "SquareOffPixelHandler",
+  "SquarePixelHandler",
+  "SSTHandler",
   "TEST_RESOURCES_DOWNLOADED",
   "TEST_RESOURCES_GENERATED",
   "TEST_RESOURCES_STATIC",
@@ -394,6 +407,7 @@ ignore_names = [
   "validate_application_output",
   "validate_release_tag",
   "validate_trigger_histograms_file",
+  "VERITASHandler",
   "X",
   "Y",
 ]
@@ -531,11 +545,18 @@ ignore_imports = [
   "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",
   "simtools.simtel.simulator_ray_tracing -> simtools.runners.simtel_runner",
   "simtools.visualization.plot_production_grid -> simtools.production_configuration.jobs_io",
-  "simtools.visualization.plot_psf -> simtools.ray_tracing.ray_tracing",
-  "simtools.visualization.plot_simtel_event_histograms -> simtools.production_configuration.trigger_histograms",
   "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
   "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_event_reader",
   "simtools.visualization.plot_simtel_events -> simtools.simtel.simtel_io_metadata",
-  "simtools.visualization.plot_tables -> simtools.reporting.figure_cache",
-  "simtools.visualization.plot_telescope_structure -> simtools.ray_tracing.backends.obdeect",
+]
+
+[[tool.importlinter.contracts]]
+name = "visualization receives model and engine data"
+type = "forbidden"
+source_modules = [ "simtools.visualization" ]
+forbidden_modules = [ "simtools.ray_tracing", "simtools.camera", "simtools.model" ]
+allow_indirect_imports = true
+ignore_imports = [
+  "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",
+  "simtools.visualization.plot_simtel_events -> simtools.model.camera",
 ]

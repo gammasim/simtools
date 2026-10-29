@@ -8,7 +8,6 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-import simtools.utils.general as gen
 from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
 from simtools.layout.geo_coordinates import GeoCoordinates
@@ -393,7 +392,7 @@ class ArrayLayout:
 
         position = data["value"]
         if isinstance(position, str):
-            position = gen.convert_string_to_list(position)
+            position = value_conversion.convert_string_to_list(position)
         self.site = data.get("site", None)
 
         table = QTable()

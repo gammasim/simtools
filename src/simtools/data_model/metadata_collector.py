@@ -24,7 +24,7 @@ from simtools.data_model import metadata_model, schema, schema_loader
 from simtools.io import ascii_handler, io_handler
 from simtools.io.file_type import product_suffixes
 from simtools.settings import config
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 _SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
     r"(?<![\w-])(?P<option>--)?"
@@ -189,8 +189,10 @@ class MetadataCollector:
         try:
             yml_file = names.file_name_with_version(yml_file, suffix)
             ascii_handler.write_data_to_file(
-                data=gen.change_dict_keys_case(
-                    gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                data=value_conversion.change_dict_keys_case(
+                    value_conversion.remove_substring_recursively_from_dict(
+                        metadata, substring="\n"
+                    ),
                     keys_lower_case,
                 ),
                 output_file=yml_file,
@@ -499,7 +501,9 @@ class MetadataCollector:
                 raise ValueError(f"Unknown metadata file format: {metadata_file}")
 
             schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
-            metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
+            metadata.append(
+                value_conversion.change_dict_keys_case(_input_metadata, lower_case=True)
+            )
 
         return metadata
 
