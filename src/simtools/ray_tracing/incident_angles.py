@@ -56,7 +56,7 @@ class IncidentAnglesCalculator:
         self.logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
 
-        self.config_data = config_data
+        self.config_data = dict(config_data)
         self.zenith_angle_deg = u.Quantity(config_data.get("zenith_angle", 0 * u.deg)).to_value(
             u.deg
         )
@@ -134,7 +134,12 @@ class IncidentAnglesCalculator:
             parameter_changes=parameter_changes.PERFECT_MIRROR if self.perfect_mirror else {},
         )
         backend = interface.get_backend(context=self.context)(
-            self.telescope_model, self.site_model, self.label, self.zenith_angle_deg, False
+            self.telescope_model,
+            self.site_model,
+            self.label,
+            self.zenith_angle_deg,
+            False,
+            context=self.context,
         )
         data, intermediate_files = backend.incidence_angles(
             request,
@@ -219,6 +224,7 @@ class IncidentAnglesCalculator:
         MetadataCollector.dump(
             args_dict=self.config_data,
             output_file=output_file.with_suffix(".yml"),
+            context=self.context,
         )
 
     def save_model_parameters(self, results_by_offset):

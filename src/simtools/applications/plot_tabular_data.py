@@ -82,6 +82,7 @@ def main():
         app_context.args,
         app_context.paths.get_output_file(app_context.args["output_file"]),
         add_activity_name=True,
+        context=app_context,
     )
 
 

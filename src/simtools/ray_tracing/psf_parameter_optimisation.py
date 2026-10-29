@@ -210,6 +210,7 @@ class PSFParameterOptimizer:
             pdf_pages,
             is_best,
             ks_stat,
+            context=self.context,
         )
 
         # Cache the result if caching is enabled and not plotting

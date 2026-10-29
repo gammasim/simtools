@@ -34,7 +34,7 @@ def main():
 
     _metadata = (
         None
-        if app_context.args.get("ignore_metadata", context=app_context)
+        if app_context.args.get("ignore_metadata")
         else MetadataCollector(app_context.args, context=app_context)
     )
 

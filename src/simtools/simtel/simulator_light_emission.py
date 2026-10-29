@@ -107,6 +107,7 @@ class SimulatorLightEmission(SimtelRunner):
             "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(context=context),
         }
         calibration_kwargs["model_reader"] = model_reader
+        calibration_kwargs["context"] = context
         calibration_model = CalibrationModel(**calibration_kwargs)
 
         wavelengths = calibration_model.get_parameter_value_with_unit(FLASHER_WAVELENGTH)
@@ -148,6 +149,7 @@ class SimulatorLightEmission(SimtelRunner):
             "model_version": light_emission_config.get("model_version"),
         }
         model_kwargs["model_reader"] = self.model_reader
+        model_kwargs["context"] = self.context
         if light_emission_config.get("model_directory") is not None:
             model_kwargs["model_directory"] = light_emission_config["model_directory"]
         self.telescope_model, self.site_model, self.calibration_model = (

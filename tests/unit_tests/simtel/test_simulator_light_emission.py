@@ -489,6 +489,7 @@ def test___init__(tmp_test_directory, run_context):
             calibration_device_type=None,
             model_version="6.0.0",
             model_reader=simulator_light_emission_instance.model_reader,
+            context=simulator_light_emission_instance.context,
         )
 
         # Verify telescope model config file was written
@@ -563,6 +564,7 @@ def test___init___with_wavelength(tmp_test_directory, run_context):
             calibration_device_type=None,
             model_version="6.0.0",
             model_reader=ANY,
+            context=context,
         )
 
 

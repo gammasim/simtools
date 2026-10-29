@@ -137,7 +137,7 @@ class MetadataCollector:
         return self.top_level_meta
 
     @staticmethod
-    def dump(args_dict, output_file, add_activity_name=False):
+    def dump(args_dict, output_file, add_activity_name=False, context=None):
         """
         Write metadata to file (static method).
 
@@ -149,8 +149,10 @@ class MetadataCollector:
             Name of output file.
         add_activity_name: bool
             Add activity name to file name.
+        context: RunContext, optional
+            Run context providing the activity.
         """
-        collector = MetadataCollector(args_dict)
+        collector = MetadataCollector(args_dict, context=context)
         collector.write(output_file, add_activity_name=add_activity_name)
 
     def write(self, yml_file=None, keys_lower_case=True, add_activity_name=False):

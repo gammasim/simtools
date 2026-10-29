@@ -307,6 +307,9 @@ class RunContext:
             "args": dict(self.args),
             "model_source": source_config,
             "model_path": str(self.paths.model_path) if self.paths.model_path else None,
+            "output_path": (
+                str(self.paths.output_path["default"]) if self.paths.output_path else None
+            ),
         }
 
     @classmethod
@@ -320,7 +323,8 @@ class RunContext:
             if source
             else None
         )
-        paths = OutputPaths(spec["args"].get("output_path"), spec.get("model_path"))
+        output_path = spec.get("output_path") or spec["args"].get("output_path")
+        paths = OutputPaths(output_path, spec.get("model_path"))
         return cls.from_arguments(
             spec["args"],
             model_reader=reader,

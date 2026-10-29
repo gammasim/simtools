@@ -54,7 +54,9 @@ def main():
             model_reader=app_context.model_reader,
             context=app_context,
         )
-        MetadataCollector.dump(app_context.args, output_file=output_file, add_activity_name=True)
+        MetadataCollector.dump(
+            app_context.args, output_file=output_file, add_activity_name=True, context=app_context
+        )
 
 
 if __name__ == "__main__":

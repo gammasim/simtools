@@ -310,7 +310,7 @@ def map_ordered(
             item=item,
             initializer=initializer if backend != "local" else None,
             initargs=tuple(initargs) if backend != "local" else (),
-            context_spec=context.to_spec() if backend != "local" else None,
+            context_spec=context.to_spec(),
         )
         for index, item in enumerate(items)
     ]

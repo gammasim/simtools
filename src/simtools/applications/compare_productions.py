@@ -156,7 +156,7 @@ def main():
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
     for output_file, array_layout_name in output_files:
-        _dump_comparison_metadata(app_context.args, output_file, array_layout_name)
+        _dump_comparison_metadata(app_context, output_file, array_layout_name)
 
 
 def _run_signal_comparison(app_context):
@@ -176,9 +176,9 @@ def _run_signal_comparison(app_context):
     ]
 
 
-def _dump_comparison_metadata(args, output_file, array_layout_name=None):
+def _dump_comparison_metadata(app_context, output_file, array_layout_name=None):
     """Write comparison metadata for one generated statistics file."""
-    metadata_args = dict(args)
+    metadata_args = dict(app_context.args)
     if array_layout_name is not None:
         metadata_args["array_layout_name"] = array_layout_name
     metadata_args.update(
@@ -189,7 +189,7 @@ def _dump_comparison_metadata(args, output_file, array_layout_name=None):
             "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
         }
     )
-    MetadataCollector.dump(metadata_args, output_file)
+    MetadataCollector.dump(metadata_args, output_file, context=app_context)
 
 
 if __name__ == "__main__":

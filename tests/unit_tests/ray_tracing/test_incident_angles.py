@@ -401,7 +401,12 @@ def test_run_with_backend(calculator, fake_backend, perfect_mirror):
     result = calculator.run()
 
     fake_backend.assert_called_once_with(
-        calculator.telescope_model, calculator.site_model, calculator.label, 0.0, False
+        calculator.telescope_model,
+        calculator.site_model,
+        calculator.label,
+        0.0,
+        False,
+        context=calculator.context,
     )
     request, work_directory, name, with_mirrors = (
         fake_backend.return_value.incidence_angles.call_args.args

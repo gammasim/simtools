@@ -28,7 +28,7 @@ class ReportGenerator:
         self._logger = logging.getLogger(__name__)
         self.context = context or RunContext.from_environment()
         self.model_reader = model_reader or self.context.model_reader
-        self.args = args
+        self.args = dict(args)
         self.output_path = output_path
 
     @property

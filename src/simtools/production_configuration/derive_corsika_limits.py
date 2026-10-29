@@ -422,7 +422,9 @@ def _generate_corsika_limits_from_histogram_directory(
         particle_args["output_file"] = str(particle_output_dir / "corsika_limits.ecsv")
         particle_args["output_path"] = str(particle_output_dir)
         if results:
-            write_results(results, particle_args, allowed_losses, energy_threshold_fraction)
+            write_results(
+                results, particle_args, allowed_losses, energy_threshold_fraction, context=context
+            )
         else:
             _logger.warning(
                 "No non-empty trigger histograms found for particle %s; no limits were written.",
