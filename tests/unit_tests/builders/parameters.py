@@ -54,7 +54,7 @@ def parameter(name, value=None, site=None, instrument=None, version="1.0.0"):
     description = schema.get_model_parameter_schema(name)
     data = description["data"]
     if data[0]["type"] == "data_table":
-        table = _table_value(_columns(data)) if value is None else value
+        table = table_value(columns(data)) if value is None else value
         return DataValidator(
             data_table=table, schema_file=schema.get_model_parameter_schema_file(name)
         ).validate_and_transform()
@@ -77,15 +77,17 @@ def parameter(name, value=None, site=None, instrument=None, version="1.0.0"):
     return record
 
 
-def _table_value(columns):
+def table_value(column_definitions):
     """Return a one-row table built from the column definitions."""
     return Table(
-        {column["name"]: [_scalar_value(column)] for column in columns},
-        units={column["name"]: column["unit"] for column in columns if column.get("unit")},
+        {column["name"]: [_scalar_value(column)] for column in column_definitions},
+        units={
+            column["name"]: column["unit"] for column in column_definitions if column.get("unit")
+        },
     )
 
 
-def _columns(data):
+def columns(data):
     """Return the table column definitions of a table-valued parameter."""
     return data[0].get("table_columns", [])
 
