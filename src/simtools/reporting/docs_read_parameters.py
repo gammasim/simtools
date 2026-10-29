@@ -84,10 +84,7 @@ def _get_figure_cache_key(plot_config, data, context):
         table_config.pop("model_version", None)
     return figure_cache_key(
         renderer="plot_tables._plot_data",
-        renderer_modules={
-            "plot_tables": plot_tables.__file__,
-            "visualize": visualize.__file__,
-        },
+        renderer_modules={"plot_tables": plot_tables.__file__, "visualize": visualize.__file__},
         plot_config=config_for_render,
         rendered_data=data,
         context=context,
@@ -154,15 +151,7 @@ class ReadParameters:
         if value1 is None or value2 is None:
             result = value1 is None and value2 is None
         elif isinstance(value1, (int, float)) and isinstance(value2, (int, float)):
-            result = bool(
-                np.isclose(
-                    value1,
-                    value2,
-                    rtol=1e-12,
-                    atol=1e-12,
-                    equal_nan=True,
-                )
-            )
+            result = bool(np.isclose(value1, value2, rtol=1e-12, atol=1e-12, equal_nan=True))
         elif isinstance(value1, (list, tuple)) and isinstance(value2, (list, tuple)):
             result = len(value1) == len(value2) and all(
                 self._values_equal(v1, v2) for v1, v2 in zip(value1, value2)
@@ -234,10 +223,7 @@ class ReadParameters:
 
             changes.append(
                 ParameterDelta.from_parameter_data(
-                    parameter,
-                    base_param_data,
-                    current_param_data,
-                    self._format_value_for_delta,
+                    parameter, base_param_data, current_param_data, self._format_value_for_delta
                 )
             )
 
@@ -381,11 +367,7 @@ class ReadParameters:
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
-                parameter,
-                parameter_version,
-                outpath,
-                **plot_kwargs,
-                model_version=model_version,
+                parameter, parameter_version, outpath, **plot_kwargs, model_version=model_version
             )
 
         return plot_names
@@ -793,14 +775,7 @@ class ReadParameters:
                 short_description = f"***{short_description}***"
 
             data.append(
-                [
-                    inst_class,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
+                [inst_class, parameter, parameter_version, value, description, short_description]
             )
 
         return data, dict_tables
@@ -816,14 +791,7 @@ class ReadParameters:
 
         # Write table rows
         column_widths = [10, 10, 20, 60]
-        for (
-            _,
-            parameter_name,
-            parameter_version,
-            value,
-            description,
-            short_description,
-        ) in data:
+        for _, parameter_name, parameter_version, value, description, short_description in data:
             text = short_description if short_description else description
             wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
             wrapped_text = " ".join(wrapped_text)
@@ -902,14 +870,7 @@ class ReadParameters:
                 dict_tables.append((telescope, parameter, value_data, unit))
 
             data.append(
-                [
-                    telescope,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
+                [telescope, parameter, parameter_version, value, description, short_description]
             )
 
         return data, dict_tables
@@ -1061,8 +1022,7 @@ class ReadParameters:
         ]
         if dict_items:
             latest_dict_item = max(
-                dict_items,
-                key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+                dict_items, key=lambda x: tuple(map(int, x["parameter_version"].split(".")))
             )
             self._write_dict_table(
                 parameter,
@@ -1083,7 +1043,6 @@ class ReadParameters:
                 self.site,
                 self.array_element,
                 self.context,
-                context=self.context,
             )
         file.write("\n\n")
 
@@ -1332,10 +1291,7 @@ class ReadParameters:
             ) or telescope_descriptions.get(parameter)
 
             row, dict_table = self._build_calibration_row(
-                parameter,
-                parameter_data,
-                parameter_descriptions,
-                array_element,
+                parameter, parameter_data, parameter_descriptions, array_element
             )
             if row is None:
                 continue

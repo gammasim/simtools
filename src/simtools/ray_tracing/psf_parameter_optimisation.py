@@ -477,11 +477,7 @@ class PSFParameterOptimizer:
 
         logger.info("Creating final plot for best parameters with both RMSD and KS statistic...")
         _, best_ks_stat, best_p_value, best_simulated_data = self.run_simulation(
-            best_params,
-            pdf_pages=None,
-            is_best=False,
-            use_cache=False,
-            use_ks_statistic=True,
+            best_params, pdf_pages=None, is_best=False, use_cache=False, use_ks_statistic=True
         )
         best_rmsd = calculate_rmsd(
             self.data_to_plot["measured"][CUMULATIVE_PSF], best_simulated_data[CUMULATIVE_PSF]
@@ -575,9 +571,7 @@ class PSFParameterOptimizer:
             iteration += 1
             logger.info(f"Gradient descent iteration {iteration}")
             step_result = self.perform_gradient_step_with_retries(
-                current_params,
-                current_metric,
-                current_lr,
+                current_params, current_metric, current_lr
             )
 
             if not step_result.step_accepted or step_result.params is None:
@@ -1302,11 +1296,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
         mc_results = optimizer.analyze_monte_carlo_error()
         if mc_results[0] is not None:
             mc_file = write_monte_carlo_analysis(
-                mc_results,
-                output_dir,
-                tel_model,
-                optimizer.use_ks_statistic,
-                optimizer.fraction,
+                mc_results, output_dir, tel_model, optimizer.use_ks_statistic, optimizer.fraction
             )
             logger.info(f"Monte Carlo analysis results written to {mc_file}")
             mc_plot_file = output_dir.joinpath(f"monte_carlo_uncertainty_{tel_model.name}.pdf")
@@ -1332,11 +1322,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
     plot_file = f"gradient_descent_convergence_{tel_model.name}.png"
     convergence_plot_file = output_dir.joinpath(plot_file)
     plot_psf.create_gradient_descent_convergence_plot(
-        gd_results,
-        threshold,
-        convergence_plot_file,
-        optimizer.fraction,
-        optimizer.use_ks_statistic,
+        gd_results, threshold, convergence_plot_file, optimizer.fraction, optimizer.use_ks_statistic
     )
 
     param_file = write_gradient_descent_log(
