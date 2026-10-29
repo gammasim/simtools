@@ -141,14 +141,11 @@ def test_read_overwrite_model_parameter_dict_with_file_non_dict_data(mocker):
     assert result == {}
 
 
-def test_read_overwrite_model_parameter_dict_uses_settings_config(mocker):
-    mocker.patch.object(
-        model_utils.settings.config,
-        "_args",
-        {"overwrite_model_parameters": {"changes": {"param1": "value1"}}},
+def test_read_overwrite_model_parameter_dict_uses_context(run_context):
+    context = run_context.replace(
+        args={"overwrite_model_parameters": {"changes": {"param1": "value1"}}}
     )
-
-    result = model_utils.read_overwrite_model_parameter_dict()
+    result = model_utils.read_overwrite_model_parameter_dict(context=context)
 
     assert result == {"param1": "value1"}
 

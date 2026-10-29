@@ -14,6 +14,7 @@ import zlib
 from contextlib import ExitStack, contextmanager
 from itertools import chain
 from pathlib import Path
+from types import MappingProxyType
 from unittest import mock
 from unittest.mock import MagicMock, PropertyMock
 
@@ -32,11 +33,14 @@ from simtools.configuration.arguments import (
     TELESCOPE,
 )
 from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.context import RunContext
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.io.output_paths import OutputPaths
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
+from tests.unit_tests.builders import model_repository
 
 logger = logging.getLogger()
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -97,6 +101,17 @@ def simtools_settings(tmp_test_directory):
     """Load simtools settings for the test session."""
     load_dotenv(".env")
     settings.config.load()
+
+
+@pytest.fixture
+def runtime_args(monkeypatch):
+    """Return a function that sets the arguments of the application run context."""
+
+    def set_args(args):
+        context = settings.config.context.replace(args=MappingProxyType(args))
+        monkeypatch.setattr(settings.config, "_context", context)
+
+    return set_args
 
 
 @pytest.fixture(autouse=True)
@@ -250,6 +265,20 @@ def io_handler(tmp_test_directory, data_path, test_resources_path):
         model_path=str(tmp_test_directory) + "/model",
     )
     return tmp_io_handler
+
+
+@pytest.fixture
+def run_context(tmp_test_directory):
+    """Return an explicit run context backed by generated model data."""
+    return RunContext.from_arguments(
+        {},
+        model_reader=model_repository.model_reader(),
+        resolve_sim_software_executables=False,
+        paths=OutputPaths(
+            output_path=Path(tmp_test_directory) / "output",
+            model_path=Path(tmp_test_directory) / "model",
+        ),
+    )
 
 
 @pytest.fixture

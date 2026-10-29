@@ -470,19 +470,19 @@ def test_write_seeds(corsika_config_mock_array_model):
         assert _call.endswith(" 0 0\n")
 
 
-def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
+def test_write_seeds_use_test_seeds(corsika_config_mock_array_model, runtime_args):
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
     expected_seeds = [534, 220, 1104, 382]
-    with patch.dict(settings.config.args, {"corsika_seeds": expected_seeds}):
-        with patch("io.open", return_value=mock_file):
-            corsika_config_mock_array_model._write_seeds(mock_file)
-        assert mock_file.write.call_count == 4
+    runtime_args({**settings.config.args, "corsika_seeds": expected_seeds})
+    with patch("io.open", return_value=mock_file):
+        corsika_config_mock_array_model._write_seeds(mock_file)
+    assert mock_file.write.call_count == 4
 
-        expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
-        for _call, seed in zip(expected_calls, expected_seeds):
-            assert _call == f"SEED {seed} 0 0\n"
+    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
+    for _call, seed in zip(expected_calls, expected_seeds):
+        assert _call == f"SEED {seed} 0 0\n"
 
 
 def test_get_corsika_telescope_list(corsika_config_mock_array_model):
@@ -816,20 +816,16 @@ def test_get_starting_grammage_value_list_empty(corsika_config_mock_array_model)
     assert result == 0
 
 
-def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model):
+@pytest.mark.parametrize("seeds", [[1, 2, 3], [1, 2, 3, 4, 5]])
+def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model, runtime_args, seeds):
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
+    runtime_args({**settings.config.args, "corsika_seeds": seeds})
 
     with patch("io.open", return_value=mock_file):
-        with patch.dict(settings.config.args, {"corsika_seeds": [1, 2, 3]}):
-            with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
-                corsika_config_mock_array_model._write_seeds(mock_file)
-
-    with patch("io.open", return_value=mock_file):
-        with patch.dict(settings.config.args, {"corsika_seeds": [1, 2, 3, 4, 5]}):
-            with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
-                corsika_config_mock_array_model._write_seeds(mock_file)
+        with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
+            corsika_config_mock_array_model._write_seeds(mock_file)
 
 
 def test_write_seeds_random_generation(corsika_config_mock_array_model):

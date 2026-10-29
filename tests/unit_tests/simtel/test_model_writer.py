@@ -6,7 +6,6 @@ from unittest.mock import Mock
 import astropy.units as u
 import pytest
 
-from simtools import settings
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
@@ -195,12 +194,10 @@ def test_add_additional_models(telescope_model_lst, mocker):
     assert parameters["param2"] == "value2"
 
 
-def test_get_additional_simtel_metadata(array_model_north, mocker):
+def test_get_additional_simtel_metadata(array_model_north, mocker, runtime_args):
     array_model_north_cp = copy.deepcopy(array_model_north)
     mocker.patch.object(array_model_north_cp.site_model, _NSB_FLUX, return_value=42.0)
-    mocker.patch.object(
-        settings.config,
-        _ARGS,
+    runtime_args(
         {
             "site": _NORTH,
             _PRIMARY: "gamma",
@@ -208,7 +205,7 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
             _ZENITH_ANGLE: 20.0 * u.deg,
             "ha": 0.0 * u.deg,
             "dec": 30.0 * u.deg,
-        },
+        }
     )
 
     metadata = get_model_writer(array_model_north_cp)._get_additional_simtel_metadata()
@@ -223,19 +220,19 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
     assert metadata[_PDGID] == 22
 
 
-def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker):
+def test_metadata_from_corsika_input_uses_shower_parameters(
+    array_model_north, mocker, runtime_args
+):
     model = copy.deepcopy(array_model_north)
     mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
-    mocker.patch.object(
-        settings.config,
-        _ARGS,
+    runtime_args(
         {
             "site": _NORTH,
             "corsika_file": "showers.iact",
             _PRIMARY: None,
             _ZENITH_ANGLE: 5 * u.deg,
             _AZIMUTH_ANGLE: 10 * u.deg,
-        },
+        }
     )
     reader = mocker.patch("simtools.simtel.model_writer.get_reader").return_value
     reader.read_simulation_parameters.return_value = {
