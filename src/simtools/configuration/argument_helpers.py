@@ -132,6 +132,8 @@ def _coerce_value(definition, value, source):
         return _coerce_boolean(value, source)
     if action == "append":
         return _coerce_append(value, kwargs)
+    if kwargs.get("nargs") == "?":
+        return _coerce_optional_value(value, kwargs)
     if kwargs.get("nargs") is not None:
         return _coerce_list(value, kwargs, source)
     if isinstance(value, list) and len(value) == 1:
@@ -178,14 +180,45 @@ def _append_groups(value, nargs):
     return value if value and isinstance(value[0], list) else [value]
 
 
+def _coerce_optional_value(value, kwargs):
+    """Convert a value of an ``nargs="?"`` argument: ``true`` means the option without a value."""
+    if value is True:
+        return kwargs.get("const")
+    if value is False:
+        return kwargs.get("default")
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
+    return _convert_argument_value(value, kwargs.get("type"))
+
+
+def _split_environment_list(value, converter):
+    """Split an environment list, unless the converter accepts the whole text as one value.
+
+    Values with units (``"0.1 rad"``) are one value; plain strings are always split.
+    """
+    if converter not in (None, str):
+        try:
+            return [converter(value)]
+        except argparse.ArgumentTypeError, TypeError, ValueError:
+            pass
+    return shlex.split(value)
+
+
 def _coerce_list(value, kwargs, source):
     """Convert list values and enforce fixed nargs length."""
     expected = kwargs["nargs"]
     fixed_count = isinstance(expected, int) and expected > 1
+    converter = kwargs.get("type")
+    if isinstance(value, str) and source == "environment" and not fixed_count:
+        values = _split_environment_list(value, converter)
+        return [
+            item if not isinstance(item, str) else _convert_argument_value(item, converter)
+            for item in values
+        ]
     if isinstance(value, str) and (source == "environment" or fixed_count):
         value = shlex.split(value)
     values = value if isinstance(value, list) else [value]
-    values = [_convert_argument_value(item, kwargs.get("type")) for item in values]
+    values = [_convert_argument_value(item, converter) for item in values]
     if isinstance(expected, int) and len(values) != expected:
         raise ValueError(f"expected {expected} values, got {len(values)}")
     return values

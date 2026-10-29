@@ -299,3 +299,27 @@ def test_configure_cli_value_replaces_exclusive_alternative_from_file(
     assert result["second"] == "cli"
     assert result["first"] is None
     assert configurator.config_sources["first"] == "default"
+
+
+def test_configure_optional_value_flag_from_file_uses_const(tmp_test_directory, monkeypatch):
+    definition = ArgumentDefinition("value", nargs="?", const="flag.png", default=None)
+    configurator = _make_configurator(definition)
+    config_file = tmp_test_directory / "optional.yml"
+    config_file.write_text(yaml.safe_dump({"value": True}), encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file)])
+
+    assert configurator.configure()["value"] == "flag.png"
+
+
+def test_configure_environment_list_keeps_value_with_unit(tmp_test_directory, monkeypatch):
+    definition = ArgumentDefinition("value", nargs="+", type=quantity(u.deg), default=None)
+    configurator = _make_configurator(definition)
+    monkeypatch.setenv("SIMTOOLS_VALUE", "0.1 rad")
+    config_file = tmp_test_directory / "empty-unit.yml"
+    config_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["test", "--config", str(config_file)])
+
+    result = configurator.configure()["value"]
+
+    assert len(result) == 1
+    assert result[0].to_value(u.rad) == pytest.approx(0.1)
