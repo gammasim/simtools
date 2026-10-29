@@ -45,5 +45,5 @@ def test_main_reads_table_and_plots(tmp_test_directory):
     ):
         app.main()
 
-    mock_read_table.assert_called_once_with("merged_limits.ecsv")
+    mock_read_table.assert_called_once_with("merged_limits.ecsv", context=app_context)
     mock_limits.assert_called_once_with(merged_table, output_dir)

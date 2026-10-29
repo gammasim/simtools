@@ -580,7 +580,7 @@ def create_monte_carlo_uncertainty_plot(
     plt.close()
 
 
-def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
+def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir, context=None):
     """
     Create PSF diameter vs off-axis angle plot using the best parameters.
 
@@ -632,6 +632,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=off_axis_angles * u.deg,
+        context=context,
     )
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")

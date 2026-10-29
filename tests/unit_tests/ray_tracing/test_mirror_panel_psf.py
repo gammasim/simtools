@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from astropy.table import Table
 
+from simtools.context import RunContext
 import simtools.ray_tracing.mirror_panel_psf as mpp
 
 
@@ -46,6 +47,7 @@ def _make_minimal_instance(
     inst.rnda_opt = None
     inst.per_mirror_results = []
     inst.final_percentage_diff = None
+    inst.context = RunContext.from_arguments({}, resolve_sim_software_executables=False)
     return inst
 
 

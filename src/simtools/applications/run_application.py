@@ -52,6 +52,7 @@ def main():
         app_context.args,
         run_time=app_context.run_time,
         replacements=replacements,
+        context=app_context,
     )
 
 

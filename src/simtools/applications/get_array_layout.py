@@ -45,7 +45,7 @@ APPLICATION = ApplicationDefinition.for_module(
 )
 
 
-def _layout_from_source(args_dict, model_reader):
+def _layout_from_source(args_dict, model_reader, context):
     """Read array elements and positions using the configured model source."""
     array_model = ArrayModel(
         model_version=args_dict["model_version"],
@@ -53,6 +53,7 @@ def _layout_from_source(args_dict, model_reader):
         layout_name=args_dict.get("array_layout_name"),
         array_elements=args_dict.get("array_element_list"),
         model_reader=model_reader,
+        context=context,
     )
     return array_model.export_array_elements_as_table(
         coordinate_system=args_dict["coordinate_system"],
@@ -69,12 +70,13 @@ def run(app_context):
             model_version=app_context.args["model_version"],
             site=app_context.args["site"],
             model_reader=app_context.model_reader,
+            context=app_context,
         )
         print(site_model.get_list_of_array_layouts())
         return
 
     app_context.logger.info("Array layout: %s", app_context.args["array_layout_name"])
-    layout = _layout_from_source(app_context.args, app_context.model_reader)
+    layout = _layout_from_source(app_context.args, app_context.model_reader, app_context)
     layout.pprint()
     if not app_context.args.get("output_file_from_default", False):
         writer.ModelDataWriter.write_product_data(
@@ -82,6 +84,7 @@ def run(app_context):
             output_file_format=app_context.args.get("output_file_format"),
             metadata=None,
             product_data=layout,
+            context=app_context,
         )
 
 

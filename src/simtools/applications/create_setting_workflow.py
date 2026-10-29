@@ -53,7 +53,7 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """Prepare the workflow and report the files and production reference."""
     context = APPLICATION.start()
-    config_file = create_setting_workflow(context.args, context.model_reader)
+    config_file = create_setting_workflow(context.args, context.model_reader, context=context)
     context.logger.info(f"Prepared workflow: {config_file}")
     reference = _production_info_reference(context.args, config_file)
     context.logger.info(
@@ -61,7 +61,7 @@ def main():
         _production_info_text(reference),
     )
     if context.args.get("run"):
-        output = run_setting_workflow(config_file, context.args)
+        output = run_setting_workflow(config_file, context.args, context=context)
         context.logger.info(f"Results: {output}")
 
 

@@ -362,6 +362,7 @@ def test__generate_plots(
                 "North",
                 "6.0.0",
                 read_parameters.model_reader,
+                context=run_context,
             )
         elif patched_method == "plot_mirror_config":
             mock_plot.assert_called_once_with(
@@ -373,6 +374,7 @@ def test__generate_plots(
                 "North",
                 "6.0.0",
                 read_parameters.model_reader,
+                context=run_context,
             )
 
 
@@ -2106,4 +2108,5 @@ def test__plot_mirror_config(
                 output_file=Path(tmp_test_directory / result[0]),
                 model_reader=read_parameters.model_reader,
                 data_file_path=input_file,
+                context=run_context,
             )

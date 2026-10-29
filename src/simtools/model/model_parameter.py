@@ -957,7 +957,7 @@ class ModelParameter:
         pathlib.Path
             Written native configuration file.
         """
-        return get_model_writer(self, simulation_software).write_config_file(
+        return get_model_writer(self, simulation_software, context=self.context).write_config_file(
             additional_models=additional_models, label=label
         )
 
@@ -972,7 +972,7 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        return get_model_writer(self).write_sim_telarray_config_file(
+        return get_model_writer(self, context=self.context).write_sim_telarray_config_file(
             additional_models=additional_models, label=label
         )
 
@@ -1004,7 +1004,7 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
-        return get_model_writer(self).export_nsb_spectrum_to_telescope_altitude_correction_file(
+        return get_model_writer(self, context=self.context).export_nsb_spectrum_to_telescope_altitude_correction_file(
             model_directory=model_directory
         )
 
@@ -1012,7 +1012,7 @@ class ModelParameter:
         self, parameter_name, model_directory, table_format, output_name
     ):
         """Export an ECSV model parameter in the native sim_telarray format."""
-        return get_model_writer(self).export_model_parameter_as_simtel_file(
+        return get_model_writer(self, context=self.context).export_model_parameter_as_simtel_file(
             parameter_name=parameter_name,
             model_directory=model_directory,
             table_format=table_format,

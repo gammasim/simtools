@@ -622,7 +622,9 @@ def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     )
 
     mock_resolve.assert_called_once_with("layout", "1.0.0")
-    mock_repository_lookup.assert_called_once_with(["single-layout"], "South", "1.0.0")
+    mock_repository_lookup.assert_called_once_with(
+        ["single-layout"], "South", "1.0.0", context=None
+    )
     assert result == {"LST": ["LSTN-01"]}
 
 

@@ -79,6 +79,7 @@ def main():
             output_file=output_file,
             output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
             product_data=array_table,
+            context=app_context,
         )
 
         write_array_elements_info_yaml(

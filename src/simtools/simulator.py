@@ -4,6 +4,7 @@ import gzip
 import logging
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 
 import numpy as np
 
@@ -29,7 +30,7 @@ from simtools.utils import general
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
 
 
-def _write_reduced_event_list_batch(job_spec):
+def _write_reduced_event_list_batch(job_spec, context=None):
     """Write one reduced-event output file from one input-file batch."""
     input_files, output_file = job_spec[:2]
     metadata_args = job_spec[2] if len(job_spec) > 2 else {}
@@ -40,7 +41,7 @@ def _write_reduced_event_list_batch(job_spec):
 
     def build_metadata_documents():
         return {
-            "METADATA": build_standard_metadata(metadata_args, output_file),
+            "METADATA": build_standard_metadata(metadata_args, output_file, context=context),
             "SIMULATION_METADATA": build_simulation_metadata(
                 generator.get_simulation_input_metadata(), array_models=model_exports
             ),
@@ -266,7 +267,6 @@ class Simulator:
         """
         context = context or RunContext.from_environment()
         base_args = dict(context.args)
-        model_reader = context.model_reader
         base_run_number = int(base_args.get("run_number", 1))
 
         events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
@@ -294,27 +294,16 @@ class Simulator:
                 "Use one value or one value per event setting."
             )
 
-        try:
-            for idx in range(n_runs):
-                run_args = base_args.copy()
-                run_args["run_number"] = base_run_number + idx
-                run_args["number_of_events"] = int(events[idx])
-                if photons[idx] is not None:
-                    run_args["flasher_photons"] = photons[idx]
+        for idx in range(n_runs):
+            run_args = base_args.copy()
+            run_args["run_number"] = base_run_number + idx
+            run_args["number_of_events"] = int(events[idx])
+            if photons[idx] is not None:
+                run_args["flasher_photons"] = photons[idx]
 
-                run_context = RunContext.from_arguments(
-                    run_args,
-                    model_reader=model_reader,
-                    paths=context.paths,
-                    resolve_sim_software_executables=False,
-                )
-                run_context = run_context.replace(model_reader=model_reader)
-
-                simulator = cls(label=label, context=run_context)
-                simulator.simulate()
-                simulator.validate_simulations()
-        finally:
-            pass
+            simulator = cls(label=label, context=context.replace(args=MappingProxyType(run_args)))
+            simulator.simulate()
+            simulator.validate_simulations()
 
     def _get_corsika_file(self):
         """
@@ -421,6 +410,7 @@ class Simulator:
             output_files=general.ensure_list(self.get_files(file_type="sim_telarray_event_data")),
             metadata_args=self.context.args,
             array_models=self.array_models,
+            context=self.context,
         )
 
     @staticmethod
@@ -438,6 +428,7 @@ class Simulator:
         array_models=None,
         input_file_list_pattern=None,
         file_format="eventio",
+        context=None,
     ):
         """
         Write reduced event lists using the selected simulation-file reader.
@@ -544,6 +535,7 @@ class Simulator:
             wait_for_completion=wait_for_completion,
             metadata_args={**(metadata_args or {}), "simulation_file_format": file_format},
             array_models=array_models,
+            context=context,
         )
 
     @staticmethod
@@ -655,8 +647,10 @@ class Simulator:
         wait_for_completion=True,
         metadata_args=None,
         array_models=None,
+        context=None,
     ):
         """Run reduced event list jobs serially or in parallel."""
+        context = context or RunContext.from_environment()
         model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
         job_specs = [
             (input_files, output_file, metadata_args or {}, model_exports)
@@ -668,6 +662,7 @@ class Simulator:
                 index=index,
                 function=_write_reduced_event_list_batch,
                 item=job_spec,
+                context_spec=context.to_spec(),
                 output_paths=(Path(output_files[index]),),
             )
             for index, job_spec in enumerate(job_specs)

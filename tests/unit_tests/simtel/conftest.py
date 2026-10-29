@@ -1,7 +1,5 @@
 """Shared physical setup for calibration simulation and format-writer tests."""
 
-from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -16,13 +14,7 @@ def simulator_instance(run_context):
     inst = SimulatorLightEmission.__new__(SimulatorLightEmission)
     # Create fresh mocks for each test to avoid cross-test contamination
     inst.calibration_model = Mock()
-    inst.context = run_context.replace(
-        software=SimpleNamespace(
-            sim_telarray_exe="/mock/simtel/bin/sim_telarray",
-            sim_telarray_path=Path("/mock/simtel"),
-            corsika_interaction_models=("qgs3", "urqmd"),
-        )
-    )
+    inst.context = run_context
     inst.model_reader = inst.context.model_reader
     inst.telescope_model = Mock()
     inst.site_model = Mock()

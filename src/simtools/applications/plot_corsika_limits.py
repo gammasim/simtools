@@ -32,7 +32,9 @@ def main():
     app_context = APPLICATION.start()
 
     plot_limits(
-        data_reader.read_table_from_file(app_context.args["corsika_limits_file"]),
+        data_reader.read_table_from_file(
+            app_context.args["corsika_limits_file"], context=app_context
+        ),
         app_context.paths.get_output_directory(),
     )
 

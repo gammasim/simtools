@@ -58,6 +58,7 @@ def write_telescope_structure_figure(file, telescope_model, logger, context=None
         },
         plot_config={"name": telescope_model.name, "shares": None},
         rendered_data=geometry,
+        context=context,
     )
     image_name = f"telescope_structure_{telescope_model.name}_{cache_key}"
     image_stem = image_dir / image_name
@@ -98,11 +99,12 @@ def write_flasher_pulse_shape_plots(
             site,
             calibration_device,
             image_dir,
+            context,
         )
 
 
 def _write_flasher_pulse_version(
-    file, item, collection, model_reader, site, calibration_device, image_dir
+    file, item, collection, model_reader, site, calibration_device, image_dir, context
 ):
     """Write pulse plots for associated telescope designs at one selected model version."""
     model_version = _latest_model_version(item["model_version"])
@@ -132,6 +134,7 @@ def _write_flasher_pulse_version(
             width,
             exp_decay,
             fadc_bins,
+            context,
         )
 
 
@@ -153,6 +156,7 @@ def _write_flasher_model_figure(
     width,
     exp_decay,
     fadc_bins,
+    context,
 ):
     """Generate and link one telescope design's exact pulse table."""
     try:
@@ -174,6 +178,7 @@ def _write_flasher_model_figure(
             "y_label": _FLASHER_Y_LABEL,
         },
         rendered_data={"time_ns": time, "amplitude": amplitude},
+        context=context,
     )
     image_name = f"flasher_pulse_shape_{telescope_model}_{cache_key}"
     image_path = (Path(image_dir) / image_name).with_suffix(".png")
@@ -243,7 +248,7 @@ def _save_flasher_figure(image_path, telescope_model, time, amplitude):
     save_figure(figure, image_path.with_suffix(""), figure_format=["png"], close=True)
 
 
-def plot_nsb_altitude_correction(input_file, output_path):
+def plot_nsb_altitude_correction(input_file, output_path, context=None):
     """Plot the spectral extinction grid used to correct the NSB by altitude."""
     table = Table.read(input_file, format="ascii.ecsv")
     wavelength = np.unique(np.asarray(table["wavelength"], dtype=float))
@@ -266,6 +271,7 @@ def plot_nsb_altitude_correction(input_file, output_path):
             "colorbar": "Extinction",
         },
         rendered_data=_file_digest(input_file),
+        context=context,
     )
     image_name = f"{Path(input_file).stem.replace('.', '-')}_{cache_key}"
     image_path = (Path(output_path) / image_name).with_suffix(".png")
@@ -295,6 +301,7 @@ def plot_camera_config(
     site,
     model_version,
     model_reader,
+    context=None,
 ):
     """Plot the camera layout file using the selected model version."""
     if not parameter_version:
@@ -324,6 +331,7 @@ def plot_camera_config(
         },
         plot_config={"telescope": telescope, "focal_length": 1.0},
         rendered_data=camera_components,
+        context=context,
     )
     plot_name = f"camera_pixel_layout_{telescope}_{cache_key}"
     plot_path = (Path(output_path) / plot_name).with_suffix(".png")
@@ -339,6 +347,7 @@ def plot_camera_config(
             },
             output_file=Path(output_path) / plot_name,
             model_reader=model_reader,
+            context=context,
         )
     return [plot_name]
 
@@ -352,6 +361,7 @@ def plot_mirror_config(
     site,
     model_version,
     model_reader,
+    context=None,
 ):
     """Plot the mirror configuration file using the selected model version."""
     if not parameter_version:
@@ -365,6 +375,7 @@ def plot_mirror_config(
         },
         plot_config={"parameter": parameter, "telescope": telescope},
         rendered_data=_file_digest(input_file),
+        context=context,
     )
     plot_name = f"{parameter}_{telescope}_{cache_key}"
     plot_path = (Path(output_path) / plot_name).with_suffix(".png")
@@ -380,6 +391,7 @@ def plot_mirror_config(
             output_file=Path(output_path) / plot_name,
             model_reader=model_reader,
             data_file_path=input_file,
+            context=context,
         )
     return [plot_name]
 

@@ -70,6 +70,7 @@ def main():
         output_path=app_context.paths.get_output_directory(),
         metadata_args=app_context.args,
         input_file_list_pattern=app_context.args["input_file_list_pattern"],
+        context=app_context,
     )
 
 

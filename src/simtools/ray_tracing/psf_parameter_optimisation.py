@@ -1008,7 +1008,7 @@ def _add_units_to_psf_parameters(best_pars):
     return psf_pars_with_units
 
 
-def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
+def export_psf_parameters(best_pars, telescope, parameter_version, output_dir, context=None):
     """
     Export optimized PSF parameters as simulation model parameter files.
 
@@ -1045,6 +1045,7 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
                 parameter_version=parameter_version,
                 output_file=f"{parameter_name}-{parameter_version}.json",
                 output_path=parameter_output_path,
+                context=context,
             )
         logger.info(f"simulation model parameter files exported to {output_dir}")
 
@@ -1438,12 +1439,18 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, 
     )
     logger.info(f"\nGradient descent progression written to {param_file}")
 
-    plot_psf.create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
+    plot_psf.create_psf_vs_offaxis_plot(
+        tel_model, site_model, args_dict, best_pars, output_dir, context=context
+    )
 
     if args_dict.get("write_psf_parameters", False):
         logger.info("Exporting best parameters as model files...")
         export_psf_parameters(
-            best_pars, args_dict.get(TELESCOPE), args_dict.get("parameter_version"), output_dir
+            best_pars,
+            args_dict.get(TELESCOPE),
+            args_dict.get("parameter_version"),
+            output_dir,
+            context=context,
         )
 
     if args_dict.get(CLEANUP, False):

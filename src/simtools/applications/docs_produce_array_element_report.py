@@ -51,13 +51,16 @@ def main():
         ]
     ):
         ReportGenerator(
-            app_context.args, output_path, app_context.model_reader
+            app_context.args, output_path, app_context.model_reader, context=app_context
         ).auto_generate_array_element_reports()
 
     else:
         model_version = app_context.args["model_version"]
         ReadParameters(
-            app_context.args, Path(output_path / f"{model_version}"), app_context.model_reader
+            app_context.args,
+            Path(output_path / f"{model_version}"),
+            app_context.model_reader,
+            context=app_context,
         ).produce_array_element_report()
 
         app_context.logger.info(

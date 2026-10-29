@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import dataclasses
 import gzip
 import math
 import subprocess
@@ -33,7 +34,6 @@ TEXT_ENCODING = "utf-8"
 
 
 BASH_SCRIPT = "#!/bin/bash\n"
-SIMTEL_EXECUTABLE = "/mock/simtel/bin/sim_telarray"
 ATM_DAT = "atm.dat"
 ATM_TRANS_DAT = "atm_trans.dat"
 AXES_OFFSETS = "axes_offsets"
@@ -988,7 +988,8 @@ def test_run_script_separates_diagnostics(
     root = Path(tmp_test_directory) / "simulation with spaces"
     source = root / "LightEmission" / FLASHER_APPLICATION
     source.parent.mkdir(parents=True)
-    simtel = root / SIMTEL_STAGE
+    simtel = root / "bin" / SIMTEL_STAGE
+    simtel.parent.mkdir(parents=True)
     for stage, executable in ((EMISSION_STAGE, source), (SIMTEL_STAGE, simtel)):
         exit_code = 7 if stage == failing_stage else 0
         executable.write_text(
@@ -1020,8 +1021,13 @@ def test_run_script_separates_diagnostics(
     mocker.patch.object(writer, "get_site_command", return_value=[])
     mocker.patch.object(writer, "get_light_source_command", return_value=[])
     mocker.patch.object(simulator_instance, TELESCOPE_POINTING_METHOD, return_value=(0, 0))
-    simulator_instance.context.software.sim_telarray_path = root
-    simulator_instance.context.software.sim_telarray_exe = simtel
+    simulator_instance.context = simulator_instance.context.replace(
+        software=dataclasses.replace(
+            simulator_instance.context.software,
+            sim_telarray_root=root,
+            sim_telarray_executable_name=SIMTEL_STAGE,
+        )
+    )
     mocker.patch(
         "simtools.simtel.simulator_light_emission.sim_telarray_env_as_string", return_value=""
     )
@@ -1072,7 +1078,6 @@ def test_make_run_command_with_traced_light(simulator_instance, mirror_class, by
             get_light_source_writer(simulator_instance), MAKE_COMMAND_METHOD
         ) as light_emission,
     ):
-        simulator_instance.context.software.sim_telarray_exe = SIMTEL_EXECUTABLE
         lines = simulator_instance.make_run_command()
 
     script = "".join(lines)

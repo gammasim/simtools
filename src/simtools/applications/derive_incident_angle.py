@@ -82,6 +82,7 @@ def main():
         config_data=app_context.args,
         output_dir=output_dir,
         label=base_label,
+        context=app_context,
     )
     results_by_offset = calculator.run_for_offsets(offsets)
     calculator.save_model_parameters(results_by_offset)

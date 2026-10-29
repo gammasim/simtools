@@ -156,9 +156,8 @@ def test_array_position_writer_uses_output_path(mocker, tmp_test_directory):
         "output_path": Path(tmp_test_directory) / "model-output",
         "parameter_version": "0.1.0",
     }
-    mocker.patch.object(
-        module.ApplicationDefinition, "start", return_value=SimpleNamespace(args=arguments)
-    )
+    app_context = SimpleNamespace(args=arguments)
+    mocker.patch.object(module.ApplicationDefinition, "start", return_value=app_context)
     write = mocker.patch.object(module, "write_array_elements_from_file_to_repository")
 
     module.main()
@@ -168,6 +167,7 @@ def test_array_position_writer_uses_output_path(mocker, tmp_test_directory):
         input_file="positions.ecsv",
         repository_path=arguments["output_path"],
         parameter_version="0.1.0",
+        context=app_context,
     )
 
 

@@ -77,6 +77,7 @@ def main():
             label=label,
             model_reader=app_context.model_reader,
             model_directory=model_directory,
+            context=app_context,
         )
         parameters = tel_model.parameters
         if args["shadowing"]:

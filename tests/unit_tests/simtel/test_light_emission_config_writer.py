@@ -660,14 +660,14 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
             return_value="atm_id_123",
         ) as mock_atmo,
     ):
-        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
         result = get_light_source_writer(simulator_instance).get_site_command(
             "ff-1m", "/config/dir", mock_altitude
         )
 
         expected = [
             "-I.",
-            "-I/mock/simtel/sim_telarray/cfg",
+            f"-I{sim_path}/cfg",
             "-I/config/dir",
             "--altitude 2200",
             "--atmosphere atm_id_123",
@@ -745,7 +745,7 @@ def test__make_light_emission_script(simulator_instance):
     ):
         # Test flat_fielding (no atmospheric profile)
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
-        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path("/output/ff-1m.log.gz")
@@ -753,7 +753,7 @@ def test__make_light_emission_script(simulator_instance):
         result = get_light_source_writer(simulator_instance).make_command("/output/ff-1m.iact.gz")
 
         expected = (
-            "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
+            f"{sim_path}/LightEmission/ff-1m -I. --altitude 2200 "
             "--photons 1000000 -o /output/ff-1m.iact.gz"
         )
         arguments = shlex.split(result)
@@ -789,7 +789,7 @@ def test__make_light_emission_script(simulator_instance):
         ),
     ):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
-        simulator_instance.context.software.sim_telarray_path = Path("/mock/simtel/sim_telarray")
+        sim_path = simulator_instance.context.software.sim_telarray_path
 
         # Mock runner_service.get_file_name to return a string path
         simulator_instance.runner_service.get_file_name.return_value = Path(
@@ -801,7 +801,7 @@ def test__make_light_emission_script(simulator_instance):
         )
 
         expected = (
-            "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
+            f"{sim_path}/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
             "-o /output/illuminator-app.iact.gz"
         )

@@ -70,7 +70,7 @@ def prepare_workflow(args_dict, replacements=None):
     return configurations, runtime, log_file, activity, collection
 
 
-def run_applications(args_dict, run_time=None, replacements=None):
+def run_applications(args_dict, run_time=None, replacements=None, context=None):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -89,6 +89,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
         Placeholder replacements applied recursively to the workflow configuration.
         The configuration directory is added automatically as
         __CONFIG_DIRECTORY__ when not supplied.
+    context : RunContext, optional
+        Run context used to report software versions and collect workflow metadata.
     """
     (
         configurations,
@@ -123,13 +125,17 @@ def run_applications(args_dict, run_time=None, replacements=None):
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         try:
-            versions = dependencies.get_version_string(run_time, include_software_versions=True)
+            versions = dependencies.get_version_string(
+                run_time, include_software_versions=True, context=context
+            )
         except FileNotFoundError as exc:
             logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
-            versions = dependencies.get_version_string(run_time, include_software_versions=False)
+            versions = dependencies.get_version_string(
+                run_time, include_software_versions=False, context=context
+            )
         file.write(versions)
         try:
-            manifest = dependencies.get_dependency_manifest(run_time or None)
+            manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
             file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
             file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
@@ -176,6 +182,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
                 configurations=configurations,
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
+                context=context,
             )
 
 
@@ -525,6 +532,7 @@ def _update_workflow_metadata_files(
     configurations,
     model_parameter_metadata_files,
     associated_activities,
+    context=None,
 ):
     """Update collected model-parameter metadata files with workflow metadata."""
     if not model_parameter_metadata_files:
@@ -539,6 +547,7 @@ def _update_workflow_metadata_files(
             runtime_environment_snapshot if not args_dict["ignore_runtime_environment"] else None
         ),
         workflow_context=_get_workflow_context(configurations),
+        context=context,
     )
     for metadata_file in model_parameter_metadata_files:
         workflow_metadata.update_model_parameter_metadata_file(

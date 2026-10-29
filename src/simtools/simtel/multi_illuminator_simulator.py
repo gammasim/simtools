@@ -145,7 +145,9 @@ class MultiIlluminatorSimulator:
 
         # Load visibility table from provided data or from the site model
         if visibility_data is None:
-            visibility_data = self._load_visibility_from_site_model(config, self.model_reader)
+            visibility_data = self._load_visibility_from_site_model(
+                config, self.model_reader, context=self.context
+            )
 
         self.visibility = IlluminatorTelescopeVisibility(visibility_data)
 
@@ -159,7 +161,7 @@ class MultiIlluminatorSimulator:
         self._logger.info("Using execution backend %s", self.backend)
 
     @staticmethod
-    def _load_visibility_from_site_model(config, model_reader=None):
+    def _load_visibility_from_site_model(config, model_reader=None, *, context):
         """
         Load visibility data from the model repository.
 
@@ -177,7 +179,10 @@ class MultiIlluminatorSimulator:
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
         site_model = SiteModel(
-            site=config["site"], model_version=config["model_version"], model_reader=model_reader
+            site=config["site"],
+            model_version=config["model_version"],
+            model_reader=model_reader,
+            context=context,
         )
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
@@ -238,7 +243,7 @@ class MultiIlluminatorSimulator:
             config_for_query["light_source"] = sample_illuminator
 
             wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(
-                config_for_query, model_reader=self.model_reader
+                config_for_query, model_reader=self.model_reader, context=self.context
             )
             self._logger.info(
                 f"Using {len(wavelengths)} wavelengths from model: "
@@ -284,6 +289,7 @@ class MultiIlluminatorSimulator:
             backend=self.backend,
             max_workers=self.max_workers,
             backend_config=self.backend_config,
+            context=self.context,
         )
 
         # Log summary

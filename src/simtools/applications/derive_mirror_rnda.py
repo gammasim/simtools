@@ -78,7 +78,7 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
+    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args, context=app_context)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
     if app_context.args.get("psf_hist"):

@@ -90,6 +90,7 @@ def main():
         model_version=app_context.args["model_version"],
         site=site,
         telescope_name=app_context.args["telescope"],
+        context=app_context,
     )
     fadc_sum_bins = telescope_model.get_parameter_value("fadc_sum_bins")
     fadc_mhz = telescope_model.get_parameter_value_with_unit("fadc_mhz").to_value("MHz")
@@ -133,6 +134,7 @@ def main():
         output_file="flasher_pulse_width.json",
         output_path=output_path,
         unit="ns",
+        context=app_context,
     )
     writer.ModelDataWriter.write_model_parameter(
         parameter_name="flasher_pulse_exp_decay",
@@ -142,6 +144,7 @@ def main():
         output_file="flasher_pulse_exp_decay.json",
         output_path=output_path,
         unit="ns",
+        context=app_context,
     )
     log.info(
         f"Wrote model parameter files flasher_pulse_width.json and "

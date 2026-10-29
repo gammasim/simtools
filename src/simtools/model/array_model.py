@@ -326,15 +326,15 @@ class ArrayModel:
         simulation_software : str
             Registered configuration format.
         """
-        return get_model_writer(self, simulation_software).export_config_files()
+        return get_model_writer(self, simulation_software, context=self.context).export_config_files()
 
     def export_simtel_telescope_config_files(self):
         """Export sim_telarray configuration files for all telescopes into the model directory."""
-        return get_model_writer(self).export_simtel_telescope_config_files()
+        return get_model_writer(self, context=self.context).export_simtel_telescope_config_files()
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        return get_model_writer(self).export_sim_telarray_config_file()
+        return get_model_writer(self, context=self.context).export_sim_telarray_config_file()
 
     def export_all_simtel_config_files(self):
         """
@@ -342,7 +342,7 @@ class ArrayModel:
 
         Config files are exported into the output model directory.
         """
-        return get_model_writer(self).export_all_simtel_config_files()
+        return get_model_writer(self, context=self.context).export_all_simtel_config_files()
 
     def get_config_directory(self):
         """
@@ -401,7 +401,9 @@ class ArrayModel:
         dict
             Dict with telescope positions.
         """
-        table = data_reader.read_table_from_file(file_name=array_elements_file)
+        table = data_reader.read_table_from_file(
+            file_name=array_elements_file, context=self.context
+        )
 
         return {
             row["telescope_name"]: self._get_telescope_position_parameter(
@@ -583,6 +585,6 @@ class ArrayModel:
 
     def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
         """Initialize sim_telarray seeds for instrument and shower simulations."""
-        return get_model_writer(self).initialize_seeds(
+        return get_model_writer(self, context=self.context).initialize_seeds(
             zenith_angle=zenith_angle, azimuth_angle=azimuth_angle
         )

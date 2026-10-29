@@ -388,8 +388,8 @@ def fake_backend(monkeypatch):
         },
         [Path("run.sh")],
     )
-    monkeypatch.setattr(ia.interface, "get_backend", lambda: backend)
-    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda: [(11, 22)])
+    monkeypatch.setattr(ia.interface, "get_backend", lambda context=None: backend)
+    monkeypatch.setattr(ia.simtel_seeds, "instance_seed_pairs", lambda context=None: [(11, 22)])
     return backend
 
 

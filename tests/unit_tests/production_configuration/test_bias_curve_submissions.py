@@ -48,7 +48,7 @@ def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_
     bias_curve_submissions.generate_scan_grids(args, io_handler)
 
     assert args == original_args
-    mock_threshold_param_name.assert_called_once_with(args)
+    mock_threshold_param_name.assert_called_once_with(args, None)
     assert [item.kwargs["curve_name"] for item in mock_generate_scan_grid.call_args_list] == [
         "nsb",
         "proton",
@@ -72,16 +72,18 @@ def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_
     ],
 )
 def test_threshold_parameter_is_chosen_from_telescope_model(
-    default_trigger, expected_param, tmp_test_directory
+    default_trigger, expected_param, tmp_test_directory, run_context
 ):
     args = _base_args(tmp_test_directory)
 
     with patch("simtools.production_configuration.bias_curve_submissions.TelescopeModel") as model:
         model.return_value.get_parameter_value.return_value = default_trigger
 
-        assert bias_curve_submissions._threshold_param_name(args) == expected_param
+        assert bias_curve_submissions._threshold_param_name(args, run_context) == expected_param
 
-    model.assert_called_once_with(site="North", telescope_name="LSTN-01", model_version="7.0.0")
+    model.assert_called_once_with(
+        site="North", telescope_name="LSTN-01", model_version="7.0.0", context=run_context
+    )
     model.return_value.get_parameter_value.assert_called_once_with("default_trigger")
 
 
@@ -211,7 +213,7 @@ def test_production_grid_configuration_uses_curve_specific_primary_and_energy_ra
     assert "telescope" not in configuration
 
 
-def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
+def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory, run_context):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
@@ -231,6 +233,7 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
             curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
             args=args,
             io_handler=paths,
+            context=run_context,
         )
 
     scan_config_file = curve_directory / "scan_config.yaml"
@@ -251,6 +254,7 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
             args, bias_curve_submissions._curve_definitions(args)["nsb"], "nsb"
         ),
         base_grid_file,
+        context=run_context,
     )
     mock_expand_job_grid.assert_called_once_with(base_grid_file, scan_config_file, scan_grid_file)
 

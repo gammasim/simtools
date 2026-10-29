@@ -552,7 +552,7 @@ def _write_trigger_histogram_product(
     context=None,
 ):
     """Build and write one trigger-histogram product from production sources."""
-    telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict)
+    telescope_configs = telescope_configs or _resolve_telescope_configs(args_dict, context)
     output_file = validate_file_type(output_file, file_type="hdf5")
 
     reference_specs = []
@@ -604,6 +604,7 @@ def _write_trigger_histogram_product(
                 args_dict,
                 output_file,
                 product_data_name=_TRIGGER_HISTOGRAMS,
+                context=context,
             ),
         },
     )
@@ -711,7 +712,9 @@ def _write_production_selection_products(args_dict, context=None):
     production_path = Path(args_dict[_PRODUCTION_PATH_KEY]).resolve()
     products = []
     for group in selection_result[_GROUPS_KEY]:
-        telescope_configs = _resolve_group_telescope_configs(args_dict, group.configuration)
+        telescope_configs = _resolve_group_telescope_configs(
+            args_dict, group.configuration, context
+        )
         product_identity = {
             _HISTOGRAM_SETTINGS_KEY: _histogram_settings(args_dict),
             "array_selection": telescope_configs,
@@ -795,7 +798,9 @@ def write_trigger_histograms(args_dict, context=None):
 
     production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
     output_file = context.paths.get_output_file(args_dict["output_file"])
-    return _write_trigger_histogram_product(args_dict, production_patterns, output_file)
+    return _write_trigger_histogram_product(
+        args_dict, production_patterns, output_file, context=context
+    )
 
 
 def _group_output_stem(group, product_identity=None, selections=None, include_hash=False):
@@ -917,22 +922,22 @@ def _relative_to_directory(path, directory):
     return Path(os.path.relpath(path, directory)).as_posix()
 
 
-def _resolve_telescope_configs(args_dict):
+def _resolve_telescope_configs(args_dict, context):
     """Return normalized resolved telescope configurations."""
     return _use_readable_inline_array_names(
-        normalize_telescope_configs(resolve_telescope_configs(args_dict))
+        normalize_telescope_configs(resolve_telescope_configs(args_dict, context=context))
     )
 
 
-def _resolve_group_telescope_configs(args_dict, configuration):
+def _resolve_group_telescope_configs(args_dict, configuration, context):
     """Resolve telescope configurations from one selected production configuration."""
     group_args = dict(args_dict)
     _set_group_argument(group_args, configuration, "site")
     _set_group_argument(group_args, configuration, "model_version", list_value=True)
     if group_args.get("array_element_list"):
-        return _resolve_telescope_configs(group_args)
+        return _resolve_telescope_configs(group_args, context)
     _set_group_argument(group_args, configuration, "array_layout_name", list_value=True)
-    return _resolve_telescope_configs(group_args)
+    return _resolve_telescope_configs(group_args, context)
 
 
 def _set_group_argument(args_dict, configuration, key, list_value=False):

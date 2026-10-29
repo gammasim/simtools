@@ -33,6 +33,7 @@ def main():
         args=app_context.args,
         output_path=output_path,
         model_reader=app_context.model_reader,
+        context=app_context,
     )
     report_generator.auto_generate_simulation_configuration_reports()
 

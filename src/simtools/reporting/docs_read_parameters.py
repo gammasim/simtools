@@ -333,7 +333,7 @@ class ReadParameters:
         plot_kwargs = {k: v for k, v in (("telescope", telescope), ("site", site)) if v}
 
         if parameter == "correct_nsb_spectrum_to_telescope_altitude":
-            plot_names = plot_nsb_altitude_correction(input_file, outpath)
+            plot_names = plot_nsb_altitude_correction(input_file, outpath, context=self.context)
         elif parameter == "camera_pixel_layout":
             plot_names = plot_camera_config(
                 parameter,
@@ -344,6 +344,7 @@ class ReadParameters:
                 site or self.site,
                 model_version or self.model_version,
                 self.model_reader,
+                context=self.context,
             )
         elif parameter in (
             "mirror_list",
@@ -359,6 +360,7 @@ class ReadParameters:
                 site or self.site,
                 model_version or self.model_version,
                 self.model_reader,
+                context=self.context,
             )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
@@ -388,6 +390,7 @@ class ReadParameters:
             plot_type="all",
             model_reader=self.model_reader,
             model_version=model_version or self.model_version,
+            context=self.context,
         )
 
         if not config_data:
@@ -397,9 +400,11 @@ class ReadParameters:
         plot_names = []
 
         for plot_config, output_file in zip(plot_configs, output_files):
-            plot_data = plot_tables.read_table_data(plot_config, model_reader=self.model_reader)
+            plot_data = plot_tables.read_table_data(
+                plot_config, model_reader=self.model_reader, context=self.context
+            )
             cache_key = plot_tables._get_figure_cache_key(  # pylint: disable=protected-access
-                plot_config, plot_data
+                plot_config, plot_data, context=self.context
             )
             figure_stem = f"{output_file.stem.replace('.', '-')}_{cache_key}"
             plot_names.append(figure_stem)
@@ -943,6 +948,7 @@ class ReadParameters:
             ignore_software_version=True,
             model_reader=self.model_reader,
             model_directory=Path(self.output_path) / "model",
+            context=self.context,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
@@ -1063,6 +1069,7 @@ class ReadParameters:
                 self.site,
                 self.array_element,
                 self.context,
+                context=self.context,
             )
         file.write("\n\n")
 

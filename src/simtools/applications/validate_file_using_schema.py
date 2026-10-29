@@ -60,7 +60,9 @@ def main():
 
     if data_type == "metadata":
         # metadata_collector runs the metadata validation by default, no need to do anything else
-        metadata_collector.MetadataCollector(None, metadata_file_name=file_name)
+        metadata_collector.MetadataCollector(
+            None, metadata_file_name=file_name, context=app_context
+        )
         app_context.logger.info(f"Successful validation of metadata {file_name}")
 
     elif data_type == "schema":

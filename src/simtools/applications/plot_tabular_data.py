@@ -66,6 +66,7 @@ def main():
         output_file=app_context.paths.get_output_file(app_context.args["output_file"]),
         data_path=app_context.args.get("data_search_path"),
         model_reader=app_context.model_reader,
+        context=app_context,
     )
 
     MetadataCollector.dump(

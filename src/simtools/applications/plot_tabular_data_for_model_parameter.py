@@ -44,6 +44,7 @@ def main():
         output_path=app_context.paths.get_output_directory(),
         plot_type=app_context.args["plot_type"],
         model_reader=app_context.model_reader,
+        context=app_context,
     )
 
     for plot_config, output_file in zip(plot_configs, output_files):
@@ -51,6 +52,7 @@ def main():
             config=plot_config,
             output_file=output_file,
             model_reader=app_context.model_reader,
+            context=app_context,
         )
         MetadataCollector.dump(app_context.args, output_file=output_file, add_activity_name=True)
 

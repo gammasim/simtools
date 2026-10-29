@@ -146,7 +146,7 @@ def main():
 
     if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
         for model_version, site in generate_plot_combinations(
-            app_context.args, app_context.model_reader
+            app_context.args, app_context.model_reader, context=app_context
         ):
             run_args = app_context.args.copy()
             run_args.update(
@@ -157,7 +157,7 @@ def main():
                 }
             )
             layouts, background_layout = layout_utils.read_layouts(
-                run_args, app_context.model_reader
+                run_args, app_context.model_reader, context=app_context
             )
             plot_array_layouts(
                 run_args,
@@ -167,7 +167,7 @@ def main():
             )
     else:
         layouts, background_layout = layout_utils.read_layouts(
-            app_context.args, app_context.model_reader
+            app_context.args, app_context.model_reader, context=app_context
         )
         plot_array_layouts(
             app_context.args,

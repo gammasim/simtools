@@ -14,7 +14,6 @@ from cycler import cycler
 from PIL import Image
 
 import simtools.utils.general as gen
-from simtools.context import RunContext
 from simtools.visualization.matplotlib_backend import lazy_module
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -605,6 +604,26 @@ def plot_histogram(data, ax=None, **kwargs):
     return ax.figure
 
 
+_FIGURE_OUTPUT = {}
+
+
+def configure_figure_output(args):
+    """
+    Set the figure output options of this process (like matplotlib ``rcParams``).
+
+    Applications call this once at start with their parsed arguments; ``save_figure``
+    then uses ``figure_format``, ``figure_dpi`` and ``figure_png_palette`` from them.
+    """
+    _FIGURE_OUTPUT.clear()
+    _FIGURE_OUTPUT.update(
+        {
+            key: args[key]
+            for key in ("figure_format", "figure_dpi", "figure_png_palette")
+            if args.get(key) is not None
+        }
+    )
+
+
 def save_figure(
     fig,
     output_file,
@@ -641,7 +660,7 @@ def save_figure(
     PNG files are converted to an optimized 256-color palette if ``figure_png_palette`` is
     configured.
     """
-    args = (context or RunContext.from_environment()).args
+    args = context.args if context is not None else _FIGURE_OUTPUT
     configured_formats = args.get("figure_format")
     configured_dpi = args.get("figure_dpi")
     png_palette = args.get("figure_png_palette", False)

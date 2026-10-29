@@ -26,7 +26,7 @@ _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_s
 
 def generate_bias_curves(args, context=None):
     """Generate bias curves from NSB/proton reduced event-data HDF5 files."""
-    time_window = _calculate_time_window(args)
+    time_window = _calculate_time_window(args, context)
     _logger.info(f"Calculated time window: {time_window * 1e9:.2f} ns")
 
     _logger.info("Extracting NSB trigger rates from HDF5 files...")
@@ -35,7 +35,7 @@ def generate_bias_curves(args, context=None):
         raise FileNotFoundError(f"No NSB input files found in {args['event_data_directory']}")
 
     _logger.info("Calculating proton trigger rates...")
-    proton_stats = _extract_proton_rates(args)
+    proton_stats = _extract_proton_rates(args, context)
     if not proton_stats:
         raise FileNotFoundError(f"No proton input files found in {args['event_data_directory']}")
 
@@ -76,7 +76,7 @@ def generate_bias_curves(args, context=None):
         _logger.info(f"NSB table written to {nsb_table_file}")
 
 
-def _calculate_time_window(args):
+def _calculate_time_window(args, context):
     """
     Calculate time window from telescope parameters.
 
@@ -106,6 +106,7 @@ def _calculate_time_window(args):
         site=args["site"],
         telescope_name=telescope_name,
         model_version=args["model_version"],
+        context=context,
     )
 
     disc_bins = telescope_model.get_parameter_value("disc_bins")
@@ -143,7 +144,7 @@ def _run_nsb_trigger_derivation(root_dir, args, time_window):
     return derive_nsb_triggers(nsb_args)
 
 
-def _extract_proton_rates(args):
+def _extract_proton_rates(args, context):
     """
     Extract proton trigger rates from HDF5 files.
 
@@ -160,7 +161,9 @@ def _extract_proton_rates(args):
     proton_stats = {}
     for threshold, run_files in sorted(proton_files.items()):
         _logger.info(f"Processing threshold {threshold}: {len(run_files)} HDF5 file(s)")
-        proton_stats[threshold] = _calculate_proton_statistics_for_threshold(run_files, args)
+        proton_stats[threshold] = _calculate_proton_statistics_for_threshold(
+            run_files, args, context
+        )
 
     return proton_stats
 
@@ -194,12 +197,12 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
     return threshold_files
 
 
-def _calculate_proton_statistics_for_threshold(run_files, args):
+def _calculate_proton_statistics_for_threshold(run_files, args, context):
     """Calculate mean proton trigger rate and error for one threshold."""
     run_rates = {}
 
     for run, hdf5_file in sorted(run_files.items()):
-        rate = _calculate_proton_rate_for_file(hdf5_file, args)
+        rate = _calculate_proton_rate_for_file(hdf5_file, args, context)
         if rate is not None:
             run_rates[run] = rate
 
@@ -224,7 +227,7 @@ def _calculate_proton_statistics_for_threshold(run_files, args):
     }
 
 
-def _calculate_proton_rate_for_file(hdf5_file, args):
+def _calculate_proton_rate_for_file(hdf5_file, args, context):
     """
     Calculate proton trigger rate for a single HDF5 file.
 
@@ -248,7 +251,7 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
     trigger_args.update({"event_data_file": str(hdf5_file), "plot_histograms": False})
 
     try:
-        results = telescope_trigger_rates(trigger_args)
+        results = telescope_trigger_rates(trigger_args, context=context)
 
         if results:
             array_name = next(iter(results.keys()))
@@ -443,6 +446,7 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, contex
             site=args["site"],
             telescope_name=telescope_name,
             model_version=args["model_version"],
+            context=context,
         )
         default_trigger = telescope_model.get_parameter_value("default_trigger")
 
@@ -481,6 +485,7 @@ def _export_trigger_threshold_as_model_parameter(args, trigger_threshold, contex
             metadata_input_dict={**args, "source": "bias_curve_analysis"},
             unit=unit,
             check_for_existing_parameter=False,
+            context=context,
         )
 
         _logger.info(

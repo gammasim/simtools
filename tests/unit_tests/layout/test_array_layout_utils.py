@@ -554,6 +554,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
             layout_name="array1",
             ignore_software_version=False,
             model_reader=None,
+            context=None,
         ),
         mocker.call(
             model_version=model_version,
@@ -562,6 +563,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
             layout_name="array2",
             ignore_software_version=False,
             model_reader=None,
+            context=None,
         ),
     ]
     mock_array_model.assert_has_calls(expected_calls, any_order=True)
@@ -638,6 +640,7 @@ def test_get_array_layouts_from_model_repository_with_layout_name(mock_array_mod
         layout_name=layout_name,
         ignore_software_version=False,
         model_reader=None,
+        context=None,
     )
     instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
     assert result == expected
@@ -689,6 +692,7 @@ def test_get_array_layouts_from_model_repository_without_layout_name(mocker, moc
         model_version=model_version,
         ignore_software_version=False,
         model_reader=None,
+        context=None,
     )
     instance_site.get_list_of_array_layouts.assert_called_once()
 
@@ -701,6 +705,7 @@ def test_get_array_layouts_from_model_repository_without_layout_name(mocker, moc
             layout_name="layout1",
             ignore_software_version=False,
             model_reader=None,
+            context=None,
         ),
         mocker.call(
             model_version=model_version,
@@ -709,6 +714,7 @@ def test_get_array_layouts_from_model_repository_without_layout_name(mocker, moc
             layout_name="layout2",
             ignore_software_version=False,
             model_reader=None,
+            context=None,
         ),
     ]
     mock_array_model.assert_has_calls(calls, any_order=True)
@@ -830,7 +836,7 @@ def test_read_array_layouts_from_repository_specific_layouts(mocker):
 
     assert result == {"LST": [1, 2], "MST": [3, 4]}
     mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, model_reader=None
+        site=site, model_version=model_version, model_reader=None, context=None
     )
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")
@@ -979,6 +985,7 @@ def test_read_layouts_selects_array_layout_from_parameter_file(minimal_args_dict
         "1.0.0",
         "ground",
         ["layout_param"],
+        context=None,
     )
 
 

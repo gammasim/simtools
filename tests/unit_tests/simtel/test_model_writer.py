@@ -279,8 +279,9 @@ def test_export_simtel_telescope_config_files(array_model_north):
     assert get_model_writer(am)._telescope_model_files_exported is True
 
 
-def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
+def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_context):
     am = Mock(spec=ArrayModel)
+    am.context = run_context
     am._logger = Mock()
     am.configuration_writers = {}
     am.calibration_models = {}

@@ -67,7 +67,7 @@ class SimulatorLightEmission(SimtelRunner):
     """
 
     @staticmethod
-    def get_available_wavelengths_from_config(config, model_reader=None):
+    def get_available_wavelengths_from_config(config, model_reader=None, context=None):
         """
         Get available wavelengths from model configuration without full initialization.
 
@@ -104,7 +104,9 @@ class SimulatorLightEmission(SimtelRunner):
             "calibration_device_model_name": light_source,
             "model_version": model_version,
             "label": f"temp_wavelength_query_{light_source}",
-            "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(),
+            "overwrite_model_parameter_dict": read_overwrite_model_parameter_dict(
+                context=context
+            ),
         }
         calibration_kwargs["model_reader"] = model_reader
         calibration_model = CalibrationModel(**calibration_kwargs)
@@ -282,7 +284,7 @@ class SimulatorLightEmission(SimtelRunner):
         type or None
             Backend class with ``traces_light_sources``.
         """
-        backend = get_backend()
+        backend = get_backend(context=self.context)
         return backend if backend.traces_light_sources else None
 
     def _seeds(self):

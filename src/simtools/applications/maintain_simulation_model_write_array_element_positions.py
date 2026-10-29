@@ -41,6 +41,7 @@ def main():
         input_file=app_context.args["array_element_positions_file"],
         repository_path=app_context.args["output_path"],
         parameter_version=app_context.args["parameter_version"],
+        context=app_context,
     )
 
 

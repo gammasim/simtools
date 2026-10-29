@@ -185,7 +185,7 @@ class ModelDataWriter:
                 activity_id = gen.extract_uuid7_from_path(output_file)
                 if activity_id is not None:
                     metadata_input_dict["activity_id"] = activity_id
-            metadata = MetadataCollector(args_dict=metadata_input_dict)
+            metadata = MetadataCollector(args_dict=metadata_input_dict, context=context)
             unique_id = (
                 metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
             )

@@ -69,7 +69,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    single_pe = SinglePhotonElectronSpectrum(app_context.args)
+    single_pe = SinglePhotonElectronSpectrum(app_context.args, context=app_context)
     single_pe.derive_single_pe_spectrum()
     single_pe.write_single_pe_spectrum()
 

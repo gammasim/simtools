@@ -64,7 +64,9 @@ def main():
         metadata, validate_schema_file = None, None
     else:
         metadata = MetadataCollector(
-            args_dict=app_context.args, model_parameter_name="array_coordinates"
+            args_dict=app_context.args,
+            model_parameter_name="array_coordinates",
+            context=app_context,
         )
         site = metadata.get_site(from_input_meta=True) or app_context.args.get("site")
         validate_schema_file = metadata.get_data_model_schema_file_name()
@@ -75,6 +77,7 @@ def main():
         telescope_list_file=app_context.args["array_element_positions_file"],
         telescope_list_metadata_file=app_context.args["input_meta"],
         validate=not app_context.args["skip_input_validation"],
+        context=app_context,
     )
     layout.select_assets(app_context.args["select_assets"])
     layout.convert_coordinates()
@@ -94,6 +97,7 @@ def main():
             metadata=metadata,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
+            context=app_context,
         )
     else:
         layout.print_telescope_list(

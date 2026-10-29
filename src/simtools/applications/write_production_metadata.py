@@ -53,7 +53,7 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """Run the production metadata writer/checker."""
     app_context = APPLICATION.start()
-    write_production_metadata(app_context.args)
+    write_production_metadata(app_context.args, context=app_context)
 
 
 if __name__ == "__main__":

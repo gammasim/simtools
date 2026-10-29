@@ -17,7 +17,7 @@ _INPUT_PATH = "input/__SETTING_WORKFLOW__"
 _OUTPUT_PATH = "output/__SETTING_WORKFLOW__"
 
 
-def create_setting_workflow(args, model_reader=None):
+def create_setting_workflow(args, model_reader=None, context=None):
     """Create validated input files, or reuse an identical setting.
 
     Parameters
@@ -49,13 +49,13 @@ def create_setting_workflow(args, model_reader=None):
     if not args["description"].strip():
         raise ValueError("A scientific description is required.")
 
-    writer = ModelDataWriter(model_reader=model_reader)
+    writer = ModelDataWriter(model_reader=model_reader, context=context)
     parameter = _validated_parameter(writer, args)
     args["model_parameter_schema_version"] = parameter["model_parameter_schema_version"]
     args["activity_id"] = general.get_uuid()
     config = _workflow_config(args)
     runtime = _runtime_configuration(args)
-    metadata = _input_metadata(args)
+    metadata = _input_metadata(args, context)
     root = Path(args.get("output_path") or Path.cwd()).resolve()
     directory = root / "input" / args["instrument"] / args["parameter"]
     existing = _existing_setting(directory, args)
@@ -158,7 +158,7 @@ def _write_runtime_file(runtime, workflow_directory):
     ascii_handler.write_data_to_file(runtime, workflow_directory / "runtime.yml", sort_keys=False)
 
 
-def _input_metadata(args):
+def _input_metadata(args, context):
     """Collect technical metadata and add the supplied scientific description."""
     metadata_args = {key: value for key, value in args.items() if key.startswith("user_")}
     metadata_args.update(
@@ -171,7 +171,7 @@ def _input_metadata(args):
             "output_file_format": "yaml",
         }
     )
-    metadata = MetadataCollector(metadata_args).get_top_level_metadata()
+    metadata = MetadataCollector(metadata_args, context=context).get_top_level_metadata()
     metadata["cta"]["product"]["description"] = args["description"].strip()
     if args.get("source_url"):
         metadata["cta"]["product"]["description"] += f" Source: {args['source_url']}"
@@ -233,7 +233,7 @@ def _setting_metadata(metadata):
     return metadata
 
 
-def run_setting_workflow(config_file, args):
+def run_setting_workflow(config_file, args, context=None):
     """Execute a prepared setting in its activity output directory.
 
     Parameters
@@ -268,5 +268,6 @@ def run_setting_workflow(config_file, args):
         runner_args,
         run_time=run_time,
         replacements={_INPUT_PATH: str(config_file.parent), _OUTPUT_PATH: str(output)},
+        context=context,
     )
     return output

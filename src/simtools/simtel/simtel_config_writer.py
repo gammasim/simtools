@@ -708,7 +708,7 @@ class SimtelConfigWriter:
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
-            **dependencies.get_dependency_metadata(),
+            **dependencies.get_dependency_metadata(context=self._context),
         }
         try:
             build_opts = dependencies.get_build_options(context=self._context)

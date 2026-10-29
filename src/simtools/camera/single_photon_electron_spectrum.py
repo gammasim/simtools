@@ -65,7 +65,7 @@ class SinglePhotonElectronSpectrum:
         )
         metadata_args = dict(self.args_dict)
         metadata_args["output_file"] = Path(self.args_dict["output_file"]).name
-        self.metadata = MetadataCollector(args_dict=metadata_args)
+        self.metadata = MetadataCollector(args_dict=metadata_args, context=context)
 
     def derive_single_pe_spectrum(self):
         """Derive single photon electron spectrum."""

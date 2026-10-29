@@ -161,7 +161,7 @@ def test_show_model_versions_uses_configured_git_source(mocker):
 
 def test_show_array_layout_names_groups_all_sites(monkeypatch, run_context):
     class FakeSiteModel:
-        def __init__(self, site, model_version, model_reader):
+        def __init__(self, site, model_version, model_reader, context=None):
             self.site = site
             self.model_version = model_version
 
@@ -185,7 +185,7 @@ def test_show_array_layout_names_groups_all_sites(monkeypatch, run_context):
 
 def test_show_array_layout_names_limits_to_selected_site(monkeypatch, run_context):
     class FakeSiteModel:
-        def __init__(self, site, model_version, model_reader):
+        def __init__(self, site, model_version, model_reader, context=None):
             self.site = site
             self.model_version = model_version
 
@@ -217,7 +217,9 @@ def test_show_corsika_interactions_include_environment(monkeypatch):
         ),
     ]
     monkeypatch.setattr(show_options, "get_installed_corsika_build_variants", lambda path: variants)
-    monkeypatch.setattr(show_options, "get_corsika_version", lambda: "7.7400")
+    monkeypatch.setattr(
+        show_options, "get_corsika_version", lambda context=None: "7.7400"
+    )
 
     high_result = show_options.resolve_show_options(
         {"show_options": "corsika_he_interaction", "corsika_path": "/corsika"}
@@ -232,11 +234,11 @@ def test_show_corsika_interactions_include_environment(monkeypatch):
     assert "executables" in high_result.environment
 
 
-def test_get_corsika_environment_handles_one_executable_without_version(monkeypatch):
+def test_get_corsika_environment_handles_one_executable_without_version(monkeypatch, run_context):
     variant = SimpleNamespace(executable="corsika", he_hadronic_model="epos")
-    monkeypatch.setattr(show_options, "get_corsika_version", lambda: None)
+    monkeypatch.setattr(show_options, "get_corsika_version", lambda context=None: None)
 
-    environment = show_options._get_corsika_environment(Path("/corsika"), [variant])
+    environment = show_options._get_corsika_environment(Path("/corsika"), [variant], run_context)
 
     assert environment["executable"] == str(Path("/corsika/corsika").resolve())
     assert "CORSIKA version" not in environment
@@ -268,7 +270,7 @@ def test_show_corsika_hadronic_transition_energy_allows_missing_build_metadata(m
         ),
     ]
     monkeypatch.setattr(show_options, "get_installed_corsika_build_variants", lambda path: variants)
-    monkeypatch.setattr(show_options, "get_corsika_version", lambda: None)
+    monkeypatch.setattr(show_options, "get_corsika_version", lambda context=None: None)
 
     result = show_options.resolve_show_options(
         {"show_options": "corsika_hadronic_transition_energy", "corsika_path": "/corsika"}

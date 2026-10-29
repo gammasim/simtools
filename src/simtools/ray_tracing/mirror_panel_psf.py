@@ -160,6 +160,7 @@ class MirrorPanelPSF:
             single_mirror_mode=True,
             mirror_numbers=[mirror_idx],
             off_axis_angle=[(0.0, 0.0)],
+            context=self.context,
         )
         ray.simulate(test=self.args_dict.get("test", False), force=True, compress_photons=False)
         ray.analyze(force=True, containment_fraction=fraction, export=False, keep_images=False)
@@ -416,6 +417,7 @@ class MirrorPanelPSF:
             max_workers=max_workers,
             backend_config=self.args_dict.get("backend_config"),
             mp_start_method="fork",
+            context=self.context,
         )
 
         self.rnda_opt = np.mean(
@@ -470,6 +472,7 @@ class MirrorPanelPSF:
                     output_file=f"{parameter_name}-{parameter_version}.json",
                     output_path=parameter_output_path,
                     unit=["deg", "dimensionless", "deg"],
+                    context=self.context,
                 )
                 self._logger.info(
                     "Exported model parameter %s (%s) to %s",

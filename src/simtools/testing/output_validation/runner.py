@@ -56,7 +56,7 @@ def _validate_rule(artifact, rule, configuration, context):
     """Run one validation rule, creating a shared model reader if needed."""
     if rule["type"] == "model_parameter" and context["model_reader"] is None:
         context["model_reader"] = _create_model_reader(configuration)
-    run_validator(artifact, rule, context)
+    run_validator(artifact, rule, context, context=context)
 
 
 def _create_model_reader(configuration):

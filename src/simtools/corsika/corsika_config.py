@@ -875,7 +875,7 @@ def get_site_config_parameters(site_model, model_directory=None):
         # We always use a custom profile by filename, so this has to be set to 99
         "ATMOSPHERE": [99, "Y"],
         "IACT ATMOFILE": [
-            model_directory / get_model_writer(site_model).get_atmospheric_profile_file_name()
+            model_directory / get_model_writer(site_model, context=site_model.context).get_atmospheric_profile_file_name()
         ],
         "MAGNET": [
             site_model.get_parameter_value("geomag_horizontal"),

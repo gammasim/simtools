@@ -94,7 +94,9 @@ def main():
     if app_context.args["run_mode"] == "full_simulation":
         telescopes = (
             get_array_elements_for_layout(
-                app_context.args["array_layout_name"], model_reader=app_context.model_reader
+                app_context.args["array_layout_name"],
+                model_reader=app_context.model_reader,
+                context=app_context,
             )
             if app_context.args.get("array_layout_name") is not None
             else general.ensure_list(app_context.args["telescopes"])

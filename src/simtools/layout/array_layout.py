@@ -357,6 +357,7 @@ class ArrayLayout:
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
+                context=self.context,
             )
 
         for row in table:

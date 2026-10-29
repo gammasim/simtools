@@ -14,6 +14,7 @@ from simtools.context import RunContext
 from simtools.io.output_paths import OutputPaths
 from simtools.model_repository.compatibility import validate_release
 from simtools.runners.simtools_runner import prepare_runtime_environment
+from simtools.visualization import visualize
 
 _DEFER_SIMULATION_VALIDATION = "_defer_simulation_dependency_validation"
 
@@ -209,6 +210,7 @@ def initialize_runtime(
 
     run_time = _prepare_runtime_environment_from_cli(args_dict)
 
+    visualize.configure_figure_output(context.args)
     return context.replace(logger=logger, run_time=run_time)
 
 

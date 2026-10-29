@@ -593,7 +593,7 @@ def test_relative_to_directory_handles_sibling_directories(tmp_test_directory):
     assert _relative_to_directory(path, directory) == "../grid-output/job-000001/file.hdf5"
 
 
-def test_production_group_telescope_configs_come_from_metadata(mocker):
+def test_production_group_telescope_configs_come_from_metadata(mocker, run_context):
     resolve = mocker.patch(
         "simtools.production_configuration.trigger_histograms._resolve_telescope_configs",
         return_value=[{"array_name": "CTAO-North-Alpha", "telescope_ids": ["LSTN-01"]}],
@@ -606,6 +606,7 @@ def test_production_group_telescope_configs_come_from_metadata(mocker):
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
         },
+        run_context,
     )
 
     resolved_args = resolve.call_args.args[0]
@@ -614,7 +615,7 @@ def test_production_group_telescope_configs_come_from_metadata(mocker):
     assert resolved_args["array_layout_name"] == ["CTAO-North-Alpha"]
 
 
-def test_production_group_telescope_configs_reject_mismatched_layout():
+def test_production_group_telescope_configs_reject_mismatched_layout(run_context):
     with pytest.raises(ValueError, match="does not match selected production metadata"):
         _resolve_group_telescope_configs(
             {"array_layout_name": ["CTAO-North-Beta"]},
@@ -623,6 +624,7 @@ def test_production_group_telescope_configs_reject_mismatched_layout():
                 "model_version": "7.0.0",
                 "array_layout_name": "CTAO-North-Alpha",
             },
+            run_context,
         )
 
 
@@ -718,6 +720,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(
         },
         Path(tmp_test_directory) / "trigger_histograms.hdf5",
         product_data_name="trigger_histograms",
+        context=run_context,
     )
     assert (
         table_handler.read_metadata_document(

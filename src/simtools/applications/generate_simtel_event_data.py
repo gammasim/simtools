@@ -86,7 +86,9 @@ def main():
         overwrite_existing=True,
         file_type="HDF5",
         metadata_documents=lambda: {
-            "METADATA": build_standard_metadata(app_context.args, output_filepath),
+            "METADATA": build_standard_metadata(
+                app_context.args, output_filepath, context=app_context
+            ),
             "SIMULATION_METADATA": build_simulation_metadata(
                 generator.get_simulation_input_metadata()
             ),

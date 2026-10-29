@@ -23,7 +23,7 @@ from simtools.production_configuration.production_file_selection import (
 )
 
 
-def write_production_metadata(args_dict):
+def write_production_metadata(args_dict, context=None):
     """Write or validate production job metadata manifests.
 
     Parameters
@@ -35,7 +35,7 @@ def write_production_metadata(args_dict):
     if args_dict.get("check"):
         _check_existing_manifests(production_path)
         return
-    _write_manifests(production_path, args_dict["job_grid_file"], args_dict)
+    _write_manifests(production_path, args_dict["job_grid_file"], args_dict, context)
 
 
 def _check_existing_manifests(production_path):
@@ -56,7 +56,7 @@ def _check_existing_manifests(production_path):
         check_manifest(job_directory / SIMULATE_PROD_JOB_METADATA)
 
 
-def _write_manifests(production_path, job_grid_file, args_dict):
+def _write_manifests(production_path, job_grid_file, args_dict, context):
     """Write manifests for job directories described by a job grid."""
     rows, metadata = read_job_grid(job_grid_file)
     job_directories = _job_directories_for_rows(production_path, len(rows))
@@ -72,7 +72,7 @@ def _write_manifests(production_path, job_grid_file, args_dict):
         _validate_resolved_configuration(resolved_args, job_grid_file)
         overwrite_parameter_file = resolved_args.get("overwrite_model_parameters")
         overwrite_parameters = (
-            read_overwrite_model_parameter_dict(overwrite_parameter_file)
+            read_overwrite_model_parameter_dict(overwrite_parameter_file, context=context)
             if overwrite_parameter_file
             else {}
         )

@@ -59,6 +59,7 @@ def telescope_trigger_rates(args_dict, context=None):
             layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),
+            context=context,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(

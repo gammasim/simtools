@@ -32,6 +32,7 @@ def main():
         args=app_context.args,
         output_path=output_path,
         model_reader=app_context.model_reader,
+        context=app_context,
     )
     generator.auto_generate_calibration_reports()
 

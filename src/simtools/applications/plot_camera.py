@@ -67,7 +67,7 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    plot_camera_pixel_layout_from_args(app_context)
+    plot_camera_pixel_layout_from_args(app_context, context=app_context)
 
 
 if __name__ == "__main__":

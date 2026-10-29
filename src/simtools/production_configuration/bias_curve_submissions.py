@@ -41,12 +41,13 @@ _DEFAULT_DSUM_THRESHOLDS = list(range(22, 31))
 _DEFAULT_DISCRIMINATOR_THRESHOLDS = list(range(0, 10))
 
 
-def _threshold_param_name(args):
+def _threshold_param_name(args, context):
     """Return the threshold parameter selected by the telescope model."""
     telescope_model = TelescopeModel(
         site=args["site"],
         telescope_name=_telescope_from_layout(args),
         model_version=args["model_version"],
+        context=context,
     )
     default_trigger = telescope_model.get_parameter_value("default_trigger")
     if default_trigger == "AnalogSum":
@@ -151,7 +152,7 @@ def _production_grid_configuration(args, curve_definition, curve_label):
     return configuration
 
 
-def _generate_scan_grid(curve_name, curve_definition, args, io_handler):
+def _generate_scan_grid(curve_name, curve_definition, args, io_handler, context):
     """Generate base grid, scan config, and scan grid for one curve."""
     curve_directory = io_handler.get_output_directory(sub_dir=curve_name)
 
@@ -166,6 +167,7 @@ def _generate_scan_grid(curve_name, curve_definition, args, io_handler):
     generate_job_grid(
         _production_grid_configuration(args, curve_definition, curve_name),
         base_grid_file,
+        context=context,
     )
     parameter_scan_generator.expand_job_grid_with_scan(
         base_grid_file,
@@ -212,7 +214,7 @@ def _curve_definitions(args):
     }
 
 
-def generate_scan_grids(args, io_handler):
+def generate_scan_grids(args, io_handler, context=None):
     """Generate NSB and proton bias-curve scan grids.
 
     Parameters
@@ -224,7 +226,7 @@ def generate_scan_grids(args, io_handler):
     """
     _validate_required_args(args)
 
-    generation_args = {**args, "threshold_parameter": _threshold_param_name(args)}
+    generation_args = {**args, "threshold_parameter": _threshold_param_name(args, context)}
 
     for curve_name, curve_definition in _curve_definitions(args).items():
         _generate_scan_grid(
@@ -232,4 +234,5 @@ def generate_scan_grids(args, io_handler):
             curve_definition=curve_definition,
             args=generation_args,
             io_handler=io_handler,
+            context=context,
         )

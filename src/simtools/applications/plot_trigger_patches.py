@@ -54,8 +54,9 @@ def run(app_context):
         label="plot_trigger_patches",
         model_reader=app_context.model_reader,
         overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(
-            args[OVERWRITE_MODEL_PARAMETERS]
+            args[OVERWRITE_MODEL_PARAMETERS], context=app_context
         ),
+        context=app_context,
     )
     pixel_table, group_table = analyze_trigger_patch_configuration(
         telescope.camera,

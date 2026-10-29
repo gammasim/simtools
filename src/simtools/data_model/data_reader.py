@@ -11,7 +11,9 @@ from simtools.data_model.metadata_collector import MetadataCollector
 _logger = logging.getLogger(__name__)
 
 
-def read_table_from_file(file_name, schema_file=None, validate=False, metadata_file=None):
+def read_table_from_file(
+    file_name, schema_file=None, validate=False, metadata_file=None, context=None
+):
     """
     Read astropy table from file and validate against schema.
 
@@ -52,6 +54,7 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         metadata = MetadataCollector(
             args_dict=None,
             metadata_file_name=(metadata_file if metadata_file is not None else file_name),
+            context=context,
         )
 
         _validator = validate_data.DataValidator(

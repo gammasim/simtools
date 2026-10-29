@@ -436,3 +436,15 @@ def test_convert_png_to_palette_keeps_smaller_original(tmp_test_directory):
     visualize.convert_png_to_palette(png_file)
 
     assert png_file.read_bytes() == original
+
+
+def test_save_figure_uses_configured_figure_output(tmp_test_directory):
+    visualize.configure_figure_output({"figure_format": ["pdf", "png"]})
+    try:
+        fig = plt.figure()
+        visualize.save_figure(fig, Path(tmp_test_directory) / "configured.png")
+        assert (Path(tmp_test_directory) / "configured.pdf").exists()
+        assert (Path(tmp_test_directory) / "configured.png").exists()
+    finally:
+        visualize.configure_figure_output({})
+        plt.close("all")

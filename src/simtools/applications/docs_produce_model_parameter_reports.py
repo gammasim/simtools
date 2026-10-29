@@ -39,6 +39,7 @@ def main():
             app_context.args,
             output_path,
             app_context.model_reader,
+            context=app_context,
         ).auto_generate_parameter_reports()
 
     else:
@@ -46,6 +47,7 @@ def main():
             app_context.args,
             output_path,
             app_context.model_reader,
+            context=app_context,
         ).produce_model_parameter_reports()
 
         app_context.logger.info(

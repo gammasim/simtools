@@ -164,6 +164,7 @@ def _show_array_layout_names(args_dict, context=None):
                 site=current_site,
                 model_version=model_version,
                 model_reader=model_reader,
+                context=context,
             ).get_list_of_array_layouts()
         )
         for current_site in sites
@@ -187,15 +188,15 @@ def _create_model_reader(args_dict, context=None):
     return create_model_reader_from_configuration(args_dict)
 
 
-def _show_corsika_he_interaction(args_dict):
-    return _show_corsika_interaction(args_dict, interaction_level="high")
+def _show_corsika_he_interaction(args_dict, context=None):
+    return _show_corsika_interaction(args_dict, interaction_level="high", context=context)
 
 
-def _show_corsika_le_interaction(args_dict):
-    return _show_corsika_interaction(args_dict, interaction_level="low")
+def _show_corsika_le_interaction(args_dict, context=None):
+    return _show_corsika_interaction(args_dict, interaction_level="low", context=context)
 
 
-def _show_corsika_hadronic_transition_energy(args_dict):
+def _show_corsika_hadronic_transition_energy(args_dict, context=None):
     """Show CORSIKA HILOW defaults recorded for installed build variants."""
     variants, resolved_path = _get_corsika_variants(args_dict)
     grouped_values = {}
@@ -219,13 +220,13 @@ def _show_corsika_hadronic_transition_energy(args_dict):
         )
     return ShowOptionsResult(
         option_name="corsika_hadronic_transition_energy",
-        environment=_get_corsika_environment(resolved_path, variants),
+        environment=_get_corsika_environment(resolved_path, variants, context),
         grouped_values=grouped_values,
         notes=notes,
     )
 
 
-def _show_corsika_interaction(args_dict, interaction_level):
+def _show_corsika_interaction(args_dict, interaction_level, context=None):
     variants, resolved_path = _get_corsika_variants(args_dict)
     if interaction_level == "high":
         option_name = "corsika_he_interaction"
@@ -235,7 +236,7 @@ def _show_corsika_interaction(args_dict, interaction_level):
         values = sorted({variant.le_hadronic_model for variant in variants})
     return ShowOptionsResult(
         option_name=option_name,
-        environment=_get_corsika_environment(resolved_path, variants),
+        environment=_get_corsika_environment(resolved_path, variants, context),
         values=tuple(values),
     )
 
@@ -245,9 +246,9 @@ def _get_corsika_variants(args_dict):
     return get_installed_corsika_build_variants(resolved_path), resolved_path
 
 
-def _get_corsika_environment(corsika_path, variants):
+def _get_corsika_environment(corsika_path, variants, context):
     environment = {"path": str(corsika_path)}
-    corsika_version = get_corsika_version()
+    corsika_version = get_corsika_version(context=context)
     if corsika_version:
         environment["CORSIKA version"] = corsika_version
     executables = sorted(

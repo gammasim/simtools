@@ -61,6 +61,7 @@ def main():
         app_context.args,
         app_context.paths.get_output_directory(),
         label=app_context.args.get("label"),
+        context=app_context,
     )
 
 

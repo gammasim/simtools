@@ -57,7 +57,9 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    resource_generation.generate_test_resources(app_context.args, run_time=app_context.run_time)
+    resource_generation.generate_test_resources(
+        app_context.args, run_time=app_context.run_time, context=app_context
+    )
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable, vstack
 
+from simtools.context import RunContext
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.model.model_utils import initialize_simulation_models
@@ -50,8 +51,10 @@ class IncidentAnglesCalculator:
         config_data,
         output_dir,
         label=None,
+        context=None,
     ):
         self.logger = logging.getLogger(__name__)
+        self.context = context or RunContext.from_environment()
 
         self.config_data = config_data
         self.zenith_angle_deg = u.Quantity(config_data.get("zenith_angle", 0 * u.deg)).to_value(
@@ -94,6 +97,7 @@ class IncidentAnglesCalculator:
             telescope_name=config_data["telescope"],
             model_version=config_data["model_version"],
             model_directory=self.model_dir,
+            context=self.context,
         )
         self.calculate_primary_secondary_angles = (
             self.telescope_model.get_parameter_value("mirror_class") == 2
@@ -125,11 +129,11 @@ class IncidentAnglesCalculator:
             off_axis_x=float(self.config_data["off_axis_angle"].to_value(u.deg)),
             off_axis_y=0.0,
             source_distance_km=self._source_distance_km(),
-            seeds=tuple(simtel_seeds.instance_seed_pairs()),
+            seeds=tuple(simtel_seeds.instance_seed_pairs(context=self.context)),
             photons_per_instance=int(self.config_data["number_of_photons"]),
             parameter_changes=parameter_changes.PERFECT_MIRROR if self.perfect_mirror else {},
         )
-        backend = interface.get_backend()(
+        backend = interface.get_backend(context=self.context)(
             self.telescope_model, self.site_model, self.label, self.zenith_angle_deg, False
         )
         data, intermediate_files = backend.incidence_angles(
@@ -270,7 +274,8 @@ class IncidentAnglesCalculator:
             ModelDataWriter.write_product_data(
                 output_file=param_dir / ecsv_file,
                 product_data=table,
-                metadata=MetadataCollector(args_dict=self.config_data),
+                metadata=MetadataCollector(args_dict=self.config_data, context=self.context),
+                context=self.context,
             )
             ModelDataWriter.write_model_parameter(
                 parameter_name=param_name,
@@ -280,6 +285,7 @@ class IncidentAnglesCalculator:
                 output_file=f"{param_name}.json",
                 output_path=param_dir,
                 metadata_input_dict=self.config_data,
+                context=self.context,
             )
 
     @staticmethod

@@ -68,7 +68,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    bias_curve_submissions.generate_scan_grids(app_context.args, app_context.paths)
+    bias_curve_submissions.generate_scan_grids(
+        app_context.args, app_context.paths, context=app_context
+    )
 
 
 if __name__ == "__main__":
