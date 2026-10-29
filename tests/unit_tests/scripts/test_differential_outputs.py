@@ -116,3 +116,19 @@ def test_compare_equal_trees_succeeds(tmp_test_directory):
     (head / "result.json").write_text('{"value": 1.0000000000001}\n', encoding="utf-8")
 
     assert DIFFERENTIAL_OUTPUTS.compare_trees(base, head, root / "diff_report.md") == 0
+
+
+def test_simtools_software_version_is_normalized():
+    base = {"software": {"name": "simtools", "version": "0.38.4.dev90+g52213ce96"}}
+    head = {"software": {"name": "simtools", "version": "0.38.4.dev91+g1234567"}}
+    assert DIFFERENTIAL_OUTPUTS.normalize_value(base) == DIFFERENTIAL_OUTPUTS.normalize_value(head)
+    model = {"software": {"name": "sim_telarray", "version": "2024.1"}}
+    assert DIFFERENTIAL_OUTPUTS.normalize_value(model) == model
+
+
+def test_tables_with_different_row_counts(tmp_test_directory):
+    base_file = Path(tmp_test_directory) / "base.ecsv"
+    head_file = Path(tmp_test_directory) / "head.ecsv"
+    Table({"value": [1]}).write(base_file, overwrite=True)
+    Table({"value": [1, 2]}).write(head_file, overwrite=True)
+    assert DIFFERENTIAL_OUTPUTS._compare_tables(base_file, head_file) == ["rows: 1 != 2"]

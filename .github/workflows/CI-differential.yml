@@ -104,7 +104,7 @@ jobs:
       contents: read
       pull-requests: read
     container:
-      image: ghcr.io/gammasim/simtools-dev:latest
+      image: ${{ vars.SIMTOOLS_DEV_IMAGE || 'ghcr.io/gammasim/simtools-dev:latest' }}
       options: --user 0
     env:
       SIMULATION_MODELS_GIT_PATH: ${{ github.workspace }}/simulation-models.git
@@ -139,9 +139,9 @@ jobs:
           {
             echo "SIMTOOLS_SIMULATION_MODELS_GIT_PATH=$SIMULATION_MODELS_GIT_PATH"
             echo "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION=$SIMTOOLS_SIMULATION_MODELS_GIT_REVISION"
-            echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
-            echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
-            echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=${SIMTOOLS_SIM_TELARRAY_PATH:-}"
+            echo "SIMTOOLS_CORSIKA_PATH=${SIMTOOLS_CORSIKA_PATH:-}"
+            echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=${SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH:-}"
           } | tee .env >> "$GITHUB_ENV"
           cp .env ../base-runtime.env
       - name: Initialize differential report

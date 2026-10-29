@@ -60,7 +60,10 @@ def normalize_value(value):
     if isinstance(value, list):
         return [normalize_value(item) for item in value]
     if isinstance(value, dict):
-        return {normalize_value(key): normalize_value(item) for key, item in value.items()}
+        normalized = {normalize_value(key): normalize_value(item) for key, item in value.items()}
+        if str(value.get("name", "")).lower() == "simtools" and "version" in normalized:
+            normalized["version"] = "<VERSION>"
+        return normalized
     return value
 
 
@@ -97,7 +100,7 @@ def _compare_tables(base_path, head_path):
         differences.append(f"columns: {base.colnames!r} != {head.colnames!r}")
         return differences
     if len(base) != len(head):
-        differences.append(f"rows: {len(base)} != {len(head)}")
+        return [f"rows: {len(base)} != {len(head)}"]
     for name in base.colnames:
         left, right = base[name], head[name]
         if str(left.unit) != str(right.unit):
