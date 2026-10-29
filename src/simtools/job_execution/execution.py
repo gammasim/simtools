@@ -2,16 +2,91 @@
 
 import json
 import logging
+import subprocess
 from pathlib import Path
 
 import yaml
 
 from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
-from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
+from simtools.job_execution.job import (
+    CommandOptions,
+    ExecutionOptions,
+    JobResult,
+    JobSpec,
+    SubmissionHandle,
+)
+from simtools.job_execution.worker import execute_command
 from simtools.settings import config
+from simtools.utils import general
 
 logger = logging.getLogger(__name__)
+
+
+class JobExecutionError(RuntimeError):
+    """Raised when a command job fails."""
+
+
+def run_command(
+    command,
+    *,
+    stdin=None,
+    stdout=None,
+    stderr=None,
+    env=None,
+    runtime_environment=None,
+    configuration=None,
+    application_log=None,
+    check=True,
+    capture_output=True,
+):
+    """Run one command synchronously through the local execution worker."""
+    job = JobSpec(
+        job_id="command",
+        index=0,
+        command=tuple(command) if isinstance(command, list) else command,
+        options=CommandOptions(
+            stdin=Path(stdin) if isinstance(stdin, (str, Path)) else stdin,
+            stdout=Path(stdout) if stdout is not None else None,
+            stderr=Path(stderr) if stderr is not None else None,
+            env=dict(env or {}),
+            runtime_environment=runtime_environment,
+            configuration=configuration,
+            application_log=Path(application_log) if application_log else None,
+            check=check,
+            capture_output=capture_output,
+        ),
+    )
+    try:
+        return_code, runtime, output = execute_command(job)
+    except subprocess.CalledProcessError as exc:
+        _raise_command_error(exc, job)
+    return JobResult(
+        job_id=job.job_id,
+        index=job.index,
+        return_code=return_code,
+        runtime=runtime,
+        output=output,
+    )
+
+
+def _raise_command_error(exc, job):
+    """Raise a command error with excerpts from available logs."""
+    excerpts = []
+    for label, path in (("Output", job.options.stdout), ("Error", job.options.stderr)):
+        if path is not None:
+            excerpts.append(f"{label} log excerpt from {path}:\n{general.get_log_excerpt(path)}")
+    if job.options.application_log and job.options.application_log.exists():
+        if general.get_file_age(job.options.application_log) < 5:
+            excerpts.append(
+                f"Application log excerpt from {job.options.application_log}:\n"
+                f"{general.get_log_excerpt(job.options.application_log)}"
+            )
+    detail = "\n".join(excerpts)
+    message = "See excerpt from log file above"
+    if detail:
+        message = f"{message}\n{detail}"
+    raise JobExecutionError(message) from exc
 
 
 def execute_jobs(job_specs, options=None):

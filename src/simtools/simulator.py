@@ -13,7 +13,7 @@ from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.io import io_handler, table_handler
 from simtools.io.file_type import product_value
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
 from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
@@ -256,13 +256,13 @@ class Simulator:
                     transition_energy.to_value("GeV")
                 )
 
-        _, self._runtime = job_manager.submit(
+        result = execution.run_command(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
-            out_file=self.runner_service.get_file_name("sub_out", self.run_number),
-            err_file=self.runner_service.get_file_name("sub_err", self.run_number),
+            stdout=self.runner_service.get_file_name("sub_out", self.run_number),
+            stderr=self.runner_service.get_file_name("sub_err", self.run_number),
             env=job_environment,
-            return_runtime=True,
         )
+        self._runtime = result.runtime
 
     @classmethod
     def simulate_direct_injection_sequence(cls, label=None):

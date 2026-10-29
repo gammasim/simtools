@@ -1,11 +1,16 @@
 """Execute one serialized job specification for a remote backend."""
 
 import argparse
+import json
 import logging
+import os
 import pickle
 import re
+import stat
 import subprocess
+import time
 import traceback
+from contextlib import ExitStack
 from pathlib import Path
 
 from simtools.application.model_reader import (
@@ -56,7 +61,80 @@ def execute_job_spec(job_spec):
         job_spec.initializer(*job_spec.initargs)
     if job_spec.function is not None:
         return job_spec.function(job_spec.item)
-    return subprocess.run(list(job_spec.command), check=True).returncode
+    return execute_command(job_spec)[0]
+
+
+def execute_command(job_spec):
+    """Run a command job with its configured streams and environment.
+
+    Returns
+    -------
+    tuple
+        Return code, wall-clock runtime in seconds, and the captured standard output
+        (None unless captured).
+    """
+    command = job_spec.command
+    if isinstance(command, (str, Path)) and Path(command).is_file():
+        command_path = Path(command)
+        command_path.chmod(command_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        command = str(command_path)
+    if job_spec.options.runtime_environment:
+        runtime = job_spec.options.runtime_environment
+        prefix = list(runtime) if isinstance(runtime, (tuple, list)) else [runtime]
+        command = [*prefix, command]
+    if job_spec.options.configuration:
+        args = _configuration_arguments(job_spec.options.configuration)
+        command = [command, *args] if isinstance(command, str) else [*command, *args]
+    environment = os.environ.copy()
+    environment.update(job_spec.options.env or {})
+    started = time.perf_counter()
+    with ExitStack() as streams:
+        stdout = _stream(streams, job_spec.options.stdout, job_spec.options.capture_output)
+        stderr = _stream(streams, job_spec.options.stderr, job_spec.options.capture_output)
+        result = subprocess.run(
+            command,
+            shell=isinstance(command, str),
+            check=job_spec.options.check,
+            text=True,
+            stdin=job_spec.options.stdin,
+            stdout=stdout,
+            stderr=stderr,
+            env=environment,
+        )
+    output = result.stdout if isinstance(result.stdout, str) else None
+    return result.returncode, time.perf_counter() - started, output
+
+
+def _stream(streams, path, capture_output):
+    """Return the subprocess stream for a log file (closed with ``streams``) or a pipe."""
+    if path is not None:
+        return streams.enter_context(Path(path).open("w", encoding="utf-8"))
+    return subprocess.PIPE if capture_output else None
+
+
+def _configuration_arguments(configuration):
+    """Convert application configuration to command-line arguments."""
+    arguments = []
+    for key, value in configuration.items():
+        if isinstance(value, bool):
+            if value:
+                arguments.append(f"--{key}")
+        elif isinstance(value, list):
+            arguments.extend(_list_arguments(key, value))
+        else:
+            arguments.extend((f"--{key}", str(value)))
+    return arguments
+
+
+def _list_arguments(key, value):
+    """Convert a list configuration value (JSON objects, repeated groups or values)."""
+    if not value:
+        return []
+    if isinstance(value[0], dict):
+        return [f"--{key}", json.dumps(value)]
+    if isinstance(value[0], list):
+        return [token for group in value for token in (f"--{key}", *(str(item) for item in group))]
+    return [f"--{key}", *(str(item) for item in value)]
 
 
 def _initialize_runtime(job_spec):

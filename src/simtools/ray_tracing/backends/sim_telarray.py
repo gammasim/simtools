@@ -15,7 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from simtools import settings
 from simtools.io import io_handler
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
+from simtools.job_execution.execution import JobExecutionError
 from simtools.ray_tracing import parameter_changes
 from simtools.ray_tracing.backends.interface import image_file_name
 from simtools.ray_tracing.psf_analysis import PSFImage
@@ -213,8 +214,8 @@ class SimtelBackend:
         self._write_incidence_script(request, script, photons_file, stars_file, log_file)
         self._logger.info("Executing %s (logging to %s)", script, log_file)
         try:
-            job_manager.submit(script)
-        except job_manager.JobExecutionError as exc:
+            execution.run_command(script)
+        except JobExecutionError as exc:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
         data = _ImagingList(with_mirrors).read(photons_file)
         intermediate = [script, stars_file] + ([] if keep_files else [photons_file])

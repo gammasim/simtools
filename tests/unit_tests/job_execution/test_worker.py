@@ -3,8 +3,8 @@
 import pickle
 from pathlib import Path
 
-from simtools.job_execution.job import JobSpec
-from simtools.job_execution.worker import execute_job_spec, run, write_job_payload
+from simtools.job_execution.job import CommandOptions, JobSpec
+from simtools.job_execution.worker import execute_command, execute_job_spec, run, write_job_payload
 
 
 def _square(value):
@@ -18,8 +18,62 @@ def test_execute_job_spec_runs_commands(mocker):
     completed.return_value.returncode = 0
     job = JobSpec("job-000000", 0, command=("example", "--flag"))
 
-    assert execute_job_spec(job) == 0
-    completed.assert_called_once_with(["example", "--flag"], check=True)
+    return_code, runtime, _ = execute_command(job)
+
+    assert return_code == 0
+    assert runtime >= 0
+    call_args = completed.call_args
+    assert call_args.args == (("example", "--flag"),)
+    assert call_args.kwargs["check"] is True
+    assert call_args.kwargs["stdout"] == -1
+    assert call_args.kwargs["stderr"] == -1
+
+
+def test_execute_command_applies_runtime_streams_environment_and_configuration(
+    mocker, tmp_test_directory
+):
+    """Command jobs preserve their runtime, streams, environment, and options."""
+    script = Path(tmp_test_directory) / "run.sh"
+    script.write_text("#!/bin/sh\n", encoding="utf-8")
+    stdin = (Path(tmp_test_directory) / "input.txt").open("w", encoding="utf-8")
+    stdout = Path(tmp_test_directory) / "stdout.log"
+    stderr = Path(tmp_test_directory) / "stderr.log"
+    run = mocker.patch("simtools.job_execution.worker.subprocess.run")
+    run.return_value.returncode = 7
+    job = JobSpec(
+        "job-000001",
+        1,
+        command=str(script),
+        options=CommandOptions(
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            env={"SIMTOOLS_TEST": "yes"},
+            runtime_environment=("container", "exec"),
+            configuration={
+                "enabled": True,
+                "disabled": False,
+                "count": 3,
+                "items": ["a", "b"],
+            },
+            check=False,
+        ),
+    )
+
+    return_code, runtime, _ = execute_command(job)
+
+    assert return_code == 7
+    assert runtime >= 0
+    assert script.stat().st_mode & 0o100
+    assert run.call_args.args == (
+        ["container", "exec", str(script), "--enabled", "--count", "3", "--items", "a", "b"],
+    )
+    assert run.call_args.kwargs["stdin"].closed is False
+    assert run.call_args.kwargs["stdout"].name == str(stdout)
+    assert run.call_args.kwargs["stderr"].name == str(stderr)
+    assert run.call_args.kwargs["env"]["SIMTOOLS_TEST"] == "yes"
+    assert run.call_args.kwargs["check"] is False
+    stdin.close()
 
 
 def test_execute_job_spec_initializes_serialized_runtime(mocker):

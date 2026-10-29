@@ -16,7 +16,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools import settings
-from simtools.job_execution import job_manager
+from simtools.job_execution import execution
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 from simtools.visualization import plot_ray_tracing_psf
 
@@ -115,11 +115,11 @@ class PSFImage:
 
             try:
                 with open(tmp_file_path, "rb") as tmp_f:
-                    result = job_manager.submit(rx_command, stdin=tmp_f)
+                    result = execution.run_command(rx_command, stdin=tmp_f)
 
                 data_lines = [
                     line.strip()
-                    for line in result.stdout.strip().split("\n")
+                    for line in result.output.strip().split("\n")
                     if line.strip() and not line.startswith("#")
                 ]
 

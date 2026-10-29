@@ -21,7 +21,7 @@ import yaml
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io.ascii_handler import to_builtin
-from simtools.job_execution.job_manager import JobExecutionError
+from simtools.job_execution.execution import JobExecutionError
 from simtools.production_configuration.compatibility import preview
 from simtools.production_configuration.production_comparison import validate_comparison_inputs
 from simtools.production_configuration.production_file_selection import normalize_for_comparison

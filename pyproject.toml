@@ -500,8 +500,6 @@ ignore_imports = [
   "simtools.data_model.format_checkers -> simtools.corsika.primary_particle",
   "simtools.data_model.model_data_writer -> simtools.application.model_reader",
   "simtools.data_model.setting_workflow -> simtools.runners.simtools_runner",
-  "simtools.job_execution.bias_curve_submissions -> simtools.production_configuration.simulation_jobs",
-  "simtools.job_execution.parameter_scan_generator -> simtools.production_configuration.job_grid_io",
   "simtools.job_execution.worker -> simtools.application.model_reader",
   "simtools.layout.array_layout -> simtools.application.model_reader",
   "simtools.model.array_model -> simtools.simulation.configuration",
