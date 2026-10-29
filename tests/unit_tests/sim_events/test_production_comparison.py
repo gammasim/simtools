@@ -83,42 +83,24 @@ def _write_minimal_dense_trigger_histogram_file(output_file):
     class _DenseHistograms:
         def __init__(self):
             self.histograms = {
-                "energy_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([3.0, 1.0])
-                    ),
-                    "1d": True,
-                },
-                "energy": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
-                    ),
-                    "1d": True,
-                },
-                "core_distance_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
-                    ),
-                    "1d": True,
-                },
-                "core_distance": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([0.0, 2.0])
-                    ),
-                    "1d": True,
-                },
-                "angular_distance_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
-                    ),
-                    "1d": True,
-                },
-                "angular_distance": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
-                    ),
-                    "1d": True,
-                },
+                "energy_mc": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([3.0, 1.0])
+                ),
+                "energy": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
+                ),
+                "core_distance_mc": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
+                ),
+                "core_distance": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([0.0, 2.0])
+                ),
+                "angular_distance_mc": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([2.0, 2.0])
+                ),
+                "angular_distance": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([1.0, 1.0])
+                ),
             }
 
     _write_dense_histogram_payload(
@@ -244,42 +226,24 @@ def test_collect_production_metrics_filters_by_array_layout_name(tmp_path):
     class _DenseHistograms:
         def __init__(self, simulated, triggered):
             self.histograms = {
-                "energy_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([simulated, 0.0])
-                    ),
-                    "1d": True,
-                },
-                "energy": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.1, 1.0, 10.0])], values=np.array([triggered, 0.0])
-                    ),
-                    "1d": True,
-                },
-                "core_distance_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.0, 50.0, 100.0])], values=np.array([simulated, 0.0])
-                    ),
-                    "1d": True,
-                },
-                "core_distance": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.0, 50.0, 100.0])], values=np.array([triggered, 0.0])
-                    ),
-                    "1d": True,
-                },
-                "angular_distance_mc": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.0, 1.0, 2.0])], values=np.array([simulated, 0.0])
-                    ),
-                    "1d": True,
-                },
-                "angular_distance": {
-                    "histogram": Histogram.from_edges(
-                        [np.array([0.0, 1.0, 2.0])], values=np.array([triggered, 0.0])
-                    ),
-                    "1d": True,
-                },
+                "energy_mc": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([simulated, 0.0])
+                ),
+                "energy": Histogram.from_edges(
+                    [np.array([0.1, 1.0, 10.0])], values=np.array([triggered, 0.0])
+                ),
+                "core_distance_mc": Histogram.from_edges(
+                    [np.array([0.0, 50.0, 100.0])], values=np.array([simulated, 0.0])
+                ),
+                "core_distance": Histogram.from_edges(
+                    [np.array([0.0, 50.0, 100.0])], values=np.array([triggered, 0.0])
+                ),
+                "angular_distance_mc": Histogram.from_edges(
+                    [np.array([0.0, 1.0, 2.0])], values=np.array([simulated, 0.0])
+                ),
+                "angular_distance": Histogram.from_edges(
+                    [np.array([0.0, 1.0, 2.0])], values=np.array([triggered, 0.0])
+                ),
             }
 
     _write_dense_histogram_payload(

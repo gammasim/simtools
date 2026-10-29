@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import astropy.units as u
@@ -128,11 +129,9 @@ def test_selected_array_names_normalizes_string_input():
 
 def test_plottable_histograms_filters_non_plotable_entries():
     histograms = {
-        "energy": {"histogram": MagicMock(ndim=1)},
-        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
-        "cube": {"histogram": MagicMock(ndim=3)},
-        "missing": {"histogram": None},
-        "raw_edges": MagicMock(),
+        "energy": SimpleNamespace(ndim=1),
+        "energy_vs_core": SimpleNamespace(ndim=2),
+        "cube": SimpleNamespace(ndim=3),
     }
 
     assert _plottable_histograms(histograms) == {
@@ -145,9 +144,9 @@ def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_dir
     histogram_instance = MagicMock()
     histogram_instance.array_name = "alpha"
     histogram_instance.histograms = {
-        "energy": {"histogram": MagicMock(ndim=1)},
-        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
-        "cube": {"histogram": MagicMock(ndim=3)},
+        "energy": Histogram.from_edges([[0, 1]]),
+        "energy_vs_core": Histogram.from_edges([[0, 1], [0, 1]]),
+        "cube": Histogram.from_edges([[0, 1], [0, 1], [0, 1]]),
     }
     mock_load = mocker.patch(
         f"{MOD}.load_event_data_histograms",
@@ -181,10 +180,10 @@ def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_test_di
 def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_test_directory, mocker):
     first = MagicMock()
     first.array_name = "alpha"
-    first.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    first.histograms = {"energy": Histogram.from_edges([[0, 1]])}
     second = MagicMock()
     second.array_name = "beta"
-    second.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    second.histograms = {"energy": Histogram.from_edges([[0, 1]])}
     mocker.patch(
         f"{MOD}.load_event_data_histograms",
         return_value=[(MagicMock(), first), (MagicMock(), second)],
@@ -579,14 +578,12 @@ def test_execute_plotting_loop():
 
 
 def test_create_2d_plot_config():
-    histograms = {
-        "histogram": Histogram.from_edges(
-            [np.array([0, 1, 2]), np.array([0, 1, 2])], values=np.array([[1, 2], [3, 4]])
-        ),
-        "plot_scales": {"y": "log"},
-        "title": "Triggered events: core distance vs energy",
-        "axis_titles": [CORE_DIST_LABEL, ENERGY_LABEL, EVENT_COUNT],
-    }
+    histograms = Histogram.from_edges(
+        [np.array([0, 1, 2]), np.array([0, 1, 2])],
+        values=np.array([[1, 2], [3, 4]]),
+        axis_names=["core_distance", "energy"],
+        axis_units=["m", "TeV"],
+    )
     config = {
         "base_key": "core_distance_vs_energy",
         "x_label": CORE_DIST_LABEL,
@@ -613,29 +610,21 @@ def test_create_2d_plot_config():
     np.testing.assert_array_equal(result["bins"][1], np.array([0, 1, 2]))
     assert result["plot_type"] == "histogram2d"
     # plot_params structure is implementation-dependent; skip detailed key check
-    assert result["labels"]["x"] == config["x_label"]
-    assert result["labels"]["y"] == config["y_label"]
-    assert (
-        result["labels"]["title"]
-        == "Triggered events: core distance vs energy: core distance vs energy"
-    )
-    # Accept lines from limits dict, not config
-    assert (
-        result["labels"]["title"]
-        == "Triggered events: core distance vs energy: core distance vs energy"
-    )
+    assert result["labels"]["x"] == "Core Distance (m)"
+    assert result["labels"]["y"] == "Energy (TeV)"
+    assert result["labels"]["title"] == "Triggered Events: core distance vs energy"
 
-    assert result["colorbar_label"] in (config["colorbar_label"], None)
+    assert result["colorbar_label"] == config["colorbar_label"]
     assert result["filename"] == "core_distance_vs_energy_triggered"
 
 
 def test_create_1d_plot_config():
-    histograms = {
-        "histogram": Histogram.from_edges([np.array([0, 1, 2, 3])], values=np.array([10, 20, 30])),
-        "plot_scales": {"x": "log", "y": "log"},
-        "title": "energy distribution",
-        "axis_titles": [ENERGY_LABEL, EVENT_COUNT],
-    }
+    histograms = Histogram.from_edges(
+        [np.array([0, 1, 2, 3])],
+        values=np.array([10, 20, 30]),
+        axis_names=["energy"],
+        axis_units=["TeV"],
+    )
     config = {
         "base_key": "energy_distribution",
         "histogram_key": "energy",
@@ -658,9 +647,9 @@ def test_create_1d_plot_config():
     assert np.array_equal(result["bins"], np.array([0, 1, 2, 3]))
     assert result["plot_type"] == "histogram"
     # plot_params structure is implementation-dependent; skip detailed key check
-    assert result["labels"]["x"] == ENERGY_LABEL
+    assert result["labels"]["x"] == "Energy (TeV)"
     assert result["labels"]["y"] == EVENT_COUNT
-    assert result["labels"]["title"] == "energy distribution: energy"
+    assert result["labels"]["title"] == "Triggered Events: energy"
     assert result["scales"] == {"x": "log", "y": "log"}
     assert result["lines"] in (None, {"x": None})
     assert result["filename"] == "energy_triggered"
@@ -702,32 +691,15 @@ def test_plot_with_output_path(mock_histograms):
         )
 
 
-def test_get_axis_title():
-    axis_titles = ["Distance (m)", "E (TeV)", "Counts"]
-
-    assert plot_simtel_event_histograms._get_axis_title(axis_titles, "x") == "Distance (m)"
-    assert plot_simtel_event_histograms._get_axis_title(axis_titles, "y") == "E (TeV)"
-    assert plot_simtel_event_histograms._get_axis_title(axis_titles, "z") == "Counts"
-
-    assert plot_simtel_event_histograms._get_axis_title(axis_titles, "invalid") is None
-    assert plot_simtel_event_histograms._get_axis_title(None, "x") is None
-
-    axis_titles = ["x_axis", "y_axis"]
-    assert plot_simtel_event_histograms._get_axis_title(axis_titles, "z") is None
-
-
 def test_generate_plot_configurations():
     assert plot_simtel_event_histograms._generate_plot_configurations({}, None) == {}
 
-    histos = {"energy": {"histogram": None}}
-    assert plot_simtel_event_histograms._generate_plot_configurations(histos, None) == {}
-
-    histos = {"energy": {"histogram": Histogram.from_edges([[0, 1]]), "1d": True}}
+    histos = {"energy": Histogram.from_edges([[0, 1]])}
     with patch(f"{MOD}._create_1d_plot_config") as mock_create_1d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         mock_create_1d.assert_called_once()
 
-    histos = {"energy": {"histogram": Histogram.from_edges([[0, 1], [0, 1]]), "1d": False}}
+    histos = {"energy": Histogram.from_edges([[0, 1], [0, 1]])}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         mock_create_2d.assert_called_once()
@@ -736,49 +708,68 @@ def test_generate_plot_configurations():
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "log"
 
-    histos = {
-        "energy_cumulative": {"histogram": Histogram.from_edges([[0, 1], [0, 1]]), "1d": False}
-    }
+    histos = {"energy_cumulative": Histogram.from_edges([[0, 1], [0, 1]])}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
 
-    histos = {
-        "core_distance_vs_energy_eff": {
-            "histogram": Histogram.from_edges([[0, 1], [0, 1]]),
-            "1d": False,
-        }
-    }
+    histos = {"core_distance_vs_energy_eff": Histogram.from_edges([[0, 1], [0, 1]])}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
 
-    histos = {
-        "reuse_mean_vs_core_distance_vs_energy": {
-            "histogram": Histogram.from_edges([[0, 1], [0, 1]]),
-            "1d": False,
-        }
-    }
+    histos = {"reuse_mean_vs_core_distance_vs_energy": Histogram.from_edges([[0, 1], [0, 1]])}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args
         assert kwargs["plot_params"]["norm"] == "linear"
 
     histos = {
-        "reuse_mean_vs_energy": {
-            "histogram": Histogram.from_edges([np.array([0.1, 1.0, 10.0])]),
-            "1d": True,
-            "axis_titles": ["Energy [TeV]", "Mean Reuse"],
-            "title": "Triggered reuse mean",
-            "plot_scales": {"x": "log", "y": "linear"},
-        }
+        "reuse_mean_vs_energy": Histogram.from_edges(
+            [np.array([0.1, 1.0, 10.0])], axis_names=["energy"], axis_units=["TeV"]
+        )
     }
     result = plot_simtel_event_histograms._generate_plot_configurations(histos, None)
     assert result["reuse_mean_vs_energy"]["scales"]["y"] == "linear"
+
+
+def test_histogram_style_table_preserves_plot_configuration():
+    axis = np.array([0.1, 1.0, 10.0])
+    histograms = {
+        "energy": Histogram.from_edges(
+            [axis], values=[1, 2], axis_names=["energy"], axis_units=["TeV"]
+        ),
+        "energy_mc": Histogram.from_edges(
+            [axis], values=[2, 4], axis_names=["energy"], axis_units=["TeV"]
+        ),
+        "energy_eff": Histogram.from_edges(
+            [axis], values=[0.5, 0.5], axis_names=["energy"], axis_units=["TeV"]
+        ),
+        "energy_cumulative": Histogram.from_edges(
+            [axis], values=[0.5, 1.0], axis_names=["energy"], axis_units=["TeV"]
+        ),
+        "reuse_mean_vs_energy": Histogram.from_edges(
+            [axis], values=[2.0, 1.0], axis_names=["energy"], axis_units=["TeV"]
+        ),
+    }
+
+    plots = plot_simtel_event_histograms._generate_plot_configurations(histograms, None)
+
+    assert plots["energy"]["labels"] == {
+        "x": "Energy (TeV)",
+        "y": "Event Count",
+        "title": "Triggered Events: energy",
+    }
+    assert plots["energy"]["scales"] == {"x": "log", "y": "log"}
+    assert plots["energy_mc"]["labels"]["title"] == "Simulated Events: energy mc"
+    assert plots["energy_eff"]["labels"]["y"] == "Efficiency"
+    assert plots["energy_cumulative"]["labels"]["y"] == "Fraction of Events"
+    assert plots["reuse_mean_vs_energy"]["labels"]["y"] == "Mean Reuse"
+    assert plots["reuse_mean_vs_energy"]["scales"] == {"x": "log", "y": "linear"}
 
 
 def test_broad_range_axis_limits_are_used_for_distance_histograms():
