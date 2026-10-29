@@ -236,3 +236,18 @@ subset, `key_columns` to compare rows in deterministic key order, `metadata`
 to include table metadata, and typed `filters` with operators such as `equal`,
 `less`, `greater_equal`, `in`, or `not_in`. Reference filtering never executes
 configuration text as code.
+
+## Differential output checks
+
+The pull-request differential job runs the configurations listed in
+`.github/scripts/differential_outputs.txt` against the merge base and the pull
+request using the same model and test-resource revisions. Its `diff_report.md`
+lists changed comparable files and up to 20 differences per file. Text is
+compared after volatile values are normalized; ECSV, FITS, HDF5, JSON, and YAML
+outputs are compared by their contents. Logs are ignored. Binary outputs are
+reported by presence and size for context and do not fail the job.
+
+Review every reported difference to determine whether it changes an expected
+scientific product. Add the `expected-output-change` pull-request label when
+the output change is intentional; the report remains available in the job
+summary and artifact. The job is informational and is not a required check.
