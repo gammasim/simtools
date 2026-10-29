@@ -126,8 +126,8 @@ scripts.simtools-inspect-file = "simtools.applications.inspect_file:main"
 scripts.simtools-maintain-simulation-model-add-production = """\
   simtools.applications.maintain_simulation_model_add_production:main\
   """
-scripts.simtools-maintain-simulation-model-compare-productions = """\
-  simtools.applications.maintain_simulation_model_compare_productions:main\
+scripts.simtools-maintain-simulation-model-compare-production-tables = """\
+  simtools.applications.maintain_simulation_model_compare_production_tables:main\
   """
 scripts.simtools-maintain-simulation-model-verify-production-tables = """\
   simtools.applications.maintain_simulation_model_verify_production_tables:main\
@@ -380,10 +380,16 @@ ignore_names = [
   "register_stage",
   "RpolMatrixWriter",
   "SimtelBackend",
+  "simulated_angular_distances",
+  "simulated_core_distances",
+  "simulated_energies",
   "skip_multiple_version_test",
   "TEST_RESOURCES_DOWNLOADED",
   "TEST_RESOURCES_GENERATED",
   "TEST_RESOURCES_STATIC",
+  "triggered_angular_distances",
+  "triggered_core_distances",
+  "triggered_energies",
   "use_network",
   "validate_application_output",
   "validate_release_tag",
@@ -506,17 +512,17 @@ ignore_imports = [
   "simtools.model.site_model -> simtools.corsika.corsika_config",
   "simtools.model.site_model -> simtools.simulation.configuration",
   "simtools.model.telescope_model -> simtools.simulation.configuration",
-  "simtools.production_configuration.simulation_jobs -> simtools.configuration.argument_helpers",
-  "simtools.production_configuration.simulation_jobs -> simtools.configuration.defaults",
+  "simtools.production_configuration.grid -> simtools.configuration.argument_helpers",
+  "simtools.production_configuration.grid -> simtools.configuration.defaults",
   "simtools.reporting.docs_auto_report_generator -> simtools.application.model_reader",
   "simtools.reporting.docs_read_parameters -> simtools.application.model_reader",
   "simtools.sim_events.formats.eventio_reader -> simtools.corsika.primary_particle",
   "simtools.sim_events.formats.eventio_reader -> simtools.simtel.simtel_io_metadata",
   "simtools.sim_events.output_validator -> simtools.production_configuration.trigger_histograms",
-  "simtools.sim_events.production_comparison -> simtools.camera.trace_analysis",
-  "simtools.sim_events.production_comparison -> simtools.production_configuration.trigger_histograms",
-  "simtools.sim_events.production_comparison -> simtools.simtel.simtel_event_reader",
-  "simtools.sim_events.production_comparison -> simtools.simtel.simtel_io_metadata",
+  "simtools.production_configuration.comparison -> simtools.camera.trace_analysis",
+  "simtools.production_configuration.comparison -> simtools.production_configuration.trigger_histograms",
+  "simtools.production_configuration.comparison -> simtools.simtel.simtel_event_reader",
+  "simtools.production_configuration.comparison -> simtools.simtel.simtel_io_metadata",
   "simtools.sim_events.reader -> simtools.corsika.primary_particle",
   "simtools.simtel.multi_illuminator_simulator -> simtools.application.model_reader",
   "simtools.simtel.simulator_array -> simtools.runners.simtel_runner",
@@ -524,7 +530,7 @@ ignore_imports = [
   "simtools.simtel.simulator_light_emission -> simtools.runners.runner_services",
   "simtools.simtel.simulator_light_emission -> simtools.runners.simtel_runner",
   "simtools.simtel.simulator_ray_tracing -> simtools.runners.simtel_runner",
-  "simtools.visualization.plot_production_grid -> simtools.production_configuration.job_grid_io",
+  "simtools.visualization.plot_production_grid -> simtools.production_configuration.jobs_io",
   "simtools.visualization.plot_psf -> simtools.ray_tracing.ray_tracing",
   "simtools.visualization.plot_simtel_event_histograms -> simtools.production_configuration.trigger_histograms",
   "simtools.visualization.plot_simtel_events -> simtools.camera.trace_analysis",

@@ -6,15 +6,15 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.production_configuration.production_comparison import write_production_comparison
-from simtools.production_configuration.resource_requirements import write_resource_requirements
-from simtools.sim_events.production_comparison import (
+from simtools.production_configuration.comparison import (
     collect_signal_metrics,
     parse_production_arguments,
+    write_production_comparison,
 )
+from simtools.production_configuration.resource_requirements import write_resource_requirements
 from simtools.visualization import (
+    plot_production_comparison,
     plot_resource_requirements,
-    plot_signal_level_production_comparison,
 )
 
 _ARGUMENTS = (
@@ -169,7 +169,7 @@ def _run_signal_comparison(app_context):
     )
     return [
         (statistics_file, None)
-        for statistics_file in plot_signal_level_production_comparison.plot(
+        for statistics_file in plot_production_comparison.plot_signal_level_comparison(
             metrics_by_telescope,
             output_path=app_context.io_handler.get_output_directory(),
             figure_format=app_context.args.get("figure_format"),
