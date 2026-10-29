@@ -1,6 +1,7 @@
 """Base service methods for simulation runners."""
 
 import logging
+from collections.abc import Mapping
 
 from simtools.context import RunContext
 from simtools.io.file_type import product_value
@@ -179,7 +180,7 @@ class RunnerServices:
         """
         if isinstance(self.config, SimulationParameters):
             return self._get_file_base_name_from_simulation_parameters(run_number, is_multi_pipe)
-        if isinstance(self.config, dict):
+        if isinstance(self.config, Mapping):
             return self._get_file_base_name_from_core_config()
         raise ValueError(f"Invalid configuration type: {type(self.config)}")
 

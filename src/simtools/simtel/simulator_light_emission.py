@@ -117,6 +117,7 @@ class SimulatorLightEmission(SimtelRunner):
         self, light_emission_config, telescope=None, label=None, model_reader=None, context=None
     ):
         """Initialize SimulatorLightEmission."""
+        light_emission_config = dict(light_emission_config)
         self._logger = logging.getLogger(__name__)
         self.configuration_writers = {}
         self._seed_pair = None
@@ -163,7 +164,6 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
-        config = dict(config)
         flasher_type = self.calibration_model.get_parameter_value("flasher_type")
         if flasher_type:
             config[LIGHT_SOURCE_TYPE] = flasher_type.lower()
