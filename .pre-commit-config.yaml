@@ -45,7 +45,7 @@ repos:
     pass_filenames: false
   - id: internal-patch-count
     name: internal patch count
-    entry: python .github/scripts/count_internal_patches.py --max 1669
+    entry: python .github/scripts/count_internal_patches.py --max 1668
     language: system
     pass_filenames: false
 # https://github.com/pre-commit/pre-commit-hooks

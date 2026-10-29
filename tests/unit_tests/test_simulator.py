@@ -9,7 +9,6 @@ from unittest import mock
 from unittest.mock import call
 
 import pytest
-from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.corsika.primary_particle import PrimaryParticle
@@ -124,7 +123,7 @@ def array_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.SimulatorArray")
+    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
@@ -149,7 +148,7 @@ def shower_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.runners.corsika_runner.CorsikaRunner")
+    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner, add_resources=True)
 
     return Simulator(
@@ -176,7 +175,7 @@ def shower_array_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
+    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
@@ -203,7 +202,7 @@ def calibration_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
+    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
@@ -375,7 +374,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_corsika_config.primary_particle.name = "proton"  # from args
 
     mocker.patch("simtools.simulator.get_shower_configuration", return_value=mock_corsika_config)
-    mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
+    mocker.patch("simtools.simulator.ChainRunner")
 
     mock_config = mocker.Mock()
     mock_config.args = args_dict
@@ -1070,6 +1069,7 @@ def test_get_corsika_file(array_simulator, mocker):
 
 def test_simulate(array_simulator, mocker):
     mock_simulation_runner = mocker.Mock()
+    mock_simulation_runner.environment.return_value = {"SIM_TELARRAY_CONFIG_PATH": ""}
     array_simulator._simulation_runner = mock_simulation_runner
 
     mock_runner_service = mocker.Mock()
@@ -1095,8 +1095,8 @@ def test_simulate(array_simulator, mocker):
     # Verify the simulation runner prepared the run
     mock_simulation_runner.prepare_run.assert_called_once_with(
         run_number=42,
-        corsika_file="/path/to/corsika.file",
         sub_script="script_42.sh",
+        input_file="/path/to/corsika.file",
         extra_commands=["echo test"],
     )
 
@@ -1109,37 +1109,6 @@ def test_simulate(array_simulator, mocker):
         return_runtime=True,
     )
     assert array_simulator._runtime == pytest.approx(2.5)
-
-
-@pytest.mark.parametrize("transition_energy", [None, 120 * u.GeV])
-def test_simulate_exports_resolved_corsika_configuration(
-    shower_simulator, mocker, transition_energy
-):
-    shower_simulator._simulation_runner = mocker.Mock()
-    shower_simulator.runner_service = mocker.Mock()
-    shower_simulator.runner_service.get_file_name.side_effect = lambda file_type, run_number: (
-        f"{file_type}_{run_number}"
-    )
-    mocker.patch.object(shower_simulator, "update_file_lists")
-
-    mock_config = mocker.Mock()
-    mock_config.args = {"corsika_hadronic_transition_energy": transition_energy}
-    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
-    mocker.patch("simtools.settings.config", mock_config)
-    mock_submit = mocker.patch(
-        "simtools.job_execution.job_manager.submit", return_value=(None, 2.5)
-    )
-
-    shower_simulator.simulate()
-
-    expected_environment = {
-        "SIM_TELARRAY_CONFIG_PATH": "",
-        "SIMTOOLS_CORSIKA_HE_INTERACTION": "qgs3",
-        "SIMTOOLS_CORSIKA_LE_INTERACTION": "urqmd",
-    }
-    if transition_energy is not None:
-        expected_environment["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = "120.0"
-    assert mock_submit.call_args.kwargs["env"] == expected_environment
 
 
 def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):

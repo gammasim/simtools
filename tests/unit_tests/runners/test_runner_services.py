@@ -17,10 +17,10 @@ SIM_TELARRAY = "sim_telarray"
 
 
 @pytest.fixture
-def runner_service(corsika_runner_mock_array_model):
+def runner_service(corsika_stage_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_stage_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type=CORSIKA,
     )
@@ -29,10 +29,10 @@ def runner_service(corsika_runner_mock_array_model):
 
 
 @pytest.fixture
-def runner_service_mock_array_model(corsika_runner_mock_array_model):
+def runner_service_mock_array_model(corsika_stage_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_stage_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type=CORSIKA,
     )
