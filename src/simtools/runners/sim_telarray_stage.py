@@ -107,10 +107,9 @@ class SimTelArrayStage:
             )
             for process_resources_file in resource_files
         ]
-        if not streamed:
-            self.file_list["sim_telarray_resources"] = (
-                resource_files[0] if len(resource_files) == 1 else resource_files
-            )
+        self.file_list["sim_telarray_resources"] = (
+            resource_files[0] if len(resource_files) == 1 else resource_files
+        )
         return lines
 
     def output_file(self, run_number):

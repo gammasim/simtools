@@ -12,12 +12,14 @@ from simtools.runners.stages import STDIN, StageInputs, StreamTo
 def _fake_stage(name, streams=True, copies=1):
     """Return a fake stage class recording its calls."""
 
+    stage_name = name
+
     class FakeStage:
         calls = []
+        name = stage_name
 
         def __init__(self, index):
             self.index = index
-            self.name = name
             self.streams = streams
             self.file_list = {f"{name}_files": f"{name}-{index}"}
 
@@ -30,7 +32,7 @@ def _fake_stage(name, streams=True, copies=1):
             return [f"run {name} {self.index} {run_number}"]
 
         def output_file(self, run_number):
-            return Path(f"{name}-{run_number}.out")
+            return Path(f"{name}-{self.index}-{run_number}.out")
 
         def environment(self):
             return {f"{name.upper()}_ENV": "1"}
@@ -91,9 +93,51 @@ def test_non_streaming_stages_hand_over_files(tmp_test_directory):
 
     runner.prepare_run(2, script)
 
-    assert second.calls == [(0, Path("first-2.out"), None)]
+    assert second.calls == [(0, Path("first-0-2.out"), None)]
     text = script.read_text(encoding="utf-8")
     assert text.index("run first 0 2") < text.index("run second 0 2")
+
+
+def test_file_hand_over_single_upstream_instance_feeds_all_instances(tmp_test_directory):
+    first = _fake_stage("first", streams=False)
+    second = _fake_stage("second", copies=3)
+    runner = _runner(first, second)
+    script = Path(tmp_test_directory) / "run.sh"
+
+    runner.prepare_run(2, script)
+
+    assert second.calls == [
+        (0, Path("first-0-2.out"), None),
+        (1, Path("first-0-2.out"), None),
+        (2, Path("first-0-2.out"), None),
+    ]
+
+
+def test_file_hand_over_pairs_instances_in_order(tmp_test_directory):
+    first = _fake_stage("first", streams=False, copies=2)
+    second = _fake_stage("second", copies=2)
+    runner = _runner(first, second)
+    script = Path(tmp_test_directory) / "run.sh"
+
+    runner.prepare_run(4, script)
+
+    assert second.calls == [
+        (0, Path("first-0-4.out"), None),
+        (1, Path("first-1-4.out"), None),
+    ]
+
+
+def test_file_hand_over_rejects_mismatched_instance_counts(tmp_test_directory):
+    first = _fake_stage("first", streams=False, copies=2)
+    second = _fake_stage("second", copies=3)
+    runner = _runner(first, second)
+    script = Path(tmp_test_directory) / "run.sh"
+
+    with pytest.raises(
+        ValueError,
+        match=r"Stage 'second' has 3 instances, but upstream stage 'first' has 2\. Files are",
+    ):
+        runner.prepare_run(1, script)
 
 
 def test_environment_and_resources():

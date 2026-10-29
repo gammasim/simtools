@@ -69,6 +69,16 @@ def test_prepare_reading_stream(sim_telarray_stage):
     assert "--input-file" not in lines[0]
 
 
+def test_prepare_reading_stream_lists_resources(sim_telarray_stage):
+    lines = sim_telarray_stage.prepare(run_number=1, input_file=STDIN)
+
+    resources = sim_telarray_stage.file_list["sim_telarray_resources"]
+    assert resources == sim_telarray_stage.runner_service.get_file_name(
+        file_type="sim_telarray_resources", run_number=1
+    )
+    assert str(resources) in lines[0]
+
+
 def test_prepare_rejects_streamed_output(sim_telarray_stage):
     with pytest.raises(ValueError, match="sim_telarray output can only be written"):
         sim_telarray_stage.prepare(run_number=1, input_file=STDIN, output=StreamTo(("x",)))

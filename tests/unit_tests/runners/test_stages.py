@@ -32,6 +32,22 @@ def test_chain_stage_classes():
     assert CorsikaStage.produces == SimTelArrayStage.consumes == stages.CHERENKOV_PHOTONS
 
 
+def test_register_stage_extends_chains():
+    class FakeStage:
+        name = "fake_stage"
+        consumes = stages.CHERENKOV_PHOTONS
+        produces = stages.CAMERA_EVENTS
+        streams = True
+
+    stages.register_stage("fake_stage", lambda: FakeStage)
+    try:
+        chain = stages.SimulationChain(("corsika", "fake_stage"))
+        assert chain.stage_classes[1] is FakeStage
+        assert chain.has("fake_stage")
+    finally:
+        stages.STAGES.pop("fake_stage")
+
+
 def test_chain_rejects_unknown_software_and_stage():
     with pytest.raises(ValueError, match="Invalid simulation software"):
         stages.SimulationChain.from_software("unknown")

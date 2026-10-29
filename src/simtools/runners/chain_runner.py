@@ -67,14 +67,11 @@ class ChainRunner:
         lines = []
         stream = None
         for index in reversed(range(len(self.stages))):
-            instances = self.stages[index]
             streamed_input = index > 0 and self._streams(index - 1, index)
-            stage_input = STDIN if streamed_input else self._input_file(index, run_number)
-            if index == 0:
-                stage_input = input_file
+            stage_inputs = self._stage_inputs(index, run_number, input_file, streamed_input)
             stage_lines = [
                 line
-                for instance in instances
+                for instance, stage_input in zip(self.stages[index], stage_inputs)
                 for line in instance.prepare(run_number, input_file=stage_input, output=stream)
             ]
             if streamed_input:
@@ -90,12 +87,35 @@ class ChainRunner:
             instance.streams for index in (upstream, downstream) for instance in self.stages[index]
         )
 
-    def _input_file(self, index, run_number):
-        """Return the output file of the previous stage (file hand-over)."""
+    def _stage_inputs(self, index, run_number, input_file, streamed_input):
+        """Return the input of each instance of a stage."""
+        count = len(self.stages[index])
         if index == 0:
-            return None
-        previous = self.stages[index - 1][0]
-        return previous.output_file(run_number)
+            return [input_file] * count
+        if streamed_input:
+            return [STDIN] * count
+        return self._upstream_files(index, run_number)
+
+    def _upstream_files(self, index, run_number):
+        """
+        Return the input file of each instance of a stage fed by file hand-over.
+
+        A single upstream instance feeds every downstream instance. Otherwise instances are
+        paired in order, which requires the same number of instances in both stages.
+        """
+        upstream = self.stages[index - 1]
+        count = len(self.stages[index])
+        if len(upstream) == 1:
+            return [upstream[0].output_file(run_number)] * count
+        if len(upstream) == count:
+            return [instance.output_file(run_number) for instance in upstream]
+        upstream_name = self.chain.stage_classes[index - 1].name
+        downstream_name = self.chain.stage_classes[index].name
+        raise ValueError(
+            f"Stage {downstream_name!r} has {count} instances, but upstream stage "
+            f"{upstream_name!r} has {len(upstream)}. Files are handed over only from one "
+            "upstream instance or between stages with the same number of instances."
+        )
 
     def _merged_file_list(self):
         """Merge the file lists of all stage instances (lists for repeated file types)."""

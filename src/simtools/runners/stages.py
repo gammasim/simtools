@@ -2,8 +2,11 @@
 
 A stage is one simulation program (e.g. CORSIKA or sim_telarray). Stages are connected by the
 data products they consume and produce, either through files or as a stream. A chain is an
-ordered list of stage names; any program can be replaced or split by registering stages with
-matching data products.
+ordered list of stage names. Stages are looked up by name in the ``STAGES`` registry, which
+maps each name to a factory returning the stage class; the factories defer imports until the
+stage is used. Additional stages are added with :func:`register_stage`. ``SimulationChain``
+checks that each stage consumes the data product of the stage before it when the chain is
+created.
 """
 
 from dataclasses import dataclass
@@ -90,6 +93,21 @@ def _sim_telarray_stage():
 
 
 STAGES = {"corsika": _corsika_stage, "sim_telarray": _sim_telarray_stage}
+
+
+def register_stage(name, factory):
+    """
+    Register a stage under a name, replacing any stage already registered under it.
+
+    Parameters
+    ----------
+    name : str
+        Stage name used in simulation chains.
+    factory : callable
+        Function without arguments returning the stage class.
+    """
+    STAGES[name] = factory
+
 
 _SOFTWARE_CHAINS = {
     "corsika": ("corsika",),
