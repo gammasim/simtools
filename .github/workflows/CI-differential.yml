@@ -152,6 +152,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
+          git config --global --add safe.directory '*'
           base_commit="$(git merge-base "origin/$BASE_REF" HEAD)"
           git worktree add ../base "$base_commit"
           cp dependency_versions.yml ../base/dependency_versions.yml
