@@ -370,15 +370,10 @@ class MetadataCollector:
 
         arguments = {key: value for key, value in self.args_dict.items() if not key.startswith("_")}
         context_dict["application_configuration"] = {
-            "schema_version": "1.0.0",
+            "schema_version": "2.0.0",
             "application": self.args_dict.get("application_label") or self.args_dict.get("label"),
             "arguments": self._sanitize_configuration(arguments),
-            "sources": {
-                source: sorted(keys)
-                for source, keys in self.args_dict.get(
-                    "_metadata_configuration_sources", {}
-                ).items()
-            },
+            "sources": dict(self.args_dict.get("_metadata_configuration_sources", {})),
         }
 
     @classmethod

@@ -145,8 +145,8 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
             "runtime_environment": {"options": ["--env SIMTOOLS_SECRET=runtime-secret"]},
             "run_time": ["podman", "run", "--env", "SIMTOOLS_SECRET=runtime-secret"],
             "_metadata_configuration_sources": {
-                "cli": {"input_path"},
-                "defaults": {"off_axis_angle"},
+                "input_path": "cli",
+                "off_axis_angle": "default",
             },
         }
     )
@@ -156,7 +156,7 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
     ).get_top_level_metadata()
     configuration = metadata["cta"]["context"]["application_configuration"]
 
-    assert configuration["schema_version"] == "1.0.0"
+    assert configuration["schema_version"] == "2.0.0"
     assert configuration["application"] == "test_application"
     assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
     assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
@@ -171,8 +171,8 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
         "SIMTOOLS_SECRET=***REDACTED***",
     ]
     assert configuration["sources"] == {
-        "cli": ["input_path"],
-        "defaults": ["off_axis_angle"],
+        "input_path": "cli",
+        "off_axis_angle": "default",
     }
     context_schema = schema.load_schema(METADATA_JSON_SCHEMA)["definitions"]["cta"]["properties"][
         "context"

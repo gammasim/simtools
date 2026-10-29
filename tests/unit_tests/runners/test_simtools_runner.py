@@ -614,7 +614,7 @@ def test_run_applications_propagates_explicit_env_file(monkeypatch, tmp_test_dir
         {
             "config_file": "workflow.config.yml",
             "env_file": str(env_file),
-            "_metadata_configuration_sources": {"cli": ["env_file"]},
+            "_metadata_configuration_sources": {"env_file": "cli"},
             "steps": None,
             "ignore_runtime_environment": True,
         }
@@ -1402,7 +1402,7 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
             "log_file": str(Path(tmp_test_directory) / "execution.log"),
             SIMULATION_MODELS_GIT_REVISION: "v1.2.3",
             "env_file": "explicit.env",
-            "_metadata_configuration_sources": {"cli": ["env_file"]},
+            "_metadata_configuration_sources": {"env_file": "cli"},
         }
     )
     payload = yaml.safe_load(provenance.read_text())

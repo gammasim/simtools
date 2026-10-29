@@ -1,22 +1,20 @@
 """Application configuration."""
 
 import argparse
-import json
 import logging
-import os
-import shlex
 import sys
 
-import astropy.units as u
-
 import simtools.configuration.commandline_parser as argparser
-import simtools.version as simtools_version
-from simtools import constants, dependency_versions
-from simtools.io import ascii_handler, io_handler
+from simtools import dependency_versions
+from simtools.configuration.argument_helpers import (
+    coerce,
+    configuration_from_environment,
+    configuration_from_file,
+    normalize_argument_aliases,
+    validate_site_telescope_consistency,
+)
+from simtools.io import io_handler
 from simtools.utils import general as gen
-from simtools.utils import names
-
-_APPEND_ACTION = "_AppendAction"
 
 
 class Configurator:
@@ -27,7 +25,6 @@ class Configurator:
 
     - command line arguments
     - configuration file
-    - configuration dict when calling the class
     - environmental variables
 
     Assigns unique ACTIVITY_ID to this configuration (uuid).
@@ -36,8 +33,6 @@ class Configurator:
 
     Parameters
     ----------
-    config: dict
-        Configuration parameters as dict.
     label: str
         Class label.
     description: str
@@ -46,24 +41,15 @@ class Configurator:
         Application usage description.
     """
 
-    def __init__(
-        self, config=None, label=None, description=None, usage=None, use_dependency_defaults=True
-    ):
+    def __init__(self, label=None, description=None, usage=None, use_dependency_defaults=True):
         """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
 
-        self.config_class_init = config
         self.label = label
         self.config = {}
         self.use_dependency_defaults = use_dependency_defaults
-        self.config_sources = {
-            "defaults": set(),
-            "environment": set(),
-            "constructor": set(),
-            "yaml": set(),
-            "cli": set(),
-        }
+        self.config_sources = {}
         self.parser = argparser.CommandLineParser(
             prog=self.label,
             description=description,
@@ -89,47 +75,27 @@ class Configurator:
         """
         cli_arglist = self._get_cli_arglist()
         self._validate_cli_aliases(cli_arglist)
-        config_file = self._option_value(cli_arglist, "--config") or (
-            self.config_class_init or {}
-        ).get("config")
-        env_file = self._option_value(cli_arglist, "--env_file") or (
-            self.config_class_init or {}
-        ).get("env_file", ".env")
-
-        env_config = self._normalize_argument_aliases(self._config_from_env(env_file))
-        file_config = self._normalize_argument_aliases(self._config_from_file(config_file))
-        constructor_config = self._normalize_argument_aliases(
-            gen.change_dict_keys_case(self.config_class_init or {})
-        )
-        default_config = self._parser_defaults()
+        cli_config = self.parser.parse_explicit_args(cli_arglist)
+        config_file = cli_config.get("config") or self._option_value(cli_arglist, "--config")
+        env_file = cli_config.get("env_file", ".env")
+        env_config = normalize_argument_aliases(self._config_from_env(env_file), self.parser)
+        file_config = normalize_argument_aliases(self._config_from_file(config_file), self.parser)
+        default_config = self.parser.declared_defaults()
         if self.use_dependency_defaults:
             default_config.update(self._dependency_defaults(default_config))
-        cli_keys = self._explicit_cli_keys(cli_arglist)
-        self.config_sources = {
-            "defaults": set(default_config),
-            "environment": set(env_config),
-            "constructor": set(constructor_config),
-            "yaml": set(file_config),
-            "cli": cli_keys,
-        }
-        merged_config = {
-            **default_config,
-            **env_config,
-            **constructor_config,
-            **file_config,
-        }
-        merged_config = self._without_cli_overrides(merged_config, cli_keys)
-        self.config = self._convert_string_none_to_none(
-            vars(
-                self.parser.parse_args(
-                    self._arglist_from_config(merged_config, parser=self.parser) + cli_arglist
-                )
+        self._merge_sources(
+            (
+                ("default", default_config),
+                ("environment", env_config),
+                ("yaml", file_config),
+                ("cli", cli_config),
             )
         )
-        self._validate_site_telescope_consistency()
+        self._validate_merged_required()
+        validate_site_telescope_consistency(self.config, self.parser)
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
-        if self.config["label"] is None:
+        if self.config.get("label") is None:
             self.config["label"] = self.label
         self._initialize_model_versions()
         self._initialize_io_handler()
@@ -138,45 +104,84 @@ class Configurator:
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config
 
-    def _validate_site_telescope_consistency(self):
-        """Reject telescope selections that belong to a different configured site."""
-        site = self.config.get("site")
-        if site is None:
-            return
+    def _merge_sources(self, sources):
+        """Merge source values in increasing priority and record the source of each value."""
+        definitions = self.parser.argument_definitions
+        destinations = {action.dest for action in self.parser._actions}  # pylint: disable=protected-access
+        self.config = {}
+        self.config_sources = {}
+        superseded = self._superseded_by_cli(dict(sources).get("cli", {}))
+        for source, values in sources:
+            for key, value in values.items():
+                if key not in destinations:
+                    self.parser.error(f"unrecognized arguments: --{key}")
+                if source not in ("default", "cli") and key in superseded:
+                    continue
+                self.config[key] = self._source_value(definitions.get(key), value, source)
+                self.config_sources[key] = source
 
-        array_elements = list(self.config.get("telescopes") or [])
-        for argument_name in ("telescope", "light_source"):
-            array_element = self.config.get(argument_name)
-            if array_element is not None:
-                array_elements.append(array_element)
-        for layout in gen.ensure_list(self.config.get("array_layout_name") or []):
-            try:
-                array_elements.append(names.validate_array_element_name(layout))
-            except ValueError:
-                continue
-        for array_element in array_elements:
-            self._validate_array_element_site(array_element, site)
+    def _source_value(self, definition, value, source):
+        """Return a source value converted by its argument declaration."""
+        if value == "None":
+            return None
+        if source == "cli" or definition is None:
+            return value
+        return self._convert_external_value(definition, value, source)
 
-    def _validate_array_element_site(self, array_element, site):
-        """Report invalid array elements and site mismatches as parser errors."""
-        try:
-            element_sites = names.get_site_from_array_element_name(array_element)
-        except ValueError as exc:
-            self.parser.error(str(exc))
-        else:
-            if site not in gen.ensure_list(element_sites):
+    def _superseded_by_cli(self, cli_config):
+        """Return keys whose environment and file values a CLI option replaces.
+
+        These are the CLI keys and the other members of their mutually exclusive groups.
+        """
+        superseded = set(cli_config)
+        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
+            members = {action.dest for action in group._group_actions}  # pylint: disable=protected-access
+            if members & cli_config.keys():
+                superseded.update(members)
+        return superseded
+
+    def _convert_external_value(self, definition, value, source):
+        """Convert a value from defaults, environment or configuration file.
+
+        Arguments with a custom argparse action are parsed by that action, so that a value
+        means the same from every source.
+        """
+        if source == "default" and value == "":
+            return value
+        action = definition.kwargs.get("action")
+        if not isinstance(action, type) or value is None:
+            return coerce(definition, value, source)
+        if isinstance(value, bool):
+            return value
+        tokens = [str(item) for item in value] if isinstance(value, list | tuple) else [str(value)]
+        return self.parser.parse_explicit_args([f"--{definition.name}", *tokens])[definition.name]
+
+    def _validate_merged_required(self):
+        """Validate required arguments and exclusive groups after source merging."""
+        missing = [
+            f"--{definition.name}"
+            for definition in self.parser.argument_definitions.values()
+            if definition.kwargs.get("required") and self.config.get(definition.name) is None
+        ]
+        groups = {}
+        for definition in self.parser.argument_definitions.values():
+            if definition.exclusive_group is not None:
+                group_key = (definition.group, definition.exclusive_group)
+                groups.setdefault(group_key, []).append(definition)
+        for definitions in groups.values():
+            selected = [
+                definition.name
+                for definition in definitions
+                if self.config.get(definition.name) not in (None, False)
+            ]
+            if len(selected) > 1:
                 self.parser.error(
-                    f"array element {array_element} belongs to site {element_sites}, "
-                    f"but site {site} was selected"
+                    f"argument --{selected[1]}: not allowed with argument --{selected[0]}"
                 )
-
-    def _parser_defaults(self):
-        """Return parser defaults as a configuration source mapping."""
-        return {
-            action.dest: action.default
-            for action in self.parser._actions  # pylint: disable=protected-access
-            if action.default is not argparse.SUPPRESS
-        }
+            if definitions[0].exclusive_group_required and not selected:
+                missing.append("/".join(f"--{item.name}" for item in definitions))
+        if missing:
+            self.parser.error("the following arguments are required: " + ", ".join(missing))
 
     @staticmethod
     def _dependency_defaults(parser_defaults):
@@ -208,18 +213,6 @@ class Configurator:
             arg_list = ["--help"]
         return arg_list
 
-    def _without_cli_overrides(self, config, cli_keys):
-        """Remove values superseded by CLI options, including exclusive alternatives."""
-        superseded = set(cli_keys)
-        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
-            group_destinations = {
-                action.dest
-                for action in group._group_actions  # pylint: disable=protected-access
-            }
-            if group_destinations & cli_keys:
-                superseded.update(group_destinations)
-        return {key: value for key, value in config.items() if key not in superseded}
-
     def _validate_cli_aliases(self, arg_list):
         """Reject conflicting canonical and deprecated CLI values."""
         for action in self.parser._actions:  # pylint: disable=protected-access
@@ -231,72 +224,9 @@ class Configurator:
             if len(values) > 1:
                 raise ValueError(f"Conflicting values for {action.dest} command-line aliases.")
 
-    def _normalize_argument_aliases(self, config):
-        """Replace deprecated configuration keys with their canonical parser destinations."""
-        config = dict(config)
-        for action in self.parser._actions:  # pylint: disable=protected-access
-            aliases = {option.removeprefix("--") for option in action.option_strings[1:]}
-            for alias in aliases & config.keys():
-                if action.dest in config and config[action.dest] != config[alias]:
-                    raise ValueError(f"{action.dest} and {alias} must match when both are set.")
-                config[action.dest] = config.pop(alias)
-        return config
-
     def _config_from_file(self, config_file):
-        """
-        Read configuration from yaml file and return as dictionary.
-
-        Parameters
-        ----------
-        config_file: str
-            Name of configuration file.
-
-        Returns
-        -------
-        dict
-            Configuration parameters.
-
-        Raises
-        ------
-        FileNotFoundError
-            If configuration file has not been found.
-        """
-        try:
-            self._logger.debug(f"Reading configuration from {config_file}")
-            _config_dict = (
-                ascii_handler.collect_data_from_file(
-                    file_name=config_file,
-                    test_resources_path=constants.get_configured_test_resources_root(),
-                )
-                if config_file
-                else None
-            )
-            _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
-            if "configuration" in _config_dict.get("applications", [{}])[0]:
-                _config_dict = _config_dict["applications"][0]["configuration"]
-
-            _config_dict = simtools_version.resolve_by_version(
-                _config_dict,
-                _config_dict.get("model_version"),
-                preserve_inconsistent_keys=self.parser.preserve_by_version,
-            )
-            return gen.change_dict_keys_case(_config_dict)
-        except TypeError, AttributeError:
-            self._logger.debug("No YAML configuration update applied to configuration dictionary.")
-            return {}
-        except FileNotFoundError:
-            self._logger.error(f"Configuration file not found: {config_file}")
-            raise
-
-    def _explicit_cli_keys(self, arg_list):
-        """Return parser destination names explicitly present in a CLI argument list."""
-        explicit_keys = set()
-        for arg in arg_list:
-            option = arg.split("=", maxsplit=1)[0]
-            action = self.parser._option_string_actions.get(option)  # pylint: disable=protected-access
-            if action is not None:
-                explicit_keys.add(action.dest)
-        return explicit_keys
+        """Read the YAML configuration through the shared conversion helper."""
+        return configuration_from_file(config_file, self.parser)
 
     def _config_from_env(self, env_file=None):
         """
@@ -312,34 +242,7 @@ class Configurator:
         dict
             Configuration parameters from environment variables.
         """
-        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
-        _env_list.extend(
-            option.removeprefix("--")
-            for action in self.parser._actions  # pylint: disable=protected-access
-            for option in action.option_strings[1:]
-        )
-        explicit_environment = set(os.environ)
-        config = gen.load_environment_variables(env_file=env_file, env_list=_env_list)
-        return self._prefer_explicit_environment_aliases(config, explicit_environment)
-
-    def _prefer_explicit_environment_aliases(self, config, explicit_environment):
-        """Prefer explicit environment values over values loaded from an env file."""
-        config = dict(config)
-        for action in self.parser._actions:  # pylint: disable=protected-access
-            keys = {
-                action.dest,
-                *(option.removeprefix("--") for option in action.option_strings[1:]),
-            }
-            explicit_keys = {
-                key for key in keys if f"SIMTOOLS_{key.upper()}" in explicit_environment
-            }
-            if explicit_keys:
-                config = {
-                    key: value
-                    for key, value in config.items()
-                    if key not in keys or key in explicit_keys
-                }
-        return config
+        return configuration_from_environment(self.parser, env_file)
 
     def _initialize_model_versions(self):
         """Initialize model versions."""
@@ -372,163 +275,3 @@ class Configurator:
                 extension = f".{self.config['output_file_format']}"
 
             self.config["output_file"] = f"{prefix}{label}{extension}"
-
-    @staticmethod
-    def _arglist_from_config(input_var, parser=None):
-        """
-        Convert input list of strings as needed by argparse.
-
-        Special cases:
-        - lists as arguments (using e.g., nargs="+") are expanded
-        - boolean are expected to be handled as action="store_true" or "store_false"
-        - None values or zero length values are ignored (this means setting a parameter
-          to none or "" is not allowed).
-
-
-        Ignore values which are None or of zero length.
-
-        Parameters
-        ----------
-        input_var: dict, list, None
-           Dictionary/list of commands to convert to list.
-        parser: argparse.ArgumentParser, optional
-            Parser used to detect fixed-arity arguments (``nargs=<int>``). When provided,
-            scalar string values for those arguments are split into multiple CLI tokens.
-
-        Returns
-        -------
-        list
-            Dict keys and values as dict.
-
-        """
-        if isinstance(input_var, dict):
-            return Configurator.arglist_from_dict(input_var, parser=parser)
-
-        try:
-            return [str(value) for value in input_var if value != "None"]
-        except TypeError:
-            return []
-
-    @staticmethod
-    def arglist_from_dict(input_dict, parser=None):
-        """Convert a configuration dictionary into CLI-style argument tokens."""
-        list_args = []
-        for key, value in input_dict.items():
-            list_args.extend(Configurator._arg_tokens_for_item(key, value, parser=parser))
-        return list_args
-
-    @staticmethod
-    def _arg_tokens_for_item(key, value, parser=None):
-        """Return CLI argument tokens for a single configuration entry."""
-        option = f"--{key}"
-        action = (
-            parser._option_string_actions.get(option)  # pylint: disable=protected-access
-            if parser is not None
-            else None
-        )
-
-        boolean_tokens = Configurator._boolean_arg_tokens(option, value, action)
-        if boolean_tokens is not None:
-            return boolean_tokens
-
-        if isinstance(value, list):
-            return Configurator._list_arg_tokens(option, value, action)
-
-        if Configurator._is_scalar_config_value(value):
-            return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
-
-        if value:
-            return [option]
-
-        return []
-
-    @staticmethod
-    def _list_arg_tokens(option, value, action):
-        """Convert a list-valued configuration entry to command-line tokens."""
-        if not value:
-            return [option] if action is not None and action.nargs == "*" else []
-        if (
-            action is not None
-            and action.__class__.__name__ == _APPEND_ACTION
-            and action.nargs is not None
-            and all(isinstance(item, list) for item in value)
-        ):
-            return [token for item in value for token in (option, *map(str, item))]
-        if Configurator._is_repeatable_single_value(action):
-            return [token for item in value for token in (option, str(item))]
-        return [option, *map(str, value)]
-
-    @staticmethod
-    def _is_repeatable_single_value(action):
-        """Return whether an argparse action appends one value per occurrence."""
-        return (
-            action is not None
-            and action.__class__.__name__ == _APPEND_ACTION
-            and action.nargs is None
-        )
-
-    @staticmethod
-    def _boolean_arg_tokens(option, value, action):
-        """Return tokens for a boolean parser action, or None for non-boolean values."""
-        if not isinstance(value, bool):
-            return None
-        if action is None:
-            return [option] if value else []
-        class_name = action.__class__.__name__
-        if class_name == "BooleanOptionalAction":
-            return [option] if value else [action.option_strings[1]]
-        if class_name == "_StoreFalseAction":
-            return [option] if not value else []
-        return [option] if value else []
-
-    @staticmethod
-    def _is_scalar_config_value(value):
-        """Return True for scalar values that should produce an option and one or more tokens."""
-        return isinstance(value, u.Quantity) or (
-            not isinstance(value, bool) and value is not None and len(str(value)) > 0
-        )
-
-    @staticmethod
-    def _normalize_scalar_config_value(key, value, parser=None):
-        """Normalize a scalar config value to one or more argument tokens."""
-        # Special handling for dictionary values (e.g., overwrite_model_parameters)
-        if isinstance(value, dict):
-            return [json.dumps(value)]
-
-        expected_nargs = Configurator._get_fixed_nargs(parser, key)
-        if not (isinstance(value, str) and isinstance(expected_nargs, int) and expected_nargs > 1):
-            return [str(value)]
-
-        split_values = shlex.split(value)
-        if len(split_values) != expected_nargs:
-            raise ValueError(
-                f"Configuration value for '{key}' must provide "
-                f"{expected_nargs} entries, got {len(split_values)}: {value}"
-            )
-        return split_values
-
-    @staticmethod
-    def _get_fixed_nargs(parser, key):
-        """Return fixed integer nargs for an option key if configured."""
-        if parser is None:
-            return None
-        action = parser._option_string_actions.get(f"--{key}")  # pylint: disable=protected-access
-        if action is None:
-            return None
-        return action.nargs if isinstance(action.nargs, int) else None
-
-    @staticmethod
-    def _convert_string_none_to_none(input_dict):
-        """
-        Convert string type 'None' to type None (argparse returns None as str).
-
-        Parameters
-        ----------
-        input_dict
-            Dictionary with values to be converted.
-
-        """
-        for key, value in input_dict.items():
-            input_dict[key] = None if value == "None" else value
-
-        return input_dict

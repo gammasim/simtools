@@ -2,15 +2,235 @@
 
 import argparse
 import ast
+import json
 import logging
+import os
 import re
+import shlex
 
 import astropy.units as u
 from astropy.units import UnitsError
 
+from simtools import constants, version
+from simtools.io import ascii_handler
 from simtools.utils import general, names
 
 logger = logging.getLogger(__name__)
+
+
+def configuration_from_file(config_file, parser):
+    """Read a YAML configuration and resolve version-specific values."""
+    try:
+        logger.debug(f"Reading configuration from {config_file}")
+        config = (
+            ascii_handler.collect_data_from_file(
+                file_name=config_file,
+                test_resources_path=constants.get_configured_test_resources_root(),
+            )
+            if config_file
+            else None
+        )
+        config = general.remove_substring_recursively_from_dict(config, substring="\n")
+        if "configuration" in config.get("applications", [{}])[0]:
+            config = config["applications"][0]["configuration"]
+        config = version.resolve_by_version(
+            config,
+            config.get("model_version"),
+            preserve_inconsistent_keys=parser.preserve_by_version,
+        )
+        return general.change_dict_keys_case(config)
+    except TypeError, AttributeError:
+        logger.debug("No YAML configuration update applied to configuration dictionary.")
+        return {}
+    except FileNotFoundError:
+        logger.error(f"Configuration file not found: {config_file}")
+        raise
+
+
+def configuration_from_environment(parser, env_file):
+    """Read environment values registered by a parser, preferring process values."""
+    names_to_load = [action.dest for action in parser._actions]  # pylint: disable=protected-access
+    names_to_load.extend(
+        option.removeprefix("--")
+        for action in parser._actions  # pylint: disable=protected-access
+        for option in action.option_strings[1:]
+    )
+    explicit = set(os.environ)
+    config = general.load_environment_variables(env_file=env_file, env_list=names_to_load)
+    for action in parser._actions:  # pylint: disable=protected-access
+        keys = {action.dest, *(option.removeprefix("--") for option in action.option_strings[1:])}
+        explicit_keys = {key for key in keys if f"SIMTOOLS_{key.upper()}" in explicit}
+        if explicit_keys:
+            config = {
+                key: value
+                for key, value in config.items()
+                if key not in keys or key in explicit_keys
+            }
+    return config
+
+
+def normalize_argument_aliases(config, parser):
+    """Map aliases from external configuration to canonical argument names."""
+    config = dict(config)
+    for action in parser._actions:  # pylint: disable=protected-access
+        aliases = {option.removeprefix("--") for option in action.option_strings[1:]}
+        for alias in aliases & config.keys():
+            if action.dest in config and config[action.dest] != config[alias]:
+                raise ValueError(f"{action.dest} and {alias} must match when both are set.")
+            config[action.dest] = config.pop(alias)
+    return config
+
+
+def validate_site_telescope_consistency(config, parser):
+    """Reject telescope selections that belong to a different configured site."""
+    selected_site = config.get("site")
+    if selected_site is None:
+        return
+    elements = list(config.get("telescopes") or [])
+    elements.extend(
+        config[name] for name in ("telescope", "light_source") if config.get(name) is not None
+    )
+    for layout in general.ensure_list(config.get("array_layout_name") or []):
+        try:
+            elements.append(names.validate_array_element_name(layout))
+        except ValueError:
+            continue
+    for element in elements:
+        try:
+            element_sites = names.get_site_from_array_element_name(element)
+        except ValueError as exc:
+            parser.error(str(exc))
+        if selected_site not in general.ensure_list(element_sites):
+            parser.error(
+                f"array element {element} belongs to site {element_sites}, "
+                f"but site {selected_site} was selected"
+            )
+
+
+def coerce(definition, value, source):
+    """Convert and validate a value supplied outside the command line."""
+    if value is None:
+        return value
+    try:
+        value = _coerce_value(definition, value, source)
+        choices = definition.kwargs.get("choices")
+        candidates = value if isinstance(value, list) else [value]
+        if choices is not None and any(item not in choices for item in candidates):
+            raise ValueError(f"must be one of {', '.join(map(str, choices))}")
+        return value
+    except (argparse.ArgumentTypeError, TypeError, ValueError) as exc:
+        raise ValueError(f"--{definition.name} from {source}: {exc}") from exc
+
+
+def _coerce_value(definition, value, source):
+    """Apply the declared action shape and converter to an external value."""
+    if value is None:
+        return None
+    kwargs = definition.kwargs
+    action = kwargs.get("action", "store")
+    if action in ("store_true", "store_false"):
+        return _coerce_boolean(value, source)
+    if action == "append":
+        return _coerce_append(value, kwargs)
+    if kwargs.get("nargs") == "?":
+        return _coerce_optional_value(value, kwargs)
+    if kwargs.get("nargs") is not None:
+        return _coerce_list(value, kwargs, source)
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
+    return _convert_argument_value(value, kwargs.get("type"))
+
+
+def _coerce_boolean(value, source):
+    """Parse a boolean value from environment or YAML."""
+    if isinstance(value, str) and source == "environment":
+        values = {"true": True, "1": True, "yes": True, "false": False, "0": False, "no": False}
+        normalized = value.casefold()
+        if normalized not in values:
+            raise ValueError(f"expected true, false, 1, 0, yes, or no; got {value!r}")
+        value = values[normalized]
+    if not isinstance(value, bool):
+        raise ValueError("expected a boolean")
+    return value
+
+
+def _coerce_append(value, kwargs):
+    """Convert append values, preserving repeated groups when nargs is used."""
+    if value == []:
+        return []
+    nargs = kwargs.get("nargs")
+    converter = kwargs.get("type")
+    if nargs is None:
+        values = shlex.split(value) if isinstance(value, str) else value
+        values = values if isinstance(values, list) else [values]
+        return [_convert_argument_value(item, converter) for item in values]
+    groups = _append_groups(value, nargs)
+    return [[_convert_argument_value(item, converter) for item in group] for group in groups]
+
+
+def _append_groups(value, nargs):
+    """Group append values into individual action occurrences."""
+    if isinstance(value, str):
+        values = shlex.split(value)
+        if isinstance(nargs, int):
+            return [values[index : index + nargs] for index in range(0, len(values), nargs)]
+        return [values]
+    if not isinstance(value, list):
+        return [[value]]
+    return value if value and isinstance(value[0], list) else [value]
+
+
+def _coerce_optional_value(value, kwargs):
+    """Convert a value of an ``nargs="?"`` argument: ``true`` means the option without a value."""
+    if value is True:
+        return kwargs.get("const")
+    if value is False:
+        return kwargs.get("default")
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
+    return _convert_argument_value(value, kwargs.get("type"))
+
+
+def _split_environment_list(value, converter):
+    """Split an environment list, unless the converter accepts the whole text as one value.
+
+    Values with units (``"0.1 rad"``) are one value; plain strings are always split.
+    """
+    if converter not in (None, str):
+        try:
+            return [converter(value)]
+        except argparse.ArgumentTypeError, TypeError, ValueError:
+            pass
+    return shlex.split(value)
+
+
+def _coerce_list(value, kwargs, source):
+    """Convert list values and enforce fixed nargs length."""
+    expected = kwargs["nargs"]
+    fixed_count = isinstance(expected, int) and expected > 1
+    converter = kwargs.get("type")
+    if isinstance(value, str) and source == "environment" and not fixed_count:
+        values = _split_environment_list(value, converter)
+        return [
+            item if not isinstance(item, str) else _convert_argument_value(item, converter)
+            for item in values
+        ]
+    if isinstance(value, str) and (source == "environment" or fixed_count):
+        value = shlex.split(value)
+    values = value if isinstance(value, list) else [value]
+    values = [_convert_argument_value(item, converter) for item in values]
+    if isinstance(expected, int) and len(values) != expected:
+        raise ValueError(f"expected {expected} values, got {len(values)}")
+    return values
+
+
+def _convert_argument_value(value, converter):
+    """Apply the declared converter to the text form of a value, as argparse does."""
+    if converter is None or value is None:
+        return value
+    if isinstance(value, dict):
+        return converter(json.dumps(value))
+    return converter(value if isinstance(value, str) else str(value))
 
 
 def scientific_int(value):

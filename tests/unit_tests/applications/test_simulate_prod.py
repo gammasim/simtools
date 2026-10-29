@@ -71,11 +71,8 @@ def _parse_with_config_sources(job_grid_file, cli_keys=(), yaml_keys=()):
     app.resolve_job_grid_arguments(
         args,
         {
-            "defaults": set(),
-            "environment": set(),
-            "constructor": set(),
-            "yaml": set(yaml_keys),
-            "cli": set(cli_keys),
+            **dict.fromkeys(yaml_keys, "yaml"),
+            **dict.fromkeys(cli_keys, "cli"),
         },
         argparse.ArgumentParser(),
     )
