@@ -14,7 +14,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
-from simtools.histogram.histogram import Histogram
+from simtools.histogram.hdf5 import read_histograms, write_histograms
 from simtools.io import io_handler, table_handler
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.io.file_type import product_value, validate_file_type
@@ -299,11 +299,6 @@ def _is_persisted_histogram(name, histogram):
     return isinstance(histogram, dict) and histogram.get("histogram") is not None
 
 
-def _iter_histogram_edges(histogram):
-    """Yield one bin-edge array per histogram axis."""
-    yield from enumerate(histogram["histogram"].edges)
-
-
 def _write_dense_histogram_payload(reference_specs, output_file):
     """Write persisted histogram arrays and bin edges as dense HDF5 datasets."""
     with h5py.File(output_file, "a") as hdf5_file:
@@ -311,55 +306,26 @@ def _write_dense_histogram_payload(reference_specs, output_file):
         dense_group.attrs["format_version"] = 1
         for spec in reference_specs:
             reference_group = dense_group.create_group(str(spec["reference_id"]))
-            for histogram_name, histogram in _iter_persisted_histograms(spec["histograms"]):
-                histogram_group = reference_group.create_group(str(histogram_name))
-                _create_dense_histogram_dataset(
-                    histogram_group,
-                    "values",
-                    data=np.asarray(histogram["histogram"].values),
-                )
-                for axis_index, edges in _iter_histogram_edges(histogram):
-                    _create_dense_histogram_dataset(
-                        histogram_group,
-                        f"edges_{axis_index}",
-                        data=np.asarray(edges, dtype=float),
-                    )
-
-
-def _create_dense_histogram_dataset(hdf5_group, dataset_name, data):
-    """Create one compressed dataset for dense trigger-histogram payloads."""
-    return hdf5_group.create_dataset(
-        dataset_name,
-        data=data,
-        chunks=True,
-        compression="gzip",
-        compression_opts=6,
-        shuffle=True,
-    )
+            write_histograms(
+                reference_group,
+                {
+                    name: definition["histogram"]
+                    for name, definition in _iter_persisted_histograms(spec["histograms"])
+                },
+            )
 
 
 def load_dense_histogram_payloads(reference_file):
-    """Load dense histogram arrays and edges grouped by reference id."""
+    """Load dense histograms grouped by reference id."""
     with h5py.File(reference_file, "r") as hdf5_file:
         if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
             return {}
 
         dense_group = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
-        payloads = {}
-        for reference_id, reference_group in dense_group.items():
-            values_by_name = {}
-            edges_by_name = {}
-            for histogram_name, histogram_group in reference_group.items():
-                values_by_name[histogram_name] = np.asarray(histogram_group["values"])
-                axis_edges = {}
-                for dataset_name, dataset in histogram_group.items():
-                    if not dataset_name.startswith("edges_"):
-                        continue
-                    axis_index = int(dataset_name.split("_", maxsplit=1)[1])
-                    axis_edges[axis_index] = np.asarray(dataset, dtype=float)
-                edges_by_name[histogram_name] = axis_edges
-            payloads[reference_id] = (values_by_name, edges_by_name)
-        return payloads
+        return {
+            reference_id: read_histograms(reference_group)
+            for reference_id, reference_group in dense_group.items()
+        }
 
 
 def inspect_trigger_histogram_file(file_path, format_report=True):
@@ -1069,33 +1035,33 @@ def _template_histograms(histograms):
     return histograms.get_empty_histogram_definitions()
 
 
-def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
-    """Attach loaded histogram arrays and exact bin edges to a histogram object."""
+def _apply_loaded_histograms(histograms, loaded_histograms):
+    """Attach loaded histograms and exact bin edges to a histogram object."""
     templates = _template_histograms(histograms)
     loaded = {}
     loaded_bin_edges = {}
-    for histogram_name, values in values_by_name.items():
+    for histogram_name, histogram in loaded_histograms.items():
         definition = copy.copy(templates.get(histogram_name, {}))
-        definition.setdefault("1d", values.ndim == 1)
+        definition.setdefault("1d", histogram.ndim == 1)
         definition["event_data"] = (
-            None if definition["1d"] else tuple(None for _ in range(values.ndim))
+            None if definition["1d"] else tuple(None for _ in range(histogram.ndim))
         )
-        axis_edges = edges_by_name[histogram_name]
-        definition["edges"] = [axis_edges[index] for index in range(values.ndim)]
-        definition["histogram"] = Histogram.from_edges(definition["edges"], values=values)
+        definition["edges"] = histogram.edges
+        definition["histogram"] = histogram
         loaded[histogram_name] = definition
 
-    if "energy" in edges_by_name:
-        loaded_bin_edges["energy"] = edges_by_name["energy"][0]
-    if "core_distance" in edges_by_name:
-        loaded_bin_edges["core_distance"] = edges_by_name["core_distance"][0]
-    if "angular_distance" in edges_by_name:
-        loaded_bin_edges["viewcone"] = edges_by_name["angular_distance"][0]
+    for histogram_name, edges_key in (
+        ("energy", "energy"),
+        ("core_distance", "core_distance"),
+        ("angular_distance", "viewcone"),
+    ):
+        if histogram_name in loaded_histograms:
+            loaded_bin_edges[edges_key] = loaded_histograms[histogram_name].edges[0]
 
     return loaded, loaded_bin_edges
 
 
-def _histograms_from_reference_row_dense(row, values_by_name, edges_by_name):
+def _histograms_from_reference_row_dense(row, loaded_histograms):
     """Reconstruct finalized EventDataHistograms from dense HDF5 payloads."""
     histograms = EventDataHistograms.create_accumulator(
         array_name=row["array_name"],
@@ -1105,9 +1071,7 @@ def _histograms_from_reference_row_dense(row, values_by_name, edges_by_name):
         angular_distance_bin_width=_row_value(row, "angular_distance_bin_width"),
         core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
     )
-    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(
-        histograms, values_by_name, edges_by_name
-    )
+    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(histograms, loaded_histograms)
     histograms.set_loaded_histograms(
         loaded_histograms,
         file_info=_metadata_file_info(row),
@@ -1153,11 +1117,10 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     loaded = []
     for row in metadata:
         reference_id = str(row["reference_id"])
-        values_by_name, edges_by_name = dense_payloads[reference_id]
         loaded.append(
             (
                 row,
-                _histograms_from_reference_row_dense(row, values_by_name, edges_by_name),
+                _histograms_from_reference_row_dense(row, dense_payloads[reference_id]),
             )
         )
     return loaded

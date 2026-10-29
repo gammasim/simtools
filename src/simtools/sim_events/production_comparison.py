@@ -256,9 +256,8 @@ def _collect_metrics_from_trigger_histogram_file(
             continue
         matched_references += 1
         reference_id = str(row["reference_id"])
-        values_by_name, edges_by_name = dense_payloads.get(reference_id, ({}, {}))
         _accumulate_quantity_histograms_from_dense_payload(
-            values_by_name, edges_by_name, accumulators
+            dense_payloads.get(reference_id, {}), accumulators
         )
         _accumulate_topology_counts_for_reference(
             topology_rows_by_reference.get(row["reference_id"], topology_counts[:0]),
@@ -273,7 +272,7 @@ def _collect_metrics_from_trigger_histogram_file(
     return matched_references
 
 
-def _accumulate_quantity_histograms_from_dense_payload(values_by_name, edges_by_name, accumulators):
+def _accumulate_quantity_histograms_from_dense_payload(histograms, accumulators):
     """Accumulate base simulated and triggered histograms from dense payloads."""
     histogram_map = {
         "energy_mc": ("energy", "simulated"),
@@ -284,15 +283,14 @@ def _accumulate_quantity_histograms_from_dense_payload(values_by_name, edges_by_
         "angular_distance": ("angular_distance", "triggered"),
     }
     for histogram_name, (quantity, event_kind) in histogram_map.items():
-        counts = values_by_name.get(histogram_name)
-        axis_edges = edges_by_name.get(histogram_name, {})
-        if counts is None or counts.ndim != 1 or 0 not in axis_edges:
+        histogram = histograms.get(histogram_name)
+        if histogram is None or histogram.ndim != 1:
             continue
         _add_histogram(
             accumulators["quantity_histograms"][event_kind],
             quantity,
-            np.asarray(counts, dtype=float),
-            np.asarray(axis_edges[0], dtype=float),
+            np.asarray(histogram.values, dtype=float),
+            np.asarray(histogram.edges[0], dtype=float),
         )
 
 
