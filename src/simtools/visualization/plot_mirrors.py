@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.io import io_handler
+from simtools.context import RunContext
 from simtools.model.mirrors import Mirrors
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
@@ -64,7 +64,7 @@ def _detect_segmentation_type(data_file_path):
     return "standard"
 
 
-def plot(config, output_file, model_reader=None, data_file_path=None):
+def plot(config, output_file, model_reader=None, data_file_path=None, *, context=None):
     """
     Plot mirror panel layout based on configuration.
 
@@ -92,7 +92,9 @@ def plot(config, output_file, model_reader=None, data_file_path=None):
     None
         The function saves the plot to the specified output file.
     """
-    output_path = io_handler.IOHandler().get_output_directory()
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
+    output_path = context.paths.get_output_directory()
     if data_file_path is None:
         telescope_model_kwargs = {
             "site": config["site"],
@@ -102,6 +104,7 @@ def plot(config, output_file, model_reader=None, data_file_path=None):
         }
         if model_reader is not None:
             telescope_model_kwargs["model_reader"] = model_reader
+        telescope_model_kwargs["context"] = context
         tel_model = TelescopeModel(**telescope_model_kwargs)
         parameter_name = config["parameter"]
         parameter_value = tel_model.get_parameter_value(parameter_name)

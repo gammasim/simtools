@@ -12,8 +12,8 @@ from jsonschema.exceptions import ValidationError
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
-from simtools import settings
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.context import RunContext
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.utils import names
@@ -80,8 +80,9 @@ def test_write(tmp_test_directory, args_dict_site):
     assert Path(w_1.output_file).is_file()
 
 
-def test_dump(args_dict):
-    settings.config.load(args=args_dict)
+def test_dump(args_dict, runtime_args):
+    runtime_args(args_dict)
+    context = RunContext.from_environment()
     empty_table = Table()
 
     output_file = "test_file.ecsv"
@@ -90,6 +91,7 @@ def test_dump(args_dict):
         metadata=None,
         product_data=empty_table,
         validate_schema_file=None,
+        context=context,
     )
 
     assert Path(args_dict["output_path"]).joinpath(output_file).exists()
@@ -97,13 +99,14 @@ def test_dump(args_dict):
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)
     args_dict["skip_output_validation"] = False
-    settings.config.load(args=args_dict)
+    runtime_args(args_dict)
     with pytest.raises(KeyError):
         writer.ModelDataWriter().write_product_data(
             output_file=output_file,
             metadata=None,
             product_data=empty_table,
             validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
+            context=RunContext.from_environment(),
         )
 
 

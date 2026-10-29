@@ -10,8 +10,8 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
+from simtools.context import RunContext
 from simtools.histogram.histogram import compute_bin_edges, normalized_counts, rebin_counts
-from simtools.io import io_handler
 from simtools.sim_events.production_comparison_statistics import (
     ANGULAR_DISTANCE,
     BIN_EDGES_KEY,
@@ -84,6 +84,8 @@ def plot(
     compact_figures=None,
     comparison_title=None,
     comparison_context=None,
+    *,
+    context=None,
 ):
     """Create all event-level production comparison plots.
 
@@ -117,7 +119,8 @@ def plot(
     if report_mode not in {COMPACT_REPORT, DIAGNOSTIC_REPORT, "none"}:
         raise ValueError(f"Unsupported report mode: {report_mode}")
     comparison_statistics = initialize_comparison_statistics(metrics_per_production)
-    output_path = output_path or io_handler.IOHandler().get_output_directory()
+    context = context or RunContext.from_environment()
+    output_path = output_path or context.paths.get_output_directory()
     output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
     output_path.mkdir(parents=True, exist_ok=True)
     suppressed_distributions = _metadata_suppressed_distributions(comparison_context)

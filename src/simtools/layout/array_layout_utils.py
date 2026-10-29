@@ -9,9 +9,10 @@ from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
 import simtools.version as simtools_version
+from simtools.context import RunContext
 from simtools.data_model import data_reader
 from simtools.data_model.model_data_writer import ModelDataWriter
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.utils import names
@@ -202,7 +203,7 @@ def _deduplicate_and_normalize_layouts(layouts):
     return deduplicated_layouts
 
 
-def write_array_layouts(array_layouts, args_dict, associated_data=None):
+def write_array_layouts(array_layouts, args_dict, associated_data=None, *, context=None):
     """
     Write array layouts as model parameter.
 
@@ -218,9 +219,8 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None):
     site = args_dict.get("site") or array_layouts.get("site")
     _logger.info(f"Writing updated array layouts to the model repository for site {site}.")
 
-    io_handler_instance = io_handler.IOHandler()
-    io_handler_instance.set_paths(output_path=args_dict["output_path"])
-    output_file = io_handler_instance.get_output_file(
+    context = context or RunContext.from_environment()
+    output_file = context.paths.get_output_file(
         f"array_layouts-{args_dict['updated_parameter_version']}.json",
         sub_dir="array_layouts",
     )
@@ -236,6 +236,7 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None):
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
         metadata_input_dict=metadata_input_dict,
+        context=context,
     )
 
 

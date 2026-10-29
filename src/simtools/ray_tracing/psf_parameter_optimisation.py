@@ -19,9 +19,10 @@ import numpy as np
 from astropy.table import Table
 from scipy import stats
 
+from simtools.context import RunContext
 from simtools.data_model import model_data_writer as writer
 from simtools.data_model import parameter_catalog as catalog
-from simtools.io.io_handler import IOHandler
+from simtools.io.output_paths import OutputPaths
 from simtools.job_execution.backends.base import BackendError
 from simtools.job_execution.backends.local import determine_max_workers
 from simtools.model.model_utils import initialize_simulation_models
@@ -841,7 +842,7 @@ def get_previous_values(tel_model):
     }
 
 
-def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
+def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars, context=None):
     """Run a ray tracing simulation with the given telescope parameters."""
     if pars is None:
         raise ValueError("No best parameters found")
@@ -854,6 +855,7 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=[0.0] * u.deg,
+        context=context,
     )
     ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
@@ -872,6 +874,7 @@ def run_psf_simulation(
     pdf_pages=None,
     is_best=False,
     use_ks_statistic=False,
+    context=None,
 ):
     """
     Run PSF simulation for given parameters and calculate optimization metric.
@@ -905,7 +908,9 @@ def run_psf_simulation(
         - p_value: p-value from KS test (None if using RMSD)
         - simulated_data: Structured array with simulated cumulative PSF data
     """
-    psf_diameter, im = _run_ray_tracing_simulation(tel_model, site, args_dict, pars)
+    psf_diameter, im = _run_ray_tracing_simulation(
+        tel_model, site, args_dict, pars, context=context
+    )
 
     if radius is None:
         raise ValueError("Radius data is not available.")
@@ -1303,19 +1308,20 @@ def _sample_standard_deviation(values):
     return float(np.std(values, ddof=1)) if len(values) > 1 else float("nan")
 
 
-def _run_psf_evaluation(job):
-    """Evaluate one parameter set and restore paths for direct local execution."""
-    io_handler = IOHandler()
-    original_paths = dict(io_handler.output_path)
-    original_model_path = io_handler.model_path
+def _run_psf_evaluation(job, context=None):
+    """Evaluate one parameter set with its output paths."""
+    context = context or RunContext.from_environment()
+    context = context.replace(
+        paths=OutputPaths(job.output_dir, model_path=context.paths.model_path)
+    )
     try:
-        io_handler.set_paths(output_path=job.output_dir, model_path=original_model_path)
         telescope, site, _ = initialize_simulation_models(
             label=job.args.get(LABEL),
             site=job.args["site"],
             telescope_name=job.args[TELESCOPE],
             model_version=job.args[MODEL_VERSION],
             model_directory=job.output_dir / "model",
+            context=context,
         )
         return run_psf_simulation(
             telescope,
@@ -1325,13 +1331,11 @@ def _run_psf_evaluation(job):
             job.measured_data,
             job.radius,
             use_ks_statistic=job.args.get(KS_STATISTIC, False),
+            context=context,
         )
     except (ValueError, RuntimeError) as exc:
         logger.warning("PSF evaluation %s failed: %s", job.output_dir.name, exc)
         return None
-    finally:
-        io_handler.output_path = original_paths
-        io_handler.model_path = original_model_path
 
 
 @dataclass(frozen=True)

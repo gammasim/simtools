@@ -30,7 +30,9 @@ def config_data_lst(model_version_prod5):
 @pytest.fixture
 def camera_efficiency_lst(config_data_lst, mocker):
     camera_eff = CameraEfficiency(
-        config_data=config_data_lst, efficiency_type="shower", label="validate_camera_efficiency"
+        config_data=config_data_lst,
+        efficiency_type="shower",
+        label="validate_camera_efficiency",
     )
     mock_camera = MagicMock()
     mock_camera.get_camera_fill_factor.return_value = 0.8
@@ -405,7 +407,7 @@ def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficien
     assert x_max == pytest.approx(850.5)
 
 
-def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
+def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog, runtime_args):
     camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
     mocker.patch.object(
         camera_efficiency_lst,
@@ -415,9 +417,11 @@ def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
     mock_dump = mocker.patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
-    mock_config = mocker.MagicMock()
-    mock_config.args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
-    mocker.patch("simtools.settings.config", mock_config)
+    args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
+    runtime_args(args)
+    from simtools.context import RunContext
+
+    camera_efficiency_lst.context = RunContext.from_environment()
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.dump_nsb_pixel_rate()
     mock_dump.assert_called_once()

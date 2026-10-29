@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import astropy.units as u
 import pytest
@@ -41,20 +41,6 @@ def mock_read_table_from_file():
 
 
 @pytest.fixture
-def test_output():
-    return "test_output.json"
-
-
-@pytest.fixture
-def mock_io_handler(test_output):
-    with patch("simtools.layout.array_layout_utils.io_handler.IOHandler") as mock:
-        instance = Mock()
-        instance.get_output_file.return_value = test_output
-        mock.return_value = instance
-        yield mock
-
-
-@pytest.fixture
 def mock_model_data_writer():
     with patch("simtools.layout.array_layout_utils.ModelDataWriter") as mock:
         yield mock
@@ -71,27 +57,25 @@ def test_path():
     return "/test/path"
 
 
-def test_write_array_layouts(mock_io_handler, mock_model_data_writer, test_path, test_output):
+def test_write_array_layouts(mock_model_data_writer, run_context):
     array_layouts = {"value": [{"name": "test_array", "elements": ["tel1", "tel2"]}]}
     args_dict = {
         "site": "North",
-        "output_path": test_path,
         "updated_parameter_version": "v1",
     }
-    array_layout_utils.write_array_layouts(array_layouts, args_dict)
-
-    mock_io_handler.return_value.set_paths.assert_called_once_with(output_path=test_path)
-    mock_io_handler.return_value.get_output_file.assert_called_once_with(
+    output_file = run_context.paths.get_output_file(
         "array_layouts-v1.json", sub_dir="array_layouts"
     )
+    array_layout_utils.write_array_layouts(array_layouts, args_dict, context=run_context)
 
     mock_model_data_writer.write_model_parameter.assert_called_once_with(
         parameter_name="array_layouts",
         value=array_layouts["value"],
         instrument="OBS-North",
         parameter_version="v1",
-        output_file=test_output,
+        output_file=output_file,
         metadata_input_dict=args_dict,
+        context=run_context,
     )
 
 

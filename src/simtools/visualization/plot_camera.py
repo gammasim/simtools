@@ -421,7 +421,7 @@ def _plot_one_axis_def(plot, **kwargs):
     )
 
 
-def plot_camera_pixel_layout_from_args(app_context):
+def plot_camera_pixel_layout_from_args(app_context, *, context=None):
     """
     Build telescope model, compute FoV, and plot the pixel layout.
 
@@ -430,8 +430,8 @@ def plot_camera_pixel_layout_from_args(app_context):
     app_context : object
         Application context with ``args`` and ``io_handler`` attributes.
     """
+    context = context or app_context.context
     args_dict = app_context.args
-    io_handler = app_context.io_handler
 
     label = "plot_camera_pixel_layout"
 
@@ -441,6 +441,7 @@ def plot_camera_pixel_layout_from_args(app_context):
         model_version=args_dict["model_version"],
         label=label,
         model_reader=app_context.model_reader,
+        context=context,
     )
     tel_model.export_model_files()
 
@@ -472,7 +473,7 @@ def plot_camera_pixel_layout_from_args(app_context):
             tel_model, patch_ids, set(camera.pixels[_PIXEL_IDS])
         )
         fig = _plot_selected_trigger_patches(camera, groups, args_dict[_SKY_COORDINATES])
-    output_dir = io_handler.get_output_directory()
+    output_dir = context.paths.get_output_directory()
     plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
     save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
 

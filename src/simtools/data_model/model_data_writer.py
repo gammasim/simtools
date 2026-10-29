@@ -7,12 +7,12 @@ import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools import settings
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.data_model import schema, validate_data
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import ascii_handler, io_handler
+from simtools.io import ascii_handler
+from simtools.io.output_paths import OutputPaths
 from simtools.utils import names, value_conversion
 
 
@@ -31,18 +31,28 @@ class ModelDataWriter:
     """
 
     def __init__(
-        self, output_file=None, output_file_format=None, output_path=None, model_reader=None
+        self,
+        output_file=None,
+        output_file_format=None,
+        output_path=None,
+        model_reader=None,
+        *,
+        context=None,
     ):
         """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
-        self.model_reader = model_reader
-        self.io_handler = io_handler.IOHandler()
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
         self.schema_dict = {}
-        self.output_label = "model_data_writer"
-        self.io_handler.set_paths(
-            output_path=output_path or settings.config.args.get("output_path"),
-            output_path_label=self.output_label,
-        )
+        self.output_label = "default"
+        selected_output_path = output_path or self.context.args.get("output_path")
+        if selected_output_path is not None:
+            paths = OutputPaths(
+                output_path=selected_output_path,
+                model_path=self.context.paths.model_path,
+            )
+            self.context = self.context.replace(paths=paths)
+        self.io_handler = self.context.paths
         try:
             self.output_file = self.io_handler.get_output_file(
                 file_name=output_file, output_path_label=self.output_label
@@ -59,6 +69,7 @@ class ModelDataWriter:
         output_file_format="ascii.ecsv",
         validate_schema_file=None,
         metadata_output_file=None,
+        context=None,
     ):
         """
         Write model data and metadata (as static method).
@@ -82,8 +93,9 @@ class ModelDataWriter:
         writer = ModelDataWriter(
             output_file=output_file,
             output_file_format=output_file_format,
+            context=context,
         )
-        skip_output_validation = settings.config.args.get("skip_output_validation", True)
+        skip_output_validation = writer.context.args.get("skip_output_validation", True)
         if validate_schema_file is not None and not skip_output_validation:
             product_data = writer.validate_and_transform(
                 product_data_table=product_data,
@@ -108,6 +120,7 @@ class ModelDataWriter:
         model_parameter_schema_version=None,
         check_for_existing_parameter=True,
         model_reader=None,
+        context=None,
     ):
         """
         Generate model repository-style model parameter dict and write it to json file.
@@ -147,8 +160,9 @@ class ModelDataWriter:
             output_file_format="json",
             output_path=output_path,
             model_reader=model_reader,
+            context=context,
         )
-        if check_for_existing_parameter and not settings.config.args.get(
+        if check_for_existing_parameter and not writer.context.args.get(
             "ignore_existing_parameter_version", False
         ):
             writer.check_for_existing_parameter(parameter_name, instrument, parameter_version)
@@ -204,7 +218,9 @@ class ModelDataWriter:
         ValueError
             If parameter with the same version exists in the model repository.
         """
-        model_reader = require_model_reader(self.model_reader)
+        model_reader = self.model_reader or self.context.model_reader
+        if model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
         if not model_reader.is_configured():
             return
         try:

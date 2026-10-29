@@ -9,9 +9,9 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.context import RunContext
 from simtools.data_model import model_data_writer
 from simtools.data_model import parameter_catalog as catalog
-from simtools.io import io_handler
 from simtools.job_execution.execution import map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
@@ -40,7 +40,7 @@ class MirrorOptimizationJob:
     measured_psf: float
 
 
-def _optimize_single_mirror_worker(job):
+def _optimize_single_mirror_worker(job, context=None):
     """
     Reconstruct optimization state and optimize one mirror.
 
@@ -48,10 +48,11 @@ def _optimize_single_mirror_worker(job):
     written for every evaluation holds the trial RNDA values, and mirrors are
     optimized in parallel.
     """
-    model_directory = io_handler.IOHandler().get_model_configuration_directory(
+    context = context or RunContext.from_environment()
+    model_directory = context.paths.get_model_configuration_directory(
         job.args["model_version"], sub_dir=f"mirror_{job.mirror_index}"
     )
-    instance = MirrorPanelPSF(job.label, job.args, model_directory=model_directory)
+    instance = MirrorPanelPSF(job.label, job.args, model_directory=model_directory, context=context)
     return instance.optimize_single_mirror(job.mirror_index, job.measured_psf)
 
 
@@ -80,7 +81,8 @@ class MirrorPanelPSF:
     MAX_FRAC_STEP = 0.1
     MAX_ITER = 100
 
-    def __init__(self, label, args_dict, model_directory=None):
+    def __init__(self, label, args_dict, model_directory=None, *, context=None):
+        self.context = context or RunContext.from_environment()
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.args_dict = args_dict
@@ -93,6 +95,7 @@ class MirrorPanelPSF:
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
             model_directory=model_directory,
+            context=self.context,
         )
 
         self.measured_data = self._load_measured_data()

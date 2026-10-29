@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from pathlib import Path
 from unittest import mock
 
 import astropy.units as u
@@ -20,7 +19,9 @@ from simtools.visualization import plot_pixels
 )
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_file")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-def test_plot_rotate_angle_kwarg(mock_save, mock_plot_layout, rotate_angle, expected_extra_kwargs):
+def test_plot_rotate_angle_kwarg(
+    mock_save, mock_plot_layout, rotate_angle, expected_extra_kwargs, run_context
+):
     config = {
         "parameter": "pixel_layout",
         "site": "North",
@@ -36,27 +37,22 @@ def test_plot_rotate_angle_kwarg(mock_save, mock_plot_layout, rotate_angle, expe
     mock_fig = mock.MagicMock()
     mock_plot_layout.return_value = mock_fig
 
-    with mock.patch("simtools.visualization.plot_pixels.io_handler.IOHandler") as mock_io:
-        mock_io_instance = mock.MagicMock()
-        mock_io.return_value = mock_io_instance
-        mock_io_instance.get_output_directory.return_value = Path("/test/path")
+    plot_pixels.plot(config, "test.png", model_reader=model_reader, context=run_context)
 
-        plot_pixels.plot(config, "test.png", model_reader=model_reader)
-
-        expected_path = Path("/test/path/test.dat")
-        mock_plot_layout.assert_called_once_with(
-            expected_path,
-            "LSTN-01",
-            pixels_id_to_print=80,
-            focal_length=1.0,
-            **expected_extra_kwargs,
-        )
-        mock_save.assert_called_once_with(mock_fig, "test.png")
+    expected_path = run_context.paths.get_output_directory() / "test.dat"
+    mock_plot_layout.assert_called_once_with(
+        expected_path,
+        "LSTN-01",
+        pixels_id_to_print=80,
+        focal_length=1.0,
+        **expected_extra_kwargs,
+    )
+    mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_configuration")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-def test_plot_camera_components(mock_save, mock_plot_layout):
+def test_plot_camera_components(mock_save, mock_plot_layout, run_context):
     config = {
         "parameter": "camera_pixel_layout",
         "site": "North",
@@ -79,9 +75,7 @@ def test_plot_camera_components(mock_save, mock_plot_layout):
     mock_fig = mock.MagicMock()
     mock_plot_layout.return_value = mock_fig
 
-    with mock.patch("simtools.visualization.plot_pixels.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = Path("/test/path")
-        plot_pixels.plot(config, "test.png", model_reader=model_reader)
+    plot_pixels.plot(config, "test.png", model_reader=model_reader, context=run_context)
 
     mock_plot_layout.assert_called_once()
     assert mock_plot_layout.call_args.args[0]["pixels"][0]["pixel_id"] == 0
@@ -90,7 +84,9 @@ def test_plot_camera_components(mock_save, mock_plot_layout):
 
 @mock.patch("simtools.visualization.plot_pixels.plot_pixel_layout_from_configuration")
 @mock.patch("simtools.visualization.plot_pixels.visualize.save_figure")
-def test_plot_camera_components_uses_requested_layout_version(mock_save, mock_plot_layout):
+def test_plot_camera_components_uses_requested_layout_version(
+    mock_save, mock_plot_layout, run_context
+):
     config = {
         "parameter": "camera_pixel_layout",
         "site": "North",
@@ -116,9 +112,7 @@ def test_plot_camera_components_uses_requested_layout_version(mock_save, mock_pl
     ]
     mock_plot_layout.return_value = mock.MagicMock()
 
-    with mock.patch("simtools.visualization.plot_pixels.io_handler.IOHandler") as mock_io:
-        mock_io.return_value.get_output_directory.return_value = Path("/test/path")
-        plot_pixels.plot(config, "test.png", model_reader=model_reader)
+    plot_pixels.plot(config, "test.png", model_reader=model_reader, context=run_context)
 
     model_reader.get_model_parameter.assert_called_once_with(
         parameter="camera_pixel_layout",
