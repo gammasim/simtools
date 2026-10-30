@@ -260,7 +260,7 @@ def test_load_and_process_data(mock_args_dict, data_file, should_raise_error):
     [
         # Normal case with parameters
         (
-            make_mirror_align_random_parameters,
+            make_mirror_align_random_parameters(),
             False,
             5.0,
         ),
@@ -296,7 +296,9 @@ def test__run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, mock_args_dict, pars
         )
         assert psf_diameter == pytest.approx(expected_psf_diameter)
-        mock_telescope_model.overwrite_parameters.assert_called_once_with(pars, flat_dict=True)
+        assert [
+            c.args for c in mock_telescope_model.overwrite_model_parameter.call_args_list
+        ] == list(pars.items())
 
 
 @pytest.mark.parametrize(
@@ -1575,7 +1577,9 @@ def test_create_psf_vs_offaxis_plot(tmp_path):
     mock_ray = mock_ray_class.return_value
     mock_ray.analyze.assert_called_once()
     assert mock_ray.analyze.call_args.kwargs["keep_images"] is False
-    mock_telescope_model.overwrite_parameters.assert_called_once_with(_OFFAXIS_PARS, flat_dict=True)
+    assert [c.args for c in mock_telescope_model.overwrite_model_parameter.call_args_list] == list(
+        _OFFAXIS_PARS.items()
+    )
     assert mock_save.call_count == 2
 
 

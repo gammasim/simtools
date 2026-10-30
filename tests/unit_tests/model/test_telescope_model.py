@@ -125,6 +125,15 @@ def test_load_camera(telescope_model_lst, monkeypatch):
     assert tel_model._camera == camera_mock.from_configuration.return_value
 
 
+def _stub_camera_tables(monkeypatch, telescope_model):
+    """Stub camera table records and their parameter entries."""
+    monkeypatch.setattr(
+        telescope_model.model_reader, "get_parameter_table_records", lambda _data: []
+    )
+    for name in ("camera_pixel_layout", "camera_trigger_groups", "camera_trigger_members"):
+        monkeypatch.setitem(telescope_model.parameters, name, {"value": None})
+
+
 def test_resolve_camera_components_uses_explicit_lightguide(telescope_model_lst, monkeypatch):
     telescope_model_lst.parameters["camera_pixel_types"] = {
         "value": [
@@ -141,7 +150,7 @@ def test_resolve_camera_components_uses_explicit_lightguide(telescope_model_lst,
         ]
     }
     telescope_model_lst.parameters["camera_rotate"] = {"value": 0.0}
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+    _stub_camera_tables(monkeypatch, telescope_model_lst)
 
     result = telescope_model_lst._resolve_camera_components()
 
@@ -171,7 +180,7 @@ def test_resolve_camera_components_uses_shared_lightguide(telescope_model_lst, m
         "value": "lightguide.ecsv",
         "instrument": "LSTN-design",
     }
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+    _stub_camera_tables(monkeypatch, telescope_model_lst)
 
     result = telescope_model_lst._resolve_camera_components()
 
@@ -196,7 +205,7 @@ def test_resolve_camera_components_does_not_infer_lightguide(telescope_model_lst
     telescope_model_lst.parameters["lightguide_efficiency_vs_incidence_angle"] = {
         "value": "lightguide.ecsv"
     }
-    monkeypatch.setattr(telescope_model_lst, "_parameter_table_records", lambda _name: [])
+    _stub_camera_tables(monkeypatch, telescope_model_lst)
 
     result = telescope_model_lst._resolve_camera_components()
 

@@ -42,7 +42,7 @@ def mock_models(monkeypatch):
     tel.name = "LST-1"
     tel.config_file_path = Path("cfg.cfg")
     tel.config_file_directory = Path()
-    tel.write_sim_telarray_config_file = MagicMock()
+    tel.configuration_writers = {"sim_telarray": MagicMock()}
     tel.get_parameter_value.side_effect = lambda key: {
         "focal_length": 280.0,
         "mirror_class": 2,

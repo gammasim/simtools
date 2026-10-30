@@ -198,21 +198,16 @@ class TelescopeModel(ModelParameter):
         return {
             "rotate": self.get_parameter_value("camera_rotate"),
             "pixel_types": pixel_types,
-            "pixels": self._parameter_table_records("camera_pixel_layout"),
-            "triggers": self._parameter_table_records("camera_trigger_groups"),
-            "trigger_members": self._parameter_table_records("camera_trigger_members"),
+            "pixels": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_pixel_layout")
+            ),
+            "triggers": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_trigger_groups")
+            ),
+            "trigger_members": self.model_reader.get_parameter_table_records(
+                self._get_parameter_dict("camera_trigger_members")
+            ),
         }
-
-    def _parameter_table_records(self, parameter_name):
-        """Return scalar records from a validated model-parameter table."""
-        parameter_data = self._get_parameter_dict(parameter_name)
-        if hasattr(self.model_reader, "get_parameter_table_records"):
-            return self.model_reader.get_parameter_table_records(parameter_data)
-        table = self.get_parameter_table(parameter_name)
-        return [
-            {column: getattr(row[column], "value", row[column]) for column in table.colnames}
-            for row in table
-        ]
 
     def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""

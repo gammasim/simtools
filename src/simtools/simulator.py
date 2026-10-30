@@ -10,7 +10,6 @@ import numpy as np
 
 from simtools.configuration import defaults
 from simtools.context import RunContext
-from simtools.corsika import corsika_output_validator
 from simtools.io import table_handler
 from simtools.io.file_type import product_value
 from simtools.job_execution import execution
@@ -20,9 +19,8 @@ from simtools.model.array_model import ArrayModel
 from simtools.runners import runner_services
 from simtools.runners.chain_runner import ChainRunner
 from simtools.runners.stages import SimulationChain, StageInputs
-from simtools.sim_events import file_info, output_validator, writer
+from simtools.sim_events import file_info, validate_run_outputs, writer
 from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
-from simtools.simtel import simtel_output_validator
 from simtools.simulation.configuration import get_shower_configuration
 from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general, value_conversion
@@ -824,7 +822,7 @@ class Simulator:
         )
 
         if self.chain.has("sim_telarray"):
-            simtel_output_validator.validate_sim_telarray(
+            validate_run_outputs.validate_sim_telarray(
                 data_files=self.get_files(file_type="sim_telarray_output"),
                 log_files=self.get_files(file_type="sim_telarray_log"),
                 array_models=self.array_models,
@@ -834,7 +832,7 @@ class Simulator:
                 allow_for_changes=["nsb_scaling_factor", "stars"],
             )
         if self.chain.has("corsika"):
-            corsika_output_validator.validate_corsika_output(
+            validate_run_outputs.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
                 if self.chain.stages == ("corsika",) or self.context.args.get("save_corsika_output")
                 else None,
@@ -844,7 +842,7 @@ class Simulator:
             )
 
         if self.context.args.get("reduced_event_lists"):
-            output_validator.validate_sim_events(
+            validate_run_outputs.validate_sim_events(
                 data_files=self.get_files(file_type="sim_telarray_event_data"),
                 expected_mc_events=expected_mc_events,
             )
