@@ -131,13 +131,13 @@ def test_export_atmospheric_transmission_file(
         model_version=model_version,
     )
 
-    mocker.patch.object(_south.model_source, "export_model_files")
+    mocker.patch.object(_south.model_reader, "export_model_files")
 
     model_directory = tmp_test_directory / "model"
 
-    _south.export_atmospheric_transmission_file(model_directory)
+    get_model_writer(_south).export_atmospheric_transmission_file(model_directory)
 
-    _south.model_source.export_model_files.assert_called_once_with(
+    _south.model_reader.export_model_files.assert_called_once_with(
         parameters={
             "atmospheric_profile": {
                 **_south.parameters["atmospheric_profile"],
@@ -164,7 +164,7 @@ def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
     serialize = mocker.patch.object(get_model_writer(site_model), "_export_ecsv_as_simtel_table")
     model_directory = tmp_test_directory / "model"
 
-    site_model.export_atmospheric_transmission_file(model_directory)
+    get_model_writer(site_model).export_atmospheric_transmission_file(model_directory)
 
     serialize.assert_called_once_with(
         parameter_name="atmospheric_profile",

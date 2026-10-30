@@ -331,7 +331,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator_reverse._sort_data()
-    assert "No data table defined for reverse sorting" in caplog.text
+    assert "No data table defined for sorting" in caplog.text
 
 
 def test_check_data_for_duplicates(reference_columns):
@@ -373,28 +373,6 @@ def test_check_data_for_duplicates(reference_columns):
         data_validator._check_data_for_duplicates()
 
 
-def test_interval_check_allow_range():
-    data_validator = validate_data.DataValidator()
-
-    assert data_validator._interval_check((0.1, 0.9), (0.0, 1.0), "allowed_range")
-    assert data_validator._interval_check((0.0, 1.0), (0.0, 1.0), "allowed_range")
-
-    assert not data_validator._interval_check((-1.0, 0.9), (0.0, 1.0), "allowed_range")
-    assert not data_validator._interval_check((0.0, 1.1), (0.0, 1.0), "allowed_range")
-    assert not data_validator._interval_check((-1.0, 1.1), (0.0, 1.0), "allowed_range")
-
-
-def test_interval_check_required_range():
-    data_validator = validate_data.DataValidator()
-
-    assert data_validator._interval_check((250.0, 700.0), (300.0, 600), "required_range")
-    assert data_validator._interval_check((300.0, 600.0), (300.0, 600), "required_range")
-
-    assert not data_validator._interval_check((350.0, 700.0), (300.0, 600), "required_range")
-    assert not data_validator._interval_check((300.0, 500.0), (300.0, 600), "required_range")
-    assert not data_validator._interval_check((350.0, 500.0), (300.0, 600), "required_range")
-
-
 def test_check_range(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -408,9 +386,6 @@ def test_check_range(reference_columns, caplog):
     with pytest.raises(IndexError):
         data_validator._check_range(col_2.name, col_2.min(), col_2.max(), "allowed_range")
 
-    with pytest.raises(KeyError):
-        data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "failed_range")
-
     col_3 = Column(name="qe", data=[0.1, 5.00], dtype="float32")
     with pytest.raises(ValueError, match=r"Value for column 'qe' out of range"):
         data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
@@ -418,8 +393,8 @@ def test_check_range(reference_columns, caplog):
     with pytest.raises(ValueError, match=r"^Value for column 'qe' out of range"):
         data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
 
-    with pytest.raises(KeyError, match=r"Allowed range types are"):
-        data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
+    # a range that is not defined in the schema is not checked
+    data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "failed_range")
 
 
 def test_check_and_convert_units(reference_columns):

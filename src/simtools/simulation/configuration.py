@@ -12,6 +12,27 @@ def _simtel_writer(model, context=None):
 _WRITERS = {"sim_telarray": _simtel_writer}
 
 
+def export_model_files(model, destination=None, update_if_necessary=False):
+    """Export the parameter files of a model into its model directory.
+
+    Parameters
+    ----------
+    model : ModelParameter
+        Model whose parameter files are exported.
+    destination : pathlib.Path, optional
+        Target directory. Defaults to the model configuration directory.
+    update_if_necessary : bool
+        Skip the export if the model files were already exported and not changed since.
+    """
+    if update_if_necessary and model.model_files_exported:
+        return
+    model.model_reader.export_model_files(
+        parameters=model.parameters,
+        dest=destination or model.config_file_directory,
+    )
+    model.model_files_exported = True
+
+
 def get_model_writer(model, simulation_software="sim_telarray", context=None):
     """Return the selected model configuration writer, retaining its table cache.
 

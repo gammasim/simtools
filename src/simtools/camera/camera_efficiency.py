@@ -18,6 +18,7 @@ from simtools.context import RunContext
 from simtools.io import ascii_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.model_repository.asset_names import get_simtel_table_file_name
+from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names
 from simtools.visualization import visualize
 
@@ -161,7 +162,9 @@ class CameraEfficiency:
         self._logger.info("Simulating CameraEfficiency")
 
         if not self.config.get("skip_correction_to_nsb_spectrum", False):
-            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
+            get_model_writer(
+                self.telescope_model
+            ).export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
             )
 
@@ -666,7 +669,7 @@ class CameraEfficiency:
                 atmospheric_profile = get_simtel_table_file_name(parameter_data) or (
                     f"atmospheric_profile-{Path(self.telescope_model.config_file_path).stem}.dat"
                 )
-                self.site_model.export_model_parameter_as_simtel_file(
+                get_model_writer(self.site_model).export_model_parameter_as_simtel_file(
                     "atmospheric_profile",
                     self.telescope_model.config_file_directory,
                     table_format="plain",

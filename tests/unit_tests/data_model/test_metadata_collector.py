@@ -272,7 +272,7 @@ def test_read_input_metadata_from_file(
         ),
     )
     validate_simtel_metadata = mocker.patch.object(
-        simtel_metadata_reader.simtel_validate_metadata,
+        simtel_metadata_reader.sim_telarray_metadata,
         "validate_metadata_values",
     )
     metadata_1.args_dict["input_meta"] = simtel_file

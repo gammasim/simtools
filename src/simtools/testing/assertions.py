@@ -8,7 +8,7 @@ import h5py
 import yaml
 
 from simtools.job_execution.log_inspector import check_plain_logs, check_tar_logs
-from simtools.simtel import simtel_output_validator
+from simtools.sim_events import validate_run_outputs
 
 _logger = logging.getLogger(__name__)
 
@@ -160,7 +160,7 @@ def check_output_from_sim_telarray(file, file_test):
     event_type = event_type.get("event_type", "shower")
     if "expected_sim_telarray_output" in file_test:
         assert_sim_telarray.append(
-            simtel_output_validator.assert_expected_sim_telarray_output_and_event_type(
+            validate_run_outputs.assert_expected_sim_telarray_output_and_event_type(
                 file=file,
                 expected_sim_telarray_output=file_test["expected_sim_telarray_output"],
                 event_type=event_type,
@@ -168,16 +168,16 @@ def check_output_from_sim_telarray(file, file_test):
         )
     if "expected_sim_telarray_metadata" in file_test:
         assert_sim_telarray.append(
-            simtel_output_validator.assert_expected_sim_telarray_metadata(
+            validate_run_outputs.assert_expected_sim_telarray_metadata(
                 file=file,
                 expected_sim_telarray_metadata=file_test["expected_sim_telarray_metadata"],
             )
         )
     if event_type == "shower":
-        assert_sim_telarray.append(simtel_output_validator.assert_n_showers_and_energy_range(file))
+        assert_sim_telarray.append(validate_run_outputs.assert_n_showers_and_energy_range(file))
     if "expected_sim_telarray_output" not in file_test:
         assert_sim_telarray.append(
-            simtel_output_validator.assert_events_of_type(file, event_type=event_type)
+            validate_run_outputs.assert_events_of_type(file, event_type=event_type)
         )
 
     return all(assert_sim_telarray)

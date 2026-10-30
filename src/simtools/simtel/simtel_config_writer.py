@@ -19,8 +19,8 @@ from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.simtel import (
     segmentation,
+    sim_telarray_metadata,
     simtel_file_writer,
-    simtel_validate_metadata,
     table_serializers,
 )
 from simtools.utils import names, value_conversion
@@ -410,7 +410,7 @@ class SimtelConfigWriter:
             if value is not None:
                 meta_parameters.append(f"{prefix} set {key}={value}")
 
-        simtel_validate_metadata.validate_metadata(meta_parameters)
+        sim_telarray_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
     def write_array_config_file(
@@ -588,7 +588,7 @@ class SimtelConfigWriter:
             for key, value in meta_items.items()
             if not isinstance(value, list)
         ]
-        simtel_validate_metadata.validate_metadata(meta_lines)
+        sim_telarray_metadata.validate_metadata(meta_lines)
         file.write("".join(f"{self.TAB}{line}\n" for line in meta_lines))
 
     def _write_site_parameters(

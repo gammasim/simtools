@@ -92,8 +92,8 @@ jobs:
 
       - name: Test CTAO metadata compatibility
         run: >-
-          pytest tests/unit_tests/simtel/test_ctao_metadata.py
-          tests/unit_tests/simtel/test_simtel_validate_metadata.py
+          pytest tests/unit_tests/simtel/test_sim_telarray_metadata.py
+          tests/unit_tests/simtel/test_sim_telarray_metadata_validation.py
 
   unit_tests:
     runs-on: ${{ matrix.os }}

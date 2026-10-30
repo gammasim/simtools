@@ -6,6 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
 from simtools.model.telescope_model import TelescopeModel
+from simtools.simulation.configuration import export_model_files
 from simtools.visualization.plot_camera import (
     PIXEL_IDS,
     parse_pixel_ids_to_print,
@@ -88,7 +89,7 @@ def main():
         model_reader=app_context.model_reader,
         context=app_context,
     )
-    tel_model.export_model_files()
+    export_model_files(tel_model)
     app_context.logger.info(f"\nPlot camera for {tel_model.name}\n")
 
     focal_length = tel_model.get_telescope_effective_focal_length("cm")

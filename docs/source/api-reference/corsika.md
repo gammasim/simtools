@@ -45,12 +45,3 @@ Support modules for running CORSIKA.
    :members:
 
 ```
-
-## corsika_output_validator
-
-(corsika-output-validator-1)=
-
-```{eval-rst}
-.. automodule:: corsika.corsika_output_validator
-   :members:
-```

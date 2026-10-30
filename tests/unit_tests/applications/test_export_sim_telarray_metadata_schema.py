@@ -24,7 +24,7 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
     )
     get_registry = mocker.patch(
         "simtools.applications.export_sim_telarray_metadata_schema."
-        "simtel_validate_metadata.get_meta_parameter_registry",
+        "sim_telarray_metadata.get_meta_parameter_registry",
         return_value=registry,
     )
 

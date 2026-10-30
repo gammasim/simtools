@@ -31,6 +31,7 @@ def models():
     tel.site = "North"
     tel.config_file_path = Path("cfg.cfg")
     tel.config_file_directory = Path()
+    tel.configuration_writers = {"sim_telarray": MagicMock()}
     site = MagicMock()
     site.get_parameter_value.return_value = 2150.0
     return SimpleNamespace(tel=tel, site=site)
@@ -349,7 +350,9 @@ def test_simulate_creates_one_simulator_per_image(backend, models, mocker):
 
     backend.simulate(requests, test=True, force=True, compress_photons=False)
 
-    models.tel.write_sim_telarray_config_file.assert_called_once()
+    models.tel.configuration_writers[
+        "sim_telarray"
+    ].write_sim_telarray_config_file.assert_called_once()
     assert simulator.call_count == 2
     config = simulator.call_args.kwargs["config_data"]
     assert config["off_axis_x"] == pytest.approx(1.0)

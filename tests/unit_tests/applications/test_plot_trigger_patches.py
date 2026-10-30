@@ -127,5 +127,5 @@ def test_run_writes_configuration_report_without_exporting_simulation_files(
         Table.read(output_files[GROUPS_FILE_KEY], format=ECSV_FORMAT),
     )
     app_context.logger.info.assert_any_call("%s", expected_page_summary)
-    telescope.export_model_files.assert_not_called()
+    telescope.model_reader.export_model_files.assert_not_called()
     assert summary["pixel_count"] == 3

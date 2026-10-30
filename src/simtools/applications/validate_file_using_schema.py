@@ -4,7 +4,7 @@
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.data_model import metadata_collector, schema, validate_data
-from simtools.sim_events import output_validator
+from simtools.sim_events import validate_run_outputs
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -73,10 +73,10 @@ def main():
             ignore_software_version=app_context.args.get("ignore_software_version", False),
         )
     elif data_type == "reduced_event_data":
-        output_validator.validate_reduced_event_data_file(file_name)
+        validate_run_outputs.validate_reduced_event_data_file(file_name)
         app_context.logger.info(f"Successful validation of reduced event data {file_name}")
     elif data_type == "trigger_histograms":
-        output_validator.validate_trigger_histogram_file(file_name)
+        validate_run_outputs.validate_trigger_histogram_file(file_name)
         app_context.logger.info(f"Successful validation of trigger histograms {file_name}")
     else:
         validate_data.DataValidator.validate_data_files(

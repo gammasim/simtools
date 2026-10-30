@@ -13,8 +13,9 @@ from simtools.data_model.table_asset import get_simtel_serialization
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events.formats.readers import get_reader
 from simtools.simtel import simtel_seeds, table_serializers
-from simtools.simtel.ctao_metadata import get_ctao_simtel_metadata
+from simtools.simtel.sim_telarray_metadata import get_ctao_simtel_metadata
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simulation.configuration import export_model_files, get_model_writer
 from simtools.utils import names
 
 _CORSIKA_FILE = "corsika_file"
@@ -57,7 +58,7 @@ class SimtelModelWriter:
         parameters = self.model.parameters.copy()
         software_parameters = self.model.get_simulation_software_parameters(SIMTEL_SOFTWARE) or {}
         parameters.update(software_parameters)
-        self.model.export_model_files(update_if_necessary=True)
+        export_model_files(self.model, update_if_necessary=True)
         self.model.model_reader.export_model_files(
             parameters=software_parameters,
             dest=self.model.config_file_directory,
@@ -96,8 +97,8 @@ class SimtelModelWriter:
             if catalog.is_global_sim_telarray_parameter(name)
         }
         parameters.update(global_parameters)
-        additional_models.export_model_files(
-            self.model.config_file_directory, update_if_necessary=True
+        export_model_files(
+            additional_models, self.model.config_file_directory, update_if_necessary=True
         )
         additional_models.model_reader.export_model_files(
             parameters=global_parameters,
@@ -207,7 +208,7 @@ class SimtelModelWriter:
         for tel_model in self.model.telescope_models.values():
             name = tel_model.name
             if name not in exported_models:
-                tel_model.write_sim_telarray_config_file(
+                get_model_writer(tel_model, context=self.context).write_sim_telarray_config_file(
                     additional_models=self.model.calibration_models.get(tel_model.name)
                 )
                 exported_models.append(name)
@@ -220,7 +221,7 @@ class SimtelModelWriter:
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        self.model.site_model.export_model_files()
+        export_model_files(self.model.site_model)
 
         self._logger.info(f"Writing array configuration file into {self.model.config_file_path}")
         simtel_writer = SimtelConfigWriter(

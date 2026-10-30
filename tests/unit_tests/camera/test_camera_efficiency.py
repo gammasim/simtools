@@ -11,6 +11,7 @@ from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.camera.camera_efficiency_calculator import CameraEfficiencyCalculator
+from simtools.simulation.configuration import get_model_writer
 
 logger = logging.getLogger()
 _TELESCOPE_THROUGHPUT_FILE_PREFIX = "telescope_throughput_"
@@ -156,7 +157,7 @@ def test_init_reuses_each_supplied_simulation_model(
 
 def test_simulate(camera_efficiency_lst, caplog, mocker):
     export_correction = mocker.patch.object(
-        camera_efficiency_lst.telescope_model,
+        get_model_writer(camera_efficiency_lst.telescope_model),
         "export_nsb_spectrum_to_telescope_altitude_correction_file",
     )
     mock_calculate = mocker.patch.object(
@@ -393,7 +394,7 @@ def test_get_x_max_for_efficiency_type_muon_exports_ecsv_profile(camera_efficien
         return_value="atmospheric_profile-1.0.0.ecsv",
     )
     export_file = mocker.patch.object(
-        camera_efficiency_lst.site_model,
+        get_model_writer(camera_efficiency_lst.site_model),
         "export_model_parameter_as_simtel_file",
     )
 

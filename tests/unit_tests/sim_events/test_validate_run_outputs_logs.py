@@ -7,38 +7,22 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_output_validator import (
+from simtools.sim_events.validate_run_outputs import (
     _assert_model_parameters,
     _assert_sim_telarray_seed,
     _extract_parameter_value,
-    _extract_sim_telarray_value,
-    _is_equal_floats_or_ints,
-    _item_to_check_from_sim_telarray,
-    _sim_telarray_name_from_parameter_name,
+    _read_sim_telarray_items,
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
     assert_expected_sim_telarray_output_and_event_type,
     assert_n_showers_and_energy_range,
     assert_sim_telarray_metadata,
     is_equal,
-    validate_event_numbers,
-    validate_log_files,
-    validate_metadata,
     validate_sim_telarray,
+    validate_sim_telarray_event_numbers,
+    validate_sim_telarray_logs,
+    validate_sim_telarray_metadata,
 )
-
-
-@pytest.mark.parametrize(
-    ("input_name", "expected"),
-    [
-        ("reference_point_latitude", "latitude"),
-        ("altitude", "corsika_observation_level"),
-        ("array_triggers", None),
-        ("mirror_area", "mirror_area"),
-    ],
-)
-def test_parameter_name_conversion(input_name, expected):
-    assert _sim_telarray_name_from_parameter_name(input_name) == expected
 
 
 @pytest.mark.parametrize(
@@ -81,7 +65,7 @@ def test_is_equal(value1, value2, value_type, expected):
     ],
 )
 def test_is_equal_floats_or_ints(value1, value2, expected):
-    result = _is_equal_floats_or_ints(value1, value2)
+    result = is_equal(value1, value2, "double")
     assert result is expected
 
 
@@ -130,10 +114,12 @@ def test_rng_select_seed_mismatch():
     sim_telarray_seeds.instrument_seed = "12345"
 
     with patch(
-        "simtools.simtel.simtel_output_validator.get_corsika_run_number", return_value=10
+        "simtools.sim_events.validate_run_outputs.get_corsika_run_number", return_value=10
     ) as mock_get_run:
         test_seeds = list(range(100))
-        with patch("simtools.simtel.simtel_output_validator.random.seeds", return_value=test_seeds):
+        with patch(
+            "simtools.sim_events.validate_run_outputs.random.seeds", return_value=test_seeds
+        ):
             result = _assert_sim_telarray_seed(
                 metadata, sim_telarray_seeds, Path("/nonexistent/test_file")
             )
@@ -196,7 +182,7 @@ def test_assert_model_parameters(
     ],
 )
 def test_extract_sim_telarray_value(value, parameter_type, expected):
-    result, _ = _extract_sim_telarray_value(value, parameter_type)
+    result = _extract_parameter_value({"key": value}, "key", parameter_type)
     if isinstance(expected, np.ndarray):
         assert np.array_equal(result, expected)
     else:
@@ -290,7 +276,7 @@ def test_telescope_count_mismatch(tmp_path):
     }
 
     with patch(
-        "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        "simtools.sim_events.validate_run_outputs.read_sim_telarray_metadata"
     ) as read_meta_mock:
         read_meta_mock.return_value = ({}, {1: {}, 2: {}, 3: {}})
 
@@ -309,12 +295,12 @@ def test_telescope_not_found(tmp_path):
     array_model_mock.telescope_models["LST-01"].parameters = {}
 
     with patch(
-        "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        "simtools.sim_events.validate_run_outputs.read_sim_telarray_metadata"
     ) as read_meta_mock:
         read_meta_mock.return_value = ({}, {1: {}})
 
         with patch(
-            "simtools.simtel.simtel_output_validator.get_sim_telarray_telescope_id"
+            "simtools.sim_events.validate_run_outputs.get_sim_telarray_telescope_id"
         ) as get_id_mock:
             get_id_mock.return_value = None
 
@@ -333,12 +319,12 @@ def test_valid_metadata(tmp_path):
     array_model_mock.telescope_models["LST-01"].parameters = {}
 
     with patch(
-        "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        "simtools.sim_events.validate_run_outputs.read_sim_telarray_metadata"
     ) as read_meta_mock:
         read_meta_mock.return_value = ({}, {1: {}})
 
         with patch(
-            "simtools.simtel.simtel_output_validator.get_sim_telarray_telescope_id"
+            "simtools.sim_events.validate_run_outputs.get_sim_telarray_telescope_id"
         ) as get_id_mock:
             get_id_mock.return_value = 1
 
@@ -352,7 +338,9 @@ def test_valid_metadata(tmp_path):
         ((50, 500), 1000, 100, True),
     ],
 )
-def test_validate_event_numbers(tmp_path, mock_return, expected_mc, expected_shower, should_raise):
+def test_validate_sim_telarray_event_numbers(
+    tmp_path, mock_return, expected_mc, expected_shower, should_raise
+):
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
 
@@ -360,28 +348,28 @@ def test_validate_event_numbers(tmp_path, mock_return, expected_mc, expected_sho
         mock_events.return_value = mock_return
         if should_raise:
             with pytest.raises(ValueError, match="Event mismatch"):
-                validate_event_numbers([data_file], expected_mc, expected_shower)
+                validate_sim_telarray_event_numbers([data_file], expected_mc, expected_shower)
         else:
-            validate_event_numbers([data_file], expected_mc, expected_shower)
+            validate_sim_telarray_event_numbers([data_file], expected_mc, expected_shower)
 
 
 def test_valid_log_files(tmp_path):
     log_file = tmp_path / "test.log"
     log_file.write_text("test log content")
 
-    with patch("simtools.simtel.simtel_output_validator.check_plain_logs") as mock_check:
+    with patch("simtools.sim_events.validate_run_outputs.check_plain_logs") as mock_check:
         mock_check.return_value = True
-        assert validate_log_files([log_file]) is None
+        assert validate_sim_telarray_logs([log_file]) is None
 
 
 def test_invalid_log_files(tmp_path):
     log_file = tmp_path / "test.log"
     log_file.write_text("test log content")
 
-    with patch("simtools.simtel.simtel_output_validator.check_plain_logs") as mock_check:
+    with patch("simtools.sim_events.validate_run_outputs.check_plain_logs") as mock_check:
         mock_check.return_value = False
         with pytest.raises(ValueError, match="validation failed"):
-            validate_log_files([log_file])
+            validate_sim_telarray_logs([log_file])
 
 
 def test_valid_showers_and_energy(tmp_path):
@@ -397,7 +385,7 @@ def test_valid_showers_and_energy(tmp_path):
         "E_range": [0.5, 10.0],
     }
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
@@ -416,7 +404,7 @@ def test_shower_count_mismatch(tmp_path):
     mock_event = {"mc_shower": {"energy": 1.0}, "type": "data"}
     mock_run_header = {"n_showers": 1000, "E_range": [0.5, 10.0]}
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
@@ -435,7 +423,7 @@ def test_energy_range_exceeded(tmp_path):
     mock_event = {"mc_shower": {"energy": 20.0}, "type": "data"}
     mock_run_header = {"n_showers": 100, "E_range": [0.5, 10.0]}
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
@@ -467,14 +455,14 @@ def test_extract_telescope_events(tmp_path):
         "photons": [50, 100, 150],
     }
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
         mock_instance.__iter__.return_value = [mock_event]
         mock_file.return_value = mock_instance
 
-        result = _item_to_check_from_sim_telarray(sim_file, expected_output)
+        result = _read_sim_telarray_items(sim_file, expected_output, set())
 
         assert "n_telescope_events" in result
         assert result["n_telescope_events"] == 1
@@ -494,7 +482,7 @@ def test_expected_output_and_event_type_uses_one_traversal(tmp_path):
         "telescope_events": [{"data": "test"}],
     }
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
@@ -525,7 +513,7 @@ def test_none_expected_metadata():
     ],
 )
 def test_assert_expected_sim_telarray_metadata(expected_metadata, metadata_return, expected_result):
-    with patch("simtools.simtel.simtel_output_validator.read_sim_telarray_metadata") as mock_read:
+    with patch("simtools.sim_events.validate_run_outputs.read_sim_telarray_metadata") as mock_read:
         mock_read.return_value = metadata_return
         result = assert_expected_sim_telarray_metadata(Path("/dummy/file.zst"), expected_metadata)
         assert result is expected_result
@@ -543,7 +531,7 @@ def test_assert_events_of_type(tmp_path, mock_events, event_type, expected_resul
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_instance = MagicMock()
         mock_instance.__enter__.return_value = mock_instance
         mock_instance.__exit__.return_value = None
@@ -561,7 +549,7 @@ def test_assert_events_of_type(tmp_path, mock_events, event_type, expected_resul
         ("other_v2.0.0.simtel.zst", "1.0.0", False),
     ],
 )
-def test_validate_metadata(tmp_path, filename, model_version, should_call_assert):
+def test_validate_sim_telarray_metadata(tmp_path, filename, model_version, should_call_assert):
     test_file = tmp_path / filename
     test_file.write_bytes(b"dummy")
 
@@ -569,9 +557,9 @@ def test_validate_metadata(tmp_path, filename, model_version, should_call_assert
     model_mock.model_version = model_version
 
     with patch(
-        "simtools.simtel.simtel_output_validator.assert_sim_telarray_metadata"
+        "simtools.sim_events.validate_run_outputs.assert_sim_telarray_metadata"
     ) as mock_assert:
-        validate_metadata([test_file], [model_mock])
+        validate_sim_telarray_metadata([test_file], [model_mock])
         if should_call_assert:
             mock_assert.assert_called_once()
         else:
@@ -591,8 +579,10 @@ def test_validate_sim_telarray(tmp_path, array_models, should_call_metadata):
     log_file = tmp_path / "test.log"
     log_file.write_text("test log")
 
-    with patch("simtools.simtel.simtel_output_validator.validate_log_files") as mock_log:
-        with patch("simtools.simtel.simtel_output_validator.validate_metadata") as mock_meta:
+    with patch("simtools.sim_events.validate_run_outputs.validate_sim_telarray_logs") as mock_log:
+        with patch(
+            "simtools.sim_events.validate_run_outputs.validate_sim_telarray_metadata"
+        ) as mock_meta:
             validate_sim_telarray([data_file], [log_file], array_models=array_models)
             mock_log.assert_called_once()
             if should_call_metadata:
@@ -608,8 +598,10 @@ def test_validate_sim_telarray_checks_zero_expected_events(tmp_path):
     log_file.write_text("test log")
 
     with (
-        patch("simtools.simtel.simtel_output_validator.validate_log_files"),
-        patch("simtools.simtel.simtel_output_validator.validate_event_numbers") as mock_events,
+        patch("simtools.sim_events.validate_run_outputs.validate_sim_telarray_logs"),
+        patch(
+            "simtools.sim_events.validate_run_outputs.validate_sim_telarray_event_numbers"
+        ) as mock_events,
     ):
         validate_sim_telarray(
             [data_file], [log_file], expected_mc_events=0, expected_shower_events=0
@@ -631,8 +623,8 @@ def test_assert_sim_telarray_seed_matching_seed(tmp_path, caplog):
     seed = MagicMock()
     seed.instrument_seed = "12345"
 
-    with patch("simtools.simtel.simtel_output_validator.get_corsika_run_number") as mock_run:
-        with patch("simtools.simtel.simtel_output_validator.random.seeds") as mock_seeds:
+    with patch("simtools.sim_events.validate_run_outputs.get_corsika_run_number") as mock_run:
+        with patch("simtools.sim_events.validate_run_outputs.random.seeds") as mock_seeds:
             mock_run.return_value = 1
             mock_seeds.return_value = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
             result = _assert_sim_telarray_seed(metadata, seed, data_file)
@@ -645,7 +637,7 @@ def test_assert_events_of_type_not_found(tmp_path, caplog):
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
 
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+    with patch("simtools.sim_events.validate_run_outputs.SimTelFile") as mock_file:
         mock_file.return_value.__enter__.return_value = iter([{"type": "calibration"}])
         result = assert_events_of_type(data_file, event_type="shower")
         assert result is False

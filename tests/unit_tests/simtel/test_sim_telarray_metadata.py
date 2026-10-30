@@ -8,7 +8,7 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 
-from simtools.simtel import ctao_metadata
+from simtools.simtel import sim_telarray_metadata
 
 _PRODUCTION_ID = "production_id"
 _LABEL = "label"
@@ -135,7 +135,7 @@ def _nested_models(annotation):
 
 
 def test_get_ctao_simtel_metadata_creates_north_product():
-    metadata = ctao_metadata.get_ctao_simtel_metadata(
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
         _BASE_ARGS,
         created=Time("2026-01-02T03:04:05", scale="utc"),
     )
@@ -149,7 +149,7 @@ def test_get_ctao_simtel_metadata_creates_north_product():
     assert metadata["PDGID"] == 22
     assert metadata["MSNGR"] == "photon"
     assert metadata[_SIMPROD] == "production-42"
-    assert metadata["MODELVER"] == ctao_metadata.PRODUCT_MODEL_VERSION
+    assert metadata["MODELVER"] == sim_telarray_metadata.PRODUCT_MODEL_VERSION
     assert metadata["ACTID"] == _BASE_ARGS["activity_id"]
     assert "primary" not in metadata
     assert math.isclose(metadata["SIMZEN"], 20.0)
@@ -171,7 +171,7 @@ def test_get_ctao_simtel_metadata_accepts_south_and_optional_coordinates(hour_an
         "nsb_scaling_factor": 1.25,
     }
 
-    metadata = ctao_metadata.get_ctao_simtel_metadata(args)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(args)
 
     assert metadata["INSTRUME"] == "CTAO-South"
     assert math.isclose(metadata["SIMHA"], 30.0)
@@ -180,14 +180,14 @@ def test_get_ctao_simtel_metadata_accepts_south_and_optional_coordinates(hour_an
 
 
 def test_get_angle_preserves_angular_units():
-    angle = ctao_metadata._get_angle({"ha": 2 * u.hourangle}, "ha")
+    angle = sim_telarray_metadata._get_angle({"ha": 2 * u.hourangle}, "ha")
 
     assert_quantity_allclose(angle, 30 * u.deg)
-    assert ctao_metadata._get_angle({}, "ha") is None
+    assert sim_telarray_metadata._get_angle({}, "ha") is None
 
 
 def test_get_ctao_simtel_metadata_uses_contact_defaults():
-    metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(_BASE_ARGS)
 
     assert metadata["AUTHOR"] == "not set"
     assert metadata["ORIGIN"] == "not set"
@@ -199,7 +199,7 @@ def test_get_ctao_simtel_metadata_uses_contact_defaults():
     [(None, _LABEL_NAME, _LABEL_NAME), (_PRODUCTION_NAME, _LABEL_NAME, _PRODUCTION_NAME)],
 )
 def test_production_identifier_precedence(production_id, label, expected):
-    metadata = ctao_metadata.get_ctao_simtel_metadata(
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(
         {**_BASE_ARGS, _PRODUCTION_ID: production_id, _LABEL: label}
     )
 
@@ -215,7 +215,7 @@ def test_get_ctao_simtel_metadata_uses_user_contact():
         "user_email": "author@example.org",
     }
 
-    metadata = ctao_metadata.get_ctao_simtel_metadata(args)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(args)
 
     assert metadata["AUTHOR"] == "A. Author"
     assert metadata["ORIGIN"] == "CTAO"
@@ -225,7 +225,7 @@ def test_get_ctao_simtel_metadata_uses_user_contact():
 def test_get_ctao_simtel_metadata_creates_activity_id_when_missing():
     args = {key: value for key, value in _BASE_ARGS.items() if key != "activity_id"}
 
-    metadata = ctao_metadata.get_ctao_simtel_metadata(args)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(args)
 
     assert metadata["ACTID"] != _BASE_ARGS["activity_id"]
 
@@ -234,7 +234,7 @@ def test_get_ctao_simtel_metadata_reads_nsb_factor_from_site_model(mocker):
     site_model = mocker.Mock()
     site_model.get_parameter_value.return_value = "0.5"
 
-    metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
 
     site_model.get_parameter_value.assert_called_once_with("nsb_scaling_factor")
     assert math.isclose(metadata["SIMNSB"], 0.5)
@@ -242,9 +242,11 @@ def test_get_ctao_simtel_metadata_reads_nsb_factor_from_site_model(mocker):
 
 def test_get_ctao_simtel_metadata_uses_default_nsb_factor_missing_from_site_model(mocker):
     site_model = mocker.Mock()
-    site_model.get_parameter_value.side_effect = ctao_metadata.InvalidModelParameterError("missing")
+    site_model.get_parameter_value.side_effect = sim_telarray_metadata.InvalidModelParameterError(
+        "missing"
+    )
 
-    metadata = ctao_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
+    metadata = sim_telarray_metadata.get_ctao_simtel_metadata(_BASE_ARGS, site_model=site_model)
 
     assert math.isclose(metadata["SIMNSB"], 1.0)
 
@@ -260,16 +262,16 @@ def test_get_ctao_simtel_metadata_uses_default_nsb_factor_missing_from_site_mode
 )
 def test_get_ctao_simtel_metadata_rejects_bad_input(args, message):
     with pytest.raises(ValueError, match=message):
-        ctao_metadata.get_ctao_simtel_metadata(args)
+        sim_telarray_metadata.get_ctao_simtel_metadata(args)
 
 
 def test_ctao_registry_uses_serialized_data_model_keywords():
-    registry = ctao_metadata.get_ctao_metadata_registry()
+    registry = sim_telarray_metadata.get_ctao_metadata_registry()
 
     assert registry["dataid"]["source_type"] == "ctao_datamodel"
     assert registry["simnsb"]["value_schema"]["data_type"] == "number"
     assert set(registry) == _USED_CTAO_KEYWORDS
     assert not _SKIPPED_CTAO_KEYWORDS.intersection(registry)
-    discovered_keywords = _data_model_keywords(ctao_metadata.Product)
+    discovered_keywords = _data_model_keywords(sim_telarray_metadata.Product)
     assert len(discovered_keywords) == len(set(discovered_keywords))
     assert set(discovered_keywords) == _USED_CTAO_KEYWORDS | _SKIPPED_CTAO_KEYWORDS
