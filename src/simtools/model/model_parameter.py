@@ -558,17 +558,22 @@ class ModelParameter:
         schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
 
         if metadata:
-            for key in _METADATA_KEYS:
-                if key in metadata:
-                    par_dict[key] = metadata[key]
-            if "model_parameter_schema_version" in metadata and isinstance(par_type, list):
-                par_dict["type"] = par_type
+            _apply_metadata(par_dict, metadata, par_type)
 
         par_dict["model_parameter_schema_version"] = schema_version
         if par_type is not None:
             par_dict.setdefault("type", par_type)
         par_dict.setdefault("unit", schema_unit)
         return par_dict
+
+
+def _apply_metadata(par_dict, metadata, par_type):
+    """Copy known metadata keys into a parameter dictionary."""
+    for key in _METADATA_KEYS:
+        if key in metadata:
+            par_dict[key] = metadata[key]
+    if "model_parameter_schema_version" in metadata and isinstance(par_type, list):
+        par_dict["type"] = par_type
 
 
 def _entry_kwargs(entry):

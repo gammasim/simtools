@@ -434,24 +434,33 @@ def _validate_metadata_value(name, value, value_schema):
     if kind == "scalar":
         _validate_scalar_value(name, value, value_schema["data_type"], value_schema)
     elif kind == "file_name":
-        if value_schema.get("allow_none_literal") and value == "none":
-            return
-        if value == "" and not value_schema.get("allow_empty", False):
-            raise ValueError(f"Empty file-like metadata value for {name}")
+        _validate_file_name_value(name, value, value_schema)
     elif kind == "fixed_numeric_tuple":
-        parts = value.split()
-        if len(parts) != value_schema["length"]:
-            raise ValueError(
-                f"sim_telarray metadata tuple length mismatch for {name}: "
-                f"{len(parts)} != {value_schema['length']}"
-            )
-        for part in parts:
-            float(part)
+        _validate_numeric_tuple(name, value, value_schema["length"])
     elif kind == "sim_telarray_key_value_string":
         if not re.fullmatch(value_schema["regex"], value):
             raise ValueError(f"sim_telarray metadata value for {name} does not match regex")
     else:
         raise ValueError(f"Unsupported value schema kind for {name}: {kind}")
+
+
+def _validate_file_name_value(name, value, value_schema):
+    """Validate a file-like metadata value."""
+    if value_schema.get("allow_none_literal") and value == "none":
+        return
+    if value == "" and not value_schema.get("allow_empty", False):
+        raise ValueError(f"Empty file-like metadata value for {name}")
+
+
+def _validate_numeric_tuple(name, value, length):
+    """Validate a whitespace-separated tuple of numbers of fixed length."""
+    parts = value.split()
+    if len(parts) != length:
+        raise ValueError(
+            f"sim_telarray metadata tuple length mismatch for {name}: {len(parts)} != {length}"
+        )
+    for part in parts:
+        float(part)
 
 
 def _validate_scalar_value(name, value, data_type, value_schema):
