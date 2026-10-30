@@ -4,6 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.production_configuration.trigger_histograms import load_event_data_histograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _ARGUMENTS = (
@@ -31,23 +32,30 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_model_reader=False,
+    needs=("corsika",),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    output_dir = app_context.io_handler.get_output_directory()
+    output_dir = app_context.paths.get_output_directory()
 
     app_context.logger.info(
         f"Loading trigger histogram file from: {app_context.args['trigger_histogram_file']}"
     )
-    plot_simtel_event_histograms.plot_trigger_histogram_file(
+    array_layout_name = app_context.args.get("array_layout_name")
+    selected_names = [array_layout_name] if array_layout_name else None
+    loaded_histograms = load_event_data_histograms(
         app_context.args["trigger_histogram_file"],
-        output_dir,
-        app_context.args.get("array_layout_name"),
+        array_names=selected_names,
     )
+    if selected_names and not loaded_histograms:
+        raise ValueError(
+            f"Array layout '{array_layout_name}' not found in histogram file "
+            f"'{app_context.args['trigger_histogram_file']}'."
+        )
+    plot_simtel_event_histograms.plot_trigger_histograms(loaded_histograms, output_dir)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,12 @@
 
 import copy
 import logging
+from dataclasses import dataclass, field
 
 import astropy.units as u
 import numpy as np
 
+from simtools.histogram.histogram import Histogram
 from simtools.sim_events.reader import EventDataReader
 from simtools.utils.general import resolve_file_patterns
 from simtools.utils.value_conversion import get_value_as_quantity
@@ -17,6 +19,21 @@ _REUSE_STAT_LABELS = {
     "max": "Max Reuse",
     "std": "Reuse Std Dev",
 }
+_AXIS_NAMES_AND_UNITS = {
+    "Energy (TeV)": ("energy", "TeV"),
+    _CORE_DISTANCE: ("core_distance", "m"),
+    _ANGULAR_DISTANCE: ("angular_distance", "deg"),
+    "Core X (m)": ("core_x", "m"),
+    "Core Y (m)": ("core_y", "m"),
+}
+_PLOT_ONLY_KEYS = (
+    "histogram",
+    "title",
+    "title_fontsize",
+    "axis_titles",
+    "plot_scales",
+    "suffix",
+)
 _EXPOSURE_INFO_KEYS = (
     "primary_particle",
     "zenith",
@@ -32,6 +49,18 @@ _EXPOSURE_INFO_KEYS = (
     "solid_angle",
     "scatter_area",
 )
+
+
+@dataclass
+class _FillState:
+    """Bookkeeping of one accumulation run (reset together)."""
+
+    histogram_specs: dict = field(default_factory=dict)
+    reuse_stat_accumulators: dict = field(default_factory=dict)
+    filled_data_sets: int = 0
+    contains_triggered_data: bool = False
+    release_event_data_after_fill: bool = False
+    file_info_source: str | None = None
 
 
 class EventDataHistograms:
@@ -92,21 +121,17 @@ class EventDataHistograms:
         self.telescope_list = telescope_list
 
         self.histograms = {}
+        self._fill_state = _FillState()
         self.file_info = {}
         self.data_ranges = {}
         self.loaded_bin_edges = {}
-        self._contains_triggered_data = False
-        self._filled_data_sets = 0
-        self._release_event_data_after_fill = False
-        self._reuse_stat_accumulators = {}
-        self._file_info_source = None
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
             self.reader = EventDataReader(
                 self.event_data_files[0], telescope_list=self.telescope_list
             )
-            self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
+            self._fill_state.contains_triggered_data = self._reader_has_triggered_data(self.reader)
 
     @classmethod
     def create_accumulator(
@@ -141,25 +166,14 @@ class EventDataHistograms:
         instance.require_triggered_data = True
         instance.telescope_list = telescope_list
         instance.histograms = {}
+        instance._fill_state = _FillState(
+            contains_triggered_data=True, release_event_data_after_fill=True
+        )
         instance.file_info = {}
         instance.data_ranges = {}
         instance.loaded_bin_edges = {}
-        instance._contains_triggered_data = True
-        instance._filled_data_sets = 0
-        instance._release_event_data_after_fill = True
-        instance._reuse_stat_accumulators = {}
-        instance._file_info_source = None
         instance.reader = None
         return instance
-
-    def get_empty_histogram_definitions(self):
-        """Return empty histogram definitions without attached event-data arrays."""
-        histograms = self._define_histograms(None, None, None)
-        for histogram in histograms.values():
-            histogram["event_data"] = (
-                None if histogram["1d"] else tuple(None for _ in histogram["event_data_column"])
-            )
-        return histograms
 
     def set_loaded_histograms(
         self,
@@ -171,15 +185,16 @@ class EventDataHistograms:
     ):
         """Install histogram data loaded from a serialized histogram product."""
         self.histograms = histograms
+        self._fill_state.histogram_specs = self._define_histograms(None, None, None)
         if file_info is not None:
             self.file_info = file_info
         if data_ranges is not None:
             self.data_ranges = data_ranges
         if loaded_bin_edges is not None:
             self.loaded_bin_edges = loaded_bin_edges
-        self._filled_data_sets = 1
-        self._contains_triggered_data = contains_triggered_data
-        self._reuse_stat_accumulators = {}
+        self._fill_state.filled_data_sets = 1
+        self._fill_state.contains_triggered_data = contains_triggered_data
+        self._fill_state.reuse_stat_accumulators = {}
 
     @staticmethod
     def _validate_angular_distance_bin_width(angular_distance_bin_width):
@@ -247,8 +262,9 @@ class EventDataHistograms:
                 raise
 
             self.reader = reader
-            self._contains_triggered_data = (
-                self._contains_triggered_data or self._reader_has_triggered_data(self.reader)
+            self._fill_state.contains_triggered_data = (
+                self._fill_state.contains_triggered_data
+                or self._reader_has_triggered_data(self.reader)
             )
             yield event_data_file, self.reader
 
@@ -311,7 +327,7 @@ class EventDataHistograms:
                 if not self._file_info_values_equal(self.file_info.get(key), file_info.get(key))
             ]
             if differing_keys:
-                previous_source = self._file_info_source or "the first input file"
+                previous_source = self._fill_state.file_info_source or "the first input file"
                 current_source = source_file or "current input"
                 details = ", ".join(
                     f"{key}: {self.file_info.get(key)!r} != {file_info.get(key)!r}"
@@ -322,39 +338,35 @@ class EventDataHistograms:
                     f"between {previous_source} and {current_source}: {details}"
                 )
         else:
-            self._file_info_source = source_file
+            self._fill_state.file_info_source = source_file
         self.file_info = file_info
 
     def _merge_histograms(self, current_histograms):
         """Carry over accumulated histogram counts before filling new data."""
-        for name, hist in current_histograms.items():
+        self._fill_state.histogram_specs = current_histograms
+        merged = {}
+        for name, spec in current_histograms.items():
             previous = self.histograms.get(name)
             if previous is not None:
-                if not self._histogram_bin_edges_equal(previous, hist):
+                if not self._histogram_bin_edges_equal(previous, spec):
                     raise ValueError(f"Cannot accumulate histogram '{name}' with different bins.")
-                hist["histogram"] = previous["histogram"]
-        self.histograms = current_histograms
+                merged[name] = previous
+        self.histograms = merged
 
     @staticmethod
     def _histogram_bin_edges_equal(first, second):
         """Return whether two histogram definitions use identical bin edges."""
-        first_edges = first.get("bin_edges")
-        second_edges = second.get("bin_edges")
-        if isinstance(first_edges, (tuple, list)) or isinstance(second_edges, (tuple, list)):
-            if not isinstance(first_edges, (tuple, list)) or not isinstance(
-                second_edges, (tuple, list)
-            ):
-                return False
-            return len(first_edges) == len(second_edges) and all(
-                np.array_equal(first_edge, second_edge)
-                for first_edge, second_edge in zip(first_edges, second_edges)
-            )
-        return np.array_equal(first_edges, second_edges)
+        first_edges = first.edges
+        second_edges = second["edges"]
+        return len(first_edges) == len(second_edges) and all(
+            np.array_equal(first_edge, second_edge)
+            for first_edge, second_edge in zip(first_edges, second_edges)
+        )
 
     def _fill_current_histograms(self):
         """Fill all currently defined histograms with their event data."""
-        for data in self.histograms.values():
-            self._fill_histogram_and_bin_edges(data)
+        for name, data in self._fill_state.histogram_specs.items():
+            self._fill_histogram_and_bin_edges(name, data)
 
     def _update_data_range(self, name, values):
         """Accumulate the finite minimum and maximum of an event-data field."""
@@ -374,7 +386,7 @@ class EventDataHistograms:
 
     def _release_event_data(self):
         """Release raw event references after their histogram counts have been accumulated."""
-        for data in self.histograms.values():
+        for data in self._fill_state.histogram_specs.values():
             if data["1d"] or data["event_data"] is None:
                 data["event_data"] = None
             else:
@@ -390,13 +402,13 @@ class EventDataHistograms:
         self._merge_histograms(current_histograms)
         self._fill_current_histograms()
         self._accumulate_reuse_histograms(event_data, triggered_data)
-        if self._release_event_data_after_fill:
+        if self._fill_state.release_event_data_after_fill:
             self._release_event_data()
-        self._filled_data_sets += 1
+        self._fill_state.filled_data_sets += 1
 
     def finalize(self, fill_efficiency_histogram=True):
         """Finalize accumulated histograms after all event datasets have been added."""
-        if self._filled_data_sets == 0:
+        if self._fill_state.filled_data_sets == 0:
             raise ValueError("No readable event data files or datasets found.")
         self.print_summary()
         if fill_efficiency_histogram:
@@ -558,6 +570,17 @@ class EventDataHistograms:
 
         hists.update(hists_mc)
         hists.update(self._define_reuse_histograms())
+        for definition in hists.values():
+            labels = definition.get("axis_titles") or []
+            if labels:
+                axis_metadata = [_AXIS_NAMES_AND_UNITS[label] for label in labels[:-1]]
+                definition["axis_names"] = [name for name, _ in axis_metadata]
+                definition["axis_units"] = [unit for _, unit in axis_metadata]
+            else:
+                definition["axis_names"] = None
+                definition["axis_units"] = None
+            for key in _PLOT_ONLY_KEYS:
+                definition.pop(key, None)
         return hists
 
     def _define_reuse_histograms(self):
@@ -644,15 +667,17 @@ class EventDataHistograms:
         for statistic in _REUSE_STAT_LABELS:
             for name, (values, bin_edges) in histogram_specs.items():
                 histogram_name = f"reuse_{statistic}_vs_{name}"
-                histogram = self.histograms.get(histogram_name)
-                if histogram is None:
+                spec = self._fill_state.histogram_specs.get(histogram_name)
+                if spec is None:
                     continue
-                accumulator = self._reuse_stat_accumulators.setdefault(
+                accumulator = self._fill_state.reuse_stat_accumulators.setdefault(
                     histogram_name,
                     self._create_reuse_stat_accumulator(bin_edges),
                 )
                 self._update_reuse_stat_accumulator(accumulator, values, reuse_counts, bin_edges)
-                histogram["histogram"] = self._finalize_reuse_statistic(accumulator, statistic)
+                self.histograms[histogram_name] = self._create_histogram(
+                    spec, self._finalize_reuse_statistic(accumulator, statistic)
+                )
 
     @staticmethod
     def _can_accumulate_reuse_histograms(event_data, triggered_data):
@@ -793,13 +818,16 @@ class EventDataHistograms:
         is_1d=True,
         plot_scales=None,
     ):
-        """Return a single histogram definition."""
+        """Return a single histogram definition (histogram is None until filled)."""
+        edges = [bin_edges] if is_1d else list(bin_edges)
+        if histogram is not None and not isinstance(histogram, Histogram):
+            histogram = Histogram.from_edges(edges, values=histogram)
         return {
             "histogram": histogram,
+            "edges": edges,
             "event_data_column": event_data_column,
             "event_data": event_data,
             "1d": is_1d,
-            "bin_edges": bin_edges,
             "title": title,
             "title_fontsize": "xx-small",
             "axis_titles": axis_titles,
@@ -807,7 +835,7 @@ class EventDataHistograms:
             "plot_scales": plot_scales,
         }
 
-    def _fill_histogram_and_bin_edges(self, data):
+    def _fill_histogram_and_bin_edges(self, name, data):
         """
         Fill histogram and bin edges into the histogram dictionary.
 
@@ -816,9 +844,7 @@ class EventDataHistograms:
         if data["1d"]:
             if data["event_data"] is None:
                 return
-            hist, _ = np.histogram(
-                getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]
-            )
+            values = [getattr(data["event_data"], data["event_data_column"])]
         else:
             if data["event_data"] is None:
                 return
@@ -828,19 +854,21 @@ class EventDataHistograms:
                 getattr(event_data, column_name)
                 for event_data, column_name in zip(data["event_data"], data["event_data_column"])
             ]
-            if len(values) == 2:
-                hist, _, _ = np.histogram2d(
-                    values[0],
-                    values[1],
-                    bins=[data["bin_edges"][0], data["bin_edges"][1]],
-                )
-            else:
-                hist, _ = np.histogramdd(
-                    np.column_stack(values),
-                    bins=data["bin_edges"],
-                )
+        histogram = self.histograms.get(name)
+        if histogram is None:
+            histogram = self._create_histogram(data)
+            self.histograms[name] = histogram
+        histogram.fill(*values)
 
-        data["histogram"] = hist if data["histogram"] is None else data["histogram"] + hist
+    @staticmethod
+    def _create_histogram(definition, values=None):
+        """Create a histogram with physical metadata from its fill definition."""
+        return Histogram.from_edges(
+            definition["edges"],
+            values=values,
+            axis_names=definition.get("axis_names"),
+            axis_units=definition.get("axis_units"),
+        )
 
     def calculate_efficiency_data(self):
         """
@@ -854,17 +882,10 @@ class EventDataHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
-        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
+        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
+            self.reader
+        ):
             return None
-
-        def calculate_efficiency(trig_hist, mc_hist):
-            with np.errstate(divide="ignore", invalid="ignore"):
-                return np.divide(
-                    trig_hist,
-                    mc_hist,
-                    out=np.zeros_like(trig_hist, dtype=float),
-                    where=mc_hist > 0,
-                )
 
         eff_histograms = {}
         for name, mc_hist in self.histograms.items():
@@ -876,23 +897,13 @@ class EventDataHistograms:
             if trig_hist is None:
                 continue
 
-            if mc_hist["histogram"].shape != trig_hist["histogram"].shape:
+            if mc_hist.shape != trig_hist.shape:
                 self._logger.warning(
                     f"Shape mismatch for {base_name} and {name}, skipping efficiency calculation."
                 )
                 continue
 
-            eff = copy.copy(mc_hist)
-            eff.update(
-                {
-                    "histogram": calculate_efficiency(trig_hist["histogram"], mc_hist["histogram"]),
-                    "suffix": "_eff",
-                    "title": "Efficiency",
-                }
-            )
-            eff["axis_titles"] = copy.copy(mc_hist["axis_titles"])
-            eff["axis_titles"][-1] = "Efficiency"
-            eff_histograms[f"{base_name}_eff"] = eff
+            eff_histograms[f"{base_name}_eff"] = trig_hist.efficiency(mc_hist)
 
         self.histograms.update(eff_histograms)
         return eff_histograms
@@ -911,8 +922,6 @@ class EventDataHistograms:
         """
         if "energy" in self.loaded_bin_edges:
             return self.loaded_bin_edges["energy"]
-        if "energy_bin_edges" in self.histograms:
-            return self.histograms["energy_bin_edges"]
 
         energy_min = self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value
         energy_max = self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value
@@ -936,8 +945,6 @@ class EventDataHistograms:
         """
         if "core_distance" in self.loaded_bin_edges:
             return self.loaded_bin_edges["core_distance"]
-        if "core_distance_bin_edges" in self.histograms:
-            return self.histograms["core_distance_bin_edges"]
 
         core_min_value = self.file_info.get("core_scatter_min")
         core_max_value = self.file_info.get("core_scatter_max")
@@ -956,8 +963,6 @@ class EventDataHistograms:
         """Return bins for the viewcone histogram."""
         if "viewcone" in self.loaded_bin_edges:
             return self.loaded_bin_edges["viewcone"]
-        if "viewcone_bin_edges" in self.histograms:
-            return self.histograms["viewcone_bin_edges"]
 
         viewcone_min = self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value
         viewcone_max = self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value
@@ -997,24 +1002,15 @@ class EventDataHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
-        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
+        if not self._fill_state.contains_triggered_data and not self._reader_has_triggered_data(
+            self.reader
+        ):
             return None
 
         cumulative_data = {}
-        suffix = "_cumulative"
 
         def add_cumulative(name, hist, **kwargs):
-            new = copy.copy(hist)
-            new["histogram"] = self._calculate_cumulative_histogram(hist["histogram"], **kwargs)
-            new["axis_titles"] = copy.copy(hist["axis_titles"])
-            new.update(
-                {
-                    "suffix": suffix,
-                    "title": "Cumulative triggered events",
-                }
-            )
-            new["axis_titles"][-1] = "Fraction of Events"
-            cumulative_data[f"{name}{suffix}"] = new
+            cumulative_data[f"{name}_cumulative"] = hist.cumulative(**kwargs)
 
         # 2D histograms vs energy
         for name, hist in self.histograms.items():
@@ -1033,145 +1029,16 @@ class EventDataHistograms:
         self.histograms.update(cumulative_data)
         return cumulative_data
 
-    def _calculate_cumulative_histogram(self, hist, reverse=False, axis=None, normalize=False):
-        """
-        Calculate cumulative distribution of a histogram.
-
-        Works with both 1D and 2D histograms.
-
-        Parameters
-        ----------
-        hist : np.ndarray
-            Histogram (1D or 2D)
-        reverse : bool, optional
-            If True, sum from high to low values
-        axis : int, optional
-            For 2D histograms, axis along which to compute cumulative sum
-            None means default behavior: for 1D just cumsum, for 2D along rows
-        normalize : bool, optional
-            If True, normalize by the total sum for each slice along the specified axis
-            For 1D histograms, normalizes by the total sum
-
-        Returns
-        -------
-        np.ndarray
-            Histogram with cumulative counts, optionally normalized
-        """
-        if hist is None:
-            return None
-
-        if hist.ndim == 1:
-            result = self._calculate_cumulative_1d(hist, reverse)
-            if normalize and np.sum(hist) > 0:
-                result = result / np.sum(hist)
-            return result
-
-        axis = axis if axis is not None else 1
-        result = self._apply_cumsum_along_axis(hist.copy(), axis, reverse)
-
-        if normalize:
-            # Ensure floating dtype to allow in-place normalization without casting errors
-            if not np.issubdtype(result.dtype, np.floating):
-                result = result.astype(float)
-            self._normalize_along_axis(result, hist, axis)
-
-        return result
-
-    def _normalize_along_axis(self, result, hist, axis):
-        """
-        Normalize cumulative histogram along the specified axis.
-
-        Parameters
-        ----------
-        result : np.ndarray
-            Cumulative histogram to normalize (modified in-place)
-        hist : np.ndarray
-            Original histogram (for calculating totals)
-        axis : int
-            Axis along which normalization should be applied
-        """
-        normalized = np.zeros_like(result, dtype=float)
-
-        if axis == 0:
-            for i in range(result.shape[1]):
-                col_total = np.sum(hist[:, i])
-                if col_total > 0:
-                    normalized[:, i] = result[:, i] / col_total
-        else:  # axis == 1
-            for i in range(result.shape[0]):
-                row_total = np.sum(hist[i, :])
-                if row_total > 0:
-                    normalized[i, :] = result[i, :] / row_total
-
-        np.copyto(result, normalized)
-
-    def _calculate_cumulative_1d(self, hist, reverse):
-        """Calculate cumulative distribution for 1D histogram."""
-        if reverse:
-            return np.cumsum(hist[::-1])[::-1]
-        return np.cumsum(hist)
-
-    def _calculate_cumulative_2d(self, hist, reverse, axis=None):
-        """Calculate cumulative distribution for 2D histogram."""
-        axis = axis if axis is not None else 1
-        return self._apply_cumsum_along_axis(hist, axis, reverse)
-
-    def _apply_cumsum_along_axis(self, hist, axis, reverse):
-        """Apply cumulative sum along the specified axis of a 2D histogram."""
-
-        def cumsum_func(arr):
-            return np.cumsum(arr[::-1])[::-1] if reverse else np.cumsum(arr)
-
-        return np.apply_along_axis(cumsum_func, axis, hist)
-
-    @staticmethod
-    def rebin_2d_histogram(hist, x_bins, y_bins, rebin_factor=2):
-        """
-        Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.
-
-        Parameters
-        ----------
-        hist : np.ndarray
-            Original 2D histogram data
-        x_bins : np.ndarray
-            Original x-axis bin edges (preserved)
-        y_bins : np.ndarray
-            Original y-axis (energy) bin edges
-        rebin_factor : int, optional
-            Factor by which to reduce the number of bins in the energy dimension
-            Default is 2 (merge every 2 bins)
-
-        Returns
-        -------
-        tuple
-            (re-binned_hist, x_bins, re-binned_y_bins)
-        """
-        if rebin_factor <= 1:
-            return hist, x_bins, y_bins
-
-        x_size = hist.shape[0]
-        new_y_size = hist.shape[1] // rebin_factor
-
-        new_hist = np.zeros((x_size, new_y_size), dtype=float)
-
-        for i in range(x_size):
-            for j in range(new_y_size):
-                y_start = j * rebin_factor
-                y_end = (j + 1) * rebin_factor
-                new_hist[i, j] = np.sum(hist[i, y_start:y_end])
-
-        new_y_bins = y_bins[::rebin_factor]
-
-        return new_hist, x_bins, new_y_bins
-
     def print_summary(self):
         """
         Print a summary of the histogram statistics.
 
         Total number of events is retrieved from the 'energy' histograms.
         """
-        total_simulated = np.sum(self.histograms.get("energy_mc", {}).get("histogram", []))
-        total_triggered = np.sum(self.histograms.get("energy", {}).get("histogram", []))
+        simulated = self.histograms.get("energy_mc")
+        triggered = self.histograms.get("energy")
+        total_simulated = np.sum(simulated.values) if simulated is not None else 0
+        total_triggered = np.sum(triggered.values) if triggered is not None else 0
 
         self._logger.info(f"Total simulated events: {total_simulated}")
         self._logger.info(f"Total triggered events: {total_triggered}")

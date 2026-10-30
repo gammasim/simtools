@@ -8,7 +8,7 @@ from simtools.configuration.argument_helpers import scientific_int
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
-from simtools.utils import general
+from simtools.utils import value_conversion
 
 _LIGHT_SOURCE_GROUP = "light source"
 _TARGET_GROUP = "target"
@@ -68,8 +68,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        cli.RAY_TRACING_BACKEND,
     ),
-    validate_simulation_dependencies=True,
+    needs=("model", "sim_telarray", "corsika"),
 )
 
 
@@ -93,10 +94,12 @@ def main():
     if app_context.args["run_mode"] == "full_simulation":
         telescopes = (
             get_array_elements_for_layout(
-                app_context.args["array_layout_name"], model_reader=app_context.model_reader
+                app_context.args["array_layout_name"],
+                model_reader=app_context.model_reader,
+                context=app_context,
             )
             if app_context.args.get("array_layout_name") is not None
-            else general.ensure_list(app_context.args["telescopes"])
+            else value_conversion.ensure_list(app_context.args["telescopes"])
         )
         for tel in telescopes:
             light_source = SimulatorLightEmission(
@@ -104,11 +107,14 @@ def main():
                 telescope=tel,
                 label=app_context.args.get("label"),
                 model_reader=app_context.model_reader,
+                context=app_context,
             )
             light_source.simulate()
             light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
-        Simulator.simulate_direct_injection_sequence(label=app_context.args.get("label"))
+        Simulator.simulate_direct_injection_sequence(
+            label=app_context.args.get("label"), context=app_context
+        )
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 

@@ -8,10 +8,23 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import QTable, Table
+from matplotlib import pyplot as plt
 
+from simtools.applications import validate_optics
 from simtools.applications.validate_cumulative_psf import _ARGUMENTS
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.ray_tracing import optics_validation
+from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"), [([], DEFAULT_MAX_WORKERS), (["--max_workers", "2"], 2)]
+)
+def test_validate_optics_cli_max_workers(args, expected):
+    parser = CommandLineParser()
+    parser.add_argument_definitions(validate_optics._ARGUMENTS)
+
+    assert parser.parse_args(args).max_workers == expected
 
 
 def test_cumulative_psf_cli_requires_measured_data():
@@ -68,7 +81,7 @@ def test_validate_cumulative_psf_requires_data_before_simulation():
         "test": True,
     }
     io_handler = MagicMock()
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -103,7 +116,7 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     measured = np.array(
         [(1.0, 0.2), (2.0, 1.0)],
@@ -150,7 +163,8 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
 
 
-def test_validate_optics_no_images(tmp_test_directory):
+@pytest.mark.parametrize("max_workers", [DEFAULT_MAX_WORKERS, 2])
+def test_validate_optics_no_images(tmp_test_directory, max_workers):
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -158,6 +172,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "zenith_angle": 20.0 * u.deg,
         "source_distance": 10.0 * u.km,
         "max_offset": 1.0 * u.deg,
+        "max_workers": max_workers,
         "offset_step": 0.5 * u.deg,
         "offset_file": None,
         "offset_directions": "N,S,E,W",
@@ -168,7 +183,7 @@ def test_validate_optics_no_images(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -190,7 +205,7 @@ def test_validate_optics_no_images(tmp_test_directory):
 
         mock_export_model_parameter.assert_called_once()
 
-        mock_ray.simulate.assert_called_once_with(test=True, force=False)
+        mock_ray.simulate.assert_called_once_with(test=True, force=False, max_workers=max_workers)
         mock_ray.analyze.assert_called_once_with(force=True, save_photons=False)
         assert mock_ray.plot.call_count == 4
         assert mock_ray.plot.call_args_list[-1].kwargs["error_type"] == "errorbar"
@@ -215,7 +230,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.pdf"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -245,12 +260,8 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         patch(
             "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf."
             "create_annotated_psf_image_figure",
-            return_value=MagicMock(),
+            side_effect=lambda *_args, **_kwargs: plt.figure(),
         ) as mock_create_figure,
-        patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
-            side_effect=lambda figures, *_args, **_kwargs: list(figures),
-        ) as mock_save_pdf,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
         patch(
             "simtools.ray_tracing.optics_validation._export_effective_focal_length_model_parameter"
@@ -266,7 +277,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert mock_save.call_count == 4
     assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
     assert mock_create_figure.call_count == 2
-    assert mock_save_pdf.call_args.kwargs["close"] is True
+    assert (Path(str(tmp_test_directory)) / "output.pdf").exists()
     mock_export_model_parameter.assert_called_once()
 
 
@@ -290,7 +301,7 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
     io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -342,7 +353,7 @@ def test_effective_focal_length_value_from_results_empty_mask_returns_zero():
     assert value == [0.0, 0.0, 0.0, 0.0, 0.0]
 
 
-def test_export_effective_focal_length_model_parameter_without_results(caplog):
+def test_export_effective_focal_length_model_parameter_without_results(caplog, run_context):
     mock_ray = MagicMock(spec=[])
 
     optics_validation._export_effective_focal_length_model_parameter(
@@ -352,6 +363,7 @@ def test_export_effective_focal_length_model_parameter_without_results(caplog):
         parameter_version="5.0.1",
         output_directory=Path("dummy"),
         metadata_input_dict={},
+        context=run_context,
     )
 
     assert "No ray-tracing results available to export effective_focal_length" in caplog.text
@@ -590,7 +602,7 @@ def test_max_image_extent_ignores_empty_images():
 # ---------------------------------------------------------------------------
 
 
-def test_plot_psf_images_calls_create_figure_per_image_and_saves_pdf():
+def test_plot_psf_images_calls_create_figure_per_image_and_saves_pdf(tmp_test_directory):
     image_a = _make_mock_image([-1.0, 1.0], [-1.0, 1.0])
     image_a.get_psf.return_value = 2.0
     image_b = _make_mock_image([0.5], [-0.5])
@@ -604,21 +616,18 @@ def test_plot_psf_images_calls_create_figure_per_image_and_saves_pdf():
         patch(
             "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf"
             ".create_annotated_psf_image_figure",
-            return_value=MagicMock(),
+            side_effect=lambda *_args, **_kwargs: plt.figure(),
         ) as mock_create,
-        patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
-            side_effect=lambda figures, *_args, **_kwargs: list(figures),
-        ) as mock_save,
     ):
-        optics_validation._plot_psf_images(mock_ray, "LSTN-01", Path("out.pdf"))
+        output = Path(str(tmp_test_directory)) / "out.pdf"
+        optics_validation._plot_psf_images(mock_ray, "LSTN-01", output)
 
     assert mock_create.call_count == 2
-    mock_save.assert_called_once()
-    assert mock_save.call_args.kwargs["close"] is True
+    assert output.exists()
+    assert output.stat().st_size > 0
 
 
-def test_plot_psf_images_passes_telescope_name_to_figure():
+def test_plot_psf_images_passes_telescope_name_to_figure(tmp_test_directory):
     image = _make_mock_image([1.0], [-1.0])
     image.get_psf.return_value = 2.0
 
@@ -630,19 +639,17 @@ def test_plot_psf_images_passes_telescope_name_to_figure():
         patch(
             "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf"
             ".create_annotated_psf_image_figure",
-            return_value=MagicMock(),
+            side_effect=lambda *_args, **_kwargs: plt.figure(),
         ) as mock_create,
-        patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
-            side_effect=lambda figures, *_args, **_kwargs: list(figures),
-        ),
     ):
-        optics_validation._plot_psf_images(mock_ray, "MSTS-01", Path("out.pdf"))
+        optics_validation._plot_psf_images(
+            mock_ray, "MSTS-01", Path(str(tmp_test_directory)) / "out.pdf"
+        )
 
     assert mock_create.call_args.kwargs["telescope_name"] == "MSTS-01"
 
 
-def test_plot_psf_images_in_degrees_uses_eff_flen():
+def test_plot_psf_images_in_degrees_uses_eff_flen(tmp_test_directory):
     image = _make_mock_image([100.0, -100.0], [50.0, -50.0])
     image.get_psf.return_value = 4.0
 
@@ -654,7 +661,7 @@ def test_plot_psf_images_in_degrees_uses_eff_flen():
 
     def capture_figure(data, **kwargs):
         captured["psf_unit"] = kwargs["psf"].unit
-        return MagicMock()
+        return plt.figure()
 
     with (
         patch(
@@ -662,13 +669,12 @@ def test_plot_psf_images_in_degrees_uses_eff_flen():
             ".create_annotated_psf_image_figure",
             side_effect=capture_figure,
         ),
-        patch(
-            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document",
-            side_effect=lambda figures, *_args, **_kwargs: list(figures),
-        ),
     ):
         optics_validation._plot_psf_images(
-            mock_ray, "LSTN-01", Path("out.pdf"), plot_in_degrees=True
+            mock_ray,
+            "LSTN-01",
+            Path(str(tmp_test_directory)) / "out.pdf",
+            plot_in_degrees=True,
         )
 
     assert captured["psf_unit"] == u.deg

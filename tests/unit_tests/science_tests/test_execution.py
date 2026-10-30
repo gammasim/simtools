@@ -122,7 +122,7 @@ def test_prepare_test_adds_shared_runtime_and_production_preview(bundle, mocker)
     )
     assert "apptainer (image: /image.sif)" == prepare(bundle).result[RUNTIME]
 
-    preview = mocker.patch.object(execution, "_preview", return_value={"ok": True})
+    preview = mocker.patch.object(execution, "preview", return_value={"ok": True})
     bundle.catalogue[DERIVE][PRODUCES_PRODUCTION] = True
     backend = bundle.template_dir / "backend.yml"
     backend.write_text(yaml.safe_dump({"container_image": PRODUCTION_SIF}), encoding=UTF_8)
@@ -204,7 +204,7 @@ def test_execute_reports_submitted_production(bundle, successful_workflow):
 
 
 def test_derived_products_are_reused_only_when_current(bundle, successful_workflow, mocker):
-    mocker.patch.object(execution, "_validate_derived_workflow")
+    mocker.patch.object(execution, "validate_derived_workflow")
     bundle.catalogue[DERIVE]["derived_output"] = defs.REPORT_PATH
     test = prepare(bundle)
     execution._execute(test, overwrite=False)

@@ -8,10 +8,10 @@ import numpy as np
 import packaging.version
 from astropy.table import Table
 
-import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
 from simtools.constants import SCHEMA_PATH
-from simtools.io import ascii_handler, io_handler, legacy_data_handler
+from simtools.context import RunContext
+from simtools.io import ascii_handler, legacy_data_handler
+from simtools.utils import value_conversion
 from simtools.visualization import visualize
 from simtools.visualization.matplotlib_backend import pyplot as plt
 
@@ -21,7 +21,7 @@ _logger = logging.getLogger(__name__)
 PROTON_INTERSECTION_FRACTION = 0.1
 
 
-def plot(config, output_file, data_path=None, model_reader=None):
+def plot(config, output_file, data_path=None, model_reader=None, *, context=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -32,20 +32,22 @@ def plot(config, output_file, data_path=None, model_reader=None):
     output_file: str
         Output file.
     data_path: Path or str, optional
-        Path to the data files (optional). Expect all files to be in the same directory.
+        Path to the data files. All files are expected in the same directory.
     """
-    data = read_table_data(config, data_path, model_reader=model_reader)
+    context = context or RunContext.from_environment()
+    data = read_table_data(config, data_path, model_reader=model_reader, context=context)
+    return _plot_data(data, config, output_file, context=context)
 
-    fig = visualize.plot_1d(
-        data,
-        **config,
+
+def _plot_data(data, config, output_file, *, context=None):
+    """Render pre-read table data with the configured table-plot renderer."""
+    visualize.save_figure(
+        visualize.plot_1d(data, **config), output_file, close=True, context=context
     )
-    visualize.save_figure(fig, output_file, close=True)
-
     return output_file
 
 
-def read_table_data(config, data_path=None, model_reader=None):
+def read_table_data(config, data_path=None, model_reader=None, *, context=None):
     """
     Read table data from file or parameter repository.
 
@@ -54,34 +56,32 @@ def read_table_data(config, data_path=None, model_reader=None):
     config: dict
         Configuration dictionary for plotting.
     data_path: Path or str, optional
-        Path to the data files (optional). Expect all files to be in the same directory.
+        Path to the data files. All files are expected in the same directory.
 
     Returns
     -------
     Dict
-        Dict with table data (astropy tables).
+        Dict with table data (numpy structured arrays).
     """
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
     data = {}
-
-    for _config in config["tables"]:
-        table = _read_configured_table(_config, data_path, model_reader)
-        data[_get_plotting_label(_config, data)] = _process_table_data(table, _config)
-
+    for table_config in config["tables"]:
+        if "file_name" in table_config:
+            table = _read_table_file(table_config, data_path)
+        elif "parameter" in table_config:
+            table = _read_table_from_model_repository(table_config, model_reader, context=context)
+        else:
+            raise ValueError("No table data defined in configuration.")
+        data[_get_plotting_label(table_config, data)] = _process_table_data(table, table_config)
     return data
-
-
-def _read_configured_table(table_config, data_path, model_reader):
-    """Read one table from a configured file or model parameter."""
-    if "file_name" in table_config:
-        return _read_table_file(table_config, data_path)
-    if "parameter" in table_config:
-        return _read_table_from_model_repository(table_config, model_reader)
-    raise ValueError("No table data defined in configuration.")
 
 
 def _read_table_file(table_config, data_path):
     """Read one configured legacy or ECSV table file."""
-    file_name = _resolve_table_file_name(table_config, data_path)
+    file_name = table_config["file_name"]
+    if data_path is not None and not table_config.get("ignore_table_data_path", False):
+        file_name = Path(data_path) / file_name
     _logger.info(f"Reading tabular data from {file_name}")
     if "legacy" in table_config.get("type", ""):
         return legacy_data_handler.read_legacy_data_as_table(file_name, table_config["type"])
@@ -90,15 +90,8 @@ def _read_table_file(table_config, data_path):
     return Table.read(file_name, format="ascii.ecsv")
 
 
-def _resolve_table_file_name(table_config, data_path):
-    """Resolve a configured table filename against the optional data directory."""
-    if data_path is None or table_config.get("ignore_table_data_path", False):
-        return table_config["file_name"]
-    return Path(data_path) / table_config["file_name"]
-
-
 def _get_plotting_label(config, data):
-    """Get a label for plotting based on the configuration."""
+    """Get a label for plotting based on the configuration, made unique within data."""
     label = config.get("label", f"{config.get('column_x')} vs {config.get('column_y')}")
     if label in data:
         index = 1
@@ -109,7 +102,7 @@ def _get_plotting_label(config, data):
 
 
 def _process_table_data(table, _config):
-    """Process table data based on configuration."""
+    """Normalise, select and convert table columns to a structured array."""
     if _config.get("normalize_y"):
         table[_config["column_y"]] = table[_config["column_y"]] / table[_config["column_y"]].max()
     if _config.get("select_values"):
@@ -119,35 +112,26 @@ def _process_table_data(table, _config):
             _config["select_values"]["value"],
         )
 
-    return gen.get_structure_array_from_table(
-        table,
-        [
-            _config["column_x"],
-            _config["column_y"],
-            _config.get("column_x_err"),
-            _config.get("column_y_err"),
-        ],
+    columns = [
+        _config["column_x"],
+        _config["column_y"],
+        _config.get("column_x_err"),
+        _config.get("column_y_err"),
+    ]
+    columns = [column for column in columns if column in table.colnames]
+    return np.array(
+        list(zip(*(np.array(table[column]) for column in columns))),
+        dtype=[(column, np.array(table[column]).dtype) for column in columns],
     )
 
 
-def _read_table_from_model_repository(table_config, model_reader=None):
-    """
-    Read table data from the simulation-model repository.
-
-    Parameters
-    ----------
-    table_config: dict
-        Configuration dictionary for table data.
-
-    Returns
-    -------
-    Table
-        Astropy table
-    """
-    model_reader = require_model_reader(model_reader)
-    destination = (
-        table_config.get("model_export_path") or io_handler.IOHandler().get_output_directory()
-    )
+def _read_table_from_model_repository(table_config, model_reader=None, *, context=None):
+    """Export a table from the simulation-model repository (returns an astropy Table)."""
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
+    if model_reader is None:
+        raise RuntimeError("No simulation model reader is configured.")
+    destination = table_config.get("model_export_path") or context.paths.get_output_directory()
     return model_reader.export_model_file(
         parameter=table_config["parameter"],
         site=table_config["site"],
@@ -159,9 +143,12 @@ def _read_table_from_model_repository(table_config, model_reader=None):
     )
 
 
-def _read_parameter_dict_from_model_repository(table_config, model_reader=None):
+def _read_parameter_dict_from_model_repository(table_config, model_reader=None, *, context=None):
     """Read a model parameter dictionary from the simulation-model repository."""
-    model_reader = require_model_reader(model_reader)
+    context = context or RunContext.from_environment()
+    model_reader = model_reader or context.model_reader
+    if model_reader is None:
+        raise RuntimeError("No simulation model reader is configured.")
     parameter_dict = model_reader.get_model_parameter(
         parameter=table_config["parameter"],
         site=table_config["site"],
@@ -182,15 +169,8 @@ def _select_values_from_table(table, column_name, value):
     return table[np.isclose(column, value)]
 
 
-def _filter_config_by_plot_type(config, plot_type):
-    """Filter a configuration based on plot type."""
-    if plot_type != "all" and config.get("type") != plot_type:
-        return False
-    return True
-
-
 def _validate_config_columns(config, valid_columns, logger):
-    """Validate that all required columns in a config exist and have valid data."""
+    """Return True if the x and y columns of all tables of a config have valid data."""
     for table_config in config.get("tables", []):
         required_cols = [table_config.get("column_x"), table_config.get("column_y")]
         if not all(col in valid_columns for col in required_cols if col):
@@ -201,11 +181,6 @@ def _validate_config_columns(config, valid_columns, logger):
             )
             return False
     return True
-
-
-def _get_valid_columns(table):
-    """Return columns that exist and have valid data (not all NaN)."""
-    return [col for col in table.colnames if not all(np.isnan(table[col]))]
 
 
 def _select_schema_entry(schema_data, schema_version=None):
@@ -228,7 +203,16 @@ def _select_schema_entry(schema_data, schema_version=None):
 
 
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type, model_reader=None
+    parameter,
+    parameter_version,
+    site,
+    telescope,
+    output_path,
+    plot_type,
+    model_reader=None,
+    model_version=None,
+    *,
+    context=None,
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -247,12 +231,14 @@ def generate_plot_configurations(
         Output path for the plots.
     plot_type: str
         Plot type or "all" for all plots.
+    model_version: str, optional
+        Exact model version used to read the table data.
 
     Returns
     -------
-    tuple
-        Tuple containing a list of plot configurations and a list of output file names.
-        Return None, if no plot configurations are found.
+    tuple or None
+        List of plot configurations and list of output file names, or None if no
+        plot configurations are found.
     """
     logger = logging.getLogger(__name__)
     table_config = {
@@ -261,9 +247,13 @@ def generate_plot_configurations(
         "telescope": telescope,
         "parameter_version": parameter_version,
     }
-    parameter_dict = _read_parameter_dict_from_model_repository(table_config, model_reader)
+    if model_version:
+        table_config["model_version"] = model_version
+    parameter_dict = _read_parameter_dict_from_model_repository(
+        table_config, model_reader, context=context
+    )
 
-    schema = gen.change_dict_keys_case(
+    schema = value_conversion.change_dict_keys_case(
         _select_schema_entry(
             ascii_handler.collect_data_from_file(
                 file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
@@ -275,17 +265,14 @@ def generate_plot_configurations(
     if not configs:
         return None
 
-    table = _read_table_from_model_repository(table_config, model_reader)
-    valid_columns = _get_valid_columns(table)
-
-    valid_configs = []
-    for config in configs:
-        if not _filter_config_by_plot_type(config, plot_type):
-            continue
-
-        if _validate_config_columns(config, valid_columns, logger):
-            valid_configs.append(config)
-
+    table = _read_table_from_model_repository(table_config, model_reader, context=context)
+    valid_columns = [col for col in table.colnames if not all(np.isnan(table[col]))]
+    valid_configs = [
+        config
+        for config in configs
+        if (plot_type == "all" or config.get("type") == plot_type)
+        and _validate_config_columns(config, valid_columns, logger)
+    ]
     if not valid_configs:
         if plot_type != "all":
             logger.warning("No valid plot config found.")
@@ -297,6 +284,8 @@ def generate_plot_configurations(
             _table["parameter_version"] = parameter_version
             _table["site"] = site
             _table["telescope"] = telescope
+            if model_version:
+                _table["model_version"] = model_version
 
         output_files.append(
             _generate_output_file_name(
@@ -335,10 +324,8 @@ def _generate_output_file_name(
 def resolve_plot_output_path(output, file_name="bias_curve.png"):
     """Resolve output as either an explicit plot file or an output directory."""
     output_path = Path(output)
-
     if output_path.suffix:
         return output_path
-
     return output_path / file_name
 
 
@@ -383,64 +370,35 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_thres
     fig.tight_layout()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=200, bbox_inches="tight")
-    plt.close(fig)
+    visualize.save_figure(
+        fig,
+        Path(output_path).with_suffix(""),
+        figure_format=[Path(output_path).suffix[1:]],
+        dpi=200,
+        close=True,
+    )
 
 
 def _plot_nsb_curve(axis, nsb_stats):
     """Plot NSB trigger rates."""
-    if not nsb_stats:
-        return
-
-    nsb_thresholds = sorted(nsb_stats.keys())
-    nsb_rates = [nsb_stats[t]["rate_hz"] for t in nsb_thresholds]
-    nsb_errors = [nsb_stats[t]["error_hz"] for t in nsb_thresholds]
-
-    axis.errorbar(
-        nsb_thresholds,
-        nsb_rates,
-        yerr=nsb_errors,
-        fmt="o",
-        label="NSB",
-        color="tab:blue",
-        capsize=3,
-    )
-
-    _plot_log_linear_fit(axis, nsb_thresholds, nsb_rates, color="tab:blue")
+    _plot_rate_curve(axis, nsb_stats, 1, "NSB", "o", "tab:blue")
 
 
 def _plot_proton_curve(axis, proton_stats):
     """Plot proton trigger rates."""
-    if not proton_stats:
-        return
-
-    proton_thresholds = sorted(proton_stats.keys())
-    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
-    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
-
-    axis.errorbar(
-        proton_thresholds,
-        proton_rates,
-        yerr=proton_errors,
-        fmt="s",
-        label="Proton",
-        color="tab:orange",
-        capsize=3,
-    )
-
-    _plot_log_linear_fit(axis, proton_thresholds, proton_rates, color="tab:orange")
+    _plot_rate_curve(axis, proton_stats, 1, "Proton", "s", "tab:orange")
 
 
 def _plot_scaled_proton_curve(axis, proton_stats, scaling_factor=1.35):
     """Plot scaled proton trigger rates."""
-    _plot_rescaled_proton_curve(
+    _plot_rate_curve(
         axis, proton_stats, scaling_factor, f"{scaling_factor} x Proton", "^", "tab:red"
     )
 
 
 def _plot_intersection_proton_curve(axis, proton_stats, scaling_factor=1.35):
     """Plot the fraction of the scaled proton rates that is intersected with the NSB rates."""
-    _plot_rescaled_proton_curve(
+    _plot_rate_curve(
         axis,
         proton_stats,
         scaling_factor * PROTON_INTERSECTION_FRACTION,
@@ -450,26 +408,16 @@ def _plot_intersection_proton_curve(axis, proton_stats, scaling_factor=1.35):
     )
 
 
-def _plot_rescaled_proton_curve(axis, proton_stats, scale, label, fmt, color):
-    """Plot proton trigger rates multiplied by a scale, with log-linear fit."""
-    if not proton_stats:
+def _plot_rate_curve(axis, stats, scale, label, fmt, color):
+    """Plot trigger rates multiplied by ``scale`` with error bars and a log-linear fit."""
+    if not stats:
         return
 
-    proton_thresholds = sorted(proton_stats.keys())
-    scaled_rates = [scale * proton_stats[t]["rate_hz"] for t in proton_thresholds]
-    scaled_errors = [scale * proton_stats[t]["error_hz"] for t in proton_thresholds]
-
-    axis.errorbar(
-        proton_thresholds,
-        scaled_rates,
-        yerr=scaled_errors,
-        fmt=fmt,
-        label=label,
-        color=color,
-        capsize=3,
-    )
-
-    _plot_log_linear_fit(axis, proton_thresholds, scaled_rates, color=color)
+    thresholds = sorted(stats.keys())
+    rates = [scale * stats[t]["rate_hz"] for t in thresholds]
+    errors = [scale * stats[t]["error_hz"] for t in thresholds]
+    axis.errorbar(thresholds, rates, yerr=errors, fmt=fmt, label=label, color=color, capsize=3)
+    _plot_log_linear_fit(axis, thresholds, rates, color=color)
 
 
 def _plot_log_linear_fit(axis, thresholds, rates, color):
@@ -484,7 +432,6 @@ def _plot_log_linear_fit(axis, thresholds, rates, color):
     fit_thresholds, coeffs = fit
     x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
     y_fit = 10 ** (coeffs[0] * x_fit + coeffs[1])
-
     axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
 
 
@@ -504,8 +451,7 @@ def fit_bias_curve(thresholds, rates):
     tuple or None
         Valid thresholds and fit coefficients (slope, intercept), or None if
         fewer than two distinct finite thresholds have corresponding finite,
-        positive rates. Returning None is expected when there is not enough
-        data to fit a line.
+        positive rates.
     """
     thresholds = np.asarray(thresholds, dtype=float)
     rates = np.asarray(rates, dtype=float)

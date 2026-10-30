@@ -13,8 +13,8 @@ import math
 from collections import Counter
 from pathlib import Path
 
-from simtools.io.file_type import _get_product_filename
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.io.file_type import product_filename
+from simtools.utils.value_conversion import replace_placeholders_recursively
 
 STATUS_KEY = "status"
 REASON_KEY = "reason"
@@ -33,7 +33,7 @@ _REPORT_PAGE = "report_page"
 _CSV_CONTEXT = ("pair", _ARRAY_LAYOUT, _SCOPE, _TELESCOPE_TYPE)
 # Columns identifying one measurement; duplicates are errors.
 _CSV_IDENTITY = ("pair", _ARRAY_LAYOUT, _PLOT, _SCOPE, _TELESCOPE_TYPE, "population", "metric")
-_COMPARISON_INVENTORY_FILE = _get_product_filename("comparison_inventory")
+_COMPARISON_INVENTORY_FILE = product_filename("comparison_inventory")
 
 
 class AcceptanceError(ValueError):

@@ -49,6 +49,47 @@ activity:
     - ValidateParameterByExpert
 source:
   - SimPipe Derived
+plot_configuration:
+  - type: optics_d80_cm_vs_off_axis_angle
+    title: D80 versus off-axis angle
+    xtitle: Off-axis angle [deg]
+    ytitle: D80 [cm]
+    no_markers: true
+    tables:
+      - parameter: optics_properties
+        label: D80 [cm]
+        column_x: off_axis_angle
+        column_y: d80_cm
+  - type: optics_d80_deg_vs_off_axis_angle
+    title: Angular D80 versus off-axis angle
+    xtitle: Off-axis angle [deg]
+    ytitle: D80 [deg]
+    no_markers: true
+    tables:
+      - parameter: optics_properties
+        label: D80 [deg]
+        column_x: off_axis_angle
+        column_y: d80_deg
+  - type: optics_effective_area_vs_off_axis_angle
+    title: Effective area versus off-axis angle
+    xtitle: Off-axis angle [deg]
+    ytitle: Effective area [m2]
+    no_markers: true
+    tables:
+      - parameter: optics_properties
+        label: Effective area [m2]
+        column_x: off_axis_angle
+        column_y: eff_area
+  - type: optics_effective_focal_length_vs_off_axis_angle
+    title: Effective focal length versus off-axis angle
+    xtitle: Off-axis angle [deg]
+    ytitle: Effective focal length [cm]
+    no_markers: true
+    tables:
+      - parameter: optics_properties
+        label: Effective focal length [cm]
+        column_x: off_axis_angle
+        column_y: eff_flen
 ---
 title: Schema for optics_properties model parameter
 schema_version: 0.1.0

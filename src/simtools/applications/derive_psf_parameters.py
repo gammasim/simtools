@@ -84,7 +84,9 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -94,7 +96,8 @@ def main():
 
     job = psf_opt.PSFOptimizationJob(
         args=dict(app_context.args),
-        output_dir=app_context.io_handler.get_output_directory(),
+        output_dir=app_context.paths.get_output_directory(),
+        context=app_context,
     )
     psf_opt.run_psf_optimization_job(job)
 

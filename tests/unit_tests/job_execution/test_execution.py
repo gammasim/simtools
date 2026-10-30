@@ -2,6 +2,7 @@
 
 import logging
 import pickle
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -9,21 +10,53 @@ from pathlib import Path
 import pytest
 import yaml
 
+from simtools.context import RunContext
+from simtools.job_execution import execution
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
 from simtools.job_execution.execution import (
+    JobExecutionError,
     collect_submission,
     execute_jobs,
     load_submission,
     map_ordered,
     options_from_args,
+    run_command,
     submit_jobs,
     wait_for_submission,
 )
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.job_execution.worker import run as run_worker
 from simtools.job_execution.worker import write_job_payload
-from simtools.settings import config
+
+
+def test_run_command_returns_result_and_runtime(mocker):
+    """Command execution returns its exit status and wall-clock runtime."""
+    run = mocker.patch("simtools.job_execution.worker.subprocess.run")
+    run.return_value.returncode = 0
+
+    result = run_command(["echo", "hello"], env={"SIMTOOLS_TEST": "yes"})
+
+    assert result.return_code == 0
+    assert result.runtime >= 0
+    assert run.call_args.args == (("echo", "hello"),)
+    assert run.call_args.kwargs["env"]["SIMTOOLS_TEST"] == "yes"
+
+
+def test_run_command_raises_execution_error_with_log_excerpt(mocker, tmp_test_directory):
+    """Command failures retain the excerpt from the configured output log."""
+    log_file = Path(tmp_test_directory) / "command.log"
+
+    def fail(*args, **kwargs):
+        kwargs["stdout"].write("command failed\n")
+        raise subprocess.CalledProcessError(1, "command")
+
+    run = mocker.patch("simtools.job_execution.worker.subprocess.run", side_effect=fail)
+
+    with pytest.raises(JobExecutionError, match="command failed"):
+        run_command(["command"], stdout=log_file)
+
+    assert run.call_count == 1
 
 
 def _square(value):
@@ -70,19 +103,15 @@ def test_map_ordered_returns_input_order():
     assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
 
 
-def test_map_ordered_serializes_runtime_for_remote_jobs(mocker):
+def test_map_ordered_serializes_runtime_for_remote_jobs(mocker, run_context):
     """Remote function jobs receive the submitting application's runtime configuration."""
     execute = mocker.patch("simtools.job_execution.execution.execute_jobs", return_value=[])
     args = {"output_path": "output", "sim_telarray_path": "simtel"}
-    config.load(args, resolve_sim_software_executables=False)
-
-    try:
-        assert map_ordered(_square, [2], backend="htcondor") == []
-    finally:
-        config.load(resolve_sim_software_executables=False)
+    context = RunContext.from_arguments(args, resolve_sim_software_executables=False)
+    assert map_ordered(_square, [2], backend="htcondor", context=context) == []
 
     job = execute.call_args.args[0][0]
-    assert job.runtime_args == args
+    assert job.context_spec == context.to_spec()
 
 
 def test_execute_jobs_empty_input_does_not_resolve_backend():
@@ -471,3 +500,44 @@ def test_collect_submission_never_waits(tmp_test_directory, mocker, finished, fa
     assert submission.metadata["state"] == expected
     assert backend.collect.call_count == int(finished)
     backend.wait.assert_not_called()
+
+
+def test_run_command_returns_captured_output_and_runtime():
+    result = execution.run_command([sys.executable, "-c", "print('captured')"])
+
+    assert result.return_code == 0
+    assert result.output.strip() == "captured"
+    assert result.runtime >= 0
+
+
+def test_run_command_raises_with_log_excerpt(tmp_test_directory):
+    stderr = Path(tmp_test_directory) / "error.log"
+
+    with pytest.raises(execution.JobExecutionError, match="Error log excerpt"):
+        execution.run_command(
+            [sys.executable, "-c", "import sys; sys.stderr.write('bad'); sys.exit(3)"],
+            stderr=stderr,
+        )
+
+    result = execution.run_command([sys.executable, "-c", "import sys; sys.exit(3)"], check=False)
+    assert result.return_code == 3
+
+
+def test_run_command_captures_error_output_and_reads_stdin_path(tmp_test_directory):
+    stdin = Path(tmp_test_directory) / "stdin.txt"
+    stdin.write_text("from file", encoding="utf-8")
+
+    result = execution.run_command(
+        [sys.executable, "-c", "import sys; print(sys.stdin.read()); sys.stderr.write('warn')"],
+        stdin=stdin,
+    )
+
+    assert result.output.strip() == "from file"
+    assert result.error_output == "warn"
+
+
+def test_run_command_error_reports_return_code_and_stderr():
+    with pytest.raises(execution.JobExecutionError, match=r"return code 3(.|\n)*boom"):
+        execution.run_command(
+            [sys.executable, "-c", "import sys; sys.stderr.write('boom'); sys.exit(3)"]
+        )

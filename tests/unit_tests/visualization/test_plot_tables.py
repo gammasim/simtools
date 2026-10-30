@@ -10,6 +10,7 @@ from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
+from simtools.reporting import docs_parameter_plots
 from simtools.visualization import plot_tables
 
 PLOT_INTERSECTION_PROTON_CURVE = (
@@ -19,7 +20,7 @@ PLOT_INTERSECTION_PROTON_CURVE = (
 
 @mock.patch("simtools.visualization.plot_tables.visualize")
 @mock.patch("simtools.visualization.plot_tables.read_table_data")
-def test_plot(mock_read_table_data, mock_visualize):
+def test_plot(mock_read_table_data, mock_visualize, run_context):
     config = {
         "tables": [
             {
@@ -37,11 +38,15 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_fig = mock.MagicMock()
     mock_visualize.plot_1d.return_value = mock_fig
 
-    plot_tables.plot(config, output_file)
+    plot_tables.plot(config, output_file, context=run_context)
 
-    mock_read_table_data.assert_called_once_with(config, None, model_reader=None)
+    mock_read_table_data.assert_called_once_with(
+        config, None, model_reader=None, context=run_context
+    )
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
-    mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
+    mock_visualize.save_figure.assert_called_once_with(
+        mock_fig, output_file, close=True, context=run_context
+    )
 
 
 @mock.patch("simtools.visualization.plot_tables.Table.read")
@@ -115,12 +120,8 @@ def test_read_non_ecsv_table_data_from_file_raises():
         plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED) / "model_parameters")
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_file(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_file(mock_read_legacy_data_as_table):
     config = {
         "tables": [
             {
@@ -132,24 +133,17 @@ def test_read_table_data_from_file(
             },
         ]
     }
-    mock_table = mock.MagicMock()
+    mock_table = Table({"x": [1.0], "y": [2.0]})
     mock_read_legacy_data_as_table.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
 
     result = plot_tables.read_table_data(config, None)
 
     mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
-@mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
-@mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-def test_read_table_data_from_model_repository(
-    mock_read_legacy_data_as_table,
-    mock_get_structure_array_from_table,
-):
+def test_read_table_data_from_model_repository(run_context):
     config = {
         "tables": [
             {
@@ -164,12 +158,9 @@ def test_read_table_data_from_model_repository(
         ]
     }
     model_reader = mock.MagicMock()
-    mock_table = mock.MagicMock()
-    model_reader.export_model_file.return_value = mock_table
-    mock_structure_array = mock.MagicMock()
-    mock_get_structure_array_from_table.return_value = mock_structure_array
+    model_reader.export_model_file.return_value = Table({"x": [1.0], "y": [2.0]})
 
-    result = plot_tables.read_table_data(config, model_reader=model_reader)
+    result = plot_tables.read_table_data(config, model_reader=model_reader, context=run_context)
 
     model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
@@ -180,8 +171,8 @@ def test_read_table_data_from_model_repository(
         export_file_as_table=True,
         dest=mock.ANY,
     )
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
-    assert result == {"test_table": mock_structure_array}
+    assert result["test_table"].dtype.names == ("x", "y")
+    assert result["test_table"][0].tolist() == (1.0, 2.0)
 
 
 def test_read_table_data_no_table_data_defined():
@@ -191,7 +182,7 @@ def test_read_table_data_no_table_data_defined():
         plot_tables.read_table_data(config)
 
 
-def test_export_model_file():
+def test_export_model_file(run_context):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
@@ -207,7 +198,7 @@ def test_export_model_file():
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config, model_reader=model_reader)
+    plot_tables.read_table_data(config, model_reader=model_reader, context=run_context)
 
     model_reader.export_model_file.assert_called_once_with(
         parameter="test_parameter",
@@ -451,6 +442,78 @@ def test_generate_plot_configurations(
     assert result is None
 
 
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_repository")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
+def test_generate_plot_configurations_uses_and_names_selected_model_version(
+    mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
+):
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.3.0"}
+    mock_read_table.return_value = Table({"wavelength": [300.0], "reflectivity": [0.9]})
+    mock_collect_data.return_value = {
+        "plot_configuration": [
+            {
+                "type": "mirror_reflectivity",
+                "tables": [{"column_x": "wavelength", "column_y": "reflectivity"}],
+            }
+        ]
+    }
+
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="mirror_reflectivity",
+        parameter_version="2.0.0",
+        site="North",
+        telescope="LSTN-design",
+        output_path=tmp_test_directory,
+        plot_type="all",
+        model_version="8.0.0",
+    )
+
+    assert mock_read_parameter_dict.call_args.args[0]["model_version"] == "8.0.0"
+    assert mock_read_table.call_args.args[0]["model_version"] == "8.0.0"
+    assert configs[0]["tables"][0]["model_version"] == "8.0.0"
+    assert output_files[0].name == "mirror_reflectivity_2.0.0_North_LSTN-design.pdf"
+
+
+def test_figure_cache_key_tracks_rendered_data_config_and_output_settings(run_context):
+    plot_config = {
+        "title": "Reflectivity",
+        "xtitle": "Wavelength [nm]",
+        "tables": [{"model_version": "7.0.0", "label": "Mirror", "column_y": "y"}],
+    }
+    data = {"Mirror": [(300.0, 0.91), (400.0, 0.87)]}
+    context_dpi_120 = run_context.replace(args={"figure_dpi": 120})
+
+    initial_key = docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_120)
+    same_render_from_another_version = {
+        **plot_config,
+        "tables": [{**plot_config["tables"][0], "model_version": "8.0.0"}],
+    }
+    assert (
+        docs_parameter_plots._get_figure_cache_key(
+            same_render_from_another_version, data, context_dpi_120
+        )
+        == initial_key
+    )
+
+    changed_data = {"Mirror": [(300.0, 0.91), (400.0, 0.86)]}
+    assert (
+        docs_parameter_plots._get_figure_cache_key(plot_config, changed_data, context_dpi_120)
+        != initial_key
+    )
+    changed_config = {**plot_config, "xtitle": "Wavelength [angstrom]"}
+    assert (
+        docs_parameter_plots._get_figure_cache_key(changed_config, data, context_dpi_120)
+        != initial_key
+    )
+
+    context_dpi_240 = run_context.replace(args={"figure_dpi": 240})
+    assert (
+        docs_parameter_plots._get_figure_cache_key(plot_config, data, context_dpi_240)
+        != initial_key
+    )
+
+
 def test_get_plotting_label_duplicate_label():
     config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
     data = {"duplicate_label": "data"}
@@ -649,8 +712,9 @@ def test_plot_bias_curves_saves_and_closes_figure(
     mock_plot_intersection_proton_curve.assert_called_once_with(mock_axis, proton_stats, 1.35)
     mock_configure_axis.assert_called_once_with(mock_axis, config, nsb_stats, proton_stats)
     mock_fig.tight_layout.assert_called_once_with()
-    mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
-    mock_plt.close.assert_called_once_with(mock_fig)
+    mock_fig.savefig.assert_called_once_with(
+        output_path, format="png", bbox_inches="tight", dpi=200
+    )
     assert output_path.parent.exists()
 
 
@@ -904,3 +968,30 @@ def test_fit_bias_curve_filters_invalid_points():
     )
     assert thresholds == pytest.approx([7, 8])
     assert coefficients == pytest.approx([-1, 9])
+
+
+def test_documented_library_plot_example(tmp_test_directory):
+    data_path = Path(tmp_test_directory)
+    Table({"wavelength": [300.0, 400.0], "efficiency": [0.2, 0.8]}).write(
+        data_path / "response.ecsv", format="ascii.ecsv"
+    )
+    config = {
+        "type": "example_response",
+        "title": "Detector response",
+        "xtitle": "Wavelength [nm]",
+        "ytitle": "Response",
+        "tables": [
+            {
+                "file_name": "response.ecsv",
+                "label": "Response",
+                "column_x": "wavelength",
+                "column_y": "efficiency",
+            }
+        ],
+    }
+    output_file = data_path / "response.png"
+
+    result = plot_tables.plot(config, output_file, data_path=data_path)
+
+    assert result == output_file
+    assert output_file.exists()

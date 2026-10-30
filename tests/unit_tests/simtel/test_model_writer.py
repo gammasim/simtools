@@ -6,12 +6,20 @@ from unittest.mock import Mock
 import astropy.units as u
 import pytest
 
-from simtools import settings
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.model.array_model import ArrayModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.model_writer import SimtelModelWriter
 from simtools.simulation.configuration import get_model_writer
 
+_NORTH = "North"
+_NSB_FLUX = "get_nsb_integrated_flux"
+_ARGS = "_args"
+_ZENITH_ANGLE = "zenith_angle"
+_AZIMUTH_ANGLE = "azimuth_angle"
+_PROTON = "proton"
+_PRIMARY = "primary"
+_PDGID = "PDGID"
 GLOBAL_FILE_PARAMETER = "iobuf_maximum"
 
 
@@ -113,7 +121,7 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
         "value": "correction-1.0.0.ecsv",
         "parameter_version": "1.0.0",
         "instrument": "LSTS-design",
-        "site": "North",
+        "site": _NORTH,
     }
     telescope_copy._simulation_config_parameters["sim_telarray"][parameter_name] = parameter
     mock_export = mocker.patch.object(telescope_copy.model_reader, "export_model_files")
@@ -132,7 +140,7 @@ def test_export_nsb_correction_file_preserves_parameter_metadata(telescope_model
     assert exported["parameter"] == parameter_name
     assert exported["parameter_version"] == "1.0.0"
     assert exported["instrument"] == "LSTS-design"
-    assert exported["site"] == "North"
+    assert exported["site"] == _NORTH
     assert exported["file"] is True
     mock_table.assert_called_once_with(exported)
     mock_write_table.assert_called_once()
@@ -186,31 +194,59 @@ def test_add_additional_models(telescope_model_lst, mocker):
     assert parameters["param2"] == "value2"
 
 
-def test_get_additional_simtel_metadata(array_model_north, mocker):
+def test_get_additional_simtel_metadata(array_model_north, mocker, run_context):
     array_model_north_cp = copy.deepcopy(array_model_north)
-    mocker.patch.object(
-        array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
-    )
-    mocker.patch.object(
-        settings.config,
-        "_args",
-        {
-            "primary": "gamma",
-            "azimuth_angle": 180.0 * u.deg,
-            "zenith_angle": 20.0 * u.deg,
+    mocker.patch.object(array_model_north_cp.site_model, _NSB_FLUX, return_value=42.0)
+    array_model_north_cp.context = run_context.replace(
+        args={
+            "site": _NORTH,
+            _PRIMARY: "gamma",
+            _AZIMUTH_ANGLE: 180.0 * u.deg,
+            _ZENITH_ANGLE: 20.0 * u.deg,
             "ha": 0.0 * u.deg,
             "dec": 30.0 * u.deg,
-        },
+        }
     )
 
     metadata = get_model_writer(array_model_north_cp)._get_additional_simtel_metadata()
 
     assert metadata["nsb_integrated_flux"] == pytest.approx(42.0)
-    assert metadata["primary"] == "gamma"
-    assert metadata["azimuth_angle"] == pytest.approx(180.0)
-    assert metadata["zenith_angle"] == pytest.approx(20.0)
+    assert metadata[_PRIMARY] == "gamma"
+    assert metadata[_AZIMUTH_ANGLE] == pytest.approx(180.0)
+    assert metadata[_ZENITH_ANGLE] == pytest.approx(20.0)
     assert metadata["ha_angle"] == pytest.approx(0.0)
     assert metadata["dec_angle"] == pytest.approx(30.0)
+    assert metadata["INSTRUME"] == "CTAO-North"
+    assert metadata[_PDGID] == 22
+
+
+def test_metadata_from_corsika_input_uses_shower_parameters(array_model_north, mocker, run_context):
+    model = copy.deepcopy(array_model_north)
+    mocker.patch.object(model.site_model, _NSB_FLUX, return_value=42.0)
+    model.context = run_context.replace(
+        args={
+            "site": _NORTH,
+            "corsika_file": "showers.iact",
+            _PRIMARY: None,
+            _ZENITH_ANGLE: 5 * u.deg,
+            _AZIMUTH_ANGLE: 10 * u.deg,
+        }
+    )
+    reader = mocker.patch("simtools.simtel.model_writer.get_reader").return_value
+    reader.read_simulation_parameters.return_value = {
+        "primary_particle": PrimaryParticle("common_name", _PROTON),
+        _ZENITH_ANGLE: 30.0,
+        _AZIMUTH_ANGLE: 120.0,
+    }
+
+    metadata = get_model_writer(model)._get_additional_simtel_metadata()
+
+    assert metadata[_PDGID] == 2212
+    assert metadata[_PRIMARY] == _PROTON
+    assert metadata["SIMZEN"] == pytest.approx(30.0)
+    assert metadata["SIMAZ"] == pytest.approx(120.0)
+    assert metadata[_ZENITH_ANGLE] == pytest.approx(30.0)
+    assert metadata[_AZIMUTH_ANGLE] == pytest.approx(120.0)
 
 
 def test_export_all_simtel_config_files(mocker):
@@ -243,8 +279,9 @@ def test_export_simtel_telescope_config_files(array_model_north):
     assert get_model_writer(am)._telescope_model_files_exported is True
 
 
-def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
+def test_export_simtel_telescope_config_files_skips_duplicates(mocker, run_context):
     am = Mock(spec=ArrayModel)
+    am.context = run_context
     am._logger = Mock()
     am.configuration_writers = {}
     am.calibration_models = {}

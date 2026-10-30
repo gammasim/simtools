@@ -20,9 +20,9 @@ Tools to handle atmospheric models and related calculations.
    :members:
 ```
 
-## atmosphere_characterization_helpers
+## transmission
 
 ```{eval-rst}
-.. automodule:: simtools.atmosphere.atmosphere_characterization_helpers
+.. automodule:: simtools.atmosphere.transmission
    :members:
 ```

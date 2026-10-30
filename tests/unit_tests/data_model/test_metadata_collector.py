@@ -17,6 +17,8 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
+from simtools.sim_events import metadata_reader as event_metadata_reader
+from simtools.simtel import metadata_reader as simtel_metadata_reader
 
 logger = logging.getLogger()
 
@@ -143,8 +145,8 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
             "runtime_environment": {"options": ["--env SIMTOOLS_SECRET=runtime-secret"]},
             "run_time": ["podman", "run", "--env", "SIMTOOLS_SECRET=runtime-secret"],
             "_metadata_configuration_sources": {
-                "cli": {"input_path"},
-                "defaults": {"off_axis_angle"},
+                "input_path": "cli",
+                "off_axis_angle": "default",
             },
         }
     )
@@ -154,7 +156,7 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
     ).get_top_level_metadata()
     configuration = metadata["cta"]["context"]["application_configuration"]
 
-    assert configuration["schema_version"] == "1.0.0"
+    assert configuration["schema_version"] == "2.0.0"
     assert configuration["application"] == "test_application"
     assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
     assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
@@ -169,8 +171,8 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
         "SIMTOOLS_SECRET=***REDACTED***",
     ]
     assert configuration["sources"] == {
-        "cli": ["input_path"],
-        "defaults": ["off_axis_angle"],
+        "input_path": "cli",
+        "off_axis_angle": "default",
     }
     context_schema = schema.load_schema(METADATA_JSON_SCHEMA)["definitions"]["cta"]["properties"][
         "context"
@@ -255,7 +257,7 @@ def test_read_input_metadata_from_file(
     simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
     simtel_file.write_bytes(b"")
     mocker.patch.object(
-        metadata_collector,
+        simtel_metadata_reader,
         "read_sim_telarray_metadata",
         return_value=(
             {
@@ -270,7 +272,8 @@ def test_read_input_metadata_from_file(
         ),
     )
     validate_simtel_metadata = mocker.patch.object(
-        metadata_collector.simtel_validate_metadata, "validate_metadata_values"
+        simtel_metadata_reader.simtel_validate_metadata,
+        "validate_metadata_values",
     )
     metadata_1.args_dict["input_meta"] = simtel_file
     simtel_metadata = metadata_1._read_input_metadata_from_file()[0]
@@ -299,7 +302,7 @@ def test_read_input_metadata_from_file(
     corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
     corsika_file.write_bytes(b"")
     mocker.patch.object(
-        metadata_collector,
+        event_metadata_reader,
         "get_corsika_run_and_event_headers",
         return_value=(
             np.array((42, 7.8010), dtype=[("run_number", "i4"), ("version", "f4")]),
@@ -327,67 +330,6 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
         with pytest.raises(FileNotFoundError):
             metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
     assert "Failed reading metadata for" in caplog.text
-
-
-def test_read_input_metadata_from_simtel_rejects_invalid_registry_value(
-    args_dict_site, tmp_test_directory, mocker
-):
-    simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
-    simtel_file.write_bytes(b"")
-    mocker.patch.object(
-        metadata_collector,
-        "read_sim_telarray_metadata",
-        return_value=({"azimuth_angle": "not-a-number"}, {}),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    with pytest.raises(ValueError, match=r"could not convert string to float"):
-        collector._read_input_metadata_from_simtel(simtel_file)
-
-
-def test_metadata_collector_eventio_helpers_handle_incomplete_values(args_dict_site):
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    assert collector._header_to_dict(None) == {}
-    assert collector._header_to_dict({"run_number": 42}) == {"run_number": 42}
-    assert collector._header_to_dict([42]) == [42]
-    assert collector._header_to_dict(np.array([(42,)], dtype=[("run_number", "i4")])) == {
-        "run_number": 42
-    }
-    assert collector._get_valid_site(None) is None
-    assert collector._get_valid_site("invalid") is None
-    assert collector._simtel_associated_elements(
-        {1: {}, 2: {"optics_config_variant": "INVALID-01"}}, "South"
-    ) == [{"site": "South", "class": "telescope", "type": None, "id": "INVALID-01"}]
-
-
-def test_read_input_metadata_from_simtel_without_metadata(args_dict_site, mocker):
-    mocker.patch.object(
-        metadata_collector,
-        "read_sim_telarray_metadata",
-        return_value=(None, None),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata = collector._read_input_metadata_from_simtel("empty.simtel")
-
-    assert metadata["cta"]["context"]["associated_elements"][0]["id"] is None
-
-
-def test_read_input_metadata_from_corsika_rejects_missing_headers(
-    args_dict_site, tmp_test_directory, mocker
-):
-    corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
-    corsika_file.write_bytes(b"")
-    mocker.patch.object(
-        metadata_collector,
-        "get_corsika_run_and_event_headers",
-        return_value=(None, None),
-    )
-
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    with pytest.raises(ValueError, match=r"^CORSIKA file has no complete run and event header:"):
-        collector._read_input_metadata_from_corsika(corsika_file)
 
 
 def test_fill_product_meta(args_dict_site):
@@ -505,64 +447,6 @@ def test_fill_context_sim_list(args_dict_site):
     _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
     _collector._fill_context_sim_list(_test_def, _new_element)
     assert _test_none == [_new_element]
-
-
-def test_process_metadata_from_file():
-    _collector = metadata_collector.MetadataCollector({})
-
-    meta_dict_1 = {"cta": {"product": {"description": "This is a sample description"}}}
-    _dict_test_1 = _collector._process_metadata_from_file(meta_dict_1)
-    assert _dict_test_1 == meta_dict_1
-
-    meta_dict_2 = {"cta": {"PRODUCT": {"description": "This is a sample description"}}}
-    _collector._process_metadata_from_file(meta_dict_2)
-
-    meta_dict_3 = {"cta": {"PRODUCT": {"description": "This is a sample\n description"}}}
-    _collector._process_metadata_from_file(meta_dict_3)
-
-    meta_dict_4 = {"cta": {"product": {"description": None}}}
-    assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
-
-
-def test_copy_list_type_metadata(args_dict_site):
-    top_level_dict = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"}
-            ]
-        }
-    }
-
-    _input_meta = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
-                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
-            ]
-        }
-    }
-
-    _result_meta = {
-        "context": {
-            "associated_elements": [
-                {"site": "Site A", "class": "Class A", "type": "Type A", "subtype": "Subtype A"},
-                {"site": "Site B", "class": "Class B", "type": "Type B", "subtype": "Subtype B"},
-                {"site": "Site C", "class": "Class C", "type": "Type C", "subtype": "Subtype C"},
-            ]
-        }
-    }
-
-    key = "associated_elements"
-
-    _collector = metadata_collector.MetadataCollector({})
-    _collector._copy_list_type_metadata(top_level_dict["context"], _input_meta, key)
-
-    assert _result_meta["context"][key] == top_level_dict["context"][key]
-
-    key = "documents"
-    _org_top_level_dict = copy.deepcopy(top_level_dict)
-    _collector._copy_list_type_metadata(top_level_dict, _input_meta, key)
-    assert _org_top_level_dict == top_level_dict
 
 
 def get_generic_input_meta():

@@ -8,10 +8,8 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
 from simtools.data_model import data_reader, schema
-from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.site_model import SiteModel
@@ -21,10 +19,6 @@ from simtools.utils import names, value_conversion
 
 class InvalidTelescopeListFileError(Exception):
     """Exception for invalid telescope list file."""
-
-
-class InvalidCoordinateDataTypeError(Exception):
-    """Exception for low-precision coordinate data type."""
 
 
 class ArrayLayout:
@@ -59,6 +53,7 @@ class ArrayLayout:
         telescope_list_metadata_file=None,
         validate=False,
         model_reader=None,
+        context=None,
     ):
         """Initialize ArrayLayout."""
         self._logger = logging.getLogger(__name__)
@@ -67,9 +62,12 @@ class ArrayLayout:
         self.label = label
         self.name = name
         self.site = None if site is None else names.validate_site_name(site)
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
         self.site_model = None
-        self.io_handler = io_handler.IOHandler()
+        self.io_handler = self.context.paths
         self.geo_coordinates = GeoCoordinates()
 
         self._telescope_list = []
@@ -100,6 +98,7 @@ class ArrayLayout:
                 site=self.site,
                 model_version=self.model_version,
                 model_reader=self.model_reader,
+                context=self.context,
                 parameter_names=self.geo_coordinates.coordinate_parameter_names(),
                 load_simulation_software_parameters=False,
             )
@@ -357,6 +356,7 @@ class ArrayLayout:
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
+                context=self.context,
             )
 
         for row in table:
@@ -393,7 +393,7 @@ class ArrayLayout:
 
         position = data["value"]
         if isinstance(position, str):
-            position = gen.convert_string_to_list(position)
+            position = value_conversion.convert_string_to_list(position)
         self.site = data.get("site", None)
 
         table = QTable()
@@ -427,6 +427,7 @@ class ArrayLayout:
             telescope_name=telescope_name,
             model_version=self.model_version,
             label=self.label,
+            context=self.context,
         )
 
     def _set_telescope_auxiliary_parameters(self, telescope, telescope_name=None):
@@ -460,44 +461,6 @@ class ArrayLayout:
                 telescope.set_auxiliary_parameter(
                     para, tel_model.get_parameter_value_with_unit(para)
                 )
-
-    def add_telescope(
-        self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None, design_model=None
-    ):
-        """
-        Add an individual telescope to the telescope list.
-
-        Parameters
-        ----------
-        telescope_name: str
-            Name of the telescope starting with L, M or S (e.g. LST-01, MST-06 ...)
-        crs_name: str
-            Name of coordinate system
-        xx: astropy.units.quantity.Quantity
-            x-coordinate for the given coordinate system
-        yy: astropy.units.quantity.Quantity
-            y-coordinate for the given coordinate system
-        altitude: astropy.units.quantity.Quantity
-            Altitude coordinate in equivalent units of u.m.
-        tel_corsika_z: astropy.units.quantity.Quantity
-            CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
-            center).
-        design_model: str
-            Name of the design model (optional).
-            If none, telescope type + "-design" is used.
-        """
-        tel = TelescopePosition(name=telescope_name)
-        self._set_telescope_auxiliary_parameters(tel, design_model)
-        tel.set_coordinates(crs_name, xx, yy)
-        if altitude is not None:
-            tel.set_altitude(altitude)
-        elif tel_corsika_z is not None:
-            tel.set_altitude(
-                self._altitude_from_corsika_z(
-                    pos_z=tel_corsika_z, telescope_axis_height=tel.get_axis_height()
-                )
-            )
-        self._telescope_list.append(tel)
 
     def _get_export_metadata(self):
         """
@@ -647,17 +610,6 @@ class ArrayLayout:
             "file": False,
             "model_parameter_schema_version": "0.1.0",
         }
-
-    def get_number_of_telescopes(self):
-        """
-        Return the number of telescopes in the list.
-
-        Returns
-        -------
-        int
-            Number of telescopes.
-        """
-        return len(self._telescope_list)
 
     def print_telescope_list(self, crs_name):
         """

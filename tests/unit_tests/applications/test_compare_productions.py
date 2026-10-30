@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-import simtools.sim_events.production_comparison as production_comparison
+import simtools.production_configuration.comparison as production_comparison
 from simtools.applications import compare_productions
 from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
     mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        "simtools.production_configuration.comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
@@ -20,7 +20,7 @@ def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
 
 def test_parse_production_arguments_resolves_flattened_pairs(mocker):
     mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        "simtools.production_configuration.comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
@@ -36,7 +36,7 @@ def test_parse_production_arguments_resolves_flattened_pairs(mocker):
 
 def test_parse_production_arguments_rejects_duplicate_labels(mocker):
     mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        "simtools.production_configuration.comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
@@ -58,7 +58,7 @@ def test_parse_production_arguments_rejects_duplicate_labels(mocker):
 )
 def test_parse_production_arguments_error_paths(mocker, arguments, error_match):
     mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        "simtools.production_configuration.comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
@@ -67,7 +67,9 @@ def test_parse_production_arguments_error_paths(mocker, arguments, error_match):
 
 
 def test_parse_production_arguments_rejects_unresolved_patterns(mocker):
-    mocker.patch("simtools.sim_events.production_comparison.resolve_file_patterns", return_value=[])
+    mocker.patch(
+        "simtools.production_configuration.comparison.resolve_file_patterns", return_value=[]
+    )
 
     with pytest.raises(ValueError, match="does not resolve to any files"):
         production_comparison.parse_production_arguments(
@@ -77,7 +79,7 @@ def test_parse_production_arguments_rejects_unresolved_patterns(mocker):
 
 def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
     mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        "simtools.production_configuration.comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
@@ -102,7 +104,7 @@ def test_main_delegates_to_production_comparison_workflow(mocker, tmp_test_direc
         "array_layout_name": ["CTAO-North-Alpha"],
         "figure_format": ["pdf"],
     }
-    app_context.io_handler.get_output_directory.return_value = output_directory
+    app_context.paths.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
     mock_write = mocker.patch(
@@ -124,13 +126,13 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
         "array_layout_name": ["LSTN-01"],
         "figure_format": ["pdf"],
     }
-    app_context.io_handler.get_output_directory.return_value = output_directory
+    app_context.paths.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
     mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
     mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
     mock_plot = mocker.patch(
-        "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
+        "simtools.applications.compare_productions.plot_production_comparison.plot_signal_level_comparison",
         return_value=[statistics_file],
     )
     mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
@@ -161,11 +163,11 @@ def test_signal_comparison_uses_array_layout_name_as_telescope_selection(
     }
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
     mock_application.start.return_value = app_context
-    app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    app_context.paths.get_output_directory.return_value = Path(tmp_test_directory)
     mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
     mock_collect = mocker.patch("simtools.applications.compare_productions.collect_signal_metrics")
     mocker.patch(
-        "simtools.applications.compare_productions.plot_signal_level_production_comparison.plot",
+        "simtools.applications.compare_productions.plot_production_comparison.plot_signal_level_comparison",
         return_value=[],
     )
 
@@ -348,7 +350,7 @@ def test_event_comparison_accepts_distinct_effective_metadata_labels(mocker):
 def test_main_runs_computing_comparison(mocker, tmp_test_directory):
     app_context = mocker.MagicMock()
     app_context.args = {"comparison_level": "computing", "baseline_path": "production"}
-    app_context.io_handler.get_output_directory.return_value = Path(tmp_test_directory)
+    app_context.paths.get_output_directory.return_value = Path(tmp_test_directory)
     mocker.patch(
         "simtools.applications.compare_productions.APPLICATION"
     ).start.return_value = app_context

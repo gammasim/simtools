@@ -10,7 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from simtools.testing import configuration, helpers, log_inspector, options, validate_output
+from simtools.job_execution import log_inspector
+from simtools.testing import configuration, helpers, options
+from simtools.testing.output_validation.runner import validate_application_output
 
 logger = logging.getLogger()
 
@@ -99,7 +101,7 @@ def _set_simulation_model_source_configuration(config, simulation_models_path, g
     if not simulation_models_path and not git_source:
         return
     source_config = config.get("configuration")
-    if source_config is None:  # e.g. 'auto-no_config' tests running without any argument
+    if source_config is None:
         return
     model_source_arguments = _get_model_source_arguments(config["application"])
     if simulation_models_path and "simulation_models_path" not in model_source_arguments:
@@ -286,7 +288,7 @@ def test_applications_from_config(
 
     assert log_inspector.inspect([result.stdout, result.stderr])
 
-    validate_output.validate_application_output(
+    validate_application_output(
         tmp_config,
         model_version,
         config_file_model_version or model_version,

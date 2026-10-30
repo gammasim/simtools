@@ -4,7 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.model import model_repository
+from simtools.model_repository import maintenance
 
 _ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
 
@@ -12,6 +12,7 @@ _ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(*_ARGUMENTS,),
+    needs=("corsika",),
 )
 
 
@@ -19,7 +20,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    if not model_repository.verify_simulation_model_production_tables(
+    if not maintenance.verify_simulation_model_production_tables(
         simulation_models_path=app_context.args["simulation_models_path"]
     ):
         raise RuntimeError(

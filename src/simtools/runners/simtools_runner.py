@@ -21,8 +21,10 @@ from simtools import version as simtools_version
 from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
 from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
-from simtools.io.file_type import _get_product_filename
-from simtools.job_execution import job_manager
+from simtools.io.file_type import product_filename
+from simtools.job_execution import execution
+from simtools.job_execution.execution import JobExecutionError
+from simtools.utils import value_conversion
 
 logger = logging.getLogger(__name__)
 _SIMULATION_MODELS_PATH = "simulation_models_path"
@@ -33,23 +35,11 @@ _MODEL_SOURCE_OPTIONS = (
     _SIMULATION_MODELS_GIT_PATH,
     "simulation_models_git_revision",
 )
+_SCIENCE_PLACEHOLDER = re.compile(r"__[A-Z][A-Z0-9_]+__")
 
 
 def prepare_workflow(args_dict, replacements=None):
-    """Resolve a workflow and its backend configuration without executing it.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Runner arguments, including config_file and optional steps and overrides.
-    replacements : dict or None
-        Placeholder values; the configuration directory is supplied automatically.
-
-    Returns
-    -------
-    tuple
-        Applications, runtime environment, log path, activity ID, and collection.
-    """
+    """Resolve a workflow and its backend configuration without executing it."""
     replacements = dict(replacements or {})
     replacements.setdefault(
         "__CONFIG_DIRECTORY__", str(Path(args_dict["config_file"]).resolve().parent)
@@ -60,7 +50,7 @@ def prepare_workflow(args_dict, replacements=None):
         args_dict.get("activity_id"),
         replacements=replacements,
     )
-    _resolve_nested_configuration_files(configurations, replacements)
+    resolve_nested_configuration_files(configurations, replacements)
     if args_dict.get("runtime_environment") is not None:
         runtime = args_dict["runtime_environment"]
     if args_dict.get("log_file") is not None:
@@ -69,25 +59,23 @@ def prepare_workflow(args_dict, replacements=None):
     return configurations, runtime, log_file, activity, collection
 
 
-def run_applications(args_dict, run_time=None, replacements=None):
+def run_applications(args_dict, run_time=None, replacements=None, context=None):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
     Parameters
     ----------
     args_dict : dict
-        Dictionary containing command line arguments.
-        Optional key ``overwrite_collection_files`` (bool) allows collection
-        output files to be overwritten when different source files have the
-        same basename. Defaults to False.
-        Set ``provenance_path`` to False to omit the resolved workflow file.
+        Command line arguments. Optional keys: ``overwrite_collection_files`` (allow
+        overwriting collection files with the same basename) and ``provenance_path``
+        (False omits the resolved workflow file).
     run_time : list or None
-        Prepared runtime command. If provided, reuse it instead of preparing
-        the runtime environment from the workflow configuration.
+        Prepared runtime command, reused instead of preparing the runtime environment.
     replacements : dict or None
-        Placeholder replacements applied recursively to the workflow configuration.
-        The configuration directory is added automatically as
-        __CONFIG_DIRECTORY__ when not supplied.
+        Placeholder replacements applied recursively; ``__CONFIG_DIRECTORY__`` is added
+        automatically.
+    context : RunContext, optional
+        Run context used to report software versions and collect workflow metadata.
     """
     (
         configurations,
@@ -100,10 +88,11 @@ def run_applications(args_dict, run_time=None, replacements=None):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
-    model_source_options = _model_source_options(args_dict)
-    explicit_env_file = _get_explicit_env_file(args_dict)
+    source_options = model_source_options(args_dict)
 
-    _apply_execution_overrides(configurations, args_dict, model_source_options, explicit_env_file)
+    apply_execution_overrides(
+        configurations, args_dict, source_options, get_explicit_env_file(args_dict)
+    )
     effective_runtime = None if args_dict["ignore_runtime_environment"] else runtime_environment
     _write_resolved_workflow(
         args_dict["config_file"],
@@ -122,13 +111,17 @@ def run_applications(args_dict, run_time=None, replacements=None):
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         try:
-            versions = dependencies.get_version_string(run_time, include_software_versions=True)
+            versions = dependencies.get_version_string(
+                run_time, include_software_versions=True, context=context
+            )
         except FileNotFoundError as exc:
             logger.info("Host simulation versions unavailable; using runtime identity: %s", exc)
-            versions = dependencies.get_version_string(run_time, include_software_versions=False)
+            versions = dependencies.get_version_string(
+                run_time, include_software_versions=False, context=context
+            )
         file.write(versions)
         try:
-            manifest = dependencies.get_dependency_manifest(run_time or None)
+            manifest = dependencies.get_dependency_manifest(run_time or None, context=context)
             file.write(f"Runtime simtools: {manifest.get('simtools', {})}\n")
             file.write(f"Runtime build options: {manifest.get('build_options', {})}\n")
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
@@ -157,7 +150,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
 
                 file.write("=" * 80 + "\n")
                 file.write(
-                    f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
+                    f"Application: {app}\nSTDOUT:\n{result.output}\n"
+                    f"STDERR:\n{result.error_output}\n"
                 )
 
             _copy_collection_files(
@@ -174,52 +168,31 @@ def run_applications(args_dict, run_time=None, replacements=None):
                 configurations=configurations,
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
+                context=context,
             )
 
 
-def _get_explicit_env_file(args_dict):
+def get_explicit_env_file(args_dict):
     """Return the runner env file when it was explicitly supplied on the CLI."""
     configuration_sources = args_dict.get("_metadata_configuration_sources", {})
-    if "env_file" not in configuration_sources.get("cli", []):
+    if configuration_sources.get("env_file") != "cli":
         return None
     return args_dict.get("env_file")
 
 
 def _copy_collection_files(configurations, collection_config, overwrite_files=False):
-    """Copy listed files from application output paths to one or more collection output paths.
-
-    Parameters
-    ----------
-    configurations : list[dict]
-        Application configurations from the workflow config file.
-    collection_config : dict or list[dict] or None
-        A single collection entry (``{output_path, files, source_directory}``) or
-        a list of such entries. ``source_directory`` is optional, can be a string
-        or list of strings, and defaults to ``output_path``. ``None`` or an empty
-        value is silently ignored.
-    overwrite_files : bool
-        If True, allow overwriting existing files in collection output paths
-        when different sources resolve to the same basename.
-
-    Raises
-    ------
-    FileExistsError
-        When two different source files would produce the same basename in an
-        output directory.
-    """
+    """Copy listed files to collection output paths, raising FileExistsError on basename clashes."""
     if not collection_config:
         return
-    if isinstance(collection_config, dict):
-        collection_config = [collection_config]
+    entries = [collection_config] if isinstance(collection_config, dict) else collection_config
 
-    for entry in collection_config:
+    for entry in entries:
         output_path = entry.get("output_path")
         files = entry.get("files") or []
         if output_path is None or not files:
             continue
         source_directories = _collect_source_directories(
-            configurations,
-            source_directory=entry.get("source_directory"),
+            configurations, source_directory=entry.get("source_directory")
         )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
@@ -245,39 +218,18 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
 def _copy_pattern_files(
     pattern, source_directories, destination, overwrite_files=False, preserve_relative_paths=False
 ):
-    """Copy all files matching *pattern* from source directories into *destination*.
-
-    Parameters
-    ----------
-    pattern : str
-        Filename or glob pattern to search for.
-    source_directories : list[Path]
-        Directories to search.
-    destination : Path
-        Target directory (must already exist).
-    overwrite_files : bool
-        If True, overwrite existing destination files.
-    preserve_relative_paths : bool
-        Preserve each matched file's path relative to its source directory.
-
-    Raises
-    ------
-    FileExistsError
-        When a source file would overwrite a different file with the same name.
-    """
-    inventory = []
+    """Copy all files matching a pattern from the source directories into a destination."""
     destination_name = None
     if isinstance(pattern, dict):
         destination_name = pattern.get("destination")
         pattern = pattern["source"]
-
     _validate_collection_destination_name(destination_name)
 
     if pattern == "**/comparison_statistics.meta.yml" and any(
-        (source_directory / _get_product_filename("comparison_statistics")).is_file()
+        (source_directory / product_filename("comparison_statistics")).is_file()
         for source_directory in source_directories
     ):
-        return inventory
+        return []
 
     source_files = _find_collection_files(pattern, source_directories)
     if destination_name is not None and len(source_files) != 1:
@@ -286,6 +238,7 @@ def _copy_pattern_files(
             f"but pattern '{pattern}' matched {len(source_files)} files."
         )
 
+    inventory = []
     for source_file in source_files:
         relative_path = _collection_relative_path(source_file, source_directories)
         name = relative_path if preserve_relative_paths else source_file.name
@@ -318,33 +271,20 @@ def _collection_relative_path(source_file, source_directories):
 
 def _sha256(path):
     """Return the SHA-256 checksum of one collected artifact."""
-    digest = hashlib.sha256()
     with Path(path).open("rb") as file:
-        for chunk in iter(lambda: file.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+        return hashlib.file_digest(file, "sha256").hexdigest()
 
 
 def _validate_collection_destination_name(destination_name):
     """Validate an optional collection destination as a plain filename."""
     if destination_name is None:
         return
-    if not isinstance(destination_name, str):
-        raise ValueError(
-            "Collection destination must be a non-empty filename without path separators: "
-            f"{destination_name!r}"
-        )
-    if not destination_name or destination_name in {".", ".."}:
-        raise ValueError(
-            "Collection destination must be a non-empty filename without path separators: "
-            f"{destination_name!r}"
-        )
-    if Path(destination_name).name != destination_name:
-        raise ValueError(
-            "Collection destination must be a non-empty filename without path separators: "
-            f"{destination_name!r}"
-        )
-    if "/" in destination_name or "\\" in destination_name:
+    if (
+        not isinstance(destination_name, str)
+        or destination_name in {"", ".", ".."}
+        or Path(destination_name).name != destination_name
+        or "\\" in destination_name
+    ):
         raise ValueError(
             "Collection destination must be a non-empty filename without path separators: "
             f"{destination_name!r}"
@@ -353,64 +293,25 @@ def _validate_collection_destination_name(destination_name):
 
 def _collect_source_directories(configurations, source_directory=None):
     """Return unique source directories from application configurations."""
+    if source_directory is None:
+        keys = ["output_path"]
+    elif isinstance(source_directory, str):
+        keys = [source_directory]
+    else:
+        keys = list(source_directory)
     source_directories = []
-    source_directory_keys = _normalize_collection_source_directories(source_directory)
     for config in configurations:
         app_configuration = config.get("configuration", {})
-        for source_key in source_directory_keys:
+        for source_key in keys:
             source_dir = app_configuration.get(source_key)
-            if source_dir is not None:
-                source_path = Path(source_dir)
-                if source_path not in source_directories:
-                    source_directories.append(source_path)
+            if source_dir is not None and Path(source_dir) not in source_directories:
+                source_directories.append(Path(source_dir))
     return source_directories
 
 
-def _normalize_collection_source_directories(source_directory):
-    """Return source directory keys as a list."""
-    if source_directory is None:
-        return ["output_path"]
-    if isinstance(source_directory, str):
-        return [source_directory]
-    return list(source_directory)
-
-
 def _find_collection_files(pattern, source_directories):
-    """Find files matching a name or glob pattern in the list of source directories.
-
-    For literal filenames (no wildcard characters), the existing exact-match
-    semantics are preserved when the file exists directly under a source
-    directory. If not, a unique recursive match anywhere below a source
-    directory is accepted so collection files can live in nested output trees.
-
-    For glob patterns (containing ``*``, ``?``, or ``[``), all source
-    directories are searched recursively and all matching regular files are
-    returned in sorted order. A :obj:`logging.WARNING` is emitted when a glob
-    pattern yields no matches (rather than raising an error, because some
-    patterns are legitimately optional).
-
-    Parameters
-    ----------
-    pattern : str
-        Filename or glob pattern (e.g. ``"result.ecsv"`` or
-        ``"angular_distance_vs_energy_*.png"``).
-    source_directories : list[Path]
-        Directories to search.
-
-    Returns
-    -------
-    list[Path]
-        Matched files. Empty list only when *pattern* is a glob and no files
-        match.
-
-    Raises
-    ------
-    FileNotFoundError
-        If *pattern* is a literal filename and is not found in any source
-        directory.
-    """
-    is_glob = glob.has_magic(pattern)
-    if is_glob:
+    """Find files matching a filename or glob pattern in the source directories."""
+    if glob.has_magic(pattern):
         matched = sorted(f for d in source_directories for f in d.rglob(pattern) if f.is_file())
         if not matched:
             logger.warning(
@@ -434,17 +335,10 @@ def _find_collection_files(pattern, source_directories):
             f"Collection file '{pattern}' matched multiple nested files in {source_directories}: "
             f"{recursive_matches}. Use a more specific path or glob pattern."
         )
-
     raise FileNotFoundError(f"Could not find collection file '{pattern}' in {source_directories}.")
 
 
-def _append_metadata_file(model_parameter_metadata_files, metadata_file):
-    """Append metadata file to list when available."""
-    if metadata_file is not None:
-        model_parameter_metadata_files.append(metadata_file)
-
-
-def _model_source_options(args_dict):
+def model_source_options(args_dict):
     """Return configured model-source options for child applications."""
     return {key: args_dict[key] for key in _MODEL_SOURCE_OPTIONS if args_dict.get(key) is not None}
 
@@ -462,21 +356,10 @@ def _application_argument_names(application):
     return {argument.name for argument in definition.all_arguments}
 
 
-def _application_accepts_model_source_options(application, source_options):
-    """Return whether a simtools application accepts all model-source options."""
-    argument_names = _application_argument_names(application)
-    return argument_names is not None and set(source_options) <= argument_names
-
-
-def _accepts_option_or_is_external(application, option):
-    """Return whether an option can be passed to an application of a workflow step."""
-    argument_names = _application_argument_names(application)
-    return argument_names is None or option in argument_names
-
-
 def _apply_model_source_options(application, configuration, source_options):
     """Apply inherited model-source options to applications that accept them."""
-    if not _application_accepts_model_source_options(application, source_options):
+    argument_names = _application_argument_names(application)
+    if argument_names is None or not set(source_options) <= argument_names:
         return
     if configuration.get(_SIMULATION_MODELS_PATH):
         return
@@ -495,23 +378,22 @@ def _submit_application_and_collect_metadata(
 ):
     """Submit one application and collect metadata file before/after submission."""
     metadata_file = _get_model_parameter_metadata_file(app_configuration)
-    _append_metadata_file(model_parameter_metadata_files, metadata_file)
+    if metadata_file is not None:
+        model_parameter_metadata_files.append(metadata_file)
 
     logger.info(f"Running application: {app}")
-    result = job_manager.submit(
+    result = execution.run_command(
         app,
-        out_file=None,
-        err_file=None,
+        stdout=None,
+        stderr=None,
         configuration=app_configuration,
         runtime_environment=runtime_environment,
     )
 
     if metadata_file is None:
-        _append_metadata_file(
-            model_parameter_metadata_files,
-            _get_model_parameter_metadata_file(app_configuration),
-        )
-
+        metadata_file = _get_model_parameter_metadata_file(app_configuration)
+        if metadata_file is not None:
+            model_parameter_metadata_files.append(metadata_file)
     return result
 
 
@@ -523,6 +405,7 @@ def _update_workflow_metadata_files(
     configurations,
     model_parameter_metadata_files,
     associated_activities,
+    context=None,
 ):
     """Update collected model-parameter metadata files with workflow metadata."""
     if not model_parameter_metadata_files:
@@ -537,6 +420,7 @@ def _update_workflow_metadata_files(
             runtime_environment_snapshot if not args_dict["ignore_runtime_environment"] else None
         ),
         workflow_context=_get_workflow_context(configurations),
+        context=context,
     )
     for metadata_file in model_parameter_metadata_files:
         workflow_metadata.update_model_parameter_metadata_file(
@@ -549,46 +433,17 @@ def _update_workflow_metadata_files(
 def _read_application_configuration(
     configuration_file, steps, workflow_activity_id=None, replacements=None
 ):
-    """
-    Read application configuration from file and modify for setting workflows.
-
-    Strong assumptions on the structure of input and output files:
-
-    - configuration file is expected to be in './input/<workflow directory>/<yaml file>'
-    - output files will be written out to './output/<workflow directory>/'
-
-    Replaces the placeholders in the configuration file with the actual values.
-
-    Parameters
-    ----------
-    configuration_file : str
-        Configuration file name.
-    steps : list
-        List of steps to be executed (None: all steps).
-    workflow_activity_id : str
-        Workflow activity id fallback from command-line context.
-    replacements : dict or None
-        Placeholder replacements applied recursively before processing.
-
-    Returns
-    -------
-    tuple
-        Tuple containing:
-        - configurations: list of application configurations
-        - runtime_environment: dict with runtime environment configuration
-        - log_file: Path to the log file
-        - workflow_activity_id: str with workflow activity id
-        - collection_config: dict or None with collection configuration
-
-    """
+    """Read a workflow file and resolve its placeholders; return configurations and metadata."""
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
-    job_configuration = gen.replace_placeholders_recursively(job_configuration, replacements or {})
+    job_configuration = value_conversion.replace_placeholders_recursively(
+        job_configuration, replacements or {}
+    )
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
     derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
-    collection_config = gen.replace_placeholders_recursively(
+    collection_config = value_conversion.replace_placeholders_recursively(
         job_configuration.get("collection"),
         {"__SETTING_WORKFLOW__": setting_workflow},
     )
@@ -596,7 +451,7 @@ def _read_application_configuration(
     output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
-        config = gen.change_dict_keys_case(config, True)
+        config = value_conversion.change_dict_keys_case(config, True)
         app_config = config.get("configuration", {})
         if "output_path" not in app_config:
             output_path_used_as_default = True
@@ -625,9 +480,6 @@ def _read_application_configuration(
     )
 
 
-_SCIENCE_PLACEHOLDER = re.compile(r"__[A-Z][A-Z0-9_]+__")
-
-
 def _validate_resolved_configuration(configurations, runtime_environment, collection_config):
     """Reject unresolved workflow placeholders before starting an application."""
     values = [configurations, runtime_environment, collection_config]
@@ -638,7 +490,7 @@ def _validate_resolved_configuration(configurations, runtime_environment, collec
         raise ValueError("Unresolved workflow placeholder(s): " + ", ".join(unresolved))
 
 
-def _resolve_nested_configuration_files(configurations, replacements):
+def resolve_nested_configuration_files(configurations, replacements):
     """Resolve placeholders in referenced backend configuration files."""
     for config in configurations:
         app_configuration = config.get("configuration", {})
@@ -653,7 +505,7 @@ def _resolve_nested_configuration_files(configurations, replacements):
         backend_values = ascii_handler.collect_data_from_file(backend_path)
         if not isinstance(backend_values, dict):
             raise ValueError(f"Backend configuration must contain a mapping: {backend_path}")
-        app_configuration["backend_config"] = gen.replace_placeholders_recursively(
+        app_configuration["backend_config"] = value_conversion.replace_placeholders_recursively(
             backend_values,
             replacements,
         )
@@ -705,23 +557,8 @@ def _write_resolved_workflow(
         )
 
 
-def _get_application_log_file(application, app_configuration, counter):
-    """Return log file path for an application executed via run_applications."""
-    if app_configuration.get("log_file") is not None:
-        return app_configuration["log_file"]
-    output_path = app_configuration.get("output_path")
-    if output_path is None:
-        return None
-    return Path(output_path) / f"{application}-{counter:02d}.log"
-
-
 def _get_model_parameter_metadata_file(app_configuration):
-    """
-    Return expected metadata file for model-parameter submission applications.
-
-    Takes into account differences in how applications generate metadata files
-    (e.g., submit-model-parameter style apps vs. more generic applications).
-    """
+    """Return the expected metadata file of a model-parameter submission application."""
     output_path = app_configuration.get("output_path")
     if not output_path:
         return None
@@ -733,80 +570,46 @@ def _get_model_parameter_metadata_file(app_configuration):
     if parameter and parameter_version:
         return output_path / parameter / f"{parameter}-{parameter_version}.meta.yml"
 
-    metadata_candidates = sorted(output_path.rglob("*.meta.yml"))
-    if len(metadata_candidates) == 1:
-        return metadata_candidates[0]
-
-    if parameter_version:
-        matching = [
-            file_path
-            for file_path in metadata_candidates
-            if file_path.name.endswith(f"-{parameter_version}.meta.yml")
-        ]
-        if len(matching) == 1:
-            return matching[0]
-
-    return None
-
-
-def _get_workflow_configuration_value(configurations, key):
-    """Return first non-empty configuration value for a given key."""
-    for config in configurations:
-        value = config.get("configuration", {}).get(key)
-        if value is not None:
-            return value
-    return None
+    candidates = sorted(output_path.rglob("*.meta.yml"))
+    if len(candidates) == 1:
+        return candidates[0]
+    matching = [
+        f
+        for f in candidates
+        if parameter_version and f.name.endswith(f"-{parameter_version}.meta.yml")
+    ]
+    return matching[0] if len(matching) == 1 else None
 
 
 def _get_workflow_context(configurations):
-    """Extract workflow context (site, instrument) from configurations.
+    """Return the site and instrument of the workflow (first non-empty value)."""
 
-    Parameters
-    ----------
-    configurations : list
-        List of application configurations.
+    def first_value(key):
+        return next(
+            (
+                value
+                for value in (config.get("configuration", {}).get(key) for config in configurations)
+                if value is not None
+            ),
+            None,
+        )
 
-    Returns
-    -------
-    dict
-        Context dict with 'site' and 'instrument' keys.
-    """
     return {
-        "site": _get_workflow_configuration_value(configurations, "site"),
-        "instrument": _get_workflow_configuration_value(configurations, "instrument")
-        or _get_workflow_configuration_value(configurations, "telescope"),
+        "site": first_value("site"),
+        "instrument": first_value("instrument") or first_value("telescope"),
     }
 
 
 def _replace_placeholders_in_configuration(
     configuration, output_path, setting_workflow, place_holder="__SETTING_WORKFLOW__"
 ):
-    """
-    Replace placeholders in the configuration dictionary.
-
-    Parameters
-    ----------
-    configuration : dict
-        Configuration dictionary.
-    output_path : Path
-        Path to the output directory.
-    setting_workflow : str
-        The setting workflow to replace the placeholder with.
-    place_holder : str
-        Placeholder to be replaced.
-
-    Returns
-    -------
-    dict
-        Configuration dictionary with placeholders replaced.
-    """
-    configuration = gen.replace_placeholders_recursively(
+    """Replace the workflow placeholder and default the output path of a configuration."""
+    configuration = value_conversion.replace_placeholders_recursively(
         configuration,
         {place_holder: setting_workflow},
     )
     if output_path:
         configuration.setdefault("output_path", str(output_path))
-
     return configuration
 
 
@@ -824,46 +627,18 @@ def _prepare_application_configuration(configuration, output_path, setting_workf
 
 
 def _set_input_output_directories(path):
-    """
-    Set input and output directories based on the configuration file path.
-
-    Tuned to simulation models setting workflows.
-
-    Parameters
-    ----------
-    path : str or Path
-        Path to the configuration file.
-
-    Returns
-    -------
-    tuple
-        The first part is the output directory, the second part is the subdirectory name.
-    """
+    """Return the output directory and workflow subdirectory for a configuration file."""
     path = Path(path)
     try:
         setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
     except ValueError:
         setting_workflow = str(path.parent) if path.parent != Path() else path.stem
 
-    output_path = Path("simtools-output") / Path(setting_workflow)
-    return output_path, setting_workflow
+    return Path("simtools-output") / Path(setting_workflow), setting_workflow
 
 
 def read_runtime_environment(runtime_environment):
-    """
-    Read the runtime environment (e.g. docker runtime) and generate the required command.
-
-    Parameters
-    ----------
-    runtime_environment : dict or None
-        Runtime environment configuration.
-    docs/changes/2323.feature.md
-
-    Returns
-    -------
-    list
-        Runtime command.
-    """
+    """Read the runtime environment (e.g. docker runtime) and return the required command."""
     if runtime_environment is None:
         return []
 
@@ -871,14 +646,20 @@ def read_runtime_environment(runtime_environment):
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
     if Path(engine).name == "apptainer":
-        return _read_apptainer_runtime_environment(runtime_environment, engine)
+        if runtime_environment.get("network"):
+            raise ValueError("Apptainer runtime environments do not support the network option.")
+        cmd = [engine, "exec"]
+        for option in runtime_environment.get("options", []):
+            cmd.extend(option.split())
+        if environment_file := runtime_environment.get("environment_file"):
+            cmd.extend(["--env-file", environment_file])
+        return [*cmd, runtime_environment["image"]]
 
     cmd = [engine, "run", "--rm"]
 
     if options := runtime_environment.get("options"):
         for opt in options:
-            expanded_opt = os.path.expandvars(opt)
-            cmd.extend(expanded_opt.split())
+            cmd.extend(os.path.expandvars(opt).split())
 
     if env := runtime_environment.get("environment_file"):
         cmd += ["--env-file", env]
@@ -891,27 +672,14 @@ def read_runtime_environment(runtime_environment):
     return cmd
 
 
-def _read_apptainer_runtime_environment(runtime_environment, engine):
-    """Build an Apptainer execution command from a runtime configuration."""
-    image = runtime_environment["image"]
-    cmd = [engine, "exec"]
-    for option in runtime_environment.get("options", []):
-        cmd.extend(option.split())
-    if environment_file := runtime_environment.get("environment_file"):
-        cmd.extend(["--env-file", environment_file])
-    if runtime_environment.get("network"):
-        raise ValueError("Apptainer runtime environments do not support the network option.")
-    cmd.append(image)
-    return cmd
-
-
 def prepare_runtime_environment(runtime_environment_file):
-    """Read and prepare a standalone runtime environment.
+    """
+    Read and prepare a standalone runtime environment.
 
     Parameters
     ----------
     runtime_environment_file : str or pathlib.Path
-        YAML file containing a top-level ``runtime_environment`` mapping.
+        YAML file with a top-level ``runtime_environment`` mapping.
 
     Returns
     -------
@@ -938,34 +706,26 @@ def prepare_runtime_environment(runtime_environment_file):
 
 
 def _pull_image(engine, image):
-    """
-    Pull the specified image using the specified container engine.
-
-    Parameters
-    ----------
-    engine : str
-        Container engine to use (e.g., 'docker' or 'podman').
-    image : str
-        Image to pull.
-    """
-    inspect_result = job_manager.submit([engine, "image", "inspect", image], check=False)
-    if inspect_result and inspect_result.returncode == 0:
+    """Pull an image with the container engine unless it is already available locally."""
+    inspect_result = execution.run_command([engine, "image", "inspect", image], check=False)
+    if inspect_result and inspect_result.return_code == 0:
         return
 
     try:
-        job_manager.submit([engine, "pull", image], capture_output=False)
-    except job_manager.JobExecutionError as exc:
+        execution.run_command([engine, "pull", image], capture_output=False)
+    except JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc
 
 
-def _apply_execution_overrides(configurations, args, model_source, env_file):
+def apply_execution_overrides(configurations, args, model_source, env_file):
     """Apply inherited settings before recording or running applications."""
     for config in configurations:
         configuration = config.get("configuration", {})
-        _apply_model_source_options(config.get("application"), configuration, model_source)
-        if args.get(_IGNORE_EXISTING_PARAMETER_VERSION) and _accepts_option_or_is_external(
-            config.get("application"), _IGNORE_EXISTING_PARAMETER_VERSION
-        ):
-            configuration[_IGNORE_EXISTING_PARAMETER_VERSION] = True
+        application = config.get("application")
+        _apply_model_source_options(application, configuration, model_source)
+        if args.get(_IGNORE_EXISTING_PARAMETER_VERSION):
+            argument_names = _application_argument_names(application)
+            if argument_names is None or _IGNORE_EXISTING_PARAMETER_VERSION in argument_names:
+                configuration[_IGNORE_EXISTING_PARAMETER_VERSION] = True
         if env_file is not None:
             configuration["env_file"] = env_file

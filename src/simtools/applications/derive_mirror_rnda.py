@@ -67,16 +67,18 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
+        *cli.RAY_TRACING_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
+    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args, context=app_context)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
     if app_context.args.get("psf_hist"):

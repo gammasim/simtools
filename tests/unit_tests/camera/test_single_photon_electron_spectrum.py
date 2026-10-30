@@ -12,7 +12,7 @@ from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectron
 
 
 @pytest.fixture
-def spe_spectrum():
+def spe_spectrum(run_context):
     args_dict = {
         "output_file": "output_file",
         "step_size": 0.1,
@@ -21,7 +21,7 @@ def spe_spectrum():
         "input_spectrum": "input_spectrum",
         "afterpulse_amplitude_range": [4.0, 42.0],
     }
-    return SinglePhotonElectronSpectrum(args_dict)
+    return SinglePhotonElectronSpectrum(args_dict, context=run_context)
 
 
 @pytest.fixture
@@ -34,18 +34,15 @@ def afterpulse_column():
     return "frequency (afterpulsing)"
 
 
-@patch("simtools.io.io_handler.IOHandler")
 @patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
-def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
-    mock_io_handler_instance = mock_io_handler.return_value
+def test_init(mock_metadata_collector, spe_spectrum):
     mock_metadata_collector_instance = mock_metadata_collector.return_value
 
-    spe_spectrum.io_handler = mock_io_handler_instance
     spe_spectrum.metadata = mock_metadata_collector_instance
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
 
     assert tmp_spe_spectrum.args_dict["output_file"] == "output_file.ecsv"
-    assert tmp_spe_spectrum.io_handler == mock_io_handler_instance
+    assert tmp_spe_spectrum.io_handler.output_path == spe_spectrum.context.paths.output_path
     assert tmp_spe_spectrum.data == ""
     assert tmp_spe_spectrum.metadata == mock_metadata_collector_instance
 
@@ -64,12 +61,9 @@ def test_derive_single_pe_spectrum(spe_spectrum, tmp_test_directory):
     assert spe_spectrum.data
 
 
-@patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
 @patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.write_product_data")
-def test_write_single_pe_spectrum(
-    mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory
-):
-    mock_get_output_directory.return_value = tmp_test_directory / "output" / "directory"
+def test_write_single_pe_spectrum(mock_dump, spe_spectrum, tmp_test_directory):
+    spe_spectrum.context.paths.output_path["default"] = tmp_test_directory / "output" / "directory"
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
 
@@ -89,6 +83,7 @@ def test_write_single_pe_spectrum(
         product_data=mock_dump.call_args.kwargs["product_data"],
         validate_schema_file=tmp_spe_spectrum.output_schema,
         metadata_output_file=(tmp_test_directory / "output" / "directory" / "output_file.ecsv"),
+        context=spe_spectrum.context,
     )
     assert mock_dump.call_args.kwargs["product_data"].colnames == [
         "amplitude",

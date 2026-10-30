@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from eventio.simtel.simtelfile import SimTelFile
 
+from simtools.job_execution.log_inspector import check_plain_logs
 from simtools.model.mirrors import uses_segmented_dual_mirror_geometry
 from simtools.model_repository.asset_names import get_simtel_table_file_name
 from simtools.sim_events import file_info
@@ -16,8 +17,7 @@ from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
-from simtools.testing.log_inspector import check_plain_logs
-from simtools.utils import general, random
+from simtools.utils import random, value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ def validate_sim_telarray(
     ValueError
         If the sim_telarray output files or metadata are not consistent with the array models.
     """
-    data_files = general.ensure_list(data_files)
-    log_files = general.ensure_list(log_files)
+    data_files = value_conversion.ensure_list(data_files)
+    log_files = value_conversion.ensure_list(log_files)
 
     if array_models:
         validate_metadata(data_files, array_models, allow_for_changes)
@@ -445,7 +445,7 @@ def validate_event_numbers(data_files, expected_mc_events, expected_shower_event
         If the number of simulated events does not match the expected number.
     """
     event_errors = []
-    for file in general.ensure_list(data_files):
+    for file in value_conversion.ensure_list(data_files):
         shower_events, mc_events = file_info.get_simulated_events(file)
 
         if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
@@ -525,25 +525,6 @@ def assert_n_showers_and_energy_range(file):
         )
 
     return True
-
-
-def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
-    """
-    Assert that the expected output is present in the sim_telarray file.
-
-    Parameters
-    ----------
-    file: Path
-        Path to the sim_telarray file.
-    expected_sim_telarray_output: dict
-        Expected output values.
-
-    """
-    if expected_sim_telarray_output is None:
-        return True
-
-    item_to_check = _item_to_check_from_sim_telarray(file, expected_sim_telarray_output)
-    return _assert_expected_sim_telarray_output(item_to_check, expected_sim_telarray_output)
 
 
 def assert_expected_sim_telarray_output_and_event_type(

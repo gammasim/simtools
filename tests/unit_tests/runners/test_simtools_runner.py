@@ -13,7 +13,7 @@ import pytest
 import yaml
 
 import simtools.utils.general as gen
-from simtools.job_execution.job_manager import JobExecutionError
+from simtools.job_execution.execution import JobExecutionError
 from simtools.runners import simtools_runner
 from simtools.runners.simtools_runner import _find_collection_files
 
@@ -170,7 +170,9 @@ def _patch_application_configuration_read(
         "simtools.runners.simtools_runner._set_input_output_directories",
         mock_set_input_output_directories,
     )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.utils.value_conversion.change_dict_keys_case", mock_change_dict_keys_case
+    )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
         placeholder_replacement,
@@ -206,7 +208,7 @@ def _patch_run_applications_dependencies(
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
     monkeypatch.setattr(
-        "simtools.job_execution.job_manager.submit",
+        "simtools.job_execution.execution.run_command",
         submit_mock or mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
     )
     monkeypatch.setattr(
@@ -546,17 +548,17 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     version_string_mock = mock.Mock(return_value="simtools version: 1.2.3\n")
     monkeypatch.setattr("simtools.dependencies.get_version_string", version_string_mock)
 
-    # Patch job_manager.submit
+    # Patch run_command
     submit_calls = []
 
-    def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
+    def mock_submit(app, stdout, stderr, configuration=None, runtime_environment=None):
         submit_calls.append({"app": app, "configuration": configuration})
         result_mock = mock.Mock()
-        result_mock.stdout = f"{app}_stdout"
-        result_mock.stderr = f"{app}_stderr"
+        result_mock.output = f"{app}_stdout"
+        result_mock.error_output = f"{app}_stderr"
         return result_mock
 
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", mock_submit)
 
     simtools_runner.run_applications(mock_args_dict)
 
@@ -583,7 +585,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert submit_calls[0]["configuration"]["output_path"] == str(tmp_test_directory)
     assert submit_calls[1]["configuration"]["output_path"] == str(tmp_test_directory)
 
-    version_string_mock.assert_called_once_with([], include_software_versions=True)
+    version_string_mock.assert_called_once_with([], include_software_versions=True, context=None)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
 
@@ -608,13 +610,13 @@ def test_run_applications_propagates_explicit_env_file(monkeypatch, tmp_test_dir
         "simtools.dependencies.get_version_string",
         mock.Mock(return_value=""),
     )
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", submit_mock)
 
     simtools_runner.run_applications(
         {
             "config_file": "workflow.config.yml",
             "env_file": str(env_file),
-            "_metadata_configuration_sources": {"cli": ["env_file"]},
+            "_metadata_configuration_sources": {"env_file": "cli"},
             "steps": None,
             "ignore_runtime_environment": True,
         }
@@ -689,7 +691,7 @@ def test_run_applications_propagates_ignore_existing_parameter_version(
         mock.Mock(),
     )
     submit_mock = mock.Mock(return_value=mock.Mock(stdout="stdout", stderr="stderr", returncode=0))
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", submit_mock)
 
     simtools_runner.run_applications(mock_args_dict)
 
@@ -906,7 +908,7 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
     monkeypatch.setattr(
-        "simtools.job_execution.job_manager.submit",
+        "simtools.job_execution.execution.run_command",
         mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
     )
     workflow_build_mock = mock.Mock(return_value={"id": "wf-activity-id"})
@@ -948,10 +950,10 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
 
-    def mock_submit_failure(app, out_file, err_file, configuration=None, runtime_environment=None):
+    def mock_submit_failure(app, stdout, stderr, configuration=None, runtime_environment=None):
         raise JobExecutionError("Job failed")
 
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit_failure)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", mock_submit_failure)
     monkeypatch.setattr(
         "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
         mock.Mock(return_value={"id": "wf-activity-id"}),
@@ -965,7 +967,7 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
         simtools_runner.run_applications(mock_args_dict)
 
 
-# Note: _convert_dict_to_args is now handled by job_manager module
+# Note: _convert_dict_to_args is now handled by command_runner module
 
 
 def test_read_runtime_environment_with_full_options(monkeypatch):
@@ -1123,14 +1125,14 @@ def test_prepare_runtime_environment_schema_validation(tmp_test_directory, conte
         simtools_runner.prepare_runtime_environment(runtime_file)
 
 
-# Note: run_application function has been replaced by job_manager.submit
+# Note: run_application function has been replaced by run_command
 
 
 def test_pull_image_skips_pull_if_image_exists(monkeypatch):
     image = "ghcr.io/gammasim/simtools-prod:test"
-    inspect_result = mock.Mock(returncode=0)
+    inspect_result = mock.Mock(return_code=0)
     submit_mock = mock.Mock(return_value=inspect_result)
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", submit_mock)
 
     simtools_runner._pull_image("podman", image)
 
@@ -1139,10 +1141,10 @@ def test_pull_image_skips_pull_if_image_exists(monkeypatch):
 
 def test_pull_image_pulls_if_image_missing(monkeypatch):
     image = "ghcr.io/gammasim/simtools-prod:test"
-    inspect_result = mock.Mock(returncode=125)
-    pull_result = mock.Mock(returncode=0)
+    inspect_result = mock.Mock(return_code=125)
+    pull_result = mock.Mock(return_code=0)
     submit_mock = mock.Mock(side_effect=[inspect_result, pull_result])
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", submit_mock)
 
     simtools_runner._pull_image("podman", image)
 
@@ -1153,30 +1155,12 @@ def test_pull_image_pulls_if_image_missing(monkeypatch):
 
 def test_pull_image_raises_if_pull_fails(monkeypatch):
     image = "ghcr.io/gammasim/simtools-prod:test"
-    inspect_result = mock.Mock(returncode=125)
+    inspect_result = mock.Mock(return_code=125)
     submit_mock = mock.Mock(side_effect=[inspect_result, JobExecutionError("pull failed")])
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+    monkeypatch.setattr("simtools.job_execution.execution.run_command", submit_mock)
 
     with pytest.raises(RuntimeError, match="Failed to pull image"):
         simtools_runner._pull_image("podman", image)
-
-
-def test_get_application_log_file_no_existing_log_file(tmp_test_directory):
-    app_configuration = {"output_path": str(tmp_test_directory)}
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 3)
-    assert result == tmp_test_directory / "simtools-derive-psf-03.log"
-
-
-def test_get_application_log_file_returns_existing_log_file(tmp_test_directory):
-    existing = tmp_test_directory / "my_custom.log"
-    app_configuration = {"output_path": str(tmp_test_directory), "log_file": existing}
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 1)
-    assert result == existing
-
-
-def test_get_application_log_file_returns_none_without_output_path():
-    result = simtools_runner._get_application_log_file("simtools-derive-psf", {}, 1)
-    assert result is None
 
 
 def test_get_model_parameter_metadata_file():
@@ -1231,7 +1215,9 @@ def test_read_application_configuration_prefers_path_uuid7(
         "simtools.runners.simtools_runner._set_input_output_directories",
         mock_set_input_output_directories,
     )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.utils.value_conversion.change_dict_keys_case", mock_change_dict_keys_case
+    )
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
         lambda config, output_path, setting_workflow: config,
@@ -1420,7 +1406,7 @@ def test_effective_overrides_are_recorded_before_launch(mocker, tmp_test_directo
             "log_file": str(Path(tmp_test_directory) / "execution.log"),
             SIMULATION_MODELS_GIT_REVISION: "v1.2.3",
             "env_file": "explicit.env",
-            "_metadata_configuration_sources": {"cli": ["env_file"]},
+            "_metadata_configuration_sources": {"env_file": "cli"},
         }
     )
     payload = yaml.safe_load(provenance.read_text())
@@ -1507,6 +1493,6 @@ def test_ignore_existing_parameter_version_is_passed_only_to_accepting_applicati
     option = simtools_runner._IGNORE_EXISTING_PARAMETER_VERSION
     configurations = [{"application": application, "configuration": {}}]
 
-    simtools_runner._apply_execution_overrides(configurations, {option: True}, {}, None)
+    simtools_runner.apply_execution_overrides(configurations, {option: True}, {}, None)
 
     assert (option in configurations[0]["configuration"]) is accepted

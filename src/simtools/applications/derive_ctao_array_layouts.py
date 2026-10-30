@@ -40,7 +40,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -67,6 +67,7 @@ def main():
         array_layouts=merge_array_layouts(model_layouts["array_layouts"], ctao_array_layouts),
         args_dict=app_context.args,
         associated_data=associated_data,
+        context=app_context,
     )
 
 

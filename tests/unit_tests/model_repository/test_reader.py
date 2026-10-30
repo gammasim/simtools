@@ -4,7 +4,6 @@ import json
 import subprocess
 import sys
 import textwrap
-from operator import itemgetter
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -12,9 +11,8 @@ import pytest
 from astropy.table import Table
 
 from simtools.application.model_reader import create_model_reader
-from simtools.model_repository import files as repository_files
 from simtools.model_repository import reader as reader_module
-from simtools.model_repository.reader import FileSystemModelSource, SimulationModelReader
+from simtools.model_repository.reader import SimulationModelReader
 
 
 def _write_json(path, data):
@@ -138,237 +136,18 @@ def test_reader_factory_selects_filesystem(model_repository):
     assert reader.source_name == str(model_repository.resolve())
 
 
-def test_production_file_index_includes_patch_history(model_repository):
-    """Patch productions include files from each version in their history."""
-    patch_path = model_repository / "simulation-models/productions/1.1.0"
-    patch_path.mkdir()
-    (patch_path / "info.yml").write_text(
-        "model_update: patch_update\nmodel_version_history:\n  - 1.0.0\n", encoding="utf-8"
-    )
-    _write_json(patch_path / "LSTN-01.json", {"parameters": {"LSTN-01": {}}})
-
-    production_files = repository_files.get_production_table_files(patch_path)
-
-    assert set(map(itemgetter(0), production_files)) == {"1.0.0", "1.1.0"}
-
-
-def test_filesystem_source_caches_reads_per_instance(model_repository, mocker):
-    """Repeated reads are cached without sharing state between roots."""
-    source = FileSystemModelSource(model_repository)
-    read_spy = mocker.spy(reader_module.ascii_handler, "collect_data_from_file")
-    parameter_path = source._parameter_path(
-        "telescopes", "LSTN-01", "camera_body_diameter", "2.0.0"
-    )
-    initial_calls = read_spy.call_count
-    source._read_parameter_file(parameter_path)
-    source._read_parameter_file(parameter_path)
-    assert read_spy.call_count - initial_calls == 1
-
-    other_source = FileSystemModelSource(model_repository)
-    assert other_source._parameters == {}
-
-
-def test_filesystem_source_does_not_parse_ecsv_before_copying(
-    model_repository, mocker, tmp_test_directory
-):
-    source = FileSystemModelSource(model_repository)
-    source_file = model_repository / "simulation-models/model_parameters/example.ecsv"
-    source_file.write_text("# example\n", encoding="utf-8")
-    validate_table = mocker.patch.object(source, "get_parameter_table")
-
-    result = source._copy_model_file(
-        {"parameter": "example"}, source_file, Path(tmp_test_directory)
-    )
-
-    assert result == "copied from filesystem"
-    validate_table.assert_not_called()
-
-
-def test_filesystem_source_qualifies_colliding_assets(model_repository, tmp_test_directory):
-    source = FileSystemModelSource(model_repository)
-    first_source = (
-        model_repository / "simulation-models/model_parameters/first/camera_filter/shared.dat"
-    )
-    second_source = (
-        model_repository / "simulation-models/model_parameters/second/camera_filter/shared.dat"
-    )
-    first_source.parent.mkdir(parents=True)
-    second_source.parent.mkdir(parents=True)
-    first_source.write_text("first\n", encoding="utf-8")
-    second_source.write_text("second\n", encoding="utf-8")
-    destination = Path(tmp_test_directory) / "exported"
-    first_parameter = {
-        "file": True,
-        "instrument": "first",
-        "parameter": "camera_filter",
-        "parameter_version": "1.0.0",
-        "value": "shared.dat",
-    }
-    second_parameter = {
-        "file": True,
-        "instrument": "second",
-        "parameter": "camera_filter",
-        "parameter_version": "1.0.0",
-        "value": "shared.dat",
+def test_reader_factory_selects_memory_storage():
+    """The in-memory constructor provides a source for generated model files."""
+    production_path = "simulation-models/productions/1.0.0/LSTN-01.json"
+    files = {
+        production_path: json.dumps({"parameters": {"LSTN-01": {}}}).encode(),
     }
 
-    source._copy_model_file(first_parameter, first_source, destination)
-    source._copy_model_file(second_parameter, second_source, destination)
+    reader = SimulationModelReader.from_memory(files)
 
-    assert second_parameter["value"] == "shared-second.dat"
-    assert (destination / "shared-second.dat").read_text(encoding="utf-8") == "second\n"
-    assert source.resolve_parameter_asset(second_parameter) == second_source.resolve()
-
-
-def test_filesystem_source_rejects_missing_repository(tmp_test_directory):
-    """A missing repository fails with a useful path error."""
-    with pytest.raises(FileNotFoundError, match="Simulation models path does not exist"):
-        FileSystemModelSource(Path(tmp_test_directory) / "missing")
-
-
-def test_filesystem_source_rejects_incomplete_repository(tmp_test_directory):
-    """A repository must contain both model directory trees."""
-    root = Path(tmp_test_directory) / "models"
-    (root / "simulation-models/productions").mkdir(parents=True)
-
-    with pytest.raises(FileNotFoundError, match="Expected simulation models directory"):
-        FileSystemModelSource(root)
-
-
-def test_filesystem_source_caches_versions_and_validates_tables(model_repository, mocker):
-    """Version and production-table reads are cached and validate their keys."""
-    source = FileSystemModelSource(model_repository)
-    source.get_model_versions()
-    (model_repository / "simulation-models/productions/9.0.0").mkdir()
-    assert source.get_model_versions() == ["1.0.0"]
-
-    source.read_production_table("telescopes", "1.0.0")
-    read_tables = mocker.spy(repository_files, "read_production_tables")
-    source.read_production_table("telescopes", "1.0.0")
-    read_tables.assert_not_called()
-
-    with pytest.raises(ValueError, match=r"Model version 2\.0\.0 not found"):
-        source.read_production_table("telescopes", "2.0.0")
-    with pytest.raises(ValueError, match="No production table for sites"):
-        source.read_production_table("sites", "1.0.0")
-
-
-@pytest.mark.parametrize(
-    ("query", "collection", "expected_instrument"),
-    [
-        ({"instrument": "LSTN-01"}, "telescopes", "LSTN-01"),
-        ({"site": "North"}, "sites", "OBS-North"),
-        ({"site": "North"}, "configuration_corsika", "global"),
-        ({"site": "North"}, "configuration_sim_telarray", "global"),
-    ],
-)
-def test_filesystem_source_resolves_parameter_scopes(query, collection, expected_instrument):
-    """Filesystem queries use the same scopes as the model repository source."""
-    assert FileSystemModelSource._get_parameter_instrument(query, collection) == expected_instrument
-
-
-def test_filesystem_source_rejects_ambiguous_parameter_scope():
-    """An element scope is required for non-global filesystem collections."""
-    with pytest.raises(ValueError, match="requires an array element name"):
-        FileSystemModelSource._get_parameter_instrument({}, "telescopes")
-
-
-def test_filesystem_source_queries_and_filters_parameters(model_repository):
-    """Queries support OR clauses and reject missing or mismatched parameters."""
-    source = FileSystemModelSource(model_repository)
-    query = {
-        "instrument": "LSTN-01",
-        "site": "North",
-        "$or": [
-            {"parameter": "missing", "parameter_version": "1.0.0"},
-            {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"},
-        ],
-    }
-    result = source.query_model_parameters(query, "telescopes")
-    assert result[0]["value"] == pytest.approx(350.0)
-
-    with pytest.raises(ValueError, match="No parameters found"):
-        source.query_model_parameters(
-            {
-                "instrument": "LSTN-01",
-                "parameter": "camera_body_diameter",
-                "parameter_version": "2.0.0",
-                "site": "South",
-            },
-            "telescopes",
-        )
-
-    with pytest.raises(ValueError, match="No parameters found"):
-        source.read_parameters(
-            {"missing": "1.0.0"}, "telescopes", instrument="LSTN-01", site="North"
-        )
-
-
-@pytest.mark.parametrize(
-    ("data", "instrument", "site", "matches"),
-    [
-        ({"instrument": "LSTN-01", "site": "North"}, "LSTN-01", "North", True),
-        ({"instrument": "MSTN-01", "site": "North"}, "LSTN-01", "North", False),
-        ({"instrument": "LSTN-01", "site": ["North", "South"]}, "LSTN-01", "South", True),
-        ({"instrument": "LSTN-01", "site": "North"}, "LSTN-01", "South", False),
-        ({"instrument": None, "site": None}, "global", "North", True),
-    ],
-)
-def test_filesystem_source_matches_parameter_filters(data, instrument, site, matches):
-    """Instrument and site filters handle scalar, list, and global metadata."""
-    assert FileSystemModelSource._matches_filters(data, instrument, site) is matches
-
-
-def test_filesystem_source_exports_files_and_rejects_unsafe_paths(
-    model_repository, tmp_test_directory
-):
-    """Referenced files are copied once and cannot escape the parameter directory."""
-    parameters_path = model_repository / "simulation-models/model_parameters"
-    (parameters_path / "nested/model.dat").parent.mkdir(parents=True)
-    (parameters_path / "nested/model.dat").write_bytes(b"model")
-    destination = Path(tmp_test_directory) / "exported"
-    source = FileSystemModelSource(model_repository)
-
-    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
-        "nested/model.dat": "copied from filesystem"
-    }
-    assert source.export_model_files(file_names="nested/model.dat", dest=destination) == {
-        "nested/model.dat": "file exists"
-    }
-    with pytest.raises(ValueError, match="escapes parameter"):
-        source.export_model_files(file_names="../model.dat", dest=destination)
-    with pytest.raises(FileNotFoundError, match="Model file not found"):
-        source.export_model_files(file_names="missing.dat", dest=destination)
-    with pytest.raises(ValueError, match="Destination path is required"):
-        source.export_model_files(file_names="nested/model.dat")
-
-
-def test_filesystem_source_exports_parameter_file_values(model_repository, tmp_test_directory):
-    """File-valued parameters are selected when file names are omitted."""
-    parameters_path = model_repository / "simulation-models/model_parameters"
-    (parameters_path / "model.dat").write_bytes(b"model")
-    destination = Path(tmp_test_directory) / "exported"
-    source = FileSystemModelSource(model_repository)
-
-    result = source.export_model_files(
-        parameters={"file": {"file": True, "value": "model.dat"}}, dest=destination
-    )
-    assert result == {"model.dat": "copied from filesystem"}
-
-
-def test_filesystem_source_reads_ecsv_and_rejects_missing_file(
-    model_repository, tmp_test_directory
-):
-    """ECSV model files are exposed as Astropy tables."""
-    parameters_path = model_repository / "simulation-models/model_parameters"
-    Table({"value": [1, 2]}).write(parameters_path / "values.ecsv", format="ascii.ecsv")
-    source = FileSystemModelSource(model_repository)
-
-    assert source.get_ecsv_file_as_astropy_table("values.ecsv")["value"].tolist() == [1, 2]
-    with pytest.raises(FileNotFoundError, match="Model file not found"):
-        source.get_ecsv_file_as_astropy_table("missing.ecsv")
-    with pytest.raises(ValueError, match="escapes parameter"):
-        source.get_ecsv_file_as_astropy_table("../values.ecsv")
+    assert reader.source_name == "memory"
+    assert reader.source_config["type"] == "memory"
+    assert reader.get_model_versions() == ["1.0.0"]
 
 
 def test_model_repository_import_has_no_external_source_dependency():
@@ -441,7 +220,7 @@ def test_reader_facade_routes_source_operations_and_branches():
         {"parameter": parameter, "value": 1} for parameter in versions
     ]
     source.export_model_files.return_value = {"model.dat": "copied"}
-    source.get_ecsv_file_as_astropy_table.return_value = "table"
+    source.get_parameter_table.return_value = "table"
     source.is_configured.return_value = True
     reader = SimulationModelReader(source)
 
@@ -465,7 +244,6 @@ def test_reader_facade_routes_source_operations_and_branches():
     assert reader.export_model_files(file_names="model.dat", dest="output") == {
         "model.dat": "copied"
     }
-    assert reader.get_ecsv_file_as_astropy_table("model.ecsv") == "table"
     assert reader.is_configured() is True
 
 
@@ -586,75 +364,18 @@ def test_reader_caches_parameter_tables():
     source.get_parameter_table.assert_called_once_with(parameter)
 
 
-def test_reader_rejects_embedded_parameter_as_ecsv(tmp_test_directory):
-    """Structured JSON parameters are not converted to ECSV tables."""
-    source = Mock()
-    reader = SimulationModelReader(source)
-    reader.get_model_parameter = Mock(
-        return_value={
-            "pulse": {
-                "parameter": "pulse",
-                "type": "dict",
-                "value": {
-                    "columns": ["time", "amplitude"],
-                    "column_units": ["ns", "dimensionless"],
-                    "rows": [[1.0, 2.0]],
-                },
-            }
-        }
-    )
-
-    with pytest.raises(ValueError, match="not ECSV tables"):
-        reader.export_parameter_data(
-            parameter="pulse",
-            site="North",
-            array_element_name="LSTN-01",
-            output_file="pulse.json",
-            export_model_file_as_table=True,
-            dest=tmp_test_directory,
-        )
-
-
-def test_reader_exports_file_parameter_and_table(tmp_test_directory):
-    """File-backed ECSV parameters support the original file and ECSV outputs."""
-    source = Mock()
-    reader = SimulationModelReader(source)
-    reader.get_model_parameter = Mock(
-        return_value={"mirror": {"parameter": "mirror", "file": True, "value": "mirror.ecsv"}}
-    )
-    source.export_model_files.return_value = {"mirror.ecsv": "copied"}
-    source_file = Path(tmp_test_directory) / "mirror.ecsv"
-    source_file.write_text("model", encoding="utf-8")
-    table = Table({"wavelength": [300.0]})
-    source.get_parameter_table.return_value = table
-
-    output_files = reader.export_parameter_data(
-        parameter="mirror",
-        site="North",
-        array_element_name="LSTN-01",
-        output_file="mirror-copy.ecsv",
-        export_model_file=True,
-        export_model_file_as_table=True,
-        dest=tmp_test_directory,
-    )
-
-    assert output_files == [
-        Path(tmp_test_directory) / "mirror-copy.ecsv",
-    ]
-    assert output_files[0].is_file()
-    assert Table.read(output_files[0], format="ascii.ecsv")["wavelength"][0] == pytest.approx(300.0)
-
-
 def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
     """Git construction and source metadata are exposed by the facade."""
-    git_source = Mock(source_name="models@commit", source_config={"type": "git"})
-    git_class = mocker.patch(
-        "simtools.model_repository.reader.GitModelSource", return_value=git_source
+    git_storage = Mock(name="storage", name_attr="models@commit")
+    git_storage.name = "models@commit"
+    git_storage.config = {"type": "git"}
+    git_storage_class = mocker.patch(
+        "simtools.model_repository.reader.GitStorage", return_value=git_storage
     )
 
     reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")
 
-    git_class.assert_called_once_with("models.git", "abc", object_store="store")
+    git_storage_class.assert_called_once_with("models.git", "abc", object_store="store")
     assert reader.source_name == "models@commit"
     assert reader.source_config == {"type": "git"}
 
@@ -700,28 +421,31 @@ def test_reader_facade_selects_all_array_element_scope_branches(mocker):
     ]
 
 
-def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
+def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, run_context):
     """Concrete sim_telarray scopes use design data or configured fallbacks."""
     source = Mock()
     source.read_production_table.return_value = {"design_model": {"LSTN-01": "LSTN-design"}}
     reader = SimulationModelReader(source)
-    args = {"ignore_missing_design_model": False}
-    mocker.patch.object(reader_module.settings.config, "_args", new=args)
+    context = run_context.replace(args={"ignore_missing_design_model": False})
 
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, context
+    ) == [
         "global",
         "LSTN-design",
         "LSTN-01",
     ]
-    assert reader._get_sim_telarray_array_element_list("global", {}) == ["global"]
-    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}) == [
+    assert reader._get_sim_telarray_array_element_list("global", {}, context) == ["global"]
+    assert reader._get_sim_telarray_array_element_list("LSTN-design", {}, context) == [
         "global",
         "LSTN-design",
     ]
 
     source.read_production_table.return_value = {"design_model": {}}
-    args["ignore_missing_design_model"] = True
-    assert reader._get_sim_telarray_array_element_list("LSTN-01", {"model_version": "1.0.0"}) == [
+    context = run_context.replace(args={"ignore_missing_design_model": True})
+    assert reader._get_sim_telarray_array_element_list(
+        "LSTN-01", {"model_version": "1.0.0"}, context
+    ) == [
         "global",
         "LSTN-01",
         "LSTN-01",
@@ -729,10 +453,20 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker):
     ]
 
     scopes = mocker.patch.object(
-        reader_module.names,
+        reader_module.catalog,
         "get_sim_telarray_parameter_scopes",
         side_effect=KeyError("missing"),
     )
     with pytest.raises(KeyError, match="Failed to generate array element list"):
         reader._get_sim_telarray_array_element_list(None, {})
     scopes.assert_called_once()
+
+
+def test_from_files_requires_model_directories(tmp_test_directory):
+    """A missing checkout or missing model directories raise before any read."""
+    root = Path(tmp_test_directory)
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        SimulationModelReader.from_files(root / "missing")
+    (root / "partial" / "simulation-models" / "productions").mkdir(parents=True)
+    with pytest.raises(FileNotFoundError, match="model_parameters"):
+        SimulationModelReader.from_files(root / "partial")

@@ -16,6 +16,15 @@ validation steps. This page summarizes the main formats and their typical roles.
 - **HDF5** (`.hdf5`): compact multidimensional data products used for histogram-based workflows and
   intermediate analysis results.
 
+### Trigger histograms
+
+Trigger-histogram products store dense arrays below
+`TRIGGER_HISTOGRAM_DENSE/<reference_id>/<name>`.
+Each histogram group contains a `values` dataset and one `edges_<axis>` dataset for every axis.
+The `axis_names` and `axis_units` attributes are JSON arrays with one entry per axis, or JSON `null`
+when metadata is absent; individual units may also be `null`. The parent `TRIGGER_HISTOGRAM_DENSE`
+group has a `format_version` attribute set to `2`.
+
 ## Configuration and parameter files
 
 - **YAML** (`.yml`, `.yaml`): workflow configuration and schema documents.

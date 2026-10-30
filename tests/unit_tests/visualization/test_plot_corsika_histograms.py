@@ -67,17 +67,11 @@ def test_export_all_photon_figures_pdf(tmp_path, mocker, hist_1d_factory):
         )
     }
 
-    # Patch save_figures_to_single_document to avoid actual file creation
-    save_fig_patch = mocker.patch(
-        "simtools.visualization.plot_corsika_histograms.save_figures_to_single_document"
-    )
-
     pdf_path = tmp_path / "output.pdf"
     export_all_photon_figures_pdf(mock_hist, pdf_path)
 
-    save_fig_patch.assert_called_once()
-    args, _ = save_fig_patch.call_args
-    assert args[1] == pdf_path
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
 
 
 def test_build_all_photon_figures_1d_and_2d(mocker, hist_1d_factory, hist_2d_factory):
@@ -149,18 +143,6 @@ def test_plot_2d_log_scale(mocker, hist_2d_factory):
 def test_plot_2d_empty_list():
     figs = plot_corsika_histograms._plot_2d([])
     assert figs == []
-
-
-def test_extract_uncertainty_with_value():
-    uncertainties = [[1, 2, 3], [4, 5, 6]]
-    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 1)
-    assert result == [4, 5, 6]
-
-
-def test_extract_uncertainty_with_none():
-    uncertainties = [None, [4, 5, 6]]
-    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 0)
-    assert result is None
 
 
 def test_plot_histogram_curve_with_uncertainties(mocker):

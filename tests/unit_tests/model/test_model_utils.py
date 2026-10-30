@@ -6,20 +6,6 @@ from simtools.model import model_utils
 
 
 @pytest.mark.parametrize(
-    ("telescope_name", "expected"),
-    [
-        ("LSTN-01", False),
-        ("MSTN-01", False),
-        ("MSTS-01", False),
-        ("SSTS-01", True),
-        ("SCTS-25", True),
-    ],
-)
-def test_is_two_mirror_telescope(telescope_name, expected):
-    assert model_utils.is_two_mirror_telescope(telescope_name) == expected
-
-
-@pytest.mark.parametrize(
     ("pars", "off_axis", "expected"),
     [
         ([0.8, 0, 0.0, 0.0, 0.0], 0.0, 0.8),
@@ -141,14 +127,11 @@ def test_read_overwrite_model_parameter_dict_with_file_non_dict_data(mocker):
     assert result == {}
 
 
-def test_read_overwrite_model_parameter_dict_uses_settings_config(mocker):
-    mocker.patch.object(
-        model_utils.settings.config,
-        "_args",
-        {"overwrite_model_parameters": {"changes": {"param1": "value1"}}},
+def test_read_overwrite_model_parameter_dict_uses_context(run_context):
+    context = run_context.replace(
+        args={"overwrite_model_parameters": {"changes": {"param1": "value1"}}}
     )
-
-    result = model_utils.read_overwrite_model_parameter_dict()
+    result = model_utils.read_overwrite_model_parameter_dict(context=context)
 
     assert result == {"param1": "value1"}
 

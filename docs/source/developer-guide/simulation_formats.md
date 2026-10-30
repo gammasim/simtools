@@ -7,8 +7,8 @@ used by simtools. These two selections are independent.
 
 The supplied writers support CORSIKA7, sim_telarray, and the LightEmission
 programs `ff-1m` and `xyzls`. The supplied `eventio` reader supports current
-CORSIKA IACT and sim_telarray files. Registration allows a new format to be added;
-it does not add support for running another simulation program.
+CORSIKA IACT and sim_telarray files. Supporting another format requires changing
+the corresponding built-in implementation.
 
 Shared file suffixes, generated defaults, fixed filenames, and lifecycle labels
 belong in [`resources/file_types.yml`](https://github.com/gammasim/simtools/blob/main/src/simtools/resources/file_types.yml)
@@ -36,61 +36,36 @@ model's parameter dictionary.
 2. Implement `write_config_file(additional_models=None, label=None)` for
    individual models, and `export_config_files()` for an array. Return the
    written configuration path from `write_config_file`.
-3. Register the writer with `register_model_writer(software_name, writer_class)`.
-4. Select it with `model.write_config_file(simulation_software=software_name)`
-   or `array_model.export_config_files(simulation_software=software_name)`.
-5. Test native syntax, unit conversions, and preservation of model parameters.
+3. Select a supported writer with
+   `model.write_config_file(simulation_software=software_name)` or
+   `array_model.export_config_files(simulation_software=software_name)`.
+4. Test native syntax, unit conversions, and preservation of model parameters.
    Add an API reference entry and a real-file integration example when the
    format is supported.
 
-For example, after implementing a writer:
-
-```python
-from simtools.simulation.configuration import register_model_writer
-
-register_model_writer("example_telescope", ExampleTelescopeWriter)
-configuration_path = telescope_model.write_config_file(simulation_software="example_telescope")
-```
-
-A shower writer is registered separately with `register_shower_writer`.
-Its factory accepts `array_model`, `run_number`, and `label`, and supplies
-`simulation_parameters` alongside its native configuration. CORSIKA7 is the
-default selected by `get_shower_configuration`.
-
-For calibration light, `register_light_source_writer` accepts a factory taking
-the physical `SimulatorLightEmission` setup. Its writer implements
-`make_command(iact_output)`. Select it through `light_source_software` in the
-light-source configuration. Source position, pointing, wavelength, intensity,
-and event numbering remain in the simulation setup; native LightEmission
-options and pulse/angular-distribution tables belong to its writer.
+Shower configuration uses CORSIKA7. Calibration light uses the LightEmission
+writer selected by `light_source_software` in the light-source configuration.
+Its writer implements `make_command(iact_output)`. Source position, pointing,
+wavelength, intensity, and event numbering remain in the simulation setup;
+native LightEmission options and pulse/angular-distribution tables belong to
+its writer.
 
 ## Add a result reader
 
 1. Put native parsing and unit/coordinate conversions in
    `simtools.sim_events.formats`. Use `EventioReader` as the current example.
-2. Implement the reader methods needed by the workflow, described below.
-3. Register it with `register_reader(format_name, reader_class)`.
-4. Select the format using `simulation_file_format` in an application
+2. Implement the `EventReader` protocol methods in
+   `simtools.sim_events.formats.readers`, described below.
+3. Select the supported format using `simulation_file_format` in an application
    configuration, or `file_format` in `EventDataWriter` and
    `Simulator.write_reduced_event_lists`. The default is `eventio`; file
    suffixes do not select a reader.
-5. Test small generated inputs with known energies, directions, reuse positions,
+4. Test small generated inputs with known energies, directions, reuse positions,
    and telescope identifiers. Check the reduced tables and metadata against
    these values. Real simulation-file compatibility belongs in integration tests.
 
-```python
-from simtools.sim_events.formats.registry import register_reader
-from simtools.sim_events.writer import EventDataWriter
-
-register_reader("example_format", ExampleReader)
-tables = EventDataWriter(input_files, file_format="example_format").process_files()
-```
-
-Register a format before calling the consuming workflow. Registration applies
-to the current Python process. For command-line applications and parallel workers,
-add the factory to the supplied reader registry so each process imports it.
-Expose the new module in the API reference.
-Unknown selections and duplicate registrations raise `ValueError`.
+Expose supported reader modules in the API reference. Unknown selections raise
+`ValueError`.
 
 ### Reader methods and quantities
 

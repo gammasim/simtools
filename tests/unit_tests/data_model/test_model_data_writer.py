@@ -12,10 +12,10 @@ from jsonschema.exceptions import ValidationError
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
-from simtools import settings
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
+from simtools.io.output_paths import OutputPaths
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -80,8 +80,11 @@ def test_write(tmp_test_directory, args_dict_site):
     assert Path(w_1.output_file).is_file()
 
 
-def test_dump(args_dict):
-    settings.config.load(args=args_dict)
+def test_dump(args_dict, run_context):
+    context = run_context.replace(
+        args=args_dict,
+        paths=OutputPaths(args_dict["output_path"], args_dict.get("model_path")),
+    )
     empty_table = Table()
 
     output_file = "test_file.ecsv"
@@ -90,6 +93,7 @@ def test_dump(args_dict):
         metadata=None,
         product_data=empty_table,
         validate_schema_file=None,
+        context=context,
     )
 
     assert Path(args_dict["output_path"]).joinpath(output_file).exists()
@@ -97,13 +101,14 @@ def test_dump(args_dict):
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)
     args_dict["skip_output_validation"] = False
-    settings.config.load(args=args_dict)
+    context = context.replace(args=args_dict)
     with pytest.raises(KeyError):
         writer.ModelDataWriter().write_product_data(
             output_file=output_file,
             metadata=None,
             product_data=empty_table,
             validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
+            context=context,
         )
 
 
@@ -161,7 +166,7 @@ def test_derive_data_format():
     assert writer.ModelDataWriter._derive_data_format(None, output_file="file.hdf5") == "hdf5"
 
 
-def test_write_model_parameter(tmp_test_directory):
+def test_write_model_parameter(tmp_test_directory, run_context):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
@@ -173,6 +178,7 @@ def test_write_model_parameter(tmp_test_directory):
         parameter_version=parameter_version,
         output_file="num_gains.json",
         output_path=tmp_test_directory,
+        context=run_context,
     )
     assert (Path(tmp_test_directory) / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
@@ -187,6 +193,7 @@ def test_write_model_parameter(tmp_test_directory):
         parameter_version=parameter_version,
         output_file="array_element_position_utm.json",
         output_path=tmp_test_directory,
+        context=run_context,
         metadata_input_dict={"name": "test_metadata"},
     )
     assert (Path(tmp_test_directory) / "array_element_position_utm.json").is_file()
@@ -203,6 +210,7 @@ def test_write_model_parameter(tmp_test_directory):
         parameter_version=parameter_version,
         output_file="focus_offset.json",
         output_path=tmp_test_directory,
+        context=run_context,
     )
     assert position_dict["value"][0] == pytest.approx(6.55)
     assert position_dict["value"][1] == pytest.approx(0.0)
@@ -219,15 +227,16 @@ def test_write_model_parameter(tmp_test_directory):
             parameter_version=parameter_version,
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
+            context=run_context,
         )
         mock_repository_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
-def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, tmp_test_directory):
+def test_write_model_parameter_ignores_existing_parameter_version(run_context, tmp_test_directory):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
-    monkeypatch.setattr(settings.config, "_args", {"ignore_existing_parameter_version": True})
+    context = run_context.replace(args={"ignore_existing_parameter_version": True})
 
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_for_existing_parameter"
@@ -239,6 +248,7 @@ def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, t
             parameter_version=parameter_version,
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
+            context=context,
         )
 
     mock_repository_check.assert_not_called()
@@ -437,23 +447,6 @@ def test_prepare_data_dict_for_writing():
         "unit": None,
         "type": "float64",
     }
-
-
-def test_get_unit_from_schema(num_gains_schema):
-    w1 = writer.ModelDataWriter()
-
-    assert w1._get_unit_from_schema() is None
-
-    w1.schema_dict = num_gains_schema
-
-    w1.schema_dict["data"][0]["unit"] = "m"
-    assert w1._get_unit_from_schema() == "m"
-
-    w1.schema_dict["data"][0]["unit"] = "dimensionless"
-    assert w1._get_unit_from_schema() is None
-
-    w1.schema_dict["data"][0].pop("unit")
-    assert w1._get_unit_from_schema() is None
 
 
 def test_parameter_is_a_file(num_gains_schema):

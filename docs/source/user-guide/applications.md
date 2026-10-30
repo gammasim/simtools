@@ -92,7 +92,7 @@ simtools-get-array-layout <applications/simtools-get-array-layout>
 simtools-get-model-parameter <applications/simtools-get-model-parameter>
 simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
-simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
+simtools-maintain-simulation-model-compare-production-tables <applications/simtools-maintain-simulation-model-compare-production-tables>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
@@ -101,6 +101,7 @@ simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
+simtools-plot-telescope-structure <applications/simtools-plot-telescope-structure>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
 simtools-plot-trigger-patches <applications/simtools-plot-trigger-patches>

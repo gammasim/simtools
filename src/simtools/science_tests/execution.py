@@ -21,16 +21,15 @@ import yaml
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io.ascii_handler import to_builtin
-from simtools.job_execution.job_manager import JobExecutionError
-from simtools.production_configuration.compatibility import _preview
-from simtools.production_configuration.production_comparison import _validate_comparison_inputs
+from simtools.production_configuration.comparison import validate_comparison_inputs
+from simtools.production_configuration.compatibility import preview
 from simtools.production_configuration.production_file_selection import normalize_for_comparison
-from simtools.production_configuration.trigger_histograms import _validate_derived_workflow
+from simtools.production_configuration.trigger_histograms import validate_derived_workflow
 from simtools.runners.simtools_runner import (
-    _apply_execution_overrides,
-    _get_explicit_env_file,
-    _model_source_options,
-    _resolve_nested_configuration_files,
+    apply_execution_overrides,
+    get_explicit_env_file,
+    model_source_options,
+    resolve_nested_configuration_files,
     run_applications,
 )
 from simtools.science_tests import definitions as defs
@@ -42,7 +41,7 @@ from simtools.science_tests.production import (
 )
 from simtools.science_tests.reports import write_test_report
 from simtools.utils import names
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 from simtools.version import __version__
 
 EXECUTION_LOG = "execution.log"
@@ -234,7 +233,7 @@ def run_test(test, release_dir, run_id, overwrite=False):
                 definition, replacements, run_id, (test.work, test.report_root)
             )
         check_inputs(definition, replacements)
-        _validate_comparison_inputs(
+        validate_comparison_inputs(
             test.workflow[_APPLICATIONS],
             [replacements[defs.CANDIDATE_SITE_PATH], replacements[defs.BASELINE_SITE_PATH]],
         )
@@ -246,7 +245,6 @@ def run_test(test, release_dir, run_id, overwrite=False):
         ValueError,
         RuntimeError,
         subprocess.SubprocessError,
-        JobExecutionError,
     ) as exc:
         result.update(status="incomplete", execution="failed", error=str(exc))
     write_test_report(
@@ -295,7 +293,7 @@ def _execute(test, overwrite):
         if log_file.is_file():
             test.result["execution_log"] = str(log_file)
     if definition.get(_DERIVED_OUTPUT):
-        _validate_derived_workflow(test.workflow[_APPLICATIONS])
+        validate_derived_workflow(test.workflow[_APPLICATIONS])
     evaluated = evaluate_products(definition, replacements)
     if definition.get(_PRODUCES_PRODUCTION):
         return {
@@ -323,8 +321,8 @@ def _resolve_workflow(bundle, site, definition, replacements, args):
         undeclared = set(configuration.get("compare_by", [])) - allowed_changes
         if undeclared:
             raise ValueError(f"Comparison by {sorted(undeclared)} is not in expected_changes.")
-    _apply_execution_overrides(
-        workflow[_APPLICATIONS], args, _model_source_options(args), _get_explicit_env_file(args)
+    apply_execution_overrides(
+        workflow[_APPLICATIONS], args, model_source_options(args), get_explicit_env_file(args)
     )
     production = definition.get(_PRODUCES_PRODUCTION) or definition.get(_COLLECT_PRODUCTION)
     if not production and _RUNTIME_ENVIRONMENT not in workflow:
@@ -362,7 +360,7 @@ def _runtime_description(runtime):
 def _preview_production(workflow, args, replacements, runtime):
     """Check dependency compatibility of the production application and its image."""
     applications = copy.deepcopy(workflow[_APPLICATIONS][:1])
-    _resolve_nested_configuration_files(applications, replacements)
+    resolve_nested_configuration_files(applications, replacements)
     selected = dict(args)
     image = runtime.get(_IMAGE) if runtime else None
     for application in applications:
@@ -370,7 +368,7 @@ def _preview_production(workflow, args, replacements, runtime):
         backend = selected.get("backend_config")
         if isinstance(backend, dict) and backend.get(_CONTAINER_IMAGE):
             image = backend[_CONTAINER_IMAGE]
-    return _preview(selected, image or replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__"))
+    return preview(selected, image or replacements.get("__SCIENCE_CONTAINER_IMAGE_PATH__"))
 
 
 def _reusable_derived_product(test):
@@ -385,7 +383,7 @@ def _reusable_derived_product(test):
         previous = defs.load_yaml(Path(test.args[_PROVENANCE_PATH]))
         if _settings(previous) != _settings(test.workflow):
             raise ValueError("derivation settings changed")
-        _validate_derived_workflow(test.workflow[_APPLICATIONS])
+        validate_derived_workflow(test.workflow[_APPLICATIONS])
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(
             f"Derived products are incomplete or stale ({exc}); rerun with --overwrite."

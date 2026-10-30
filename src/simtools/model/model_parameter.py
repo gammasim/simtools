@@ -2,18 +2,16 @@
 """Base class for simulation model parameters (e.g., for SiteModel or TelescopeModel)."""
 
 import logging
-import shutil
 from copy import copy, deepcopy
 from pathlib import Path
 
 import astropy.units as u
 
-import simtools.utils.general as gen
-from simtools.application.model_reader import require_model_reader
+from simtools.context import RunContext
+from simtools.data_model import parameter_catalog as catalog
 from simtools.data_model import schema
 from simtools.data_model.json_validation import validate_finite_json_values
 from simtools.data_model.validate_data import DataValidator
-from simtools.io import io_handler
 from simtools.simulation.configuration import get_model_writer
 from simtools.utils import names, value_conversion
 
@@ -69,13 +67,17 @@ class ModelParameter:
         model_directory=None,
         parameter_names=None,
         load_simulation_software_parameters=True,
+        context=None,
     ):
         self._logger = logging.getLogger(__name__)
-        self.io_handler = io_handler.IOHandler()
-        self.model_reader = require_model_reader(model_reader)
+        self.context = context or RunContext.from_environment()
+        self.io_handler = self.context.paths
+        self.model_reader = model_reader or self.context.model_reader
+        if self.model_reader is None:
+            raise RuntimeError("No simulation model reader is configured.")
 
         self.parameters = {}
-        self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
+        self._simulation_config_parameters = {sw: {} for sw in catalog.simulation_software()}
         self.collection = collection
         self.label = label
         self.model_version = model_version
@@ -181,7 +183,7 @@ class ModelParameter:
                 AttributeError,
             ):  # float - in case we don't know
                 _is_float = True
-            value = gen.convert_string_to_list(value, is_float=_is_float)
+            value = value_conversion.convert_string_to_list(value, is_float=_is_float)
             if len(value) == 1:
                 value = value[0]
 
@@ -258,27 +260,6 @@ class ModelParameter:
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a type.")
         return None
-
-    def get_parameter_file_flag(self, par_name):
-        """
-        Get the file flag of an existing model parameter (the ``file`` field).
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        bool
-            True if file flag is set.
-
-        """
-        try:
-            return self._get_parameter_dict(par_name)["file"]
-        except KeyError:
-            self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
-        return False
 
     def get_parameter_version(self, par_name):
         """
@@ -415,7 +396,7 @@ class ModelParameter:
         filtered_parameter_changes = {}
         for par_name, par_value in parameter_changes.items():
             try:
-                parameter_collection = names.get_collection_name_from_parameter_name(par_name)
+                parameter_collection = catalog.get_collection_name_from_parameter_name(par_name)
             except KeyError:
                 self._logger.warning(
                     f"Skipping unknown overwrite parameter '{par_name}' while "
@@ -480,7 +461,7 @@ class ModelParameter:
         for parameter_name in self.overwrite_model_parameter_dict:
             try:
                 if (
-                    names.get_collection_name_from_parameter_name(parameter_name)
+                    catalog.get_collection_name_from_parameter_name(parameter_name)
                     in ignored_collections
                 ):
                     return True
@@ -496,7 +477,7 @@ class ModelParameter:
             for parameter_name in parameters:
                 try:
                     if (
-                        names.get_collection_name_from_parameter_name(parameter_name)
+                        catalog.get_collection_name_from_parameter_name(parameter_name)
                         in ignored_collections
                     ):
                         return True
@@ -535,7 +516,7 @@ class ModelParameter:
         filtered = {}
         for parameter_name, value in parameters.items():
             try:
-                collection = names.get_collection_name_from_parameter_name(parameter_name)
+                collection = catalog.get_collection_name_from_parameter_name(parameter_name)
             except KeyError:
                 filtered[parameter_name] = value
             else:
@@ -562,7 +543,7 @@ class ModelParameter:
         """
         for par_name, par_data in parameters.items():
             validate_finite_json_values(par_data.get("value"))
-            if par_name in (parameter_schema := names.model_parameters()):
+            if par_name in (parameter_schema := catalog.model_parameters()):
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,
@@ -644,7 +625,9 @@ class ModelParameter:
             DataValidator.validate_model_parameter(
                 self._update_parameter_dict(
                     par_name,
-                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                    value_conversion.convert_string_to_list(value)
+                    if isinstance(value, str)
+                    else value,
                     parameter_version,
                     metadata,
                     parameter_store=parameter_store,
@@ -841,7 +824,7 @@ class ModelParameter:
             return False
 
         try:
-            collection_name = names.get_collection_name_from_parameter_name(par_name)
+            collection_name = catalog.get_collection_name_from_parameter_name(par_name)
         except KeyError:
             return False
         return collection_name in ignore_collection
@@ -854,7 +837,7 @@ class ModelParameter:
         # Skip validation for global configuration parameters (e.g., configuration_sim_telarray)
         # These parameters are scoped under configuration classes and not telescope models
         try:
-            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            parameter_class = catalog.get_collection_name_from_parameter_name(par_name)
             if parameter_class == "configuration_sim_telarray":
                 self._logger.debug(
                     f"Skipping validation for global parameter '{par_name}' "
@@ -879,7 +862,7 @@ class ModelParameter:
     def _should_route_to_sim_telarray(self, par_name):
         """Check if parameter should be routed to sim_telarray config."""
         try:
-            parameter_class = names.get_collection_name_from_parameter_name(par_name)
+            parameter_class = catalog.get_collection_name_from_parameter_name(par_name)
             return parameter_class == "configuration_sim_telarray"
         except KeyError:
             return False
@@ -926,23 +909,6 @@ class ModelParameter:
             for key, value in par_value.items()
             if key in ("unit", "model_parameter_schema_version")
         }
-
-    def overwrite_model_file(self, par_name, file_path):
-        """
-        Overwrite the existing model file in the config file directory.
-
-        Keeps track of updated model file with '_added_parameter_files' attribute.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-        file_path: str
-            Path of the file to be added to the config file directory.
-        """
-        self._added_parameter_files = self._added_parameter_files or []
-        self._added_parameter_files.append(par_name)
-        shutil.copy(file_path, self.config_file_directory)
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
@@ -992,7 +958,7 @@ class ModelParameter:
         pathlib.Path
             Written native configuration file.
         """
-        return get_model_writer(self, simulation_software).write_config_file(
+        return get_model_writer(self, simulation_software, context=self.context).write_config_file(
             additional_models=additional_models, label=label
         )
 
@@ -1007,7 +973,7 @@ class ModelParameter:
         label: str or None
             Optional label override used for output file naming.
         """
-        return get_model_writer(self).write_sim_telarray_config_file(
+        return get_model_writer(self, context=self.context).write_sim_telarray_config_file(
             additional_models=additional_models, label=label
         )
 
@@ -1039,15 +1005,15 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
-        return get_model_writer(self).export_nsb_spectrum_to_telescope_altitude_correction_file(
-            model_directory=model_directory
-        )
+        return get_model_writer(
+            self, context=self.context
+        ).export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory=model_directory)
 
     def export_model_parameter_as_simtel_file(
         self, parameter_name, model_directory, table_format, output_name
     ):
         """Export an ECSV model parameter in the native sim_telarray format."""
-        return get_model_writer(self).export_model_parameter_as_simtel_file(
+        return get_model_writer(self, context=self.context).export_model_parameter_as_simtel_file(
             parameter_name=parameter_name,
             model_directory=model_directory,
             table_format=table_format,

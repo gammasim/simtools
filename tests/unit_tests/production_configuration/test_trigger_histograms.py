@@ -7,7 +7,8 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools.io import io_handler, table_handler
+from simtools.histogram.histogram import Histogram
+from simtools.io import table_handler
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_BINS_TABLE,
@@ -32,6 +33,7 @@ from simtools.production_configuration.trigger_histograms import (
     _write_trigger_histogram_metadata,
     discover_event_data_groups,
     inspect_trigger_histogram_file,
+    load_dense_histogram_payloads,
     load_event_data_histograms,
     write_trigger_histograms,
 )
@@ -59,15 +61,18 @@ class _FakeHistograms:
             "solid_angle": 0.1 * u.sr,
         }
         self.histograms = {
-            "angular_distance_vs_energy_vs_core_distance": {
-                "histogram": np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]])
-            },
-            "angular_distance_vs_energy_vs_core_distance_mc": {
-                "histogram": np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]])
-            },
-            "angular_distance_vs_energy_vs_core_distance_eff": {
-                "histogram": np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]])
-            },
+            "angular_distance_vs_energy_vs_core_distance": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]]),
+            ),
+            "angular_distance_vs_energy_vs_core_distance_mc": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]]),
+            ),
+            "angular_distance_vs_energy_vs_core_distance_eff": Histogram.from_edges(
+                [np.arange(3), np.arange(3), np.arange(3)],
+                values=np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]]),
+            ),
         }
         self.energy_bins = np.array([0.1, 1.0, 10.0])
         self.view_cone_bins = np.array([0.0, 1.0, 2.0])
@@ -98,17 +103,20 @@ def _full_fake_histograms():
         "solid_angle": 0.1 * u.sr,
     }
     histograms.data_ranges = {"angular_distance": (0.5, 1.5)}
-    histograms.histograms = histograms._define_histograms(None, None, None)
-    for name, histogram in histograms.histograms.items():
-        if histogram["1d"]:
-            shape = (len(histogram["bin_edges"]) - 1,)
-        else:
-            shape = tuple(len(edges) - 1 for edges in histogram["bin_edges"])
-        histogram["histogram"] = np.full(shape, 2.0 if name.endswith("_mc") else 1.0)
-        histogram["event_data"] = (
-            None if histogram["1d"] else tuple(None for _ in histogram["event_data_column"])
+    histograms._fill_state.histogram_specs = histograms._define_histograms(None, None, None)
+    histograms.histograms = {
+        name: Histogram.from_edges(
+            spec["edges"],
+            values=np.full(
+                tuple(len(edges) - 1 for edges in spec["edges"]),
+                2.0 if name.endswith("_mc") else 1.0,
+            ),
+            axis_names=histograms._create_histogram(spec).axis_names,
+            axis_units=histograms._create_histogram(spec).axis_units,
         )
-    histograms._filled_data_sets = 1
+        for name, spec in histograms._fill_state.histogram_specs.items()
+    }
+    histograms._fill_state.filled_data_sets = 1
     histograms.calculate_efficiency_data()
     histograms.calculate_cumulative_data()
     return histograms
@@ -146,7 +154,7 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert np.all(bin_table["trigger_efficiency"] >= 0.0)
 
 
-def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
+def test_event_data_histograms_round_trip_via_hdf5(tmp_test_directory):
     histograms = _full_fake_histograms()
     reference_specs = [
         {
@@ -159,7 +167,7 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    output_file = tmp_path / "trigger_histograms.hdf5"
+    output_file = tmp_test_directory / "trigger_histograms.hdf5"
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,
@@ -177,22 +185,48 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     assert loaded_histograms.file_info["primary_particle"] == "gamma"
     assert loaded_histograms.file_info["spectral_index"] == pytest.approx(-2.0)
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
-    assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
+    assert all(
+        isinstance(histogram, Histogram) for histogram in loaded_histograms.histograms.values()
+    )
+    for name, definition in histograms.histograms.items():
+        actual = loaded_histograms.histograms[name]
+        np.testing.assert_array_equal(actual.values, definition.values)
+        assert actual.axis_names == definition.axis_names
+        assert actual.axis_units == definition.axis_units
+        for actual_edges, expected_edges in zip(actual.edges, definition.edges, strict=True):
+            np.testing.assert_array_equal(actual_edges, expected_edges)
+    with h5py.File(output_file) as hdf5_file:
+        dense = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
+        assert dense.attrs["format_version"] == 2
+        for name, group in dense["ref-1"].items():
+            histogram = histograms.histograms[name]
+            assert set(group) == {"values", *(f"edges_{axis}" for axis in range(histogram.ndim))}
+            assert group["values"].dtype == histogram.values.dtype
+            np.testing.assert_array_equal(group["values"][()], histogram.values)
     np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)
     np.testing.assert_allclose(
-        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
-        histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
+        loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values,
+        histograms.histograms["angular_distance_vs_energy_vs_core_distance"].values,
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
     assert "reuse_mean_vs_energy" in loaded_histograms.histograms
     np.testing.assert_allclose(
-        loaded_histograms.histograms["reuse_mean_vs_energy"]["histogram"],
-        histograms.histograms["reuse_mean_vs_energy"]["histogram"],
+        loaded_histograms.histograms["reuse_mean_vs_energy"].values,
+        histograms.histograms["reuse_mean_vs_energy"].values,
     )
 
     with h5py.File(output_file, "r") as hdf5_file:
         assert TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file
+
+
+def test_load_dense_histograms_rejects_unsupported_format_version(tmp_test_directory):
+    file_path = tmp_test_directory / "old_histograms.hdf5"
+    with h5py.File(file_path, "w") as hdf5_file:
+        hdf5_file.create_group(TRIGGER_HISTOGRAM_DENSE_GROUP).attrs["format_version"] = 1
+
+    with pytest.raises(ValueError, match=r"old_histograms\.hdf5.*found 1.*supported version is 2"):
+        load_dense_histogram_payloads(file_path)
 
 
 def test_trigger_topology_tables_are_created_from_reference_specs():
@@ -229,7 +263,7 @@ def test_trigger_topology_tables_are_created_from_reference_specs():
     assert np.sum(subset_histogram_table["count"]) == 6
 
 
-def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
+def test_event_data_histograms_hdf5_filter_by_array_name(tmp_test_directory):
     histograms = _full_fake_histograms()
     reference_specs = [
         {
@@ -242,7 +276,7 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    output_file = tmp_path / "trigger_histograms.hdf5"
+    output_file = tmp_test_directory / "trigger_histograms.hdf5"
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,
@@ -339,7 +373,9 @@ def test_discover_event_data_groups_rejects_empty_directory(tmp_test_directory):
         discover_event_data_groups(input_directory)
 
 
-def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_directory):
+def test_write_directory_products_submits_one_job_per_group(
+    mocker, tmp_test_directory, run_context
+):
     tmp_test_directory = Path(tmp_test_directory)
     input_directory = tmp_test_directory / "reduced_event_data"
     input_directory.mkdir()
@@ -349,9 +385,7 @@ def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_dir
         "proton.reduced_event_data.hdf5",
     ):
         (input_directory / file_name).touch()
-    mocker.patch(
-        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
-    ).return_value.get_output_directory.return_value = tmp_test_directory / "output"
+    run_context.paths.output_path["default"] = tmp_test_directory / "output"
     submit_jobs = mocker.patch("simtools.production_configuration.trigger_histograms.submit_jobs")
 
     _write_directory_products(
@@ -361,7 +395,8 @@ def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_dir
             "backend": "htcondor",
             "backend_config": {},
             "max_workers": 4,
-        }
+        },
+        context=run_context,
     )
 
     jobs = submit_jobs.call_args.args[0]
@@ -488,7 +523,7 @@ def test_group_output_stem_includes_selections_without_hash():
     [(1, False), (2, True)],
 )
 def test_production_selection_controls_hash_for_number_of_outputs(
-    mocker, tmp_test_directory, group_count, expected_hash
+    mocker, tmp_test_directory, run_context, group_count, expected_hash
 ):
     configuration = {
         "array_layout_name": ["CTAO-South-Beta"],
@@ -526,7 +561,7 @@ def test_production_selection_controls_hash_for_number_of_outputs(
         "simtools.production_configuration.trigger_histograms.submit_jobs",
         return_value=None,
     )
-    io_handler.IOHandler().set_paths(output_path=tmp_test_directory)
+    run_context.paths.output_path["default"] = tmp_test_directory
 
     write_trigger_histograms_args = {
         "production_path": str(tmp_test_directory),
@@ -540,7 +575,7 @@ def test_production_selection_controls_hash_for_number_of_outputs(
         "core_distance_bin_width": 20.0 * u.m,
         "minimum_triggered_telescopes": 2,
     }
-    _write_production_selection_products(write_trigger_histograms_args)
+    _write_production_selection_products(write_trigger_histograms_args, context=run_context)
 
     assert len(submit_jobs.call_args.args[0]) == group_count
     hash_values = [call.kwargs["include_hash"] for call in stem.call_args_list]
@@ -558,7 +593,7 @@ def test_relative_to_directory_handles_sibling_directories(tmp_test_directory):
     assert _relative_to_directory(path, directory) == "../grid-output/job-000001/file.hdf5"
 
 
-def test_production_group_telescope_configs_come_from_metadata(mocker):
+def test_production_group_telescope_configs_come_from_metadata(mocker, run_context):
     resolve = mocker.patch(
         "simtools.production_configuration.trigger_histograms._resolve_telescope_configs",
         return_value=[{"array_name": "CTAO-North-Alpha", "telescope_ids": ["LSTN-01"]}],
@@ -571,6 +606,7 @@ def test_production_group_telescope_configs_come_from_metadata(mocker):
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
         },
+        run_context,
     )
 
     resolved_args = resolve.call_args.args[0]
@@ -579,7 +615,7 @@ def test_production_group_telescope_configs_come_from_metadata(mocker):
     assert resolved_args["array_layout_name"] == ["CTAO-North-Alpha"]
 
 
-def test_production_group_telescope_configs_reject_mismatched_layout():
+def test_production_group_telescope_configs_reject_mismatched_layout(run_context):
     with pytest.raises(ValueError, match="does not match selected production metadata"):
         _resolve_group_telescope_configs(
             {"array_layout_name": ["CTAO-North-Beta"]},
@@ -588,6 +624,7 @@ def test_production_group_telescope_configs_reject_mismatched_layout():
                 "model_version": "7.0.0",
                 "array_layout_name": "CTAO-North-Alpha",
             },
+            run_context,
         )
 
 
@@ -596,7 +633,9 @@ def test_production_metadata_histograms_reject_non_event_data_file_types():
         write_trigger_histograms({"production_path": "production", "file_type": "sim_telarray"})
 
 
-def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):
+def test_write_trigger_histograms_dispatches_one_job_per_pattern(
+    mocker, tmp_test_directory, run_context
+):
     mocker.patch(
         "simtools.production_configuration.trigger_histograms.resolve_telescope_configs",
         return_value={"alpha": ["LSTN-01"]},
@@ -605,9 +644,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "simtools.production_configuration.trigger_histograms.normalize_telescope_configs",
         return_value=[{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
     )
-    mocker.patch(
-        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
-    ).return_value.get_output_file.return_value = tmp_path / "trigger_histograms.hdf5"
+    run_context.paths.output_path["default"] = tmp_test_directory
     mock_process_pool = mocker.patch(
         "simtools.production_configuration.trigger_histograms.map_ordered",
         return_value=[
@@ -650,7 +687,8 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "max_workers": 24,
             "site": "North",
             "output_file": "trigger_histograms.hdf5",
-        }
+        },
+        context=run_context,
     )
 
     mock_process_pool.assert_called_once()
@@ -680,11 +718,14 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             "site": "North",
             "output_file": "trigger_histograms.hdf5",
         },
-        tmp_path / "trigger_histograms.hdf5",
+        Path(tmp_test_directory) / "trigger_histograms.hdf5",
         product_data_name="trigger_histograms",
+        context=run_context,
     )
     assert (
-        table_handler.read_metadata_document(tmp_path / "trigger_histograms.hdf5", "METADATA")
+        table_handler.read_metadata_document(
+            Path(tmp_test_directory) / "trigger_histograms.hdf5", "METADATA"
+        )
         == metadata_document
     )
 

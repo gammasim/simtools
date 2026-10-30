@@ -10,7 +10,6 @@ from astropy import units as u
 from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
-import simtools.utils.general as gen
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
@@ -301,7 +300,7 @@ class DataValidator:
             )
 
         for i, (value, expected_type) in enumerate(zip(value_list, expected_types)):
-            if not gen.validate_data_type(
+            if not value_conversion.validate_data_type(
                 reference_dtype=expected_type,
                 value=value,
                 dtype=None,
@@ -331,16 +330,22 @@ class DataValidator:
 
         return expected_types
 
-    def _get_unit_list_for_values(self, value_as_list):
-        """Return a per-value unit list from current data dict unit entry."""
-        if isinstance(self.data_dict.get("unit"), list):
-            return self.data_dict.get("unit", [])
-        return [self.data_dict.get("unit")] * len(value_as_list)
-
     def _assign_validated_values(self, value_as_list, unit_as_list):
-        """Assign validated value/unit as scalar or list depending on list length."""
-        if len(value_as_list) == 1:
+        """Assign validated value/unit as scalar or list depending on list length.
+
+        A list value of a ``dict`` parameter is a JSON array and stays a list, also with
+        a single item (its JSON schema requires an array).
+        """
+        is_json_array = self._get_data_description(0).get("type") == "dict" and isinstance(
+            self.data_dict["value"], list
+        )
+        if len(value_as_list) == 1 and not is_json_array:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+            return
+        if is_json_array:
+            self.data_dict["value"] = value_as_list
+            if unit_as_list:
+                self.data_dict["unit"] = unit_as_list[0]
             return
         self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
@@ -651,7 +656,7 @@ class DataValidator:
 
         """
         reference_dtype = self._get_data_description(column_name).get("type", None)
-        if not gen.validate_data_type(
+        if not value_conversion.validate_data_type(
             reference_dtype=reference_dtype,
             value=value,
             dtype=dtype,
@@ -1050,7 +1055,7 @@ class DataValidator:
             if normalized is None:
                 self.data_dict["unit"] = None
             else:
-                self.data_dict["unit"] = gen.convert_string_to_list(
+                self.data_dict["unit"] = value_conversion.convert_string_to_list(
                     normalized, force_comma_separation=True
                 )
 
@@ -1062,9 +1067,9 @@ class DataValidator:
         """
         value = self.data_dict["value"]
         if isinstance(value, list):
-            self.data_dict["value"] = gen.convert_list_to_string(value)
+            self.data_dict["value"] = value_conversion.convert_list_to_string(value)
         if isinstance(self.data_dict["unit"], list):
-            self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
+            self.data_dict["unit"] = value_conversion.convert_list_to_string(self.data_dict["unit"])
 
     def _check_site_and_array_element_consistency(self, instrument, site):
         """

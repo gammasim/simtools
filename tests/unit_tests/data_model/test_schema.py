@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import urllib.error
 from pathlib import Path
 
 import jsonschema
@@ -17,7 +18,7 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
-from simtools.data_model import schema, schema_loader
+from simtools.data_model import schema
 from simtools.io import ascii_handler
 
 _INTEGRATION_CONFIG_FILES = sorted(
@@ -58,16 +59,6 @@ def test_camera_pixel_types_schema_has_explicit_lightguide_reference():
 
     assert "lightguide_angle_parameter" in current_properties
     assert "lightguide_angle_parameter" not in previous_properties
-
-
-def test_get_model_parameter_schema_returns_independent_copies():
-    schema_loader.clear_cache()
-    schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
-    schema_2 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
-
-    schema_1["data"][0]["unit"] = "m"
-
-    assert schema_2["data"][0]["unit"] == "cm"
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():
@@ -454,19 +445,21 @@ def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
-    mock_url_exists = mocker.patch("simtools.data_model.schema.gen.url_exists")
+    mock_urlopen = mocker.patch("simtools.data_model.schema.urllib.request.urlopen")
+    response = mocker.MagicMock()
+    response.status = 200
+    mock_urlopen.return_value.__enter__.return_value = response
 
     # with valid meta_schema_url
-    mock_url_exists.return_value = True
     data["meta_schema_url"] = "https://github.com/gammasim/simtools"
     schema.validate_dict_using_schema(data, schema_file)
-    mock_url_exists.assert_called_with("https://github.com/gammasim/simtools")
+    mock_urlopen.assert_called_with("https://github.com/gammasim/simtools", timeout=5)
 
-    mock_url_exists.return_value = False
+    mock_urlopen.side_effect = urllib.error.URLError("not found")
     data["meta_schema_url"] = "https://invalid_url"
     with pytest.raises(FileNotFoundError, match=r"^Meta schema URL does not exist:"):
         schema.validate_dict_using_schema(data, schema_file)
-    mock_url_exists.assert_called_with("https://invalid_url")
+    mock_urlopen.assert_called_with("https://invalid_url", timeout=5)
 
 
 def test_validate_schema_astropy_units(caplog):

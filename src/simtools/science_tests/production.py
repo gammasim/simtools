@@ -10,10 +10,10 @@ import logging
 from collections import Counter
 from pathlib import Path
 
-from simtools.io.file_type import _get_product_filename
+from simtools.io.file_type import product_filename
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.execution import collect_submission, load_submission
-from simtools.production_configuration.job_grid_io import read_job_grid
+from simtools.production_configuration.jobs_io import read_job_grid
 from simtools.production_configuration.production_file_selection import (
     discover_manifests,
     normalize_for_comparison,
@@ -25,9 +25,9 @@ from simtools.science_tests.definitions import (
     CANDIDATE_PATH,
     CANDIDATE_SITE_PATH,
 )
-from simtools.utils.general import replace_placeholders_recursively
+from simtools.utils.value_conversion import replace_placeholders_recursively
 
-SUBMISSION_FILE = _get_product_filename("submission_manifest")
+SUBMISSION_FILE = product_filename("submission_manifest")
 _ENCODING = "utf-8"
 _JOB_IDS = "job_ids"
 _STATE = "state"

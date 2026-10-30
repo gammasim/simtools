@@ -9,28 +9,19 @@ from simtools.visualization.matplotlib_backend import pyplot as plt
 _WAVELENGTH_COLUMN = "wl"
 _EFFICIENCY_LABEL = "Efficiency"
 _RELATIVE_CHANGE_LABEL = "Relative change (%)"
-_DEFAULT_DETECTED_COLUMN = "cherenkov_detected"
-# Optical throughput, compared when tables have no detected spectrum.
-_THROUGHPUT_COLUMN = "eff"
-_NSB_DETECTED_COLUMN = "nsb_detected"
-_DETECTED_COLUMNS = {"nsb": _NSB_DETECTED_COLUMN}
-# Column names written by earlier sim_telarray versions.
-_LEGACY_COLUMNS = {"C4": _DEFAULT_DETECTED_COLUMN, "N4": _NSB_DETECTED_COLUMN}
 _ZERO_LINE = {"color": "black", "linewidth": 0.7}
-_SHADOWING_COLUMN = "masts"
-_PIXEL_COLUMN = "pixel"
 _COMBINED_LABEL = "Combined throughput"
 # Optical stages and the table columns whose product forms each plotted curve.
 EFFICIENCY_COMPONENT_GROUPS = {
     "Mirrors": {
         "Reflectivity": ("ref",),
-        "Shadowing": (_SHADOWING_COLUMN,),
-        _COMBINED_LABEL: ("ref", _SHADOWING_COLUMN),
+        "Shadowing": ("masts",),
+        _COMBINED_LABEL: ("ref", "masts"),
     },
     "Camera": {
         "Filter": ("filt",),
-        "Pixel and lightguide": (_PIXEL_COLUMN,),
-        _COMBINED_LABEL: ("filt", _PIXEL_COLUMN),
+        "Pixel and lightguide": ("pixel",),
+        _COMBINED_LABEL: ("filt", "pixel"),
     },
     "Photodetector": {"Quantum efficiency": ("qe",)},
     "Atmosphere": {"Transmission": ("atm_trans",)},
@@ -47,23 +38,28 @@ def plot_metric_changes(changes, title, pdf_pages):
         Metric changes as returned by ``telescope_throughput.compare_results``.
     title : str
         Page title.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
     """
     names = list(changes)
     positions = np.arange(len(names))
-    labels = [_metric_label(name, changes[name]["unit"]) for name in names]
+    labels = [
+        f"{name} ({changes[name]['unit']})" if changes[name]["unit"] else name for name in names
+    ]
     relative = [
-        np.nan if relative is None else 100 * relative
-        for relative in (changes[name]["relative"] for name in names)
+        np.nan if changes[name]["relative"] is None else 100 * changes[name]["relative"]
+        for name in names
     ]
     figure, (values_axis, change_axis) = plt.subplots(1, 2, figsize=(12, max(4, len(names) * 0.55)))
     values_axis.axis("off")
     values_axis.set_title("Scalar values")
-    for position, name, label in zip(positions, names, labels, strict=True):
+    for position, name in zip(positions, names, strict=True):
         change = changes[name]
         values_axis.text(
-            0, position, f"{label}: {change['baseline']:g} -> {change['candidate']:g}", va="center"
+            0,
+            position,
+            f"{labels[position]}: {change['baseline']:g} -> {change['candidate']:g}",
+            va="center",
         )
     values_axis.set_ylim(len(names) - 0.5, -0.5)
     change_axis.barh(positions, relative)
@@ -71,7 +67,9 @@ def plot_metric_changes(changes, title, pdf_pages):
     change_axis.set_yticks(positions, labels)
     change_axis.invert_yaxis()
     change_axis.set_xlabel(_RELATIVE_CHANGE_LABEL)
-    _save_page(figure, title, pdf_pages)
+    figure.suptitle(title)
+    figure.tight_layout()
+    pdf_pages.add(figure)
 
 
 def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
@@ -85,7 +83,7 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
         Page title.
     labels : tuple of str
         Baseline and candidate legend labels.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
 
     Returns
@@ -93,21 +91,21 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
     list of str
         Channels that could not be compared.
     """
-    channels = sorted(set(baseline_tables) & set(candidate_tables))
     curves, diagnostics = {}, []
-    for channel in channels:
+    for channel in sorted(set(baseline_tables) & set(candidate_tables)):
         try:
             wavelength, unit, before, after = _read_pair(
                 baseline_tables[channel], candidate_tables[channel]
             )
-            column = _DETECTED_COLUMNS.get(channel, _DEFAULT_DETECTED_COLUMN)
+            column = "nsb_detected" if channel == "nsb" else "cherenkov_detected"
             if column not in before.colnames and column not in after.colnames:
-                column = _THROUGHPUT_COLUMN
+                column = "eff"
             curves[channel] = (wavelength, unit, _curve(before, column), _curve(after, column))
         except (KeyError, OSError, ValueError, u.UnitsError) as exc:
             diagnostics.append(f"Cannot compare {channel} spectrum: {exc}")
     if not curves:
         return diagnostics
+
     figure, axes = plt.subplots(2, len(curves), sharex="col", figsize=(5 * len(curves), 8))
     axes = np.asarray(axes).reshape(2, -1)
     for (channel, (wavelength, unit, before, after)), column in zip(
@@ -123,7 +121,9 @@ def plot_spectra(baseline_tables, candidate_tables, title, labels, pdf_pages):
         column[1].set_ylabel(_RELATIVE_CHANGE_LABEL)
         for axis in column:
             _label_wavelength_axis(axis, unit)
-    _save_page(figure, title, pdf_pages)
+    figure.suptitle(title)
+    figure.tight_layout()
+    pdf_pages.add(figure)
     return diagnostics
 
 
@@ -138,7 +138,7 @@ def plot_components(baseline_table, candidate_table, title, labels, pdf_pages):
         Page title prefix.
     labels : tuple of str
         Baseline and candidate legend labels.
-    pdf_pages : matplotlib.backends.backend_pdf.PdfPages
+    pdf_pages : PDF report object
         Open PDF report.
 
     Returns
@@ -157,10 +157,15 @@ def plot_components(baseline_table, candidate_table, title, labels, pdf_pages):
         }
     except (KeyError, OSError, ValueError, u.UnitsError) as exc:
         return f"Cannot compare efficiency components: {exc}"
-    for relative in (False, True):
+
+    for relative, page in (
+        (False, "efficiency components"),
+        (True, "relative change by component"),
+    ):
         figure = _component_page(wavelength, unit, groups, relative, labels)
-        page = "relative change by component" if relative else "efficiency components"
-        _save_page(figure, f"{title}: {page}", pdf_pages)
+        figure.suptitle(f"{title}: {page}")
+        figure.tight_layout()
+        pdf_pages.add(figure)
     return None
 
 
@@ -214,7 +219,8 @@ def _curve(table, *columns):
 def _read_table(path):
     """Read an ECSV or plain whitespace-separated table, mapping legacy column names."""
     table = Table.read(path, format="ascii")
-    for legacy, name in _LEGACY_COLUMNS.items():
+    # Column names written by earlier sim_telarray versions.
+    for legacy, name in {"C4": "cherenkov_detected", "N4": "nsb_detected"}.items():
         if legacy in table.colnames and name not in table.colnames:
             table.rename_column(legacy, name)
     return table
@@ -227,17 +233,6 @@ def _relative_percent(before, after):
     )
 
 
-def _metric_label(name, unit):
-    return f"{name} ({unit})" if unit else name
-
-
 def _label_wavelength_axis(axis, unit):
     axis.set_xlabel(f"Wavelength ({unit})")
     axis.tick_params(axis="x", labelbottom=True)
-
-
-def _save_page(figure, title, pdf_pages):
-    figure.suptitle(title)
-    figure.tight_layout()
-    pdf_pages.savefig(figure)
-    plt.close(figure)

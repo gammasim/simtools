@@ -6,7 +6,6 @@ import shutil
 
 import astropy.units as u
 
-from simtools import settings
 from simtools.job_execution.process_accounting import build_accounting_command
 from simtools.simtel import simtel_file_writer
 from simtools.utils.geometry import fiducial_radius_from_shape
@@ -94,7 +93,9 @@ class LightEmissionConfigWriter:
 
         app = self.get_light_emission_application_name()
         cmd = [
-            shlex.quote(str(settings.config.sim_telarray_path / "LightEmission" / app)),
+            shlex.quote(
+                str(self.simulation.context.software.sim_telarray_path / "LightEmission" / app)
+            ),
             *self.get_site_command(app, config_directory, obs_level),
             *self.get_light_source_command(),
         ]
@@ -130,7 +131,7 @@ class LightEmissionConfigWriter:
             atmo_id = self.prepare_flasher_atmosphere_files(config_directory)
             return [
                 "-I.",
-                f"-I{settings.config.sim_telarray_path / 'cfg'}",
+                f"-I{self.simulation.context.software.sim_telarray_path / 'cfg'}",
                 f"-I{config_directory}",
                 f"--altitude {corsika_observation_level.to(u.m).value}",
                 f"--atmosphere {atmo_id}",
@@ -140,14 +141,8 @@ class LightEmissionConfigWriter:
 
         if self.simulation.light_emission_config.get("light_source_type") == "illuminator":
             illuminator_position = self.simulation.get_illuminator_position()
-            pointing_vector = self.simulation.get_illuminator_pointing_vector(illuminator_position)
-            if self.simulation.uses_telescope_position_file(pointing_vector):
-                self._logger.info(
-                    "Using telescope position file for illuminator setup "
-                    f"(pointing={pointing_vector})."
-                )
-                position_file = self.simulation.write_telescope_position_file(illuminator_position)
-                cmd.append(f"--telpos-file {position_file}")
+            position_file = self.simulation.write_telescope_position_file(illuminator_position)
+            cmd.append(f"--telpos-file {position_file}")
         return cmd
 
     def get_light_source_command(self):
@@ -212,6 +207,7 @@ class LightEmissionConfigWriter:
             f"-z {z_cal.to(u.cm).value}",
             f"-d {','.join(map(str, pointing_vector))}",
             f"-n {self.simulation.light_emission_config['flasher_photons']}",
+            f"-N {int(self.simulation.light_emission_config.get('number_of_events') or 1)}",
             f"-s {int(flasher_wavelength.to(u.nm).value)}",
             f"-p {pulse_arg}",
             f"-a {angular_distribution}",

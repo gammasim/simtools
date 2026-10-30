@@ -34,7 +34,9 @@ def test_run_lists_layouts_from_supplied_reader(mocker, capsys):
     application.run(context)
 
     assert capsys.readouterr().out.strip() == "['layout-a', 'layout-b']"
-    site_model.assert_called_once_with(model_version="6.0.2", site="North", model_reader=reader)
+    site_model.assert_called_once_with(
+        model_version="6.0.2", site="North", model_reader=reader, context=context
+    )
 
 
 def test_run_exports_layout_from_supplied_reader(mocker):
@@ -55,5 +57,5 @@ def test_run_exports_layout_from_supplied_reader(mocker):
 
     application.run(context)
 
-    layout_from_source.assert_called_once_with(context.args, reader)
+    layout_from_source.assert_called_once_with(context.args, reader, context)
     layout.pprint.assert_called_once_with()

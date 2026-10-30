@@ -1,15 +1,12 @@
 """
 Ray tracing simulations and analysis.
 
-Simulates light propagation through telescope optics using simtel_array,
-processes photon lists to compute PSF (D80 containment diameter),
-effective mirror area, and effective focal length as functions of off-axis angle.
+Traces star light through the telescope optics with the configured ray-tracing backend
+(``simtools.ray_tracing.backends.interface``) and computes the PSF (D80 containment
+diameter), effective mirror area and effective focal length versus off-axis angle.
 """
 
-import gzip
 import logging
-import shutil
-from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from math import pi, tan
 from pathlib import Path
@@ -19,15 +16,19 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from simtools.io import io_handler
+from simtools import constants
+from simtools.context import RunContext
 from simtools.model.model_utils import compute_telescope_transmission
-from simtools.ray_tracing.psf_analysis import PSFImage
-from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
-from simtools.utils import names
+from simtools.ray_tracing import parameter_changes
+from simtools.ray_tracing.backends import interface
+from simtools.ray_tracing.backends.interface import StarImageRequest
+from simtools.utils import names, random
 from simtools.visualization import visualize
 
 INVALID_KEY_TO_PLOT = "Invalid key to plot"
 DEFAULT_MAX_WORKERS = 8
+BACKEND_METADATA = "ray_tracing_backend"
+_CARDINAL_OFFSETS = {"N": (0.0, 1.0), "S": (0.0, -1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 
 
 class RayTracing:
@@ -36,33 +37,31 @@ class RayTracing:
 
     Parameters
     ----------
-    telescope_model: TelescopeModel
-        telescope model
-    site_model: SiteModel
-        site model
-    label: str
-        label used for output file naming.
-    zenith_angle: astropy.units.Quantity
+    telescope_model, site_model : TelescopeModel, SiteModel
+        Telescope and site models.
+    label : str
+        Label used for output file naming.
+    zenith_angle : astropy.units.Quantity
         Zenith angle.
-    off_axis_angle: list of tuples or astropy.units.Quantity, optional
-        Off-axis angles as (x, y) tuples in degrees, or list of scalar angles
-        for backward compatibility. If scalar values provided, cardinal offsets
-        will be generated in N, S, E, W directions.
-    source_distance: astropy.units.Quantity
+    off_axis_angle : list of tuples or astropy.units.Quantity, optional
+        Off-axis angles as (x, y) tuples in degrees, or scalar angles. Scalar angles
+        generate offsets in the cardinal directions ``offset_directions``.
+    source_distance : astropy.units.Quantity
         Source distance.
-    single_mirror_mode: bool
-        Single mirror mode flag.
-    use_random_focal_length: bool
-        Use random focal length flag.
-    random_focal_length_seed: int
-        Seed for the random number generator used for focal length variation.
-    mirror_numbers: list, str
+    single_mirror_mode : bool
+        Trace each mirror panel instead of the telescope optics.
+    use_random_focal_length : bool
+        Use random focal length variation of the mirror panels.
+    random_focal_length_seed : int
+        Seed for the random focal length variation.
+    mirror_numbers : list, str
         List of mirror numbers (or 'all').
-    offset_file: Path or str, optional
-        Path to ECSV file containing x, y offset columns (in degrees).
-    offset_directions: list, optional
-        Cardinal directions for offset generation: ['N', 'S', 'E', 'W'].
-        Only used when generating from scalar offsets.
+    offset_file : Path or str, optional
+        ECSV file with x, y offset columns (in degrees).
+    offset_directions : list, optional
+        Cardinal directions ['N', 'S', 'E', 'W'] for scalar offsets.
+    context : RunContext, optional
+        Run context.
     """
 
     YLABEL = {
@@ -86,11 +85,13 @@ class RayTracing:
         mirror_numbers="all",
         offset_file=None,
         offset_directions=None,
+        context=None,
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
 
-        self._io_handler = io_handler.IOHandler()
+        self.context = context or RunContext.from_environment()
+        self._io_handler = self.context.paths
 
         self.telescope_model, self.site_model = telescope_model, site_model
         self.label = label if label is not None else self.telescope_model.label
@@ -102,7 +103,6 @@ class RayTracing:
             f"azimuth={self.azimuth_angle:.3f} deg"
         )
 
-        # Process off-axis angles: convert to list of (x, y) tuples
         if offset_file is not None:
             self.off_axis_angle = self._load_offset_file(offset_file)
         else:
@@ -118,120 +118,30 @@ class RayTracing:
             self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")
         )
         self.psf_images = {}
+        self._backend = None
         self._results = None
 
     def _process_offset_angles(self, off_axis_angle, offset_directions):
-        """
-        Process off-axis angles and convert to (x, y) tuples.
+        """Return (x, y) offsets in degrees from (x, y) tuples or from scalar angles."""
+        if isinstance(off_axis_angle, (list, tuple)) and (
+            len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list))
+        ):
+            return [
+                tuple(x.to("deg").value if isinstance(x, u.Quantity) else float(x) for x in offset)
+                for offset in off_axis_angle
+            ]
 
-        Parameters
-        ----------
-        off_axis_angle: astropy.units.Quantity or list
-            Scalar angles for backward compatibility, or list of (x, y) tuples.
-        offset_directions: list or None
-            Cardinal directions ['N', 'S', 'E', 'W'] for offset generation.
-
-        Returns
-        -------
-        list
-            List of (x, y) tuples in degrees.
-        """
-        # Check if input is already a list of tuples
-        if self._is_list_of_tuples(off_axis_angle):
-            return self._convert_tuples_to_degrees(off_axis_angle)
-
-        # Convert scalar angles to numpy array
-        angles_deg = self._extract_scalar_angles(off_axis_angle)
-
-        # Generate offsets from scalar angles
-        if offset_directions is None:
-            offset_directions = ["N", "S", "E", "W"]
-
-        return self._generate_offsets_from_angles(angles_deg, offset_directions)
-
-    def _is_list_of_tuples(self, off_axis_angle):
-        """
-        Check if input is a list of tuples or lists.
-
-        Parameters
-        ----------
-        off_axis_angle: any
-            Input to check.
-
-        Returns
-        -------
-        bool
-            True if input is a list of tuples/lists.
-        """
-        if not isinstance(off_axis_angle, (list, tuple)):
-            return False
-        return len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list))
-
-    def _convert_tuples_to_degrees(self, offset_tuples):
-        """
-        Convert tuple offsets to degrees, handling units.
-
-        Parameters
-        ----------
-        offset_tuples: list
-            List of (x, y) tuples, possibly with units.
-
-        Returns
-        -------
-        list
-            List of (x, y) tuples in degrees.
-        """
-        result = []
-        for offset in offset_tuples:
-            converted_offset = tuple(
-                x.to("deg").value if isinstance(x, u.Quantity) else float(x) for x in offset
-            )
-            result.append(converted_offset)
-        return result
-
-    def _extract_scalar_angles(self, off_axis_angle):
-        """
-        Extract scalar angles and convert to degrees.
-
-        Parameters
-        ----------
-        off_axis_angle: astropy.units.Quantity or list
-            Input angles.
-
-        Returns
-        -------
-        numpy.ndarray
-            Angles in degrees.
-        """
         if isinstance(off_axis_angle, (list, tuple)):
             angles_deg = np.asarray(off_axis_angle)
         else:
             angles_deg = off_axis_angle.to("deg").value
-        return np.atleast_1d(np.around(angles_deg, 5))
+        angles_deg = np.atleast_1d(np.around(angles_deg, 5))
+        if offset_directions is None:
+            offset_directions = ["N", "S", "E", "W"]
+        return self._cardinal_offsets(angles_deg, offset_directions)
 
-    def _generate_offsets_from_angles(self, angles_deg, offset_directions):
-        """
-        Generate (x, y) offsets for given angles and directions.
-
-        Parameters
-        ----------
-        angles_deg: numpy.ndarray
-            Angles in degrees.
-        offset_directions: list
-            Cardinal directions.
-
-        Returns
-        -------
-        list
-            List of (x, y) tuples.
-        """
-        direction_map = {
-            "N": (0.0, 1.0),
-            "S": (0.0, -1.0),
-            "E": (1.0, 0.0),
-            "W": (-1.0, 0.0),
-        }
-
+    def _cardinal_offsets(self, angles_deg, offset_directions):
+        """Return (x, y) offsets for each angle along the given cardinal directions."""
         offsets = []
         for angle in angles_deg:
             # avoid generating multiple identical offsets at zero angle
@@ -239,30 +149,15 @@ class RayTracing:
                 offsets.append((0.0, 0.0))
                 continue
             for direction in offset_directions:
-                if direction not in direction_map:
+                if direction not in _CARDINAL_OFFSETS:
                     self._logger.warning(f"Unknown direction {direction}, skipping")
                     continue
-                dx, dy = direction_map[direction]
+                dx, dy = _CARDINAL_OFFSETS[direction]
                 offsets.append((dx * angle, dy * angle))
-
         return offsets
 
     def _load_offset_file(self, offset_file_path):
-        """
-        Load offsets from ECSV file.
-
-        Expected columns: x, y (in degrees)
-
-        Parameters
-        ----------
-        offset_file_path: Path or str
-            Path to ECSV file.
-
-        Returns
-        -------
-        list
-            List of (x, y) tuples in degrees.
-        """
+        """Load (x, y) offsets in degrees from an ECSV file with columns x and y."""
         offset_file = Path(offset_file_path)
         if not offset_file.exists():
             raise FileNotFoundError(f"Offset file not found: {offset_file}")
@@ -275,35 +170,10 @@ class RayTracing:
         self._logger.info(f"Loaded {len(offsets)} offsets from {offset_file}")
         return offsets
 
-    def _initialize_mirror_configuration(
-        self,
-        source_distance,
-        mirror_numbers,
-    ):
-        """
-        Initialize mirror configuration.
-
-        Note the difference between single mirror mode and nominal mode.
-        In single mirror mode, a 'mirror' is a mirror panel.
-        In nominal mode, a 'mirror' is a telescope.
-
-        Parameters
-        ----------
-        source_distance: astropy.units.Quantity
-            Source distance.
-        mirror_numbers: list, str
-            List of mirror numbers (or 'all').
-
-        Returns
-        -------
-        dict
-            Dictionary containing mirror numbers, focal lengths, and source distances.
-
-        """
-        # initialize a mirror as a mirror panel
+    def _initialize_mirror_configuration(self, source_distance, mirror_numbers):
+        """Return the mirrors to trace: mirror panels in single-mirror mode, else the telescope."""
         if self.single_mirror_mode:
             return self._initialize_single_mirror_mode(mirror_numbers)
-        # initialize a mirror as a telescope optical system
         return {
             0: {
                 "source_distance": source_distance.to("km").value,
@@ -312,19 +182,7 @@ class RayTracing:
         }
 
     def _initialize_single_mirror_mode(self, mirror_numbers):
-        """
-        Initialize single mirror mode.
-
-        Parameters
-        ----------
-        mirror_numbers: list, str
-            List of mirror numbers (or 'all').
-
-        Returns
-        -------
-        dict
-            Dictionary containing mirror numbers, focal lengths, and source distances.
-        """
+        """Return focal length and source distance of each mirror panel."""
         self._logger.debug(
             "Single mirror mode is activated - "
             "source distance is being recalculated to 2 * focal length "
@@ -348,14 +206,7 @@ class RayTracing:
         return mirrors
 
     def _get_mirror_panel_focal_length(self):
-        """
-        Return mirror panel focal length with possible random addition.
-
-        Returns
-        -------
-        float
-            Focal length.
-        """
+        """Return the mirror panel focal length, with random variation if requested."""
         _focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
         if self.use_random_focal_length:
             rng = np.random.default_rng(self.random_focal_length_seed)
@@ -372,115 +223,142 @@ class RayTracing:
         self, test=False, force=False, compress_photons=True, max_workers=DEFAULT_MAX_WORKERS
     ):
         """
-        Run ray tracing simulations using sim_telarray.
-
-        Generates photon lists for each off-axis angle and mirror configuration,
-        simulating light propagation through telescope optics.
-        Output files are compressed with gzip if compress_photons is True.
-        Independent full-telescope simulations are executed concurrently. Single-mirror
-        simulations remain serial because their temporary camera files are shared.
+        Run the ray tracing simulations with the configured backend.
 
         Parameters
         ----------
-        test: bool
-            Test flag will make it faster by simulating much fewer photons.
-        force: bool
-            Force flag will remove existing files and simulate again.
-        compress_photons: bool
-            If True, compress photon list files to ``.gz`` after simulation.
-        max_workers: int
-            Maximum number of concurrent full-telescope simulations. Defaults to 8.
+        test : bool
+            Simulate much fewer photons.
+        force : bool
+            Simulate again even if the backend keeps earlier results.
+        compress_photons : bool
+            Compress the photon files written by the backend.
+        max_workers : int
+            Maximum number of concurrent simulations of the backend.
 
         Raises
         ------
         ValueError
             If ``max_workers`` is not positive.
-
         """
         if max_workers < 1:
             raise ValueError("max_workers must be a positive integer")
+        self._get_backend().simulate(
+            self._requests(test),
+            test=test,
+            force=force,
+            compress_photons=compress_photons,
+            max_workers=max_workers,
+        )
 
-        if not self.single_mirror_mode:
-            self.telescope_model.write_sim_telarray_config_file(
-                additional_models=self.site_model,
-                label=self.label,
+    def _get_backend(self):
+        """Return the ray-tracing backend (created on first use)."""
+        if self._backend is None:
+            self._backend = interface.get_backend(context=self.context)(
+                self.telescope_model,
+                self.site_model,
+                self.label,
+                self.zenith_angle,
+                self.single_mirror_mode,
+                context=self.context,
             )
+        return self._backend
 
-        simulations = [
-            (
-                self._create_simulator(off_x, off_y, mirror_number, mirror_data, test, force),
-                off_x,
-                off_y,
-                mirror_number,
-            )
+    def _requests(self, test=False, for_simulation=True):
+        """Star images to trace: one per off-axis angle (and mirror in single-mirror mode)."""
+        photons = self._photons_per_instance(test)
+        seeds = self._instance_seeds(single_instance=test) if for_simulation else ()
+        return [
+            self._request(off_x, off_y, mirror_number, photons or 100000, seeds, for_simulation)
             for off_x, off_y in self.off_axis_angle
-            for mirror_number, mirror_data in self.mirrors.items()
+            for mirror_number in self.mirrors
         ]
 
-        if not self.single_mirror_mode and len(simulations) > 1:
-            workers = min(max_workers, len(simulations))
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                list(
-                    executor.map(
-                        self._run_simulator,
-                        simulations,
-                        [test] * len(simulations),
-                        [compress_photons] * len(simulations),
-                    )
+    def _photons_per_instance(self, test):
+        """Photons per instance: 5000 in test mode, else ``number_of_photons`` (or None)."""
+        if test:
+            return 5000
+        photons = self.context.args.get("number_of_photons")
+        if photons is not None and (
+            isinstance(photons, bool) or not isinstance(photons, int) or photons < 1
+        ):
+            raise ValueError("number_of_photons must be a positive integer")
+        return photons
+
+    def _request(self, off_x, off_y, mirror_number, photons, seeds, for_simulation):
+        """Return the request of one image."""
+        source_distance = self.mirrors[mirror_number]["source_distance"]
+        changes = {}
+        if self.single_mirror_mode and for_simulation:
+            changes = parameter_changes.single_mirror(
+                self.telescope_model.get_single_mirror_list_file(
+                    mirror_number, self.use_random_focal_length
+                ),
+                self.telescope_model.get_parameter_value("mirror_focal_length"),
+                source_distance * u.km.to(u.cm),
+            )
+        return StarImageRequest(
+            off_axis_x=off_x,
+            off_axis_y=off_y,
+            source_distance_km=source_distance,
+            seeds=tuple(self._mirror_seeds(seeds, mirror_number)),
+            photons_per_instance=photons,
+            mirror_number=mirror_number if self.single_mirror_mode else None,
+            parameter_changes=changes,
+        )
+
+    def _instance_seeds(self, single_instance=False):
+        """
+        Return (instrument seed, simulation seed) of each random instrument instance.
+
+        A single instance in single-mirror mode or if ``single_instance`` is set (test
+        mode); otherwise ``random_instrument_instances``.
+        """
+        instances = self.context.args.get(
+            "random_instrument_instances", constants.RAY_TRACING_INSTRUMENT_INSTANCES
+        )
+        if single_instance or self.single_mirror_mode:
+            instances = 1
+        instrument_seed = self.context.args.get("instrument_seed")
+        simulation_seed = self.context.args.get("simulation_seed")
+        if isinstance(simulation_seed, list | tuple):
+            if len(simulation_seed) == 2:
+                instrument_seed = simulation_seed[0]
+                simulation_seed = simulation_seed[1]
+            elif len(simulation_seed) == 1:
+                simulation_seed = simulation_seed[0]
+            else:
+                raise ValueError(
+                    "simulation_seed must contain one value (simulation seed) or two values "
+                    "(instrument seed, simulation seed)."
                 )
-            return
-
-        for simulator in simulations:
-            self._run_simulator(simulator, test, compress_photons)
-
-    def _create_simulator(self, off_x, off_y, mirror_number, mirror_data, test, force):
-        """Create one ray-tracing simulator with unique input and output files."""
-        self._logger.info(
-            f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), mirror={mirror_number}"
-        )
-        theta_offset = np.sqrt(off_x**2 + off_y**2)
-        simulator = SimulatorRayTracing(
-            telescope_model=self.telescope_model,
-            site_model=self.site_model,
-            label=self.label,
-            test=test,
-            config_data={
-                "zenith_angle": self.zenith_angle,
-                "off_axis_x": off_x,
-                "off_axis_y": off_y,
-                "off_axis_theta": theta_offset,
-                "source_distance": mirror_data["source_distance"],
-                "single_mirror_mode": self.single_mirror_mode,
-                "use_random_focal_length": self.use_random_focal_length,
-                "mirror_numbers": mirror_number,
-            },
-            force_simulate=force,
-        )
-        if not self.single_mirror_mode:
-            simulator._write_config = False  # pylint: disable=protected-access
-        return simulator
-
-    def _run_simulator(self, simulation, test, compress_photons):
-        """Run one prepared simulator and optionally compress its photon list."""
-        simulator, off_x, off_y, mirror_number = simulation
-        simulator.run(test=test)
-        photons_file = self.output_directory.joinpath(
-            self._generate_file_name(
-                file_type="photons",
-                suffix=".lis",
-                off_axis_x=off_x,
-                off_axis_y=off_y,
-                mirror_number=mirror_number if self.single_mirror_mode else None,
+        instrument_seed = instrument_seed or random.seeds(max_seed=constants.SIMTEL_MAX_SEED)
+        simulation_seed = simulation_seed or random.seeds(max_seed=constants.SIMTEL_MAX_SEED)
+        return list(
+            zip(
+                random.instance_seeds(
+                    instrument_seed, instances, max_seed=constants.SIMTEL_MAX_SEED
+                ),
+                random.instance_seeds(
+                    simulation_seed, instances, max_seed=constants.SIMTEL_MAX_SEED
+                ),
+                strict=True,
             )
         )
-        if not compress_photons:
-            return
 
-        self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
-        with open(photons_file, "rb") as f_in:
-            with gzip.open(photons_file.with_suffix(photons_file.suffix + ".gz"), "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        photons_file.unlink()
+    def _mirror_seeds(self, seeds, mirror_number):
+        """Return the seeds of one mirror in single-mirror mode (each mirror has its own)."""
+        if not self.single_mirror_mode:
+            return seeds
+        return [
+            tuple(
+                random.seeds(
+                    fixed_seed=(seed, mirror_number + 1), max_seed=constants.SIMTEL_MAX_SEED
+                )
+                for seed in pair
+            )
+            for pair in seeds
+        ]
 
     def analyze(
         self,
@@ -493,42 +371,42 @@ class RayTracing:
         keep_images=True,
     ):
         """
-        Analyze ray tracing simulation results.
+        Analyze the ray tracing results: PSF containment, effective area and focal length.
 
-        Processes photon lists to compute PSF containment diameters (D80 by default),
-        effective mirror area (detected_photons * total_area / total_photons),
-        and effective focal length (centroid_radius / tan(off_axis_angle)).
+        The effective mirror area is detected_photons * total_area / total_photons and the
+        effective focal length is centroid_radius / tan(off_axis_angle).
 
         Parameters
         ----------
-        export: bool
-            If True, results will be exported to a file automatically. Alternatively,
-            export_results function can be used.
-        force: bool
-            If True, existing results files will be removed and analysis will be done again.
-        use_rx: bool
-            If True, calculations are done using the rx binary provided by sim_telarray. If False,
-            calculations are done internally, by the module psf_analysis.
-        no_tel_transmission: bool
+        export : bool
+            If True, export the results to a file.
+        force : bool
+            If True, existing results files are removed and the analysis is repeated.
+        use_rx : bool
+            If True, use the rx binary of sim_telarray; otherwise the internal psf_analysis.
+        no_tel_transmission : bool
             If True, the telescope transmission is not applied.
-        containment_fraction: float
-            Containment fraction for PSF containment calculation. Allowed values are in the
-            interval [0,1]
-        save_photons: bool
-            If True, retain compressed photon list files after analysis. By default, photon
-            list files are removed after successful analysis.
-        keep_images: bool
-            If True, keep the PSF image of each off-axis angle (see ``images``). Images hold
-            all photon positions; without them only the results table is kept.
+        containment_fraction : float
+            Containment fraction for the PSF calculation, in [0, 1].
+        save_photons : bool
+            If True, keep the photon files of the backend.
+        keep_images : bool
+            If True, keep the PSF image of each off-axis angle (see ``images``).
         """
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
             self._read_results()
+            do_analyze = (
+                self._results.meta.get(BACKEND_METADATA)
+                != self.context.software.ray_tracing_backend
+            )
 
-        tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
-
+        tel_transmission_pars = (
+            self.telescope_model.get_parameter_value("telescope_transmission")
+            if not no_tel_transmission
+            else [1, 0, 0, 0]
+        )
         self.psf_images = {}
-
         _rows = self._process_off_axis_and_mirror(
             tel_transmission_pars,
             do_analyze,
@@ -552,151 +430,45 @@ class RayTracing:
         save_photons,
         keep_images=True,
     ):
-        """
-        Process off-axis angles and mirrors for RayTracing analysis.
-
-        Parameters
-        ----------
-        tel_transmission_pars: list
-            Telescope transmission parameters.
-        do_analyze: bool
-            Flag indicating whether to perform analysis or not.
-        use_rx: bool
-            Flag indicating whether to use the RX method for analysis.
-        containment_fraction: float
-            Containment fraction for PSF containment calculation.
-        save_photons: bool
-            If True, retain compressed photon list files after analysis.
-        keep_images: bool
-            If True, keep the PSF image of each off-axis angle.
-
-        Returns
-        -------
-        list
-            List of results for each combination of off-axis angle and mirror.
-        """
+        """Analyze the image of each off-axis angle and mirror; returns the result rows."""
         _rows = []
+        for request in self._requests(for_simulation=False):
+            mirror_number = 0 if request.mirror_number is None else request.mirror_number
+            self._logger.debug(
+                f"Analyzing RayTracing for off_axis=({request.off_axis_x:.3f}, "
+                f"{request.off_axis_y:.3f})"
+            )
+            image, traced_structure = self._get_backend().psf_image(
+                request,
+                self.mirrors[mirror_number]["focal_length"],
+                containment_fraction,
+                use_rx=use_rx,
+                save_photons=save_photons,
+            )
+            theta_offset = np.sqrt(request.off_axis_x**2 + request.off_axis_y**2)
+            # A traced telescope structure replaces telescope_transmission.
+            tel_transmission = (
+                1.0
+                if traced_structure
+                else compute_telescope_transmission(tel_transmission_pars, theta_offset)
+            )
+            if keep_images:
+                self.psf_images[(request.off_axis_x, request.off_axis_y)] = copy(image)
+            if not do_analyze:
+                continue
 
-        for off_x, off_y in self.off_axis_angle:
-            for mirror_number, mirror_data in self.mirrors.items():
-                self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
-
-                photons_file_lis = self.output_directory.joinpath(
-                    self._generate_file_name(
-                        "photons",
-                        ".lis",
-                        off_axis_x=off_x,
-                        off_axis_y=off_y,
-                        mirror_number=mirror_number,
-                    )
-                )
-                photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
-                stars_file = self.output_directory.joinpath(
-                    self._generate_file_name(
-                        "stars",
-                        ".lis",
-                        off_axis_x=off_x,
-                        off_axis_y=off_y,
-                        mirror_number=mirror_number,
-                    )
-                )
-                photons_file = self._select_photon_file(photons_file_lis, photons_file_gz, use_rx)
-
-                # Calculate theta and phi for transmission calculation
-                theta_offset = np.sqrt(off_x**2 + off_y**2)
-
-                tel_transmission = compute_telescope_transmission(
-                    tel_transmission_pars, theta_offset
-                )
-                image = self._create_psf_image(
-                    photons_file,
-                    mirror_data["focal_length"],
-                    containment_fraction,
-                    use_rx,
-                )
-
-                if keep_images:
-                    self.psf_images[(off_x, off_y)] = copy(image)
-
-                if do_analyze:
-                    _current_results = self._analyze_image(
-                        image,
-                        off_x,
-                        off_y,
-                        theta_offset,
-                        containment_fraction,
-                        tel_transmission,
-                    )
-
-                    if self.single_mirror_mode:
-                        _current_results += (mirror_number,)
-
-                    _rows.append(_current_results)
-
-                self._remove_photon_files(
-                    photons_file_lis, photons_file_gz, stars_file, save_photons
-                )
-
+            current_result = self._analyze_image(
+                image,
+                request.off_axis_x,
+                request.off_axis_y,
+                theta_offset,
+                containment_fraction,
+                tel_transmission,
+            )
+            if self.single_mirror_mode:
+                current_result = (*current_result, mirror_number)
+            _rows.append(current_result)
         return _rows
-
-    @staticmethod
-    def _select_photon_file(photons_file_lis, photons_file_gz, use_rx):
-        """Choose the available photon list, preferring a reusable compressed list."""
-        if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
-            return photons_file_lis
-        return photons_file_gz
-
-    @staticmethod
-    def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
-        """Remove ray-tracing input and output lists unless retention was requested."""
-        if not save_photons:
-            photons_file_lis.unlink(missing_ok=True)
-            photons_file_gz.unlink(missing_ok=True)
-            stars_file.unlink(missing_ok=True)
-
-    def _get_telescope_transmission_params(self, no_tel_transmission):
-        """
-        Get telescope transmission parameters.
-
-        Parameters
-        ----------
-        no_tel_transmission: bool
-            Flag indicating whether to apply telescope transmission or not.
-
-        Returns
-        -------
-        list
-            Telescope transmission parameters.
-        """
-        return (
-            self.telescope_model.get_parameter_value("telescope_transmission")
-            if not no_tel_transmission
-            else [1, 0, 0, 0]
-        )
-
-    def _create_psf_image(self, photons_file, focal_length, containment_fraction, use_rx=False):
-        """
-        Create PSF image from photons file.
-
-        Parameters
-        ----------
-        photons_file: Path
-            Path to the photons file.
-        focal_length: float
-            Focal length of the telescope.
-        containment_fraction: float
-            Containment fraction for PSF containment calculation.
-        use_rx: bool
-            Flag indicating whether to use the RX method for analysis.
-
-        Returns
-        -------
-        PSFImage
-            PSF image object.
-        """
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
-        image.process_photon_list(photons_file, use_rx)
-        return image
 
     def _analyze_image(
         self,
@@ -708,41 +480,16 @@ class RayTracing:
         tel_transmission,
     ):
         """
-        Extract analysis results from PSF image.
+        Extract the analysis results of one PSF image.
 
-        Computes effective focal length as f_eff = r / tan(off_axis_angle),
-        where r is the distance from the image centroid to the optical axis.
-
-        Parameters
-        ----------
-        image: PSFImage
-            PSF image object.
-        off_x: float
-            X offset in degrees.
-        off_y: float
-            Y offset in degrees.
-        theta_offset: float
-            Radial offset (radial distance) in degrees.
-        containment_fraction: float
-            Containment fraction for PSF containment calculation.
-        tel_transmission: float
-            Telescope transmission factor.
+        The effective focal length is f_eff = r / tan(off_axis_angle), where r is the
+        distance from the image centroid to the optical axis.
 
         Returns
         -------
         tuple
-            (
-                off_x,
-                off_y,
-                theta_offset,
-                psf_cm,
-                psf_deg,
-                eff_area,
-                centroid_x_error,
-                centroid_y_error,
-                eff_focal_length,
-                eff_focal_length_error,
-            )
+            (off_x, off_y, theta_offset, psf_cm, psf_deg, eff_area, centroid_x_error,
+            centroid_y_error, eff_focal_length, eff_focal_length_error), with units.
         """
         r = np.hypot(image.centroid_x, image.centroid_y)
         centroid_x_error = float(getattr(image, "centroid_x_error", 0.0) or 0.0)
@@ -763,13 +510,16 @@ class RayTracing:
                 )
             eff_focal_length_error = radius_error / tan_theta
 
+        effective_area = image.get_effective_area(tel_transmission)
+        if effective_area is None:
+            effective_area = np.nan
         return (
             off_x * u.deg,
             off_y * u.deg,
             theta_offset * u.deg,
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
-            image.get_effective_area(tel_transmission) * u.m * u.m,
+            effective_area * u.m * u.m,
             centroid_x_error * u.cm,
             centroid_y_error * u.cm,
             eff_focal_length,
@@ -777,14 +527,7 @@ class RayTracing:
         )
 
     def _store_results(self, _rows):
-        """
-        Store analysis results.
-
-        Parameters
-        ----------
-        _rows: list
-            List of rows containing analysis results.
-        """
+        """Store the analysis rows as results table."""
         _columns = [
             "off_x",
             "off_y",
@@ -800,9 +543,10 @@ class RayTracing:
         if self.single_mirror_mode:
             _columns.append("mirror_number")
         self._results = QTable(rows=_rows, names=_columns)
+        self._results.meta[BACKEND_METADATA] = self.context.software.ray_tracing_backend
 
     def export_results(self):
-        """Export results to a csv file."""
+        """Export the results to an ECSV file."""
         if self._results:
             self._logger.info(f"Exporting results to {self._file_results}")
             astropy.io.ascii.write(self._results, self._file_results, format="ecsv", overwrite=True)
@@ -810,7 +554,8 @@ class RayTracing:
             self._logger.error("No results to export")
 
     def get_psf_mm(self, row_index: int = 0) -> float:
-        """Return PSF diameter from the analysis results in mm.
+        """
+        Return the PSF diameter from the analysis results in mm.
 
         Parameters
         ----------
@@ -825,12 +570,7 @@ class RayTracing:
         if self._results is None:
             raise RuntimeError("No results available; run analyze() first")
         psf = self._results["psf_cm"][row_index]
-
-        if isinstance(psf, u.Quantity):
-            psf_cm = psf.to_value(u.cm)
-        else:
-            psf_cm = float(psf)
-
+        psf_cm = psf.to_value(u.cm) if isinstance(psf, u.Quantity) else float(psf)
         return psf_cm * 10.0
 
     def _read_results(self):
@@ -839,22 +579,18 @@ class RayTracing:
 
     def plot(self, key, save=False, psf_diameter_cm=None, **kwargs):
         """
-        Plot analysis results vs radial off-axis angle.
-
-        Visualizes computed PSF, effective area, or effective focal length
-        as a function of radial off-axis angle. Optionally saves individual PSF images
-        and cumulative distributions.
+        Plot the analysis results versus the radial off-axis angle.
 
         Parameters
         ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-        save: bool
-            If True, figure will be saved.
-        psf_diameter_cm: float
-            PSF diameter value to be marked in the cumulative PSF plot (in cm).
-        **kwargs:
-            kwargs for the plot
+        key : str
+            psf_cm, psf_deg, eff_area or eff_flen.
+        save : bool
+            If True, the figures are saved.
+        psf_diameter_cm : float
+            PSF diameter marked in the cumulative PSF plot (in cm).
+        **kwargs
+            Passed to the plot function.
 
         Raises
         ------
@@ -890,54 +626,55 @@ class RayTracing:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 
         if save:
-            plot_file_name = self._generate_file_name(
-                file_type="ray_tracing",
-                suffix=".pdf",
-                extra_label=key,
-            )
-            self.output_directory.joinpath("figures").mkdir(exist_ok=True)
-            plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
-            self._logger.info(f"Saving fig in {plot_file}")
-            plot.savefig(plot_file)
+            self._save_figures(plot, key, psf_diameter_cm)
+        return plot
 
-            for (off_x, off_y), image in self.psf_images.items():
-                image_file_name = self._generate_file_name(
+    def _save_figures(self, plot, key, psf_diameter_cm):
+        """Save the summary plot and the PSF image plots of each off-axis angle."""
+        figures_dir = self.output_directory.joinpath("figures")
+        figures_dir.mkdir(exist_ok=True)
+        plot_file = figures_dir.joinpath(
+            self._generate_file_name(file_type="ray_tracing", suffix=".pdf", extra_label=key)
+        )
+        self._logger.info(f"Saving fig in {plot_file}")
+        # Keep the suffix: file names contain decimal points (e.g. "za20.0deg").
+        visualize.save_figure(plot, plot_file, figure_format=[plot_file.suffix[1:]], close=True)
+
+        for (off_x, off_y), image in self.psf_images.items():
+            image_file = figures_dir.joinpath(
+                self._generate_file_name(
                     file_type="ray_tracing",
                     off_axis_x=off_x,
                     off_axis_y=off_y,
                     suffix=".pdf",
                     extra_label=f"image_{key}",
                 )
-                image_file = self.output_directory.joinpath("figures").joinpath(image_file_name)
-                self._logger.info(f"Saving PSF image to {image_file}")
-                image.plot_image(file_name=image_file)
+            )
+            self._logger.info(f"Saving PSF image to {image_file}")
+            image.plot_image(file_name=image_file)
 
-                image_cumulative_file_name = self._generate_file_name(
+            cumulative_file = figures_dir.joinpath(
+                self._generate_file_name(
                     file_type="ray_tracing",
                     off_axis_x=off_x,
                     off_axis_y=off_y,
                     suffix=".pdf",
                     extra_label=f"cumulative_psf_{key}",
                 )
-                image_cumulative_file = self.output_directory.joinpath("figures").joinpath(
-                    image_cumulative_file_name
-                )
-                self._logger.info(f"Saving cumulative PSF to {image_cumulative_file}")
-                image.plot_cumulative(
-                    file_name=image_cumulative_file, psf_diameter_cm=psf_diameter_cm
-                )
-        return plot
+            )
+            self._logger.info(f"Saving cumulative PSF to {cumulative_file}")
+            image.plot_cumulative(file_name=cumulative_file, psf_diameter_cm=psf_diameter_cm)
 
     def plot_histogram(self, key, **kwargs):
         """
-        Plot histogram of key.
+        Plot a histogram of a results column.
 
         Parameters
         ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-        **kwargs:
-            kwargs for the histogram plot
+        key : str
+            psf_cm, psf_deg, eff_area or eff_flen.
+        **kwargs
+            Passed to the histogram plot.
 
         Raises
         ------
@@ -949,64 +686,14 @@ class RayTracing:
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 
-    def get_mean(self, key):
-        """
-        Get mean value of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Mean value of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.mean(self._results[key])
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
-    def get_std_dev(self, key):
-        """
-        Get std dev of key.
-
-        Parameters
-        ----------
-        key: str
-            psf_cm, psf_deg, eff_area or eff_flen
-
-        Returns
-        -------
-        float
-            Std deviation of key.
-
-        Raises
-        ------
-        KeyError
-            If key is not among the valid options.
-        """
-        try:
-            return np.std(self._results[key])
-        except KeyError as exc:
-            raise KeyError(INVALID_KEY_TO_PLOT) from exc
-
     def images(self):
         """
-        Get list of analyzed PSF images.
-
-        Returns PSFImage objects containing photon positions, centroids,
-        PSF containment diameters, and effective areas for each off-axis point.
+        Return the analyzed PSF images, one per off-axis angle.
 
         Returns
         -------
-        List of PSFImages
+        list of PSFImage or None
+            PSF images with photon positions, centroids and PSF containment diameters.
         """
         images = [
             self.psf_images[(off_x, off_y)]
@@ -1027,7 +714,7 @@ class RayTracing:
         mirror_number=None,
         extra_label=None,
     ):
-        """Generate file name for output files with (x, y) offsets."""
+        """Generate the file name of an output file with (x, y) offsets."""
         file_type_prefix = file_type if file_type == "ray_tracing" else f"ray_tracing_{file_type}"
         return names.generate_file_name(
             file_type=file_type_prefix,

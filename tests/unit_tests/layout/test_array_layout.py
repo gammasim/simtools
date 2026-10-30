@@ -62,13 +62,17 @@ def _write_position_json(tmp_test_directory, file_name, parameter, instrument):
 
 
 @pytest.fixture
-def array_layout_north_instance(model_version):
-    return ArrayLayout(site="North", model_version=model_version, name="test_layout")
+def array_layout_north_instance(model_version, run_context):
+    return ArrayLayout(
+        context=run_context, site="North", model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
-def array_layout_south_instance(model_version):
-    return ArrayLayout(site="South", model_version=model_version, name="test_layout")
+def array_layout_south_instance(model_version, run_context):
+    return ArrayLayout(
+        context=run_context, site="South", model_version=model_version, name="test_layout"
+    )
 
 
 @pytest.fixture
@@ -96,8 +100,9 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture
-def array_layout_north_four_lst_instance(model_version):
+def array_layout_north_four_lst_instance(model_version, run_context):
     return ArrayLayout(
+        context=run_context,
         site="North",
         label="test_layout",
         name="LST4",
@@ -106,8 +111,9 @@ def array_layout_north_four_lst_instance(model_version):
 
 
 @pytest.fixture
-def array_layout_south_four_lst_instance(model_version):
+def array_layout_south_four_lst_instance(model_version, run_context):
     return ArrayLayout(
+        context=run_context,
         site="South",
         label="test_layout",
         name="LST4",
@@ -120,6 +126,7 @@ def test_initialize_coordinate_systems(
     array_layout_north_instance,
     south_layout_center_data_dict,
     array_layout_south_instance,
+    run_context,
 ):
     def test_one_site(center_data_dict, instance, easting, northing):
         # set center data from model repository
@@ -159,10 +166,17 @@ def test_initialize_coordinate_systems(
 
 
 def test_initialize_site_parameters_loads_only_coordinate_parameters(
-    model_version, mock_model_reader
+    model_version,
+    mock_model_reader,
+    run_context,
 ):
     """Array layouts avoid loading unrelated simulation-configuration parameters."""
-    ArrayLayout(site="North", model_version=model_version, model_reader=mock_model_reader)
+    ArrayLayout(
+        context=run_context,
+        site="North",
+        model_version=model_version,
+        model_reader=mock_model_reader,
+    )
 
     model_reader_call = mock_model_reader.get_model_parameters.call_args
     assert model_reader_call.kwargs["parameter_names"] == frozenset(
@@ -171,7 +185,7 @@ def test_initialize_site_parameters_loads_only_coordinate_parameters(
     mock_model_reader.get_simulation_configuration_parameters.assert_not_called()
 
 
-def test_select_assets(model_version, tmp_test_directory):
+def test_select_assets(model_version, tmp_test_directory, run_context):
     telescope_names = (
         [f"LSTN-{index:02d}" for index in range(1, 17)]
         + [f"MSTN-{index:02d}" for index in range(1, 6)]
@@ -185,6 +199,7 @@ def test_select_assets(model_version, tmp_test_directory):
         np.arange(25),
     )
     layout = ArrayLayout(
+        context=run_context,
         site="North",
         name="test_layout",
         telescope_list_file=telescope_list_file,
@@ -204,23 +219,6 @@ def test_select_assets(model_version, tmp_test_directory):
     assert len(layout._telescope_list) == 0
 
 
-def test_add_tel(array_layout_south_instance):
-    def test_one_site(instance, altitude, tel_name, design_model):
-        ntel_before = instance.get_number_of_telescopes()
-        instance.add_telescope(
-            tel_name, "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m, design_model=design_model
-        )
-        ntel_after = instance.get_number_of_telescopes()
-        assert ntel_before + 1 == ntel_after
-
-        instance.add_telescope(
-            tel_name, "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m, design_model=design_model
-        )
-        assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
-
-    test_one_site(array_layout_south_instance, 2181.0, "LSTS-05", "LSTS-design")
-
-
 def check_table_columns(_table, add_geocode, asset_code, sequence_number):
     """Helper function for test_build_layout to check table columns."""
     if add_geocode:
@@ -234,118 +232,15 @@ def check_table_columns(_table, add_geocode, asset_code, sequence_number):
         assert "sequence_number" in _table.colnames
 
 
-def test_build_layout(
-    array_layout_north_four_lst_instance,
-    array_layout_south_four_lst_instance,
-    tmp_test_directory,
-    io_handler,
-    capfd,
-):
-    def test_one_site(
-        layout, site_label, add_geocode=False, asset_code=False, sequence_number=False
-    ):
-        layout.add_telescope(
-            telescope_name="LST" + site_label[0] + "-01",
-            crs_name="ground",
-            xx=57.5 * u.m,
-            yy=57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-        layout.add_telescope(
-            telescope_name="LST" + site_label[0] + "-02",
-            crs_name="ground",
-            xx=-57.5 * u.m,
-            yy=57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-        layout.add_telescope(
-            telescope_name="LST" + site_label[0] + "-02",
-            crs_name="ground",
-            xx=57.5 * u.m,
-            yy=-57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-        layout.add_telescope(
-            telescope_name="LST" + site_label[0] + "-04",
-            crs_name="ground",
-            xx=-57.5 * u.m,
-            yy=-57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-        for tel in layout._telescope_list:
-            if add_geocode:
-                tel.geo_code = "test_geo_code"
-            if asset_code:
-                tel.asset_code = "test_asset_code"
-            if sequence_number:
-                tel.sequence_number = 1
-
-        layout.convert_coordinates()
-        # test that certain keywords appear in printout
-        layout.print_telescope_list("ground")
-        captured_printout, _ = capfd.readouterr()
-        substrings_to_check = ["LST", "telescope_name", "position_x"]
-        assert all(substring in captured_printout for substring in substrings_to_check)
-
-        _table = layout.export_telescope_list_table(crs_name="ground")
-        _export_file = tmp_test_directory / "test_layout.ecsv"
-        _table.write(_export_file, format="ascii.ecsv", overwrite=True)
-
-        assert isinstance(_table, QTable)
-
-        check_table_columns(_table, add_geocode, asset_code, sequence_number)
-
-    test_one_site(array_layout_north_four_lst_instance, "North")
-    test_one_site(array_layout_south_four_lst_instance, "South")
-    test_one_site(array_layout_north_four_lst_instance, "North", add_geocode=True)
-    test_one_site(
-        array_layout_north_four_lst_instance, "North", asset_code=True, sequence_number=False
-    )
-    test_one_site(
-        array_layout_north_four_lst_instance, "North", asset_code=False, sequence_number=True
-    )
-    test_one_site(
-        array_layout_north_four_lst_instance, "North", asset_code=True, sequence_number=True
-    )
-
-
-def test_altitude_from_corsika_z(
-    array_layout_north_four_lst_instance, array_layout_south_four_lst_instance
-):
-    def test_one_site(instance, telescope_name, result1, result2):
-        instance.add_telescope(
-            telescope_name=telescope_name,
-            crs_name="ground",
-            xx=57.5 * u.m,
-            yy=57.5 * u.m,
-            tel_corsika_z=0 * u.m,
-        )
-
-        assert instance._altitude_from_corsika_z(
-            pos_z=result2 * u.m, altitude=None, telescope_axis_height=16.0 * u.m
-        ).value == pytest.approx(result1)
-        assert instance._altitude_from_corsika_z(
-            pos_z=None, altitude=result1 * u.m, telescope_axis_height=16.0 * u.m
-        ).value == pytest.approx(result2)
-        with pytest.raises(TypeError):
-            instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
-        assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
-
-    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2187.0, 45.0)
-    test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
-
-    converted = array_layout_north_four_lst_instance._altitude_from_corsika_z(
-        altitude=2271.2 * u.m, telescope_axis_height=0.0 * u.m
-    )
-    assert repr(float(converted.value)) == "113.2"
-
-
 def test_calibration_device_uses_zero_axis_height_for_corsika_coordinates(
-    model_version, tmp_test_directory
+    model_version,
+    tmp_test_directory,
+    run_context,
 ):
     utm_file = _write_utm_position_table(tmp_test_directory, "illuminator.ecsv", ["ILLN-01"])
 
     layout = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=utm_file,
@@ -361,6 +256,7 @@ def test_try_set_coordinate(
     array_layout_north_instance,
     array_layout_south_instance,
     tmp_test_directory,
+    run_context,
 ):
     manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
@@ -402,25 +298,7 @@ def test_try_set_coordinate(
     test_one_site(array_layout_south_instance, south_file, manual_xx_south, manual_yy_south)
 
 
-def test_len(model_version, tmp_test_directory):
-    telescope_names = [f"LSTN-{index:02d}" for index in range(1, 14)]
-    telescope_list_file = _write_ground_position_table(
-        tmp_test_directory,
-        "north.ecsv",
-        telescope_names,
-        np.arange(13),
-        np.arange(13),
-    )
-    layout = ArrayLayout(
-        telescope_list_file=telescope_list_file,
-        model_version=model_version,
-        site="North",
-    )
-    assert len(layout) == 13
-    assert layout.get_number_of_telescopes() == 13
-
-
-def test_getitem(model_version, tmp_test_directory):
+def test_getitem(model_version, tmp_test_directory, run_context):
     telescope_list_file = _write_ground_position_table(
         tmp_test_directory,
         "north.ecsv",
@@ -429,6 +307,7 @@ def test_getitem(model_version, tmp_test_directory):
         np.array([0.0]),
     )
     layout = ArrayLayout(
+        context=run_context,
         telescope_list_file=telescope_list_file,
         model_version=model_version,
         site="North",
@@ -440,6 +319,7 @@ def test_getitem(model_version, tmp_test_directory):
 def test_export_telescope_list_table(
     model_version,
     tmp_test_directory,
+    run_context,
 ):
     ground_file = _write_ground_position_table(
         tmp_test_directory,
@@ -454,6 +334,7 @@ def test_export_telescope_list_table(
         ["LSTN-01"],
     )
     layout = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=ground_file,
@@ -467,6 +348,7 @@ def test_export_telescope_list_table(
     assert "sequence_number" not in table.colnames
 
     layout_utm = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=utm_file,
@@ -484,7 +366,7 @@ def test_export_telescope_list_table(
         pytest.fail("IndexError raised")
 
 
-def test_export_one_telescope_as_json(model_version, tmp_test_directory):
+def test_export_one_telescope_as_json(model_version, tmp_test_directory, run_context):
     ground_file = _write_position_json(
         tmp_test_directory,
         "ground.json",
@@ -497,6 +379,7 @@ def test_export_one_telescope_as_json(model_version, tmp_test_directory):
         ["LSTN-01", "LSTN-02"],
     )
     layout = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=ground_file,
@@ -514,6 +397,7 @@ def test_export_one_telescope_as_json(model_version, tmp_test_directory):
     assert mercator_dict["parameter"] == "array_element_position_mercator"
 
     layout_utm = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=utm_file,
@@ -522,7 +406,7 @@ def test_export_one_telescope_as_json(model_version, tmp_test_directory):
         layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
-def test_read_table_from_json_file(model_version, tmp_test_directory):
+def test_read_table_from_json_file(model_version, tmp_test_directory, run_context):
     ground_table_file = _write_position_json(
         tmp_test_directory,
         "ground.json",
@@ -530,6 +414,7 @@ def test_read_table_from_json_file(model_version, tmp_test_directory):
         "MSTN-09",
     )
     layout = ArrayLayout(
+        context=run_context,
         site="North",
         model_version=model_version,
         telescope_list_file=ground_table_file,

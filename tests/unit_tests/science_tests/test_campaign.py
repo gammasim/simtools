@@ -165,7 +165,7 @@ def test_production_requires_explicit_selection_and_preflight(campaign, mocker, 
     with pytest.raises(ValueError, match="--allow_production"):
         campaign_runner.run_release(**campaign, tests=[DERIVE])
 
-    mocker.patch("simtools.science_tests.execution._preview", return_value={})
+    mocker.patch("simtools.science_tests.execution.preview", return_value={})
     execute = mocker.patch.object(campaign_runner, "execute_tests", return_value=[])
     validate = mocker.patch.object(campaign_runner, "validate_context_paths")
     canary = mocker.patch.object(campaign_runner, "run_worker_canary")

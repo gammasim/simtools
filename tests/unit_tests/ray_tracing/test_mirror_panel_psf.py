@@ -9,6 +9,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.ray_tracing.mirror_panel_psf as mpp
+from simtools.context import RunContext
 
 
 def _make_dummy_tel(label="orig", config_dir=None):
@@ -46,6 +47,7 @@ def _make_minimal_instance(
     inst.rnda_opt = None
     inst.per_mirror_results = []
     inst.final_percentage_diff = None
+    inst.context = RunContext.from_arguments({}, resolve_sim_software_executables=False)
     return inst
 
 
@@ -139,7 +141,7 @@ def test_rnda_bounds_clamps_sigma_min_to_positive(monkeypatch):
             }
         }
 
-    monkeypatch.setattr(mpp.names, "model_parameters", _fake_model_parameters)
+    monkeypatch.setattr(mpp.catalog, "model_parameters", _fake_model_parameters)
     bounds = mpp.MirrorPanelPSF._rnda_bounds()
     assert bounds[0][0] == pytest.approx(1e-12)
     assert bounds[1][0] == pytest.approx(0.0)
@@ -187,23 +189,20 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     assert inst.final_percentage_diff == pytest.approx(20.0)
 
 
-def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker, tmp_path):
+def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker, run_context):
     dummy = SimpleNamespace(optimize_single_mirror=MagicMock(return_value={"ok": True}))
     constructor = mocker.patch.object(mpp, "MirrorPanelPSF", return_value=dummy)
-    directory = mocker.patch.object(
-        mpp.io_handler.IOHandler,
-        "get_model_configuration_directory",
-        side_effect=lambda version, sub_dir: tmp_path / sub_dir / version,
-    )
     args = {"site": "North", "model_version": "6.0.0"}
     job = mpp.MirrorOptimizationJob("test", args, 1, 12.25)
 
-    result = mpp._optimize_single_mirror_worker(job)
+    model_directory = run_context.paths.get_model_configuration_directory(
+        "6.0.0", sub_dir="mirror_1"
+    )
+    result = mpp._optimize_single_mirror_worker(job, context=run_context)
 
     # Parallel mirrors must not share configuration files (they hold the trial RNDA).
-    directory.assert_called_once_with("6.0.0", sub_dir="mirror_1")
     constructor.assert_called_once_with(
-        "test", args, model_directory=tmp_path / "mirror_1" / "6.0.0"
+        "test", args, model_directory=model_directory, context=run_context
     )
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}

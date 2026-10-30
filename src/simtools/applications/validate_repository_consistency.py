@@ -45,9 +45,7 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Require metadata and product files to be tracked by Git.",
         ),
     ),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
+    needs=(),
 )
 
 

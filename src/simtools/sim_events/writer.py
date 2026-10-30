@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
-from astropy.table import Table, vstack
+from astropy.table import Table
 
-from simtools.sim_events.formats.registry import get_reader
+from simtools.sim_events.formats.readers import get_reader
 
 
 @dataclass
@@ -106,21 +106,6 @@ class EventDataWriter:
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
-
-    def process_files(self):
-        """
-        Process input files and return tables.
-
-        Returns
-        -------
-        list
-            List of tables containing processed data.
-        """
-        tables_by_name = {name: [] for name in TableSchemas.schemas}
-        for tables in self.iter_table_chunks():
-            for table in tables:
-                tables_by_name[table.meta["EXTNAME"]].append(table)
-        return [vstack(tables_by_name[name]) for name in TableSchemas.schemas]
 
     def iter_table_chunks(self, chunk_size=100_000):
         """Yield bounded table chunks while processing input files."""

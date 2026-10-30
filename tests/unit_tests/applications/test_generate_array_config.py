@@ -27,6 +27,7 @@ def test_main_passes_registered_array_element_list(mocker):
         layout_name=None,
         array_elements=["LSTN-01", "MSTN-01"],
         model_reader=context.model_reader,
+        context=context,
     )
     mock_array_model.return_value.print_telescope_list.assert_called_once()
     mock_array_model.return_value.export_all_simtel_config_files.assert_called_once()

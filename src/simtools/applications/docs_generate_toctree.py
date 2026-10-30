@@ -3,8 +3,8 @@
 r"""Generate Sphinx toctree index files for the simulation model documentation.
 
 Writes an ``index.md`` file with a toctree into each directory of the documentation source
-tree listing its markdown reports, images, and subdirectories. The index of the source root
-includes the production version descriptions (``production_version_descriptions.md``).
+tree listing its markdown reports, images, and subdirectories. An index containing
+``<!-- simtools: keep-index -->`` is preserved so site-owned pages can define their layout.
 Directories for static content, images, data files, and build output are ignored.
 """
 
@@ -27,8 +27,7 @@ _ARGUMENTS = (
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=_ARGUMENTS,
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
+    needs=(),
 )
 
 
