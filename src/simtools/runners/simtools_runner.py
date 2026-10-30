@@ -293,11 +293,12 @@ def _validate_collection_destination_name(destination_name):
 
 def _collect_source_directories(configurations, source_directory=None):
     """Return unique source directories from application configurations."""
-    keys = (
-        ["output_path"]
-        if source_directory is None
-        else ([source_directory] if isinstance(source_directory, str) else list(source_directory))
-    )
+    if source_directory is None:
+        keys = ["output_path"]
+    elif isinstance(source_directory, str):
+        keys = [source_directory]
+    else:
+        keys = list(source_directory)
     source_directories = []
     for config in configurations:
         app_configuration = config.get("configuration", {})
