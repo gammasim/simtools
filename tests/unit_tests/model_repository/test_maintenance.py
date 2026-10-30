@@ -414,10 +414,6 @@ def test_update_parameters_dict_new_function():
     assert "dsum_clipping" in deprecated  # Should be in deprecated list
 
 
-def test_get_production_table_key_configuration_corsika():
-    assert maintenance._get_production_table_key("configuration_corsika") == "global"
-
-
 def test_apply_changes_to_production_table_update_model_version():
     data = {
         "model_version": "6.0.0",

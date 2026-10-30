@@ -13,7 +13,7 @@ from scipy import integrate
 from simtools.context import RunContext
 from simtools.histogram.histogram import Histogram
 from simtools.io import ascii_handler
-from simtools.layout.array_layout_utils import get_array_elements_from_model_repository
+from simtools.layout.array_layout_sources import get_array_elements_from_model_repository
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 

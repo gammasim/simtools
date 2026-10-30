@@ -115,7 +115,7 @@ def test_backend_failure_is_not_treated_as_simulation_failure(optimizer, mocker)
 @pytest.mark.parametrize("fails", [False, True])
 def test_worker_isolates_models_and_paths(optimizer, mocker, fails, run_context):
     output_dir = optimizer.output_dir / "evaluation"
-    args = optimizer.args_dict | {psf.CLEANUP: True, psf.KS_STATISTIC: True}
+    args = optimizer.args_dict | {"cleanup": True, psf.KS_STATISTIC: True}
     job = evaluation._PSFEvaluationJob(args, {}, {}, np.array([1.0]), output_dir)
     telescope, site = object(), object()
     initialize = mocker.patch.object(psf, INITIALIZE_MODELS, return_value=(telescope, site, None))

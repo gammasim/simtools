@@ -117,30 +117,24 @@ def create_msts_different_params_mock_trigger():
     }
 
 
-def setup_mixed_trigger_test(simtel_config_writer, tmp_test_directory, mock_function):
-    """Set up and execute a mixed trigger test scenario."""
+def setup_mixed_trigger_test(
+    simtel_config_writer, tmp_test_directory, lst_trigger, mst_trigger=None
+):
+    """Write the array trigger file for mock LST/MST/SST telescopes and return its lines."""
     telescope_model = create_mock_telescope_model()
-    array_triggers = create_mock_array_triggers()
+    array_triggers = [
+        {"name": "LSTS_array", **lst_trigger},
+        {"name": "MSTS_array", **(mst_trigger or create_mock_array_triggers())},
+        {"name": "SSTS_array", **create_mock_array_triggers()},
+    ]
+    result_file = simtel_config_writer._write_array_triggers_file(
+        array_triggers, tmp_test_directory, telescope_model
+    )
 
-    with mock.patch.object(
-        simtel_config_writer,
-        "_get_array_triggers_for_telescope_type",
-        side_effect=mock_function,
-    ):
-        result_file = simtel_config_writer._write_array_triggers_file(
-            array_triggers, tmp_test_directory, telescope_model
-        )
-
-    # Check file was created
     assert result_file == "array_triggers.dat"
     file_path = tmp_test_directory / result_file
     assert file_path.exists()
-
-    # Read and return content
-    with open(file_path, encoding="utf-8") as f:
-        content = f.read()
-
-    return content.strip().split("\n")
+    return file_path.read_text(encoding="utf-8").strip().split("\n")
 
 
 def create_msts_hardstereo_trigger(multiplicity=2):
@@ -340,15 +334,9 @@ def test_write_camera_file_resolves_explicit_lightguide(
         "camera_trigger_groups": {"value": "groups.ecsv"},
         "camera_trigger_members": {"value": "members.ecsv"},
     }
+    parameters["lightguide_efficiency_vs_incidence_angle"] = {"value": "angle.ecsv"}
     mocker.patch.object(simtel_config_writer, "_camera_table_records", return_value=[])
-
-    def resolve_lightguide(pixel_type, parameter_key, output_key, *_args):
-        pixel_type.pop(parameter_key, None)
-        pixel_type[output_key] = "angle.dat"
-
-    mocker.patch.object(
-        simtel_config_writer, "_resolve_lightguide_file", side_effect=resolve_lightguide
-    )
+    mocker.patch.object(simtel_config_writer, "_write_parameter_table", return_value="angle.dat")
     write_camera = mocker.patch(
         "simtools.simtel.simtel_config_writer.simtel_file_writer.write_camera_file"
     )
@@ -357,13 +345,12 @@ def test_write_camera_file_resolves_explicit_lightguide(
 
     configuration = write_camera.call_args.args[0]
     assert configuration["pixel_types"][0]["lightguide_angle_file"] == "angle.dat"
-    assert simtel_config_writer._resolve_lightguide_file.call_args_list[0] == mocker.call(
-        mocker.ANY,
-        "lightguide_angle_parameter",
-        "lightguide_angle_file",
-        parameters,
+    simtel_config_writer._write_parameter_table.assert_called_once_with(
+        "lightguide_efficiency_vs_incidence_angle",
+        parameters["lightguide_efficiency_vs_incidence_angle"],
         tmp_test_directory,
-        "config",
+        "lightguide_efficiency_vs_incidence_angle-config.dat",
+        require_rows=True,
     )
 
 
@@ -576,29 +563,6 @@ def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel([1, 2, 3]) == "1 2 3"
     assert simtel_config_writer._get_value_string_for_simtel(np.array([1, 2, 3])) == "1 2 3"
     assert simtel_config_writer._get_value_string_for_simtel(5) == 5
-
-
-def test_get_array_triggers_for_telescope_type(simtel_config_writer):
-    array_triggers = [
-        {"name": "LSTN_array", "multiplicity": {"value": 2}, "width": {"value": 10, "unit": "ns"}},
-        {"name": "MSTN_single_telescope", "multiplicity": {"value": 1}},
-    ]
-
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "LSTN", 2)
-    assert result is not None
-    assert result["name"] == "LSTN_array"
-    assert result["multiplicity"]["value"] == 2
-    assert result["width"]["value"] == 10
-    assert result["width"]["unit"] == "ns"
-
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN", 1)
-    assert result["multiplicity"]["value"] == 1
-
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN", 2)
-    assert result is None
-
-    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "SST", 2)
-    assert result is None
 
 
 def test_convert_model_parameters_to_simtel_format(
@@ -1040,15 +1004,8 @@ def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
 
 
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
-
-    # Mock the method to return different values for different telescope types
-    def mock_get_array_triggers(array_triggers, tel_type, num_tels):
-        if tel_type == "LSTS":
-            return create_lsts_mock_trigger()
-        return create_mock_array_triggers()
-
     lines = setup_mixed_trigger_test(
-        simtel_config_writer, tmp_test_directory, mock_get_array_triggers
+        simtel_config_writer, tmp_test_directory, create_lsts_mock_trigger()
     )
 
     # Should have comment line, hardstereo line for LSTs, individual and combined lines
@@ -1065,17 +1022,11 @@ def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_te
 
 def test_write_array_triggers_file_different_parameters(simtel_config_writer, tmp_test_directory):
 
-    # Mock the method to return different values for different telescope types
-    def mock_get_array_triggers(array_triggers, tel_type, num_tels):
-        if tel_type == "LSTS":
-            return create_lsts_mock_trigger()
-        if tel_type == "MSTS":
-            return create_msts_different_params_mock_trigger()
-        # SSTS
-        return create_mock_array_triggers()
-
     lines = setup_mixed_trigger_test(
-        simtel_config_writer, tmp_test_directory, mock_get_array_triggers
+        simtel_config_writer,
+        tmp_test_directory,
+        create_lsts_mock_trigger(),
+        create_msts_different_params_mock_trigger(),
     )
 
     # Should have comment, hardstereo line for LSTs, individual and combined lines
@@ -1100,59 +1051,19 @@ def test_write_array_triggers_file_different_parameters(simtel_config_writer, tm
     assert "Trigger 2 of 3, 4, 5, 6 width 300.0 minsep 25.0" in combined_line  # shortest values
 
 
-def test_build_trigger_line(simtel_config_writer):
-    trigger_dict = {"multiplicity": {"value": 2}}
+def test_trigger_line(simtel_config_writer):
     tel_list = [1, 2, 3]
     width = 120.0 * u.ns
     minsep = 30.0 * u.m
 
-    # Test hardstereo line
-    line = simtel_config_writer._build_trigger_line(
-        trigger_dict, tel_list, width, minsep, hardstereo=True
-    )
-    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo minsep 30.0 m"
-    assert line == expected
+    line = simtel_config_writer._trigger_line(2, tel_list, width, minsep, hardstereo=True)
+    assert line == "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo minsep 30.0 m"
 
-    # Test non-hardstereo line
-    line = simtel_config_writer._build_trigger_line(
-        trigger_dict, tel_list, width, minsep, hardstereo=False
-    )
-    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns minsep 30.0 m"
-    assert line == expected
+    line = simtel_config_writer._trigger_line(2, tel_list, width, minsep, hardstereo=False)
+    assert line == "Trigger 2 of 1, 2, 3 width 120.0 ns minsep 30.0 m"
 
-    # Test line without minsep
-    line = simtel_config_writer._build_trigger_line(
-        trigger_dict, tel_list, width, None, hardstereo=True
-    )
-    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo"
-    assert line == expected
-
-
-def test_get_minimum_minsep(simtel_config_writer):
-    # Test with minsep values - use plain numbers as keys like the actual implementation
-    non_hardstereo_groups = {
-        (300.0, 25.0): [3, 4],
-        (400.0, 30.0): [5, 6],
-    }
-
-    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep == pytest.approx(25.0)  # Test with None values
-    non_hardstereo_groups = {
-        (300.0, None): [3, 4],
-        (400.0, None): [5, 6],
-    }
-
-    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep is None
-
-    # Test with mixed values
-    non_hardstereo_groups = {
-        (300.0, 25.0): [3, 4],
-        (400.0, None): [5, 6],
-    }
-
-    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep == pytest.approx(25.0)
+    line = simtel_config_writer._trigger_line(2, tel_list, width, None, hardstereo=True)
+    assert line == "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo"
 
 
 def _read_pulse_table(path: Path):
@@ -1210,29 +1121,35 @@ def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_d
         )
 
 
-def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
+def test_write_array_triggers_file_without_minsep(simtel_config_writer, tmp_test_directory):
+    def trigger(name, width):
+        return {
+            "name": name,
+            "multiplicity": {"value": 3},
+            "width": {"value": width, "unit": "ns"},
+            "min_separation": {"value": None, "unit": None},
+            "hard_stereo": {"value": False},
+        }
 
-    hardstereo_lines = []
-    non_hardstereo_groups = {
-        (300.0, None): [1, 2],
-        (400.0, None): [3, 4],
-    }
-    all_non_hardstereo_tels = [1, 2, 3, 4]
-    multiplicity = 3
-
-    output = io.StringIO()
-    simtel_config_writer._write_trigger_lines(
-        output, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    array_triggers = [
+        trigger("LSTS_array", 300.0),
+        trigger("MSTS_array", 400.0),
+        trigger("SSTS_array", 400.0),
+    ]
+    telescope_model = dict.fromkeys(
+        ["LSTS-01", "LSTS-02", "MSTS-01", "MSTS-02", "SSTS-01", "SSTS-02"]
+    )
+    simtel_config_writer._write_array_triggers_file(
+        array_triggers, tmp_test_directory, telescope_model
     )
 
-    content = output.getvalue()
-    lines = content.strip().split("\n")
-
-    # Should have individual lines + combined line (no minsep in combined line)
-    assert len(lines) == 3
-    assert TRIGGER_1_2_WIDTH_300_LINE in lines
-    assert TRIGGER_3_4_WIDTH_400_LINE in lines
-    assert TRIGGER_1234_WIDTH_300_LINE in lines  # Min width, no minsep
+    lines = (tmp_test_directory / "array_triggers.dat").read_text(encoding="utf-8").splitlines()
+    assert lines == [
+        "# Array trigger definition",
+        "Trigger 3 of 1, 2 width 300.0",
+        "Trigger 3 of 3, 4, 5, 6 width 400.0",
+        "Trigger 3 of 1, 2, 3, 4, 5, 6 width 300.0",
+    ]
 
 
 def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_test_directory):
