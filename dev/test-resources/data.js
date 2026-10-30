@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793352546688,
+  "lastUpdate": 1793354712962,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -34082,6 +34082,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 473.109375,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "431eeb9ba47c89da3c46d817697043f3becac066",
+          "message": "Validate with jsonschema, one metadata builder, one output validator (W4) (#2730)\n\n* Validate with jsonschema, one metadata builder, one run-output validator, leaner ModelParameter\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Add news fragment\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Mirror test file names to the merged metadata and validator modules\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Resolve override design model with the model's collection; test schema errors without patches\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* CI: use the renamed metadata test files\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Reduce cognitive complexity (SonarQube S3776)\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Migrate the PSF optimiser to overwrite_model_parameter\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T10:54:01+01:00",
+          "tree_id": "80354abffcf1698afef866e814228cfea57b8ca7",
+          "url": "https://github.com/gammasim/simtools/commit/431eeb9ba47c89da3c46d817697043f3becac066"
+        },
+        "date": 1793354698725,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 66.685821233,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 68.53,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 469.51171875,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
