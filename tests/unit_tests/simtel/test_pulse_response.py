@@ -34,17 +34,36 @@ def pulse_model():
         "transit_time_jitter": 0,
     }
     model.get_parameter_value.side_effect = parameters.__getitem__
-    linear = Table({"time": [0.0, 1.0, 2.0, 3.0, 4.0], AMPLITUDE: [0.0, 0.0, 1.0, 0.0, 0.0]})
-    nonlinear = Table(
-        {
-            INTENSITY: np.repeat([10.0, 20.0], 5),
-            "time": np.tile([0.0, 1.0, 2.0, 3.0, 4.0], 2),
-            AMPLITUDE: [0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 5.0, 15.0, 5.0, 0.0],
-        }
-    )
-    model.get_parameter_table.side_effect = lambda name: (
-        linear if name == "fadc_pulse_shape" else nonlinear
-    )
+    rows = []
+    for gain in pulse_response.GAINS:
+        rows.extend(
+            {
+                "template_kind": "reference",
+                "gain": gain,
+                INTENSITY: 1.0,
+                "time": time,
+                AMPLITUDE: amplitude,
+            }
+            for time, amplitude in zip(
+                [0.0, 1.0, 2.0, 3.0, 4.0], [0.0, 0.0, 1.0, 0.0, 0.0], strict=True
+            )
+        )
+        for intensity, amplitudes in (
+            (10.0, [0.0, 0.0, 10.0, 0.0, 0.0]),
+            (20.0, [0.0, 5.0, 15.0, 5.0, 0.0]),
+        ):
+            rows.extend(
+                {
+                    "template_kind": "response",
+                    "gain": gain,
+                    INTENSITY: intensity,
+                    "time": time,
+                    AMPLITUDE: amplitude,
+                }
+                for time, amplitude in zip([0.0, 1.0, 2.0, 3.0, 4.0], amplitudes, strict=True)
+            )
+    unified = Table(rows=rows)
+    model.get_parameter_table.return_value = unified
     return model
 
 
@@ -57,10 +76,47 @@ def test_template_scaling_interpolation_and_holding(pulse_model):
     assert len(waves) == 20
 
 
+def test_template_response_scan_requires_unified_parameter(pulse_model):
+    pulse_model.get_parameter_table.return_value = Table({"time": [0, 1], AMPLITUDE: [0, 1]})
+    with pytest.raises(ValueError, match="requires unified"):
+        pulse_response.template_responses(pulse_model, [1])
+
+
 def test_template_clipping(pulse_model):
     table, _ = pulse_response.template_responses(pulse_model, [100])
     linear = table[(table["gain"] == "HG") & (table[RESPONSE] == "linear_clipped")]
     assert linear[PEAK][0] == pytest.approx(90)
+
+
+def test_template_responses_reads_unified_reference_and_gain_templates(pulse_model):
+    rows = []
+    for gain in ("HG", "LG"):
+        rows.extend(
+            {
+                "template_kind": "reference",
+                "gain": gain,
+                INTENSITY: 1.0,
+                "time": time,
+                AMPLITUDE: amplitude,
+            }
+            for time, amplitude in zip([0, 1, 2, 3, 4], [0, 0, 1, 0, 0], strict=True)
+        )
+        for intensity, pulse in ((10, [0, 0, 10, 0, 0]), (20, [0, 0, 20, 0, 0])):
+            rows.extend(
+                {
+                    "template_kind": "response",
+                    "gain": gain,
+                    INTENSITY: intensity,
+                    "time": time,
+                    AMPLITUDE: amplitude,
+                }
+                for time, amplitude in zip([0, 1, 2, 3, 4], pulse, strict=True)
+            )
+    unified = Table(rows=rows)
+    pulse_model.get_parameter_table.side_effect = lambda _name: unified
+    table, _ = pulse_response.template_responses(pulse_model, [10])
+    assert table[table["response"] == "nonlinear"][PEAK].tolist() == pytest.approx([20, 10])
+    assert pulse_model.get_parameter_table.call_args_list[0].args == ("fadc_pulse_shape",)
 
 
 def test_invalid_intensities(pulse_model):

@@ -14,7 +14,6 @@ from simtools.simtel.simtel_io_metadata import (
 )
 from simtools.visualization.plot_pulse_response import plot_response
 
-LOW_GAIN_AMPLITUDE = "amplitude_low_gain"
 PEAK_TIME = "peak_time_ns"
 RESPONSE = "response"
 PIXEL = "pixel"
@@ -38,6 +37,9 @@ PEAK = "peak_adc"
 WIDTH = "width_ns"
 WIDTH_FRACTION = "width_fraction"
 THRESHOLD_ADC = "threshold_adc"
+TEMPLATE_KIND = "template_kind"
+GAIN = "gain"
+REFERENCE = "reference"
 
 
 def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=None):
@@ -62,11 +64,13 @@ def template_responses(model, illuminations, width_fraction=0.95, threshold_adc=
         of the simulator's internal rpolator resampling or stochastic digitization.
     """
     levels = _positive_levels(illuminations)
-    linear = model.get_parameter_table("fadc_pulse_shape")
+    unified = model.get_parameter_table("fadc_pulse_shape")
+    if TEMPLATE_KIND not in unified.colnames:
+        raise ValueError("Pulse response scan requires unified fadc_pulse_shape templates")
     rows, waves = [], []
     for gain_index, gain in enumerate(GAINS):
         time, single, nonlinear, scale, pedestal, ceiling = _gain_response(
-            model, linear, gain_index
+            model, unified, gain_index
         )
         dt = float(time[1] - time[0])
         for level in levels:
@@ -102,26 +106,33 @@ def _time_ns(table):
     return np.asarray(u.Quantity(column, unit=column.unit or u.ns).to_value(u.ns))
 
 
-def _gain_response(model, linear, gain_index):
+def _gain_response(model, unified, gain_index):
     """Build one gain's uniformly sampled linear reference and ADC conversion."""
-    gain = GAINS[gain_index].lower()
-    nonlinear = model.get_parameter_table(f"{FADC_PREFIX}{gain}_pulse_shape")
+    nonlinear = unified[
+        (np.asarray(unified[TEMPLATE_KIND]) == "response")
+        & (np.asarray(unified[GAIN]) == GAINS[gain_index])
+    ]
+    reference = unified[
+        (np.asarray(unified[TEMPLATE_KIND]) == REFERENCE)
+        & (np.asarray(unified[GAIN]) == GAINS[gain_index])
+    ]
+    if len(reference) == 0 or len(nonlinear) == 0:
+        raise ValueError(f"Unified FADC table is missing {GAINS[gain_index]} templates")
+    if not np.all(np.asarray(reference[TABLE_INTENSITY], dtype=float) == 1):
+        raise ValueError("Unified FADC reference rows must have intensity 1")
     frequency = _scalar(model, "fadc_mhz")
     jitter = _scalar(model, "transit_time_jitter")
     if frequency <= 0 or jitter < 0:
         raise ValueError("Sampling frequency must be positive and jitter non-negative")
     dt = 1000 / frequency
-    raw_time = _time_ns(linear)
+    raw_time = _time_ns(reference)
     time_nl = _time_ns(nonlinear)
     start = min(raw_time.min(), time_nl.min()) - 5 * jitter
     stop = max(raw_time.max(), time_nl.max()) + 5 * jitter
     time = np.arange(start, stop + 0.5 * dt, dt)
     fine_dt = min(dt, 0.1)
     fine_time = np.arange(start, stop + fine_dt, fine_dt)
-    column = AMPLITUDE
-    if gain_index and LOW_GAIN_AMPLITUDE in linear.colnames:
-        column = LOW_GAIN_AMPLITUDE
-    raw = np.asarray(linear[column], dtype=float).copy()
+    raw = np.asarray(reference[AMPLITUDE], dtype=float).copy()
     raw[raw_time < 0] = 0
     if not np.all(np.isfinite(raw)) or raw.max() <= 0:
         raise ValueError("Linear pulse must have a finite positive peak")

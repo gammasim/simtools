@@ -75,8 +75,8 @@ applications:
     <<: *scan
     label: linear
     output_path: __OUTPUT__/linear_simulation
-    overwrite_model_parameters: '{"LSTN-01": {"fadc_hg_pulse_shape": null, "fadc_lg_pulse_shape":
-      null, "fadc_bins": 120, "fadc_sum_bins": 100}}'
+    overwrite_model_parameters: '{"LSTN-01": {"fadc_pulse_shape": {"value": null, "version":
+      "2.0.0"}, "fadc_bins": 120, "fadc_sum_bins": 100}}'
   test_name: linear_control
 - application: simtools-analyze-flasher-response
   configuration:

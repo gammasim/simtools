@@ -461,23 +461,37 @@ def test_validate_table_asset_rejects_missing_required_metadata():
         )
 
 
-@pytest.mark.parametrize("parameter", ["fadc_hg_pulse_shape", "fadc_lg_pulse_shape"])
-def test_saturation_template_schema_requires_intensity_of_at_least_one_pe(parameter):
-    """Templates below 1 p.e. are rejected, as sim_telarray does."""
-    entry = schema.get_model_parameter_schema(parameter)["data"][0]
-    table = QTable(
-        {
-            "intensity": [0.5, 0.5, 0.5],
-            "time": [-1.0, 0.0, 1.0] * u.ns,
-            "amplitude": [0.0, 0.5, 0.0],
-        }
-    )
+def test_unified_fadc_schema_rejects_missing_reference_gain():
+    entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
+    rows = []
+    for gain in ("HG", "LG"):
+        for time, amplitude in ((0.0, 0.0), (1.0, 1.0)):
+            rows.append(
+                {
+                    "template_kind": "reference",
+                    "gain": gain,
+                    "intensity": 1.0,
+                    "time": time,
+                    "amplitude": amplitude,
+                }
+            )
+        for intensity in (10.0, 20.0):
+            for time, amplitude in ((0.0, 0.0), (1.0, intensity)):
+                rows.append(
+                    {
+                        "template_kind": "response",
+                        "gain": gain,
+                        "intensity": intensity,
+                        "time": time,
+                        "amplitude": amplitude,
+                    }
+                )
+    table = QTable(rows=rows)
+    table["time"].unit = u.ns
     for name in table.colnames:
         table[name].info.description = name
-
-    with pytest.raises(ValueError, match=r"'intensity' violates allowed_range\.min"):
-        validate_table_asset(table, schema_entry=entry)
-
-    table["intensity"] = [1.0, 1.0, 1.0]
-    table["intensity"].info.description = "intensity"
     validate_table_asset(table, schema_entry=entry)
+
+    malformed = table[~((table["template_kind"] == "reference") & (table["gain"] == "LG"))]
+    with pytest.raises(ValueError, match="LG reference rows must have intensity 1"):
+        validate_table_asset(malformed, schema_entry=entry)

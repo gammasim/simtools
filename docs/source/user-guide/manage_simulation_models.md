@@ -34,24 +34,27 @@ manage_simulation_models/model_import.md
 
 ## Intensity-dependent readout pulse templates
 
-`fadc_hg_pulse_shape` and `fadc_lg_pulse_shape` are optional, independent ECSV
-model parameters describing the pixel response to a narrow light flash as a
-function of intensity. Keep `fadc_pulse_shape` for the linear
-single-photoelectron response. The existing table exporter writes three columns,
-ordered by intensity and time: `intensity` (fluctuated p.e. sum at nominal gain,
-at least 1 p.e.), `time` (ns relative to the photoelectron arrival including
-transit delay, the same origin as `fadc_pulse_shape`), and `amplitude`
-(complete baseline-subtracted waveform relative to the nominal
-single-photoelectron peak of that gain). Amplitudes include the intensity
-response; the exporter preserves their scale. A complete shared time grid is
-required and validated before serialization.
+The `fadc_pulse_shape` parameter stores both the linear reference pulses and
+optional intensity-dependent HG/LG responses. Existing versions with columns
+`time`, `amplitude`, and optional `amplitude_low_gain` remain valid. Schema
+0.4.0 uses long-form rows with `template_kind` (`reference` or `response`),
+`gain` (`HG` or `LG`), `intensity`, `time` (ns), and `amplitude`. Reference rows
+have intensity 1 and contain the original unsmeared single-photoelectron
+pulse. Response rows contain complete baseline-subtracted waveforms relative
+to the nominal single-photoelectron peak. Each gain can use its own intensity
+grid; each gain's response templates share a time grid, and the two reference
+pulses share a time grid. simtools exports the reference to the linear pulse
+input and writes one response file per gain. It passes the response files with
+the `fadc_hg_response_table` and `fadc_lg_response_table` simulator keys; these
+keys describe simulator inputs, not model parameters.
 
-Templates include the `transit_time_jitter`, which sim_telarray does not apply
-again to pixels using them. The lowest template should therefore equal its
-intensity times the peak-normalized `fadc_pulse_shape` of the same telescope,
-smeared with `transit_time_jitter`; sim_telarray warns if peak, area, or peak
-time differ, since that would produce a step where pixels switch to the table.
-Telescopes with their own `fadc_pulse_shape` therefore need their own templates.
+Response templates include `transit_time_jitter`, which sim_telarray does not
+apply again to pixels using them. The reference pulse remains unsmeared in the
+model and is used for the linear response; the simulator applies transit-time
+jitter to individual photoelectrons on that path. The lowest response template
+should equal its intensity times the peak-normalized reference smeared with
+`transit_time_jitter`. Telescopes with their own reference pulse therefore need
+their own response templates.
 
 Each signal photoelectron contributes the interpolated template, divided by its
 intensity and weighted with the photoelectron amplitude, at its own arrival
@@ -62,8 +65,7 @@ narrow illumination this is the pixel intensity; spread-out signals saturate
 less. Pixel gain variations shift the intensity at which a template is selected
 rather than scaling the saturated amplitude.
 
-The generated detector keys are `FADC_HG_PULSE_SHAPE` and
-`FADC_LG_PULSE_SHAPE`. sim_telarray retains linear pulses at or below the lowest
+sim_telarray retains linear pulses at or below the lowest
 effective intensity, interpolates linearly between templates (warning if this
 produces double-peaked pulses, in which case a denser intensity grid is needed),
 and holds the last waveform above the largest intensity (with a warning). It
