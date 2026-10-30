@@ -3,6 +3,568 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsDataAndModelParameters'
 title: SimPipe Data and Model Parameter Metaschema
 description: YAML representation of data and model parameter metaschema
+schema_version: 0.2.0
+schema_name: model_parameter_and_data_schema.metaschema
+type: object
+
+
+definitions:
+  SimtoolsDataAndModelParameters:
+    type: object
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+        description: "title for schema file"
+      schema_version:
+        type: string
+        description: "version of this schema file (semver)"
+      meta_schema:
+        type: string
+        description: "name of meta schema (e.g. simpipe-schema)"
+      meta_schema_url:
+        type: string
+        format: uri
+        description: "url to meta schema definition"
+      meta_schema_version:
+        type: string
+        description: "version of meta schema applied to this file (semver)"
+      deprecated:
+        type: boolean
+        description: "indicates if this parameter is deprecated"
+      deprecation_note:
+        type: string
+        description: "notes about deprecation"
+      name:
+        type: string
+        description: "name of model parameter"
+      surface:
+        type: string
+        enum:
+          - primary
+          - secondary
+        description: "Optical surface represented by a mirror parameter"
+      developer_note:
+        type: string
+        description: "notes for developers"
+      short_description:
+        type: string
+        description: "short description of model parameter"
+      description:
+        type: string
+        description: "description of model parameter"
+      instrument:
+        $ref: '#/definitions/Instrument'
+        description: "associated instruments and sites"
+      data:
+        $ref: '#/definitions/DataUnion'
+      activity:
+        $ref: '#/definitions/Activity'
+      source:
+        type: array
+        items:
+          $ref: '#/definitions/Source'
+      simulation_software:
+        description: |-
+          "name of simulation software"
+        type: array
+        items:
+          $ref: '#/definitions/SimulationSoftware'
+      plot_configuration:
+        type: array
+        items:
+          $ref: 'plot_configuration.metaschema.yml#/definitions/plot'
+        description: "List of plotting configurations"
+    required:
+      - schema_version
+      - meta_schema
+      - meta_schema_version
+      - name
+      - data
+      - description
+    title: SimulationModelParameters
+  Activity:
+    type: object
+    additionalProperties: false
+    properties:
+      setting:
+        type: array
+        items:
+          $ref: '#/definitions/Setting'
+        description: "setting workflows"
+      validation:
+        type: array
+        items:
+          $ref: '#/definitions/Validation'
+        description: "validation workflows"
+    required:
+      - setting
+      - validation
+    title: Activity
+  Datum:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: |-
+          "use numpy basic types where possible
+          (https://numpy.org/doc/stable/user/basics.types.html).
+          Use `file` if the parameter describes a file name.
+          Use `data_table` if the parameter describes a data table
+          (requires TABLE_COLUMNS description)"
+      json_schema:
+        $ref: "http://json-schema.org/draft-06/schema#"
+        description: |-
+          "json schema describing the parameter"
+        additionalProperties: true
+      unit:
+        $ref: '#/definitions/Unit'
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+      allowed_values:
+        type: array
+      default:
+        type:
+          - number
+          - string
+          - boolean
+          - "null"
+      table_columns:
+        type: array
+        items:
+          $ref: '#/definitions/TableColumn'
+      table_metadata:
+        type: array
+        items:
+          $ref: '#/definitions/TableMetadata'
+      allow_extra_columns:
+        type: boolean
+        description: "allow format-dependent optional columns beyond table_columns"
+      required:
+        type: boolean
+      condition:
+        type: string
+      description:
+        type: string
+      developer_note:
+        type: string
+    required:
+      - type
+    title: Datum
+  DataClass:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: "parameter type"
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+      required:
+        type: boolean
+        description: "required or optional parameter"
+      default:
+        type:
+          - number
+          - string
+          - boolean
+        description: "default value"
+      unit:
+        $ref: '#/definitions/Unit'
+        description: |-
+          "parameter unit
+          (using astropy names wherever possible)"
+    required:
+      - type
+      - unit
+    title: DataClass
+  ValueRange:
+    type: object
+    additionalProperties: false
+    properties:
+      min:
+        type: number
+      max:
+        type: number
+    title: ValueRange
+  TableColumn:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: "column name"
+      description:
+        type: string
+        description: "column description"
+      developer_note:
+        type: string
+        description: "notes for developers"
+      required:
+        type: boolean
+        description: "required or optional data column"
+      default:
+        type:
+          - number
+          - string
+          - boolean
+        description: "default value"
+      condition:
+        type: string
+        description: "condition to change this column to a required data column"
+      unit:
+        type: string
+        description: "column unit"
+      type:
+        $ref: '#/definitions/TableColumnType'
+        description: "column data type"
+      allowed_range:
+        $ref: '#/definitions/ValueRange'
+        description: "allowed range of values in data column"
+      allowed_values:
+        type: array
+        description: "list of allowed values in data column"
+      required_range:
+        $ref: '#/definitions/ValueRange'
+        description: "required range of values in data column"
+      column_type:
+        type: string
+        enum:
+          - independent
+          - dependent
+        description: |-
+          "column type to allow several dependent columns in 3D
+          tables"
+      input_processing:
+        type: array
+        description: |
+          "input data processing steps applied to data columns"
+        items:
+          type: string
+          enum:
+            - remove_duplicates
+            - sort
+            - allow_nan
+      table_columns:
+        type: array
+        items:
+          $ref: '#/definitions/TableColumn'
+      file_info_key:
+        type: string
+        description: "key in event-file metadata used to populate this table column"
+    required:
+      - description
+      - name
+      - type
+    title: TableColumn
+  TableMetadata:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: "table metadata key"
+      description:
+        type: string
+        description: "table metadata description"
+      required:
+        type: boolean
+        description: "whether the metadata key is required"
+      type:
+        type: string
+        enum:
+          - string
+          - number
+          - boolean
+          - array
+          - object
+          - "null"
+        description: "JSON-compatible metadata value type"
+      allowed_values:
+        type: array
+        description: "permitted metadata values"
+    required:
+      - description
+      - name
+      - type
+    title: TableMetadata
+  Instrument:
+    type: object
+    additionalProperties: false
+    properties:
+      class:
+        type: string
+        description: "instrument class"
+        enum:
+          - Calibration
+          - Camera
+          - Site
+          - Structure
+          - Telescope
+          - configuration_sim_telarray
+          - configuration_corsika
+    required:
+      - class
+    title: Instrument
+  InstrumentTypeElement:
+    type:
+      - string
+      - "null"
+    description: "specific type of instrument"
+    enum:
+      - Atmosphere
+      - Observatory
+      - None
+      - null
+    title: InstrumentTypeElement
+  SimulationSoftware:
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        $ref: '#/definitions/SimulationSoftwareName'
+      version:
+        type: string
+        description: |-
+          "version of simulation software this parameter is used"
+      format:
+        anyOf:
+          - type: string
+            enum:
+              - scalar
+              - list
+              - bool_flag
+          - type: string
+            pattern: '^(quantity:.+|converter:[a-z][a-z0-9_]*)$'
+        description: Software-specific value formatting contract.
+      internal_parameter_name:
+        type: string
+        description: |-
+          "Naming of parameter as used this simulation software"
+      meta_parameter_mode:
+        type: string
+        enum:
+          - add
+          - set
+        description: |-
+          meta parameter serialization mode
+      table_format:
+        type: string
+        description: sim_telarray table serialization format
+      set_meta_parameter:
+        type: boolean
+        description: |-
+          "Add this parameter as sim_telarray meta parameter using option 'set'"
+      output_value_schema:
+        $ref: '#/definitions/SimulationSoftwareOutputValueSchema'
+        description: |-
+          "Optional emitted-value schema for software-specific serialized output"
+      serialization:
+        $ref: '#/definitions/SerializationContract'
+        description: "Declared serialization contract for table-valued parameters"
+    required:
+      - name
+    title: SimulationSoftware
+  SimulationSoftwareOutputValueSchema:
+    type: object
+    additionalProperties: false
+    properties:
+      kind:
+        type: string
+        enum:
+          - scalar
+          - file_name
+          - fixed_numeric_tuple
+          - sim_telarray_key_value_string
+      data_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+          - boolean
+      item_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+      length:
+        type: integer
+        minimum: 1
+      regex:
+        type: string
+      allow_empty:
+        type: boolean
+      allow_none_literal:
+        type: boolean
+    required:
+      - kind
+    title: SimulationSoftwareOutputValueSchema
+  SerializationContract:
+    type: object
+    additionalProperties: false
+    properties:
+      columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      optional_columns:
+        type: array
+        items:
+          type: string
+      allowed_columns:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      row_sort_keys:
+        type: array
+        items:
+          type: string
+      sort_keys:
+        type: array
+        items:
+          type: string
+      matrix_axes:
+        type: array
+        items:
+          type: string
+        minItems: 2
+        maxItems: 2
+      value_column:
+        type: string
+      missing_value:
+        type: number
+      incomplete_grid_policy:
+        type: string
+        enum: [opaque]
+        description: Policy for incomplete matrix exports.
+      float_format:
+        type: string
+      write_comments:
+        type: boolean
+      units:
+        type: object
+        additionalProperties:
+          type: string
+      description:
+        type: string
+    required:
+      - columns
+    title: SerializationContract
+  DataUnion:
+    anyOf:
+      - type: array
+        items:
+          $ref: '#/definitions/Datum'
+      - $ref: '#/definitions/DataClass'
+    title: DataUnion
+  Setting:
+    type:
+      - string
+      - "null"
+    description: "list of setting workflows"
+    enum:
+      - SetArrayElementCoordinates
+      - SetEffectiveFocalLength
+      - SetGeomagneticField
+      - SetLightGuideEfficiency
+      - SetMirrorPanelAlignment
+      - SetMirrorPanelRandomReflection
+      - SetNightSkyBackgroundRate
+      - SetParameterFromExternal
+      - SetPhotonDelay
+      - SetReadoutPulseShape
+      - SetSinglePhotoElectronResponse
+      - SetTelescopeEfficiency
+      - SetTelescopeFiducialSphere
+      - SetTelescopeShadowingParameters
+      - SetTriggerThresholdsFromRateScan
+      - null
+    title: Setting
+  Validation:
+    type:
+      - string
+      - "null"
+    description: "list of validation workflows"
+    enum:
+      - ValidateArrayElementCoordinates
+      - ValidateAtmosphericModel
+      - ValidateCameraChargeResponse
+      - ValidateCameraEfficiency
+      - ValidateCameraGainsAndEfficiency
+      - ValidateCameraGeometry
+      - ValidateCameraLinearity
+      - ValidateCameraPlateScale
+      - ValidateCameraTimeResponse
+      - ValidateMirrorPanelParameters
+      - ValidateNightSkyBackgroundMeasurement
+      - ValidateOpticalPSF
+      - ValidateParameterByExpert
+      - ValidatePedestalEvents
+      - ValidatePixelStatus
+      - ValidateReadout
+      - ValidateSinglePhotoElectronResponse
+      - ValidateTelescopeEfficiency
+      - ValidateTelescopeShadowing
+      - ValidateTelescopeSimulationModel
+      - ValidateTelescopeStructure
+      - ValidateTriggerPerformance
+      - ValidationWorkflowMissing
+      - null
+  TableColumnType:
+    type: string
+    enum:
+      - boolean
+      - data_table
+      - dict
+      - double
+      - float64
+      - int
+      - int64
+      - string
+      - uint
+      - uint64
+      - file
+    title: TableColumnType
+  Unit:
+    type: string
+    description: |-
+      "Unit correspond to astropy unit names"
+    format: astropy_unit
+    title: Unit
+  SimulationSoftwareName:
+    type: string
+    description: |-
+      "Names of simulation software"
+    enum:
+      - sim_telarray
+      - corsika
+      - simtools
+      - obdeect
+    title: Name
+  Source:
+    type: string
+    description: "origin of data / how it is obtained"
+    enum:
+      - Initial instrument setup
+      - Calibration
+      - External
+      - Observation execution
+      - SimPipe Derived
+      - Configuration
+    title: Source
+
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimtoolsDataAndModelParameters'
+title: SimPipe Data and Model Parameter Metaschema
+description: YAML representation of data and model parameter metaschema
 schema_version: 0.1.0
 schema_name: model_parameter_and_data_schema.metaschema
 type: object
