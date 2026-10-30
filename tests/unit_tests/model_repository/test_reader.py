@@ -349,3 +349,22 @@ def test_reader_simtel_scope_lookup_supports_fallback_and_wraps_errors(mocker, r
     with pytest.raises(KeyError, match="Failed to generate array element list"):
         reader._get_sim_telarray_array_element_list(None, {})
     scopes.assert_called_once()
+
+
+def test_reader_facade_delegates_git_source_and_optional_source_config(mocker):
+    """Git construction and source metadata are exposed by the facade."""
+    git_storage = Mock(name="storage", name_attr="models@commit")
+    git_storage.name = "models@commit"
+    git_storage.config = {"type": "git"}
+    git_storage_class = mocker.patch(
+        "simtools.model_repository.reader.GitStorage", return_value=git_storage
+    )
+
+    reader = SimulationModelReader.from_git("models.git", "abc", object_store="store")
+
+    git_storage_class.assert_called_once_with("models.git", "abc", object_store="store")
+    assert reader.source_name == "models@commit"
+    assert reader.source_config == {"type": "git"}
+
+    source_without_config = Mock(spec=["source_name", "is_configured"])
+    assert SimulationModelReader(source_without_config).source_config is None
