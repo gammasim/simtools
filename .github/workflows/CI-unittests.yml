@@ -106,6 +106,9 @@ jobs:
           - os: ubuntu-24.04
             python-version: "3.14"
             extra-args: ["random-order"]
+          - os: ubuntu-24.04
+            python-version: "3.15"
+            extra-args: []
 
     defaults:
       run:
