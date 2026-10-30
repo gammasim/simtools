@@ -4,7 +4,7 @@
 
 The nominal geometry comes from the model parameters, without random alignment
 errors. With ``--shadowing``, the telescope structure is coloured by the light each
-element stops on its own; this needs the optional obdeect package.
+element stops on its own; this needs the obdeect package.
 """
 
 from pathlib import Path

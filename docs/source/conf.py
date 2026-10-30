@@ -18,12 +18,13 @@ path[:0] = [
     str(Path(p).resolve())
     for p in [
         "../../src",
-        "../../src/simtools",
         "../../src/simtools/applications",
         "../..",
         "./_ext",
     ]
 ]
+# Keep legacy short API module paths available after the standard library paths.
+path.append(str(Path("../../src/simtools").resolve()))
 
 simtools_version = import_module("simtools.version")
 
@@ -98,8 +99,6 @@ nitpicky = True
 # targets, so keep type information in the source API while omitting it from
 # generated signatures.
 autodoc_typehints = "none"
-# Optional ray-tracing backend; documented without installing it.
-autodoc_mock_imports = ["obdeect"]
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.core.Unit"),

@@ -3,7 +3,7 @@
 The geometry is read from the model parameters with the nominal positions, that is
 without the random alignment errors of a particular instrument. Only simtools is
 needed. With ``shadowing``, the structure is coloured by the light each element stops
-on its own; that needs the optional obdeect package.
+on its own; that needs the obdeect package.
 """
 
 import numpy as np
