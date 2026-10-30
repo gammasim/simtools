@@ -12,9 +12,6 @@ This section outlines how to contribute effectively to the `simtools` project.
 - [Documentation](documentation.md): Contributing to user and developer documentation.
 - [Simulation formats](simulation_formats.md): Add configuration writers and result readers.
 - [Ray-tracing backend](extending/ray-tracing-backend.md): Add a ray-tracing backend.
-- [Shower simulator](extending/add-shower-simulator.md): Add a shower simulation stage.
-- [Telescope simulator](extending/add-telescope-simulator.md): Add a telescope simulation stage.
-- [CORSIKA parameter](extending/add-corsika-parameter.md): Declare a CORSIKA input parameter.
 - [Testing](testing.md): Unit, integration, and science tests.
 
 ## Automatic Processes
@@ -48,9 +45,6 @@ documentation.md
 testing.md
 simulation_formats.md
 extending/ray-tracing-backend.md
-extending/add-shower-simulator.md
-extending/add-telescope-simulator.md
-extending/add-corsika-parameter.md
 continuous_integration.md
 simtools_build_images.md
 dependency_versions.md
