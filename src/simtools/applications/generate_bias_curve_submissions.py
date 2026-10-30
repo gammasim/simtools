@@ -61,13 +61,14 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    parameter_scans.generate_scan_grids(app_context.args, app_context.io_handler)
+    parameter_scans.generate_scan_grids(app_context.args, app_context.paths, context=app_context)
 
 
 if __name__ == "__main__":

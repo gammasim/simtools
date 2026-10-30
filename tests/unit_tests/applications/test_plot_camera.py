@@ -61,7 +61,7 @@ def test_main_selects_plot_path(patch_ids, pixel, expected, mocker):
             "trigger_pixel": pixel,
         },
         model_reader=MagicMock(),
-        context=MagicMock(),
+        paths=MagicMock(),
         logger=MagicMock(),
     )
     mocker.patch.object(plot_camera, "APPLICATION").start.return_value = app_context

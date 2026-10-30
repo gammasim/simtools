@@ -11,20 +11,17 @@ import struct
 import tarfile
 import urllib.error
 import zlib
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from itertools import chain
 from pathlib import Path
-from types import MappingProxyType
+from types import SimpleNamespace
 from unittest import mock
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import matplotlib.pyplot as plt
 import pytest
 from astropy import units as u
-from dotenv import load_dotenv
 
-import simtools.io.io_handler
-from simtools import settings
 from simtools.configuration.arguments import (
     OUTPUT_PATH_ARGUMENTS,
     OVERWRITE_MODEL_PARAMETERS,
@@ -33,14 +30,13 @@ from simtools.configuration.arguments import (
     TELESCOPE,
 )
 from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.context import RunContext
+from simtools.context import RunContext, SimulationSoftware
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io.output_paths import OutputPaths
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_stage import CorsikaStage
-from tests.unit_tests.builders import model_repository
 
 logger = logging.getLogger()
 _REPO_ROOT = Path(__file__).parent.parent.parent
@@ -106,24 +102,6 @@ def command_runner(mocker):
 
 
 @pytest.fixture(autouse=True)
-def simtools_settings(tmp_test_directory):
-    """Load simtools settings for the test session."""
-    load_dotenv(".env")
-    settings.config.load()
-
-
-@pytest.fixture
-def runtime_args(monkeypatch):
-    """Return a function that sets the arguments of the application run context."""
-
-    def set_args(args):
-        context = settings.config.context.replace(args=MappingProxyType(args))
-        monkeypatch.setattr(settings.config, "_context", context)
-
-    return set_args
-
-
-@pytest.fixture(autouse=True)
 def mock_simulator_paths(request, tmp_test_directory):
     """Mock sim_telarray and corsika paths for unit tests.
 
@@ -159,14 +137,7 @@ def mock_simulator_paths(request, tmp_test_directory):
         "corsika_interaction_table_path": interaction_table_dir,
     }
 
-    # Apply patches for all properties
-    with ExitStack() as stack:
-        for prop_name, return_value in mock_paths.items():
-            mock_obj = stack.enter_context(
-                mock.patch.object(type(settings.config), prop_name, new_callable=PropertyMock)
-            )
-            mock_obj.return_value = return_value
-        yield
+    yield mock_paths
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -264,44 +235,59 @@ def data_path():
     return "./data/"
 
 
-@pytest.fixture(autouse=True)
-def io_handler(tmp_test_directory, data_path, test_resources_path):
-    """Define io_handler fixture including output and model directories."""
-    tmp_io_handler = simtools.io.io_handler.IOHandler()
-    tmp_io_handler.test_resources_path = test_resources_path
-    tmp_io_handler.set_paths(
-        output_path=str(tmp_test_directory) + "/output",
-        model_path=str(tmp_test_directory) + "/model",
-    )
-    return tmp_io_handler
-
-
 @pytest.fixture
-def run_context(tmp_test_directory):
+def run_context(tmp_test_directory, mock_model_reader):
     """Return an explicit run context backed by generated model data."""
-    return RunContext.from_arguments(
+    mock_model_reader.source_config = None
+    for name in ("output", "model", "corsika", "corsika-tables", "sim_telarray"):
+        (Path(tmp_test_directory) / name).mkdir(exist_ok=True)
+    sim_telarray_bin = Path(tmp_test_directory) / "sim_telarray" / "bin"
+    sim_telarray_bin.mkdir(exist_ok=True)
+    sim_telarray_executable = sim_telarray_bin / "sim_telarray"
+    sim_telarray_executable.touch()
+    sim_telarray_executable.chmod(0o755)
+    context = RunContext.from_arguments(
         {},
-        model_reader=model_repository.model_reader(),
+        model_reader=mock_model_reader,
         resolve_sim_software_executables=False,
         paths=OutputPaths(
             output_path=Path(tmp_test_directory) / "output",
             model_path=Path(tmp_test_directory) / "model",
         ),
     )
+    return context.replace(
+        software=SimulationSoftware(
+            corsika_root=Path(tmp_test_directory) / "corsika",
+            corsika_interaction_table_root=Path(tmp_test_directory) / "corsika-tables",
+            sim_telarray_root=Path(tmp_test_directory) / "sim_telarray",
+            sim_telarray_executable_name="sim_telarray",
+        )
+    )
 
 
 @pytest.fixture
-def _mock_settings_env_vars(tmp_test_directory):
-    """Removes all environment variable from the test system and explicitly sets those needed."""
+def _mock_settings_env_vars(monkeypatch, tmp_test_directory):
+    """Provide isolated runtime environment values without process-global settings."""
+    for name in tuple(os.environ):
+        if name.startswith("SIMTOOLS_"):
+            monkeypatch.delenv(name, raising=False)
+    sim_telarray = Path(tmp_test_directory) / "sim_telarray"
+    monkeypatch.setenv("SIMTOOLS_SIM_TELARRAY_PATH", str(sim_telarray))
 
-    with mock.patch.dict(
-        os.environ,
-        {
-            "SIMTOOLS_SIM_TELARRAY_PATH": str(settings.config.sim_telarray_path),
-        },
-        clear=True,
-    ):
-        yield
+
+@pytest.fixture
+def output_paths(tmp_test_directory, test_resources_path):
+    """Return output paths rooted in the temporary test directory."""
+    return OutputPaths(
+        output_path=Path(tmp_test_directory) / "output",
+        model_path=Path(tmp_test_directory) / "model",
+    )
+
+
+@pytest.fixture
+def io_handler(output_paths):
+    """Return the explicit output path service for older fixture consumers."""
+    return output_paths
 
 
 @pytest.fixture
@@ -531,40 +517,6 @@ def mock_model_reader():
     return model_source
 
 
-@pytest.fixture(autouse=True)
-def patch_model_reader(mocker, monkeypatch, simtools_settings, mock_model_reader):
-    """
-    Install a source-neutral model reader for normal unit tests.
-
-    """
-    for variable in (
-        "SIMTOOLS_SIMULATION_MODELS_PATH",
-        "SIMTOOLS_SIMULATION_MODELS_GIT_PATH",
-        "SIMTOOLS_SIMULATION_MODELS_GIT_REVISION",
-    ):
-        monkeypatch.delenv(variable, raising=False)
-
-    # Mock schema validation to avoid version check issues
-    mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
-
-    previous_model_reader = settings.config.model_reader
-    settings.config.set_model_reader(mock_model_reader)
-    mocker.patch(
-        "simtools.application.control.create_model_reader_from_configuration",
-        return_value=mock_model_reader,
-    )
-    mocker.patch(
-        "simtools.configuration.show_options.create_model_reader_from_configuration",
-        return_value=mock_model_reader,
-    )
-    mocker.patch(
-        "simtools.job_execution.worker.create_model_reader_from_configuration",
-        return_value=mock_model_reader,
-    )
-    yield
-    settings.config.set_model_reader(previous_model_reader)
-
-
 @pytest.fixture
 def model_version():
     """Simulation model version used in tests."""
@@ -578,77 +530,84 @@ def model_version_prod5():
 
 
 @pytest.fixture
-def array_model_north(io_handler, model_version):
+def array_model_north(run_context, model_version):
     """Array model for North site."""
     return ArrayModel(
         label="test-lst-array",
         site="North",
         layout_name="test_layout",
         model_version=model_version,
+        context=run_context,
     )
 
 
 @pytest.fixture
-def array_model_south(io_handler, model_version):
+def array_model_south(run_context, model_version):
     """Array model for South site."""
     return ArrayModel(
         label="test-lst-array",
         site="South",
         layout_name="test_layout",
         model_version=model_version,
+        context=run_context,
     )
 
 
 @pytest.fixture
-def site_model_south(model_version):
+def site_model_south(model_version, run_context):
     """Site model for South site."""
     return SiteModel(
         site="South",
         label="site-south",
         model_version=model_version,
+        context=run_context,
     )
 
 
 @pytest.fixture
-def site_model_north(model_version):
+def site_model_north(model_version, run_context):
     """Site model for North site."""
     return SiteModel(
         site="North",
         label="site-north",
         model_version=model_version,
+        context=run_context,
     )
 
 
 @pytest.fixture
-def telescope_model_lst(model_version):
+def telescope_model_lst(model_version, run_context):
     """Telescope model LST North."""
     return TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model-lst",
+        context=run_context,
     )
 
 
 @pytest.fixture
-def telescope_model_mst(model_version):
+def telescope_model_mst(model_version, run_context):
     """Telescope model MST FlashCam."""
     return TelescopeModel(
         site="South",
         telescope_name="MSTx-FlashCam",
         model_version=model_version,
         label="test-telescope-model-mst",
+        context=run_context,
     )
 
 
 @pytest.fixture
-def telescope_model_sst(model_version):
+def telescope_model_sst(model_version, run_context):
     """Telescope model SST South."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
         label="test-telescope-model-sst",
+        context=run_context,
     )
 
 
@@ -674,7 +633,7 @@ def corsika_config_data(model_version):
 
 
 @pytest.fixture
-def corsika_config_mock_array_model(corsika_config_data, model_version):
+def corsika_config_mock_array_model(corsika_config_data, model_version, run_context):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
@@ -711,26 +670,41 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
         "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
     }
 
-    with mock.patch.object(
-        settings._Config,
-        "args",
-        new_callable=mock.PropertyMock,
-        return_value=corsika_config_data,
-    ):
-        array_model.site_model.get_simulation_software_parameters.return_value = (
-            corsika_params_from_repository
-        )
-        corsika_config = CorsikaConfig(
-            array_model=array_model, run_number=1, label="test-corsika-config"
-        )
+    run_context = run_context.replace(args=corsika_config_data)
+    array_model.context = run_context
+    array_model.site_model.get_simulation_software_parameters.return_value = (
+        corsika_params_from_repository
+    )
+    corsika_config = CorsikaConfig(
+        array_model=array_model, run_number=1, label="test-corsika-config", context=run_context
+    )
 
     corsika_config.array_model.site = "South"
     return corsika_config
 
 
 @pytest.fixture
-def corsika_stage_mock_array_model(corsika_config_mock_array_model):
-    return CorsikaStage(corsika_config_mock_array_model, label="test-corsika-runner")
+def corsika_stage_mock_array_model(corsika_config_mock_array_model, run_context):
+    corsika_root = Path(run_context.software.corsika_root)
+    corsika_executable = corsika_root / "corsika"
+    curved_executable = corsika_root / "corsika_curved"
+    for executable in (corsika_executable, curved_executable):
+        executable.touch()
+        executable.chmod(0o755)
+    software = SimpleNamespace(
+        corsika_exe=corsika_executable,
+        corsika_exe_curved=curved_executable,
+        corsika_interaction_models=("qgs3", "urqmd"),
+        sim_telarray_path=Path(run_context.software.sim_telarray_root),
+        he_interaction="qgs3",
+        le_interaction="urqmd",
+    )
+    run_context = run_context.replace(software=software)
+    return CorsikaStage(
+        corsika_config_mock_array_model,
+        label="test-corsika-runner",
+        context=run_context,
+    )
 
 
 @pytest.fixture

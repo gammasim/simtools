@@ -159,7 +159,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    resolve_sim_software_executables=False,
+    needs=("model",),
 )
 
 
@@ -169,8 +169,9 @@ def main():
 
     generate_job_grid(
         app_context.args,
-        app_context.io_handler.get_output_file(app_context.args["output_file"]),
-        metadata=MetadataCollector(app_context.args).get_top_level_metadata(),
+        app_context.paths.get_output_file(app_context.args["output_file"]),
+        metadata=MetadataCollector(app_context.args, context=app_context).get_top_level_metadata(),
+        context=app_context,
     )
 
 

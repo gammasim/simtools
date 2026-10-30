@@ -62,6 +62,7 @@ def test_main_generates_production_without_initialization(mocker, tmp_test_direc
         model_version=[NEW_MODEL_VERSION],
         simulation_models_path=add_production.Path(tmp_test_directory),
         setting_workflows_git_tag=None,
+        context=context,
     )
 
 

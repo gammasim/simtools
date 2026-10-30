@@ -49,9 +49,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     model_repository=True,
     arguments=(*_ARGUMENTS,),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
+    needs=(),
 )
 
 
@@ -59,7 +57,9 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    resource_generation.generate_test_resources(app_context.args, run_time=app_context.run_time)
+    resource_generation.generate_test_resources(
+        app_context.args, run_time=app_context.run_time, context=app_context
+    )
 
 
 if __name__ == "__main__":

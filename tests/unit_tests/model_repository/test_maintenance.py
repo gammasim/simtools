@@ -627,7 +627,7 @@ def test_generate_new_production_empty_version_history(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_test_directory)
     )
     mock_apply_model_changes.assert_called_once_with(
-        {}, str(tmp_test_directory), "v0.3.0", "https://example.org/workflows.git"
+        {}, str(tmp_test_directory), "v0.3.0", "https://example.org/workflows.git", context=None
     )
 
 
@@ -671,6 +671,7 @@ def test_generate_new_production_separates_recursive_table_changes_from_paramete
         "main",
         "https://gitlab.cta-observatory.org/cta-science/simulations/"
         "simulation-model/simulation-model-parameter-setting.git",
+        context=None,
     )
 
 
@@ -698,7 +699,7 @@ def test_generate_new_production_setting_workflows_git_tag_override(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_test_directory)
     )
     mock_apply_model_changes.assert_called_once_with(
-        {}, str(tmp_test_directory), "from-cli", "https://example.org/workflows.git"
+        {}, str(tmp_test_directory), "from-cli", "https://example.org/workflows.git", context=None
     )
 
 
@@ -765,13 +766,18 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_test_di
     # Should only call _create_new_model_parameter_entry for parameters with values
     assert mock_create_entry.call_count == 2
     mock_create_entry.assert_any_call(
-        "MSTx-FlashCam", "dsum_threshold", {"version": "4.0.0", "value": 62.5}, model_parameters_dir
+        "MSTx-FlashCam",
+        "dsum_threshold",
+        {"version": "4.0.0", "value": 62.5},
+        model_parameters_dir,
+        context=None,
     )
     mock_create_entry.assert_any_call(
         "MSTx-NectarCam",
         "discriminator_threshold",
         {"version": "4.0.0", "value": 31.9},
         model_parameters_dir,
+        context=None,
     )
 
 
@@ -809,7 +815,11 @@ def test_apply_changes_to_model_parameters_with_activity_id(
         "simulation-model/simulation-model-parameter-setting.git",
     )
     mock_create_entry.assert_called_once_with(
-        "LSTN-design", "value_only_param", {"version": "2.0.0", "value": 42}, model_parameters_dir
+        "LSTN-design",
+        "value_only_param",
+        {"version": "2.0.0", "value": 42},
+        model_parameters_dir,
+        context=None,
     )
 
 
@@ -1171,10 +1181,11 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
         output_path=model_parameters_dir / telescope / param,
         unit=None,
         model_parameter_schema_version=None,
+        context=None,
     )
 
 
-def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_directory):
+def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_directory, run_context):
     telescope = "NonExistentTelescope"
     param = "some_param"
     param_data = {"version": "1.0.0", "value": 42.5}
@@ -1182,7 +1193,7 @@ def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_dire
     # Don't create the telescope directory - the function will create it but fail on schema
     with pytest.raises(FileNotFoundError, match="Schema file not found"):
         maintenance._create_new_model_parameter_entry(
-            telescope, param, param_data, Path(tmp_test_directory)
+            telescope, param, param_data, Path(tmp_test_directory), context=run_context
         )
 
 

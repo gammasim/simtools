@@ -9,10 +9,8 @@ from simtools.application.model_reader import (
     create_model_reader,
     create_model_reader_from_configuration,
     create_model_reader_from_source_config,
-    require_model_reader,
 )
 from simtools.model_repository.reader import SimulationModelReader
-from simtools.settings import config
 
 
 def _model_repository_root(tmp_test_directory):
@@ -170,32 +168,3 @@ def test_create_model_reader_from_source_config_uses_filesystem_path(mocker):
     )
 
     create_reader.assert_called_once_with(simulation_models_path="models")
-
-
-def test_require_model_reader_prefers_explicit_reader():
-    """An explicit reader is returned independently of application configuration."""
-    reader = Mock()
-
-    assert require_model_reader(reader) is reader
-
-
-def test_require_model_reader_uses_configured_reader():
-    """Library callers use the reader selected during application setup."""
-    reader = Mock()
-    previous_reader = config.model_reader
-    config.set_model_reader(reader)
-    try:
-        assert require_model_reader() is reader
-    finally:
-        config.set_model_reader(previous_reader)
-
-
-def test_require_model_reader_requires_selection():
-    """Calls outside an application must explicitly select a reader."""
-    previous_reader = config.model_reader
-    config.set_model_reader(None)
-    try:
-        with pytest.raises(RuntimeError, match="No simulation model reader is configured"):
-            require_model_reader()
-    finally:
-        config.set_model_reader(previous_reader)

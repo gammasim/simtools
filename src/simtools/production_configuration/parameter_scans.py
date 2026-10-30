@@ -207,10 +207,13 @@ def _threshold_values(threshold_param, trigger_thresholds=None):
     return [minimum + index * step_size for index in range(int(number))]
 
 
-def _threshold_param_name(args, telescope):
+def _threshold_param_name(args, telescope, context):
     """Return the threshold parameter selected by the telescope's default trigger."""
     telescope_model = TelescopeModel(
-        site=args["site"], telescope_name=telescope, model_version=args["model_version"]
+        site=args["site"],
+        telescope_name=telescope,
+        model_version=args["model_version"],
+        context=context,
     )
     default_trigger = telescope_model.get_parameter_value("default_trigger")
     if default_trigger == "AnalogSum":
@@ -253,7 +256,7 @@ def _scan_config(curve_name, telescope, args):
     }
 
 
-def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handler):
+def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handler, context):
     """Generate the base grid, scan configuration, and scan grid for one curve."""
     curve_directory = io_handler.get_output_directory(sub_dir=curve_name)
     base_grid_file = curve_directory / "base_grid.ecsv"
@@ -275,25 +278,32 @@ def _generate_scan_grid(curve_name, curve_definition, args, telescope, io_handle
             "label": curve_name,
         }
     )
-    generate_job_grid(production_configuration, base_grid_file)
+    generate_job_grid(production_configuration, base_grid_file, context=context)
     expand_job_grid_with_scan(base_grid_file, scan_config_file, scan_grid_file)
 
 
-def generate_scan_grids(args, io_handler):
+def generate_scan_grids(args, io_handler, context=None):
     """Generate the NSB and proton bias-curve scan grids.
 
     Parameters
     ----------
     args : dict
         Application arguments for the production grid and scan configuration.
-    io_handler : IOHandler
-        IOHandler providing the output directories.
+    io_handler : OutputPaths
+        Output paths providing the output directories.
+    context : RunContext, optional
+        Run context for model access.
     """
     missing = [key for key in _REQUIRED_ARGS if args.get(key) in (None, "")]
     if missing:
         raise ValueError(f"Missing required argument: --{missing[0]}")
 
     telescope = resolve_array_layout_name(args["array_layout_name"], args["model_version"])
-    generation_args = {**args, "threshold_parameter": _threshold_param_name(args, telescope)}
+    generation_args = {
+        **args,
+        "threshold_parameter": _threshold_param_name(args, telescope, context),
+    }
     for curve_name, curve_definition in _CURVES.items():
-        _generate_scan_grid(curve_name, curve_definition, generation_args, telescope, io_handler)
+        _generate_scan_grid(
+            curve_name, curve_definition, generation_args, telescope, io_handler, context
+        )

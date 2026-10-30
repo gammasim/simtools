@@ -6,8 +6,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from simtools import context as context_module
-from simtools import settings
 from simtools.context import Activity, RunContext, SimulationSoftware
 from simtools.io.output_paths import OutputPaths
 
@@ -107,16 +105,8 @@ def test_run_context_replace_and_deepcopy(tmp_test_directory):
     assert replaced.ray_tracing_backend == replaced.software.ray_tracing_backend
 
 
-def test_from_environment_returns_the_application_context():
-    assert RunContext.from_environment() is settings.config.context
-
-
-def test_from_environment_without_application_provider():
-    context_module.register_application_context_provider(None)
-    try:
-        context = RunContext.from_environment()
-    finally:
-        context_module.register_application_context_provider(lambda: settings.config.context)
-
-    assert context is not settings.config.context
-    assert context.model_reader is None
+def test_from_environment_returns_a_fresh_context():
+    first = RunContext.from_environment()
+    second = RunContext.from_environment()
+    assert first is not second
+    assert first.model_reader is None

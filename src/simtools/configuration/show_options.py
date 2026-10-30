@@ -1,6 +1,7 @@
 """Shared option-discovery helpers for selected command-line arguments."""
 
 import argparse
+import inspect
 import os
 import sys
 from dataclasses import dataclass, field
@@ -27,13 +28,13 @@ class ShowOptionsResult:
     notes: tuple = ()
 
 
-def handle_show_options(args_dict, parser):
+def handle_show_options(args_dict, parser, context=None):
     """Print available values for a supported option and exit."""
     if not args_dict.get("show_options"):
         return False
 
     try:
-        result = resolve_show_options(args_dict, parser)
+        result = resolve_show_options(args_dict, parser, context=context)
     except (FileNotFoundError, PermissionError, ValueError) as exc:
         parser.error(str(exc))
 
@@ -42,12 +43,16 @@ def handle_show_options(args_dict, parser):
     return True
 
 
-def resolve_show_options(args_dict, parser=None):
+def resolve_show_options(args_dict, parser=None, context=None):
     """Resolve ``--show_options`` using a custom provider or parser metadata."""
     option_name = args_dict["show_options"]
     provider = _SHOW_OPTION_PROVIDERS.get(option_name)
     if provider is not None:
-        return _with_argparse_help(provider(args_dict), parser)
+        if "context" in inspect.signature(provider).parameters:
+            result = provider(args_dict, context=context)
+        else:
+            result = provider(args_dict)
+        return _with_argparse_help(result, parser)
     if parser is not None:
         return _show_argparse_option(option_name, parser)
     supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
@@ -140,17 +145,17 @@ def _show_sites(_args_dict):
     return ShowOptionsResult(option_name="site", values=tuple(names.site_names()))
 
 
-def _show_model_versions(args_dict):
-    model_reader = _create_model_reader(args_dict)
+def _show_model_versions(args_dict, context=None):
+    model_reader = _create_model_reader(args_dict, context=context)
     return ShowOptionsResult(
         option_name="model_version",
         values=tuple(model_reader.get_model_versions()),
     )
 
 
-def _show_array_layout_names(args_dict):
+def _show_array_layout_names(args_dict, context=None):
     model_version = _get_single_model_version(args_dict, "array_layout_name")
-    model_reader = _create_model_reader(args_dict)
+    model_reader = _create_model_reader(args_dict, context=context)
     site = args_dict.get("site")
     sites = [site] if site else sorted(names.site_names())
     grouped_values = {
@@ -159,6 +164,7 @@ def _show_array_layout_names(args_dict):
                 site=current_site,
                 model_version=model_version,
                 model_reader=model_reader,
+                context=context,
             ).get_list_of_array_layouts()
         )
         for current_site in sites
@@ -175,20 +181,22 @@ def _show_array_layout_names(args_dict):
     )
 
 
-def _create_model_reader(args_dict):
+def _create_model_reader(args_dict, context=None):
     """Create a configured model reader for an option provider."""
+    if context is not None and context.model_reader is not None:
+        return context.model_reader
     return create_model_reader_from_configuration(args_dict)
 
 
-def _show_corsika_he_interaction(args_dict):
-    return _show_corsika_interaction(args_dict, interaction_level="high")
+def _show_corsika_he_interaction(args_dict, context=None):
+    return _show_corsika_interaction(args_dict, interaction_level="high", context=context)
 
 
-def _show_corsika_le_interaction(args_dict):
-    return _show_corsika_interaction(args_dict, interaction_level="low")
+def _show_corsika_le_interaction(args_dict, context=None):
+    return _show_corsika_interaction(args_dict, interaction_level="low", context=context)
 
 
-def _show_corsika_hadronic_transition_energy(args_dict):
+def _show_corsika_hadronic_transition_energy(args_dict, context=None):
     """Show CORSIKA HILOW defaults recorded for installed build variants."""
     variants, resolved_path = _get_corsika_variants(args_dict)
     grouped_values = {}
@@ -212,13 +220,13 @@ def _show_corsika_hadronic_transition_energy(args_dict):
         )
     return ShowOptionsResult(
         option_name="corsika_hadronic_transition_energy",
-        environment=_get_corsika_environment(resolved_path, variants),
+        environment=_get_corsika_environment(resolved_path, variants, context),
         grouped_values=grouped_values,
         notes=notes,
     )
 
 
-def _show_corsika_interaction(args_dict, interaction_level):
+def _show_corsika_interaction(args_dict, interaction_level, context=None):
     variants, resolved_path = _get_corsika_variants(args_dict)
     if interaction_level == "high":
         option_name = "corsika_he_interaction"
@@ -228,7 +236,7 @@ def _show_corsika_interaction(args_dict, interaction_level):
         values = sorted({variant.le_hadronic_model for variant in variants})
     return ShowOptionsResult(
         option_name=option_name,
-        environment=_get_corsika_environment(resolved_path, variants),
+        environment=_get_corsika_environment(resolved_path, variants, context),
         values=tuple(values),
     )
 
@@ -238,9 +246,9 @@ def _get_corsika_variants(args_dict):
     return get_installed_corsika_build_variants(resolved_path), resolved_path
 
 
-def _get_corsika_environment(corsika_path, variants):
+def _get_corsika_environment(corsika_path, variants, context):
     environment = {"path": str(corsika_path)}
-    corsika_version = get_corsika_version()
+    corsika_version = get_corsika_version(context=context)
     if corsika_version:
         environment["CORSIKA version"] = corsika_version
     executables = sorted(

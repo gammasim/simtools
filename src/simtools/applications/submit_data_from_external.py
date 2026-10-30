@@ -24,7 +24,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("corsika", "output"),
 )
 
 
@@ -33,7 +33,9 @@ def main():
     app_context = APPLICATION.start()
 
     _metadata = (
-        None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)
+        None
+        if app_context.args.get("ignore_metadata")
+        else MetadataCollector(app_context.args, context=app_context)
     )
 
     data_validator = validate_data.DataValidator(
@@ -50,6 +52,7 @@ def main():
         output_file_format=app_context.args.get("output_file_format"),
         metadata=_metadata,
         product_data=data_validator.validate_and_transform(),
+        context=app_context,
     )
 
 

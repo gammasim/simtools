@@ -9,6 +9,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.ray_tracing.mirror_panel_psf as mpp
+from simtools.context import RunContext
 
 
 def _make_dummy_tel(label="orig", config_dir=None):
@@ -46,6 +47,7 @@ def _make_minimal_instance(
     inst.rnda_opt = None
     inst.per_mirror_results = []
     inst.final_percentage_diff = None
+    inst.context = RunContext.from_arguments({}, resolve_sim_software_executables=False)
     return inst
 
 

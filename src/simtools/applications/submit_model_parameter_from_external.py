@@ -60,7 +60,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -71,7 +71,7 @@ def main():
     value = app_context.args[_VALUE_ARGUMENT]
     if isinstance(value, list) and len(value) == 1:
         value = value[0]
-    data_writer = writer.ModelDataWriter()
+    data_writer = writer.ModelDataWriter(context=app_context)
     parameter_type = data_writer.get_parameter_type_for_schema(
         app_context.args["parameter"],
         model_parameter_schema_version,
@@ -85,7 +85,7 @@ def main():
         validate_finite_json_values(value)
 
     if app_context.args.get("output_path"):
-        output_path = app_context.io_handler.get_output_directory(
+        output_path = app_context.paths.get_output_directory(
             sub_dir=app_context.args.get("parameter")
         )
     else:
@@ -103,6 +103,7 @@ def main():
         metadata_input_dict=app_context.args,
         check_for_existing_parameter=app_context.args.get("check_parameter_version", False),
         model_parameter_schema_version=model_parameter_schema_version,
+        context=app_context,
     )
 
 

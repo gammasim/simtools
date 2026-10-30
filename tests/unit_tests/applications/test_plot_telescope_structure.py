@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from types import ModuleType
+from types import MappingProxyType, ModuleType
 
 import astropy.units as u
 import pytest
@@ -13,7 +13,7 @@ from simtools.applications import plot_telescope_structure as app
 
 @pytest.mark.parametrize("shadowing", [False, True])
 def test_application_plot_custom_structure(
-    monkeypatch, tmp_test_directory, mock_model_reader, shadowing
+    monkeypatch, tmp_test_directory, mock_model_reader, run_context, shadowing
 ):
     get_parameters = mock_model_reader.get_model_parameters.side_effect
 
@@ -101,6 +101,9 @@ def test_application_plot_custom_structure(
         ]
         + (["--shadowing"] if shadowing else []),
     )
+    args = vars(app.APPLICATION.build_parser().parse_args(sys.argv[1:]))
+    context = run_context.replace(args=MappingProxyType(args), model_reader=mock_model_reader)
+    monkeypatch.setattr(type(app.APPLICATION), "start", lambda _application: context)
     try:
         app.main()
     finally:

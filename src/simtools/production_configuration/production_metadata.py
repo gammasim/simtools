@@ -42,19 +42,21 @@ _SIMTEL_EVENT_COUNT_PATTERN = re.compile(
 )
 
 
-def write_production_metadata(args_dict):
+def write_production_metadata(args_dict, context=None):
     """Write or validate production job metadata manifests.
 
     Parameters
     ----------
     args_dict : dict
         Application arguments containing ``production_path`` and, in write mode, ``job_grid_file``.
+    context : RunContext, optional
+        Run context for model access.
     """
     production_path = Path(args_dict["production_path"])
     if args_dict.get("check"):
         _check_existing_manifests(production_path)
     else:
-        _write_manifests(production_path, args_dict["job_grid_file"], args_dict)
+        _write_manifests(production_path, args_dict["job_grid_file"], args_dict, context)
 
 
 def _check_existing_manifests(production_path):
@@ -72,7 +74,7 @@ def _check_existing_manifests(production_path):
         check_manifest(manifest)
 
 
-def _write_manifests(production_path, job_grid_file, args_dict):
+def _write_manifests(production_path, job_grid_file, args_dict, context):
     """Write manifests for job directories described by a job grid."""
     rows, metadata = read_job_grid(job_grid_file)
     job_directories = _job_directories_for_rows(production_path, len(rows))
@@ -102,7 +104,9 @@ def _write_manifests(production_path, job_grid_file, args_dict):
                 SimpleNamespace(
                     model_version=args["model_version"],
                     overwrite_model_parameter_dict=(
-                        read_overwrite_model_parameter_dict(overwrites) if overwrites else {}
+                        read_overwrite_model_parameter_dict(overwrites, context=context)
+                        if overwrites
+                        else {}
                     ),
                     array_elements={},
                     site_model=SimpleNamespace(parameters={}),

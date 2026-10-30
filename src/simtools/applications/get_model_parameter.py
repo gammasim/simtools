@@ -5,7 +5,6 @@
 from pprint import pprint
 
 from simtools.application.definition import ApplicationDefinition
-from simtools.application.model_reader import require_model_reader
 from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
 from simtools.model_repository.asset_names import get_export_file_name
@@ -56,7 +55,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
-    initialize_output=False,
+    needs=("model", "corsika"),
 )
 
 
@@ -65,7 +64,7 @@ def _export_parameter_file(app_context, model_reader, parameters):
     parameter = app_context.args["parameter"]
     parameter_info = parameters[parameter]
     output_file = app_context.args.get("output_file")
-    output_directory = app_context.io_handler.get_output_directory()
+    output_directory = app_context.paths.get_output_directory()
 
     if _is_row_table_dict(parameter_info.get("value")):
         if output_file is None:
@@ -81,7 +80,7 @@ def _export_parameter_file(app_context, model_reader, parameters):
             export_file_as_table=True,
             dest=output_directory,
         )
-        table_file = app_context.io_handler.get_output_file(output_file).with_suffix(".ecsv")
+        table_file = app_context.paths.get_output_file(output_file).with_suffix(".ecsv")
         table.write(table_file, format="ascii.ecsv", overwrite=True)
         return [table_file]
 
@@ -106,7 +105,7 @@ def _export_parameter_file(app_context, model_reader, parameters):
     if not source_file.exists():
         source_file = output_directory / parameter_info["value"]
     model_output_file = (
-        app_context.io_handler.get_output_file(output_file) if output_file else source_file
+        app_context.paths.get_output_file(output_file) if output_file else source_file
     )
     output_files = []
     if app_context.args["export_model_file"]:
@@ -125,7 +124,7 @@ def _export_parameter_file(app_context, model_reader, parameters):
 
 def run(app_context):
     """Run the model-parameter retrieval using an initialized application context."""
-    model_reader = require_model_reader(app_context.model_reader)
+    model_reader = app_context.model_reader
     parameters = model_reader.get_model_parameter(
         parameter=app_context.args["parameter"],
         site=app_context.args["site"],
@@ -144,7 +143,7 @@ def run(app_context):
         data = dict(parameter_data)
         ascii_handler.write_data_to_file(
             data=data,
-            output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
+            output_file=app_context.paths.get_output_file(app_context.args["output_file"]),
         )
     else:
         pprint(parameter_data)

@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
-from simtools.application.model_reader import require_model_reader
 from simtools.atmosphere.atmosphere_characterization import characterize_atmospheres
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import site as validate_site
@@ -62,6 +61,7 @@ APPLICATION = ApplicationDefinition.for_module(
         ),
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -87,13 +87,13 @@ def _read_table(context, parameter, site, value):
     """Read an atmospheric table from an ECSV file or the model repository."""
     if _is_ecsv_file(value):
         return _read_ecsv_file(parameter, value)
-    return require_model_reader(context.model_reader).export_model_file(
+    return context.model_reader.export_model_file(
         parameter=parameter,
         site=site,
         array_element_name=None,
         parameter_version=value,
         export_file_as_table=True,
-        dest=context.io_handler.get_output_directory(),
+        dest=context.paths.get_output_directory(),
     )
 
 
@@ -126,7 +126,7 @@ def _candidate_common_wavelength_count(summary):
 def main():
     """Compare atmospheres using the configured model repository or ECSV files."""
     context = APPLICATION.start()
-    output_path = context.io_handler.get_output_directory()
+    output_path = context.paths.get_output_directory()
     atmospheres = []
     site_counts = {}
     fallback_warnings = []

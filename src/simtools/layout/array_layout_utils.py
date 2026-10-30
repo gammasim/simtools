@@ -446,7 +446,7 @@ def _get_single_model_version(model_version):
 
 
 def get_array_layouts_from_parameter_file(
-    file_path, model_version, coordinate_system="ground", array_layout_name=None
+    file_path, model_version, coordinate_system="ground", array_layout_name=None, context=None
 ):
     """
     Retrieve array layouts from parameter file.
@@ -481,6 +481,7 @@ def get_array_layouts_from_parameter_file(
             layout.get("elements"),
             layout["name"],
             coordinate_system,
+            context=context,
         )
         for layout in value
         if array_layout_name is None or layout.get("name") in array_layout_name
@@ -494,6 +495,7 @@ def get_array_layouts_from_model_repository(
     coordinate_system="ground",
     ignore_software_version=False,
     model_reader=None,
+    context=None,
 ):
     """
     Retrieve all array layouts from the model repository and return as list of astropy tables.
@@ -525,6 +527,7 @@ def get_array_layouts_from_model_repository(
             model_version=model_version,
             ignore_software_version=ignore_software_version,
             model_reader=model_reader,
+            context=context,
         )
         layout_names = site_model.get_list_of_array_layouts()
 
@@ -537,6 +540,7 @@ def get_array_layouts_from_model_repository(
             coordinate_system,
             ignore_software_version,
             model_reader=model_reader,
+            context=context,
         )
         for _layout_name in layout_names
     ]
@@ -552,6 +556,7 @@ def get_array_layouts_using_telescope_lists_from_model_repository(
     coordinate_system="ground",
     ignore_software_version=False,
     model_reader=None,
+    context=None,
 ):
     """
     Retrieve array layouts from the model repository using telescope lists.
@@ -596,12 +601,13 @@ def get_array_layouts_using_telescope_lists_from_model_repository(
                 coordinate_system,
                 ignore_software_version,
                 model_reader,
+                context=context,
             )
         )
     return layouts
 
 
-def get_array_layouts_from_file(file_path):
+def get_array_layouts_from_file(file_path, context=None):
     """
     Retrieve array layout(s) from astropy table file(s).
 
@@ -621,7 +627,7 @@ def get_array_layouts_from_file(file_path):
     return [
         {
             "name": Path(_file).stem,
-            "array_elements": data_reader.read_table_from_file(file_name=_file),
+            "array_elements": data_reader.read_table_from_file(file_name=_file, context=context),
         }
         for _file in file_path
     ]
@@ -635,6 +641,8 @@ def _get_array_layout_dict(
     coordinate_system,
     ignore_software_version=False,
     model_reader=None,
+    *,
+    context,
 ):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
@@ -644,6 +652,7 @@ def _get_array_layout_dict(
         layout_name=layout_name,
         ignore_software_version=ignore_software_version,
         model_reader=model_reader,
+        context=context,
     )
     return {
         "name": layout_name if layout_name else "list",
@@ -654,7 +663,9 @@ def _get_array_layout_dict(
     }
 
 
-def get_array_elements_from_model_repository(layouts, site, model_version, model_reader=None):
+def get_array_elements_from_model_repository(
+    layouts, site, model_version, model_reader=None, context=None
+):
     """
     Get list of array elements from the model repository for given list of layout names.
 
@@ -684,6 +695,7 @@ def get_array_elements_from_model_repository(layouts, site, model_version, model
         site=site,
         model_version=model_version,
         model_reader=model_reader,
+        context=context,
     )
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
@@ -702,7 +714,7 @@ def _validate_layout_file_args(args_dict):
         )
 
 
-def read_layouts(args_dict, model_reader=None):
+def read_layouts(args_dict, model_reader=None, context=None):
     """
     Read array layouts from the model repository or parameter file.
 
@@ -730,6 +742,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["coordinate_system"],
             ignore_software_version,
             model_reader=model_reader,
+            context=context,
         )["array_elements"]
 
     if args_dict["array_layout_parameter_file"] is not None:
@@ -739,6 +752,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["model_version"],
             args_dict["coordinate_system"],
             args_dict.get("array_layout_name_from_parameter_file"),
+            context=context,
         ), background_layout
 
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
@@ -750,6 +764,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["coordinate_system"],
             ignore_software_version,
             model_reader=model_reader,
+            context=context,
         )
         if isinstance(layouts, list):
             return layouts, background_layout
@@ -757,7 +772,10 @@ def read_layouts(args_dict, model_reader=None):
 
     if args_dict["array_layout_file"] is not None:
         _logger.info("Plotting array from telescope table file(s).")
-        return get_array_layouts_from_file(args_dict["array_layout_file"]), background_layout
+        return (
+            get_array_layouts_from_file(args_dict["array_layout_file"], context=context),
+            background_layout,
+        )
     if args_dict["array_element_list"] is not None:
         _logger.info("Plotting array from list of array elements.")
         return get_array_layouts_using_telescope_lists_from_model_repository(
@@ -767,6 +785,7 @@ def read_layouts(args_dict, model_reader=None):
             args_dict["coordinate_system"],
             ignore_software_version,
             model_reader=model_reader,
+            context=context,
         ), background_layout
 
     return [], background_layout
@@ -884,7 +903,7 @@ def create_regular_array(
 
 
 def write_array_elements_from_file_to_repository(
-    coordinate_system, input_file, repository_path, parameter_version
+    coordinate_system, input_file, repository_path, parameter_version, context=None
 ):
     """
     Read array elements from file and write their positions to model repository.
@@ -945,6 +964,7 @@ def write_array_elements_from_file_to_repository(
             output_path=repository_path / instrument,
             output_file=f"{parameter_name}.json",
             check_for_existing_parameter=False,
+            context=context,
         )
 
 

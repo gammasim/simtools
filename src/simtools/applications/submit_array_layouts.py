@@ -56,7 +56,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
-    initialize_output=True,
+    needs=("model", "corsika", "output"),
 )
 
 
@@ -73,7 +73,7 @@ def main():
         array_layouts=array_layouts,
     )
 
-    write_array_layouts(array_layouts=array_layouts, args_dict=args_dict)
+    write_array_layouts(array_layouts=array_layouts, args_dict=args_dict, context=app_context)
 
 
 if __name__ == "__main__":

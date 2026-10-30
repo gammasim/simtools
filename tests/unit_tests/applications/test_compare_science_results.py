@@ -45,7 +45,7 @@ def run_main(mocker, output, **overrides):
         "require_wavelength_tables": False,
     } | overrides
     context = mocker.Mock(args=args)
-    context.io_handler.get_output_directory.return_value = output
+    context.paths.get_output_directory.return_value = output
     mocker.patch(
         "simtools.application.definition.ApplicationDefinition.start", return_value=context
     )

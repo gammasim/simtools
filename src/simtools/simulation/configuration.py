@@ -1,18 +1,18 @@
 """Select software-specific configuration writers for resolved simulation models."""
 
 
-def _simtel_writer(model):
+def _simtel_writer(model, context=None):
     """Construct the sim_telarray model writer."""
     # pylint: disable-next=import-outside-toplevel
     from simtools.simtel.model_writer import SimtelModelWriter
 
-    return SimtelModelWriter(model)
+    return SimtelModelWriter(model, context=context)
 
 
 _WRITERS = {"sim_telarray": _simtel_writer}
 
 
-def get_model_writer(model, simulation_software="sim_telarray"):
+def get_model_writer(model, simulation_software="sim_telarray", context=None):
     """Return the selected model configuration writer, retaining its table cache.
 
     Parameters
@@ -21,6 +21,8 @@ def get_model_writer(model, simulation_software="sim_telarray"):
         Resolved simulation model.
     simulation_software : str
         Registered configuration writer.
+    context : RunContext, optional
+        Run context; the model's own context is used if not given.
 
     Returns
     -------
@@ -37,16 +39,18 @@ def get_model_writer(model, simulation_software="sim_telarray"):
     except KeyError as exc:
         raise ValueError(f"Unknown model configuration writer '{simulation_software}'.") from exc
     if simulation_software not in model.configuration_writers:
-        model.configuration_writers[simulation_software] = factory(model)
+        model.configuration_writers[simulation_software] = factory(model, context=context)
     return model.configuration_writers[simulation_software]
 
 
-def _corsika_configuration(array_model, run_number, label=None):
+def _corsika_configuration(array_model, run_number, label=None, context=None):
     """Construct the CORSIKA7 configuration writer."""
     # pylint: disable-next=import-outside-toplevel
     from simtools.corsika.corsika_config import CorsikaConfig
 
-    return CorsikaConfig(array_model=array_model, run_number=run_number, label=label)
+    return CorsikaConfig(
+        array_model=array_model, run_number=run_number, label=label, context=context
+    )
 
 
 def _light_emission_writer(simulation):
@@ -61,7 +65,9 @@ _SHOWER_WRITERS = {"corsika": _corsika_configuration}
 _LIGHT_SOURCE_WRITERS = {"light_emission": _light_emission_writer}
 
 
-def get_shower_configuration(array_model, run_number, label=None, simulation_software="corsika"):
+def get_shower_configuration(
+    array_model, run_number, label=None, simulation_software="corsika", context=None
+):
     """Create a shower configuration for the selected software.
 
     Parameters
@@ -84,7 +90,7 @@ def get_shower_configuration(array_model, run_number, label=None, simulation_sof
         factory = _SHOWER_WRITERS[simulation_software]
     except KeyError as exc:
         raise ValueError(f"Unknown shower configuration writer '{simulation_software}'.") from exc
-    return factory(array_model=array_model, run_number=run_number, label=label)
+    return factory(array_model=array_model, run_number=run_number, label=label, context=context)
 
 
 def get_light_source_writer(simulation):

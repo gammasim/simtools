@@ -136,6 +136,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     post_parse=_validate_parameter_file_layout_selection,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
+    needs=("model", "corsika"),
 )
 
 
@@ -145,7 +146,7 @@ def main():
 
     if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
         for model_version, site in generate_plot_combinations(
-            app_context.args, app_context.model_reader
+            app_context.args, app_context.model_reader, context=app_context
         ):
             run_args = app_context.args.copy()
             run_args.update(
@@ -156,21 +157,21 @@ def main():
                 }
             )
             layouts, background_layout = layout_utils.read_layouts(
-                run_args, app_context.model_reader
+                run_args, app_context.model_reader, context=app_context
             )
             plot_array_layouts(
                 run_args,
-                app_context.io_handler.get_output_directory(),
+                app_context.paths.get_output_directory(),
                 layouts,
                 background_layout,
             )
     else:
         layouts, background_layout = layout_utils.read_layouts(
-            app_context.args, app_context.model_reader
+            app_context.args, app_context.model_reader, context=app_context
         )
         plot_array_layouts(
             app_context.args,
-            app_context.io_handler.get_output_directory(),
+            app_context.paths.get_output_directory(),
             layouts,
             background_layout,
         )

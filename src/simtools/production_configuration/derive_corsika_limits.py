@@ -12,11 +12,11 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
-from simtools import settings
 from simtools.constants import SCHEMA_PATH
+from simtools.context import RunContext
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.histogram.histogram import Histogram
-from simtools.io import ascii_handler, io_handler, table_handler
+from simtools.io import ascii_handler, table_handler
 from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
 )
@@ -195,7 +195,7 @@ def parse_allowed_losses(allowed_losses_args):
     return parsed
 
 
-def generate_corsika_limits_grid(args_dict=None):
+def generate_corsika_limits_grid(args_dict=None, context=None):
     """
     Generate CORSIKA limits from precomputed trigger-histogram products.
 
@@ -204,7 +204,8 @@ def generate_corsika_limits_grid(args_dict=None):
     behavior. A directory processes supported particle products independently
     and writes one result below a particle-specific subdirectory.
     """
-    args_dict = args_dict or settings.config.args
+    context = context or RunContext.from_environment()
+    args_dict = args_dict or context.args
 
     trigger_histogram_file = args_dict.get("trigger_histogram_file")
     trigger_histogram_directory = args_dict.get("trigger_histogram_directory")
@@ -238,6 +239,7 @@ def generate_corsika_limits_grid(args_dict=None):
             allowed_losses,
             energy_threshold_fraction,
             differential_loss_bins_per_decade,
+            context=context,
         )
 
     results = _generate_corsika_limits_from_histogram_file(
@@ -245,9 +247,10 @@ def generate_corsika_limits_grid(args_dict=None):
         allowed_losses,
         energy_threshold_fraction,
         differential_loss_bins_per_decade,
+        context=context,
     )
     if results:
-        write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+        write_results(results, args_dict, allowed_losses, energy_threshold_fraction, context)
     else:
         _logger.warning("No non-empty trigger histograms were available; no limits were written.")
     return None
@@ -260,8 +263,10 @@ def _generate_corsika_limits_from_histogram_file(
     differential_loss_bins_per_decade,
     histogram_files=None,
     output_dir=None,
+    context=None,
 ):
     """Derive CORSIKA limits from one or more precomputed trigger-histogram files."""
+    context = context or RunContext.from_environment()
     selected_array_names = _selected_array_names(args_dict)
     plot_layouts = _normalize_plot_histogram_selection(args_dict.get("plot_histograms", False))
     loaded_histograms = []
@@ -275,7 +280,7 @@ def _generate_corsika_limits_from_histogram_file(
                 array_names=selected_array_names,
             )
         )
-    output_dir = output_dir or io_handler.IOHandler().get_output_directory()
+    output_dir = output_dir or context.paths.get_output_directory()
     usable_histograms = []
     for row, histograms in loaded_histograms:
         if _has_positive_energy_histogram(histograms):
@@ -307,6 +312,7 @@ def _generate_corsika_limits_from_histogram_file(
             output_subdir,
             differential_loss_bins_per_decade,
             args_dict.get("plot_reduced_histograms", False),
+            context=context,
         )
         result.update(
             {
@@ -393,10 +399,12 @@ def _generate_corsika_limits_from_histogram_directory(
     allowed_losses,
     energy_threshold_fraction,
     differential_loss_bins_per_decade,
+    context=None,
 ):
     """Derive one CORSIKA-limits table per metadata-defined particle in a directory."""
+    context = context or RunContext.from_environment()
     particle_files = _discover_trigger_histogram_groups(args_dict["trigger_histogram_directory"])
-    output_root = io_handler.IOHandler().get_output_directory()
+    output_root = context.paths.get_output_directory()
 
     for particle_name, histogram_files in particle_files.items():
         particle_output_dir = output_root / particle_name
@@ -408,12 +416,15 @@ def _generate_corsika_limits_from_histogram_directory(
             differential_loss_bins_per_decade,
             histogram_files=histogram_files,
             output_dir=particle_output_dir,
+            context=context,
         )
         particle_args = dict(args_dict)
         particle_args["output_file"] = str(particle_output_dir / "corsika_limits.ecsv")
         particle_args["output_path"] = str(particle_output_dir)
         if results:
-            write_results(results, particle_args, allowed_losses, energy_threshold_fraction)
+            write_results(
+                results, particle_args, allowed_losses, energy_threshold_fraction, context=context
+            )
         else:
             _logger.warning(
                 "No non-empty trigger histograms found for particle %s; no limits were written.",
@@ -569,6 +580,7 @@ def _derive_limits_from_histograms(
     output_subdir,
     differential_loss_bins_per_decade,
     plot_reduced_histograms=False,
+    context=None,
 ):
     """Compute, optionally plot, and return limits from finalized histograms."""
     limits = {
@@ -593,7 +605,8 @@ def _derive_limits_from_histograms(
     )
 
     if plot_histograms:
-        plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
+        context = context or RunContext.from_environment()
+        plot_output_path = output_subdir or context.paths.get_output_directory()
         histograms_to_plot = {
             name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
         }
@@ -769,7 +782,7 @@ def _differential_upper_limits(
     )
 
 
-def write_results(results, args_dict, allowed_losses, energy_threshold_fraction):
+def write_results(results, args_dict, allowed_losses, energy_threshold_fraction, context=None):
     """
     Write the computed limits as astropy table to file.
 
@@ -782,14 +795,15 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
     energy_threshold_fraction : float
         Fraction used for deriving the lower energy threshold.
     """
+    context = context or RunContext.from_environment()
     table = _create_results_table(
         results,
         allowed_losses,
         energy_threshold_fraction,
     )
-    table.meta.update(MetadataCollector(args_dict).get_top_level_metadata())
+    table.meta.update(MetadataCollector(args_dict, context=context).get_top_level_metadata())
 
-    io = io_handler.IOHandler()
+    io = context.paths
     output_file_arg = args_dict.get("output_file")
     if isinstance(output_file_arg, str | os.PathLike):
         output_file = Path(output_file_arg)

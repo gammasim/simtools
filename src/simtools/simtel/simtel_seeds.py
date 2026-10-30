@@ -3,8 +3,8 @@
 import logging
 from pathlib import Path
 
-from simtools import settings
 from simtools.constants import SIMTEL_MAX_SEED
+from simtools.context import RunContext
 from simtools.utils import names, random
 from simtools.version import semver_to_int
 
@@ -26,7 +26,13 @@ class SimtelSeeds:
     """Manage seeds for sim_telarray simulations."""
 
     def __init__(
-        self, output_path=None, site=None, model_version=None, zenith_angle=None, azimuth_angle=None
+        self,
+        output_path=None,
+        site=None,
+        model_version=None,
+        zenith_angle=None,
+        azimuth_angle=None,
+        context=None,
     ):
         """
         Initialize seeds for sim_telarray simulations.
@@ -51,10 +57,11 @@ class SimtelSeeds:
         """
         self._logger = logging.getLogger(__name__)
 
-        self.instrument_seed = settings.config.args.get("instrument_seed", None)
-        self.instruments = settings.config.args.get("random_instrument_instances", None)
-        self.simulation_seed = settings.config.args.get("simulation_seed", None)
-        self.seed_file = settings.config.args.get("sim_telarray_seed_file", None)
+        context = context or RunContext.from_environment()
+        self.instrument_seed = context.args.get("instrument_seed", None)
+        self.instruments = context.args.get("random_instrument_instances", None)
+        self.simulation_seed = context.args.get("simulation_seed", None)
+        self.seed_file = context.args.get("sim_telarray_seed_file", None)
         if output_path is not None:
             self.seed_file = Path(output_path) / self.seed_file
 
@@ -180,7 +187,7 @@ class SimtelSeeds:
         return random.seeds(max_seed=SIMTEL_MAX_SEED)
 
 
-def instance_seed_pairs(instances=1):
+def instance_seed_pairs(instances=1, context=None):
     """
     Instrument and simulation seed of each random instrument instance.
 
@@ -199,8 +206,9 @@ def instance_seed_pairs(instances=1):
     list of tuple of int
         (instrument seed, simulation seed) of each instance.
     """
-    instrument = settings.config.args.get("instrument_seed")
-    simulation = settings.config.args.get("simulation_seed")
+    context = context or RunContext.from_environment()
+    instrument = context.args.get("instrument_seed")
+    simulation = context.args.get("simulation_seed")
     if isinstance(simulation, list | tuple):
         fixed_instrument, simulation = _split_simulation_seed(simulation)
         if fixed_instrument is not None:

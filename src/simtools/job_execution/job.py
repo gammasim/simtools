@@ -32,8 +32,7 @@ class JobSpec:
     options: CommandOptions | None = None
     initializer: Any = None
     initargs: tuple[Any, ...] = ()
-    runtime_args: dict[str, Any] | None = None
-    model_source_config: dict[str, Any] | None = None
+    context_spec: dict[str, Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     resources: dict[str, Any] = field(default_factory=dict)
     mount_paths: tuple[Path, ...] = ()

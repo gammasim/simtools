@@ -615,9 +615,21 @@ def resolve_single_model_version(model_version):
     return model_version
 
 
-def build_observing_location(site, model_version):
-    """Build observing location from the site model."""
-    site_model = SiteModel(model_version=resolve_single_model_version(model_version), site=site)
+def build_observing_location(site, model_version, context=None):
+    """Build observing location from the site model.
+
+    Parameters
+    ----------
+    site : str
+        Site name.
+    model_version : str or list[str]
+        Model version used to read site coordinates.
+    context : RunContext, optional
+        Run configuration and model reader.
+    """
+    site_model = SiteModel(
+        model_version=resolve_single_model_version(model_version), site=site, context=context
+    )
     return EarthLocation(
         lat=site_model.get_parameter_value_with_unit("reference_point_latitude"),
         lon=site_model.get_parameter_value_with_unit("reference_point_longitude"),
@@ -685,16 +697,22 @@ def build_axes_dict_from_cli_args(args_dict):
     }
 
 
-def _resolve_nsb_rate(args_dict, model_version):
+def _resolve_nsb_rate(args_dict, model_version, context=None):
     """Resolve the NSB interpolation rate for one model version."""
     if not args_dict.get("site") or not model_version:
         raise ValueError("site and model_version are required to resolve nsb_rate.")
     return float(
-        SiteModel(model_version=model_version, site=args_dict["site"]).get_nsb_integrated_flux()
+        SiteModel(
+            model_version=model_version,
+            site=args_dict["site"],
+            context=context,
+        ).get_nsb_integrated_flux()
     )
 
 
-def build_production_grid_engine(args_dict, array_layout_name=None, model_version=None):
+def build_production_grid_engine(
+    args_dict, array_layout_name=None, model_version=None, context=None
+):
     """
     Build a production-grid engine from application arguments.
 
@@ -708,6 +726,8 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
     model_version : str, optional
         Model version for observing location, array layout, and NSB rate.
         Defaults to the first model version in ``args_dict``.
+    context : RunContext, optional
+        Run configuration and model reader.
 
     Returns
     -------
@@ -722,7 +742,7 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
     observing_location = None
     if args_dict.get("site") and resolved_model_version:
         observing_location = build_observing_location(
-            site=args_dict["site"], model_version=resolved_model_version
+            site=args_dict["site"], model_version=resolved_model_version, context=context
         )
     if coordinate_system == "ha_dec" and observing_location is None:
         raise ValueError("site is required when using HA/Dec axes.")
@@ -736,7 +756,7 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
         observing_location=observing_location,
         lookup_table=args_dict.get("corsika_limits"),
         array_layout_name=resolved_layout_name,
-        lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version),
+        lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version, context=context),
     )
 
 
@@ -1188,12 +1208,14 @@ def _log_generated_row_summary(rows):
     logger.info("Total showers for the entire production: %d.", summary[TOTAL_SHOWERS_ARGUMENT])
 
 
-def _resolve_nsb_rates_per_model_version(args_dict, model_versions):
+def _resolve_nsb_rates_per_model_version(args_dict, model_versions, context=None):
     """Resolve NSB interpolation rate per model version."""
-    return {mv: _resolve_nsb_rate(args_dict, mv) for mv in model_versions}
+    return {mv: _resolve_nsb_rate(args_dict, mv, context=context) for mv in model_versions}
 
 
-def _generate_observation_grids_per_layout(args_dict, grid_axes, nsb_rates_per_model_version=None):
+def _generate_observation_grids_per_layout(
+    args_dict, grid_axes, nsb_rates_per_model_version=None, context=None
+):
     """Generate observation grids per array layout.
 
     Uses either ProductionGridEngine or explicit azimuth/zenith axes.
@@ -1206,7 +1228,7 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes, nsb_rates_per_m
     corsika_limits_path = args_dict.get("corsika_limits")
     if nsb_rates_per_model_version is None:
         nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
-            args_dict, grid_axes["model_version"]
+            args_dict, grid_axes["model_version"], context=context
         )
 
     observation_grids_per_model_version = {}
@@ -1221,6 +1243,7 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes, nsb_rates_per_m
                     args_dict,
                     array_layout_name=resolved_layout_name,
                     model_version=model_version,
+                    context=context,
                 ).generate_simulation_grid()
             else:
                 corsika_limits = (
@@ -1271,7 +1294,7 @@ def _build_run_allocation(args_dict, total_showers, total_showers_scaling):
     )
 
 
-def build_simulation_jobs(args_dict):
+def build_simulation_jobs(args_dict, context=None):
     """
     Expand production config into full simulation job matrix.
 
@@ -1304,11 +1327,14 @@ def build_simulation_jobs(args_dict):
     view_cone = args_dict["view_cone"]
     corsika_hadronic_transition_energy = args_dict.get("corsika_hadronic_transition_energy")
     nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
-        args_dict, grid_axes["model_version"]
+        args_dict, grid_axes["model_version"], context=context
     )
     observation_grids_per_model_version, resolved_layout_names = (
         _generate_observation_grids_per_layout(
-            args_dict, grid_axes, nsb_rates_per_model_version=nsb_rates_per_model_version
+            args_dict,
+            grid_axes,
+            nsb_rates_per_model_version=nsb_rates_per_model_version,
+            context=context,
         )
     )
     logger.info(
@@ -1398,7 +1424,7 @@ def renumber_job_rows(job_rows, run_number_offset):
     return job_rows
 
 
-def generate_job_grid(args_dict, output_file, metadata=None):
+def generate_job_grid(args_dict, output_file, metadata=None, context=None):
     """
     Generate and serialize a production job grid.
 
@@ -1410,10 +1436,12 @@ def generate_job_grid(args_dict, output_file, metadata=None):
         Path to the ECSV file to write.
     metadata : dict, optional
         Default metadata to include in the ECSV header.
+    context : RunContext, optional
+        Run configuration and model reader.
     """
     production_definition_from_arguments(args_dict)
     job_rows = renumber_job_rows(
-        build_simulation_jobs(args_dict),
+        build_simulation_jobs(args_dict, context=context),
         run_number_offset=int(args_dict.get("run_number_offset", 0)),
     )
     serialize_job_grid(

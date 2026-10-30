@@ -38,21 +38,20 @@ APPLICATION = ApplicationDefinition.for_module(
             help="Build-options YAML files to merge in development mode.",
         ),
     ),
-    setup_io_handler=False,
-    resolve_sim_software_executables=False,
-    initialize_model_reader=False,
+    needs=(),
 )
 
 
 def main():
     """Write the requested provenance manifest."""
-    args = APPLICATION.start().args
+    app_context = APPLICATION.start()
+    args = app_context.args
     if args["development"]:
         write_development_dependency_manifest(
             args["output_file"], args["project_file"], args["build_option_files"]
         )
         return
-    write_dependency_manifest(args["output_file"])
+    write_dependency_manifest(args["output_file"], context=app_context)
 
 
 if __name__ == "__main__":

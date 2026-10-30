@@ -115,6 +115,7 @@ class SimtelBackend:
                 "seeds": request.seeds,
             },
             force_simulate=force,
+            context=self.context,
         )
         if not self.single_mirror_mode:
             simulator._write_config = False  # pylint: disable=protected-access

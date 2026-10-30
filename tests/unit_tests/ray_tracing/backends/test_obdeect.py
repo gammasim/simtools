@@ -159,13 +159,13 @@ def _request(off_axis_x=0.0):
 
 
 @pytest.fixture
-def backend(toy_telescope):
+def backend(toy_telescope, run_context):
     toy_telescope.site = "North"
-    return ObdeectBackend(toy_telescope, None, "test", 20.0, False)
+    return ObdeectBackend(toy_telescope, None, "test", 20.0, False, context=run_context)
 
 
 @pytest.mark.parametrize("save_photons", [False, True])
-def test_backend_psf_image(backend, io_handler, save_photons):
+def test_backend_psf_image(backend, run_context, save_photons):
     request = _request()
     with pytest.raises(RuntimeError, match="simulate first"):
         backend.psf_image(request, 800.0, 0.8)
@@ -177,7 +177,7 @@ def test_backend_psf_image(backend, io_handler, save_photons):
     assert request.key not in backend._images
     area = image.get_effective_area()
     assert area == pytest.approx(7 * math.pi / 4 - 0.36, rel=0.05)
-    files = list(io_handler.get_output_directory().glob("ray_tracing_photons*.ecsv"))
+    files = list(run_context.paths.get_output_directory().glob("ray_tracing_photons*.ecsv"))
     assert len(files) == int(save_photons)
     if save_photons:
         photons = QTable.read(files[0])

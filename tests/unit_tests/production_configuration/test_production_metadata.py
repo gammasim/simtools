@@ -74,7 +74,7 @@ def test_write_production_metadata_dispatches_check_and_write_modes(mocker, tmp_
     )
 
     mock_check.assert_called_once_with(production_path)
-    mock_write.assert_called_once_with(production_path, "job-grid.ecsv", mocker.ANY)
+    mock_write.assert_called_once_with(production_path, "job-grid.ecsv", mocker.ANY, None)
 
 
 def test_check_existing_manifests_validates_each_manifest(mocker, tmp_test_directory):
@@ -92,7 +92,9 @@ def test_check_existing_manifests_validates_each_manifest(mocker, tmp_test_direc
     mock_check.assert_called_once_with(manifest_path)
 
 
-def test_write_manifests_does_not_mark_incomplete_job_complete(mocker, tmp_test_directory):
+def test_write_manifests_does_not_mark_incomplete_job_complete(
+    mocker, tmp_test_directory, run_context
+):
     production_path = Path(tmp_test_directory)
     (production_path / "job-000001").mkdir()
     mocker.patch(
@@ -111,22 +113,27 @@ def test_write_manifests_does_not_mark_incomplete_job_complete(mocker, tmp_test_
             production_path,
             "job-grid.ecsv",
             {"overwrite": False},
+            run_context,
         )
 
     write_file.assert_not_called()
 
 
-def test_write_manifests_rejects_missing_job_directory(mocker, tmp_test_directory):
+def test_write_manifests_rejects_missing_job_directory(mocker, tmp_test_directory, run_context):
     mocker.patch(
         "simtools.production_configuration.production_metadata.read_job_grid",
         return_value=([_job_grid_row()], {}),
     )
 
     with pytest.raises(FileNotFoundError, match="Production job directory not found"):
-        production_metadata._write_manifests(Path(tmp_test_directory), "job-grid.ecsv", {})
+        production_metadata._write_manifests(
+            Path(tmp_test_directory), "job-grid.ecsv", {}, run_context
+        )
 
 
-def test_write_manifests_supports_zero_based_job_directories(mocker, tmp_test_directory):
+def test_write_manifests_supports_zero_based_job_directories(
+    mocker, tmp_test_directory, run_context
+):
     production_path = Path(tmp_test_directory)
     job_directory = production_path / "job-000000"
     job_directory.mkdir()
@@ -139,12 +146,16 @@ def test_write_manifests_supports_zero_based_job_directories(mocker, tmp_test_di
         "simtools.production_configuration.production_metadata.write_data_to_file"
     )
 
-    production_metadata._write_manifests(production_path, "job-grid.ecsv", {"overwrite": False})
+    production_metadata._write_manifests(
+        production_path, "job-grid.ecsv", {"overwrite": False}, run_context
+    )
 
     assert write_file.call_args.args[1] == job_directory / "simulate_prod_job_metadata.yml"
 
 
-def test_write_manifests_requires_overwrite_for_existing_manifest(mocker, tmp_test_directory):
+def test_write_manifests_requires_overwrite_for_existing_manifest(
+    mocker, tmp_test_directory, run_context
+):
     production_path = Path(tmp_test_directory)
     job_directory = production_path / "job-000001"
     job_directory.mkdir()
@@ -155,10 +166,12 @@ def test_write_manifests_requires_overwrite_for_existing_manifest(mocker, tmp_te
     )
 
     with pytest.raises(FileExistsError, match="Use --overwrite"):
-        production_metadata._write_manifests(production_path, "job-grid.ecsv", {})
+        production_metadata._write_manifests(production_path, "job-grid.ecsv", {}, run_context)
 
 
-def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(mocker, tmp_test_directory):
+def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(
+    mocker, tmp_test_directory, run_context
+):
     production_path = Path(tmp_test_directory)
     job_directory = production_path / "job-000001"
     job_directory.mkdir()
@@ -178,6 +191,7 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(mocker, tmp
         production_path,
         "job-grid.ecsv",
         {"overwrite": False},
+        run_context,
     )
 
     manifest = write_file.call_args.args[0]
@@ -185,13 +199,15 @@ def test_write_manifests_omits_unknown_catalog_and_atmosphere_values(mocker, tmp
     assert manifest["configuration"]["atmosphere"] == {}
 
 
-def test_write_manifests_requires_primary_and_existing_production_path(tmp_test_directory):
+def test_write_manifests_requires_primary_and_existing_production_path(
+    tmp_test_directory, run_context
+):
     job_grid = Path(tmp_test_directory) / "job-grid.ecsv"
     jobs_io.serialize_job_grid([{**_job_grid_row(), "nsb_rate": 1.0, "primary": ""}], job_grid)
     (Path(tmp_test_directory) / "job-000001").mkdir()
 
     with pytest.raises(KeyError, match="primary"):
-        production_metadata._write_manifests(Path(tmp_test_directory), job_grid, {})
+        production_metadata._write_manifests(Path(tmp_test_directory), job_grid, {}, run_context)
     with pytest.raises(FileNotFoundError, match="Production path not found"):
         production_metadata._check_existing_manifests(Path(tmp_test_directory) / "missing")
 

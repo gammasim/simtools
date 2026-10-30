@@ -148,12 +148,12 @@ def test_save_figure_closes_when_requested(io_handler, mocker):
     mock_close.assert_called_once_with(fig)
 
 
-def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker):
+def test_save_figure_uses_configured_dpi_for_png_only(tmp_test_directory, mocker, run_context):
     fig = mocker.Mock()
-    mocker.patch.object(visualize, "config").args = {"figure_dpi": 123}
+    context = run_context.replace(args={"figure_dpi": 123})
     output_file = Path(tmp_test_directory) / "figure"
 
-    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], dpi=150)
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], dpi=150, context=context)
 
     assert fig.savefig.call_args_list == [
         mocker.call(output_file.with_suffix(".pdf"), format="pdf", bbox_inches="tight", dpi=150),
@@ -392,22 +392,21 @@ def test_save_figure_keeps_decimal_points_in_name(tmp_test_directory, output_nam
     assert (tmp_test_directory / expected_name).exists()
 
 
-def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker):
-    mocker.patch.object(visualize, "config").args = {"figure_png_palette": True}
+def test_save_figure_converts_png_to_palette_if_configured(tmp_test_directory, mocker, run_context):
+    context = run_context.replace(args={"figure_png_palette": True})
     convert = mocker.patch.object(visualize, "convert_png_to_palette")
     fig = mocker.Mock()
     output_file = Path(tmp_test_directory) / "figure"
 
-    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"])
+    visualize.save_figure(fig, output_file, figure_format=["pdf", "png"], context=context)
 
     convert.assert_called_once_with(output_file.with_suffix(".png"))
 
 
-def test_save_figure_keeps_png_without_palette_option(tmp_test_directory, mocker):
-    mocker.patch.object(visualize, "config").args = {}
+def test_save_figure_keeps_png_without_palette_option(tmp_test_directory, mocker, run_context):
     convert = mocker.patch.object(visualize, "convert_png_to_palette")
 
-    visualize.save_figure(mocker.Mock(), Path(tmp_test_directory) / "figure")
+    visualize.save_figure(mocker.Mock(), Path(tmp_test_directory) / "figure", context=run_context)
 
     convert.assert_not_called()
 
@@ -437,3 +436,15 @@ def test_convert_png_to_palette_keeps_smaller_original(tmp_test_directory):
     visualize.convert_png_to_palette(png_file)
 
     assert png_file.read_bytes() == original
+
+
+def test_save_figure_uses_configured_figure_output(tmp_test_directory):
+    visualize.configure_figure_output({"figure_format": ["pdf", "png"]})
+    try:
+        fig = plt.figure()
+        visualize.save_figure(fig, Path(tmp_test_directory) / "configured.png")
+        assert (Path(tmp_test_directory) / "configured.pdf").exists()
+        assert (Path(tmp_test_directory) / "configured.png").exists()
+    finally:
+        visualize.configure_figure_output({})
+        plt.close("all")

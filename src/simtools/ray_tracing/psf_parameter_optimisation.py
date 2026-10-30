@@ -114,7 +114,9 @@ class PSFParameterOptimizer:
     LR_MAXIMUM_THRESHOLD = 0.01
     LR_RESET_VALUE = 0.0001
 
-    def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
+    def __init__(
+        self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir, context=None
+    ):
         """Initialize the PSF parameter optimizer."""
         self.tel_model = tel_model
         self.site_model = site_model
@@ -122,6 +124,7 @@ class PSFParameterOptimizer:
         self.data_to_plot = data_to_plot
         self.radius = radius
         self.output_dir = output_dir
+        self.context = (context or RunContext.from_environment()).replace(args=args_dict)
         self.use_ks_statistic = args_dict.get(KS_STATISTIC, False)
         self.fraction = args_dict.get("fraction", DEFAULT_FRACTION)
         self.simulation_cache = {}
@@ -207,6 +210,7 @@ class PSFParameterOptimizer:
             pdf_pages,
             is_best,
             ks_stat,
+            context=self.context,
         )
 
         # Cache the result if caching is enabled and not plotting
@@ -294,6 +298,7 @@ class PSFParameterOptimizer:
             self.output_dir,
             self.max_workers,
             _run_psf_evaluation,
+            context=self.context,
         )
 
     def apply_gradient_step(self, current_params, gradients, learning_rate):
@@ -323,7 +328,6 @@ class PSFParameterOptimizer:
         new_params = {}
         for param_name, param_values in current_params.items():
             param_gradients = gradients[param_name]
-
             if isinstance(param_values, list):
                 updated_values = []
                 for i, (value, gradient) in enumerate(zip(param_values, param_gradients)):
@@ -374,7 +378,6 @@ class PSFParameterOptimizer:
         for attempt in range(max_retries):
             try:
                 gradients = self.calculate_gradient(current_params, current_metric)
-
                 if gradients is None:
                     logger.warning(
                         f"Gradient calculation failed on attempt {attempt + 1}, skipping step"
@@ -475,11 +478,7 @@ class PSFParameterOptimizer:
 
         logger.info("Creating final plot for best parameters with both RMSD and KS statistic...")
         _, best_ks_stat, best_p_value, best_simulated_data = self.run_simulation(
-            best_params,
-            pdf_pages=None,
-            is_best=False,
-            use_cache=False,
-            use_ks_statistic=True,
+            best_params, pdf_pages=None, is_best=False, use_cache=False, use_ks_statistic=True
         )
         best_rmsd = calculate_rmsd(
             self.data_to_plot["measured"][CUMULATIVE_PSF], best_simulated_data[CUMULATIVE_PSF]
@@ -572,11 +571,8 @@ class PSFParameterOptimizer:
 
             iteration += 1
             logger.info(f"Gradient descent iteration {iteration}")
-
             step_result = self.perform_gradient_step_with_retries(
-                current_params,
-                current_metric,
-                current_lr,
+                current_params, current_metric, current_lr
             )
 
             if not step_result.step_accepted or step_result.params is None:
@@ -698,9 +694,7 @@ def _is_parameter_within_allowed_range(param_name, param_index, value):
         if not allowed_range:
             return True
 
-        min_val = allowed_range.get("min")
-        max_val = allowed_range.get("max")
-
+        min_val, max_val = allowed_range.get("min"), allowed_range.get("max")
         if min_val is not None and value < min_val:
             return False
         return not (max_val is not None and value > max_val)
@@ -932,7 +926,7 @@ def _add_units_to_psf_parameters(best_pars):
     return psf_pars_with_units
 
 
-def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
+def export_psf_parameters(best_pars, telescope, parameter_version, output_dir, context=None):
     """
     Export optimized PSF parameters as simulation model parameter files.
 
@@ -967,6 +961,7 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
                 parameter_version=parameter_version,
                 output_file=f"{parameter_name}-{parameter_version}.json",
                 output_path=parameter_output_path,
+                context=context,
             )
         logger.info(f"simulation model parameter files exported to {output_dir}")
 
@@ -1247,9 +1242,8 @@ def _initialize_job_models(args, **kwargs):
 def _run_psf_evaluation(job, context=None):
     """Evaluate one parameter set with its output paths."""
     context = context or RunContext.from_environment()
-    context = context.replace(
-        paths=OutputPaths(job.output_dir, model_path=context.paths.model_path)
-    )
+    paths = OutputPaths(job.output_dir, model_path=context.paths.model_path)
+    context = context.replace(paths=paths)
     try:
         telescope, site, _ = _initialize_job_models(
             job.args, model_directory=job.output_dir / "model", context=context
@@ -1275,6 +1269,7 @@ class PSFOptimizationJob:
 
     args: dict
     output_dir: Path
+    context: RunContext | None = None
 
 
 def run_psf_optimization_job(job):
@@ -1285,16 +1280,16 @@ def run_psf_optimization_job(job):
     job : PSFOptimizationJob
         Application arguments and output directory for the workflow.
     """
-    tel_model, site_model, _ = _initialize_job_models(job.args)
-    run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir)
+    tel_model, site_model, _ = _initialize_job_models(job.args, context=job.context)
+    run_psf_optimization_workflow(tel_model, site_model, job.args, job.output_dir, job.context)
 
 
-def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
+def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir, context=None):
     """Run the PSF parameter optimization workflow using gradient descent."""
     data_to_plot, radius = load_and_process_data(args_dict)
 
     optimizer = PSFParameterOptimizer(
-        tel_model, site_model, args_dict, data_to_plot, radius, output_dir
+        tel_model, site_model, args_dict, data_to_plot, radius, output_dir, context=context
     )
 
     # Handle Monte Carlo analysis if requested
@@ -1302,11 +1297,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         mc_results = optimizer.analyze_monte_carlo_error()
         if mc_results[0] is not None:
             mc_file = write_monte_carlo_analysis(
-                mc_results,
-                output_dir,
-                tel_model,
-                optimizer.use_ks_statistic,
-                optimizer.fraction,
+                mc_results, output_dir, tel_model, optimizer.use_ks_statistic, optimizer.fraction
             )
             logger.info(f"Monte Carlo analysis results written to {mc_file}")
             mc_plot_file = output_dir.joinpath(f"monte_carlo_uncertainty_{tel_model.name}.pdf")
@@ -1329,15 +1320,10 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
 
     create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, output_dir)
 
-    convergence_plot_file = output_dir.joinpath(
-        f"gradient_descent_convergence_{tel_model.name}.png"
-    )
+    plot_file = f"gradient_descent_convergence_{tel_model.name}.png"
+    convergence_plot_file = output_dir.joinpath(plot_file)
     plot_psf.create_gradient_descent_convergence_plot(
-        gd_results,
-        threshold,
-        convergence_plot_file,
-        optimizer.fraction,
-        optimizer.use_ks_statistic,
+        gd_results, threshold, convergence_plot_file, optimizer.fraction, optimizer.use_ks_statistic
     )
 
     param_file = write_gradient_descent_log(
@@ -1351,12 +1337,18 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     )
     logger.info(f"\nGradient descent progression written to {param_file}")
 
-    create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir)
+    create_psf_vs_offaxis_plot(
+        tel_model, site_model, args_dict, best_pars, output_dir, context=context
+    )
 
     if args_dict.get("write_psf_parameters", False):
         logger.info("Exporting best parameters as model files...")
         export_psf_parameters(
-            best_pars, args_dict.get(TELESCOPE), args_dict.get("parameter_version"), output_dir
+            best_pars,
+            args_dict.get(TELESCOPE),
+            args_dict.get("parameter_version"),
+            output_dir,
+            context=context,
         )
 
     if args_dict.get(CLEANUP, False):
@@ -1367,7 +1359,9 @@ MAX_OFFSET_DEFAULT = 4.5  # Maximum off-axis angle in degrees
 OFFSET_STEPS_DEFAULT = 0.1  # Step size for off-axis angle sampling
 
 
-def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
+def create_psf_vs_offaxis_plot(
+    tel_model, site_model, args_dict, best_pars, output_dir, context=None
+):
     """
     Create PSF diameter vs off-axis angle plot using the best parameters.
 
@@ -1383,6 +1377,8 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         Best parameter set.
     output_dir : Path
         Output directory for plots.
+    context : RunContext, optional
+        Run context for ray tracing.
     """
     fraction = args_dict.get("fraction", DEFAULT_FRACTION)
     psf_label_cm = get_psf_diameter_label(fraction, unit="cm")
@@ -1413,6 +1409,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=off_axis_angles * u.deg,
+        context=context,
     )
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")

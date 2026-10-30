@@ -356,6 +356,7 @@ class ArrayLayout:
                 file_name=telescope_list_file,
                 validate=validate,
                 metadata_file=telescope_list_metadata_file,
+                context=self.context,
             )
 
         for row in table:
@@ -426,6 +427,7 @@ class ArrayLayout:
             telescope_name=telescope_name,
             model_version=self.model_version,
             label=self.label,
+            context=self.context,
         )
 
     def _set_telescope_auxiliary_parameters(self, telescope, telescope_name=None):

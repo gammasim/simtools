@@ -54,8 +54,12 @@ class ModelDataWriter:
             self.context = self.context.replace(paths=paths)
         self.io_handler = self.context.paths
         try:
-            self.output_file = self.io_handler.get_output_file(
-                file_name=output_file, output_path_label=self.output_label
+            self.output_file = (
+                self.io_handler.get_output_file(
+                    file_name=output_file, output_path_label=self.output_label
+                )
+                if self.output_label in self.io_handler.output_path
+                else None
             )
         except TypeError:
             self.output_file = None
@@ -181,7 +185,7 @@ class ModelDataWriter:
                 activity_id = gen.extract_uuid7_from_path(output_file)
                 if activity_id is not None:
                     metadata_input_dict["activity_id"] = activity_id
-            metadata = MetadataCollector(args_dict=metadata_input_dict)
+            metadata = MetadataCollector(args_dict=metadata_input_dict, context=context)
             unique_id = (
                 metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
             )

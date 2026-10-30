@@ -48,6 +48,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
     ),
+    needs=("corsika",),
 )
 
 
@@ -75,6 +76,7 @@ def main():
         model_version=model_version,
         simulation_models_path=simulation_models_path,
         setting_workflows_git_tag=app_context.args[_SETTING_WORKFLOWS_GIT_TAG_KEY],
+        context=app_context,
     )
 
 

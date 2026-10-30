@@ -81,7 +81,7 @@ def test_validate_cumulative_psf_requires_data_before_simulation():
         "test": True,
     }
     io_handler = MagicMock()
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -116,7 +116,7 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     measured = np.array(
         [(1.0, 0.2), (2.0, 1.0)],
@@ -183,7 +183,7 @@ def test_validate_optics_no_images(tmp_test_directory, max_workers):
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -230,7 +230,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.pdf"
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -301,7 +301,7 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
     io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
-    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+    app_context = SimpleNamespace(args=args_dict, paths=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -353,7 +353,7 @@ def test_effective_focal_length_value_from_results_empty_mask_returns_zero():
     assert value == [0.0, 0.0, 0.0, 0.0, 0.0]
 
 
-def test_export_effective_focal_length_model_parameter_without_results(caplog):
+def test_export_effective_focal_length_model_parameter_without_results(caplog, run_context):
     mock_ray = MagicMock(spec=[])
 
     optics_validation._export_effective_focal_length_model_parameter(
@@ -363,6 +363,7 @@ def test_export_effective_focal_length_model_parameter_without_results(caplog):
         parameter_version="5.0.1",
         output_directory=Path("dummy"),
         metadata_input_dict={},
+        context=run_context,
     )
 
     assert "No ray-tracing results available to export effective_focal_length" in caplog.text

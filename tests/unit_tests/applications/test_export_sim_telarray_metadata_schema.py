@@ -15,7 +15,7 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
             "source_type": "generated",
             "schema_version": None,
         },
-        io_handler=SimpleNamespace(get_output_file=lambda _: output_file),
+        paths=SimpleNamespace(get_output_file=lambda _: output_file),
         logger=SimpleNamespace(info=lambda _: None),
     )
     mocker.patch(

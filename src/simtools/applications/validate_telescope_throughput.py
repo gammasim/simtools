@@ -49,6 +49,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_EXISTING_PARAMETER_VERSION,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
+    needs=("model", "corsika"),
 )
 
 
@@ -58,8 +59,9 @@ def main():
 
     run_camera_efficiency(
         app_context.args,
-        app_context.io_handler.get_output_directory(),
+        app_context.paths.get_output_directory(),
         label=app_context.args.get("label"),
+        context=app_context,
     )
 
 

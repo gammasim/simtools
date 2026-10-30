@@ -12,8 +12,9 @@ from simtools.simulation.configuration import get_model_writer
 logger = logging.getLogger()
 
 
-def test_get_corsika_site_parameters(model_version):
+def test_get_corsika_site_parameters(model_version, run_context):
     _north = SiteModel(
+        context=run_context,
         site="North",
         label="testing-sitemodel",
         model_version=model_version,
@@ -24,7 +25,7 @@ def test_get_corsika_site_parameters(model_version):
     assert "ARRANG" in _north.get_corsika_site_parameters(config_file_style=True)
 
 
-def test_get_corsika_site_parameters_with_model_directory(array_model_north):
+def test_get_corsika_site_parameters_with_model_directory(array_model_north, run_context):
     model_directory = array_model_north.get_config_directory()
     corsika_site_parameters = array_model_north.site_model.get_corsika_site_parameters(
         config_file_style=True, model_directory=model_directory
@@ -32,7 +33,9 @@ def test_get_corsika_site_parameters_with_model_directory(array_model_north):
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
 
 
-def test_get_corsika_site_parameters_uses_simtel_atmospheric_profile_file(array_model_north):
+def test_get_corsika_site_parameters_uses_simtel_atmospheric_profile_file(
+    array_model_north, run_context
+):
     parameter = array_model_north.site_model.parameters["atmospheric_profile"]
     parameter.update(
         value="atmospheric_profile-1.0.0.ecsv",
@@ -47,8 +50,9 @@ def test_get_corsika_site_parameters_uses_simtel_atmospheric_profile_file(array_
     assert parameters["IACT ATMOFILE"][0].name == "atmospheric_profile-1.0.0.dat"
 
 
-def test_get_array_elements_for_layout(model_version):
+def test_get_array_elements_for_layout(model_version, run_context):
     _north = SiteModel(
+        context=run_context,
         site="North",
         label="testing-sitemodel",
         model_version=model_version,
@@ -67,9 +71,13 @@ def test_get_array_elements_for_layout(model_version):
         _north.get_array_elements_for_layout("not_a_layout")
 
 
-def test_get_array_elements_for_layout_single_telescope(model_version):
-    _north = SiteModel(site="North", label="testing-sitemodel", model_version=model_version)
-    _south = SiteModel(site="South", label="testing-sitemodel", model_version=model_version)
+def test_get_array_elements_for_layout_single_telescope(model_version, run_context):
+    _north = SiteModel(
+        context=run_context, site="North", label="testing-sitemodel", model_version=model_version
+    )
+    _south = SiteModel(
+        context=run_context, site="South", label="testing-sitemodel", model_version=model_version
+    )
 
     # Valid North telescope used as single-telescope layout
     result = _north.get_array_elements_for_layout("MSTN-05")
@@ -101,8 +109,9 @@ def test_get_array_elements_for_layout_single_telescope(model_version):
         _north.get_array_elements_for_layout("ILLN-01")
 
 
-def test_get_list_of_array_layouts(model_version):
+def test_get_list_of_array_layouts(model_version, run_context):
     _north = SiteModel(
+        context=run_context,
         site="North",
         label="testing-sitemodel",
         model_version=model_version,
@@ -112,8 +121,11 @@ def test_get_list_of_array_layouts(model_version):
     assert "test_layout" in _north.get_list_of_array_layouts()
 
 
-def test_export_atmospheric_transmission_file(model_version, tmp_test_directory, mocker):
+def test_export_atmospheric_transmission_file(
+    model_version, tmp_test_directory, mocker, run_context
+):
     _south = SiteModel(
+        context=run_context,
         site="South",
         label="testing-sitemodel",
         model_version=model_version,
@@ -137,9 +149,10 @@ def test_export_atmospheric_transmission_file(model_version, tmp_test_directory,
 
 
 def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
-    model_version, tmp_test_directory, mocker
+    model_version, tmp_test_directory, mocker, run_context
 ):
     site_model = SiteModel(
+        context=run_context,
         site="South",
         label="testing-sitemodel",
         model_version=model_version,
@@ -165,8 +178,9 @@ def test_export_atmospheric_transmission_file_serializes_ecsv_profile(
     )
 
 
-def test_get_nsb_integrated_flux(model_version, mocker):
+def test_get_nsb_integrated_flux(model_version, mocker, run_context):
     _south = SiteModel(
+        context=run_context,
         site="South",
         label="testing-sitemodel",
         model_version=model_version,
@@ -189,8 +203,11 @@ def test_get_nsb_integrated_flux(model_version, mocker):
     get_parameter_table.assert_called_once_with("nsb_spectrum")
 
 
-def test_get_nsb_integrated_flux_returns_zero_for_empty_wavelength_range(model_version, mocker):
+def test_get_nsb_integrated_flux_returns_zero_for_empty_wavelength_range(
+    model_version, mocker, run_context
+):
     site_model = SiteModel(
+        context=run_context,
         site="South",
         label="testing-sitemodel",
         model_version=model_version,
