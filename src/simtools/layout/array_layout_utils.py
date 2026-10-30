@@ -10,12 +10,15 @@ from astropy.table import QTable, Table
 import simtools.utils.general as gen
 import simtools.version as simtools_version
 from simtools.context import RunContext
-from simtools.data_model import data_reader
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler
-from simtools.model.array_model import ArrayModel
-from simtools.model.site_model import SiteModel
-from simtools.utils import names, value_conversion
+from simtools.layout.array_layout_sources import (
+    get_array_layouts_from_file,
+    get_array_layouts_from_model_repository,
+    get_array_layouts_from_parameter_file,
+    get_array_layouts_using_telescope_lists_from_model_repository,
+)
+from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 SUBARRAY_IDS_FILE_NAME = "subarray-ids.json"
@@ -23,22 +26,21 @@ SUBARRAY_IDS_FILE_NAME = "subarray-ids.json"
 
 def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
     """
-    Retrieve array layouts from CTAO common identifiers repository.
+    Retrieve array layouts from the CTAO common identifiers repository.
 
     Parameters
     ----------
     site : str
         Site identifier.
     repository_url : str
-        URL or path to CTAO common identifiers
+        URL or path to CTAO common identifiers.
     branch_name : str
-        Repository branch to use for CTAO common identifiers.
+        Repository branch to use.
 
     Returns
     -------
     tuple
-        Array layouts for the requested site (list of dicts) and metadata from
-        ``subarray-ids.json`` (dict).
+        Array layouts for the site (list of dicts) and ``subarray-ids.json`` metadata (list).
     """
     _logger.info(f"Retrieving array layouts from {repository_url} on branch {branch_name}.")
 
@@ -73,9 +75,8 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
 
 def _build_associated_data_from_metadata(metadata, url=None, branch=None):
     """Return associated_data entries derived from subarray-ids.json metadata."""
-    entries = []
     if product_id := metadata.get("CTA PRODUCT ID"):
-        entries.append(
+        return [
             {
                 "id": product_id,
                 "description": "CTAO subarray identifiers",
@@ -83,30 +84,13 @@ def _build_associated_data_from_metadata(metadata, url=None, branch=None):
                 "url": url,
                 "branch": branch,
             }
-        )
-    return entries
+        ]
+    return []
 
 
 def _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids):
-    """
-    Get array layouts for CTAO sites.
-
-    Parameters
-    ----------
-    site : str
-        Site identifier.
-    sub_arrays : dict
-        Sub-array definitions.
-    array_element_ids : dict
-        Array element definitions.
-
-    Returns
-    -------
-    dict
-        Array layouts for CTAO sites.
-    """
+    """Get array layouts for CTAO sites (sub-arrays whose elements belong to ``site``)."""
     layouts_per_site = []
-
     for array in sub_arrays.get("subarrays", []):
         elements = []
         for ids in array.get("array_element_ids", []):
@@ -115,11 +99,7 @@ def _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids):
                 break
             elements.append(element_name)
         if len(elements) > 0:
-            array_layout = {
-                "name": array.get("name"),
-                "elements": elements,
-            }
-            layouts_per_site.append(array_layout)
+            layouts_per_site.append({"name": array.get("name"), "elements": elements})
 
     _logger.info(f"CTAO array layout definition: {layouts_per_site}")
     return layouts_per_site
@@ -163,10 +143,7 @@ def merge_array_layouts(layouts_1, layouts_2):
                 layout_found = True
         if not layout_found:
             merged_layout["value"].append(
-                {
-                    "name": normalized_name,
-                    "elements": layout_2["elements"],
-                }
+                {"name": normalized_name, "elements": layout_2["elements"]}
             )
             _logger.info(f"Adding {normalized_name} with {layout_2['elements']}")
 
@@ -183,7 +160,6 @@ def _deduplicate_and_normalize_layouts(layouts):
     """Deduplicate layouts by telescope set and normalize all layout names."""
     deduplicated_layouts = []
     seen_element_sets = set()
-
     for layout in layouts:
         element_key = tuple(sorted(layout.get("elements", [])))
         if element_key in seen_element_sets:
@@ -191,7 +167,6 @@ def _deduplicate_and_normalize_layouts(layouts):
                 f"Skipping duplicate layout {layout.get('name')} with elements {element_key}"
             )
             continue
-
         deduplicated_layouts.append(
             {
                 "name": _normalize_array_layout_name(layout.get("name")),
@@ -199,7 +174,6 @@ def _deduplicate_and_normalize_layouts(layouts):
             }
         )
         seen_element_sets.add(element_key)
-
     return deduplicated_layouts
 
 
@@ -214,7 +188,9 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None, *, conte
     args_dict : dict
         Command line arguments.
     associated_data : list, optional
-        List of associated data entries to include in the metadata.
+        Associated data entries to include in the metadata.
+    context : RunContext, optional
+        Run context (defaults to the environment).
     """
     site = args_dict.get("site") or array_layouts.get("site")
     _logger.info(f"Writing updated array layouts to the model repository for site {site}.")
@@ -242,10 +218,7 @@ def write_array_layouts(array_layouts, args_dict, associated_data=None, *, conte
 
 def validate_array_layouts_with_model_repository(production_table, array_layouts):
     """
-    Validate array layouts against the production table in the model repository.
-
-    Confirm that every telescope defined in the array layouts exist in the
-    production table.
+    Validate that all telescopes in the array layouts exist in the production table.
 
     Parameters
     ----------
@@ -258,24 +231,27 @@ def validate_array_layouts_with_model_repository(production_table, array_layouts
     -------
     dict
         Validated array layouts.
+
+    Raises
+    ------
+    ValueError
+        If array elements are not in the production table.
     """
     model_elements = set(production_table.get("parameters", {}).keys())
-
     invalid_array_elements = [
         e
         for layout in array_layouts.get("value", [])
         for e in layout.get("elements", [])
         if e not in model_elements
     ]
-
     if invalid_array_elements:
         raise ValueError(f"Invalid array elements found: {invalid_array_elements}. ")
-
     return array_layouts
 
 
 def get_array_layout_elements(array_layouts, layout_name):
-    """Return the elements for a named layout in an array-layout parameter.
+    """
+    Return the elements of a named layout in an array-layout parameter.
 
     Parameters
     ----------
@@ -287,12 +263,12 @@ def get_array_layout_elements(array_layouts, layout_name):
     Returns
     -------
     list
-        Elements in the named layout, preserving their stored order.
+        Elements in the named layout, in stored order.
 
     Raises
     ------
     ValueError
-        If the reference layout does not exist or has no elements.
+        If the layout does not exist or has no elements.
     """
     for layout in array_layouts.get("value", []):
         if layout.get("name") == layout_name:
@@ -300,14 +276,14 @@ def get_array_layout_elements(array_layouts, layout_name):
             if not elements:
                 raise ValueError(f"Reference array layout '{layout_name}' has no elements.")
             return list(elements)
-
     raise ValueError(f"Reference array layout '{layout_name}' not found.")
 
 
 def validate_array_layout_subset_of_reference(
     layout_name, elements, reference_elements, reference_layout_name
 ):
-    """Validate and return one array layout constrained by a reference layout.
+    """
+    Validate and return one array layout constrained by a reference layout.
 
     Parameters
     ----------
@@ -328,8 +304,8 @@ def validate_array_layout_subset_of_reference(
     Raises
     ------
     ValueError
-        If the name or element list is invalid, contains duplicates, or is not
-        a subset of the reference layout.
+        If the name or element list is invalid, has duplicates, or is not a subset
+        of the reference layout.
     """
     if not isinstance(layout_name, str) or not layout_name.strip():
         raise ValueError("Array layout name must be a non-empty string.")
@@ -345,16 +321,16 @@ def validate_array_layout_subset_of_reference(
             f"Array layout '{layout_name}' contains elements outside reference layout "
             f"'{reference_layout_name}': {invalid_elements}."
         )
-
     return {"name": layout_name, "elements": list(elements)}
 
 
 def prepare_array_layouts_for_submission(model_reader, args_dict):
-    """Read or construct array layouts for the submit application.
+    """
+    Read or construct array layouts for the submit application.
 
     The legacy file input is returned unchanged. Direct input reads the base
-    parameter, validates the requested layout against its reference layout,
-    and adds the new layout to the base value.
+    parameter, validates the requested layout against its reference layout, and
+    adds the new layout to the base value.
 
     Parameters
     ----------
@@ -366,8 +342,7 @@ def prepare_array_layouts_for_submission(model_reader, args_dict):
     Returns
     -------
     tuple
-        Array-layout parameter and the single model version used for
-        production-table validation.
+        Array-layout parameter and the single model version used for validation.
 
     Raises
     ------
@@ -402,13 +377,12 @@ def prepare_array_layouts_for_submission(model_reader, args_dict):
         raise ValueError("Direct layout input requires: " + ", ".join(missing))
 
     model_version = _get_single_model_version(args_dict["model_version"])
-    parameter_data = model_reader.get_model_parameter(
+    base_layouts = model_reader.get_model_parameter(
         parameter="array_layouts",
         site=args_dict["site"],
         array_element_name=None,
         parameter_version=args_dict["parameter_version"],
-    )
-    base_layouts = parameter_data["array_layouts"]
+    )["array_layouts"]
     parameter_site = base_layouts.get("site")
     if parameter_site and parameter_site != args_dict["site"]:
         raise ValueError(
@@ -445,275 +419,6 @@ def _get_single_model_version(model_version):
     return model_version
 
 
-def get_array_layouts_from_parameter_file(
-    file_path, model_version, coordinate_system="ground", array_layout_name=None, context=None
-):
-    """
-    Retrieve array layouts from parameter file.
-
-    Parameters
-    ----------
-    file_path : str or Path
-        Path to the array layout parameter file.
-    model_version : str
-        Model version to retrieve.
-    coordinate_system : str
-        Coordinate system to use for the array elements (default is "ground").
-    array_layout_name : list
-        List of array layouts to plot (if None: plot all)
-
-    Returns
-    -------
-    list
-        List of dictionaries containing array layout names and their elements.
-    """
-    array_layouts = ascii_handler.collect_data_from_file(file_path)
-    try:
-        value = array_layouts["value"]
-    except KeyError as exc:
-        raise ValueError("Missing 'value' key in layout file.") from exc
-    site = array_layouts.get("site")
-
-    return [
-        _get_array_layout_dict(
-            model_version,
-            site,
-            layout.get("elements"),
-            layout["name"],
-            coordinate_system,
-            context=context,
-        )
-        for layout in value
-        if array_layout_name is None or layout.get("name") in array_layout_name
-    ]
-
-
-def get_array_layouts_from_model_repository(
-    layout_name,
-    site,
-    model_version,
-    coordinate_system="ground",
-    ignore_software_version=False,
-    model_reader=None,
-    context=None,
-):
-    """
-    Retrieve all array layouts from the model repository and return as list of astropy tables.
-
-    Parameters
-    ----------
-    layout_name : str
-        Name of the array layout to retrieve (for None, all layouts are retrieved).
-    site : str
-        Site identifier.
-    model_version : str
-        Model version to retrieve.
-    coordinate_system : str
-        Coordinate system to use for the array elements (default is "ground").
-    ignore_software_version : bool
-        If True, skip the software version compatibility check.
-
-    Returns
-    -------
-    list
-        List of dictionaries containing array layout names and their elements.
-    """
-    layout_names = []
-    if layout_name:
-        layout_names = value_conversion.ensure_list(layout_name)
-    else:
-        site_model = SiteModel(
-            site=site,
-            model_version=model_version,
-            ignore_software_version=ignore_software_version,
-            model_reader=model_reader,
-            context=context,
-        )
-        layout_names = site_model.get_list_of_array_layouts()
-
-    layouts = [
-        _get_array_layout_dict(
-            model_version,
-            site,
-            None,
-            _layout_name,
-            coordinate_system,
-            ignore_software_version,
-            model_reader=model_reader,
-            context=context,
-        )
-        for _layout_name in layout_names
-    ]
-    if len(layouts) == 1:
-        return layouts[0]
-    return layouts
-
-
-def get_array_layouts_using_telescope_lists_from_model_repository(
-    telescope_lists,
-    site,
-    model_version,
-    coordinate_system="ground",
-    ignore_software_version=False,
-    model_reader=None,
-    context=None,
-):
-    """
-    Retrieve array layouts from the model repository using telescope lists.
-
-    Parameters
-    ----------
-    telescope_lists : list
-        List of telescope lists to retrieve array layouts for.
-    site : str
-        Site identifier.
-    model_version : str
-        Model version to retrieve.
-    coordinate_system : str
-        Coordinate system to use for the array elements (default is "ground").
-    ignore_software_version : bool
-        If True, skip the software version compatibility check.
-
-    Returns
-    -------
-    list
-        List of dictionaries containing array layout names and their elements.
-
-    """
-    layouts = []
-    for telescope_list in telescope_lists:
-        _site = site
-        if _site is None:
-            sites = {names.get_site_from_array_element_name(t) for t in telescope_list}
-            if len(sites) != 1:
-                raise ValueError(
-                    f"Telescope list contains elements from multiple sites: {sites}."
-                    "Please specify a site."
-                )
-            _site = sites.pop()
-
-        layouts.append(
-            _get_array_layout_dict(
-                model_version,
-                _site,
-                telescope_list,
-                None,
-                coordinate_system,
-                ignore_software_version,
-                model_reader,
-                context=context,
-            )
-        )
-    return layouts
-
-
-def get_array_layouts_from_file(file_path, context=None):
-    """
-    Retrieve array layout(s) from astropy table file(s).
-
-    Parameters
-    ----------
-    file_path : str or Path or list of str or list of Path
-        Path(s) to array layout files(s).
-
-    Returns
-    -------
-    list
-        List of dictionaries containing array layout names and their elements.
-    """
-    if isinstance(file_path, str | Path):
-        file_path = [file_path]
-
-    return [
-        {
-            "name": Path(_file).stem,
-            "array_elements": data_reader.read_table_from_file(file_name=_file, context=context),
-        }
-        for _file in file_path
-    ]
-
-
-def _get_array_layout_dict(
-    model_version,
-    site,
-    telescope_list,
-    layout_name,
-    coordinate_system,
-    ignore_software_version=False,
-    model_reader=None,
-    *,
-    context,
-):
-    """Return array layout dictionary for a given telescope list."""
-    array_model = ArrayModel(
-        model_version=model_version,
-        site=site,
-        array_elements=telescope_list,
-        layout_name=layout_name,
-        ignore_software_version=ignore_software_version,
-        model_reader=model_reader,
-        context=context,
-    )
-    return {
-        "name": layout_name if layout_name else "list",
-        "site": site,
-        "array_elements": array_model.export_array_elements_as_table(
-            coordinate_system=coordinate_system
-        ),
-    }
-
-
-def get_array_elements_from_model_repository(
-    layouts, site, model_version, model_reader=None, context=None
-):
-    """
-    Get list of array elements from the model repository for given list of layout names.
-
-    Structure of the returned dictionary::
-
-        {
-            "layout_name_1": [telescope_id_1, telescope_id_2, ...],
-            "layout_name_2": [telescope_id_3, telescope_id_4, ...],
-            ...
-        }
-
-    Parameters
-    ----------
-    layouts : list[str]
-        List of layout names to read. If "all", read all available layouts.
-    site : str
-        Site name for the array layouts.
-    model_version : str
-        Model version for the array layouts.
-
-    Returns
-    -------
-    dict
-        Dictionary mapping layout names to telescope IDs.
-    """
-    site_model = SiteModel(
-        site=site,
-        model_version=model_version,
-        model_reader=model_reader,
-        context=context,
-    )
-    layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
-    layout_dict = {}
-    for layout_name in layout_names:
-        layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
-    return layout_dict
-
-
-def _validate_layout_file_args(args_dict):
-    """Validate the related array-layout parameter-file options."""
-    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
-        "array_layout_parameter_file"
-    ):
-        raise ValueError(
-            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
-        )
-
-
 def read_layouts(args_dict, model_reader=None, context=None):
     """
     Read array layouts from the model repository or parameter file.
@@ -722,15 +427,27 @@ def read_layouts(args_dict, model_reader=None, context=None):
     ----------
     args_dict : dict
         Dictionary with command line arguments.
+    model_reader : SimulationModelReader, optional
+        Model reader.
+    context : RunContext, optional
+        Run context.
 
     Returns
     -------
     tuple
-        A tuple containing:
-            - list: List of array layouts.
-            - list or None: Background layout or None if not provided.
+        List of array layouts and the background layout (or None).
+
+    Raises
+    ------
+    ValueError
+        If array_layout_name_from_parameter_file is given without array_layout_parameter_file.
     """
-    _validate_layout_file_args(args_dict)
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        raise ValueError(
+            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
+        )
 
     background_layout = None
     ignore_software_version = args_dict.get("ignore_software_version", False)
@@ -792,35 +509,29 @@ def read_layouts(args_dict, model_reader=None, context=None):
 
 
 def _create_star_array(tel_name, pos_x, pos_y, pos_z, n_telescopes, tel_type, site, distance):
-    """Create star-shaped array positions along x and y axes."""
+    """Create star-shaped array positions along the x and y axes."""
     axis_sequence = ["x", "y", "-x", "-y"]
     step = 1
     for i in range(n_telescopes):
         tel_name.append(
             names.generate_array_element_name_from_type_site_id(tel_type, site, f"{i + 1:02d}")
         )
-        axis = axis_sequence[i % 4]
         dist = distance * step
-        if axis == "x":
-            pos_x.append(dist)
-            pos_y.append(0 * u.m)
-        elif axis == "-x":
-            pos_x.append(-dist)
-            pos_y.append(0 * u.m)
-        elif axis == "y":
-            pos_x.append(0 * u.m)
-            pos_y.append(dist)
-        elif axis == "-y":
-            pos_x.append(0 * u.m)
-            pos_y.append(-dist)
+        x, y = {
+            "x": (dist, 0 * u.m),
+            "-x": (-dist, 0 * u.m),
+            "y": (0 * u.m, dist),
+            "-y": (0 * u.m, -dist),
+        }[axis_sequence[i % 4]]
+        pos_x.append(x)
+        pos_y.append(y)
         pos_z.append(0 * u.m)
-
         if (i + 1) % 4 == 0:
             step += 1
 
 
 def _create_square_array(tel_name, pos_x, pos_y, pos_z, n_tel, tel_type, site, distance):
-    """Create square array positions."""
+    """Create square array positions (1 or 4 telescopes)."""
     if n_tel == 1:
         tel_name.append(names.generate_array_element_name_from_type_site_id(tel_type, site, "01"))
         pos_x.append(0 * u.m)
@@ -863,33 +574,20 @@ def create_regular_array(
     -------
     astropy.table.Table
         Table with the regular array layout.
-    """
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
 
-    if shape == "square":
-        _create_square_array(
-            tel_name,
-            pos_x,
-            pos_y,
-            pos_z,
-            n_telescopes,
-            telescope_type,
-            site,
-            telescope_distance,
-        )
-    elif shape == "star":
-        _create_star_array(
-            tel_name,
-            pos_x,
-            pos_y,
-            pos_z,
-            n_telescopes,
-            telescope_type,
-            site,
-            telescope_distance,
-        )
-    else:
+    Raises
+    ------
+    ValueError
+        If the shape is not supported.
+    """
+    builders = {"square": _create_square_array, "star": _create_star_array}
+    if shape not in builders:
         raise ValueError(f"Unsupported array shape: {shape}. Allowed: 'square' or 'star'.")
+
+    tel_name, pos_x, pos_y, pos_z = [], [], [], []
+    builders[shape](
+        tel_name, pos_x, pos_y, pos_z, n_telescopes, telescope_type, site, telescope_distance
+    )
 
     table = QTable(meta={"array_name": array_name, "site": site})
     table["telescope_name"] = tel_name
@@ -898,7 +596,6 @@ def create_regular_array(
     table["position_z"] = pos_z
     table.sort("telescope_name")
     _logger.info(f"Regular array layout table:\n{table}")
-
     return table
 
 
@@ -906,9 +603,9 @@ def write_array_elements_from_file_to_repository(
     coordinate_system, input_file, repository_path, parameter_version, context=None
 ):
     """
-    Read array elements from file and write their positions to model repository.
+    Read array elements from file and write their positions to the model repository.
 
-    Writes one model parameter file per array elements.
+    Writes one model parameter file per array element.
 
     Parameters
     ----------
@@ -920,30 +617,27 @@ def write_array_elements_from_file_to_repository(
         Path to model repository.
     parameter_version : str
         Parameter version to use when writing to repository.
+    context : RunContext, optional
+        Run context.
 
     Notes
     -----
-    Repository generation writes files directly and does not query a model repository
-    for an existing parameter version.
+    Writes files directly and does not query the model repository for an existing version.
     """
     repository_path = Path(repository_path)
-
     array_elements = Table.read(input_file)
 
     if coordinate_system == "ground":
         parameter_name = "array_element_position_ground"
-        x = array_elements["position_x"].quantity.to(u.m).value
-        y = array_elements["position_y"].quantity.to(u.m).value
-        alt = array_elements["position_z"].quantity.to(u.m).value
+        columns = ("position_x", "position_y", "position_z")
     elif coordinate_system == "utm":
-        x = array_elements["utm_east"].quantity.to(u.m).value
-        y = array_elements["utm_north"].quantity.to(u.m).value
-        alt = array_elements["altitude"].quantity.to(u.m).value
         parameter_name = "array_element_position_utm"
+        columns = ("utm_east", "utm_north", "altitude")
     else:
         raise ValueError(
             f"Unsupported coordinate system: {coordinate_system}. Allowed are 'utm' and 'ground'."
         )
+    x, y, alt = (array_elements[c].quantity.to(u.m).value for c in columns)
 
     for i, row in enumerate(array_elements):
         instrument = (
@@ -961,7 +655,7 @@ def write_array_elements_from_file_to_repository(
             value=f"{x[i]} {y[i]} {alt[i]}",
             unit="m",
             parameter_version=parameter_version,
-            output_path=repository_path / instrument,
+            output_path=output_path,
             output_file=f"{parameter_name}.json",
             check_for_existing_parameter=False,
             context=context,
@@ -988,26 +682,18 @@ def write_array_elements_info_yaml(
         Parameter version to use in the YAML file.
     """
     telescope_names = [str(name) for name in array_table["telescope_name"]]
-
+    array_layout = {
+        "version": parameter_version,
+        "value": [{"name": array_table.meta["array_name"], "elements": telescope_names}],
+        "unit": None,
+    }
     data = {
         "model_version": model_version,
         "model_update": "patch_update",
         "model_version_history": [model_version],
         "description": f"Regular array layout: {array_table.meta['array_name']}",
-        "changes": {
-            f"OBS-{site}": {
-                "array_layouts": {
-                    "version": parameter_version,
-                    "value": [],
-                    "unit": None,
-                }
-            }
-        },
+        "changes": {f"OBS-{site}": {"array_layouts": array_layout}},
     }
-
-    data["changes"][f"OBS-{site}"]["array_layouts"]["value"].append(
-        {"name": array_table.meta["array_name"], "elements": telescope_names}
-    )
 
     for tel_name, pos_x, pos_y, pos_z in zip(
         telescope_names,
@@ -1041,6 +727,10 @@ def resolve_array_layout_name(array_layout_name, model_version):
     model_version : str
         Model version to resolve for.
 
+    Returns
+    -------
+    str or dict or list
+        The resolved array layout name(s) or configuration.
     """
     if isinstance(array_layout_name, list) and len(array_layout_name) == 1:
         array_layout_name = array_layout_name[0]
