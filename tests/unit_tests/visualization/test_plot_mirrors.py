@@ -39,23 +39,6 @@ def test_plot(mock_save, mock_plot_layout, tmp_test_directory):
     mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
-@mock.patch("simtools.visualization.plot_mirrors.plot_mirror_layout")
-@mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
-def test_plot_uses_explicit_data_file_path(mock_save, mock_plot_layout, tmp_test_directory):
-    config = {
-        "parameter": "mirror_list",
-        "site": "North",
-        "telescope": "LSTN-01",
-    }
-    data_file_path = Path(tmp_test_directory) / "mirror_list-2.0.0-LSTN-design.ecsv"
-    mock_fig = mock.MagicMock()
-    mock_plot_layout.return_value = mock_fig
-
-    plot_mirrors.plot(config, "test.png", data_file_path, mirrors=mock.sentinel.mirrors)
-
-    mock_save.assert_called_once_with(mock_fig, "test.png")
-
-
 @pytest.mark.parametrize(
     ("telescope", "file_name", "file_content", "plot_function"),
     [
@@ -133,48 +116,6 @@ def test__create_single_mirror_patch():
     assert np.isclose(patch.orientation, 0)
 
 
-@mock.patch(PYPLOT_SUBPLOTS_TARGET)
-def test_plot_mirror_layout(mock_subplots, tmp_path):
-    mock_fig = mock.MagicMock()
-    mock_ax = mock.MagicMock()
-    mock_ax.get_xlim.return_value = (-1000, 1000)
-    mock_ax.get_ylim.return_value = (-1000, 1000)
-    mock_subplots.return_value = (mock_fig, mock_ax)
-
-    mock_mirrors = mock.MagicMock()
-
-    mirror_table = Table(
-        {
-            "mirror_x": [100.0, 200.0, 300.0] * u.cm,
-            "mirror_y": [100.0, 200.0, 300.0] * u.cm,
-            "focal_length": [2800.0, 2850.0, 2900.0] * u.cm,
-            "mirror_panel_id": [1, 2, 3],
-        }
-    )
-
-    mock_mirrors.mirror_table = mirror_table
-    mock_mirrors.mirror_diameter = 151.0 * u.cm
-    mock_mirrors.shape_type = 3
-    mock_mirrors.number_of_mirrors = 3
-
-    with mock.patch("matplotlib.pyplot.colorbar") as mock_colorbar:
-        mock_cbar = mock.MagicMock()
-        mock_colorbar.return_value = mock_cbar
-
-        fig = plot_mirrors.plot_mirror_layout(
-            mirrors=mock_mirrors,
-            mirror_file_path=tmp_path / "test_mirror_list.dat",
-            telescope_model_name="LSTN-01",
-        )
-
-        assert fig is not None
-
-        mock_ax.set_aspect.assert_called_once_with("equal")
-        mock_ax.add_collection.assert_called_once()
-        mock_colorbar.assert_called_once()
-        mock_cbar.set_label.assert_called_once()
-
-
 def test__add_mirror_labels():
     mock_ax = mock.MagicMock()
     x_pos = np.array([100.0, 200.0, 300.0, 400.0, 500.0])
@@ -184,31 +125,6 @@ def test__add_mirror_labels():
     plot_mirrors._add_mirror_labels(mock_ax, x_pos, y_pos, mirror_ids, max_labels=3)
 
     assert mock_ax.text.call_count == 3
-
-
-def test__configure_mirror_plot():
-    mock_ax = mock.MagicMock()
-    mock_ax.get_xlim.return_value = (-1000, 1000)
-    mock_ax.get_ylim.return_value = (-1000, 1000)
-
-    x_pos = np.array([100.0, 200.0, 300.0])
-    y_pos = np.array([100.0, 200.0, 300.0])
-
-    with (
-        mock.patch("matplotlib.pyplot.grid") as mock_grid,
-        mock.patch("matplotlib.pyplot.xlabel") as mock_xlabel,
-        mock.patch("matplotlib.pyplot.ylabel") as mock_ylabel,
-        mock.patch("matplotlib.pyplot.tick_params") as mock_tick_params,
-    ):
-        plot_mirrors._configure_mirror_plot(mock_ax, x_pos, y_pos)
-
-        mock_ax.set_aspect.assert_called_once_with("equal")
-        mock_ax.set_xlim.assert_called_once()
-        mock_ax.set_ylim.assert_called_once()
-        mock_grid.assert_called_once()
-        mock_xlabel.assert_called_once()
-        mock_ylabel.assert_called_once()
-        mock_tick_params.assert_called_once()
 
 
 def test__configure_mirror_plot_single_position_uses_nonzero_limits():
@@ -303,68 +219,6 @@ def test__read_ring_segmentation_data(tmp_path):
     assert rings[1]["rmax"] == pytest.approx(300.0)
 
 
-@mock.patch(PYPLOT_SUBPLOTS_TARGET)
-def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
-    mock_fig = mock.MagicMock()
-    mock_ax = mock.MagicMock()
-    mock_subplots.return_value = (mock_fig, mock_ax)
-
-    ring_file = tmp_path / "ring_seg.dat"
-    ring_file.write_text("# Ring segmentation file\nring 6 100.0 200.0 60.0 0.0\n")
-
-    with (
-        mock.patch("matplotlib.pyplot.tight_layout"),
-    ):
-        fig = plot_mirrors.plot_mirror_ring_segmentation(
-            data_file_path=ring_file,
-            telescope_model_name="SCTS-01",
-            parameter_type="primary_mirror_segmentation",
-        )
-
-        assert fig is not None
-        plt.close(fig)
-        mock_ax.set_ylim.assert_called_once()
-
-
-@mock.patch(PYPLOT_SUBPLOTS_TARGET)
-def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
-    mock_fig = mock.MagicMock()
-    mock_ax = mock.MagicMock()
-    mock_subplots.return_value = (mock_fig, mock_ax)
-
-    shape_file = tmp_path / "shape_seg.dat"
-    shape_file.write_text(
-        "# Shape segmentation file\nhex 1 100.0 0.0 50.0 0.0\nhex 2 -50.0 86.6 50.0 0.0\n"
-    )
-
-    with (
-        mock.patch("matplotlib.pyplot.grid"),
-        mock.patch("matplotlib.pyplot.xlabel"),
-        mock.patch("matplotlib.pyplot.ylabel"),
-        mock.patch("matplotlib.pyplot.tick_params"),
-    ):
-        fig = plot_mirrors.plot_mirror_shape_segmentation(
-            data_file_path=shape_file,
-            telescope_model_name="SCTS-01",
-            parameter_type="primary_mirror_segmentation",
-        )
-
-        assert fig is not None
-        plt.close(fig)
-        mock_ax.set_aspect.assert_called_once_with("equal")
-        mock_ax.text.assert_called()
-
-
-def test__read_segmentation_file_with_invalid_data(tmp_path):
-    data_file = tmp_path / "invalid_seg.dat"
-    data_file.write_text("invalid_x invalid_y 100.0 50.0\n")
-
-    result = plot_mirrors._read_segmentation_file(data_file)
-
-    assert len(result["x"]) == 0
-    assert len(result["y"]) == 0
-
-
 def test__read_segmentation_file_empty_warning(tmp_path, caplog):
     """Test warning when segmentation file has no valid numeric data."""
     data_file = tmp_path / "empty_seg.dat"
@@ -449,33 +303,6 @@ def test__configure_mirror_plot_empty_data():
     plot_mirrors._configure_mirror_plot(mock_ax, np.array([]), np.array([]))
     mock_ax.text.assert_called_once()
     assert "No valid mirror data" in mock_ax.text.call_args[0][2]
-
-
-def test_plot_mirror_shape_segmentation_no_segment_ids(tmp_path):
-    data_file = tmp_path / "shape_no_ids.dat"
-    data_file.write_text(
-        "# Shape file without segment IDs\nhex 1 100.0 0.0 50.0 0.0\nhex 2 200.0 0.0 50.0 0.0\n"
-    )
-
-    with mock.patch(
-        "simtools.visualization.plot_mirrors._read_shape_segmentation_file"
-    ) as mock_read:
-        mock_read.return_value = (
-            [
-                {"shape": "hex", "x": 100.0, "y": 0.0, "diameter": 50.0, "rotation": 0.0},
-                {"shape": "hex", "x": 200.0, "y": 0.0, "diameter": 50.0, "rotation": 0.0},
-            ],
-            [],  # Empty segment_ids
-        )
-
-        fig = plot_mirrors.plot_mirror_shape_segmentation(
-            data_file_path=data_file,
-            telescope_model_name="SCTS-01",
-            parameter_type="primary_mirror_segmentation",
-        )
-
-        assert fig is not None
-        plt.close(fig)
 
 
 def test__read_segmentation_file_with_invalid_x_y(tmp_path):

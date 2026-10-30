@@ -15,7 +15,7 @@ Render only the command block for an example:
 .. code-block:: rst
 
     .. simtools-integration-example::
-       :file: docs_produce_array_element_report_run.yml
+       :file: docs_produce_reports_array_element_run.yml
        :show-command:
 """
 

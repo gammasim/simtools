@@ -11,7 +11,6 @@ from astropy.table import QTable, Table
 from matplotlib import pyplot as plt
 
 from simtools.applications import validate_optics
-from simtools.applications.validate_cumulative_psf import _ARGUMENTS
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.ray_tracing import optics_validation
 from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
@@ -25,14 +24,6 @@ def test_validate_optics_cli_max_workers(args, expected):
     parser.add_argument_definitions(validate_optics._ARGUMENTS)
 
     assert parser.parse_args(args).max_workers == expected
-
-
-def test_cumulative_psf_cli_requires_measured_data():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(_ARGUMENTS)
-
-    with pytest.raises(SystemExit):
-        parser.parse_args([])
 
 
 def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):

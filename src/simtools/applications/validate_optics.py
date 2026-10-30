@@ -1,13 +1,30 @@
 #!/usr/bin/python3
 
-"""Validate the optical model parameters through ray tracing simulations of the whole telescope."""
+"""Validate the optical model through ray tracing simulations of the whole telescope.
+
+Validation type ``optics`` (default) scans field angles and derives the PSF (D80), effective mirror
+area and effective focal length. Validation type ``cumulative_psf`` compares the simulated
+cumulative PSF with measured PSF data (``--data``).
+"""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.ray_tracing.optics_validation import validate_optics
+from simtools.ray_tracing.optics_validation import validate_cumulative_psf, validate_optics
 from simtools.ray_tracing.ray_tracing import DEFAULT_MAX_WORKERS
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "type",
+        help="Validation type: optics (field-angle scan) or cumulative_psf (measured PSF comparison).",
+        type=str,
+        choices=["optics", "cumulative_psf"],
+        default="optics",
+    ),
+    cli.DATA(
+        help="Measured cumulative PSF data file (required for type cumulative_psf).",
+        required=False,
+    ),
+    cli.DATA_SEARCH_PATH,
     cli.SOURCE_DISTANCE,
     cli.RAY_TRACING_ZENITH_ANGLE,
     cli.MAX_OFFSET,
@@ -84,7 +101,10 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    validate_optics(app_context)
+    if app_context.args["type"] == "cumulative_psf":
+        validate_cumulative_psf(app_context)
+    else:
+        validate_optics(app_context)
 
 
 if __name__ == "__main__":
