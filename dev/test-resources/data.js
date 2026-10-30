@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793354712962,
+  "lastUpdate": 1793358578756,
   "repoUrl": "https://github.com/gammasim/simtools",
   "entries": {
     "simtools CI test benchmarks": [
@@ -34124,6 +34124,48 @@ window.BENCHMARK_DATA = {
           {
             "name": "unit-session / peak_rss_mib",
             "value": 469.51171875,
+            "unit": "peak_rss_mib",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "gernot.maier@desy.de",
+            "name": "Gernot Maier",
+            "username": "GernotMaier"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "868212e504badacaec9ce2788061b406fe8c3044",
+          "message": "Merge overlapping applications, prune tests, document the public API (W7) (#2731)\n\n* WIP W7: first test pruning and CLI merges\n\n* WIP W7: public API page\n\n* Merge overlapping applications, prune tests, document the public API (W7)\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Name news fragments after the pull request\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Test merged applications with fakes; fix the cumulative PSF output name in the integration config\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n* Keep reader tests needed for coverage; patch ratchet 1267\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T11:55:55+01:00",
+          "tree_id": "3d6a1cedbf2e0b505d545136eef776acea264473",
+          "url": "https://github.com/gammasim/simtools/commit/868212e504badacaec9ce2788061b406fe8c3044"
+        },
+        "date": 1793358564806,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "unit-session / wall_time_s",
+            "value": 60.250629536999995,
+            "unit": "wall_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / cpu_time_s",
+            "value": 61.730000000000004,
+            "unit": "cpu_time_s",
+            "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
+          },
+          {
+            "name": "unit-session / peak_rss_mib",
+            "value": 468.43359375,
             "unit": "peak_rss_mib",
             "extra": "outcome=exit_status=0 | python=3.14.10 | runner=Linux/X64 | runner_image=ubuntu24/20261026.354.1 | container=None | sample_interval_s=0.2"
           }
