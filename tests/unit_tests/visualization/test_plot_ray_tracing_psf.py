@@ -26,6 +26,7 @@ def test_create_cumulative_psf_figure_draws_curve_and_markers():
     assert len(ax.lines) == 3
     assert ax.lines[1].get_xdata()[0] == pytest.approx(1.5)
     assert ax.lines[2].get_xdata()[0] == pytest.approx(2.0)
+    assert ax.get_xlim()[1] >= 2.0
 
 
 def test_create_psf_image_figure_draws_histogram_circle_and_axes():

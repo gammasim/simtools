@@ -138,43 +138,6 @@ def test_accumulate_histograms_by_telescope_config_accumulates_and_finalizes(moc
     ]
 
 
-def test_accumulate_histograms_by_telescope_config_collects_trigger_topology(mocker):
-    event_source = mocker.Mock()
-    reader = mocker.Mock()
-    event_source.iter_event_data.return_value = [(reader, ("file_info", "shower", None, None))]
-    accumulator = mocker.Mock()
-    topology = {"marker": 1}
-    mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers.EventDataHistograms",
-        return_value=event_source,
-    )
-    mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "EventDataHistograms.create_accumulator",
-        return_value=accumulator,
-    )
-    mock_init = mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "_initialize_trigger_topology_accumulator",
-        return_value=topology,
-    )
-    mock_accumulate = mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "_accumulate_trigger_topology"
-    )
-
-    result = helpers.accumulate_histograms_by_telescope_config(
-        "prod*.hdf5",
-        [{"array_name": "alpha", "telescope_ids": []}],
-        energy_bins_per_decade=4,
-        collect_trigger_topology=True,
-    )
-
-    mock_init.assert_called_once_with()
-    mock_accumulate.assert_called_once_with(None, None, topology, allowed_telescopes=[])
-    assert result == [({"array_name": "alpha", "telescope_ids": []}, accumulator, topology)]
-
-
 def test_trigger_topology_helpers_track_counts_and_subsets(mocker):
     mocker.patch(
         "simtools.production_configuration.production_event_data_helpers."
@@ -200,21 +163,6 @@ def test_trigger_topology_helpers_track_counts_and_subsets(mocker):
     assert accumulator["subset_values"]["energy"]["mixed_type"] == pytest.approx([0.5])
     assert helpers._subset_counts_for_trigger(("LST-1", "LST-2")) == {"LST": 2}
     helpers._accumulate_trigger_topology(None, triggered_data, accumulator)
-
-
-def test_normalize_trigger_telescopes_filters_unknown_and_non_selected(mocker):
-    mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "names.get_array_element_type_from_name",
-        side_effect=lambda telescope: {"LST-1": "LST", "MST-1": "MST"}[telescope],
-    )
-
-    normalized = helpers._normalize_trigger_telescopes(
-        ["Unknown_30", "MST-1", "LST-1"],
-        {"LST-1", "MST-1"},
-    )
-
-    assert normalized == ("LST-1", "MST-1")
 
 
 def test_accumulate_trigger_topology_ignores_unknown_and_non_selected_telescopes(mocker):

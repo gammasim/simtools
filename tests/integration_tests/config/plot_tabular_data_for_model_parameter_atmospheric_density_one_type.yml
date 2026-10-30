@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-plot-tabular-data-for-model-parameter
+- application: simtools-plot-tabular-data
   docs:
     title: Plot atmospheric refractive index
     summary: >-

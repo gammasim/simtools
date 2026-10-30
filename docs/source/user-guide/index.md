@@ -22,6 +22,7 @@ productions.md
 manage_simulation_models.md
 simulate_calibration_data
 applications.md
+public_api.md
 container_images.md
 execution_backends.md
 ```

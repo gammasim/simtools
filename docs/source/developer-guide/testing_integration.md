@@ -82,7 +82,7 @@ pytest --no-cov -vv \
   --model_version 7.0.0 \
   --simulation_models_git_path ../simulation-models.git \
   --simulation_models_git_revision v0.17.2 \
-  'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-array-element-report_run]'
+  'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-reports_run0]'
 ```
 
 Filesystem and Git sources cannot be configured together. All model-dependent workflows use

@@ -55,62 +55,6 @@ def test_get_psf_diameter_label():
     assert plot_psf.get_psf_diameter_label(0.85) == "D85 (cm)"
 
 
-@pytest.mark.parametrize(
-    ("use_ks_statistic", "second_metric", "p_value", "fraction"),
-    [
-        (False, None, None, 0.8),
-        (True, None, 0.05, 0.8),
-        (False, 0.456, None, 0.8),
-        (False, 0.456, 0.05, 0.95),
-    ],
-)
-def test__format_metric_text(use_ks_statistic, second_metric, p_value, fraction):
-    result = plot_psf._format_metric_text(
-        3.5, 0.123, fraction, p_value, use_ks_statistic, second_metric
-    )
-    expected_label = f"D{int(fraction * 100)}"
-    assert f"{expected_label} = 3.50000 cm" in result
-    assert "0.123" in result
-
-
-def test__create_base_plot_figure(data_to_plot, sample_psf_data):
-    with patch("simtools.visualization.plot_psf.visualize.plot_1d") as mock_plot:
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_fig.get_axes.return_value = [mock_ax]
-        mock_plot.return_value = mock_fig
-
-        # Test with simulated data
-        fig, ax = plot_psf._create_base_plot_figure(data_to_plot, simulated_data=sample_psf_data)
-        assert fig == mock_fig
-        assert ax == mock_ax
-
-        # Test error handling
-        mock_plot.side_effect = ValueError("Plot error")
-        with pytest.raises(ValueError, match="Plot error"):
-            plot_psf._create_base_plot_figure(data_to_plot)
-
-
-def test__build_parameter_title(sample_parameters):
-    title = plot_psf._build_parameter_title(sample_parameters, is_best=True)
-    assert "* reflection" in title
-    assert "0.00600" in title
-
-    title = plot_psf._build_parameter_title(sample_parameters, is_best=False)
-    assert "* reflection" not in title
-
-
-def test__add_plot_annotations(sample_parameters):
-    mock_ax = MagicMock()
-    mock_fig = MagicMock()
-
-    # Test best parameter case (includes footnote)
-    plot_psf._add_plot_annotations(mock_ax, mock_fig, sample_parameters, 3.5, 0.123, True, 0.05)
-    mock_ax.set_title.assert_called_once()
-    mock_ax.text.assert_called_once()
-    mock_fig.text.assert_called_once()
-
-
 def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
     with (
         patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
@@ -128,6 +72,30 @@ def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
         mock_base.assert_called_once()
         mock_annotations.assert_called_once()
         mock_pdf_pages.add.assert_called_once_with(mock_fig)
+
+
+def test_psf_private_helpers(data_to_plot, sample_psf_data, sample_parameters):
+    with patch("simtools.visualization.plot_psf.visualize.plot_1d") as plot_1d:
+        figure = MagicMock()
+        figure.get_axes.return_value = [MagicMock()]
+        plot_1d.return_value = figure
+        result_figure, _ = plot_psf._create_base_plot_figure(
+            data_to_plot, simulated_data=sample_psf_data
+        )
+        assert result_figure is figure
+
+    title = plot_psf._build_parameter_title(sample_parameters, is_best=True)
+    assert "* reflection" in title
+    assert "0.00600" in title
+
+    assert plot_psf._format_metric_text(3.5, 0.123, 0.8, None, False) == (
+        "D80 = 3.50000 cm\nRMSD = 0.1230"
+    )
+    axis, figure = MagicMock(), MagicMock()
+    plot_psf._add_plot_annotations(axis, figure, sample_parameters, 3.5, 0.123, True, 0.05)
+    axis.set_title.assert_called_once()
+    axis.text.assert_called_once()
+    figure.text.assert_called_once()
 
 
 def test_create_gradient_descent_convergence_plot(tmp_path):

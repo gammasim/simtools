@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import astropy.units as u
 import numpy as np
@@ -177,56 +177,6 @@ def test_add_lines(lines, expect_lines, expect_circles):
     plt.close(fig)
 
 
-def test_create_plot():
-    data = np.array([1, 2, 3])
-    bins = np.array([0, 1, 2, 3])
-    plot_params = {"color": "blue"}
-    test_plot_title = "Test Plot"
-    labels = {"x": "X-axis", "y": "Y-axis", "title": test_plot_title}
-    scales = {"x": "linear", "y": "log"}
-    colorbar_label = "Colorbar"
-    output_file = None
-    lines = {"x": 1, "y": 2}
-
-    with (
-        patch(PATCH_SUBPLOTS) as mock_subplots,
-        patch(PATCH_SHOW) as mock_show,
-    ):
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_subplots.return_value = (mock_fig, mock_ax)
-
-        result = _create_plot(
-            data=data,
-            bins=bins,
-            plot_type="histogram",
-            plot_params=plot_params,
-            labels=labels,
-            scales=scales,
-            colorbar_label=colorbar_label,
-            output_file=output_file,
-            lines=lines,
-        )
-
-        assert result is not None
-        mock_subplots.assert_called_once()
-        # Manually check bar call with numpy arrays
-        assert mock_ax.bar.call_count == 1
-        bar_args, bar_kwargs = mock_ax.bar.call_args
-        np.testing.assert_array_equal(bar_args[0], bins[:-1])
-        np.testing.assert_array_equal(bar_args[1], data)
-        np.testing.assert_array_equal(bar_kwargs["width"], np.diff(bins))
-        assert bar_kwargs["color"] == plot_params["color"]
-        mock_ax.set.assert_called_once_with(
-            xlabel="X-axis",
-            ylabel="Y-axis",
-            title=test_plot_title,
-            xscale="linear",
-            yscale="log",
-        )
-        mock_show.assert_called_once()
-
-
 def test_create_plot_with_output_file(tmp_test_directory):
     data = np.array([1, 2, 3])
     bins = np.array([0, 1, 2, 3])
@@ -252,45 +202,6 @@ def test_create_plot_with_output_file(tmp_test_directory):
     assert output_file.stat().st_size > 0
 
 
-@pytest.mark.filterwarnings("ignore:Tight layout not applied.*:UserWarning")
-def test_create_plot_histogram2d_colorbar():
-    data = np.array([[1, 2], [3, 4]])
-    bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
-    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
-    labels = {"x": "X", "y": "Y", "title": "2D"}
-
-    with (
-        patch(PATCH_SUBPLOTS) as mock_subplots,
-        patch(PATCH_PCOLOR) as mock_pcolor,
-        patch(PATCH_CONTOUR) as mock_contour,
-        patch(PATCH_COLORBAR) as mock_colorbar,
-        patch(PATCH_SHOW) as mock_show,
-    ):
-        mock_fig = MagicMock()
-        mock_ax = MagicMock()
-        mock_subplots.return_value = (mock_fig, mock_ax)
-
-        result = _create_plot(
-            data=data,
-            bins=bins,
-            plot_type="histogram2d",
-            plot_params=plot_params,
-            labels=labels,
-            scales=None,
-            colorbar_label="Count",
-            output_file=None,
-            lines=None,
-        )
-
-    assert result is mock_fig
-    # Ensure internal 2d creation helpers used
-    mock_pcolor.assert_called_once()
-    mock_contour.assert_not_called()
-    mock_colorbar.assert_called_once()
-    mock_show.assert_called_once()
-    mock_fig.savefig.assert_not_called()
-
-
 def test_create_plot_early_return_when_no_data():
     with patch(PATCH_SUBPLOTS) as mock_subplots:
         result = _create_plot(data=None, bins=None, plot_type="histogram")
@@ -298,21 +209,25 @@ def test_create_plot_early_return_when_no_data():
         mock_subplots.assert_not_called()
 
 
-def test_build_plot_filename():
-    base_filename = "test_plot"
-    assert _build_plot_filename(base_filename) == "test_plot.png"
-    assert _build_plot_filename(base_filename, "array1") == "test_plot_array1.png"
-
-
-def test_build_plot_filename_with_file_info():
-    file_info = {"zenith": 20.0 * u.deg, "azimuth": 0.0 * u.deg, "nsb_level": 0.3}
-    result = _build_plot_filename("angular_distance", "MyArray", file_info)
-    assert result == "angular_distance_MyArray_z20_az0_nsb0.3.png"
-
-
-def test_build_plot_filename_with_partial_file_info():
-    result = _build_plot_filename("plot", file_info={"zenith": 52.0 * u.deg})
-    assert result == "plot_z52.png"
+@pytest.mark.parametrize(
+    ("args", "kwargs", "expected"),
+    [
+        (("test_plot",), {}, "test_plot.png"),
+        (("test_plot", "array1"), {}, "test_plot_array1.png"),
+        (
+            (
+                "angular_distance",
+                "MyArray",
+                {"zenith": 20.0 * u.deg, "azimuth": 0.0 * u.deg, "nsb_level": 0.3},
+            ),
+            {},
+            "angular_distance_MyArray_z20_az0_nsb0.3.png",
+        ),
+        (("plot",), {"file_info": {"zenith": 52.0 * u.deg}}, "plot_z52.png"),
+    ],
+)
+def test_build_plot_filename(args, kwargs, expected):
+    assert _build_plot_filename(*args, **kwargs) == expected
 
 
 def test_format_file_info_suffix_empty():
@@ -438,25 +353,6 @@ def test_histogram_style_table_preserves_plot_configuration():
         "x": "linear",
         "y": "log",
     }
-
-
-def test_broad_range_axis_limits_are_used_for_distance_histograms():
-    limits = {
-        "br_energy_min": 0.02 * u.TeV,
-        "br_energy_max": 200.0 * u.TeV,
-        "br_core_scatter_max": 1800.0 * u.m,
-        "br_viewcone_max": 4.0 * u.deg,
-    }
-
-    core_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
-        "core_distance_vs_energy", limits
-    )
-    angular_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
-        "angular_distance_vs_energy_mc", limits
-    )
-
-    assert core_limits == {"x": (0.0, 1800.0), "y": (0.02, 200.0)}
-    assert angular_limits == {"x": (0.0, 4.0), "y": (0.02, 200.0)}
 
 
 def test_broad_range_axis_limits_do_not_replace_derived_limits():

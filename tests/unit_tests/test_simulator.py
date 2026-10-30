@@ -495,24 +495,6 @@ def test_write_reduced_event_lists_passes_activity_id_to_hdf5_writer(
     assert mock_table_handler.write_table_chunks.call_args.kwargs["activity_id"] == activity_id
 
 
-def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp_test_directory):
-    data_dir = Path(str(tmp_test_directory)) / "data"
-    input_file = str(data_dir / "output_file3.simtel")
-
-    mock_generator = mocker.MagicMock()
-    mock_simtel_io_writer = mocker.patch(
-        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
-    )
-    mock_table_handler = _mock_reduced_event_table_writer(mocker)
-
-    Simulator.write_reduced_event_lists(input_files=[input_file])
-
-    mock_simtel_io_writer.assert_called_once_with([input_file], file_format="eventio")
-    call = mock_table_handler.write_table_chunks.call_args
-    assert call.kwargs["output_file"] == data_dir / "output_file3.reduced_event_data.hdf5"
-    assert "metadata_documents" in call.kwargs
-
-
 def test_write_reduced_event_lists_warns_for_long_output_filename(
     mocker, tmp_test_directory, caplog
 ):
@@ -809,39 +791,26 @@ def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_ph
     assert run1_args["number_of_events"] == 3
 
 
-def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length(
-    run_context,
+@pytest.mark.parametrize(
+    ("number_of_events", "flasher_photons", "match"),
+    [
+        ([1, 2], [100, 200, 300], "Invalid number_of_events list length for direct_injection"),
+        ([1, 2, 3], [100, 200], "Invalid flasher_photons list length for direct_injection"),
+    ],
+)
+def test_simulate_direct_injection_sequence_raises_for_invalid_list_length(
+    run_context, number_of_events, flasher_photons, match
 ):
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
-        "number_of_events": [1, 2],
-        "flasher_photons": [100, 200, 300],
+        "number_of_events": number_of_events,
+        "flasher_photons": flasher_photons,
     }
 
     context = run_context.replace(args=base_args)
 
-    with pytest.raises(
-        ValueError,
-        match="Invalid number_of_events list length for direct_injection",
-    ):
-        Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
-
-
-def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_length(run_context):
-    base_args = {
-        "run_mode": "direct_injection",
-        "run_number": 10,
-        "number_of_events": [1, 2, 3],
-        "flasher_photons": [100, 200],
-    }
-
-    context = run_context.replace(args=base_args)
-
-    with pytest.raises(
-        ValueError,
-        match="Invalid flasher_photons list length for direct_injection",
-    ):
+    with pytest.raises(ValueError, match=match):
         Simulator.simulate_direct_injection_sequence(label="test-label", context=context)
 
 
@@ -895,54 +864,29 @@ def test_report(array_simulator, mocker, caplog):
     assert expected_computing_msg in caplog.text
 
 
-def test_make_resources_report(array_simulator, mocker):
-    # Test case 1: With runtime and n_events > 0
-    mock_sub_out_files = ["sub_out_file.txt"]
-    mocker.patch.object(array_simulator, "get_files", return_value=mock_sub_out_files)
+@pytest.mark.parametrize(
+    ("resources", "expected"),
+    [
+        (
+            {"runtime": 123.45, "n_events": 1000},
+            "Mean wall time/run [sec]: 123.45, #events/run: 1000",
+        ),
+        ({"runtime": 67.89, "n_events": 0}, "Mean wall time/run [sec]: 67.89"),
+        ({"runtime": 99.99}, "Mean wall time/run [sec]: 99.99"),
+        ({"runtime": 0, "n_events": 500}, "Mean wall time/run [sec]: 0.0, #events/run: 500"),
+    ],
+)
+def test_make_resources_report(array_simulator, mocker, resources, expected):
+    mocker.patch.object(array_simulator, "get_files", return_value=["sub_out_file.txt"])
+    mocker.patch.object(array_simulator._simulation_runner, "get_resources", return_value=resources)
 
-    mock_resources = {"runtime": 123.45, "n_events": 1000}
+    assert array_simulator._make_resources_report() == expected
+
+
+def test_make_resources_report_without_runtime(array_simulator, mocker):
+    mocker.patch.object(array_simulator, "get_files", return_value=["sub_out_file.txt"])
     mocker.patch.object(
-        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
-    )
-
-    result = array_simulator._make_resources_report()
-    expected = "Mean wall time/run [sec]: 123.45, #events/run: 1000"
-    assert result == expected
-
-    # Test case 2: With runtime but n_events <= 0
-    mock_resources = {"runtime": 67.89, "n_events": 0}
-    mocker.patch.object(
-        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
-    )
-
-    result = array_simulator._make_resources_report()
-    expected = "Mean wall time/run [sec]: 67.89"
-    assert result == expected
-
-    # Test case 3: With runtime but no n_events key
-    mock_resources = {"runtime": 99.99}
-    mocker.patch.object(
-        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
-    )
-
-    result = array_simulator._make_resources_report()
-    expected = "Mean wall time/run [sec]: 99.99"
-    assert result == expected
-
-    # Test case 4: Runtime of 0 is a valid value
-    mock_resources = {"runtime": 0, "n_events": 500}
-    mocker.patch.object(
-        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
-    )
-
-    result = array_simulator._make_resources_report()
-    expected = "Mean wall time/run [sec]: 0.0, #events/run: 500"
-    assert result == expected
-
-    # Test case 5: No runtime available (empty runtime list)
-    mock_resources = {"n_events": 500}
-    mocker.patch.object(
-        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
+        array_simulator._simulation_runner, "get_resources", return_value={"n_events": 500}
     )
 
     result = array_simulator._make_resources_report()

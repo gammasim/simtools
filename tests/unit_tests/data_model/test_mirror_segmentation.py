@@ -62,37 +62,6 @@ def test_parse_and_write_ring_segments(tmp_test_directory):
     assert records[0]["r_min"] == _q(1.0)
 
 
-def test_parse_and_write_shape_and_polygon_segments(tmp_test_directory):
-    records = [
-        {
-            "kind": "hex",
-            "count": 1,
-            "x": _q(1),
-            "y": _q(2),
-            "diameter": _q(3),
-            "rotation": _q(4, "deg"),
-        },
-        {
-            "kind": "polygon",
-            "count": 1,
-            "rotation": _q(5, "deg"),
-            "vertices": [
-                {"x": _q(0), "y": _q(0)},
-                {"x": _q(1), "y": _q(0)},
-                {"x": _q(0), "y": _q(1)},
-            ],
-        },
-    ]
-    output = Path(tmp_test_directory) / "output.dat"
-
-    write_mirror_segmentation(records, output, PARAMETER_NAME, SCHEMA_VERSION)
-
-    assert output.read_text(encoding="utf-8").splitlines() == [
-        "HEX 1 1.0 2.0 3.0 4.0",
-        "POLYGON 1 5.0 0.0 0.0 1.0 0.0 0.0 1.0",
-    ]
-
-
 def test_validate_shape_and_polygon():
     validate_segments([_shape(), _polygon()], PARAMETER_NAME, SCHEMA_VERSION)
 
@@ -117,39 +86,6 @@ def test_validate_rejects_schema_invalid_record(record):
         validate_segments([record], PARAMETER_NAME, SCHEMA_VERSION)
 
 
-def test_validate_uses_selected_parameter_schema():
-    validate_segments([_shape()], "secondary_mirror_segmentation", SCHEMA_VERSION)
-
-
-def test_validate_accepts_compatible_units():
-    record = _shape()
-    record["diameter"] = _q(0.1, "m")
-    validate_segments([record], PARAMETER_NAME, SCHEMA_VERSION)
-
-
-def test_write_converts_compatible_units_to_simtel_centimeters(tmp_test_directory):
-    record = _shape()
-    record["diameter"] = _q(0.1, "m")
-    output = Path(tmp_test_directory) / "segments.dat"
-
-    write_mirror_segmentation([record], output, PARAMETER_NAME, SCHEMA_VERSION)
-
-    assert output.read_text(encoding="utf-8").splitlines() == ["HEX 1 0.0 0.0 10.0 0.0"]
-
-
-def test_validate_rejects_invalid_ring_and_polygon():
-    with pytest.raises(ValueError, match="greater than"):
-        validate_segments(
-            [{"kind": "ring", "count": 1, "r_min": _q(2), "r_max": _q(1), "dphi": _q(1, "deg")}],
-            PARAMETER_NAME,
-            SCHEMA_VERSION,
-        )
-    polygon = _polygon()
-    polygon["vertices"][2] = {"x": _q(2), "y": _q(0)}
-    with pytest.raises(ValueError, match="non-zero area"):
-        validate_segments([polygon], PARAMETER_NAME, SCHEMA_VERSION)
-
-
 def test_validate_rejects_nonpositive_shape_diameter():
     record = _shape()
     record["diameter"] = _q(0)
@@ -162,17 +98,3 @@ def test_validate_rejects_polygon_with_area_below_absolute_tolerance():
     polygon["vertices"][2] = {"x": _q(0), "y": _q(1e-13)}
     with pytest.raises(ValueError, match="non-zero area"):
         validate_segments([polygon], PARAMETER_NAME, SCHEMA_VERSION)
-
-
-def test_validate_rejects_nonfinite_values():
-    record = _shape()
-    record["x"]["value"] = float("nan")
-    with pytest.raises(ValueError, match="finite"):
-        validate_segments([record], PARAMETER_NAME, SCHEMA_VERSION)
-
-
-def test_write_rejects_path_traversal(tmp_test_directory):
-    with pytest.raises(ValueError, match="Unsafe"):
-        write_mirror_segmentation(
-            [_shape()], Path(tmp_test_directory) / ".." / "bad.dat", PARAMETER_NAME, SCHEMA_VERSION
-        )

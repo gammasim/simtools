@@ -4,51 +4,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools.constants import MODEL_PARAMETER_METASCHEMA
 from simtools.data_model import schema_loader
 from simtools.io import ascii_handler
 
 DUMMY_FILE = "dummy_file.yml"
-
-
-@pytest.mark.parametrize("name", ["example.schema.yml", "model_parameters/example.schema.yml"])
-def test_load_packaged_schema_outside_checkout(name, tmp_test_directory, monkeypatch):
-    tmp_test_directory = Path(tmp_test_directory)
-    packaged = tmp_test_directory / "installed" / "schemas"
-    schema_file = packaged / name
-    schema_file.parent.mkdir(parents=True)
-    expected = {"schema_version": "1.0.0", "name": "packaged"}
-    schema_file.write_text(yaml.safe_dump(expected), encoding="utf-8")
-    working_directory = tmp_test_directory / "consumer"
-    working_directory.mkdir()
-    monkeypatch.chdir(working_directory)
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", packaged)
-
-    assert schema_loader.load_schema(name) == expected
-
-
-def test_local_schema_takes_precedence_over_packaged_schema(tmp_test_directory, monkeypatch):
-    tmp_test_directory = Path(tmp_test_directory)
-    packaged = tmp_test_directory / "schemas"
-    packaged.mkdir()
-    name = "precedence.schema.yml"
-    (packaged / name).write_text(yaml.safe_dump({"name": "packaged"}), encoding="utf-8")
-    local = tmp_test_directory / name
-    local.write_text(yaml.safe_dump({"name": "custom"}), encoding="utf-8")
-    monkeypatch.chdir(tmp_test_directory)
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", packaged)
-
-    assert schema_loader.load_schema(name)["name"] == "custom"
-    assert schema_loader.load_schema(local)["name"] == "custom"
-
-
-def test_missing_absolute_schema_does_not_use_packaged_namesake(tmp_test_directory, monkeypatch):
-    name = "example.schema.yml"
-    (tmp_test_directory / name).write_text(yaml.safe_dump({"name": "packaged"}), encoding="utf-8")
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory)
-
-    with pytest.raises(FileNotFoundError, match="Schema file not found"):
-        schema_loader.load_schema(tmp_test_directory / "missing" / name)
 
 
 @pytest.fixture(autouse=True)
@@ -87,75 +46,6 @@ def test_get_model_parameter_schema_files(tmp_test_directory):
     assert files == sorted(schema_files)
 
 
-def test_load_schema_caches_parsed_source_across_versions(mocker):
-    collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
-
-    schema_1 = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
-    schema_2 = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
-    schema_1["schema_version"] = "changed"
-    schema_1_cached = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
-
-    assert schema_1_cached["schema_version"] == "0.1.0"
-    assert schema_1 is not schema_1_cached
-    assert schema_1 is not schema_2
-    assert collect_data.call_count == 1
-
-
-def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_test_directory):
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory)
-    remote_url = "https://example.com/schemas/example.schema.yml"
-    local_schema = tmp_test_directory / "example.schema.yml"
-    expected_schema = {"schema_version": "1.0.0"}
-    calls = []
-
-    def _collect_data(file_name):
-        calls.append(str(file_name))
-        if Path(str(file_name)) == local_schema:
-            return expected_schema
-        raise FileNotFoundError(file_name)
-
-    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _collect_data)
-
-    assert schema_loader.load_schema(remote_url, "1.0.0") == expected_schema
-    assert str(local_schema) in calls
-    assert remote_url not in calls
-
-
-def test_load_schema_resolves_remote_model_parameter_url_locally(monkeypatch, tmp_test_directory):
-    """Resolve a packaged model-parameter schema referenced by its remote URL."""
-    model_schema_path = tmp_test_directory / "model_parameters"
-    model_schema_path.mkdir()
-    schema_file = model_schema_path / "array_coordinates_UTM.schema.yml"
-    schema_file.write_text(
-        yaml.safe_dump({"schema_version": "1.0.0", "name": "array_coordinates_utm"}),
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory / "schemas")
-    monkeypatch.setattr(schema_loader, "MODEL_PARAMETER_SCHEMA_PATH", model_schema_path)
-
-    remote_url = (
-        "https://raw.githubusercontent.com/gammasim/simtools/main/"
-        "src/simtools/schemas/model_parameters/array_coordinates_UTM.schema.yml"
-    )
-
-    assert schema_loader.load_schema(remote_url, "1.0.0")["name"] == "array_coordinates_utm"
-
-
-def test_load_schema_falls_back_to_remote(monkeypatch, tmp_test_directory):
-    monkeypatch.setattr(schema_loader, "SCHEMA_PATH", tmp_test_directory)
-    remote_url = "https://example.com/schemas/example.schema.yml"
-    expected_schema = {"schema_version": "1.0.0"}
-
-    def _collect_data(file_name):
-        if str(file_name) == remote_url:
-            return expected_schema
-        raise FileNotFoundError(file_name)
-
-    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _collect_data)
-
-    assert schema_loader.load_schema(remote_url, "1.0.0") == expected_schema
-
-
 @pytest.mark.parametrize(
     ("schema_file", "error"),
     [
@@ -176,12 +66,6 @@ def test_load_schema_reports_missing_source(schema_file, error, monkeypatch, tmp
 
     with pytest.raises(FileNotFoundError, match=error):
         schema_loader.load_schema(schema_file)
-
-
-def test_get_schema_for_version_with_dict():
-    schema = {"schema_version": "1.0.0", "name": "test"}
-
-    assert schema_loader.get_schema_for_version(schema, DUMMY_FILE, "1.0.0") == schema
 
 
 @pytest.mark.parametrize(

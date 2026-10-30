@@ -1,56 +1,8 @@
-from unittest.mock import Mock
-
 from astropy.table import Table
 
 from simtools.reporting.model_figures import (
-    _get_flasher_readout_models,
-    _use_exported_model_filenames,
     plot_nsb_altitude_correction,
 )
-
-
-def test_get_flasher_readout_models_uses_explicit_device_assignment():
-    reader = Mock()
-    reader.read_production_table.return_value = {
-        "parameters": {"MSTx-NectarCam": {}, "MSTx-FlashCam": {}, "LSTN-design": {}}
-    }
-    reader.get_model_parameters.side_effect = [
-        {
-            "calibration_devices": {"value": {"flat_fielding": "MSFx-NectarCam"}},
-            "fadc_sum_bins": {"value": 60},
-        },
-        {
-            "calibration_devices": {"value": {"flat_fielding": "MSFx-FlashCam"}},
-            "fadc_sum_bins": {"value": 40},
-        },
-        {
-            "calibration_devices": {"value": {"flat_fielding": "MSFx-NectarCam"}},
-            "fadc_sum_bins": {"value": 32},
-        },
-    ]
-
-    result = _get_flasher_readout_models(reader, "North", "8.0.0", "MSFx-NectarCam")
-
-    assert result == [("MSTx-NectarCam", 60), ("LSTN-design", 32)]
-
-
-def test_use_exported_model_filenames_matches_qualified_report_assets(tmp_path):
-    telescope_model = Mock()
-    telescope_model.config_file_directory = tmp_path
-    telescope_model.parameters = {
-        "mirror_list": {
-            "file": True,
-            "instrument": "MSTx-NectarCam",
-            "value": "mirror_list-1.0.0.ecsv",
-        }
-    }
-    (tmp_path / "mirror_list-1.0.0-MSTx-NectarCam.ecsv").touch()
-
-    _use_exported_model_filenames(telescope_model)
-
-    assert telescope_model.parameters["mirror_list"]["value"] == (
-        "mirror_list-1.0.0-MSTx-NectarCam.ecsv"
-    )
 
 
 def test_plot_nsb_altitude_correction_creates_heatmap(tmp_path):

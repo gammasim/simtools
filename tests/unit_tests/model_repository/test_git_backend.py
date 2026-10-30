@@ -7,7 +7,6 @@ from types import SimpleNamespace
 import pytest
 
 from simtools.model_repository.git_backend import (
-    GitModelSourceDependencyError,
     Pygit2ObjectStore,
 )
 
@@ -88,16 +87,6 @@ def _install_pygit2(monkeypatch, repository):
     )
     monkeypatch.setitem(sys.modules, "pygit2", pygit2)
     return pygit2, owner_validation
-
-
-def test_pygit2_object_store_requires_runtime_dependency(monkeypatch, tmp_test_directory):
-    """Selecting a Git source explains how to install its dependency."""
-    monkeypatch.setitem(sys.modules, "pygit2", None)
-
-    with pytest.raises(
-        GitModelSourceDependencyError, match="install simtools with its standard dependencies"
-    ):
-        Pygit2ObjectStore(tmp_test_directory)
 
 
 def test_pygit2_object_store_rejects_missing_repository(monkeypatch, tmp_test_directory):

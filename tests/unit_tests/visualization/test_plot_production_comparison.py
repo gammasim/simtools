@@ -248,7 +248,8 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     assert participation["comparisons"][0]["value"] == pytest.approx(0.0)
 
 
-def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
+@pytest.mark.parametrize("figure_format", ["pdf", "svg"])
+def test_plot_writes_requested_figure_format_only(tmp_test_directory, figure_format):
     output_path = Path(tmp_test_directory)
     metrics = [
         _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0),
@@ -256,11 +257,10 @@ def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
     ]
 
     plot_production_comparison.plot_event_level_comparison(
-        metrics, output_path=output_path, bins=8, figure_format=["pdf"]
+        metrics, output_path=output_path, bins=8, figure_format=[figure_format]
     )
 
-    assert (output_path / "trigger_multiplicity.pdf").exists()
-    assert (output_path / "distribution_energy.pdf").exists()
+    assert (output_path / f"trigger_multiplicity.{figure_format}").exists()
     assert not (output_path / "trigger_multiplicity.png").exists()
 
 
@@ -345,19 +345,6 @@ def test_empty_pdf_report_does_not_create_an_output(tmp_test_directory):
     assert not output.exists()
 
 
-def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
-    metrics = [
-        _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0),
-        _build_metrics(CANDIDATE, simulated_scale=1.2, triggered_scale=1.1),
-    ]
-
-    plot_production_comparison.plot_event_level_comparison(
-        metrics, output_path=Path(tmp_test_directory), figure_format=["svg"]
-    )
-
-    assert (Path(tmp_test_directory) / "trigger_multiplicity.svg").exists()
-
-
 def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)]
@@ -435,7 +422,7 @@ def test_artist_color():
     plt.close(fig)
 
 
-def test_trigger_fraction_and_skip_paths(tmp_test_directory):
+def test_trigger_plots_skip_empty_and_single_telescope_data(tmp_test_directory):
     output_path = Path(tmp_test_directory)
 
     empty_metric = _build_metrics("empty", simulated_scale=1.0, triggered_scale=1.0)
@@ -447,9 +434,6 @@ def test_trigger_fraction_and_skip_paths(tmp_test_directory):
     plot_production_comparison._plot_telescope_participation([empty_metric], output_path)
     assert not (output_path / "trigger_multiplicity_empty.png").exists()
 
-
-def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
-    output_path = Path(tmp_test_directory)
     metric = _build_metrics(BASELINE, simulated_scale=1.0, triggered_scale=1.0)
     metric.trigger_combinations = Counter({"LSTN-01,MSTN-01,SSTS-01": 2})
     plot_production_comparison._plot_single_telescope_trigger_frequencies([metric], output_path)

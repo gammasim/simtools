@@ -30,6 +30,11 @@ area (left) and the effective focal length (right) vs off-axis angle are shown.
 
 **Command line arguments**
 
+type (str, optional)
+    Validation type: 'optics' (default; field-angle scan of the whole telescope) or
+    'cumulative_psf' (cumulative PSF compared with measured data given by '--data').
+data (str, required for type cumulative_psf)
+    Measured cumulative PSF data file.
 site (str, required)
     North or South.
 telescope (str, required)
@@ -65,6 +70,13 @@ LST-1 5.0.0
 
 The output is saved in simtools-output/validate_optics
 
+Compare the cumulative PSF with measured data (type cumulative_psf):
+
+.. code-block:: console
+
+    simtools-validate-optics --type cumulative_psf --site North --telescope LST-1 \\
+    --zenith_angle 20 --data PSFcurve_data_v2.ecsv --model_version 6.0.2
+
 Expected final print-out message:
 
 .. code-block:: console
@@ -86,4 +98,9 @@ Expected final print-out message:
 ```{eval-rst}
 .. simtools-integration-example::
     :file: validate_optics_run.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_optics_cumulative_psf_prod6_psf.yml
 ```

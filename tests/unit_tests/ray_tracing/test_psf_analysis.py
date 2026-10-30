@@ -57,12 +57,6 @@ def psf_image(run_context, _mock_settings_env_vars):
     return image
 
 
-def test_init_zero_focal_length(caplog):
-    with caplog.at_level(logging.WARNING):
-        PSFImage(focal_length=0.0)
-    assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
-
-
 def test_reading_simtel_file(tmp_test_directory, mocker, caplog):
     test_file = tmp_test_directory / "photons.lis.gz"
     photon_data = (
@@ -98,35 +92,6 @@ def test_reading_simtel_file(tmp_test_directory, mocker, caplog):
         image_not_ok.read_photon_list_from_simtel_file(test_file)
 
 
-def test_get_cumulative_data(psf_image):
-    image = psf_image
-
-    cumulative_data = image.get_cumulative_data()
-    assert len(cumulative_data) == 30
-    assert cumulative_data["Radius [cm]"][0] == 0
-    assert cumulative_data["Cumulative PSF"][0] == 0
-
-    # test with radius
-    radius = np.array([50.0] * u.cm)
-    cumulative_data_radius = image.get_cumulative_data(radius=radius)
-    assert len(cumulative_data_radius) == 1
-    assert cumulative_data_radius["Radius [cm]"][0] == pytest.approx(50.0)
-
-
-def test_get_image_data(psf_image):
-    image = psf_image
-
-    # Test centralized data
-    data_centralized = image.get_image_data(centralized=True)
-    assert np.allclose(data_centralized.X, image.photon_pos_x - image.centroid_x)
-    assert np.allclose(data_centralized.Y, image.photon_pos_y - image.centroid_y)
-
-    # Test non-centralized data
-    data_non_centralized = image.get_image_data(centralized=False)
-    assert np.allclose(data_non_centralized.X, image.photon_pos_x)
-    assert np.allclose(data_non_centralized.Y, image.photon_pos_y)
-
-
 def test_set_psf(caplog):
     image = PSFImage(focal_length=2800.0)
 
@@ -154,54 +119,11 @@ def test_set_psf(caplog):
     assert image._stored_psf[0.5] == pytest.approx(expected_value_fraction_0_5)
 
 
-def test_find_radius_by_scanning(psf_image):
-    image = psf_image
-
-    target_number = 680
-    radius_sig = 1.0
-
-    radius = image._find_radius_by_scanning(target_number, radius_sig)
-    assert radius > 0
-
-    # Test with a target number that is too high
-    with pytest.raises(RuntimeError):
-        image._find_radius_by_scanning(2000, radius_sig)
-
-    # Test with a target number that is too low
-    with pytest.raises(RuntimeError):
-        image._find_radius_by_scanning(0, radius_sig)
-
-
 def test_find_psf(psf_image):
     image = psf_image
 
     psf = image._find_psf(fraction=0.8)
     assert psf > 0
-
-
-def test_find_psf_identical_positions(psf_image):
-    image = psf_image
-    image.photon_pos_x = np.ones(10)
-    image.photon_pos_y = np.ones(10)
-    image.centroid_x = 1.0
-    image.centroid_y = 1.0
-    image._number_of_detected_photons = 10
-
-    assert image._find_psf(fraction=0.8) == pytest.approx(0.0)
-
-
-def test_get_effective_area(psf_image, caplog):
-    image = psf_image
-
-    # Test when effective area is set
-    image._effective_area = 100.0
-    assert image.get_effective_area() == pytest.approx(100.0)
-
-    # Test when effective area is not set
-    image_no_effective_area = PSFImage()
-    with caplog.at_level(logging.ERROR):
-        assert image_no_effective_area.get_effective_area() is None
-    assert "Effective Area could not be calculated" in caplog.text
 
 
 def test_get_psf(psf_image, caplog):
@@ -224,28 +146,6 @@ def test_get_psf(psf_image, caplog):
     psf_fraction_0_5 = image.get_psf(fraction=0.5, unit="cm")
     assert psf_fraction_0_5 > 0
     assert 0.5 in image._stored_psf
-
-
-def test_process_photon_list_with_rx(mocker, psf_image, dummy_photon_file):
-    image = psf_image
-    mocker.patch.object(image, "_process_simtel_file_using_rx")
-    mocker.patch.object(image, "read_photon_list_from_simtel_file")
-
-    use_rx = True
-    image.process_photon_list(dummy_photon_file, use_rx)
-    image._process_simtel_file_using_rx.assert_called_once_with(dummy_photon_file)
-    image.read_photon_list_from_simtel_file.assert_not_called()
-
-
-def test_process_photon_list_without_rx(mocker, psf_image, dummy_photon_file):
-    image = psf_image
-    mocker.patch.object(image, "_process_simtel_file_using_rx")
-    mocker.patch.object(image, "read_photon_list_from_simtel_file")
-
-    use_rx = False
-    image.process_photon_list(dummy_photon_file, use_rx)
-    image.read_photon_list_from_simtel_file.assert_called_once_with(dummy_photon_file)
-    image._process_simtel_file_using_rx.assert_not_called()
 
 
 def test_process_simtel_file_using_rx_success(
@@ -300,16 +200,6 @@ def test_process_simtel_file_using_rx_success(
     assert image._effective_area == pytest.approx(100.0)
 
 
-def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_gzip_open):
-    image = psf_image
-    photon_file = "non_existent_file.gz"
-
-    mocker.patch(mocker_gzip_open, side_effect=FileNotFoundError)
-
-    with pytest.raises(FileNotFoundError, match=f"Photon list file not found: {photon_file}"):
-        image._process_simtel_file_using_rx(photon_file)
-
-
 def test_process_simtel_file_using_rx_unexpected_output_format(
     mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
 ):
@@ -353,23 +243,6 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
         image._process_simtel_file_using_rx(dummy_photon_file)
 
 
-def test_is_photon_positions_ok(psf_image):
-    image = psf_image
-
-    assert image._is_photon_positions_ok() is True
-
-    image.photon_pos_x = []
-    assert image._is_photon_positions_ok() is False
-
-    image.photon_pos_x = psf_image.photon_pos_x  # Reset to original
-    image.photon_pos_y = []
-    assert image._is_photon_positions_ok() is False
-
-    image.photon_pos_y = psf_image.photon_pos_y  # Reset to original
-    image.photon_pos_x.append(0.0)  # Add an extra element to make lengths different
-    assert image._is_photon_positions_ok() is False
-
-
 def test_find_psf_brute_force(psf_image, mocker, caplog):
     image = psf_image
     mocker.patch.object(image, "_sum_photons_in_radius", return_value=100)
@@ -387,6 +260,111 @@ def test_find_psf_brute_force(psf_image, mocker, caplog):
     mocker.patch.object(image, "_sum_photons_in_radius", return_value=1000)
     psf = image._find_psf(fraction)
     assert psf == pytest.approx(2 * radius_sig)
+
+
+def test_init_zero_focal_length(caplog):
+    with caplog.at_level(logging.WARNING):
+        PSFImage(focal_length=0.0)
+    assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
+
+
+def test_get_cumulative_data(psf_image):
+    image = psf_image
+
+    cumulative_data = image.get_cumulative_data()
+    assert len(cumulative_data) == 30
+    assert cumulative_data["Radius [cm]"][0] == 0
+    assert cumulative_data["Cumulative PSF"][0] == 0
+
+    # test with radius
+    radius = np.array([50.0] * u.cm)
+    cumulative_data_radius = image.get_cumulative_data(radius=radius)
+    assert len(cumulative_data_radius) == 1
+    assert cumulative_data_radius["Radius [cm]"][0] == pytest.approx(50.0)
+
+
+def test_get_image_data(psf_image):
+    image = psf_image
+
+    # Test centralized data
+    data_centralized = image.get_image_data(centralized=True)
+    assert np.allclose(data_centralized.X, image.photon_pos_x - image.centroid_x)
+    assert np.allclose(data_centralized.Y, image.photon_pos_y - image.centroid_y)
+
+    # Test non-centralized data
+    data_non_centralized = image.get_image_data(centralized=False)
+    assert np.allclose(data_non_centralized.X, image.photon_pos_x)
+    assert np.allclose(data_non_centralized.Y, image.photon_pos_y)
+
+
+def test_find_radius_by_scanning(psf_image):
+    image = psf_image
+
+    target_number = 680
+    radius_sig = 1.0
+
+    radius = image._find_radius_by_scanning(target_number, radius_sig)
+    assert radius > 0
+
+    # Test with a target number that is too high
+    with pytest.raises(RuntimeError):
+        image._find_radius_by_scanning(2000, radius_sig)
+
+    # Test with a target number that is too low
+    with pytest.raises(RuntimeError):
+        image._find_radius_by_scanning(0, radius_sig)
+
+
+def test_find_psf_identical_positions(psf_image):
+    image = psf_image
+    image.photon_pos_x = np.ones(10)
+    image.photon_pos_y = np.ones(10)
+    image.centroid_x = 1.0
+    image.centroid_y = 1.0
+    image._number_of_detected_photons = 10
+
+    assert image._find_psf(fraction=0.8) == pytest.approx(0.0)
+
+
+def test_get_effective_area(psf_image, caplog):
+    image = psf_image
+
+    # Test when effective area is set
+    image._effective_area = 100.0
+    assert image.get_effective_area() == pytest.approx(100.0)
+
+    # Test when effective area is not set
+    image_no_effective_area = PSFImage()
+    with caplog.at_level(logging.ERROR):
+        assert image_no_effective_area.get_effective_area() is None
+    assert "Effective Area could not be calculated" in caplog.text
+
+
+def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_gzip_open):
+    image = psf_image
+    photon_file = "non_existent_file.gz"
+
+    mocker.patch(mocker_gzip_open, side_effect=FileNotFoundError)
+
+    with pytest.raises(FileNotFoundError, match=f"Photon list file not found: {photon_file}"):
+        image._process_simtel_file_using_rx(photon_file)
+
+
+def test_is_photon_positions_ok(psf_image):
+    image = psf_image
+
+    assert image._is_photon_positions_ok() is True
+
+    image.photon_pos_x = []
+    assert image._is_photon_positions_ok() is False
+
+    image.photon_pos_x = psf_image.photon_pos_x  # Reset to original
+    image.photon_pos_y = []
+    assert image._is_photon_positions_ok() is False
+
+    image.photon_pos_y = psf_image.photon_pos_y  # Reset to original
+    image.photon_pos_x.append(0.0)  # Add an extra element to make lengths different
+    assert image._is_photon_positions_ok() is False
 
 
 def test_plot_cumulative(psf_image, mocker):

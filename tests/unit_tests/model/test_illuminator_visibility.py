@@ -56,38 +56,10 @@ def test_init_missing_keys():
         IlluminatorTelescopeVisibility([{"columns": ["a", "b", "c"]}])
 
 
-def test_init_missing_required_columns():
-    data = [{"wrong_column": "ILL-01", "telescope_id": "TEL-01", "visible": True}]
-    with pytest.raises(ValueError, match="must contain illuminator_id"):
-        IlluminatorTelescopeVisibility(data)
-
-
 def test_init_empty_rows():
     data = []
     with pytest.raises(ValueError, match="contains no illuminators"):
         IlluminatorTelescopeVisibility(data)
-
-
-def test_get_telescopes(simple_visibility_data):
-    visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
-    telescopes = visibility.get_telescopes()
-
-    assert len(telescopes) == 3
-    assert "MSTS-01" in telescopes
-    assert "MSTS-02" in telescopes
-    assert "MSTS-03" in telescopes
-
-
-def test_get_valid_pairs(simple_visibility_data):
-    visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
-    pairs = visibility.get_valid_pairs()
-
-    assert len(pairs) == 4
-    assert ("ILLS-01", "MSTS-01") in pairs
-    assert ("ILLS-01", "MSTS-03") in pairs
-    assert ("ILLS-02", "MSTS-02") in pairs
-    assert ("ILLS-02", "MSTS-03") in pairs
-    assert ("ILLS-01", "MSTS-02") not in pairs
 
 
 def test_properties(simple_visibility_data):

@@ -53,44 +53,16 @@ def test_initialization_default_label(simple_visibility_data, base_config, run_c
     assert simulator.label == "multi_illuminator"
 
 
-def test_determine_max_workers_explicit(simple_visibility_data, base_config, run_context):
-    """Test max_workers initialization with explicit value."""
+@pytest.mark.parametrize("max_workers", [4, None, 0])
+def test_max_workers_is_preserved(simple_visibility_data, base_config, run_context, max_workers):
     simulator = MultiIlluminatorSimulator(
         context=run_context,
         visibility_data=simple_visibility_data,
         config=base_config,
-        max_workers=4,
+        max_workers=max_workers,
     )
 
-    assert simulator.max_workers == 4
-
-
-def test_max_workers_default_is_resolved_by_backend(
-    simple_visibility_data, base_config, run_context
-):
-    """Leave the local default for the execution backend to resolve."""
-    simulator = MultiIlluminatorSimulator(
-        context=run_context,
-        visibility_data=simple_visibility_data,
-        config=base_config,
-        max_workers=None,
-    )
-
-    assert simulator.max_workers is None
-
-
-def test_max_workers_all_cores_is_resolved_by_backend(
-    simple_visibility_data, base_config, run_context
-):
-    """Preserve zero so only the selected local backend interprets it."""
-    simulator = MultiIlluminatorSimulator(
-        context=run_context,
-        visibility_data=simple_visibility_data,
-        config=base_config,
-        max_workers=0,
-    )
-
-    assert simulator.max_workers == 0
+    assert simulator.max_workers == max_workers
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")

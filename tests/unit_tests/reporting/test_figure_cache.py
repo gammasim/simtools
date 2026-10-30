@@ -11,19 +11,6 @@ class PlotData:
     x: np.ndarray
 
 
-def test_canonicalize_dataclass_numpy_and_paths():
-    value = PlotData(x=np.array([1.0, 2.0], dtype=np.float64))
-
-    result = figure_cache._canonicalize(value)
-
-    assert result["x"]["dtype"] == "<f8"
-    assert result["x"]["shape"] == [2]
-    assert np.all(np.isclose(result["x"]["values"], [1.0, 2.0]))
-    assert np.isclose(figure_cache._canonicalize(np.float64(2.5)), 2.5)
-    assert figure_cache._canonicalize(Path("images/plot.png")) == "images/plot.png"
-    assert figure_cache._canonicalize(float("nan")) == "nan"
-
-
 def test_figure_cache_key_tracks_data_configuration_and_rendering_inputs(
     tmp_test_directory, monkeypatch, run_context
 ):

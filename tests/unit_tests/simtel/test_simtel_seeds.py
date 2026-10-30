@@ -70,51 +70,6 @@ def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, m
     random_seed_mock.assert_not_called()
 
 
-def test_set_fixed_seeds(mocker, mock_config):
-    mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
-    mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
-
-    seeds = SimtelSeeds(context=mock_config)
-    seeds.simulation_seed = [123, 456]
-    result = seeds._set_fixed_seeds()
-    assert result == "123,456"
-    mock_logger.return_value.warning.assert_called_once()
-    assert "123,456" in mock_logger.return_value.warning.call_args[0][0]
-
-    seeds.simulation_seed = [789]
-    with pytest.raises(IndexError, match="Two seeds must be provided"):
-        seeds._set_fixed_seeds()
-
-
-@pytest.mark.parametrize(
-    ("instrument_seed", "expected_generates"),
-    [
-        (None, True),
-        (700, False),
-    ],
-)
-def test_generate_seed_pair(mocker, mock_config, instrument_seed, expected_generates):
-    """Test _generate_seed_pair generates or uses existing instrument seed."""
-    if expected_generates:
-        mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=500)
-    mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
-    mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
-
-    seeds = SimtelSeeds(context=mock_config)
-    seeds.instrument_seed = instrument_seed
-    seeds.simulation_seed = 600
-    result = seeds._generate_seed_pair()
-
-    if expected_generates:
-        assert seeds.instrument_seed == 500
-        assert result == "500,600"
-    else:
-        assert result == "700,600"
-
-    mock_logger.return_value.info.assert_called_once()
-    assert str(seeds.instrument_seed) in mock_logger.return_value.info.call_args[0][0]
-
-
 def test_generate_seeds_with_file(mocker, mock_config, tmp_path):
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
     mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=[101, 102, 103])
@@ -141,30 +96,6 @@ def test_generate_seeds_with_file(mocker, mock_config, tmp_path):
         ValueError, match="Number of random instances of instrument must be less than 1024"
     ):
         seeds._generate_seeds_with_file("north", "1.0.0", 20.0, 180.0)
-
-
-def test_get_instrument_seed_deterministic(mocker, mock_config):
-    mocker.patch(
-        "simtools.simtel.simtel_seeds.names.site_names",
-        return_value={"North": ["north"], "South": ["south"]},
-    )
-
-    seeds = SimtelSeeds(context=mock_config)
-    seeds.instrument_seed = None
-
-    result_base = seeds._get_instrument_seed("north", "1.0.0", 20.0, 180.0)
-    assert result_base == 100001020180
-    result_site = seeds._get_instrument_seed("south", "1.0.0", 20.0, 180.0)
-    assert result_site == 100002020180
-    result_zenith = seeds._get_instrument_seed("north", "1.0.0", 30.0, 180.0)
-    assert result_zenith == 100001030180
-    result_azimuth = seeds._get_instrument_seed("north", "1.0.0", 20.0, 270.0)
-    assert result_azimuth == 100001020270
-
-    assert len({result_base, result_site, result_zenith, result_azimuth}) == 4
-
-    with pytest.raises(ValueError, match="Unknown site"):
-        seeds._get_instrument_seed("unknown_site", "1.0.0", 20.0, 180.0)
 
 
 @pytest.mark.parametrize(

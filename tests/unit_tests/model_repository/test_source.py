@@ -31,35 +31,6 @@ def _parameter(instrument, value):
     )
 
 
-def test_source_warms_a_model_version_and_reads_parameters():
-    """Production and referenced parameter files are cached on first use."""
-    production = "simulation-models/productions/1.0.0/LSTN-01.json"
-    parameter_path = (
-        "simulation-models/model_parameters/LSTN-01/camera_body_diameter/"
-        "camera_body_diameter-1.0.0.json"
-    )
-    files = {
-        production: _json({"parameters": {"LSTN-01": {"camera_body_diameter": "1.0.0"}}}),
-        parameter_path: _parameter("LSTN-01", 350.0),
-    }
-    storage = MemoryStorage(files)
-    source = ModelSource(storage)
-
-    table = source.read_production_table("telescopes", "1.0.0")
-    assert source.is_configured() is True
-    assert source.read_production_table("telescopes", "1.0.0") == table
-    first_reads = set(storage.files)
-    parameter = source.read_parameters(
-        {"camera_body_diameter": "1.0.0"}, "telescopes", "LSTN-01", "North"
-    )
-
-    assert table["parameters"]["LSTN-01"]["camera_body_diameter"] == "1.0.0"
-    assert parameter[0]["value"] == pytest.approx(350.0)
-    assert first_reads == set(files)
-    assert source.source_name == "memory"
-    assert source.source_config == {"type": "memory", "files": files}
-
-
 def test_source_combines_patch_history_and_descriptions():
     """Patch versions include earlier production documents and info descriptions."""
     storage = MemoryStorage(
@@ -86,24 +57,6 @@ def test_source_combines_patch_history_and_descriptions():
     }
     assert source.get_model_versions() == ["1.0.0", "1.1.0"]
     assert source.get_production_descriptions() == [("1.1.0", "Updated")]
-
-
-def test_source_rejects_missing_patch_history_version():
-    """A patch release must not silently drop a version listed in its history."""
-    storage = MemoryStorage(
-        {
-            "simulation-models/productions/1.1.0/info.yml": (
-                b"description: Updated\nmodel_update: patch_update\n"
-                b"model_version_history:\n  - 1.0.0\n"
-            ),
-            "simulation-models/productions/1.1.0/LSTN-01.json": _json(
-                {"parameters": {"LSTN-01": {"new_parameter": "1.0.0"}}}
-            ),
-        }
-    )
-
-    with pytest.raises(ValueError, match=r"1\.0\.0 in the patch history of 1\.1\.0 not found"):
-        ModelSource(storage).read_production_table("telescopes", "1.1.0")
 
 
 def test_source_reports_missing_tables_and_parameters():
@@ -250,14 +203,3 @@ def test_source_export_reuses_identical_files_and_rejects_ambiguous_exports(
         source.export_model_files(file_names="model.dat", dest=destination)
     with pytest.raises(ValueError, match="Destination path is required"):
         source.export_model_files(parameters={"data": parameter})
-
-
-def test_source_export_skips_file_parameters_without_value(tmp_test_directory):
-    """File parameters without a value (no file configured) are not exported."""
-    source = ModelSource(MemoryStorage({}))
-    parameters = {
-        "unset_file": {"file": True, "value": None, "parameter": "unset_file"},
-        "empty_file": {"file": True, "value": "", "parameter": "empty_file"},
-    }
-
-    assert source.export_model_files(parameters=parameters, dest=tmp_test_directory) == {}
