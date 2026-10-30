@@ -26,6 +26,7 @@ from simtools.simulation.parameters import SimulationParameters
 from simtools.utils import general, value_conversion
 
 _REDUCED_EVENT_DATA_SUFFIX = product_value("sim_telarray_event_data", "default_suffix")
+_COMPRESSION_SUFFIXES = {".gz", ".zst", ".bz2", ".xz"}
 
 
 def _write_reduced_event_list_batch(job_spec, context=None):
@@ -36,36 +37,46 @@ def _write_reduced_event_list_batch(job_spec, context=None):
     generator = writer.EventDataWriter(
         input_files, file_format=metadata_args.get("simulation_file_format", "eventio")
     )
-
-    def build_metadata_documents():
-        return {
-            "METADATA": build_standard_metadata(metadata_args, output_file, context=context),
-            "SIMULATION_METADATA": build_simulation_metadata(
-                generator.get_simulation_input_metadata(), array_models=model_exports
-            ),
-        }
-
     table_handler.write_table_chunks(
         table_chunks=generator.iter_table_chunks(),
         output_file=Path(output_file),
         overwrite_existing=True,
-        metadata_documents=build_metadata_documents,
+        metadata_documents=lambda: {
+            "METADATA": build_standard_metadata(metadata_args, output_file, context=context),
+            "SIMULATION_METADATA": build_simulation_metadata(
+                generator.get_simulation_input_metadata(), array_models=model_exports
+            ),
+        },
         activity_id=metadata_args.get("activity_id") if metadata_args else None,
     )
 
 
 def _simtools_log_file_path():
-    """Return the path of the first file log handler in the simtools logger hierarchy."""
+    """Return the file path of the first file log handler in the simtools logger hierarchy."""
     logger = logging.getLogger("simtools")
     while logger:
-        file_handler = next(
-            (handler for handler in logger.handlers if isinstance(handler, logging.FileHandler)),
-            None,
-        )
-        if file_handler is not None:
-            return file_handler.baseFilename
+        for handler in logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                return handler.baseFilename
         logger = logger.parent
     return None
+
+
+def _gzip_file(source, destination):
+    """Write a gzip-compressed copy of a file."""
+    with Path(source).open("rb") as file_in, gzip.open(destination, "wb") as file_out:
+        shutil.copyfileobj(file_in, file_out)
+
+
+def _broadcast_to_runs(values, n_runs, name, hint):
+    """Broadcast a single value to all runs or require one value per run."""
+    if len(values) == 1:
+        return values * n_runs
+    if len(values) != n_runs:
+        raise ValueError(
+            f"Invalid {name} list length for direct_injection. Use one value or {hint}"
+        )
+    return values
 
 
 class Simulator:
@@ -94,12 +105,10 @@ class Simulator:
 
         self.site = self.context.args.get("site", None)
         self.model_version = self.context.args.get("model_version", None)
-
         self.simulation_software = self.context.args.get(
             "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
         )
         self.run_mode = self.context.args.get("run_mode", None)
-
         self.io_handler = self.context.paths
 
         self._extra_commands = extra_commands
@@ -126,19 +135,10 @@ class Simulator:
     @simulation_software.setter
     def simulation_software(self, simulation_software):
         """
-        Set and test simulation_software type.
+        Set the simulation software.
 
-        Parameters
-        ----------
-        simulation_software : str
-            Simulation software to use. Must be one of ``"sim_telarray"``,
-            ``"corsika"``, or ``"corsika_sim_telarray"``. The latter runs CORSIKA
-            and pipes it directly to sim_telarray.
-
-        Raises
-        ------
-        ValueError
-
+        Must be one of ``"sim_telarray"``, ``"corsika"`` or ``"corsika_sim_telarray"``
+        (CORSIKA piped directly to sim_telarray). Raises ValueError otherwise.
         """
         if simulation_software not in defaults.SIMULATION_SOFTWARE_CHOICES:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
@@ -146,7 +146,7 @@ class Simulator:
         self.chain = SimulationChain.from_software(self._simulation_software)
 
     def _initialize_from_tool_configuration(self):
-        """Initialize simulator from tool configuration."""
+        """Initialize run number from the tool configuration."""
         if self.context.args.get("corsika_file"):
             run_number = file_info.get_corsika_run_number(
                 self.context.args["corsika_file"],
@@ -159,22 +159,13 @@ class Simulator:
         return runner_services.validate_corsika_run_number(run_number)
 
     def _initialize_array_models(self):
-        """
-        Initialize array simulation models and CORSIKA config (one per model version).
-
-        Returns
-        -------
-        list, list
-            List of ArrayModel and CorsikaConfig objects.
-        """
-        versions = value_conversion.ensure_list(self.model_version)
-
+        """Initialize array models and CORSIKA configurations (one per model version)."""
         array_model = []
         corsika_configurations = []
         self.simulation_parameters = []
         model_subdir = f"run{self.run_number:06d}"
 
-        for version in versions:
+        for version in value_conversion.ensure_list(self.model_version):
             model = ArrayModel(
                 label=self.label,
                 site=self.site,
@@ -189,12 +180,7 @@ class Simulator:
                 model_reader=self.model_reader,
                 context=self.context,
             )
-            if not self.chain.starts_with_showers:
-                cfg = None
-                parameters = SimulationParameters.from_args(
-                    self.context.args, self.run_number, model.site_model
-                )
-            else:
+            if self.chain.starts_with_showers:
                 cfg = get_shower_configuration(
                     array_model=model,
                     label=self.label,
@@ -202,6 +188,11 @@ class Simulator:
                     context=self.context,
                 )
                 parameters = cfg.simulation_parameters
+            else:
+                cfg = None
+                parameters = SimulationParameters.from_args(
+                    self.context.args, self.run_number, model.site_model
+                )
             self.simulation_parameters.append(parameters)
             model.initialize_seeds(parameters.zenith_angle, parameters.azimuth_angle)
 
@@ -212,18 +203,10 @@ class Simulator:
         corsika_configurations = (
             corsika_configurations if len(self.chain.stages) > 1 else corsika_configurations[0]
         )
-
         return array_model, corsika_configurations
 
     def _initialize_simulation_runner(self):
-        """
-        Initialize the runner of the simulation chain.
-
-        Returns
-        -------
-        ChainRunner
-            Runner writing the run script of all chain stages.
-        """
+        """Initialize the ChainRunner writing the run script of all chain stages."""
         models = slice(None) if len(self.chain.stages) > 1 else slice(0, 1)
         inputs = StageInputs(
             array_models=tuple(self.array_models[models]),
@@ -235,12 +218,7 @@ class Simulator:
         return ChainRunner(self.chain, inputs, label=self.label)
 
     def simulate(self):
-        """
-        Prepare and submit a run script as a job.
-
-        Writes submission scripts using the simulation runners and submits the
-        run script through the execution layer. Collects generated files.
-        """
+        """Prepare and submit the run script as a job, then collect generated files."""
         self._simulation_runner.prepare_run(
             run_number=self.run_number,
             sub_script=self.runner_service.get_file_name("sub_script", self.run_number),
@@ -248,19 +226,17 @@ class Simulator:
             extra_commands=self._extra_commands,
         )
         self.update_file_lists()
-        job_environment = self._simulation_runner.environment()
-
         result = execution.run_command(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
             stdout=self.runner_service.get_file_name("sub_out", self.run_number),
             stderr=self.runner_service.get_file_name("sub_err", self.run_number),
-            env=job_environment,
+            env=self._simulation_runner.environment(),
         )
         self._runtime = result.runtime
 
     @classmethod
     def simulate_direct_injection_sequence(cls, label=None, context=None):
-        """Run direct-injection simulations for one or multiple intensity settings.
+        """Run direct-injection simulations for one or several intensity settings.
 
         This method supports filter-wheel-like sequences by allowing
         ``number_of_events`` and ``flasher_photons`` to be provided as either
@@ -270,14 +246,7 @@ class Simulator:
         Parameters
         ----------
         label : str or None, optional
-                Optional simulation label passed to the simulator instance for each
-                sequence step.
-
-        Returns
-        -------
-        None
-                This method runs simulations as side effects and does not return a
-                value.
+            Simulation label passed to the simulator instance of each sequence step.
         """
         context = context or RunContext.from_environment()
         base_args = dict(context.args)
@@ -285,28 +254,13 @@ class Simulator:
 
         events = value_conversion.parse_typed_sequence(base_args.get("number_of_events", 1), int)
         photons = value_conversion.parse_typed_sequence(base_args.get("flasher_photons"), int)
-
         n_runs = max(len(events), len(photons), 1)
-
-        if len(events) == 0:
-            events = [1]
-        if len(events) == 1 and n_runs > 1:
-            events = events * n_runs
-        elif len(events) != n_runs:
-            raise ValueError(
-                "Invalid number_of_events list length for direct_injection. "
-                "Use one value or one value per photon intensity."
-            )
-
-        if len(photons) == 0:
-            photons = [None] * n_runs
-        elif len(photons) == 1 and n_runs > 1:
-            photons = photons * n_runs
-        elif len(photons) != n_runs:
-            raise ValueError(
-                "Invalid flasher_photons list length for direct_injection. "
-                "Use one value or one value per event setting."
-            )
+        events = _broadcast_to_runs(
+            events or [1], n_runs, "number_of_events", "one value per photon intensity."
+        )
+        photons = _broadcast_to_runs(
+            photons or [None], n_runs, "flasher_photons", "one value per event setting."
+        )
 
         for idx in range(n_runs):
             run_args = base_args.copy()
@@ -320,24 +274,14 @@ class Simulator:
             simulator.validate_simulations()
 
     def _get_corsika_file(self):
-        """
-        Get the CORSIKA input file if applicable (for sim_telarray simulations).
-
-        Returns
-        -------
-        Path, None
-            Path to the CORSIKA input file.
-        """
+        """Return the CORSIKA input file if the chain reads one, else None."""
         if self.chain.reads_input_file:
             return self.context.args.get("corsika_file", None)
         return None
 
     def get_files(self, file_type):
         """
-        Get file(s) generated by simulations.
-
-        Not all file types are available for all simulation types.
-        Returns an empty list for an unknown file type.
+        Get file(s) generated by simulations (empty list for an unknown file type).
 
         Parameters
         ----------
@@ -347,40 +291,31 @@ class Simulator:
         Returns
         -------
         Path or list[Path]:
-            File or list with the full path of output files of a certain file type.
-
+            Full path(s) of the output files of the given file type.
         """
         return self.file_list.get(file_type, [])
 
+    def _files(self, *file_types):
+        """Return the output files of all given file types as one flat list."""
+        return [
+            file
+            for file_type in file_types
+            for file in value_conversion.ensure_list(self.get_files(file_type=file_type))
+        ]
+
     def _make_resources_report(self):
-        """
-        Prepare a simple report on computing wall clock time used in the simulations.
-
-        Returns
-        -------
-        str
-           string reporting on computing resources
-
-        """
-        runtime = []
-        _resources = self._simulation_runner.get_resources(runtime=self._runtime)
-        if _resources.get("runtime") is not None:
-            runtime.append(_resources["runtime"])
-
-        mean_runtime = np.mean(runtime) if runtime else np.nan
+        """Return a summary string of the wall time and number of events per run."""
+        resources = self._simulation_runner.get_resources(runtime=self._runtime)
+        runtimes = [resources["runtime"]] if resources.get("runtime") is not None else []
+        mean_runtime = np.mean(runtimes) if runtimes else np.nan
 
         resource_summary = f"Mean wall time/run [sec]: {mean_runtime}"
-        if "n_events" in _resources and _resources["n_events"] > 0:
-            resource_summary += f", #events/run: {_resources['n_events']}"
-
+        if resources.get("n_events", 0) > 0:
+            resource_summary += f", #events/run: {resources['n_events']}"
         return resource_summary
 
     def report(self):
-        """
-        Report on simulations and computing resources used.
-
-        Includes run time per run only at this point.
-        """
+        """Report on the simulations and the computing resources used."""
         parameters = self.simulation_parameters[0]
         self.logger.info(
             f"Production run complete for primary {parameters.primary_particle} showers "
@@ -403,9 +338,7 @@ class Simulator:
 
             path = outdir / f"{file_type}_files.txt"
             self.logger.info(f"Saving list of {file_type} files to {path}")
-
-            with open(path, "w", encoding="utf-8") as f:
-                f.write("\n".join(map(str, files)) + "\n")
+            path.write_text("\n".join(map(str, files)) + "\n", encoding="utf-8")
 
     def save_reduced_event_lists(self):
         """
@@ -420,12 +353,8 @@ class Simulator:
             return
 
         Simulator.write_reduced_event_lists(
-            input_files=value_conversion.ensure_list(
-                self.get_files(file_type="sim_telarray_output")
-            ),
-            output_files=value_conversion.ensure_list(
-                self.get_files(file_type="sim_telarray_event_data")
-            ),
+            input_files=self._files("sim_telarray_output"),
+            output_files=self._files("sim_telarray_event_data"),
             array_models=self.array_models,
             context=self.context,
         )
@@ -449,88 +378,73 @@ class Simulator:
         """
         Write reduced event lists using the selected simulation-file reader.
 
-        Input files can be passed directly or read from one or more text files
-        matching a glob pattern. Files are processed in batches, with one output
-        file written per batch.
+        Input files are passed directly or read from text files (one file per line),
+        processed in batches with one output file written per batch.
 
         Parameters
         ----------
         input_files : list
-            List of simulation files in the selected input format.
+            Simulation files in the selected input format.
         output_path : str or Path, optional
-            Directory for the output files. Defaults to the same directory as
-            each input file.
+            Output directory (default: the directory of each input file).
         output_files : list, optional
-            Explicit output files. When provided, these are used directly and
-            zipped with the input file batches.
+            Explicit output files, zipped with the input file batches.
         input_file_list : str or Path, optional
             Text file containing one simulation file per line.
         files_per_reduced_event_file : int, optional
-            Number of input files combined into each output file. Defaults to 1.
+            Number of input files combined into each output file (default 1).
         max_workers : int, optional
-            Maximum number of output-file worker processes. ``None`` uses 60% of
-            available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
+            Output-file worker processes (None: 60% of CPUs, 0: all CPUs, 1: serial).
         array_models : list, optional
-            Resolved ``ArrayModel`` instances to export into simulation metadata.
+            ``ArrayModel`` instances exported into the simulation metadata.
         input_file_list_pattern : str, optional
-            Glob pattern matching text files containing one simulation
-            file per line. Each list is processed independently, while all
-            resulting jobs share the same execution submission.
+            Glob pattern of text files with one simulation file per line; each list
+            is processed independently, all jobs share one execution submission.
         backend : str, optional
-            Execution backend. Defaults to ``"local"``.
+            Execution backend (default ``"local"``).
         backend_config : dict, optional
             Backend-specific execution settings.
         wait_for_completion : bool, optional
-            Wait for all backend jobs before returning. Submit-only mode is
-            available for asynchronous backends such as HTCondor.
+            Wait for all backend jobs; submit-only mode suits asynchronous backends.
         context : RunContext, optional
-            Run context; its arguments build the embedded standard metadata document.
+            Run context; its arguments build the embedded standard metadata.
 
         Returns
         -------
         SubmissionHandle or None
-            A handle for submit-only execution; blocking execution returns ``None``.
+            Handle for submit-only execution; blocking execution returns ``None``.
 
         Raises
         ------
         ValueError
             If the input parameters or number of explicit output files are invalid.
         """
-        Simulator._validate_reduced_event_list_args(
-            input_files=input_files,
-            input_file_list=input_file_list,
-            input_file_list_pattern=input_file_list_pattern,
-            files_per_reduced_event_file=files_per_reduced_event_file,
-        )
+        sources = (input_files, input_file_list, input_file_list_pattern)
+        if sum(source is not None for source in sources) != 1:
+            raise ValueError(
+                "Provide exactly one of input_files, input_file_list, or input_file_list_pattern."
+            )
+        if files_per_reduced_event_file < 1:
+            raise ValueError("files_per_reduced_event_file must be greater than zero.")
 
-        input_file_groups = Simulator._resolve_reduced_event_input_groups(
-            input_files=input_files,
-            input_file_list=input_file_list,
-            input_file_list_pattern=input_file_list_pattern,
-        )
         input_file_batches = []
         derived_output_files = []
-        for resolved_input_files, input_file_list_path in input_file_groups:
-            batches = Simulator._build_input_file_batches(
-                input_files=resolved_input_files,
-                files_per_reduced_event_file=files_per_reduced_event_file,
-            )
+        for (
+            resolved_input_files,
+            input_file_list_path,
+        ) in Simulator._resolve_reduced_event_input_groups(
+            input_files=input_files,
+            input_file_list=input_file_list,
+            input_file_list_pattern=input_file_list_pattern,
+        ):
+            batches = [
+                resolved_input_files[index : index + files_per_reduced_event_file]
+                for index in range(0, len(resolved_input_files), files_per_reduced_event_file)
+            ]
             input_file_batches.extend(batches)
-            if input_file_list_path is None:
-                derived_output_files.extend(
-                    Simulator._build_output_files_from_input_batches(
-                        output_path=output_path,
-                        input_file_batches=batches,
-                    )
-                )
-            else:
-                derived_output_files.extend(
-                    Simulator._build_output_files_from_input_file_list(
-                        output_path=output_path,
-                        input_file_list=input_file_list_path,
-                        input_file_batches=batches,
-                    )
-                )
+            derived_output_files.extend(
+                Simulator._build_output_files(output_path, batches, input_file_list_path)
+            )
 
         resolved_output_files = output_files if output_files is not None else derived_output_files
         Simulator._validate_reduced_event_output_count(
@@ -558,58 +472,40 @@ class Simulator:
         )
 
     @staticmethod
-    def _validate_reduced_event_list_args(
-        input_files,
-        input_file_list,
-        input_file_list_pattern,
-        files_per_reduced_event_file,
-    ):
-        """Validate argument combinations for reduced event list writing."""
-        input_sources = (input_files, input_file_list, input_file_list_pattern)
-        if sum(source is not None for source in input_sources) != 1:
-            raise ValueError(
-                "Provide exactly one of input_files, input_file_list, or input_file_list_pattern."
-            )
-        if files_per_reduced_event_file < 1:
-            raise ValueError("files_per_reduced_event_file must be greater than zero.")
-
-    @staticmethod
     def _resolve_reduced_event_input_groups(input_files, input_file_list, input_file_list_pattern):
-        """Resolve direct input files or one or more input-file lists."""
+        """Resolve direct input files or one or more input-file lists into (files, list path)."""
         if input_files is not None:
             return [(input_files, None)]
 
-        if input_file_list_pattern is not None:
-            list_paths = sorted(
+        if input_file_list_pattern is None:
+            list_paths = [Path(input_file_list)]
+        else:
+            matches = sorted(
                 path
                 for path in general.resolve_file_patterns(input_file_list_pattern)
                 if Path(path).is_file()
             )
-            if not list_paths:
+            if not matches:
                 raise FileNotFoundError(
                     f"No input file lists found for pattern: {input_file_list_pattern}"
                 )
-        else:
-            list_paths = [input_file_list]
+            list_paths = [Path(path) for path in matches]
+
         groups = []
         for list_path in list_paths:
-            list_path = Path(list_path)
             with open(list_path, encoding="utf-8") as file_list:
                 resolved_input_files = [line.strip() for line in file_list if line.strip()]
             groups.append((resolved_input_files, list_path))
         return groups
 
     @staticmethod
-    def _build_input_file_batches(input_files, files_per_reduced_event_file):
-        """Split input files into fixed-size batches."""
-        return [
-            input_files[index : index + files_per_reduced_event_file]
-            for index in range(0, len(input_files), files_per_reduced_event_file)
-        ]
-
-    @staticmethod
-    def _build_output_files_from_input_file_list(output_path, input_file_list, input_file_batches):
-        """Build output files using a file-list stem plus part index."""
+    def _build_output_files(output_path, input_file_batches, input_file_list=None):
+        """Build output names: one per input batch, or from the file-list stem and part index."""
+        if input_file_list is None:
+            return [
+                Simulator._build_output_file_for_input_batch(output_path, batch)
+                for batch in input_file_batches
+            ]
         output_dir = Path(output_path) if output_path else input_file_list.parent
         return [
             output_dir / f"{input_file_list.stem}.part{index:04d}{_REDUCED_EVENT_DATA_SUFFIX}"
@@ -617,33 +513,13 @@ class Simulator:
         ]
 
     @staticmethod
-    def _build_output_files_from_input_batches(output_path, input_file_batches):
-        """Build one output file per input-file batch."""
-        output_files = []
-        for input_file_batch in input_file_batches:
-            output_files.append(
-                Simulator._build_output_file_for_input_batch(
-                    output_path=output_path,
-                    input_file_batch=input_file_batch,
-                )
-            )
-        return output_files
-
-    @staticmethod
     def _build_output_file_for_input_batch(output_path, input_file_batch):
         """Build output filename for a single input batch."""
         input_file = Path(input_file_batch[0])
         output_dir = Path(output_path) if output_path else input_file.parent
-        stem = Simulator._simulation_file_stem(input_file.name)
-        return output_dir / f"{stem}{_REDUCED_EVENT_DATA_SUFFIX}"
-
-    @staticmethod
-    def _simulation_file_stem(file_name):
-        """Remove the input-format suffix and optional compression suffix."""
-        path = Path(file_name)
-        if path.suffix in {".gz", ".zst", ".bz2", ".xz"}:
-            path = path.with_suffix("")
-        return path.stem
+        if input_file.suffix in _COMPRESSION_SUFFIXES:
+            input_file = input_file.with_suffix("")
+        return output_dir / f"{input_file.stem}{_REDUCED_EVENT_DATA_SUFFIX}"
 
     @staticmethod
     def _validate_reduced_event_output_count(input_file_batches, output_files):
@@ -671,20 +547,18 @@ class Simulator:
         """Run reduced event list jobs serially or in parallel."""
         context = context or RunContext.from_environment()
         model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
-        job_specs = [
-            (input_files, output_file, metadata_args or {}, model_exports)
-            for input_files, output_file in zip(input_file_batches, output_files)
-        ]
         execution_jobs = [
             JobSpec(
                 job_id=f"job-{index:06d}",
                 index=index,
                 function=_write_reduced_event_list_batch,
-                item=job_spec,
+                item=(input_files, output_file, metadata_args or {}, model_exports),
                 context_spec=context.to_spec(),
-                output_paths=(Path(output_files[index]),),
+                output_paths=(Path(output_file),),
             )
-            for index, job_spec in enumerate(job_specs)
+            for index, (input_files, output_file) in enumerate(
+                zip(input_file_batches, output_files)
+            )
         ]
         options = options_from_args(
             {"backend": backend, "backend_config": backend_config},
@@ -703,37 +577,30 @@ class Simulator:
         Parameters
         ----------
         directory_for_grid_upload : str or pathlib.Path or None, optional
-            Directory for the output files. If ``None``, use the
-            ``directory_for_grid_upload`` subdirectory of the configured output directory.
-
+            Output directory; defaults to the ``directory_for_grid_upload`` subdirectory.
         """
         self.logger.info(
             f"Packing output files for registering on the grid ({directory_for_grid_upload})"
         )
-        output_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_output"))
-        log_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_log"))
         simtools_log_file = _simtools_log_file_path()
-        histogram_files = value_conversion.ensure_list(
-            self.get_files(file_type="sim_telarray_histogram")
+        files_to_copy = self._files(
+            "sim_telarray_log",
+            "sim_telarray_histogram",
+            "corsika_log",
+            "corsika_resources",
+            "sim_telarray_resources",
+            "multi_pipe_resources",
+            "sim_telarray_err",
+            "corsika_err",
         )
-        corsika_log_files = value_conversion.ensure_list(self.get_files(file_type="corsika_log"))
-        resource_files = value_conversion.ensure_list(self.get_files(file_type="corsika_resources"))
-        resource_files += value_conversion.ensure_list(
-            self.get_files(file_type="sim_telarray_resources")
-        )
-        resource_files += value_conversion.ensure_list(
-            self.get_files(file_type="multi_pipe_resources")
-        )
-        corsika_output_files = (
-            value_conversion.ensure_list(self.get_files(file_type="corsika_output"))
-            if self.context.args.get("save_corsika_output")
-            else []
-        )
-        reduced_event_files = (
-            value_conversion.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
-            if self.context.args.get("reduced_event_lists")
-            else []
-        )
+        for model in self.array_models:
+            files_to_copy += value_conversion.ensure_list(model.pack_model_files())
+
+        files_to_move = self._files("sim_telarray_output")
+        if self.context.args.get("reduced_event_lists"):
+            files_to_move += self._files("sim_telarray_event_data")
+        if self.context.args.get("save_corsika_output"):
+            files_to_move += self._files("corsika_output")
 
         directory_for_grid_upload = (
             Path(directory_for_grid_upload)
@@ -742,56 +609,35 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        stderr_files = value_conversion.ensure_list(self.get_files(file_type="sim_telarray_err"))
-        stderr_files += value_conversion.ensure_list(self.get_files(file_type="corsika_err"))
-        files_to_copy = (
-            log_files + histogram_files + corsika_log_files + resource_files + stderr_files
-        )
-        for model in self.array_models:
-            files_to_copy += value_conversion.ensure_list(model.pack_model_files())
-
         for file_to_copy in files_to_copy:
-            destination_file = directory_for_grid_upload / Path(file_to_copy).name
-            if destination_file.exists():
-                self.logger.warning(f"Overwriting existing file: {destination_file}")
-            shutil.copy2(file_to_copy, destination_file)
+            self._place_file(
+                file_to_copy, directory_for_grid_upload / Path(file_to_copy).name, shutil.copy2
+            )
 
         if simtools_log_file and Path(simtools_log_file).exists():
-            destination_file = directory_for_grid_upload / f"{Path(simtools_log_file).name}.gz"
-            if destination_file.exists():
-                self.logger.warning(f"Overwriting existing file: {destination_file}")
-            with (
-                Path(simtools_log_file).open("rb") as file_in,
-                gzip.open(destination_file, "wb") as file_out,
-            ):
-                shutil.copyfileobj(file_in, file_out)
+            self._place_file(
+                simtools_log_file,
+                directory_for_grid_upload / f"{Path(simtools_log_file).name}.gz",
+                _gzip_file,
+            )
 
-        for file_to_move in output_files + reduced_event_files + corsika_output_files:
-            destination_file = directory_for_grid_upload / Path(file_to_move).name
-            if destination_file.exists():
-                self.logger.warning(f"Overwriting existing file: {destination_file}")
-            shutil.move(file_to_move, destination_file)
+        for file_to_move in files_to_move:
+            self._place_file(
+                file_to_move, directory_for_grid_upload / Path(file_to_move).name, shutil.move
+            )
 
         self.logger.info(f"Grid output files grid placed in {directory_for_grid_upload!s}")
 
+    def _place_file(self, source, destination, operation):
+        """Copy or move a file to its destination, warning about overwrites."""
+        if destination.exists():
+            self.logger.warning(f"Overwriting existing file: {destination}")
+        operation(source, destination)
+
     @staticmethod
     def _get_calibration_device_types(run_mode):
-        """
-        Get the list of calibration device types based on the run mode.
-
-        Parameters
-        ----------
-        run_mode: str
-            Run mode of the simulation.
-
-        Returns
-        -------
-        list
-            List of calibration device types.
-        """
-        if run_mode == "direct_injection":
-            return ["flat_fielding"]
-        return []
+        """Return the calibration device types for a run mode."""
+        return ["flat_fielding"] if run_mode == "direct_injection" else []
 
     def _overwrite_flasher_photons_for_direct_injection(self):
         """Overwrite direct-injection photons-per-pixel in calibration models."""
@@ -807,12 +653,7 @@ class Simulator:
                     )
 
     def validate_simulations(self):
-        """
-        Validate simulations data and metadata.
-
-        Validates data, log, and metadata files from CORSIKA, sim_telarray and reduced event lists
-        (if saved).
-        """
+        """Validate data, log and metadata of CORSIKA, sim_telarray and reduced event lists."""
         parameters = self.simulation_parameters[0]
         expected_shower_events = parameters.shower_events
         expected_mc_events = parameters.mc_events
@@ -848,11 +689,7 @@ class Simulator:
             )
 
     def update_file_lists(self):
-        """
-        Update file lists with all data, log, histogram and submission files.
-
-        Some of these files are generated by the simulation runners.
-        """
+        """Update file lists with the data, log, histogram and submission files."""
         if self.file_list is None:
             self.file_list = self._simulation_runner.file_list
         else:

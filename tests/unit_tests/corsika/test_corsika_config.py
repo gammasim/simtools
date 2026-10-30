@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -233,112 +234,6 @@ def test_corsika_configuration_without_first_interaction_height(
 
 def test_primary_particle(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model.primary_particle.name == "proton"
-
-
-def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model):
-    assert (
-        corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-            {"value": 0.0, "unit": G_CM2}
-        )
-        == "0.0"
-    )
-    assert (
-        corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-            {"value": 10.0, "unit": "kg/cm2"}
-        )
-        == "10000.0"
-    )
-
-
-def test_input_config_corsika_starting_grammage_muon_grammage(
-    corsika_config_mock_array_model,
-    get_standard_corsika_parameters_muon_grammage,
-    get_standard_corsika_parameters_teltype_grammage,
-):
-    # default behavior with proton as primary
-    assert (
-        corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
-        )
-        == "0.0"
-    )
-    # change primary to muon+
-    corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
-    corsika_config_mock_array_model_muon.primary_particle = {
-        "primary": MUON_PLUS_PARTICLE,
-        "primary_id_type": "common_name",
-    }
-    assert (
-        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
-        )
-        == "10.0"
-    )
-    corsika_config_mock_array_model_muon.primary_particle = {
-        "primary": "gamma",
-        "primary_id_type": "common_name",
-    }
-    assert (
-        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
-        )
-        == "0.0"
-    )
-
-    # Telescope-type dependent starting grammage
-    tel1 = MagicMock()
-    tel1.design_model = "LSTS-design"
-    tel1.__str__.return_value = "LSTS-01"
-
-    tel2 = MagicMock()
-    tel2.design_model = "SSTS-design"
-    tel2.__str__.return_value = "SSTS-14"
-
-    corsika_config_mock_array_model_teltype = copy.deepcopy(corsika_config_mock_array_model)
-    corsika_config_mock_array_model_teltype.array_model = MagicMock()
-
-    # Create telescope model mock that behaves like a dictionary
-    telescope_model_mock = MagicMock()
-    telescope_model_mock.values = MagicMock(return_value=[tel1, tel2])
-    corsika_config_mock_array_model_teltype.array_model.telescope_models = telescope_model_mock
-
-    corsika_config_mock_array_model_teltype.primary_particle = {
-        "primary": MUON_PLUS_PARTICLE,
-        "primary_id_type": "common_name",
-    }
-
-    assert (
-        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
-            get_standard_corsika_parameters_teltype_grammage["corsika_starting_grammage"]
-        )
-        == "10.0"
-    )
-
-    corsika_config_mock_array_model_teltype.primary_particle = {
-        "primary": PROTON_PARTICLE,
-        "primary_id_type": "common_name",
-    }
-    assert (
-        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
-            get_standard_corsika_parameters_teltype_grammage["corsika_starting_grammage"]
-        )
-        == "2.0"
-    )
-
-
-def test_input_config_io_buff(corsika_config_mock_array_model):
-    assert (
-        corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "MB"})
-        == "800MB"
-    )
-    assert (
-        corsika_config_mock_array_model._input_config_io_buff({"value": 8.5, "unit": "MB"})
-        == "8500000"
-    )
-    assert (
-        corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "kB"})
-        == "800000"
-    )
 
 
 def test_to_corsika_phi(corsika_config_mock_array_model):
@@ -888,3 +783,58 @@ def test_corsika_configuration_interaction_flags_with_epos(
     assert isinstance(interaction_flags, dict)
     assert "EPOPAR fname pathnx" in interaction_flags
     assert any("EPOPAR fname" in key for key in interaction_flags.keys())
+
+
+def test_corsika_card_matches_previous_parameter_formatting(
+    corsika_config_mock_array_model, tmp_test_directory
+):
+    """Check that schema-selected formatters preserve the generated card bytes."""
+    config = corsika_config_mock_array_model
+    config.context.args["corsika_seeds"] = [11, 22, 33, 44]
+    input_path = Path(tmp_test_directory) / "new.input"
+    old_input_path = Path(tmp_test_directory) / "old.input"
+    output_path = Path("events.dat")
+    config.generate_corsika_input_file(False, input_path, output_path)
+
+    previous = copy.deepcopy(config.config)
+    repository = config.array_model.site_model.get_simulation_software_parameters("corsika")
+    interaction = previous["INTERACTION_FLAGS"]
+    first_height = repository["corsika_first_interaction_height"]
+    interaction["FIXHEI"] = [
+        f"{first_height['value'] * u.Unit(first_height['unit']).to('cm'):.2f}",
+        "0",
+    ]
+    starting = repository["corsika_starting_grammage"]
+    interaction["FIXCHI"] = [
+        str(
+            config._get_starting_grammage_value(starting["value"])
+            * u.Unit(starting["unit"]).to("g/cm2")
+        )
+    ]
+    cutoffs = repository["corsika_particle_kinetic_energy_cutoff"]
+    values = cutoffs["value"]
+    interaction["ECUTS"] = [
+        " ".join(str(value * u.Unit(cutoffs["unit"]).to("GeV")) for value in values)
+    ]
+    longitudinal = repository["corsika_longitudinal_shower_development"]
+    interaction["LONGI"] = [
+        "T",
+        f"{longitudinal['value'] * u.Unit(longitudinal['unit']).to('g/cm2')}",
+        "F",
+        "F",
+    ]
+    wavelength = repository["corsika_cherenkov_photon_wavelength_range"]
+    previous["CHERENKOV_EMISSION_PARAMETERS"]["CWAVLG"] = [
+        f"{value * u.Unit(wavelength['unit']).to('nm')}" for value in wavelength["value"]
+    ]
+    buffer = repository["corsika_iact_io_buffer"]
+    buffer_value = buffer["value"] * u.Unit(buffer["unit"]).to("Mbyte")
+    previous["IACT_PARAMETERS"]["IO_BUFFER"] = [
+        f"{int(buffer_value)}MB"
+        if buffer_value.is_integer()
+        else str(int(buffer["value"] * u.Unit(buffer["unit"]).to("byte")))
+    ]
+
+    config.config = previous
+    config.generate_corsika_input_file(False, old_input_path, output_path)
+    assert input_path.read_bytes() == old_input_path.read_bytes()

@@ -18,7 +18,6 @@ from simtools.simulator import Simulator
 
 logger = logging.getLogger()
 
-CORSIKA_CONFIG_MOCK_PATCH = "simtools.simulator.get_shower_configuration"
 INITIALIZE_RUN_LIST_ERROR_MSG = (
     "Error in initializing run list "
     "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
@@ -68,136 +67,70 @@ def mock_array_model(model_version):
 
 
 @pytest.fixture
-def patch_simulator_core(mocker, mock_array_model):
-    """Patch core simulator dependencies to avoid model repository and heavy init."""
+def make_simulator(io_handler, run_context, simulations_args_dict, mock_array_model, mocker):
+    """Return a factory creating a Simulator with the model repository and runner stubbed."""
 
-    def _apply():
+    def _make(simulation_software, label, add_resources=False, **extra_args):
+        args_dict = copy.deepcopy(simulations_args_dict)
+        args_dict.update(simulation_software=simulation_software, label=label, **extra_args)
+
         mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
         mocker.patch("simtools.simulator.get_shower_configuration")
-        mock_runner_service = mocker.patch("simtools.simulator.runner_services.RunnerServices")
-        mock_runner_service.return_value.load_files.return_value = {}
-        mock_runner_service.return_value.get_file_name.side_effect = (
+        runner_service = mocker.patch("simtools.simulator.runner_services.RunnerServices")
+        runner_service.return_value.load_files.return_value = {}
+        runner_service.return_value.get_file_name.side_effect = (
             lambda file_type, run_number=1, **kwargs: f"{file_type}_{run_number}.txt"
         )
 
-    return _apply
-
-
-@pytest.fixture
-def configure_runner_mock(io_handler):
-    """Configure a runner patch with common behaviors used in tests."""
-
-    def _configure(runner_patch, add_resources=False):
-        runner_patch.return_value.prepare_run.return_value = str(
+        runner = mocker.patch("simtools.simulator.ChainRunner")
+        runner.return_value.prepare_run.return_value = str(
             io_handler.get_output_directory() / "test_run_script.sh"
         )
-        runner_patch.return_value.get_file_name.side_effect = lambda file_type, **kwargs: str(
+        runner.return_value.get_file_name.side_effect = lambda file_type, **kwargs: str(
             io_handler.get_output_directory() / f"{file_type}_{kwargs.get('run_number', 1)}.txt"
         )
         if add_resources:
+            runner.return_value.get_resources.side_effect = lambda run_number: _resources_for_run(
+                io_handler.get_output_directory() / f"sub_log_{run_number}.txt"
+            )
 
-            def mock_get_resources(run_number):
-                file_path = io_handler.get_output_directory() / f"sub_log_{run_number}.txt"
-                if not file_path.exists():
-                    raise FileNotFoundError(f"Log file not found: {file_path}")
-                return {"runtime": 6, "n_events": 100}
+        return Simulator(
+            label=args_dict["label"],
+            context=run_context.replace(args=args_dict, paths=io_handler),
+        )
 
-            runner_patch.return_value.get_resources.side_effect = mock_get_resources
-
-    return _configure
+    return _make
 
 
-@pytest.fixture
-def array_simulator(
-    io_handler,
-    run_context,
-    simulations_args_dict,
-    patch_simulator_core,
-    configure_runner_mock,
-    mocker,
-):
-    args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "sim_telarray"
-
-    patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
-    configure_runner_mock(mock_runner)
-
-    return Simulator(
-        label=args_dict["label"],
-        context=run_context.replace(args=args_dict, paths=io_handler),
-    )
+def _resources_for_run(file_path):
+    """Return the runtime resources of a run whose log file must exist."""
+    if not file_path.exists():
+        raise FileNotFoundError(f"Log file not found: {file_path}")
+    return {"runtime": 6, "n_events": 100}
 
 
 @pytest.fixture
-def shower_simulator(
-    io_handler,
-    run_context,
-    simulations_args_dict,
-    patch_simulator_core,
-    configure_runner_mock,
-    mocker,
-):
-    args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika"
-    args_dict["label"] = "test-shower-simulator"
-
-    patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
-    configure_runner_mock(mock_runner, add_resources=True)
-
-    return Simulator(
-        label=args_dict["label"],
-        context=run_context.replace(args=args_dict, paths=io_handler),
-    )
+def array_simulator(make_simulator):
+    return make_simulator("sim_telarray", "test-array-simulator")
 
 
 @pytest.fixture
-def shower_array_simulator(
-    io_handler,
-    run_context,
-    simulations_args_dict,
-    patch_simulator_core,
-    configure_runner_mock,
-    mocker,
-):
-    args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_sim_telarray"
-    args_dict["label"] = "test-shower-array-simulator"
-    args_dict["sequential"] = True
-
-    patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
-    configure_runner_mock(mock_runner)
-
-    return Simulator(
-        label=args_dict["label"],
-        context=run_context.replace(args=args_dict, paths=io_handler),
-    )
+def shower_simulator(make_simulator):
+    return make_simulator("corsika", "test-shower-simulator", add_resources=True)
 
 
 @pytest.fixture
-def calibration_simulator(
-    io_handler,
-    run_context,
-    simulations_args_dict,
-    patch_simulator_core,
-    configure_runner_mock,
-    mocker,
-):
-    args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_sim_telarray"
-    args_dict["label"] = "test-calibration-shower-array-simulator"
-    args_dict["sequential"] = True
-    args_dict["run_mode"] = "pedestals_nsb_only"
+def shower_array_simulator(make_simulator):
+    return make_simulator("corsika_sim_telarray", "test-shower-array-simulator", sequential=True)
 
-    patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.ChainRunner")
-    configure_runner_mock(mock_runner)
 
-    return Simulator(
-        label=args_dict["label"],
-        context=run_context.replace(args=args_dict, paths=io_handler),
+@pytest.fixture
+def calibration_simulator(make_simulator):
+    return make_simulator(
+        "corsika_sim_telarray",
+        "test-calibration-shower-array-simulator",
+        sequential=True,
+        run_mode="pedestals_nsb_only",
     )
 
 
