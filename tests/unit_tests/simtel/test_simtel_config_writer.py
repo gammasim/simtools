@@ -9,6 +9,7 @@ from unittest import mock
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import QTable
 
 import simtools.simtel.simtel_file_writer as simtel_file_writer
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
@@ -416,13 +417,61 @@ def test_write_tel_config_file_orders_generated_parameters_and_metadata(
     assert "metaparam telescope add fadc_pulse_shape" in lines
 
 
+def test_write_tel_config_adds_response_table_metadata(
+    simtel_config_writer, tmp_test_directory, mocker
+):
+    rows = []
+    for gain in ("HG", "LG"):
+        rows.extend(
+            {
+                "template_kind": "reference",
+                "gain": gain,
+                "intensity": 1.0,
+                "time": time,
+                "amplitude": amplitude,
+            }
+            for time, amplitude in ((0.0, 0.0), (1.0, 1.0))
+        )
+        for intensity in (10.0, 20.0):
+            rows.extend(
+                {
+                    "template_kind": "response",
+                    "gain": gain,
+                    "intensity": intensity,
+                    "time": time,
+                    "amplitude": amplitude,
+                }
+                for time, amplitude in ((0.0, 0.0), (1.0, intensity))
+            )
+    simtel_config_writer._model_reader = mocker.Mock()
+    simtel_config_writer._model_reader.get_parameter_table.return_value = QTable(rows=rows)
+    config_file = Path(tmp_test_directory) / "CTAO-LSTN-01.cfg"
+    simtel_config_writer.write_telescope_config_file(
+        config_file,
+        {
+            "fadc_pulse_shape": {
+                "value": "fadc_pulse_shape-3.0.0.ecsv",
+                "model_parameter_schema_version": "0.4.0",
+            }
+        },
+        telescope_name="LSTN-01",
+    )
+    lines = config_file.read_text(encoding="utf-8").splitlines()
+    assert "metaparam telescope add fadc_hg_response_table" in lines
+    assert "metaparam telescope add fadc_lg_response_table" in lines
+
+
 def test_write_dummy_telescope_configuration_includes_camera_file(
     simtel_config_writer, tmp_test_directory
 ):
     config_file = Path(tmp_test_directory) / "InvalidTelescope.cfg"
 
     simtel_config_writer.write_dummy_telescope_configuration_file(
-        {"num_gains": {"value": 1}}, config_file, "InvalidTelescope"
+        {
+            "num_gains": {"value": 1},
+        },
+        config_file,
+        "InvalidTelescope",
     )
 
     lines = config_file.read_text(encoding="utf-8").splitlines()
@@ -1001,3 +1050,73 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     last_line_large = content_large[-1].split()
     assert float(last_line_large[0]) == pytest.approx(180.0)
     assert float(last_line_large[1]) == pytest.approx(0.0)
+
+
+def test_unified_fadc_config_export(simtel_config_writer, tmp_test_directory, mocker):
+    rows = []
+    for gain, amplitudes in (("HG", [1.0, 0.5]), ("LG", [2.0, 1.0])):
+        rows.extend(
+            {
+                "template_kind": "reference",
+                "gain": gain,
+                "intensity": 1.0,
+                "time": time,
+                "amplitude": amplitude,
+            }
+            for time, amplitude in zip([0.0, 1.0], amplitudes, strict=True)
+        )
+        for intensity in (10.0, 20.0):
+            rows.extend(
+                {
+                    "template_kind": "response",
+                    "gain": gain,
+                    "intensity": intensity,
+                    "time": time,
+                    "amplitude": amplitude * intensity,
+                }
+                for time, amplitude in zip([0.0, 1.0], amplitudes, strict=True)
+            )
+    table = QTable(rows=rows)
+    table["time"] = np.tile([0.0, 1e-9], 6) * u.s
+    simtel_config_writer._model_reader = mocker.Mock()
+    simtel_config_writer._model_reader.get_parameter_table.return_value = table
+    result = simtel_config_writer._get_parameters_for_sim_telarray(
+        {
+            "fadc_pulse_shape": {
+                "value": "fadc_pulse_shape-3.0.0.ecsv",
+                "model_parameter_schema_version": "0.4.0",
+            }
+        },
+        Path(tmp_test_directory) / "LSTN-01.cfg",
+    )
+    assert result == {
+        "fadc_hg_response_table": "fadc_hg_response_table-LSTN-01.dat",
+        "fadc_lg_response_table": "fadc_lg_response_table-LSTN-01.dat",
+        "fadc_pulse_shape": "fadc_pulse_shape-LSTN-01.dat",
+        "stars": None,
+    }
+    assert (Path(tmp_test_directory) / result["fadc_pulse_shape"]).read_text().splitlines() == [
+        "0 1 2",
+        "1 0.5 1",
+    ]
+    assert (
+        Path(tmp_test_directory) / result["fadc_hg_response_table"]
+    ).read_text().splitlines() == [
+        "10 0 10",
+        "10 1 5",
+        "20 0 20",
+        "20 1 10",
+    ]
+    simtel_config_writer._model_reader.get_parameter_table.return_value = table[
+        ~((table["template_kind"] == "reference") & (table["gain"] == "LG"))
+    ]
+    with pytest.raises(ValueError, match="reference rows must have intensity 1"):
+        simtel_config_writer._get_parameters_for_sim_telarray(
+            {
+                "fadc_pulse_shape": {
+                    "value": "fadc_pulse_shape-3.0.0.ecsv",
+                    "model_parameter_schema_version": "0.4.0",
+                }
+            },
+            Path(tmp_test_directory) / "LSTN-02.cfg",
+        )

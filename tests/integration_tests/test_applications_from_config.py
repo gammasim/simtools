@@ -178,7 +178,17 @@ def pytest_generate_tests(metafunc):
     if "config" not in metafunc.fixturenames:
         return
 
-    config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
+    # These multi-step workflows are exercised as a whole in test_saturation_workflows.
+    saturation_workflows = {
+        "validate_pulse_response.yml",
+        "validate_saturation_direct_injection_lst.yml",
+        "validate_saturation_flasher_lst.yml",
+    }
+    config_files = sorted(
+        path
+        for path in Path(__file__).parent.glob("config/*.yml")
+        if path.name not in saturation_workflows
+    )
     test_configs, test_ids = configuration.get_list_of_test_configurations(
         config_files,
         test_resources_path=metafunc.config.getoption("test_resources_path", default=None),

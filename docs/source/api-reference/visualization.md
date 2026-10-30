@@ -183,3 +183,10 @@ the visualization module.
 .. automodule:: visualization.matplotlib_backend
    :members:
 ```
+
+## plot_pulse_response
+
+```{eval-rst}
+.. automodule:: simtools.visualization.plot_pulse_response
+   :members:
+```

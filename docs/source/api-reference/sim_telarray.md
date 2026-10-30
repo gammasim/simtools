@@ -176,3 +176,10 @@ incomplete contracts and invalid matrix grids before creating a configuration.
 .. automodule:: simtel.light_emission_config_writer
    :members:
 ```
+
+## pulse_response
+
+```{eval-rst}
+.. automodule:: simtools.simtel.pulse_response
+   :members:
+```

@@ -65,6 +65,78 @@ plot_configuration:
         column_x: time
         column_y: amplitude
 ---
+title: Schema for unified fadc_pulse_shape reference and response templates
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_pulse_shape
+description: >-
+  Linear reference pulse shapes and gain-specific intensity-dependent pulse
+  response templates. Rows use template_kind=reference or response and gain=HG
+  or LG. Reference rows have intensity 1 and preserve the unsmeared linear
+  reference. Response amplitudes are complete waveforms relative to the
+  nominal single-photoelectron peak and already include transit-time jitter.
+  The response templates are not jittered again. Each gain has its own
+  intensity grid.
+short_description: FADC reference pulse and intensity-dependent response templates.
+data:
+  - type: file
+    unit: dimensionless
+    table_columns:
+      - name: template_kind
+        description: Reference pulse or intensity-dependent response template
+        type: string
+        required: true
+        allowed_values: [reference, response]
+      - name: gain
+        description: Readout gain channel
+        type: string
+        required: true
+        allowed_values: [HG, LG]
+      - name: intensity
+        description: Input intensity in nominal single-photoelectron units
+        type: float64
+        unit: dimensionless
+        required: true
+        allowed_range: {min: 1.0}
+      - name: time
+        description: Time relative to photoelectron arrival
+        type: float64
+        unit: ns
+        required: true
+      - name: amplitude
+        description: Pulse amplitude relative to nominal single-photoelectron peak
+        type: float64
+        unit: dimensionless
+        required: true
+instrument:
+  class: Camera
+activity:
+  setting: [SetReadoutPulseShape, SetParameterFromExternal]
+  validation: [ValidateParameterByExpert, ValidateCameraChargeResponse, ValidateCameraTimeResponse]
+source: [Calibration]
+simulation_software:
+  - name: sim_telarray
+    table_format: fadc_templates
+    meta_parameter_mode: add
+    serialization:
+      columns: [template_kind, gain, intensity, time, amplitude]
+      allowed_columns: [template_kind, gain, intensity, time, amplitude]
+      row_sort_keys: [template_kind, gain, intensity, time]
+      float_format: ".12g"
+      write_comments: false
+plot_configuration:
+  - type: fadc_pulse_shape
+    title: FADC pulse reference
+    xtitle: Time [ns]
+    ytitle: Amplitude [a.u.]
+    no_markers: true
+    tables:
+      - parameter: fadc_pulse_shape
+        column_x: time
+        column_y: amplitude
+---
 title: Schema for fadc_pulse_shape model parameter
 schema_version: 0.2.0
 meta_schema: simpipe-schema

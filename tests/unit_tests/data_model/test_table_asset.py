@@ -6,6 +6,7 @@ import astropy.units as u
 import pytest
 from astropy.table import QTable, Table
 
+from simtools.data_model import schema
 from simtools.data_model.table_asset import (
     get_simtel_serialization,
     read_ecsv_asset,
@@ -340,3 +341,39 @@ def test_validate_table_asset_rejects_missing_required_metadata():
             table,
             schema_entry={"table_metadata": [{"name": "source_file_name", "required": True}]},
         )
+
+
+def test_unified_fadc_schema_rejects_missing_reference_gain():
+    entry = schema.get_model_parameter_schema("fadc_pulse_shape", "0.4.0")["data"][0]
+    rows = []
+    for gain in ("HG", "LG"):
+        for time, amplitude in ((0.0, 0.0), (1.0, 1.0)):
+            rows.append(
+                {
+                    "template_kind": "reference",
+                    "gain": gain,
+                    "intensity": 1.0,
+                    "time": time,
+                    "amplitude": amplitude,
+                }
+            )
+        for intensity in (10.0, 20.0):
+            for time, amplitude in ((0.0, 0.0), (1.0, intensity)):
+                rows.append(
+                    {
+                        "template_kind": "response",
+                        "gain": gain,
+                        "intensity": intensity,
+                        "time": time,
+                        "amplitude": amplitude,
+                    }
+                )
+    table = QTable(rows=rows)
+    table["time"].unit = u.ns
+    for name in table.colnames:
+        table[name].info.description = name
+    validate_table_asset(table, schema_entry=entry)
+
+    malformed = table[~((table["template_kind"] == "reference") & (table["gain"] == "LG"))]
+    with pytest.raises(ValueError, match="LG reference rows must have intensity 1"):
+        validate_table_asset(malformed, schema_entry=entry)

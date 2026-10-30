@@ -140,6 +140,9 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TableMetadata'
+      table_validation:
+        type: string
+        description: "Additional grouped-row validation applied to tabular model data"
       allow_extra_columns:
         type: boolean
         description: "allow format-dependent optional columns beyond table_columns"

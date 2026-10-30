@@ -1,0 +1,52 @@
+---
+applications:
+- application: simtools-validate-pulse-response
+  docs:
+    title: LST pulse response curves
+    summary: Compare HG and LG intensity-dependent tables with clipped linear pulses.
+  configuration:
+    model_version: 8.0.0
+    site: North
+    telescope: LSTN-01
+    illumination:
+    - 10
+    - 100
+    - 150
+    - 500
+    - 1000
+    - 2000
+    - 3000
+    - 10000
+    - 20000
+    output_path: __OUTPUT__
+  test_name: pulse_response
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      file: pulse_response.ecsv
+      validations:
+      - type: table
+        minimum_rows: 36
+        columns:
+          gain:
+            allowed_values:
+            - HG
+            - LG
+          peak_adc:
+            range:
+              minimum: 0
+          adc_sum:
+            range:
+              minimum: 0
+          width_ns:
+            range:
+              minimum: 0
+    - path_descriptor: output_path
+      file: pulse_response.pdf
+    - path_descriptor: output_path
+      file: pulse_response_summary.ecsv
+      validations:
+      - type: table
+        minimum_rows: 36
+schema_name: application_workflow.metaschema
+schema_version: 0.7.0
